@@ -1,0 +1,57 @@
+.leaflet-popup-content p {
+	margin: 0 !important;
+}
+
+/* Custom Scrollbar */
+/* https://github.com/luandersonn/Modern-scrollbar */
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+	transition: 1s;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: rgba(127, 127, 127, 0.6);
+	background-clip: padding-box;
+	border: 2px solid transparent;
+	border-radius: 5px;
+	transition: 1s;
+}
+
+::-webkit-scrollbar-thumb:vertical:hover,
+::-webkit-scrollbar-thumb:horizontal:hover {
+	background-color: rgb(110, 110, 110);
+	transition: 0.3s;
+}
+
+::-webkit-scrollbar-track {
+	background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb:vertical:active,
+::-webkit-scrollbar-thumb:horizontal:active {
+	background: rgba(95, 91, 91, 1);
+}
+
+::-webkit-scrollbar-corner {
+	background: none;
+}
+
+.link-underline {
+	border-bottom-width: 0;
+	background-image: linear-gradient(transparent, transparent), linear-gradient(#2563eb, #2563eb);
+	background-size: 0 2px;
+	background-position: 0 100%;
+	background-repeat: no-repeat;
+	transition: background-size 0.4s ease-in-out;
+}
+
+.link-underline:hover {
+	background-size: 100% 2px;
+	background-position: 0 100%;
+}
+
+.break_words > p {
+	word-break: break-word;
+}

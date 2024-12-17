@@ -1,0 +1,20 @@
+{
+	"name": "@sakilabs/btsfinder",
+	"license": "GPL-3.0",
+	"workspaces": ["packages/*"],
+	"scripts": {
+		"build": "pnpm --stream -r build",
+		"start:client": "pnpm --filter @sakilabs/btsfinder_client run start",
+		"start:server": "pnpm --filter @sakilabs/btsfinder_server run start"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4"
+	},
+	"packageManager": "pnpm@9.1.3",
+	"engines": {
+		"node": ">=18",
+		"npm": "please-use-pnpm",
+		"pnpm": ">=8",
+		"yarn": "please-use-pnpm"
+	}
+}
