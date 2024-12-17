@@ -31,6 +31,8 @@ What's need to be done to achieve that?
 - [ ] Add an option to disable comments on station
 - [ ] Make sidebar (details of specific station) more modular (e.g. for cells, LAC, eNBID etc.)
 - [ ] Add support for UKE (Urząd Komunikacji Elektronicznej)'s data locations of stations
+- [ ] Add support to see radiolines (with data from [here](https://bts.mserv.ovh/))
+- [ ] Add docker support (Dockerfile & docker compose)
 
 Stack
 ----
