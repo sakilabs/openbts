@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"target": "es2022",
+		"verbatimModuleSyntax": true,
+		"allowJs": true,
+		"resolveJsonModule": true,
+		"moduleDetection": "force",
+		"noUncheckedIndexedAccess": true,
+		"moduleResolution": "NodeNext",
+		"module": "NodeNext",
+		"lib": ["ES2022"]
+	},
+	"include": ["./**/*"],
+	"exclude": ["node_modules", "dist"]
+}

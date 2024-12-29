@@ -1,0 +1,19 @@
+{
+	"name": "@sakilabs/btsfinder_shared",
+	"description": "Shared utilities/code",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "tsc",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
+	},
+	"dependencies": {
+		"dotenv": "16.4.5",
+		"drizzle-orm": "0.36.3"
+	},
+	"devDependencies": {
+		"drizzle-kit": "0.28.1"
+	}
+}
