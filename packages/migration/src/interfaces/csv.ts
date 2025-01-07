@@ -1,4 +1,15 @@
-export type OperatorKey = "T-Mobile" | "Orange" | "Plus" | "Aero2" | "Play" | "Mobyland" | "CenterNet" | "Nordisk";
+export type OperatorKey =
+	| "T-Mobile"
+	| "Orange"
+	| "Plus"
+	| "Aero2"
+	| "Play"
+	| "Mobyland"
+	| "CenterNet"
+	| "Nordisk"
+	| "Sferia"
+	| "PGE Systemy"
+	| "NetWorkS!";
 export type OperatorRow = { siec_id: OperatorKey; uwagi?: string };
 
 export interface CsvRow {

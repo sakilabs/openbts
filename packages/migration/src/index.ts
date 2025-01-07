@@ -151,6 +151,24 @@ function parseIntSafe(value: string | null | undefined): number | null {
 	return Number.isNaN(num) ? null : num;
 }
 
+async function updateStationFlags(db: PostgresJsDatabase<typeof schema>, stationId: number, standard: string) {
+	const flagMapping: Record<string, keyof typeof stations.$inferSelect> = {
+		GSM: "is_gsm",
+		UMTS: "is_umts",
+		LTE: "is_lte",
+		"5G": "is_5g",
+		CDMA: "is_cdma",
+	};
+
+	const flag = flagMapping[standard.toUpperCase()];
+	if (flag) {
+		await db
+			.update(stations)
+			.set({ [flag]: true })
+			.where(eq(stations.id, stationId));
+	}
+}
+
 async function main() {
 	const sql = postgres(process.env.DATABASE_URL as string);
 	const db = drizzle({
@@ -257,14 +275,15 @@ async function main() {
 				.onConflictDoNothing()
 				.returning();
 
-			progress.stations.increment();
-
 			const [existingStation] = await db.select().from(stations).where(eq(stations.station_id, row.StationId)).limit(1);
 			const stationID = existingStation?.id ?? station?.id ?? null;
 			if (!stationID) {
 				progress.cells.increment();
 				continue;
 			}
+
+			await updateStationFlags(db, stationID, row.standard);
+
 			const clid = parseIntSafe(row.CLID) ?? 0;
 			await db.insert(cells).values({
 				// @ts-expect-error: Drizzle bug?
@@ -274,7 +293,7 @@ async function main() {
 				config: {
 					duplex: row.duplex,
 					ecid: parseIntSafe(row.ECID),
-					clid: parseIntSafe(row.CLID) ?? 0,
+					clid,
 					carrier: parseIntSafe(row.carrier),
 				},
 				sector: clid ? clid % 100 : 0,
