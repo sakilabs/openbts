@@ -33,6 +33,12 @@ What's need to be done to achieve that?
 - [ ] Add support for UKE (Urząd Komunikacji Elektronicznej)'s data locations of stations
 - [ ] Add support to see radiolines (with data from [here](https://bts.mserv.ovh/))
 - [x] Add docker support (Dockerfile & docker compose)
+- [ ] Redesign frontend
+  - Make left sidebar, with search options, sticky or on hover it slides onto screen,
+  - Map itself in the container with rounded corners
+  - Use dark colors
+  - Redesign the list UI (move it to left sidebar)
+  - Allow searching via user's GPS in search bar instead of asking for it immediately on visit, or by typing address (could use openstreetmap service for that)
 
 Stack
 ----
@@ -41,6 +47,7 @@ Stack
   - [Nuxt UI 3](https://ui3.nuxt.dev/)
   - [Vite PWA](https://vite-pwa-org.netlify.app/)
   - and more...
-- [Fastify 5](https://fastify.dev)
+- [Fastify 5](https://fastify.dev/)
+- [Drizzle](https://orm.drizzle.team/)
 - [Leaflet](https://leafletjs.com/)
 - [MarkerCluster for Leaflet (our fork)](https://github.com/sakilabs/Leaflet.markercluster)
