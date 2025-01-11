@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  client:
+    build:
+      context: ./packages/client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NUXT_PUBLIC_BASE_API_URL=http://localhost:3030
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: ./packages/server
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/btsfinder
+      - JWT_SECRET=your-secret-key-here
+      - PUBLIC_ACCESS=true
+      - ENABLE_COMMENTS=false
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=btsfinder
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

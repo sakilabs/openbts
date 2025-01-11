@@ -30,6 +30,7 @@ const props = defineProps<{
 }>();
 
 const cookie = useCookie("token");
+const loggedUser = loggedInUser();
 const lists = userLists();
 const currentUserListObj = currentUserList();
 const list = currentUserListObj.value;
@@ -42,9 +43,8 @@ const sortLists = (a: userListRequest, b: userListRequest) => {
 };
 
 const isListAuthor = computed(() => {
-	if (!list || !cookie.value) return false;
-	const tokenData = decodeJwt(cookie.value);
-	return tokenData.user_id === list.created_by;
+	if (!list || !loggedUser?.value) return false;
+	return loggedUser.value.user_id === list.created_by;
 });
 
 const isInList = computed(() => {
@@ -235,21 +235,5 @@ const deleteList = async (list_uuid: string): Promise<string | null> => {
 const refreshLists = async (bool = true) => {
 	if (!bool) return;
 	lists.value = await getUserLists();
-};
-
-const decodeJwt = (token: string) => {
-	try {
-		const base64Url = token.split(".")[1];
-		if (!base64Url) return {};
-		const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-		const jsonPayload = atob(base64)
-			.split("")
-			.map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
-			.join("");
-		return JSON.parse(decodeURIComponent(jsonPayload));
-	} catch (e) {
-		console.error("Failed to decode JWT:", e);
-		return {};
-	}
 };
 </script>

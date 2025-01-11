@@ -81,16 +81,11 @@
 				<SlideoverComments :key="station.bts_id" :bts_id="station.bts_id" :comments="btsNotes" />
 			</div>
 		</template>
-
-		<template #footer>
-			<h1 class="text-sm">{{ runtimeConfig.public.FOOTER_TEXT }}</h1>
-		</template>
 	</USlideover>
 </template>
 <script setup lang="ts">
 import type { BTSStationNotes, ExtraBTSStation, BTSStationSpecificDetails } from "@/interfaces/bts.js";
 
-const runtimeConfig = useRuntimeConfig();
 const extraBTSDetails = ref();
 const btsNotes = ref<BTSStationNotes[]>([]);
 const props = defineProps<{

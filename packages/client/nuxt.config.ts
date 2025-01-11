@@ -109,7 +109,7 @@ export default defineNuxtConfig({
 			// Populate prod API URL
 			BASE_API_URL: process.env.NODE_ENV !== "production" ? "http://localhost:3030/api/v1" : "",
 			WEBSITE_VERSION: version,
-			FOOTER_TEXT: "Lorem ipsum dolor sit amet...",
+			USE_BOUNDARIES_MAP: true,
 		},
 	},
 	typescript: {

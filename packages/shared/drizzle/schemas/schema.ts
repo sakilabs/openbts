@@ -38,8 +38,6 @@ export const stations = pgTable("stations", {
 	is_gsm: boolean("is_gsm").default(false),
 	is_lte: boolean("is_lte").default(false),
 	is_5g: boolean("is_5g").default(false),
-	is_outdoor: boolean("is_outdoor").default(true),
-	installation_type: varchar("installation_type", { length: 100 }),
 	notes: text("notes"),
 	last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
