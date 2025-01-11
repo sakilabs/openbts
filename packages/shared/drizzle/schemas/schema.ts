@@ -1,5 +1,12 @@
 import { type AnyPgColumn, boolean, integer, jsonb, numeric, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
+// temp
+export enum Role {
+	User = 1,
+	Moderator = 2,
+	Admin = 3,
+}
+
 export const operators = pgTable("operators", {
 	id: serial("id").primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
@@ -64,4 +71,47 @@ export const bands = pgTable("bands", {
 	name: varchar("name", { length: 50 }).notNull(),
 	frequency: varchar("frequency", { length: 50 }),
 	duplex: varchar("duplex", { length: 5 }),
+});
+
+export const users = pgTable("users", {
+	id: serial("id").primaryKey(),
+	username: varchar("username", { length: 100 }).notNull().unique(),
+	email: varchar("email", { length: 100 }).notNull().unique(),
+	password: varchar("password").notNull(),
+	role: integer("role").notNull().default(1).$type<Role>(),
+	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const userLists = pgTable("lists", {
+	id: serial("id").primaryKey(),
+	// add default value
+	uuid: text("uuid").notNull(),
+	name: text("name").notNull(),
+	created_by: integer("created_by")
+		.notNull()
+		.references(() => users.id),
+	stations: jsonb("stations").$type<number[]>().notNull(),
+	created_at: timestamp("created_at").notNull(),
+});
+
+export const stationNotes = pgTable("stations_notes", {
+	id: serial("id").primaryKey(),
+	station_id: integer("station_id")
+		.references(() => stations.id)
+		.notNull(),
+	user_id: integer("user_id")
+		.references(() => users.id)
+		.notNull(),
+	attachments: jsonb("attachments").$type<{ uuid: string; type: string }[]>(),
+	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const attachments = pgTable("attachments", {
+	id: serial("id").primaryKey(),
+	name: text("name").notNull(),
+	uuid: text("uuid").notNull(),
+	author_id: integer("author_id")
+		.notNull()
+		.references(() => users.id),
+	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
