@@ -15,6 +15,13 @@
       "when": 1736630037238,
       "tag": "0001_flimsy_jigsaw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1736630260764,
+      "tag": "0002_little_red_wolf",
+      "breakpoints": true
     }
   ]
 }

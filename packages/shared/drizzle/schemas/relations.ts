@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm/relations";
 
-import { bands, cells, locations, operators, regions, stationNotes, stations, userLists, users } from "./schema.js";
+import { apiTokens, bands, cells, locations, operators, regions, stationNotes, stations, userLists, users } from "./schema.js";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
 	parent: one(operators, {
@@ -57,14 +57,22 @@ export const userListRelations = relations(userLists, ({ one }) => ({
 	}),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
-	notes: many(stationNotes),
-	lists: many(userLists),
-}));
-
 export const userNotesRelations = relations(stationNotes, ({ one }) => ({
 	user: one(users, {
 		fields: [stationNotes.user_id],
 		references: [users.id],
 	}),
+}));
+
+export const apiTokensRelations = relations(apiTokens, ({ one }) => ({
+	apiToken: one(users, {
+		fields: [apiTokens.user_id],
+		references: [users.id],
+	}),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+	notes: many(stationNotes),
+	lists: many(userLists),
+	apiTokens: many(apiTokens),
 }));

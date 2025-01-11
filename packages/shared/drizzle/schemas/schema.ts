@@ -7,6 +7,13 @@ export enum Role {
 	Admin = 3,
 }
 
+// for rate limits?
+export enum APITokenTier {
+	Basic = 1,
+	Pro = 2,
+	Unlimited = 3,
+}
+
 export const operators = pgTable("operators", {
 	id: serial("id").primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
@@ -79,6 +86,16 @@ export const users = pgTable("users", {
 	email: varchar("email", { length: 100 }).notNull().unique(),
 	password: varchar("password").notNull(),
 	role: integer("role").notNull().default(1).$type<Role>(),
+	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const apiTokens = pgTable("api_tokens", {
+	id: serial("id").primaryKey(),
+	user_id: integer("user_id")
+		.references(() => users.id)
+		.notNull(),
+	token: text("token").notNull().unique(),
+	tier: integer("tier").notNull().default(1).$type<APITokenTier>(),
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
