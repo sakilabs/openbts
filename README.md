@@ -25,6 +25,7 @@ What's need to be done to achieve that?
 
 - [ ] Remove exclusive support for NetWorkS!
 - [x] Add migrations for drizzle (drizzle-kit)
+  - [ ] Add migration initialization in server startup
 - [ ] Add an option to disable login-only mode
 - [ ] Rework admin page & and make it more useful (edit stations etc.)
 - [ ] Add an option to load stations only for visible boundaries (to not download all stations at start)
@@ -32,9 +33,10 @@ What's need to be done to achieve that?
 - [ ] Make sidebar (details of specific station) more modular (e.g. for cells, LAC, eNBID etc.)
 - [ ] Add support for UKE (Urząd Komunikacji Elektronicznej)'s data locations of stations
 - [ ] Add support to see radiolines (with data from [here](https://bts.mserv.ovh/))
+- [ ] Add support for calculating the distance from the marker
 - [x] Add docker support (Dockerfile & docker compose)
 - [ ] Redesign frontend
-  - Make left sidebar, with search options, sticky or on hover it slides onto screen,
+  - Make left sidebar, with search options, sticky or on hover it slides onto screen
   - Map itself in the container with rounded corners
   - Use dark colors
   - Redesign the list UI (move it to left sidebar)
