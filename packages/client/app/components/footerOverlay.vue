@@ -38,6 +38,8 @@
 import { ref } from "vue";
 import { toast } from "vue-sonner";
 
+import { execFetch } from "@/composables/useCustomFetch.js";
+
 import type { userListRequest } from "@/interfaces/requests.js";
 
 const props = defineProps<{
@@ -52,7 +54,6 @@ const text = ref(props.list.name);
 const editableText = ref(props.list.name);
 const isEditing = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
-const cookie = useCookie("token");
 const loggedUser = loggedInUser();
 
 const canEdit = computed(() => {
@@ -94,18 +95,12 @@ const patchList = async (list_uuid: string, name: string): Promise<userListReque
 	const payload = {
 		name,
 	};
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: userListRequest;
-		error?: string;
-	}>(`/lists/${list_uuid}`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<userListRequest | null>(`/lists/${list_uuid}`, {
 		method: "PATCH",
 		body: JSON.stringify(payload),
 	});
-	if (!data?.value?.success || error?.value?.data) return null;
 
-	return data?.value.data as userListRequest;
+	return data;
 };
 
 const copyLink = () => {

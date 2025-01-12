@@ -12,23 +12,16 @@
 <script setup lang="ts">
 import "@/assets/css/tailwindui.css";
 import "@/assets/css/main.css";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
-const cookie = useCookie("token");
 const colorMode = useColorMode();
 const getMeInfo = async (): Promise<{ user_id: number; display_name: string; username: string; verified: boolean } | null> => {
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: { user_id: number; display_name: string; username: string; verified: boolean };
-		error?: string;
-	}>("/@me", {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = execFetch<{ user_id: number; display_name: string; username: string; verified: boolean } | null>("/@me", {
 		method: "GET",
 	});
 
-	if (!data?.value?.success || error?.value?.data) return null;
-	return data?.value.data as { user_id: number; display_name: string; username: string; verified: boolean };
+	return data;
 };
-
 const userInfo = await getMeInfo();
 const loggedUser = loggedInUser();
 loggedUser.value = userInfo;

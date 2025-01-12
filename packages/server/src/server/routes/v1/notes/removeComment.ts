@@ -58,7 +58,7 @@ const removeBTSComment: Route = {
 			);
 		}
 
-		return res.send({ success: true, message: "Komentarz został usunięty" });
+		return res.send({ success: true, data: { message: "Komentarz został usunięty" } });
 	},
 };
 

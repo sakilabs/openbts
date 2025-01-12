@@ -84,6 +84,8 @@
 	</USlideover>
 </template>
 <script setup lang="ts">
+import { execFetch } from "@/composables/useCustomFetch.js";
+
 import type { BTSStationNotes, ExtraBTSStation, BTSStationSpecificDetails } from "@/interfaces/bts.js";
 
 const extraBTSDetails = ref();
@@ -99,23 +101,17 @@ const props = defineProps<{
 		btsDetails: BTSStationSpecificDetails | null;
 	};
 }>();
-const cookie = useCookie("token");
 
 const getExtraBTSDetails = async (bts_id: number): Promise<ExtraBTSStation | null> => {
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: ExtraBTSStation; error?: string }>(`/bts/${bts_id.toString()}/details`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
-	});
-	if (!data?.value?.success || error?.value?.data || !data?.value?.data) return null;
-	return data?.value?.data;
+	const data = await execFetch<ExtraBTSStation | null>(`/bts/${bts_id.toString()}/details`);
+	return data;
 };
 
 const getBTSNotes = async (bts_id: number): Promise<BTSStationNotes[]> => {
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: BTSStationNotes[]; error?: string }>(`/bts/${bts_id.toString()}/notes`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
-	});
-	if (!data?.value?.success || error?.value?.data || !data?.value?.data) return [];
+	const data = await execFetch<BTSStationNotes[] | null>(`/bts/${bts_id.toString()}/notes`);
+	if (!data) return [];
 
-	return data?.value?.data;
+	return data;
 };
 
 extraBTSDetails.value = await getExtraBTSDetails(props.station.bts_id);

@@ -24,6 +24,7 @@
 import { LatLng } from "leaflet";
 import { leafletMap } from "@/composables/leafletMap.js";
 import { db } from "@/composables/indexeddb.js";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
 import type { Marker } from "leaflet";
 import type { BTSStation } from "@/interfaces/bts.js";
@@ -31,19 +32,20 @@ import type { BTSStation } from "@/interfaces/bts.js";
 const router = useRouter();
 const list = currentUserList();
 list.value = null;
+
 const cookie = useCookie("token", { expires: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365) });
 if (!cookie.value) router.push("/auth");
 
-const getStationList = async () => {
+const getStationList = async (): Promise<BTSStation[]> => {
 	const cacheData = await db.btsList.toArray();
 	if (cacheData.length) return cacheData;
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: BTSStation[]; error?: string }>("/btsList", {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<BTSStation[]>("/btsList", {
+		method: "GET",
 	});
-	if (!data?.value?.success || error?.value?.data || !data?.value?.data) return [];
+	if (!data) return [];
 
-	const stations = data?.value?.data;
-	db.btsList.bulkPut(data?.value?.data);
+	const stations = data;
+	db.btsList.bulkPut(stations);
 	return stations;
 };
 clearNuxtState("mapObj");

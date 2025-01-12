@@ -98,6 +98,7 @@
 </style>
 <script setup lang="ts">
 import { parseMarked } from "@/utils/helpers.js";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
 import type { BTSStationNotes } from "@/interfaces/bts.js";
 
@@ -115,7 +116,6 @@ const modifiableComments = ref<BTSStationNotes[]>(props.comments);
 const text = ref("");
 const images = ref<{ url: string; name: string; blob: Blob }[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
-const cookie = useCookie("token");
 
 watch(
 	() => props.comments,
@@ -144,44 +144,41 @@ const uploadAttachments = async (): Promise<{ success: boolean; data?: Attachmen
 		formData.append(`file_${index}`, image.blob);
 	}
 
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: Attachment[]; error?: string }>("/uploadAttachments", {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<Attachment[] | null>("/uploadAttachments", {
 		body: formData,
 		method: "PUT",
 	});
-	if (!data?.value?.success || error?.value?.data) return { success: false, error: "Wystąpił błąd podczas przesyłania załączników" };
+	if (!data) return { success: false, error: "Wystąpił błąd podczas przesyłania załączników" };
 
-	return data?.value as { success: true; data: Attachment[] };
+	return { success: true, data };
 };
 
 const sendComment = async (bts_id: number, attachments: Attachment[] = []): Promise<{ success: boolean; data?: BTSStationNotes; error?: string }> => {
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: BTSStationNotes; error?: string }>(`/bts/${bts_id}/notes`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<BTSStationNotes | null>(`/bts/${bts_id}/notes`, {
 		body: JSON.stringify({
 			comment_note: text.value.trim() === "" ? null : text.value.trim(),
 			attachments: attachments,
 		}),
 		method: "PUT",
 	});
-	if (!data?.value?.success || error?.value?.data) return { success: false, error: "Wystąpił błąd podczas wysyłania komentarza" };
+	if (!data) return { success: false, error: "Wystąpił błąd podczas wysyłania komentarza" };
 
-	if (props.comments) modifiableComments.value.push(data?.value?.data as BTSStationNotes);
-	return data?.value as { success: true; data: BTSStationNotes };
+	if (props.comments) modifiableComments.value.push(data);
+	return { success: true, data };
 };
 
-const removeComment = async (comment_id: number): Promise<{ success: boolean; message?: string; error?: string } | null> => {
+const removeComment = async (comment_id: number): Promise<{ success: boolean; data?: { message: string }; error?: string } | null> => {
 	if (comment_id === 0) return null;
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: string[]; error?: string }>(`/bts/${props.bts_id}/notes`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<{ message: string } | null>(`/bts/${props.bts_id}/notes`, {
 		body: JSON.stringify({
 			comment_id,
 		}),
 		method: "DELETE",
 	});
-	if (!data?.value?.success || error?.value?.data) return { success: false, error: "Wystąpił błąd podczas usuwania komentarza" };
+	if (!data) return { success: false, error: "Wystąpił błąd podczas usuwania komentarza" };
 
 	modifiableComments.value = modifiableComments.value.filter((comment) => comment.comment_id !== comment_id);
-	return data?.value as { success: true; message: string };
+	return { success: true, data };
 };
 
 const isDuplicateImage = (name: string) => {

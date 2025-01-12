@@ -20,6 +20,7 @@ import { toast } from "vue-sonner";
 
 import ConfirmDeletion from "./confirmDeletion.vue";
 import { currentUserList } from "@/composables/userLists.js";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
 import type { DropdownMenuItem } from "@nuxt/ui/runtime/components/DropdownMenu.vue";
 import type { userListRequest } from "@/interfaces/requests.js";
@@ -29,7 +30,6 @@ const props = defineProps<{
 	icon: "heroicons:plus-circle-16-solid" | "heroicons:bars-3";
 }>();
 
-const cookie = useCookie("token");
 const loggedUser = loggedInUser();
 const lists = userLists();
 const currentUserListObj = currentUserList();
@@ -166,35 +166,23 @@ document.body.addEventListener("confirmDeletion", async (e: Event) => {
 });
 
 const getUserLists = async (): Promise<userListRequest[]> => {
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: userListRequest[];
-		error?: string;
-	}>("/lists/@me", {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<userListRequest[]>("/lists/@me", {
 		method: "GET",
 	});
-	if (!data?.value?.success || error?.value?.data) return [];
+	if (!data) return [];
 
-	return data?.value.data as userListRequest[];
+	return data;
 };
 
 const createNewList = async (bts_id?: number): Promise<userListRequest | null> => {
 	const stations = bts_id ? [bts_id] : [];
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: userListRequest;
-		error?: string;
-	}>("/lists/new", {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<userListRequest | null>("/lists/new", {
 		method: "POST",
 		body: JSON.stringify({
 			stations,
 		}),
 	});
-	if (!data?.value?.success || error?.value?.data) return null;
-
-	return data?.value.data as userListRequest;
+	return data;
 };
 
 const patchList = async (list_uuid: string, bts_id: number, action: "add" | "remove"): Promise<userListRequest | null> => {
@@ -204,32 +192,20 @@ const patchList = async (list_uuid: string, bts_id: number, action: "add" | "rem
 			toRemove: action === "remove" ? [bts_id] : [],
 		},
 	};
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: userListRequest;
-		error?: string;
-	}>(`/lists/${list_uuid}`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<userListRequest | null>(`/lists/${list_uuid}`, {
 		method: "PATCH",
 		body: JSON.stringify(payload),
 	});
-	if (!data?.value?.success || error?.value?.data) return null;
 
-	return data?.value.data as userListRequest;
+	return data;
 };
 
 const deleteList = async (list_uuid: string): Promise<string | null> => {
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: string;
-		error?: string;
-	}>(`/lists/${list_uuid}`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<string | null>(`/lists/${list_uuid}`, {
 		method: "DELETE",
 	});
-	if (!data?.value?.success || error?.value?.data) return null;
 
-	return data?.value.data as string;
+	return data;
 };
 
 const refreshLists = async (bool = true) => {

@@ -56,6 +56,7 @@ import Fuse, { type FuseResult, type FuseResultMatch } from "fuse.js";
 import { Marker, latLng, type MarkerOptions } from "leaflet";
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption, TransitionRoot } from "@headlessui/vue";
 import { leafletMap } from "@/composables/leafletMap.js";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
 import type { BTSStation } from "@/interfaces/bts.js";
 
@@ -119,14 +120,11 @@ const onInput = () => {
 };
 
 const fetchResults = async (query: string): Promise<SearchBTSStation[] | null> => {
-	const cookie = useCookie("token");
-	const { data, error } = await useCustomFetch<{ success: boolean; data: SearchBTSStation[] | null; error?: string }>("/search", {
+	const data = await execFetch<SearchBTSStation[] | null>("/search", {
 		method: "POST",
 		body: JSON.stringify({ searchQuery: query }),
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
 	});
-	if (!data?.value?.success || error?.value?.data || !data?.value?.data) return null;
-	return data?.value?.data;
+	return data;
 };
 
 const clearResults = () => {

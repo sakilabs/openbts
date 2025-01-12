@@ -21,6 +21,7 @@
 </template>
 <script setup lang="ts">
 import { markerClusterList } from "@/composables/leafletMap.js";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
 import type { Marker } from "leaflet";
 import type { userListRequest } from "@/interfaces/requests.js";
@@ -34,17 +35,11 @@ const list = currentUserList();
 if (!cookie.value) router.push("/auth");
 
 const getList = async (list_uuid: string): Promise<userListRequest | null> => {
-	const { data, error } = await useCustomFetch<{
-		success: boolean;
-		data?: userListRequest;
-		error?: string;
-	}>(`/lists/${list_uuid}`, {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<userListRequest | null>(`/lists/${list_uuid}`, {
 		method: "GET",
 	});
-	if (!data?.value?.success || error?.value?.data) return null;
 
-	return data?.value.data as userListRequest;
+	return data;
 };
 list.value = await getList(route.params.id as string);
 if (!list.value) router.push("/");
@@ -52,17 +47,17 @@ if (!list.value) router.push("/");
 const getStationList = async () => {
 	const cacheData = await db.btsList.toArray();
 	if (cacheData.length) return cacheData;
-	const { data, error } = await useCustomFetch<{ success: boolean; data?: BTSStation[]; error?: string }>("/btsList", {
-		headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
+	const data = await execFetch<BTSStation[]>("/btsList", {
+		method: "GET",
 	});
-	if (!data?.value?.success || error?.value?.data || !data?.value?.data) return [];
+	if (!data) return [];
 
-	const stations = data?.value?.data;
-	db.btsList.bulkPut(data?.value?.data);
+	const stations = data;
+	db.btsList.bulkPut(stations);
 	return stations;
 };
 const cacheData = await getStationList();
-const stations = cacheData.filter((station) => list?.value?.stations.includes(station.bts_id));
+const stations = cacheData.filter((station: { bts_id: number }) => list?.value?.stations.includes(station.bts_id));
 const locations: { name: string; lat: number; lng: number }[] = [];
 const locationMap = new Map<
 	string,

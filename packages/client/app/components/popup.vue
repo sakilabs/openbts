@@ -47,10 +47,10 @@ import { onMounted } from "vue";
 
 import { colorOwner } from "@/utils/helpers.js";
 import Slideover from "@/components/slideover.vue";
+import { execFetch } from "@/composables/useCustomFetch.js";
 
 import type { BTSStationSpecificDetails } from "@/interfaces/bts.js";
 
-const cookie = useCookie("token");
 const props = defineProps<{
 	lat: number;
 	lng: number;
@@ -82,18 +82,15 @@ function openSlideover(station: {
 }
 
 const getBTSDetails = async (bts_id: number): Promise<BTSStationSpecificDetails | null> => {
-	const { data, error } = await useCustomFetch<{ success: boolean; data: BTSStationSpecificDetails | null; error?: string }>(
-		`/bts/${bts_id.toString()}`,
-		{
-			headers: cookie.value ? { Authorization: `Bearer ${cookie.value}` } : undefined,
-		},
-	);
-	if (!data?.value?.success || error?.value?.data) {
+	const data = await execFetch<BTSStationSpecificDetails | null>(`/bts/${bts_id.toString()}`, {
+		method: "GET",
+	});
+	if (!data) {
 		errorOccured.value = true;
 		return null;
 	}
 
-	return data?.value?.data;
+	return data;
 };
 
 //* Show only 5 stations in the popup if they are at the same location
