@@ -1,5 +1,6 @@
 import db from "../../database/index.js";
 import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
+import { i18n } from "../../i18n/index.js";
 
 import type { and as d_and, lte as d_lte, gte as d_gte } from "drizzle-orm/pg-core/expressions";
 import type { FastifyRequest } from "fastify";
@@ -95,7 +96,13 @@ const getStations: Route = {
 			orderBy: (fields, operators) => [operators.asc(fields.bts_id)],
 		});
 
-		if (!btsStations) return res.status(404).send({ success: false, error: "Failed to retrieve BTS Stations" });
+		if (!btsStations) {
+			return res.status(404).send({
+				success: false,
+				error: i18n.t("errors.failedToRetrieveStations", req.language),
+			});
+		}
+
 		res.send({ success: true, data: btsStations });
 	},
 };

@@ -1,0 +1,8 @@
+{
+	"errors": {
+		"invalidBoundaries": "Invalid boundaries",
+		"failedToRetrieveStations": "Failed to retrieve stations. Try again later...",
+		"unauthorized": "Unauthorized user",
+		"invalidCredentials": "Invalid credentials"
+	}
+}

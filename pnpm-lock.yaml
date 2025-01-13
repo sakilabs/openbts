@@ -185,6 +185,9 @@ importers:
       '@btsfinder/drizzle':
         specifier: workspace:*
         version: link:../drizzle
+      '@btsfinder/translations':
+        specifier: workspace:*
+        version: link:../translations
       '@fastify/cors':
         specifier: 10.0.1
         version: 10.0.1
@@ -234,6 +237,18 @@ importers:
       tsx:
         specifier: 4.19.2
         version: 4.19.2
+      typescript:
+        specifier: 5.6.3
+        version: 5.6.3
+
+  packages/translations:
+    devDependencies:
+      '@btsfinder/typescript-configs':
+        specifier: workspace:*
+        version: link:../typescript-configs
+      '@types/node':
+        specifier: 22.9.0
+        version: 22.9.0
       typescript:
         specifier: 5.6.3
         version: 5.6.3

@@ -3,6 +3,7 @@ import type { FastifyReply, RawReplyDefaultExpression, RawRequestDefaultExpressi
 declare module "fastify" {
 	export interface FastifyRequest {
 		requestStartTime: bigint;
+		language: string;
 	}
 }
 
