@@ -6,8 +6,10 @@ import type { FastifyRequest } from "fastify";
 import type { ReplyPayload } from "../../interfaces/fastify.interface.js";
 import type { BasicResponse, Route } from "../../interfaces/routes.interface.js";
 
-interface BoundariesQuery {
+interface StationFilterParams {
 	boundaries?: string;
+	limit?: number;
+	page?: number;
 }
 
 const schemaRoute = {
@@ -17,6 +19,15 @@ const schemaRoute = {
 			boundaries: {
 				type: "string",
 				pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$",
+			},
+			limit: {
+				type: "number",
+				minimum: 1,
+			},
+			page: {
+				type: "number",
+				minimum: 1,
+				default: 1,
 			},
 		},
 	},
@@ -47,12 +58,15 @@ const schemaRoute = {
 	},
 };
 
-const getBTSStations: Route = {
+const getStations: Route = {
 	url: "/stations",
 	method: "GET",
 	schema: schemaRoute,
 	onRequest: AuthMiddleware,
-	handler: async (req: FastifyRequest<{ Querystring: BoundariesQuery }>, res: ReplyPayload<BasicResponse<unknown>>) => {
+	handler: async (req: FastifyRequest<{ Querystring: StationFilterParams }>, res: ReplyPayload<BasicResponse<unknown>>) => {
+		const { limit, page = 1 } = req.query;
+		const offset = (page - 1) * (limit ?? 0);
+
 		// const { boundaries } = req.query;
 
 		// let boundaryCondition:
@@ -76,6 +90,8 @@ const getBTSStations: Route = {
 
 		const btsStations = await db.query.stations.findMany({
 			// where: boundaryCondition,
+			limit: limit ?? undefined,
+			offset: limit ? offset : undefined,
 			orderBy: (fields, operators) => [operators.asc(fields.bts_id)],
 		});
 
@@ -84,4 +100,4 @@ const getBTSStations: Route = {
 	},
 };
 
-export default getBTSStations;
+export default getStations;
