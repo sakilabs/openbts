@@ -1,5 +1,5 @@
-import * as schema from "@sakilabs/btsfinder_shared/drizzle/schemas/index.js";
-import { bands, cells, locations, operators, regions, stations } from "@sakilabs/btsfinder_shared/drizzle/schemas/schema.js";
+import * as schema from "@btsfinder/drizzle";
+import { bands, cells, locations, operators, regions, stations } from "@btsfinder/drizzle";
 import cliProgress from "cli-progress";
 import { config } from "dotenv";
 import { and, eq, isNull } from "drizzle-orm";

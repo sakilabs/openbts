@@ -1,22 +1,8 @@
 {
+	"extends": "@btsfinder/typescript-configs/base.json",
 	"compilerOptions": {
 		"outDir": "./dist",
-		"baseUrl": "src",
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"strict": true,
-		"strictNullChecks": true,
-		"skipLibCheck": true,
-		"target": "es2022",
-		"verbatimModuleSyntax": true,
-		"allowJs": true,
-		"resolveJsonModule": true,
-		"moduleDetection": "force",
-		"noUncheckedIndexedAccess": true,
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
-		"lib": ["ES2022"]
+		"baseUrl": "./src"
 	},
-	"include": ["src/**/*", "../shared/drizzle/**/*"],
-	"exclude": ["node_modules", "dist"]
+	"include": ["./src/**/*"]
 }

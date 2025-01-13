@@ -1,6 +1,5 @@
 {
 	"compilerOptions": {
-		"baseUrl": ".",
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
@@ -14,7 +13,5 @@
 		"moduleResolution": "NodeNext",
 		"module": "NodeNext",
 		"lib": ["ES2022"]
-	},
-	"include": ["./**/*"],
-	"exclude": ["node_modules", "dist"]
+	}
 }

@@ -19,16 +19,39 @@ export default class App {
 
 		debug.enable("sakilabs/btsfinder:*");
 
+		this.checkEnvironment();
 		this.initHooks();
 		this.initMiddlewares();
 		this.initControllers();
+	}
+
+	private checkEnvironment(): void {
+		if (!process.env.JWT_SECRET) {
+			this.logger.extend("env")("`JWT_SECRET` environment variable is not set. Exiting...");
+			throw new Error("JWT_SECRET environment variable is not set");
+		}
+
+		if (!process.env.DATABASE_URL) {
+			this.logger.extend("env")("`DATABASE_URL` environment variable is not set. Exiting...");
+			throw new Error("DATABASE_URL environment variable is not set");
+		}
+
+		if (!process.env.PUBLIC_ACCESS || !["true", "false"].includes(process.env.PUBLIC_ACCESS)) {
+			this.logger.extend("env")("`PUBLIC_ACCESS` environment variable is not set, defaulting to `true`");
+			process.env.PUBLIC_ACCESS = "true";
+		}
+
+		if (!process.env.ENABLE_COMMENTS || !["true", "false"].includes(process.env.ENABLE_COMMENTS)) {
+			this.logger.extend("env")("`ENABLE_COMMENTS` environment variable is not set, defaulting to `true`");
+			process.env.ENABLE_COMMENTS = "true";
+		}
 	}
 
 	private initMiddlewares(): void {
 		this.logger("Registering middlewares");
 		this.fastify.register(import("@fastify/cors")).register(import("@fastify/multipart"));
 		this.fastify.register(import("@fastify/jwt"), {
-			secret: process.env.JWT_SECRET as string,
+			secret: process.env.JWT_SECRET,
 		});
 	}
 

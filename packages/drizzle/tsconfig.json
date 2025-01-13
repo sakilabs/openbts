@@ -1,0 +1,9 @@
+{
+	"extends": "@btsfinder/typescript-configs/base.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"outDir": "./dist"
+	},
+	"include": ["./**/*"],
+	"exclude": ["node_modules", "dist"]
+}

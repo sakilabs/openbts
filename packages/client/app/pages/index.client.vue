@@ -39,7 +39,7 @@ if (!cookie.value) router.push("/auth");
 const getStationList = async (): Promise<BTSStation[]> => {
 	const cacheData = await db.btsList.toArray();
 	if (cacheData.length) return cacheData;
-	const data = await execFetch<BTSStation[]>("/btsList", {
+	const data = await execFetch<BTSStation[]>("/stations", {
 		method: "GET",
 	});
 	if (!data) return [];

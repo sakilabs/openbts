@@ -2,4 +2,4 @@
 .env
 
 # Dist files
-.js
+*.js
