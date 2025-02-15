@@ -11,7 +11,7 @@ export type Route = {
 	handler: Function;
 };
 
-export type BasicResponse<T = void> = RouteGenericInterface & {
+export type JSONBody<T = void> = RouteGenericInterface & {
 	Reply: Response<T>;
 };
 type Response<T> = SuccessfulResponse<T> | UnsuccessfulResponse;

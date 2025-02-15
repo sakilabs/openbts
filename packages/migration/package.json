@@ -1,5 +1,5 @@
 {
-	"name": "@btsfinder/migration",
+	"name": "@openbts/migration",
 	"version": "1.0.0",
 	"private": true,
 	"description": "Migration from CSV file for BTS Finder",
@@ -11,7 +11,7 @@
 		"start": "node dist/src/index.js"
 	},
 	"dependencies": {
-		"@btsfinder/drizzle": "workspace:*",
+		"@openbts/drizzle": "workspace:*",
 		"cli-progress": "^3.12.0",
 		"dotenv": "16.4.5",
 		"drizzle-orm": "0.36.3",
@@ -19,7 +19,7 @@
 		"postgres": "3.4.5"
 	},
 	"devDependencies": {
-		"@btsfinder/typescript-configs": "workspace:*",
+		"@openbts/typescript-configs": "workspace:*",
 		"@types/cli-progress": "^3.11.6",
 		"@types/node": "22.9.0",
 		"@types/papaparse": "^5.3.15",

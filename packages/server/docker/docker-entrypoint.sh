@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "Running database migrations..."
-pnpm --filter @btsfinder/server db:migrate
+pnpm --filter @openbts/server db:migrate
 
 echo "Starting server..."
-exec pnpm --filter @btsfinder/server start
+exec pnpm --filter @openbts/server start

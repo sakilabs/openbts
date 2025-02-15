@@ -1,9 +1,9 @@
-# bts finder
+# OpenBTS
 
 Why it exists?
 ----
 
-This project was initially made for private database of NetWorkS! (Polish company for managing infrastructure for Orange & T-Mobile), however with time I realized this project can be modular and handle all of the operators including Plus (Polkomtel), Aero2 etc., Play (P4) and more...
+This project was initially made for private database of NetWorkS! (Polish company for managing infrastructure for Orange & T-Mobile), however with time I realized this project can be modular and handle all of the operators including Plus (Polkomtel), Aero2 (Plus), Play (P4) and more...
 
 How it works?
 ----
@@ -41,6 +41,7 @@ What's need to be done to achieve that?
   - Use dark colors
   - Redesign the list UI (move it to left sidebar)
   - Allow searching via user's GPS in search bar instead of asking for it immediately on visit, or by typing address (could use openstreetmap service for that)
+- Rewrite frontend to React/Next.js (no SSR)
 
 Stack
 ----

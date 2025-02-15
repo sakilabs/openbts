@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "@btsfinder/drizzle";
+import * as schema from "@openbts/drizzle";
 
 const connectionString = process.env.DATABASE_URL;
 const postgresClient = postgres(connectionString);

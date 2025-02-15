@@ -1,5 +1,5 @@
-import * as schema from "@btsfinder/drizzle";
-import { bands, cells, locations, operators, regions, stations } from "@btsfinder/drizzle";
+import * as schema from "@openbts/drizzle";
+import { bands, cells, locations, operators, regions, stations } from "@openbts/drizzle";
 import cliProgress from "cli-progress";
 import { config } from "dotenv";
 import { and, eq, isNull } from "drizzle-orm";

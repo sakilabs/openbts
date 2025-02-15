@@ -1,5 +1,5 @@
 {
-	"name": "@btsfinder/translations",
+	"name": "@openbts/translations",
 	"version": "1.0.0",
 	"private": true,
 	"type": "module",
@@ -9,7 +9,7 @@
 		"build": "tsc"
 	},
 	"devDependencies": {
-		"@btsfinder/typescript-configs": "workspace:*",
+		"@openbts/typescript-configs": "workspace:*",
 		"@types/node": "22.9.0",
 		"typescript": "5.6.3"
 	}

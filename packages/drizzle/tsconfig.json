@@ -1,5 +1,5 @@
 {
-	"extends": "@btsfinder/typescript-configs/base.json",
+	"extends": "@openbts/typescript-configs/base.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"outDir": "./dist"

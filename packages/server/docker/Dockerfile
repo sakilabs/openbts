@@ -14,8 +14,8 @@ RUN pnpm install --frozen-lockfile
 COPY packages/drizzle ./packages/drizzle
 COPY packages/server ./packages/server
 
-RUN pnpm --filter @btsfinder/drizzle build && \
-    pnpm --filter @btsfinder/server build
+RUN pnpm --filter @openbts/drizzle build && \
+    pnpm --filter @openbts/server build
 
 FROM node:20-alpine
 

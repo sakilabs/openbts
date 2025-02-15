@@ -1,4 +1,4 @@
-import { translations } from "@btsfinder/translations";
+import { translations } from "@openbts/translations";
 
 import type { FastifyRequest } from "fastify";
 

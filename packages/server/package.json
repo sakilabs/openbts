@@ -1,8 +1,8 @@
 {
-	"name": "@btsfinder/server",
+	"name": "@openbts/server",
 	"version": "1.0.0",
 	"private": true,
-	"description": "Backend API for BTS Finder",
+	"description": "Core server for OpenBTS",
 	"license": "GPL-3.0",
 	"type": "module",
 	"scripts": {
@@ -14,8 +14,8 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@btsfinder/drizzle": "workspace:*",
-		"@btsfinder/translations": "workspace:*",
+		"@openbts/drizzle": "workspace:*",
+		"@openbts/translations": "workspace:*",
 		"@fastify/cors": "10.0.1",
 		"@fastify/jwt": "9.0.1",
 		"@fastify/multipart": "9.0.1",
@@ -28,7 +28,7 @@
 		"postgres": "3.4.5"
 	},
 	"devDependencies": {
-		"@btsfinder/typescript-configs": "workspace:*",
+		"@openbts/typescript-configs": "workspace:*",
 		"@types/debug": "4.1.12",
 		"@types/json-schema": "7.0.15",
 		"@types/node": "22.9.0",

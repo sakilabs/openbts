@@ -1,5 +1,5 @@
 {
-	"name": "@btsfinder/drizzle",
+	"name": "@openbts/drizzle",
 	"description": "Drizzle schemas",
 	"version": "1.0.0",
 	"private": true,
@@ -15,7 +15,7 @@
 		"drizzle-orm": "0.36.3"
 	},
 	"devDependencies": {
-		"@btsfinder/typescript-configs": "workspace:*",
+		"@openbts/typescript-configs": "workspace:*",
 		"drizzle-kit": "0.28.1"
 	},
 	"exports": {
