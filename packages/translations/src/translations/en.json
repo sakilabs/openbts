@@ -3,6 +3,7 @@
 		"invalidBoundaries": "Invalid boundaries",
 		"failedToRetrieveStations": "Failed to retrieve stations. Try again later...",
 		"unauthorized": "Unauthorized user",
-		"invalidCredentials": "Invalid credentials"
+		"invalidCredentials": "Invalid credentials",
+		"tooManyRequests": "Too many requests, please try again later..."
 	}
 }

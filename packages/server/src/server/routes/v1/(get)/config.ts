@@ -7,7 +7,7 @@ import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
 const configRoute: Route = {
 	url: "/config",
 	method: "GET",
-	handler: async (_: FastifyRequest, res: ReplyPayload<JSONBody<{ inLoginMode: boolean; commentsEnabled: boolean }>>) => {
+	handler: async (_: FastifyRequest, res: ReplyPayload<JSONBody<Record<string, unknown>>>) => {
 		const query = await db.query.siteConfig.findMany({
 			columns: {
 				key: true,

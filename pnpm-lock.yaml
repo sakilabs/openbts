@@ -25,10 +25,10 @@ importers:
         version: 1.7.23(vue@3.5.13(typescript@5.6.3))
       '@nuxt/image':
         specifier: 1.8.1
-        version: 1.8.1(ioredis@5.4.1)(magicast@0.3.5)(rollup@4.27.2)
+        version: 1.8.1(ioredis@5.5.0)(magicast@0.3.5)(rollup@4.27.2)
       '@nuxt/ui':
         specifier: 3.0.0-alpha.11
-        version: 3.0.0-alpha.11(@babel/parser@7.26.2)(change-case@5.4.4)(embla-carousel@8.5.2)(ioredis@5.4.1)(magicast@0.3.5)(radix-vue@1.9.12(vue@3.5.13(typescript@5.6.3)))(rollup@4.27.2)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))
+        version: 3.0.0-alpha.11(@babel/parser@7.26.2)(change-case@5.4.4)(embla-carousel@8.5.2)(ioredis@5.5.0)(magicast@0.3.5)(radix-vue@1.9.12(vue@3.5.13(typescript@5.6.3)))(rollup@4.27.2)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))
       '@types/leaflet':
         specifier: 1.9.14
         version: 1.9.14
@@ -40,7 +40,7 @@ importers:
         version: 11.2.0(vue@3.5.13(typescript@5.6.3))
       '@vueuse/nuxt':
         specifier: 11.2.0
-        version: 11.2.0(magicast@0.3.5)(nuxt@3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.4.1)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0)))(rollup@4.27.2)(vue@3.5.13(typescript@5.6.3))
+        version: 11.2.0(magicast@0.3.5)(nuxt@3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.5.0)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0)))(rollup@4.27.2)(vue@3.5.13(typescript@5.6.3))
       dayjs:
         specifier: 1.11.13
         version: 1.11.13
@@ -113,7 +113,7 @@ importers:
         version: 0.10.6(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(workbox-build@7.3.0)(workbox-window@7.3.0)
       nuxt:
         specifier: 3.14.159
-        version: 3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.4.1)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
+        version: 3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.5.0)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
       tailwindcss:
         specifier: 4.0.0-beta.9
         version: 4.0.0-beta.9
@@ -209,9 +209,15 @@ importers:
       drizzle-orm:
         specifier: 0.36.3
         version: 0.36.3(@types/pg@8.11.10)(postgres@3.4.5)
+      fast-jwt:
+        specifier: 5.0.5
+        version: 5.0.5
       fastify:
         specifier: 5.1.0
         version: 5.1.0
+      ioredis:
+        specifier: 5.5.0
+        version: 5.5.0
       nanoid:
         specifier: 5.0.8
         version: 5.0.8
@@ -1677,14 +1683,8 @@ packages:
     peerDependencies:
       vue: '>=3'
 
-  '@internationalized/date@3.5.6':
-    resolution: {integrity: sha512-jLxQjefH9VI5P9UQuqB6qNKnvFt1Ky1TPIzHGsIlCi7sZZoMR8SdYbBGRvM0y+Jtb+ez4ieBzmiAUcpmPYpyOw==}
-
   '@internationalized/date@3.7.0':
     resolution: {integrity: sha512-VJ5WS3fcVx0bejE/YHfbDKR/yawZgKqn/if+oEeLqNwBtPzVB06olkfcnojTmEMX+gTpH+FlQ69SHNitJ8/erQ==}
-
-  '@internationalized/number@3.5.4':
-    resolution: {integrity: sha512-h9huwWjNqYyE2FXZZewWqmCdkw1HeFds5q4Siuoms3hUQC5iPJK3aBmkFZoDSLN4UD0Bl8G22L/NdHpeOr+/7A==}
 
   '@internationalized/number@3.6.0':
     resolution: {integrity: sha512-PtrRcJVy7nw++wn4W2OuePQQfTqDzfusSuY1QTtui4wa7r+rGVtR75pO8CyKvHvzyQYi3Q1uO5sY0AsB4e65Bw==}
@@ -3582,6 +3582,10 @@ packages:
     resolution: {integrity: sha512-QnpNdn0955GT7SlT8iMgYfhTsityUWysrQjM+Q7bGFijLp6+TNWzlbSMPvgalbrQGRg4ZaHZgMcns5fYOm5avg==}
     engines: {node: '>=16'}
 
+  fast-jwt@5.0.5:
+    resolution: {integrity: sha512-Ch94zewwBjRznO0r76NFI5FDT0lOtnzkWVO4r7+d7E2WKuf7WW1FVOWRpv7QGEFlXzz9OAayrb5BhEmkOkwjhg==}
+    engines: {node: '>=20'}
+
   fast-npm-meta@0.2.2:
     resolution: {integrity: sha512-E+fdxeaOQGo/CMWc9f4uHFfgUPJRAu7N3uB8GBvB3SDPAIWJK4GKyYhkAGFq+GYrcbKNfQIz5VVQyJnDuPPCrg==}
 
@@ -3934,8 +3938,8 @@ packages:
     resolution: {integrity: sha512-NGnrKwXzSms2qUUih/ILZ5JBqNTSa1+ZmP6flaIp6KmSElgE9qdndzS3cqjrDovwFdmwsGsLdeFgB6suw+1e9g==}
     engines: {node: '>= 0.4'}
 
-  ioredis@5.4.1:
-    resolution: {integrity: sha512-2YZsvl7jopIa1gaePkeMtd9rAcSjOOjPtpcLlOeusyO+XH2SK5ZcT+UCrElPP+WVIInh2TzeI4XW9ENaSLVVHA==}
+  ioredis@5.5.0:
+    resolution: {integrity: sha512-7CutT89g23FfSa8MDoIFs2GYYa0PaNiW/OrT+nRyjRXHDZd17HmIgy+reOQ/yhh72NznNjGuS8kbCAcA4Ro4mw==}
     engines: {node: '>=12.22.0'}
 
   ipaddr.js@1.9.1:
@@ -4335,6 +4339,7 @@ packages:
 
   lodash.isequal@4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
 
   lodash.memoize@4.1.2:
     resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
@@ -7562,15 +7567,7 @@ snapshots:
       '@iconify/types': 2.0.0
       vue: 3.5.13(typescript@5.6.3)
 
-  '@internationalized/date@3.5.6':
-    dependencies:
-      '@swc/helpers': 0.5.15
-
   '@internationalized/date@3.7.0':
-    dependencies:
-      '@swc/helpers': 0.5.15
-
-  '@internationalized/number@3.5.4':
     dependencies:
       '@swc/helpers': 0.5.15
 
@@ -7753,7 +7750,7 @@ snapshots:
       - utf-8-validate
       - vue
 
-  '@nuxt/fonts@0.10.3(ioredis@5.4.1)(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))':
+  '@nuxt/fonts@0.10.3(ioredis@5.5.0)(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))':
     dependencies:
       '@nuxt/devtools-kit': 1.7.0(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
       '@nuxt/kit': 3.15.2(magicast@0.3.5)(rollup@4.27.2)
@@ -7774,7 +7771,7 @@ snapshots:
       ufo: 1.5.4
       unifont: 0.1.7
       unplugin: 2.1.2
-      unstorage: 1.13.1(ioredis@5.4.1)
+      unstorage: 1.13.1(ioredis@5.5.0)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -7818,7 +7815,7 @@ snapshots:
       - vite
       - vue
 
-  '@nuxt/image@1.8.1(ioredis@5.4.1)(magicast@0.3.5)(rollup@4.27.2)':
+  '@nuxt/image@1.8.1(ioredis@5.5.0)(magicast@0.3.5)(rollup@4.27.2)':
     dependencies:
       '@nuxt/kit': 3.14.159(magicast@0.3.5)(rollup@4.27.2)
       consola: 3.2.3
@@ -7831,7 +7828,7 @@ snapshots:
       std-env: 3.8.0
       ufo: 1.5.4
     optionalDependencies:
-      ipx: 2.1.0(ioredis@5.4.1)
+      ipx: 2.1.0(ioredis@5.5.0)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -7957,13 +7954,13 @@ snapshots:
       - rollup
       - supports-color
 
-  '@nuxt/ui@3.0.0-alpha.11(@babel/parser@7.26.2)(change-case@5.4.4)(embla-carousel@8.5.2)(ioredis@5.4.1)(magicast@0.3.5)(radix-vue@1.9.12(vue@3.5.13(typescript@5.6.3)))(rollup@4.27.2)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))':
+  '@nuxt/ui@3.0.0-alpha.11(@babel/parser@7.26.2)(change-case@5.4.4)(embla-carousel@8.5.2)(ioredis@5.5.0)(magicast@0.3.5)(radix-vue@1.9.12(vue@3.5.13(typescript@5.6.3)))(rollup@4.27.2)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))':
     dependencies:
       '@iconify/vue': 4.3.0(vue@3.5.13(typescript@5.6.3))
       '@internationalized/date': 3.7.0
       '@internationalized/number': 3.6.0
       '@nuxt/devtools-kit': 1.7.0(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
-      '@nuxt/fonts': 0.10.3(ioredis@5.4.1)(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
+      '@nuxt/fonts': 0.10.3(ioredis@5.5.0)(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
       '@nuxt/icon': 1.10.3(magicast@0.3.5)(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))
       '@nuxt/kit': 3.15.2(magicast@0.3.5)(rollup@4.27.2)
       '@nuxt/schema': 3.15.2
@@ -8861,13 +8858,13 @@ snapshots:
 
   '@vueuse/metadata@12.4.0': {}
 
-  '@vueuse/nuxt@11.2.0(magicast@0.3.5)(nuxt@3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.4.1)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0)))(rollup@4.27.2)(vue@3.5.13(typescript@5.6.3))':
+  '@vueuse/nuxt@11.2.0(magicast@0.3.5)(nuxt@3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.5.0)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0)))(rollup@4.27.2)(vue@3.5.13(typescript@5.6.3))':
     dependencies:
       '@nuxt/kit': 3.14.159(magicast@0.3.5)(rollup@4.27.2)
       '@vueuse/core': 11.2.0(vue@3.5.13(typescript@5.6.3))
       '@vueuse/metadata': 11.2.0
       local-pkg: 0.5.0
-      nuxt: 3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.4.1)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
+      nuxt: 3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.5.0)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))
       vue-demi: 0.14.10(vue@3.5.13(typescript@5.6.3))
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -10030,6 +10027,13 @@ snapshots:
       ecdsa-sig-formatter: 1.0.11
       mnemonist: 0.39.8
 
+  fast-jwt@5.0.5:
+    dependencies:
+      '@lukeed/ms': 2.0.2
+      asn1.js: 5.4.1
+      ecdsa-sig-formatter: 1.0.11
+      mnemonist: 0.39.8
+
   fast-npm-meta@0.2.2: {}
 
   fast-querystring@1.1.2:
@@ -10438,7 +10442,7 @@ snapshots:
       hasown: 2.0.2
       side-channel: 1.0.6
 
-  ioredis@5.4.1:
+  ioredis@5.5.0:
     dependencies:
       '@ioredis/commands': 1.2.0
       cluster-key-slot: 1.1.2
@@ -10454,7 +10458,7 @@ snapshots:
 
   ipaddr.js@1.9.1: {}
 
-  ipx@2.1.0(ioredis@5.4.1):
+  ipx@2.1.0(ioredis@5.5.0):
     dependencies:
       '@fastify/accept-negotiator': 1.1.0
       citty: 0.1.6
@@ -10470,7 +10474,7 @@ snapshots:
       sharp: 0.32.6
       svgo: 3.3.2
       ufo: 1.5.4
-      unstorage: 1.13.1(ioredis@5.4.1)
+      unstorage: 1.13.1(ioredis@5.5.0)
       xss: 1.0.15
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -11066,7 +11070,7 @@ snapshots:
       h3: 1.13.0
       hookable: 5.5.3
       httpxy: 0.1.5
-      ioredis: 5.4.1
+      ioredis: 5.5.0
       jiti: 2.4.0
       klona: 2.0.6
       knitwork: 1.1.0
@@ -11096,7 +11100,7 @@ snapshots:
       unctx: 2.3.1
       unenv: 1.10.0
       unimport: 3.13.2(rollup@4.27.2)
-      unstorage: 1.13.1(ioredis@5.4.1)
+      unstorage: 1.13.1(ioredis@5.5.0)
       untyped: 1.5.1
       unwasm: 0.3.9
     transitivePeerDependencies:
@@ -11174,7 +11178,7 @@ snapshots:
 
   nuxi@3.15.0: {}
 
-  nuxt@3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.4.1)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0)):
+  nuxt@3.14.159(@biomejs/biome@1.9.4)(@parcel/watcher@2.5.0)(@types/node@22.9.0)(drizzle-orm@0.36.3(@types/pg@8.11.10)(postgres@3.4.5))(ioredis@5.5.0)(lightningcss@1.29.1)(magicast@0.3.5)(rollup@4.27.2)(terser@5.36.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0)):
     dependencies:
       '@nuxt/devalue': 2.0.2
       '@nuxt/devtools': 1.6.0(rollup@4.27.2)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.29.1)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))
@@ -11234,7 +11238,7 @@ snapshots:
       unimport: 3.13.2(rollup@4.27.2)
       unplugin: 1.16.0
       unplugin-vue-router: 0.10.8(rollup@4.27.2)(vue-router@4.4.5(vue@3.5.13(typescript@5.6.3)))(vue@3.5.13(typescript@5.6.3))
-      unstorage: 1.13.1(ioredis@5.4.1)
+      unstorage: 1.13.1(ioredis@5.5.0)
       untyped: 1.5.1
       vue: 3.5.13(typescript@5.6.3)
       vue-bundle-renderer: 2.1.1
@@ -11761,8 +11765,8 @@ snapshots:
     dependencies:
       '@floating-ui/dom': 1.6.12
       '@floating-ui/vue': 1.1.5(vue@3.5.13(typescript@5.6.3))
-      '@internationalized/date': 3.5.6
-      '@internationalized/number': 3.5.4
+      '@internationalized/date': 3.7.0
+      '@internationalized/number': 3.6.0
       '@tanstack/vue-virtual': 3.10.9(vue@3.5.13(typescript@5.6.3))
       '@vueuse/core': 10.11.1(vue@3.5.13(typescript@5.6.3))
       '@vueuse/shared': 10.11.1(vue@3.5.13(typescript@5.6.3))
@@ -12749,7 +12753,7 @@ snapshots:
       acorn: 8.14.0
       webpack-virtual-modules: 0.6.2
 
-  unstorage@1.13.1(ioredis@5.4.1):
+  unstorage@1.13.1(ioredis@5.5.0):
     dependencies:
       anymatch: 3.1.3
       chokidar: 3.6.0
@@ -12762,7 +12766,7 @@ snapshots:
       ofetch: 1.4.1
       ufo: 1.5.4
     optionalDependencies:
-      ioredis: 5.4.1
+      ioredis: 5.5.0
 
   untun@0.1.3:
     dependencies:

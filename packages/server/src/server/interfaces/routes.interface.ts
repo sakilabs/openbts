@@ -6,9 +6,11 @@ export type Route = {
 	schema?: Record<string, unknown>;
 	attachValidation?: boolean;
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
-	onRequest?: Function | Function[];
+	onRequest?: Function[];
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	handler: Function;
+	permissions?: string[];
+	allowLoggedIn?: boolean;
 };
 
 export type JSONBody<T = void> = RouteGenericInterface & {

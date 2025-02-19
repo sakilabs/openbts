@@ -14,11 +14,9 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-// temp
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
-
-// for rate limits?
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
+export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
 
 export const operators = pgTable("operators", {
 	id: serial("id").primaryKey(),
@@ -28,6 +26,7 @@ export const operators = pgTable("operators", {
 });
 export const operatorMncCodeIdx = index("operator_mnc_code_idx").on(operators.mnc_code);
 
+//* Provinces
 export const regions = pgTable("regions", {
 	id: serial("id").primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
@@ -55,13 +54,11 @@ export const stations = pgTable("stations", {
 	enbi: integer("enbi"),
 	is_common_bch: boolean("is_common_bch").default(false),
 	is_cdma: boolean("is_cdma").default(false),
-	is_umts: boolean("is_umts").default(false),
-	is_gsm: boolean("is_gsm").default(false),
-	is_lte: boolean("is_lte").default(false),
-	is_5g: boolean("is_5g").default(false),
 	notes: text("notes"),
 	last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	is_confirmed: boolean("is_confirmed").default(false),
+	status: varchar("status", { length: 100 }),
 });
 export const stationIdIdx = index("station_station_id_idx").on(stations.station_id);
 
@@ -70,12 +67,12 @@ export const cells = pgTable("cells", {
 	station_id: integer("station_id")
 		.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
-	standard: varchar("standard", { length: 20 }).notNull(),
 	band_id: integer("band_id")
 		.references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
-	config: jsonb("config").notNull().$type<{ duplex: string | null; ecid: number; clid: number; carrier: number }>(),
+	config: jsonb("config").notNull().$type<{ ecid: number; clid: number; carrier: number }>(),
 	sector: integer("sector").notNull(),
+	is_confimed: boolean("is_confirmed").default(false),
 	last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
@@ -83,9 +80,9 @@ export const cells = pgTable("cells", {
 export const bands = pgTable("bands", {
 	id: serial("id").primaryKey(),
 	value: integer("value").unique(),
-	name: varchar("name", { length: 50 }).notNull(),
-	frequency: varchar("frequency", { length: 50 }),
-	duplex: varchar("duplex", { length: 5 }),
+	name: varchar("name", { length: 10 }).notNull(),
+	ua_freq: integer("ua_freq"),
+	duplex: varchar("duplex", { length: 3 }),
 });
 
 export const users = pgTable("users", {
@@ -98,7 +95,6 @@ export const users = pgTable("users", {
 	last_login: timestamp({ withTimezone: true }),
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	deleted_at: timestamp({ withTimezone: true }),
 });
 
 export const apiTokens = pgTable("api_tokens", {
@@ -107,12 +103,11 @@ export const apiTokens = pgTable("api_tokens", {
 		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
 	token: text("token").notNull().unique(),
-	name: varchar("name", { length: 100 }).notNull(),
-	description: text("description"),
 	tier: APITokenTier("tier").notNull().default("basic"),
 	expires_at: timestamp({ withTimezone: true }),
 	last_used_at: timestamp({ withTimezone: true }),
 	is_revoked: boolean("is_revoked").default(false),
+	permissions: jsonb("permissions").$type<string[]>().notNull().default([]),
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
@@ -143,7 +138,6 @@ export const stationNotes = pgTable("stations_notes", {
 	content: text("content").notNull(),
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	deleted_at: timestamp({ withTimezone: true }),
 });
 export const stationNotesStationIdIdx = index("station_id_idx").on(stationNotes.station_id);
 export const stationNotesUserIdIdx = index("user_id_idx").on(stationNotes.user_id);
@@ -169,3 +163,69 @@ export const siteConfig = pgTable("site_config", {
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+export const TypeEnum = pgEnum("type", ["new", "update"]);
+export const submissions = pgTable("submissions", {
+	id: serial("id").primaryKey(),
+	station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
+	submitter_id: integer("submitter_id")
+		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
+		.notNull(),
+	status: SubmissionStatus("status").notNull().default("pending"),
+	type: TypeEnum("type").notNull(),
+	data: jsonb("data").notNull().$type<{
+		station?: {
+			operator_id?: number;
+			lac?: number;
+			//* 3G only?
+			rnc?: string;
+			//* 3G only?
+			enbi?: number;
+			is_common_bch?: boolean;
+			is_cdma?: boolean;
+			is_umts?: boolean;
+			is_gsm?: boolean;
+			is_lte?: boolean;
+			is_5g?: boolean;
+			notes?: string;
+		};
+		cells?: {
+			band: {
+				value: number;
+				name: string;
+				ua_freq: number;
+				duplex?: string;
+			};
+			config: {
+				ecid: number;
+				clid: number;
+				carrier: number;
+			};
+			sector: number;
+		}[];
+	}>(),
+	reviewer_id: integer("reviewer_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+	review_notes: text("review_notes"),
+	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	reviewed_at: timestamp({ withTimezone: true }),
+});
+
+export const submissionStatusIdx = index("submission_status_idx").on(submissions.status);
+export const submissionStationIdx = index("submission_station_idx").on(submissions.station_id);
+export const submissionSubmitterIdx = index("submission_submitter_idx").on(submissions.submitter_id);
+
+export const AuditLogAction = pgEnum("audit_log_action", ["create", "update", "delete"]);
+
+export const auditLogs = pgTable("audit_logs", {
+	id: serial("id").primaryKey(),
+	action: AuditLogAction("action").notNull(),
+	record_id: integer("record_id").notNull(),
+	old_values: jsonb("old_values"),
+	new_values: jsonb("new_values"),
+	user_id: integer("user_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const auditLogsRecordIdIdx = index("audit_logs_record_id_idx").on(auditLogs.record_id);
+export const auditLogsUserIdIdx = index("audit_logs_user_id_idx").on(auditLogs.user_id);
