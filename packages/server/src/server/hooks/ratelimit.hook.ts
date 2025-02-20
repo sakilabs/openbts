@@ -1,20 +1,19 @@
 import { i18n } from "../i18n/index.js";
 import { redis } from "../database/redis.js";
+import { generateFingerprint } from "../utils/fingerprint.js";
 
 import type { FastifyReply, FastifyRequest, HookHandlerDoneFunction, onRequestHookHandler } from "fastify";
+import type { TokenTier, User, UserRole } from "../interfaces/auth.interface.js";
 
 export type RateLimitTier = {
 	maxReq: number;
 	windowMs: number;
 };
 
-type TokenTier = "basic" | "pro" | "unlimited";
-export type UserRole = "guest" | "user" | "moderator" | "admin";
-
 export interface RateLimitOptions {
 	windowMs?: number;
 	maxReq?: number;
-	keyGenerator?: (req: FastifyRequest) => string;
+	useRouteKey?: boolean;
 	tiers?: Partial<Record<TokenTier, RateLimitTier>>;
 	roles?: Partial<Record<UserRole, RateLimitTier>>;
 }
@@ -37,7 +36,7 @@ const defaultOptions: Required<RateLimitOptions> = {
 	maxReq: 60,
 	tiers: defaultTiers,
 	roles: defaultRoles,
-	keyGenerator: () => "unknown",
+	useRouteKey: false,
 };
 
 export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequestHookHandler => {
@@ -46,10 +45,10 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 		tiers: { ...defaultOptions.tiers, ...options.tiers },
 		roles: { ...defaultOptions.roles, ...options.roles },
 		...options,
-		keyGenerator: options.keyGenerator ?? defaultOptions.keyGenerator,
+		useRouteKey: options.useRouteKey ?? defaultOptions.useRouteKey,
 	};
 
-	const rateLimitHook: onRequestHookHandler = async (req: FastifyRequest, res: FastifyReply, done: HookHandlerDoneFunction) => {
+	return async function rateLimit(req: FastifyRequest, res: FastifyReply, done: HookHandlerDoneFunction) {
 		try {
 			let rateLimit: RateLimitTier;
 
@@ -72,23 +71,27 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 
 			if (rateLimit.maxReq === Number.POSITIVE_INFINITY) return done();
 
-			const key =
-				finalOptions.keyGenerator?.(req) ??
-				(() => {
-					const route = req.routeOptions.url?.replace("/", "") ?? "unknown";
+			const key = (() => {
+				const useRouteKey = finalOptions?.useRouteKey === true;
+				const route = req.routeOptions.url?.replace("/", "") ?? "unknown";
 
-					if (req.apiToken) {
-						const tokenId = req.apiToken.id;
-						return `ratelimit:api:${tokenId}:${route}`;
+				if (req.apiToken) {
+					const tokenId = req.apiToken.id;
+					return `ratelimit:api:${tokenId}${useRouteKey ? `:${route}` : ""}`;
+				}
+
+				if (req.user) {
+					if ((req.user as User).role === "guest") {
+						const fingerprint = generateFingerprint(req);
+						return `ratelimit:guest:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 					}
+					const userId = (req.user as { id: number }).id;
+					return `ratelimit:user:${userId}${useRouteKey ? `:${route}` : ""}`;
+				}
 
-					if (req.user) {
-						const userId = (req.user as { id: number }).id;
-						return `ratelimit:user:${userId}:${route}`;
-					}
-
-					return `ratelimit:ip:${req.ip}:${route}`;
-				})();
+				const fingerprint = generateFingerprint(req);
+				return `ratelimit:unauth:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
+			})();
 
 			const current = await redis.get(key);
 			const count = current ? Number.parseInt(current, 10) : 0;
@@ -117,8 +120,6 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 			done();
 		}
 	};
-
-	return rateLimitHook;
 };
 
 export const globalRateLimit = createRateLimit();

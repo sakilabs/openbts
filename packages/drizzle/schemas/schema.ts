@@ -107,7 +107,7 @@ export const apiTokens = pgTable("api_tokens", {
 	expires_at: timestamp({ withTimezone: true }),
 	last_used_at: timestamp({ withTimezone: true }),
 	is_revoked: boolean("is_revoked").default(false),
-	permissions: jsonb("permissions").$type<string[]>().notNull().default([]),
+	scope: text("scope").$type<string>().notNull().default(""),
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

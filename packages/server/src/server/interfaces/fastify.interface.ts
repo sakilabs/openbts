@@ -4,12 +4,6 @@ declare module "fastify" {
 	export interface FastifyRequest {
 		requestStartTime: bigint;
 		language: string;
-		apiToken?: {
-			id: number;
-			userId: number;
-			tier: "basic" | "pro" | "unlimited";
-			permissions: string[];
-		};
 	}
 }
 

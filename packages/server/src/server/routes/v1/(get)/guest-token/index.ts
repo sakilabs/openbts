@@ -1,14 +1,14 @@
 import { createVerifier } from "fast-jwt";
-
 import { i18n } from "../../../../i18n/index.js";
 import { redis } from "../../../../database/redis.js";
 import { createRateLimit } from "../../../../hooks/ratelimit.hook.js";
+import { generateFingerprint } from "../../../../utils/fingerprint.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const RATE_LIMIT_SECONDS = 24 * 60 * 60; // 24 hours
+const GUEST_TOKEN_EXPIRATION = 24 * 60 * 60; // 24 hours
 
 const schemaRoute = {
 	response: {
@@ -23,19 +23,22 @@ const schemaRoute = {
 					},
 					required: ["token"],
 				},
+				error: { type: ["string"] },
+				message: { type: ["string"] },
 			},
-			required: ["success", "data"],
+			required: ["success"],
 		},
 	},
 };
 
 async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<{ token: string }>>) {
 	try {
-		const ip = req.ip;
-		const key = `guest-token:${ip}`;
+		const fingerprint = generateFingerprint(req);
+		const key = `guest-token:${fingerprint}`;
 
 		const existingToken = await redis.get(key);
 		const verifySync = createVerifier({ key: async () => process.env.JWT_SECRET });
+
 		if (existingToken) {
 			try {
 				await verifySync(existingToken);
@@ -50,14 +53,14 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<{ token: 
 
 		const token = await res.jwtSign(
 			{
-				role: "guest",
+				type: "guest",
 			},
 			{
-				expiresIn: RATE_LIMIT_SECONDS,
+				expiresIn: GUEST_TOKEN_EXPIRATION,
 			},
 		);
 
-		await redis.setex(key, RATE_LIMIT_SECONDS, token);
+		await redis.setex(key, GUEST_TOKEN_EXPIRATION, token);
 
 		return res.send({
 			success: true,
@@ -65,6 +68,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<{ token: 
 		});
 	} catch (error) {
 		req.log.error(error, "Failed to generate guest token");
+		redis.del(`ratelimit:guest:${generateFingerprint(req)}:guest-token`);
 		return res.status(500).send({
 			statusCode: 500,
 			error: "Internal Server Error",
@@ -82,7 +86,8 @@ const getGuestToken: Route = {
 	onRequest: [
 		createRateLimit({
 			maxReq: 1,
-			windowMs: RATE_LIMIT_SECONDS * 1000,
+			windowMs: GUEST_TOKEN_EXPIRATION * 1000,
+			useRouteKey: true,
 		}),
 	],
 };

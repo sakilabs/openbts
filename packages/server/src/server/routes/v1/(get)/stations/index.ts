@@ -1,5 +1,4 @@
 import db from "../../../../database/index.js";
-import { AuthMiddleware } from "../../../../middlewares/auth.middleware.js";
 import { i18n } from "../../../../i18n/index.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -69,7 +68,6 @@ const getStations: Route = {
 	url: "/stations",
 	method: "GET",
 	schema: schemaRoute,
-	onRequest: [AuthMiddleware],
 	permissions: ["read:stations"],
 	handler: async (req: FastifyRequest<{ Querystring: StationFilterParams }>, res: ReplyPayload<JSONBody<typeof stations>>) => {
 		const { limit, page = 1, bounds, tech, operators, bands } = req.query;

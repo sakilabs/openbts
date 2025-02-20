@@ -15,15 +15,16 @@ export class PermissionManager {
 		return grantedParts.length === requiredParts.length;
 	}
 
-	getMissingPermissions(required: string[], granted: string[]): string[] {
+	getMissingPermissions(required: string[], scope: string): string[] {
 		if (!required || required.length === 0) return [];
-		if (!granted || granted.length === 0) return [...required];
+		if (!scope) return [...required];
 
+		const granted = scope.split(" ").filter(Boolean);
 		return required.filter((reqPerm) => !granted.some((grantedPerm) => this.matchPermission(reqPerm, grantedPerm)));
 	}
 
-	hasPermission(required: string[], granted: string[]): boolean {
-		return this.getMissingPermissions(required, granted).length === 0;
+	hasPermission(required: string[], scope: string): boolean {
+		return this.getMissingPermissions(required, scope).length === 0;
 	}
 }
 
