@@ -1,13 +1,14 @@
-import { eq } from "drizzle-orm/pg-core/expressions";
-
 import { i18n } from "../i18n/index.js";
 import { db } from "../database/index.js";
-import { apiTokens } from "@openbts/drizzle";
-import { API_TOKEN_PREFIX, BEARER_PREFIX, PUBLIC_ROUTES, ROLE_SCOPES } from "../constants.js";
+import { redis } from "../database/redis.js";
+import { API_TOKEN_PREFIX, BEARER_PREFIX, PUBLIC_ROUTES } from "../constants.js";
+import { JWTService } from "../services/jwt.service.js";
 
-import type { User } from "../interfaces/auth.interface.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Route } from "../interfaces/routes.interface.js";
+import type { SessionPayload } from "../interfaces/auth.interface.js";
+
+const REDIS_REVOKED_TOKEN_PREFIX = "revoked_token:";
 
 export async function authHook(req: FastifyRequest, res: FastifyReply) {
 	const route = req.routeOptions as Route;
@@ -15,8 +16,8 @@ export async function authHook(req: FastifyRequest, res: FastifyReply) {
 
 	if (PUBLIC_ROUTES.some((publicRoute) => url.startsWith(publicRoute))) return;
 
-	if (route?.allowLoggedIn === false) {
-		if (req.apiToken || (req.user && (req.user as User).type !== "guest")) {
+	if (route?.config?.allowLoggedIn === false) {
+		if (req.apiToken || (req.userSession && req.userSession.type !== "guest")) {
 			return res.status(403).send({
 				statusCode: 403,
 				error: "Forbidden",
@@ -52,23 +53,9 @@ export async function authHook(req: FastifyRequest, res: FastifyReply) {
 				});
 			}
 
-			if (token.is_revoked || (token.expires_at && token?.expires_at < new Date())) {
-				return res.status(403).send({
-					statusCode: 403,
-					error: "Forbidden",
-					message: i18n.t("errors.invalidApiToken", req.language),
-				});
-			}
-
-			await db.update(apiTokens).set({ last_used_at: new Date() }).where(eq(apiTokens.id, token.id));
-
-			req.apiToken = {
-				id: token.id,
-				tier: token.tier,
-				scope: token.scope,
-			};
+			req.apiToken = token;
 			return;
-		} catch (err) {
+		} catch (error) {
 			return res.status(403).send({
 				statusCode: 403,
 				error: "Forbidden",
@@ -77,50 +64,37 @@ export async function authHook(req: FastifyRequest, res: FastifyReply) {
 		}
 	}
 
-	if (auth.startsWith(BEARER_PREFIX)) {
-		try {
-			await req.jwtVerify();
-			const decodedToken = req.user as User;
-
-			if (decodedToken?.type === "user" && decodedToken.user_id) {
-				const user = await db.query.users.findFirst({
-					where: (fields, { eq }) => eq(fields.id, Number(decodedToken.user_id)),
-				});
-
-				if (!user) {
-					return res.status(403).send({
-						statusCode: 403,
-						error: "Forbidden",
-						message: i18n.t("errors.userNotFound", req.language),
-					});
-				}
-
-				req.user = {
-					...decodedToken,
-					role: user.role,
-					scope: ROLE_SCOPES[user.role],
-				};
-			} else if (decodedToken?.type === "guest") {
-				req.user = {
-					...decodedToken,
-					scope: ROLE_SCOPES.guest,
-				};
-			}
-
-			return;
-		} catch (err) {
-			const error = err as { code: string };
-			return res.status(403).send({
-				statusCode: 403,
-				error: "Forbidden",
-				message: error.code,
-			});
-		}
+	if (!auth.startsWith(BEARER_PREFIX)) {
+		return res.status(403).send({
+			statusCode: 403,
+			error: "Forbidden",
+			message: i18n.t("errors.invalidCredentials", req.language),
+		});
 	}
 
-	return res.status(403).send({
-		statusCode: 403,
-		error: "Forbidden",
-		message: i18n.t("errors.invalidAuthorizationFormat", req.language),
-	});
+	try {
+		const token = auth.slice(BEARER_PREFIX.length);
+		const jwtService = JWTService.getInstance();
+		const decodedJWT = (await jwtService.verifyAccessToken(token)) as SessionPayload;
+		req.userSession = decodedJWT;
+
+		if (decodedJWT.jti) {
+			const isRevoked = await redis.get(`${REDIS_REVOKED_TOKEN_PREFIX}${decodedJWT.jti}`);
+			if (isRevoked) {
+				return res.status(401).send({
+					statusCode: 401,
+					error: "Unauthorized",
+					message: i18n.t("errors.tokenRevoked", req.language),
+				});
+			}
+		}
+
+		return;
+	} catch (err) {
+		return res.status(401).send({
+			statusCode: 401,
+			error: "Unauthorized",
+			message: i18n.t("errors.invalidCredentials", req.language),
+		});
+	}
 }

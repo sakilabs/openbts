@@ -8,7 +8,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 const getStation: Route = {
 	url: "/stations/:id",
 	method: "GET",
-	permissions: ["read:stations"],
+	config: { permissions: ["read:stations"] },
 	handler: async (req: FastifyRequest<{ Params: { id: number } }>, res: ReplyPayload<JSONBody<unknown>>) => {
 		const { id } = req.params;
 

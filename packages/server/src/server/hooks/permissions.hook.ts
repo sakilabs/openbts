@@ -3,21 +3,20 @@ import { i18n } from "../i18n/index.js";
 import { ROLE_SCOPES } from "../constants.js";
 
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { RoutePermissions } from "../interfaces/fastify.interface.js";
-import type { User } from "../interfaces/auth.interface.js";
+import type { SessionPayload } from "../interfaces/auth.interface.js";
 
 export async function permissionsHook(req: FastifyRequest, res: FastifyReply) {
-	const routePermissions = (req.routeOptions as RoutePermissions).permissions;
+	const routePermissions = req.routeOptions.config?.permissions;
 	if (!routePermissions) return;
 
-	let scope = req.apiToken?.scope || (req.user as User)?.scope;
+	let scope = req.apiToken?.scope;
+	const session = req.userSession as SessionPayload;
 
-	if (!scope && req.user) {
-		const user = req.user as User;
-		if (user.type === "guest") {
+	if (!scope && session) {
+		if (session.type === "user") {
+			scope = session.user.scope || ROLE_SCOPES[session.user.role];
+		} else if (session.type === "guest") {
 			scope = ROLE_SCOPES.guest;
-		} else if (user.role) {
-			scope = ROLE_SCOPES[user.role];
 		}
 	}
 

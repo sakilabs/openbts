@@ -1,27 +1,33 @@
 export type TokenTier = "basic" | "pro" | "unlimited";
 export type UserRole = "guest" | "user" | "moderator" | "admin";
+export type TokenType = "user" | "guest" | "refresh";
 
-export interface APIToken {
-	id: number;
-	tier: TokenTier;
+interface BaseToken {
+	sub?: string;
+	jti?: string;
+	exp?: number;
+	iat?: number;
+	iss?: string;
+	aud?: string;
+}
+
+interface UserToken extends BaseToken {
+	type: "user";
+}
+
+interface Token extends BaseToken {
+	type: "guest" | "refresh";
+}
+
+export type TokenPayload = UserToken | Token;
+
+export interface UserSessionData {
 	scope: string;
+	role: UserRole;
 }
 
-export interface User {
-	user_id?: number;
-	type: "guest" | "user";
-	role?: UserRole;
-	scope?: string;
+export interface EnrichedUserToken extends UserToken {
+	user: UserSessionData;
 }
 
-declare module "fastify" {
-	interface FastifyRequest {
-		apiToken?: APIToken;
-	}
-}
-
-declare module "@fastify/jwt" {
-	interface FastifyJWT {
-		user?: User;
-	}
-}
+export type SessionPayload = EnrichedUserToken | Token;

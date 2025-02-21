@@ -3,14 +3,16 @@ import type { RouteGenericInterface } from "fastify/types/route.js";
 export type Route = {
 	url: string;
 	method: string;
-	schema?: Record<string, unknown>;
-	attachValidation?: boolean;
-	// biome-ignore lint/complexity/noBannedTypes: <explanation>
-	onRequest?: Function[];
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	handler: Function;
-	permissions?: string[];
-	allowLoggedIn?: boolean;
+	// biome-ignore lint/complexity/noBannedTypes: <explanation>
+	onRequest?: Function[];
+	schema?: Record<string, unknown>;
+	attachValidation?: boolean;
+	config?: {
+		permissions?: string[];
+		allowLoggedIn?: boolean;
+	};
 };
 
 export type JSONBody<T = void> = RouteGenericInterface & {
@@ -26,4 +28,5 @@ interface SuccessfulResponse<T> {
 interface UnsuccessfulResponse {
 	success: false;
 	error: string;
+	message?: string;
 }

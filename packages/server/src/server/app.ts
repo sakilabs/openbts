@@ -31,51 +31,44 @@ export default class App {
 		this.initControllers();
 	}
 
-	private checkEnvironment(): void {
-		const requiredEnvVars = ["JWT_SECRET", "DATABASE_URL"];
-		const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+	public static async initializeTranslations(): Promise<void> {
+		await i18n.loadTranslationFiles();
+		App.translationsLoaded = true;
+	}
 
-		if (missingVars.length > 0) {
-			for (const varName of missingVars) {
-				this.logger.extend("env")(`\`${varName}\` environment variable is not set.`);
-			}
-			throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
+	private checkEnvironment(): void {
+		const requiredEnvVars = ["JWT_SECRET", "DATABASE_URL", "JWT_REFRESH_SECRET"];
+		const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+		if (missingEnvVars.length > 0) {
+			throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
 		}
 	}
 
-	public static async initializeTranslations(): Promise<void> {
-		if (!App.translationsLoaded) {
-			await i18n.loadTranslationFiles();
-			App.translationsLoaded = true;
-		}
+	private initHooks(): void {
+		this.logger("Registering hooks");
+		this.fastify.addHook("onRequest", OnRequestHook);
+		this.fastify.addHook("preHandler", PreHandlerHook);
+		this.fastify.addHook("onSend", OnSendHook);
 	}
 
 	private initMiddlewares(): void {
 		this.logger("Registering middlewares");
 		this.fastify.register(import("@fastify/cors")).register(import("@fastify/multipart"));
-		this.fastify.register(import("@fastify/jwt"), {
-			secret: process.env.JWT_SECRET,
-		});
 	}
 
 	private initControllers(): void {
 		this.logger("Registering controllers");
-		this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
+		this.fastify.register(APIv1Controller);
 	}
 
-	private initHooks(): void {
-		this.logger("Registering hooks");
-		const requestStartTime = Symbol("requestStartTime");
-		this.fastify.decorateRequest(requestStartTime, 0);
-
-		this.fastify.addHook("preHandler", PreHandlerHook);
-		this.fastify.addHook("onRequest", OnRequestHook);
-		this.fastify.addHook("onSend", OnSendHook);
-	}
-
-	listen(port: number): void {
-		this.fastify.listen({ port, host: "127.0.0.1" }, () => {
-			this.logger(`Server is ready on port ${port}`);
-		});
+	public async start(port: number): Promise<void> {
+		try {
+			await this.fastify.listen({ port, host: "127.0.0.1" });
+			this.logger("Server is ready on port %d", port);
+		} catch (err) {
+			this.logger("Error starting server: %O", err);
+			process.exit(1);
+		}
 	}
 }

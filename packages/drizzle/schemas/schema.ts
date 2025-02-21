@@ -91,10 +91,8 @@ export const users = pgTable("users", {
 	email: varchar("email", { length: 100 }).notNull().unique(),
 	password: varchar("password").notNull(),
 	role: Role("role").notNull().default("user"),
-	is_active: boolean("is_active").default(true),
 	last_login: timestamp({ withTimezone: true }),
 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
 export const apiTokens = pgTable("api_tokens", {

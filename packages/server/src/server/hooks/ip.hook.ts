@@ -37,7 +37,7 @@ function isValidIp(ip: string): boolean {
 	return false;
 }
 
-export function ipHook(req: FastifyRequest, res: FastifyReply, done: () => void) {
+export function ipHook(req: FastifyRequest, _: FastifyReply, done: () => void) {
 	if (req.ip && isValidIp(req.ip)) {
 		done();
 		return;

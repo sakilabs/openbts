@@ -68,7 +68,7 @@ const getStations: Route = {
 	url: "/stations",
 	method: "GET",
 	schema: schemaRoute,
-	permissions: ["read:stations"],
+	config: { permissions: ["read:stations"] },
 	handler: async (req: FastifyRequest<{ Querystring: StationFilterParams }>, res: ReplyPayload<JSONBody<typeof stations>>) => {
 		const { limit, page = 1, bounds, tech, operators, bands } = req.query;
 		const offset = (page - 1) * (limit ?? 0);

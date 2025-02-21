@@ -4,6 +4,22 @@
 		"failedToRetrieveStations": "Failed to retrieve stations. Try again later...",
 		"unauthorized": "Unauthorized user",
 		"invalidCredentials": "Invalid credentials",
-		"tooManyRequests": "Too many requests, please try again later..."
+		"tooManyRequests": "Too many requests, please try again later...",
+		"missingFields": "Please fill in all required fields",
+		"emailExists": "An account with this email already exists",
+		"usernameExists": "This username is already taken",
+		"internalServerError": "An internal server error occurred. Please try again later",
+		"invalidToken": "Invalid or expired token",
+		"tokenRevoked": "This token has been revoked",
+		"invalidApiToken": "Invalid API token",
+		"alreadyLoggedIn": "You are already logged in",
+		"invalidSession": "Invalid session"
+	},
+	"success": {
+		"signedOut": "Successfully signed out",
+		"signedOutAllSessions": "Successfully signed out from all other devices"
+	},
+	"station": {
+		"notFound": "Station not found"
 	}
 }

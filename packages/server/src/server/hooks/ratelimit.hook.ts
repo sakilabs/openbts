@@ -3,7 +3,7 @@ import { redis } from "../database/redis.js";
 import { generateFingerprint } from "../utils/fingerprint.js";
 
 import type { FastifyReply, FastifyRequest, HookHandlerDoneFunction, onRequestHookHandler } from "fastify";
-import type { TokenTier, User, UserRole } from "../interfaces/auth.interface.js";
+import type { TokenTier, UserRole, SessionPayload } from "../interfaces/auth.interface.js";
 
 export type RateLimitTier = {
 	maxReq: number;
@@ -51,19 +51,20 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 	return async function rateLimit(req: FastifyRequest, res: FastifyReply, done: HookHandlerDoneFunction) {
 		try {
 			let rateLimit: RateLimitTier;
+			const session = req.userSession;
 
 			if (req.apiToken) {
 				const tier = req.apiToken.tier as TokenTier;
 				const tierLimit = finalOptions.tiers[tier];
 				rateLimit = tierLimit ?? { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
-			} else if (req.user) {
-				const { role, tier } = req.user as { role: UserRole; tier?: TokenTier };
-				const tierLimit = tier && finalOptions.tiers[tier];
-				const roleLimit = finalOptions.roles[role];
-
-				if (tierLimit) rateLimit = tierLimit;
-				else if (roleLimit) rateLimit = roleLimit;
-				else rateLimit = { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
+			} else if (session) {
+				if (session.type === "user") {
+					const roleLimit = finalOptions.roles[session.user.role];
+					rateLimit = roleLimit ?? { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
+				} else {
+					const guestLimit = finalOptions.roles.guest;
+					rateLimit = guestLimit ?? { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
+				}
 			} else {
 				const guestLimit = finalOptions.roles.guest;
 				rateLimit = guestLimit ?? { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
@@ -80,13 +81,14 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 					return `ratelimit:api:${tokenId}${useRouteKey ? `:${route}` : ""}`;
 				}
 
-				if (req.user) {
-					if ((req.user as User).role === "guest") {
+				if (session) {
+					if (session.type === "guest") {
 						const fingerprint = generateFingerprint(req);
 						return `ratelimit:guest:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 					}
-					const userId = (req.user as { id: number }).id;
-					return `ratelimit:user:${userId}${useRouteKey ? `:${route}` : ""}`;
+					if (session.type === "user" && session.sub) {
+						return `ratelimit:user:${session.sub}${useRouteKey ? `:${route}` : ""}`;
+					}
 				}
 
 				const fingerprint = generateFingerprint(req);
