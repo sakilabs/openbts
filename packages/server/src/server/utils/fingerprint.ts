@@ -9,7 +9,7 @@ interface BrowserProperties {
 	acceptHeaders: string;
 }
 
-export function generateFingerprint(req: FastifyRequest): string {
+export function generateFingerprint(req: FastifyRequest): string | null {
 	const headers = req.headers;
 
 	const getHeaderValue = (value: string | string[] | undefined): string => {
@@ -28,6 +28,12 @@ export function generateFingerprint(req: FastifyRequest): string {
 		timezone: getHeaderValue(headers["sec-ch-timezone"]),
 		acceptHeaders: getHeaderValue(headers.accept),
 	};
+
+	const unknownCount = Object.values(properties).filter((val) => val === "unknown").length;
+	const requiredProperties = ["userAgent", "acceptHeaders"];
+	const hasRequiredProperties = requiredProperties.every((prop) => properties[prop as keyof BrowserProperties] !== "unknown");
+
+	if (unknownCount > 3 || !hasRequiredProperties) return null;
 
 	const fingerprintString = Object.values(properties).join("|");
 

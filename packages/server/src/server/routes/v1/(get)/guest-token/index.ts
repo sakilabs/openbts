@@ -36,6 +36,14 @@ const schemaRoute = {
 async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<{ accessToken: string }>>) {
 	try {
 		const fingerprint = generateFingerprint(req);
+		if (!fingerprint) {
+			return res.status(400).send({
+				success: false,
+				error: "Bad Request",
+				message: i18n.t("errors.notGenuineRequest", req.language),
+			});
+		}
+
 		const key = `guest-token:${fingerprint}`;
 
 		const existingToken = await redis.get(key);
@@ -65,7 +73,10 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<{ accessT
 			data: { accessToken: token },
 		});
 	} catch (error) {
-		redis.del(`ratelimit:guest:${generateFingerprint(req)}:guest-token`);
+		const fingerprint = generateFingerprint(req);
+		if (fingerprint !== null) {
+			redis.del(`ratelimit:guest:${fingerprint}:guest-token`);
+		}
 		return res.status(500).send({
 			success: false,
 			error: "Internal Server Error",

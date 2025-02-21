@@ -84,6 +84,15 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 				if (session) {
 					if (session.type === "guest") {
 						const fingerprint = generateFingerprint(req);
+						if (!fingerprint) {
+							res.status(400).send({
+								statusCode: 400,
+								error: "Bad Request",
+								message: i18n.t("errors.notGenuineRequest", req.language),
+							});
+							return null;
+						}
+
 						return `ratelimit:guest:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 					}
 					if (session.type === "user" && session.sub) {
@@ -92,8 +101,21 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 				}
 
 				const fingerprint = generateFingerprint(req);
+				if (!fingerprint) {
+					res.status(400).send({
+						statusCode: 400,
+						error: "Bad Request",
+						message: i18n.t("errors.notGenuineRequest", req.language),
+					});
+					return null;
+				}
+
 				return `ratelimit:unauth:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 			})();
+
+			if (key === null) {
+				return done();
+			}
 
 			const current = await redis.get(key);
 			const count = current ? Number.parseInt(current, 10) : 0;
