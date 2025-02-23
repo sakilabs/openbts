@@ -83,7 +83,6 @@ export const ukePermissions = pgTable("uke_permissions", {
 
 export const ukePermissionsStationIdIdx = index("uke_permissions_station_id_idx").on(ukePermissions.station_id);
 export const ukePermissionsStationIdUkeIdx = index("uke_permissions_station_id_uke_idx").on(ukePermissions.station_id_uke);
-export const ukePermissionsBandIdIdx = index("uke_permissions_band_id_idx").on(ukePermissions.band_id);
 
 export const cells = pgTable("cells", {
 	id: serial("id").primaryKey(),

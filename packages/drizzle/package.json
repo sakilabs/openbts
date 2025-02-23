@@ -11,8 +11,10 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@types/xlsx": "^0.0.36",
 		"dotenv": "16.4.5",
-		"drizzle-orm": "0.36.3"
+		"drizzle-orm": "0.36.3",
+		"xlsx": "^0.18.5"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",

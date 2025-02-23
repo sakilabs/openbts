@@ -1,5 +1,4 @@
-import type { InferModel } from 'drizzle-orm';
-import { ukePermissions } from './schema.js';
+import type { ukePermissions } from "./schema.js";
 
-export type UkePermission = InferModel<typeof ukePermissions>;
-export type NewUkePermission = InferModel<typeof ukePermissions, 'insert'>; 
+export type UkePermission = typeof ukePermissions.$inferSelect;
+export type NewUkePermission = typeof ukePermissions.$inferInsert;
