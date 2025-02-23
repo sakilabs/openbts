@@ -32,9 +32,7 @@ export class JWTService {
 	}
 
 	public static getInstance(): JWTService {
-		if (!JWTService.instance) {
-			JWTService.instance = new JWTService();
-		}
+		if (!JWTService.instance) JWTService.instance = new JWTService();
 		return JWTService.instance;
 	}
 

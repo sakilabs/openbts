@@ -62,6 +62,29 @@ export const stations = pgTable("stations", {
 });
 export const stationIdIdx = index("station_station_id_idx").on(stations.station_id);
 
+export const ukePermissions = pgTable("uke_permissions", {
+	id: serial("id").primaryKey(),
+	station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
+	operator_name: varchar("operator_name", { length: 255 }).notNull(),
+	decision_number: varchar("decision_number", { length: 100 }).notNull(),
+	decision_type: varchar("decision_type", { length: 100 }).notNull(),
+	expiry_date: timestamp({ withTimezone: true }).notNull(),
+	longitude: numeric("longitude", { precision: 9, scale: 6 }).notNull(),
+	latitude: numeric("latitude", { precision: 8, scale: 6 }).notNull(),
+	city: varchar("city", { length: 255 }).notNull(),
+	location: text("location").notNull(),
+	station_id_uke: varchar("station_id_uke", { length: 50 }).notNull(),
+	band_id: integer("band_id")
+		.references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
+		.notNull(),
+	last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const ukePermissionsStationIdIdx = index("uke_permissions_station_id_idx").on(ukePermissions.station_id);
+export const ukePermissionsStationIdUkeIdx = index("uke_permissions_station_id_uke_idx").on(ukePermissions.station_id_uke);
+export const ukePermissionsBandIdIdx = index("uke_permissions_band_id_idx").on(ukePermissions.band_id);
+
 export const cells = pgTable("cells", {
 	id: serial("id").primaryKey(),
 	station_id: integer("station_id")

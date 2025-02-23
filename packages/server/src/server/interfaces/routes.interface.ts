@@ -5,10 +5,8 @@ export type Route = {
 	method: string;
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	handler: Function;
-	// biome-ignore lint/complexity/noBannedTypes: <explanation>
+	// biome-ignore lint/complexity/noBannedTypes: </explanation>
 	onRequest?: Function[];
-	schema?: Record<string, unknown>;
-	attachValidation?: boolean;
 	config?: {
 		permissions?: string[];
 		allowLoggedIn?: boolean;

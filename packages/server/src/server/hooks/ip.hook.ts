@@ -33,7 +33,6 @@ function isValidIp(ip: string): boolean {
 	}
 
 	if (ipv6Regex.test(ip)) return true;
-
 	return false;
 }
 

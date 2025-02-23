@@ -3,7 +3,7 @@ import { redis } from "../database/redis.js";
 import { generateFingerprint } from "../utils/fingerprint.js";
 
 import type { FastifyReply, FastifyRequest, HookHandlerDoneFunction, onRequestHookHandler } from "fastify";
-import type { TokenTier, UserRole, SessionPayload } from "../interfaces/auth.interface.js";
+import type { TokenTier, UserRole } from "../interfaces/auth.interface.js";
 
 export type RateLimitTier = {
 	maxReq: number;
@@ -54,7 +54,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 			const session = req.userSession;
 
 			if (req.apiToken) {
-				const tier = req.apiToken.tier as TokenTier;
+				const tier = req.apiToken.tier;
 				const tierLimit = finalOptions.tiers[tier];
 				rateLimit = tierLimit ?? { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
 			} else if (session) {
@@ -113,9 +113,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 				return `ratelimit:unauth:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 			})();
 
-			if (key === null) {
-				return done();
-			}
+			if (!key) return done();
 
 			const current = await redis.get(key);
 			const count = current ? Number.parseInt(current, 10) : 0;
@@ -129,11 +127,8 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 				return done();
 			}
 
-			if (count === 0) {
-				await redis.setex(key, Math.ceil(rateLimit.windowMs / 1000), "1");
-			} else {
-				await redis.incr(key);
-			}
+			if (count === 0) await redis.setex(key, Math.ceil(rateLimit.windowMs / 1000), "1");
+			else await redis.incr(key);
 
 			res.header("X-RateLimit-Limit", rateLimit.maxReq.toString());
 			res.header("X-RateLimit-Remaining", (rateLimit.maxReq - count - 1).toString());

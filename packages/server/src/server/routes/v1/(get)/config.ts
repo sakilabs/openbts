@@ -1,4 +1,4 @@
-import db from "../../../database/index.js";
+import db from "../../../database/psql.js";
 
 import type { FastifyRequest } from "fastify";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";

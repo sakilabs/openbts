@@ -1,4 +1,5 @@
 import type { ChainableCommander, Redis } from "ioredis";
+
 import { REDIS_REVOKED_TOKEN_PREFIX, REDIS_REVOKED_TOKEN_TTL, REDIS_SESSION_PREFIX, REDIS_USER_SESSIONS_PREFIX } from "../constants.js";
 
 export class RedisSessionService {
@@ -43,26 +44,26 @@ export class RedisSessionService {
 	}
 
 	/**
-	 * Update the access token for a user's active session
+	 * Update the access token for a specific session identified by refresh token
 	 * @param userId User ID
+	 * @param refreshToken Refresh token to identify the session
 	 * @param accessToken New access token
 	 */
-	async updateSessionAccessToken(userId: number, accessToken: string): Promise<void> {
+	async updateSessionAccessToken(userId: number, refreshToken: string, accessToken: string): Promise<void> {
 		const userSessionsKey = `${REDIS_USER_SESSIONS_PREFIX}${userId}`;
 		const sessions = await this.redis.smembers(userSessionsKey);
 
-		if (sessions.length === 0) {
-			return;
-		}
+		if (sessions.length === 0) return;
 
-		// Update the access token for all active sessions
-		const pipeline = this.redis.pipeline();
 		for (const sessionId of sessions) {
 			const fullSessionKey = `${REDIS_SESSION_PREFIX}${sessionId}`;
-			pipeline.hset(fullSessionKey, "accessToken", accessToken);
-		}
+			const session = await this.redis.hgetall(fullSessionKey);
 
-		await pipeline.exec();
+			if (session && session.refreshToken === refreshToken) {
+				await this.redis.hset(fullSessionKey, "accessToken", accessToken);
+				break;
+			}
+		}
 	}
 
 	/**

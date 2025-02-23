@@ -1,4 +1,4 @@
-import db from "../../../../database/index.js";
+import db from "../../../../database/psql.js";
 import { i18n } from "../../../../i18n/index.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";

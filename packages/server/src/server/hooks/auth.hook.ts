@@ -1,5 +1,5 @@
 import { i18n } from "../i18n/index.js";
-import { db } from "../database/index.js";
+import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
 import { API_TOKEN_PREFIX, BEARER_PREFIX, PUBLIC_ROUTES } from "../constants.js";
 import { JWTService } from "../services/jwt.service.js";

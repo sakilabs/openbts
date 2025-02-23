@@ -31,11 +31,6 @@ export default class App {
 		this.initControllers();
 	}
 
-	public static async initializeTranslations(): Promise<void> {
-		await i18n.loadTranslationFiles();
-		App.translationsLoaded = true;
-	}
-
 	private checkEnvironment(): void {
 		const requiredEnvVars = ["JWT_SECRET", "DATABASE_URL", "JWT_REFRESH_SECRET"];
 		const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
@@ -47,6 +42,9 @@ export default class App {
 
 	private initHooks(): void {
 		this.logger("Registering hooks");
+
+		const requestStartTime = Symbol("requestStartTime");
+		this.fastify.decorateRequest(requestStartTime, 0);
 		this.fastify.addHook("onRequest", OnRequestHook);
 		this.fastify.addHook("preHandler", PreHandlerHook);
 		this.fastify.addHook("onSend", OnSendHook);
@@ -60,6 +58,11 @@ export default class App {
 	private initControllers(): void {
 		this.logger("Registering controllers");
 		this.fastify.register(APIv1Controller);
+	}
+
+	public static async initializeTranslations(): Promise<void> {
+		await i18n.loadTranslationFiles();
+		App.translationsLoaded = true;
 	}
 
 	public async start(port: number): Promise<void> {

@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
-import { db } from "../../../../database/index.js";
+import { db } from "../../../../database/psql.js";
 import { i18n } from "../../../../i18n/index.js";
 import { redis } from "../../../../database/redis.js";
 import { RedisSessionService } from "../../../../services/redis.session.js";
 import { JWTService } from "../../../../services/jwt.service.js";
+import { REDIS_REVOKED_TOKEN_PREFIX } from "../../../../constants.js";
 
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { FastifyRequest } from "fastify";
@@ -16,11 +17,9 @@ interface RefreshBody {
 	refreshToken: string;
 }
 
-const REDIS_REVOKED_TOKEN_PREFIX = "revoked_token:";
-
 export const refresh: Route = {
 	method: "POST",
-	url: "/auth/refresh",
+	url: "/auth/refreshSession",
 	config: { allowLoggedIn: false },
 	handler: async (req: FastifyRequest<{ Body: RefreshBody }>, res: ReplyPayload<JSONBody<{ accessToken: string }>>) => {
 		const { refreshToken } = req.body;
@@ -35,7 +34,7 @@ export const refresh: Route = {
 
 		try {
 			const jwtService = JWTService.getInstance();
-			const decoded = (await jwtService.verifyRefreshToken(refreshToken)) as TokenPayload;
+			const decoded = await jwtService.verifyRefreshToken(refreshToken);
 
 			if (decoded.type !== "refresh") {
 				return res.status(401).send({
@@ -76,19 +75,20 @@ export const refresh: Route = {
 				});
 			}
 
-			const accessToken = await jwtService.signAccessToken({
+			const refreshedAccessToken = await jwtService.signAccessToken({
 				type: "user",
 				jti: randomUUID(),
 				sub: user.id.toString(),
 			});
 
 			const sessionService = new RedisSessionService(redis);
-			await sessionService.updateSessionAccessToken(user.id, accessToken);
+			await sessionService.updateSessionAccessToken(user.id, refreshToken, refreshedAccessToken);
 
 			return res.send({
 				success: true,
 				data: {
-					accessToken,
+					accessToken: refreshedAccessToken,
+					refreshToken,
 				},
 			});
 		} catch (err) {
