@@ -1,16 +1,15 @@
 import { randomUUID } from "node:crypto";
 
-import { i18n } from "../../../../i18n/index.js";
-import { redis } from "../../../../database/redis.js";
-import { createRateLimit } from "../../../../hooks/ratelimit.hook.js";
-import { generateFingerprint } from "../../../../utils/fingerprint.js";
-import { JWTService } from "../../../../services/jwt.service.js";
+import { i18n } from "../../../../../i18n/index.js";
+import { redis } from "../../../../../database/redis.js";
+import { createRateLimit } from "../../../../../hooks/ratelimit.hook.js";
+import { generateFingerprint } from "../../../../../utils/fingerprint.js";
+import { JWTService } from "../../../../../services/jwt.service.js";
+import { GUEST_TOKEN_EXPIRATION } from "../../../../../constants.js";
 
-import type { FastifyRequest } from "fastify";
-import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-
-const GUEST_TOKEN_EXPIRATION = 24 * 60 * 60; // 24 hours
+import type { FastifyRequest, RouteGenericInterface } from "fastify";
+import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
 	response: {
@@ -85,8 +84,8 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<{ accessT
 	}
 }
 
-const getGuestToken: Route = {
-	url: "/guest-token",
+const getGuestToken: Route<RouteGenericInterface, { accessToken: string }> = {
+	url: "/auth/guest-token",
 	method: "GET",
 	schema: schemaRoute,
 	handler,

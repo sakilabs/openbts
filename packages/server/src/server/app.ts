@@ -7,6 +7,7 @@ import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
 import { i18n } from "./i18n/index.js";
+import { registerErrorHandlers } from "./utils/errorHelper.js";
 
 import type { FastifyInstance } from "fastify";
 
@@ -28,6 +29,7 @@ export default class App {
 		this.checkEnvironment();
 		this.initHooks();
 		this.initMiddlewares();
+		this.initErrorHandlers();
 		this.initControllers();
 	}
 
@@ -55,6 +57,11 @@ export default class App {
 		this.fastify.register(import("@fastify/cors")).register(import("@fastify/multipart"));
 	}
 
+	private initErrorHandlers(): void {
+		this.logger("Registering global error handlers");
+		registerErrorHandlers(this.fastify);
+	}
+
 	private initControllers(): void {
 		this.logger("Registering controllers");
 		this.fastify.register(APIv1Controller);
@@ -65,7 +72,7 @@ export default class App {
 		App.translationsLoaded = true;
 	}
 
-	public async start(port: number): Promise<void> {
+	public async listen(port: number): Promise<void> {
 		try {
 			await this.fastify.listen({ port, host: "127.0.0.1" });
 			this.logger("Server is ready on port %d", port);

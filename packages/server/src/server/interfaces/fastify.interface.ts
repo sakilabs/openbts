@@ -9,6 +9,7 @@ declare module "fastify" {
 		language: string;
 		apiToken?: InferSelectModel<typeof apiTokens>;
 		userSession: SessionPayload;
+		id: string; // Request ID for tracing
 	}
 
 	export interface FastifyContextConfig {
@@ -17,10 +18,18 @@ declare module "fastify" {
 	}
 }
 
-export type ReplyPayload<Payload extends RouteGenericInterface> = FastifyReply<
-	RouteGenericInterface,
-	RawServerDefault,
-	RawRequestDefaultExpression,
-	RawReplyDefaultExpression,
-	Payload
->;
+export type ReplyPayload<Payload extends RouteGenericInterface> = Omit<
+	FastifyReply<
+		RouteGenericInterface,
+		RawServerDefault,
+		RawRequestDefaultExpression,
+		RawReplyDefaultExpression,
+		Payload
+	>,
+	"send"
+> & {
+	send: (payload: Payload["Reply"]) => FastifyReply;
+	status: (statusCode: number) => {
+		send: (payload: Payload["Reply"]) => FastifyReply;
+	};
+};

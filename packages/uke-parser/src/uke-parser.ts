@@ -2,16 +2,16 @@ import { read, utils } from "xlsx";
 import path from "node:path";
 import { eq } from "drizzle-orm";
 
-import { ukePermissions, bands } from "../schemas/schema.js";
+import { ukePermissions, bands } from "@openbts/drizzle";
 
 import type { WorkBook, WorkSheet } from "xlsx";
-import type { NewUkePermission } from "../schemas/types.js";
+import type { NewUkePermission } from "@openbts/drizzle/types";
 import type { db } from "../../server/src/server/database/psql.js";
 
 interface RawUkeData {
 	"Nazwa Operatora": string;
 	"Nr Decyzji": string;
-	"Rodzaj decyzji": string;
+	"Rodzaj decyzji": "zmP" | "P";
 	"Data ważności": string;
 	"Dł geogr stacji": string;
 	"Szer geogr stacji": string;
@@ -72,9 +72,7 @@ export function parseUkeXlsx(filePath: string, bandId: number): NewUkePermission
 	if (!firstSheetName) throw new Error("No worksheets found in the XLSX file");
 	const worksheet = sheets[firstSheetName];
 
-	if (!worksheet) {
-		throw new Error("No worksheet found in the XLSX file");
-	}
+	if (!worksheet) throw new Error("No worksheet found in the XLSX file");
 
 	const jsonData = utils.sheet_to_json<RawUkeData>(worksheet);
 
@@ -96,7 +94,7 @@ export function parseUkeXlsx(filePath: string, bandId: number): NewUkePermission
 			latitude: latitude.toString(),
 			city: row.Miejscowość,
 			location: row.Lokalizacja,
-			station_id_uke: row.IdStacji,
+			station_id: row.IdStacji,
 			band_id: bandId,
 			last_updated: new Date(),
 			date_created: new Date(),

@@ -21,5 +21,25 @@
 	},
 	"station": {
 		"notFound": "Station not found"
+	},
+	"operator": {
+		"notFound": "Operator not found",
+		"deleted": "Operator deleted successfully"
+	},
+	"location": {
+		"notFound": "Location not found",
+		"deleted": "Location deleted successfully"
+	},
+	"band": {
+		"notFound": "Band not found",
+		"deleted": "Band deleted successfully"
+	},
+	"cell": {
+		"notFound": "Cell not found",
+		"deleted": "Cell deleted successfully"
+	},
+	"region": {
+		"notFound": "Region not found",
+		"deleted": "Region deleted successfully"
 	}
 }

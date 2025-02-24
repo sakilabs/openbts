@@ -11,10 +11,8 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@types/xlsx": "^0.0.36",
 		"dotenv": "16.4.5",
-		"drizzle-orm": "0.36.3",
-		"xlsx": "^0.18.5"
+		"drizzle-orm": "0.36.3"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",
@@ -24,6 +22,10 @@
 		".": {
 			"types": "./schemas/index.ts",
 			"default": "./dist/schemas/index.js"
+		},
+		"./types": {
+			"types": "./schemas/types.ts",
+			"default": "./dist/schemas/types.js"
 		}
 	}
 }

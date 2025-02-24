@@ -1,14 +1,12 @@
 import { i18n } from "../i18n/index.js";
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
-import { API_TOKEN_PREFIX, BEARER_PREFIX, PUBLIC_ROUTES } from "../constants.js";
+import { API_TOKEN_PREFIX, BEARER_PREFIX, PUBLIC_ROUTES, REDIS_REVOKED_TOKEN_PREFIX } from "../constants.js";
 import { JWTService } from "../services/jwt.service.js";
 
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Route } from "../interfaces/routes.interface.js";
 import type { SessionPayload } from "../interfaces/auth.interface.js";
-
-const REDIS_REVOKED_TOKEN_PREFIX = "revoked_token:";
 
 export async function authHook(req: FastifyRequest, res: FastifyReply) {
 	const route = req.routeOptions as Route;

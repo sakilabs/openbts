@@ -48,7 +48,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 		useRouteKey: options.useRouteKey ?? defaultOptions.useRouteKey,
 	};
 
-	return async function rateLimit(req: FastifyRequest, res: FastifyReply, done: HookHandlerDoneFunction) {
+	return async function rateLimit(req: FastifyRequest, res: FastifyReply) {
 		try {
 			let rateLimit: RateLimitTier;
 			const session = req.userSession;
@@ -70,7 +70,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 				rateLimit = guestLimit ?? { maxReq: finalOptions.maxReq, windowMs: finalOptions.windowMs };
 			}
 
-			if (rateLimit.maxReq === Number.POSITIVE_INFINITY) return done();
+			if (rateLimit.maxReq === Number.POSITIVE_INFINITY) return;
 
 			const key = (() => {
 				const useRouteKey = finalOptions?.useRouteKey === true;
@@ -95,9 +95,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 
 						return `ratelimit:guest:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 					}
-					if (session.type === "user" && session.sub) {
-						return `ratelimit:user:${session.sub}${useRouteKey ? `:${route}` : ""}`;
-					}
+					if (session.type === "user" && session.sub) return `ratelimit:user:${session.sub}${useRouteKey ? `:${route}` : ""}`;
 				}
 
 				const fingerprint = generateFingerprint(req);
@@ -113,7 +111,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 				return `ratelimit:unauth:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
 			})();
 
-			if (!key) return done();
+			if (!key) return;
 
 			const current = await redis.get(key);
 			const count = current ? Number.parseInt(current, 10) : 0;
@@ -124,7 +122,7 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 					error: "Too Many Requests",
 					message: i18n.t("errors.tooManyRequests", req.language),
 				});
-				return done();
+				return;
 			}
 
 			if (count === 0) await redis.setex(key, Math.ceil(rateLimit.windowMs / 1000), "1");
@@ -132,11 +130,8 @@ export const createRateLimit = (options: Partial<RateLimitOptions> = {}): onRequ
 
 			res.header("X-RateLimit-Limit", rateLimit.maxReq.toString());
 			res.header("X-RateLimit-Remaining", (rateLimit.maxReq - count - 1).toString());
-
-			done();
 		} catch (err) {
 			req.log.error("Rate limit error:", err);
-			done();
 		}
 	};
 };

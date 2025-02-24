@@ -114,10 +114,7 @@ export class RedisSessionService {
 		const fullSessionKey = `${REDIS_SESSION_PREFIX}${sessionId}`;
 		const userSessionsKey = `${REDIS_USER_SESSIONS_PREFIX}${userId}`;
 
-		// Remove from user's active sessions
 		await this.redis.srem(userSessionsKey, sessionId);
-
-		// Delete session details
 		await this.redis.del(fullSessionKey);
 	}
 
