@@ -10,18 +10,7 @@ type ReqBody = { Body: typeof locations.$inferInsert };
 type ResponseData = typeof locations.$inferSelect;
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { region_id, city, address, longitude, latitude } = req.body;
-
-	const location = await db
-		.insert(locations)
-		.values({
-			region_id,
-			city,
-			address,
-			longitude: longitude.toString(),
-			latitude: latitude.toString(),
-		})
-		.returning();
+	const location = await db.insert(locations).values(req.body).returning();
 
 	return res.send({ success: true, data: location[0] });
 }

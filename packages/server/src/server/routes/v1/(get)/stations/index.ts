@@ -72,14 +72,19 @@ type Station = typeof stations.$inferSelect;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Station[]>>) {
 	const { limit, page = 1, bounds, tech, operators, bands } = req.query;
-	const offset = (page - 1) * (limit ?? 0);
+	const offset = limit ? (page - 1) * limit : undefined;
 
 	let locationIds: number[] | undefined;
 
 	if (bounds) {
 		const coords = bounds.split(",").map(Number);
 		const [lat1, lon1, lat2, lon2] = coords;
-		if (!lat1 || !lon1 || !lat2 || !lon2) return res.status(400).send({ success: false, error: "Invalid boundaries" });
+		if (!lat1 || !lon1 || !lat2 || !lon2) {
+			return res.status(400).send({
+				success: false,
+				error: i18n.t("errors.invalidFormat", req.language),
+			});
+		}
 
 		const [north, south] = lat1 > lat2 ? [lat1, lat2] : [lat2, lat1];
 		const [east, west] = lon1 > lon2 ? [lon1, lon2] : [lon2, lon1];
@@ -87,12 +92,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		const boundaryLocations = await db.query.locations.findMany({
 			columns: { id: true },
 			where: (fields, { and, lte, gte }) =>
-				and(
-					lte(fields.latitude, north.toString()),
-					gte(fields.latitude, south.toString()),
-					lte(fields.longitude, east.toString()),
-					gte(fields.longitude, west.toString()),
-				),
+				and(lte(fields.latitude, north), gte(fields.latitude, south), lte(fields.longitude, east), gte(fields.longitude, west)),
 		});
 
 		locationIds = boundaryLocations.map((loc) => loc.id);
@@ -129,59 +129,61 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		if (!operatorIds.length) return res.send({ success: true, data: [] });
 	}
 
-	const btsStations = await db.query.stations.findMany({
-		with: {
-			cells: {
-				with: {
-					band: true,
+	try {
+		const btsStations = await db.query.stations.findMany({
+			with: {
+				cells: {
+					with: {
+						band: true,
+					},
+					where: (fields, { inArray }) => (bandIds ? inArray(fields.band_id, bandIds) : undefined),
 				},
-				where: (fields, { inArray }) => (bandIds ? inArray(fields.band_id, bandIds) : undefined),
 			},
-		},
-		where: (fields, { and, inArray }) => {
-			const conditions = [];
-			if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
-			if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
+			where: (fields, { and, inArray }) => {
+				const conditions = [];
+				if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
+				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
 
-			return conditions.length > 0 ? and(...conditions) : undefined;
-		},
-		limit: limit ?? undefined,
-		offset: limit ? offset : undefined,
-		orderBy: (fields, operators) => [operators.asc(fields.bts_id)],
-	});
-
-	const filteredStations = btsStations.filter((station) => {
-		if (!tech) return true;
-		const requestedTechs = tech.toLowerCase().split(",");
-		if (requestedTechs.includes("cdma") && station.is_cdma) return true;
-
-		return station.cells.some((cell) => {
-			const bandName = cell.band.name.toLowerCase();
-			return requestedTechs.some((tech) => {
-				switch (tech) {
-					case "gsm":
-						return bandName.includes("gsm");
-					case "umts":
-						return bandName.includes("umts");
-					case "lte":
-						return bandName.includes("lte");
-					case "5g":
-						return bandName.includes("5g");
-					default:
-						return false;
-				}
-			});
+				return conditions.length > 0 ? and(...conditions) : undefined;
+			},
+			limit: limit ?? undefined,
+			offset,
+			orderBy: (fields, operators) => [operators.asc(fields.bts_id)],
 		});
-	});
 
-	if (!filteredStations) {
-		return res.status(404).send({
+		const filteredStations = tech
+			? btsStations.filter((station) => {
+					const requestedTechs = tech.toLowerCase().split(",");
+					if (requestedTechs.includes("cdma") && station.is_cdma) return true;
+
+					return station.cells.some((cell) => {
+						const bandName = cell.band.name.toLowerCase();
+						return requestedTechs.some((tech) => {
+							switch (tech) {
+								case "gsm":
+									return bandName.includes("gsm");
+								case "umts":
+									return bandName.includes("umts");
+								case "lte":
+									return bandName.includes("lte");
+								case "5g":
+									return bandName.includes("5g");
+								default:
+									return false;
+							}
+						});
+					});
+				})
+			: btsStations;
+
+		res.send({ success: true, data: filteredStations });
+	} catch (error) {
+		console.error("Error retrieving stations:", error);
+		return res.status(500).send({
 			success: false,
-			error: i18n.t("errors.failedToRetrieveStations", req.language),
+			error: i18n.t("errors.internalServerError", req.language),
 		});
 	}
-
-	res.send({ success: true, data: filteredStations });
 }
 
 const getStations: Route<ReqQuery, Station[]> = {

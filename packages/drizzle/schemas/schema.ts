@@ -43,8 +43,8 @@ export const locations = pgTable("locations", {
 		.notNull(),
 	city: varchar("city", { length: 100 }).notNull(),
 	address: text("address").notNull(),
-	longitude: numeric("longitude", { precision: 9, scale: 6 }).notNull(),
-	latitude: numeric("latitude", { precision: 8, scale: 6 }).notNull(),
+	longitude: integer("longitude").notNull(),
+	latitude: integer("latitude").notNull(),
 });
 
 export const stations = pgTable(
@@ -78,8 +78,8 @@ export const ukePermissions = pgTable(
 		decision_number: varchar("decision_number", { length: 100 }),
 		decision_type: UKEPermissionType("decision_type").notNull(),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),
-		longitude: numeric("longitude", { precision: 9, scale: 6 }).notNull(),
-		latitude: numeric("latitude", { precision: 8, scale: 6 }).notNull(),
+		longitude: integer("longitude").notNull(),
+		latitude: integer("latitude").notNull(),
 		city: varchar("city", { length: 255 }).notNull(),
 		location: text("location").notNull(),
 		band_id: integer("band_id")

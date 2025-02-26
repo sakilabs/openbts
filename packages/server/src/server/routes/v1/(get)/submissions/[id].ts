@@ -4,9 +4,9 @@ import { i18n } from "../../../../i18n/index.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import type { submissions } from "@openbts/drizzle";
+import type { submissions as submissionsType } from "@openbts/drizzle";
 
-type Submission = typeof submissions.$inferSelect;
+type Submission = typeof submissionsType.$inferSelect;
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Submission>>) {
 	const { id } = req.params;

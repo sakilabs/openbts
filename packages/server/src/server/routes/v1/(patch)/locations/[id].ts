@@ -81,13 +81,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	}
 
 	try {
-		const updateData = {
-			...req.body,
-			longitude: req.body.longitude?.toString(),
-			latitude: req.body.latitude?.toString(),
-		};
-
-		const updated = await db.update(locations).set(updateData).where(eq(locations.id, locationId)).returning();
+		const updated = await db.update(locations).set(req.body).where(eq(locations.id, locationId)).returning();
 
 		return res.send({
 			success: true,
