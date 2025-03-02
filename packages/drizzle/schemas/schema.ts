@@ -13,6 +13,7 @@ import {
 	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
+import { newId } from "@openbts/id";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
@@ -129,7 +130,10 @@ export const apiTokens = pgTable("api_tokens", {
 	user_id: integer("user_id")
 		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
-	token: text("token").notNull().unique(),
+	token: text("token")
+		.notNull()
+		.unique()
+		.$defaultFn(() => newId("api")),
 	tier: APITokenTier("tier").notNull().default("basic"),
 	expires_at: timestamp({ withTimezone: true }),
 	last_used_at: timestamp({ withTimezone: true }),
@@ -141,7 +145,9 @@ export const apiTokens = pgTable("api_tokens", {
 
 export const userLists = pgTable("user_lists", {
 	id: serial("id").primaryKey(),
-	uuid: uuid("uuid").notNull().defaultRandom(),
+	uuid: text("uuid")
+		.notNull()
+		.$defaultFn(() => newId("list")),
 	name: text("name").notNull(),
 	description: text("description"),
 	is_public: boolean("is_public").default(false),
@@ -176,7 +182,9 @@ export const attachments = pgTable(
 	{
 		id: serial("id").primaryKey(),
 		name: text("name").notNull(),
-		uuid: uuid("uuid").notNull().defaultRandom(),
+		uuid: text("uuid")
+			.notNull()
+			.$defaultFn(() => newId("attachment")),
 		author_id: integer("author_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
