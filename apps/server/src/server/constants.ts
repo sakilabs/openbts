@@ -1,11 +1,5 @@
-export const ROLE_SCOPES = {
-	guest: "read:stations",
-	user: "read:stations write:stations read:lists write:lists",
-	moderator: "read:* write:*",
-	admin: "*",
-} as const;
-export const API_TOKEN_PREFIX = "Api-Token ";
 export const PUBLIC_ROUTES = [];
+export const API_KEYS_LIMIT = 1;
 export const ARGON2_OPTIONS = {
 	timeCost: 3,
 	memoryCost: 65536,

@@ -1,22 +1,17 @@
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, anonymous, apiKey, multiSession, username } from "better-auth/plugins";
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { hash, verify } from "@node-rs/argon2";
 
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
-import { ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
+import { API_KEYS_LIMIT, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
 import { accessControl, adminRole, modRole, userRole } from "../utils/permissions.js";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
-
-declare module "fastify" {
-	interface FastifyInstance {
-		auth: { handler: (request: Request) => Promise<Response> } | ((request: Request) => Promise<Response>);
-	}
-}
 
 export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown>) {
 	const entries = Object.entries(headers);
@@ -49,6 +44,9 @@ export const auth = betterAuth({
 			},
 		},
 	},
+	hooks: {
+		before: createAuthMiddleware(beforeAuthHook.bind(this)),
+	},
 	plugins: [
 		admin({
 			ac: accessControl,
@@ -62,6 +60,7 @@ export const auth = betterAuth({
 		}),
 		anonymous(),
 		apiKey({
+			apiKeyHeaders: ["authorization"],
 			defaultPrefix: "openbts_",
 			enableMetadata: true,
 			permissions: {
@@ -111,6 +110,36 @@ export const auth = betterAuth({
 	},
 	disabledPaths: PUBLIC_ROUTES,
 });
+
+async function beforeAuthHook(
+	ctx: MiddlewareContext<
+		MiddlewareOptions,
+		AuthContext & {
+			returned?: unknown;
+			responseHeaders?: Headers;
+		}
+	>,
+) {
+	if (!ctx.path.startsWith("/api-key/create")) return;
+
+	const session = await getSessionFromCtx(ctx);
+
+	if (!session) {
+		throw new APIError("UNAUTHORIZED", {
+			message: "Unauthorized access to this endpoint.",
+		});
+	}
+
+	const keys = await db.query.apiKeys.findMany({
+		where: (apiKeys, { eq }) => eq(apiKeys.userId, Number(session.user.id)),
+	});
+
+	if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
+		throw new APIError("TOO_MANY_REQUESTS", {
+			message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
+		});
+	}
+}
 
 export async function getCurrentUser(req: FastifyRequest) {
 	const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });

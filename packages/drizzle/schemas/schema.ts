@@ -131,7 +131,7 @@ export const users = pgTable(
 		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		isAnonymous: boolean("isAnonymous").default(false),
 	},
-	(table) => [index("users_id_idx").on(table.id)],
+	(table) => [index("users_id_idx").on(table.id), index("users_email_idx").on(table.email)],
 );
 
 // export const sessions = pgTable("sessions", {
@@ -273,14 +273,6 @@ export const attachments = pgTable(
 	},
 	(table) => [index("attachment_author_id_idx").on(table.author_id)],
 );
-
-export const siteConfig = pgTable("site_config", {
-	id: serial("id").primaryKey(),
-	key: varchar("key", { length: 100 }).notNull().unique(),
-	value: text("value").notNull(),
-	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
 
 export const TypeEnum = pgEnum("type", ["new", "update"]);
 export const submissions = pgTable(

@@ -8,6 +8,8 @@ interface BetterAuthPermission {
 	stations?: ("read" | "create" | "update" | "delete")[];
 	operators?: ("read" | "create" | "update" | "delete")[];
 	locations?: ("read" | "create" | "update" | "delete")[];
+	submissions?: ("read" | "create" | "update" | "delete")[];
+	comments?: ("read" | "create" | "delete")[];
 	bands?: ("read" | "create" | "update" | "delete")[];
 	users?: ("create" | "list" | "set-role" | "ban" | "impersonate" | "delete" | "set-password")[];
 	session?: ("list" | "delete" | "revoke")[];
@@ -28,10 +30,18 @@ export async function permissionsMiddleware(req: FastifyRequest, res: FastifyRep
 				case "operators":
 				case "locations":
 				case "bands":
+				case "submissions":
 					if (["read", "create", "update", "delete"].includes(action)) {
 						if (!permission[resource]) permission[resource] = [];
 
 						permission[resource]?.push(action as "read" | "create" | "update" | "delete");
+					}
+					break;
+				case "comments":
+					if (["read", "create", "delete"].includes(action)) {
+						if (!permission.comments) permission.comments = [];
+
+						permission.comments.push(action as "read" | "create" | "delete");
 					}
 					break;
 				case "users":

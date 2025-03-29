@@ -39,8 +39,8 @@ export async function authHook(req: FastifyRequest, res: FastifyReply) {
 		return;
 	}
 
-	if (authHeader.startsWith("ApiKey ")) {
-		const apiKey = authHeader.slice(7);
+	if (authHeader) {
+		const apiKey = authHeader;
 
 		let routePermissions: Record<string, string[]> | undefined = undefined;
 		if (route?.config?.permissions) {
@@ -49,9 +49,7 @@ export async function authHook(req: FastifyRequest, res: FastifyReply) {
 			for (const perm of route.config.permissions) {
 				const [action, resource] = perm.split(":");
 				if (action && resource) {
-					if (!routePermissions[resource]) {
-						routePermissions[resource] = [];
-					}
+					if (!routePermissions[resource]) routePermissions[resource] = [];
 					routePermissions[resource].push(action);
 				}
 			}
