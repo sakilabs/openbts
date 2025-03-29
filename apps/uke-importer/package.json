@@ -1,0 +1,19 @@
+{
+	"name": "@openbts/uke-importer",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"@openbts/typescript-configs": "workspace:*",
+		"@openbts/drizzle": "workspace:*",
+		"@types/node": "20",
+		"typescript": "5.6.3"
+	},
+	"dependencies": {
+		"drizzle-orm": "0.36.3",
+		"xlsx": "^0.18.5"
+	}
+}

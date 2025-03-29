@@ -1,8 +1,0 @@
-# Node
-node_modules
-
-# Environment files
-.env
-
-# Dist files
-*.js

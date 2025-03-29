@@ -13,7 +13,7 @@ import {
 	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
-import { newId } from "@openbts/id";
+import { nanoid } from "nanoid";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
@@ -115,49 +115,129 @@ export const bands = pgTable("bands", {
 	duplex: varchar("duplex", { length: 3 }),
 });
 
-export const users = pgTable("users", {
-	id: serial("id").primaryKey(),
-	username: varchar("username", { length: 100 }).notNull().unique(),
-	email: varchar("email", { length: 100 }).notNull().unique(),
-	password: varchar("password").notNull(),
-	role: Role("role").notNull().default("user"),
-	last_login: timestamp({ withTimezone: true }),
-	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const users = pgTable(
+	"users",
+	{
+		id: serial("id").primaryKey(),
+		username: varchar("username", { length: 100 }).unique(),
+		email: varchar("email", { length: 100 }).notNull().unique(),
+		password: varchar("password", { length: 255 }),
+		image: text("image"),
+		name: text("name"),
+		role: Role("role").notNull().default("user"),
+		last_login: timestamp({ withTimezone: true }),
+		emailVerified: timestamp({ withTimezone: true }),
+		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		isAnonymous: boolean("isAnonymous").default(false),
+	},
+	(table) => [index("users_id_idx").on(table.id)],
+);
 
-export const apiTokens = pgTable("api_tokens", {
-	id: serial("id").primaryKey(),
-	user_id: integer("user_id")
-		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
-		.notNull(),
-	token: text("token")
-		.notNull()
-		.unique()
-		.$defaultFn(() => newId("api")),
-	tier: APITokenTier("tier").notNull().default("basic"),
-	expires_at: timestamp({ withTimezone: true }),
-	last_used_at: timestamp({ withTimezone: true }),
-	is_revoked: boolean("is_revoked").default(false),
-	scope: text("scope").$type<string>().notNull().default(""),
-	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+// export const sessions = pgTable("sessions", {
+// 	id: text("id").notNull().primaryKey(),
+// 	userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+// 	expiresAt: timestamp({ withTimezone: true }).notNull(),
+// 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+// 	sessionToken: text("session_token").notNull().unique(),
+// 	fresh: boolean("fresh").default(true),
+// 	userAgent: text("user_agent"),
+// 	ip: text("ip"),
+// 	lastActiveAt: timestamp({ withTimezone: true }),
+// });
 
-export const userLists = pgTable("user_lists", {
-	id: serial("id").primaryKey(),
-	uuid: text("uuid")
-		.notNull()
-		.$defaultFn(() => newId("list")),
-	name: text("name").notNull(),
-	description: text("description"),
-	is_public: boolean("is_public").default(false),
-	created_by: integer("created_by")
-		.notNull()
-		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
-	stations: jsonb("stations").$type<number[]>().notNull(),
-	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+// export const accounts = pgTable("accounts", {
+// 	id: text("id").notNull().primaryKey(),
+// 	userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+// 	providerType: text("provider_type").notNull(),
+// 	providerId: text("provider_id").notNull(),
+// 	providerAccountId: text("provider_account_id").notNull(),
+// 	refreshToken: text("refresh_token"),
+// 	accessToken: text("access_token"),
+// 	expiresAt: timestamp({ withTimezone: true }),
+// 	idToken: text("id_token"),
+// 	scope: text("scope"),
+// 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+// 	updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+// }, (table) => {
+// 	return [
+// 		index("accounts_user_id_idx").on(table.userId),
+// 		index("accounts_provider_account_id_idx").on(table.providerAccountId),
+// 	];
+// });
+
+// export const verificationTokens = pgTable("verification_tokens", {
+// 	id: text("id").primaryKey().notNull(),
+// 	identifier: text("identifier").notNull(),
+// 	token: text("token").notNull().unique(),
+// 	expires: timestamp({ withTimezone: true }).notNull(),
+// 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+// });
+
+export const apiKeys = pgTable(
+	"api_keys",
+	{
+		id: text("id").primaryKey().notNull(),
+		userId: integer("user_id")
+			.references(() => users.id, { onDelete: "cascade" })
+			.notNull(),
+		name: text("name").notNull(),
+		key: text("key").notNull().unique(),
+		enabled: boolean("enabled").default(true).notNull(),
+		expiresAt: timestamp({ withTimezone: true }),
+		metadata: jsonb("metadata"),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		permissions: jsonb("permissions"),
+		remaining: integer("remaining"),
+		refillAmount: integer("refill_amount"),
+		refillInterval: integer("refill_interval"),
+		lastRefillAt: timestamp({ withTimezone: true }),
+		rateLimitEnabled: boolean("rate_limit_enabled").default(false),
+		rateLimitTimeWindow: integer("rate_limit_time_window"),
+		rateLimitMax: integer("rate_limit_max"),
+	},
+	(table) => [index("api_keys_user_id_idx").on(table.userId)],
+);
+
+// // Legacy API Tokens table kept for backward compatibility
+// export const apiTokens = pgTable("api_tokens", {
+// 	id: serial("id").primaryKey(),
+// 	user_id: integer("user_id")
+// 		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
+// 		.notNull(),
+// 	token: text("token")
+// 		.notNull()
+// 		.unique()
+// 		.$defaultFn(() => newId("api")),
+// 	tier: APITokenTier("tier").notNull().default("basic"),
+// 	expires_at: timestamp({ withTimezone: true }),
+// 	last_used_at: timestamp({ withTimezone: true }),
+// 	is_revoked: boolean("is_revoked").default(false),
+// 	scope: text("scope").notNull().default(""),
+// 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+// 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+// });
+
+export const userLists = pgTable(
+	"user_lists",
+	{
+		id: serial("id").primaryKey(),
+		uuid: text("uuid")
+			.notNull()
+			.$defaultFn(() => nanoid(14)),
+		name: text("name").notNull(),
+		description: text("description"),
+		is_public: boolean("is_public").default(false),
+		created_by: integer("created_by")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		stations: jsonb("stations").$type<number[]>().notNull(),
+		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("user_lists_id_idx").on(table.id)],
+);
 
 export const stationNotes = pgTable(
 	"station_comments",
@@ -182,9 +262,7 @@ export const attachments = pgTable(
 	{
 		id: serial("id").primaryKey(),
 		name: text("name").notNull(),
-		uuid: text("uuid")
-			.notNull()
-			.$defaultFn(() => newId("attachment")),
+		uuid: uuid("uuid").notNull().defaultRandom(),
 		author_id: integer("author_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
@@ -265,8 +343,8 @@ export const auditLogs = pgTable(
 		record_id: integer("record_id").notNull(),
 		old_values: jsonb("old_values"),
 		new_values: jsonb("new_values"),
-		user_id: integer("user_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+		invoked_by: integer("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [index("audit_logs_record_id_idx").on(table.record_id), index("audit_logs_user_id_idx").on(table.user_id)],
+	(table) => [index("audit_logs_record_id_idx").on(table.record_id), index("audit_logs_invoked_by_idx").on(table.invoked_by)],
 );

@@ -1,11 +1,11 @@
 {
-	"name": "@sakilabs/btsfinder",
+	"name": "@sakilabs/openbts",
 	"license": "GPL-3.0",
 	"workspaces": ["packages/*"],
 	"scripts": {
 		"build": "turbo build",
-		"start:client": "pnpm --filter @sakilabs/btsfinder_client run start",
-		"start:server": "pnpm --filter @sakilabs/btsfinder_server run start"
+		"start:client": "pnpm --filter @sakilabs/openbts_client run start",
+		"start:server": "pnpm --filter @sakilabs/openbts_server run start"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

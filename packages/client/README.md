@@ -1,3 +1,0 @@
-# client
-
-BTS Finder client.
