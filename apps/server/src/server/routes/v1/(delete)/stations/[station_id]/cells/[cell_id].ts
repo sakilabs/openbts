@@ -31,7 +31,7 @@ const schemaRoute = {
 				data: {
 					type: "object",
 					properties: {
-						id: { type: "number" },
+						message: { type: "string" },
 					},
 				},
 			},

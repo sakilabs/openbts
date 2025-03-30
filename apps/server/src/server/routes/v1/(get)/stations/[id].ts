@@ -13,6 +13,11 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
 	const station = await db.query.stations.findFirst({
 		where: (fields, { eq }) => eq(fields.bts_id, Number(id)),
+		with: {
+			cells: true,
+			location: true,
+			operator: true,
+		},
 	});
 	if (!station) return res.status(404).send({ success: false, message: i18n.t("station.notFound") });
 

@@ -3,12 +3,11 @@ import { eq } from "drizzle-orm";
 import db from "../../../../database/psql.js";
 import { i18n } from "../../../../i18n/index.js";
 import { submissions } from "@openbts/drizzle";
-import { PermissionManagerInstance } from "../../../../utils/permissions.js";
+import { auth } from "../../../../plugins/betterauth.plugin.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import type { SessionPayload } from "../../../../interfaces/auth.interface.js";
 
 type ResponseData = {
 	message: string;
@@ -61,12 +60,26 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { id } = req.params;
-	const session = req.userSession as SessionPayload;
-	const userId = session.sub;
+	const session = req.userSession;
+	if (!session)
+		return res.status(401).send({
+			success: false,
+			message: i18n.t("errors.forbidden"),
+		});
 
 	let hasAdminPermission = false;
-	if (session.type === "user" && session.user?.scope)
-		hasAdminPermission = PermissionManagerInstance.hasPermission(["delete:submissions"], session.user.scope);
+	if (session.user) {
+		const hasPerm = await auth.api.userHasPermission({
+			body: {
+				userId: session.user.id,
+				permission: {
+					submissions: ["delete"],
+				},
+			},
+		});
+
+		if (hasPerm.success) hasAdminPermission = true;
+	}
 
 	const submission = await db.query.submissions.findFirst({
 		where: (fields, { eq }) => eq(fields.id, Number(id)),
@@ -83,7 +96,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		});
 	}
 
-	if (!hasAdminPermission && submission.submitter_id !== Number(userId)) {
+	if (!hasAdminPermission && submission.submitter_id !== Number(session.user.id)) {
 		return res.status(403).send({
 			success: false,
 			message: i18n.t("errors.forbidden"),

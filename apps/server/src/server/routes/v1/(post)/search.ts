@@ -29,7 +29,7 @@ const schemaRoute = {
 
 const SIMILARITY_THRESHOLD = 0.6;
 
-// IMPORTANT: REQUIRES `CREATE EXTENSION pg_trgm;` TO BE EXECUTED IN DATABASE.
+// IMPORTANT: Requires `CREATE EXTENSION pg_trgm;` command to be executed inside the target database
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
 	const { query } = req.body;
 

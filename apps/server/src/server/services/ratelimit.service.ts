@@ -8,12 +8,19 @@ export type RateLimitTier = {
 	window: number;
 };
 
+export type RouteRateLimit = {
+	url: string;
+	max: number;
+	window: number;
+};
+
 export interface RateLimitOptions {
 	window?: number;
 	max?: number;
 	useRouteKey?: boolean;
 	tiers?: Partial<Record<TokenTier, RateLimitTier>>;
 	roles?: Partial<Record<UserRole, RateLimitTier>>;
+	routes?: RouteRateLimit[];
 }
 
 export interface RateLimitResult {
@@ -47,6 +54,7 @@ export class RateLimitService {
 		tiers: this.defaultTiers,
 		roles: this.defaultRoles,
 		useRouteKey: false,
+		routes: [],
 	};
 
 	private options: Required<RateLimitOptions>;
@@ -65,6 +73,7 @@ export class RateLimitService {
 			roles: { ...this.defaultOptions.roles, ...options.roles },
 			...options,
 			useRouteKey: options.useRouteKey ?? this.defaultOptions.useRouteKey,
+			routes: options.routes ?? this.defaultOptions.routes,
 		};
 	}
 
@@ -120,11 +129,49 @@ export class RateLimitService {
 	}
 
 	/**
+	 * Get route-specific rate limit if configured
+	 * @param req FastifyRequest object
+	 * @returns Rate limit configuration for the route or null if not found
+	 */
+	private getRouteRateLimit(req: FastifyRequest): RateLimitTier | null {
+		const url = req.url;
+		if (!url || !this.options.routes.length) return null;
+
+		const routeConfig = this.options.routes.find((route) => {
+			if (route.url === url) return true;
+
+			const routeParts = route.url.split("/");
+			const urlParts = url.split("/");
+
+			if (routeParts.length !== urlParts.length) return false;
+
+			return routeParts.every((part, i) => {
+				if (part.startsWith(":") || part.startsWith("[")) return true;
+				return part === urlParts[i];
+			});
+		});
+
+		if (routeConfig) {
+			return {
+				max: routeConfig.max,
+				window: routeConfig.window,
+			};
+		}
+
+		return null;
+	}
+
+	/**
 	 * Determine the appropriate rate limit tier for a request
 	 * @param req FastifyRequest object
 	 * @returns Rate limit configuration for the request
 	 */
 	async getRateLimitTier(req: FastifyRequest): Promise<RateLimitTier> {
+		// First check for route-specific rate limits
+		const routeLimit = this.getRouteRateLimit(req);
+		if (routeLimit) return routeLimit;
+
+		// Then check for API token rate limits
 		if (req.apiToken) {
 			const apiKeyRateLimit = await this.getApiKeyRateLimit(req);
 			if (apiKeyRateLimit) return apiKeyRateLimit;
@@ -228,6 +275,32 @@ export class RateLimitService {
 			roles: { ...this.options.roles, ...options.roles },
 			...options,
 			useRouteKey: options.useRouteKey ?? this.options.useRouteKey,
+			routes: options.routes ?? this.options.routes,
 		};
+	}
+
+	/**
+	 * Add a route-specific rate limit
+	 * @param route Route configuration with url, max requests, and time window
+	 */
+	addRouteLimit(route: RouteRateLimit | RouteRateLimit[]): void {
+		if (Array.isArray(route)) {
+			const urls = route.map((r) => r.url);
+
+			this.options.routes = this.options.routes.filter((r) => !urls.includes(r.url));
+			this.options.routes.push(...route);
+		} else {
+			this.options.routes = this.options.routes.filter((r) => r.url !== route.url);
+			this.options.routes.push(route);
+		}
+	}
+
+	/**
+	 * Remove a route-specific rate limit
+	 * @param url URL or URLs of the routes to remove rate limit for
+	 */
+	removeRouteLimit(url: string | string[]): void {
+		if (Array.isArray(url)) this.options.routes = this.options.routes.filter((r) => !url.includes(r.url));
+		else this.options.routes = this.options.routes.filter((r) => r.url !== url);
 	}
 }

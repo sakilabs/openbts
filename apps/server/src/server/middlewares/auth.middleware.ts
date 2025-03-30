@@ -7,9 +7,9 @@ import type { Route } from "../interfaces/routes.interface.js";
 
 export async function authHook(req: FastifyRequest, res: FastifyReply) {
 	const route = req.routeOptions as Route;
-	const url = (route as { url: string }).url;
+	const url = req.url;
 
-	if (PUBLIC_ROUTES.some((publicRoute) => url.startsWith(publicRoute))) return;
+	if (PUBLIC_ROUTES.some((publicRoute) => url?.startsWith(publicRoute))) return;
 
 	if (route?.config?.allowLoggedIn === false) {
 		const user = await getCurrentUser(req);

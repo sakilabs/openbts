@@ -1,4 +1,4 @@
-export const PUBLIC_ROUTES = [];
+export const PUBLIC_ROUTES = ["/api/v1/auth"];
 export const API_KEYS_LIMIT = 1;
 export const ARGON2_OPTIONS = {
 	timeCost: 3,

@@ -7,6 +7,7 @@ interface BetterAuthPermission {
 	cells?: ("read" | "create" | "update" | "delete")[];
 	stations?: ("read" | "create" | "update" | "delete")[];
 	operators?: ("read" | "create" | "update" | "delete")[];
+	regions?: ("read" | "create" | "update" | "delete")[];
 	locations?: ("read" | "create" | "update" | "delete")[];
 	submissions?: ("read" | "create" | "update" | "delete")[];
 	comments?: ("read" | "create" | "delete")[];
@@ -18,6 +19,7 @@ interface BetterAuthPermission {
 export async function permissionsMiddleware(req: FastifyRequest, res: FastifyReply) {
 	const route = req.routeOptions;
 	if (!route?.config?.permissions) return;
+	if (req.apiToken) return;
 
 	const permission: BetterAuthPermission = {};
 	for (const perm of route.config.permissions) {
@@ -30,6 +32,7 @@ export async function permissionsMiddleware(req: FastifyRequest, res: FastifyRep
 				case "operators":
 				case "locations":
 				case "bands":
+				case "regions":
 				case "submissions":
 					if (["read", "create", "update", "delete"].includes(action)) {
 						if (!permission[resource]) permission[resource] = [];

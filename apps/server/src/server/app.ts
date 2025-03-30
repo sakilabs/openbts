@@ -3,7 +3,6 @@ import Fastify from "fastify";
 
 import { logger } from "./config.js";
 import { APIv1Controller } from "./controllers/apiController.v1.js";
-import { auth, registerBetterAuth } from "./plugins/betterauth.plugin.js";
 import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
@@ -33,7 +32,7 @@ export default class App {
 	}
 
 	private checkEnvironment(): void {
-		const requiredEnvVars = ["DATABASE_URL", "BETTER_AUTH_SECRET"];
+		const requiredEnvVars = ["DATABASE_URL"];
 		const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
 		if (missingEnvVars.length > 0) throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
@@ -52,8 +51,6 @@ export default class App {
 	private initMiddlewares(): void {
 		this.logger("Registering middlewares");
 		this.fastify.register(import("@fastify/cors")).register(import("@fastify/multipart"));
-
-		registerBetterAuth(this.fastify, auth);
 	}
 
 	// private initErrorHandlers(): void {
@@ -63,7 +60,7 @@ export default class App {
 
 	private initControllers(): void {
 		this.logger("Registering controllers");
-		this.fastify.register(APIv1Controller);
+		this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
 	}
 
 	public static async initializeTranslations(): Promise<void> {

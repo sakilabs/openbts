@@ -1,8 +1,8 @@
-import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import { APIError, betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
+import { fromNodeHeaders } from "better-auth/node";
+import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, anonymous, apiKey, multiSession, username } from "better-auth/plugins";
-import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { hash, verify } from "@node-rs/argon2";
 
 import { db } from "../database/psql.js";
@@ -10,7 +10,7 @@ import { redis } from "../database/redis.js";
 import { API_KEYS_LIMIT, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
 import { accessControl, adminRole, modRole, userRole } from "../utils/permissions.js";
 
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
 
 export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown>) {
@@ -26,6 +26,7 @@ export const auth = betterAuth({
 	advanced: {
 		cookiePrefix: "openbts",
 	},
+	basePath: "/api/v1/auth",
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		usePlural: true,
@@ -108,7 +109,7 @@ export const auth = betterAuth({
 	deleteUser: {
 		enabled: true,
 	},
-	disabledPaths: PUBLIC_ROUTES,
+	// disabledPaths: PUBLIC_ROUTES,
 });
 
 async function beforeAuthHook(
@@ -157,20 +158,3 @@ export async function verifyApiKey(apiKey: string, requiredPermissions?: Record<
 
 	return result;
 }
-
-export const registerBetterAuth = (fastify: FastifyInstance, options: { handler: (request: Request) => Promise<Response> }) => {
-	// @ts-ignore: The type definitions for fastify.decorate are more restrictive than our usage
-	fastify.decorate("auth", options);
-	fastify.register((fastify) => {
-		const authHandler = toNodeHandler(options);
-
-		fastify.addContentTypeParser("application/json", (_req, _payload, done) => {
-			done(null, null);
-		});
-
-		fastify.all("/api/v1/auth/*", async (req, res) => {
-			res.raw.setHeaders(mapHeaders(res.getHeaders()));
-			await authHandler(req.raw, res.raw);
-		});
-	});
-};
