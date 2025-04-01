@@ -121,24 +121,52 @@ async function beforeAuthHook(
 		}
 	>,
 ) {
-	if (!ctx.path.startsWith("/api-key/create")) return;
+	if (ctx.path.startsWith("/api-key/create")) {
+		const session = await getSessionFromCtx(ctx);
 
-	const session = await getSessionFromCtx(ctx);
+		if (!session) {
+			throw new APIError("UNAUTHORIZED", {
+				message: "Unauthorized access to this endpoint.",
+			});
+		}
 
-	if (!session) {
-		throw new APIError("UNAUTHORIZED", {
-			message: "Unauthorized access to this endpoint.",
+		const keys = await db.query.apiKeys.findMany({
+			where: (apiKeys, { eq }) => eq(apiKeys.userId, Number(session.user.id)),
 		});
+
+		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
+			throw new APIError("TOO_MANY_REQUESTS", {
+				message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
+			});
+		}
 	}
 
-	const keys = await db.query.apiKeys.findMany({
-		where: (apiKeys, { eq }) => eq(apiKeys.userId, Number(session.user.id)),
-	});
+	const userEndpoints = [
+		"/update-user",
+		"/change-password",
+		"/set-password",
+		"/change-email",
+		"/link-social",
+		"/unlink-account",
+		"/send-verification-email",
+	];
 
-	if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
-		throw new APIError("TOO_MANY_REQUESTS", {
-			message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
-		});
+	if (userEndpoints.some((endpoint) => ctx.path.startsWith(endpoint))) {
+		const session = await getSessionFromCtx(ctx);
+
+		if (!session) {
+			throw new APIError("UNAUTHORIZED", {
+				message: "Unauthorized access to this endpoint.",
+			});
+		}
+
+		const isAnonymous = session.user.isAnonymous;
+
+		if (isAnonymous) {
+			throw new APIError("UNAUTHORIZED", {
+				message: "Anonymous users can't modify the profile in any way.",
+			});
+		}
 	}
 }
 

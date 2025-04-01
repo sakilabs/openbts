@@ -17,7 +17,6 @@ export type RouteRateLimit = {
 export interface RateLimitOptions {
 	window?: number;
 	max?: number;
-	useRouteKey?: boolean;
 	tiers?: Partial<Record<TokenTier, RateLimitTier>>;
 	roles?: Partial<Record<UserRole, RateLimitTier>>;
 	routes?: RouteRateLimit[];
@@ -53,7 +52,6 @@ export class RateLimitService {
 		max: 60,
 		tiers: this.defaultTiers,
 		roles: this.defaultRoles,
-		useRouteKey: false,
 		routes: [],
 	};
 
@@ -72,7 +70,6 @@ export class RateLimitService {
 			tiers: { ...this.defaultOptions.tiers, ...options.tiers },
 			roles: { ...this.defaultOptions.roles, ...options.roles },
 			...options,
-			useRouteKey: options.useRouteKey ?? this.defaultOptions.useRouteKey,
 			routes: options.routes ?? this.defaultOptions.routes,
 		};
 	}
@@ -80,10 +77,10 @@ export class RateLimitService {
 	/**
 	 * Generate a rate limit key based on the request
 	 * @param req FastifyRequest object
+	 * @param useRouteKey Whether to include the route in the key
 	 * @returns Rate limit key or null if fingerprint generation fails
 	 */
-	generateKey(req: FastifyRequest): string | null {
-		const useRouteKey = this.options.useRouteKey === true;
+	generateKey(req: FastifyRequest, useRouteKey = false): string | null {
 		const route = req.routeOptions.url?.replace("/", "") ?? "unknown";
 
 		if (req.apiToken) {
@@ -134,7 +131,7 @@ export class RateLimitService {
 	 * @returns Rate limit configuration for the route or null if not found
 	 */
 	private getRouteRateLimit(req: FastifyRequest): RateLimitTier | null {
-		const url = req.url;
+		const url = req.routeOptions?.url ?? req.url;
 		if (!url || !this.options.routes.length) return null;
 
 		const routeConfig = this.options.routes.find((route) => {
@@ -146,7 +143,7 @@ export class RateLimitService {
 			if (routeParts.length !== urlParts.length) return false;
 
 			return routeParts.every((part, i) => {
-				if (part.startsWith(":") || part.startsWith("[")) return true;
+				if (part.startsWith(":") || part.startsWith("*")) return true;
 				return part === urlParts[i];
 			});
 		});
@@ -252,9 +249,10 @@ export class RateLimitService {
 		try {
 			const rateLimit = await this.getRateLimitTier(req);
 
-			if (rateLimit.max === Number.POSITIVE_INFINITY) return null;
+			const routeLimit = this.getRouteRateLimit(req);
+			const useRouteKey = routeLimit !== null;
 
-			const key = this.generateKey(req);
+			const key = this.generateKey(req, useRouteKey);
 			if (!key) return null;
 
 			return await this.check(key, rateLimit);
@@ -274,7 +272,6 @@ export class RateLimitService {
 			tiers: { ...this.options.tiers, ...options.tiers },
 			roles: { ...this.options.roles, ...options.roles },
 			...options,
-			useRouteKey: options.useRouteKey ?? this.options.useRouteKey,
 			routes: options.routes ?? this.options.routes,
 		};
 	}
