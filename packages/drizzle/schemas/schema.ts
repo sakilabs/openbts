@@ -75,7 +75,7 @@ export const ukePermits = pgTable(
 	{
 		id: serial("id").primaryKey(),
 		station_id: varchar("station_id", { length: 10 }).notNull(),
-		operator_name: varchar("operator_name", { length: 255 }).notNull(),
+		operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		decision_number: varchar("decision_number", { length: 100 }),
 		decision_type: UKEPermissionType("decision_type").notNull(),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),

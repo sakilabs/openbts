@@ -15,8 +15,9 @@ interface PermitFilterParams {
 	bounds?: string;
 	limit?: number;
 	page?: number;
-	operator?: string;
-	band?: string;
+	operators?: string;
+	tech?: string;
+	bands?: string;
 	decisionType?: string;
 }
 
@@ -37,10 +38,15 @@ const schemaRoute = {
 				minimum: 1,
 				default: 1,
 			},
-			operator: {
+			tech: {
 				type: "string",
+				pattern: "^(cdma|umts|gsm|lte|5g)(,(cdma|umts|gsm|lte|5g))*$",
 			},
-			band: {
+			operators: {
+				type: "string",
+				pattern: "^\\d+(,\\d+)*$",
+			},
+			bands: {
 				type: "string",
 				pattern: "^\\d+(,\\d+)*$",
 			},
@@ -70,12 +76,12 @@ const schemaRoute = {
 type Permit = typeof ukePermits.$inferSelect & { band?: typeof bands.$inferSelect };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-	const { limit, page = 1, bounds, operator, band, decisionType } = req.query;
+	const { limit, page = 1, bounds, operators, tech, bands, decisionType } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let bandIds: number[] | undefined;
-	if (band) {
-		const requestedBandIds = band.split(",").map(Number);
+	if (bands) {
+		const requestedBandIds = bands.split(",").map(Number);
 		const validBands = await db.query.bands.findMany({
 			columns: { id: true },
 			where: (fields, { inArray }) => inArray(fields.value, requestedBandIds),
@@ -106,14 +112,32 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			);
 		}
 
+		let operatorIds: number[] | undefined;
+		if (operators) {
+			const operatorQueries = operators.split(",").map((op) => {
+				const mnc = Number.parseInt(op);
+				if (!Number.isNaN(mnc)) {
+					return db.query.operators.findMany({
+						columns: { id: true },
+						where: (fields, { eq }) => eq(fields.mnc_code, mnc),
+					});
+				}
+			});
+
+			const operatorResults = await Promise.all(operatorQueries);
+			const flattenedResults = operatorResults.flat().filter((op): op is NonNullable<typeof op> => op !== undefined);
+			operatorIds = flattenedResults.map((op) => op.id);
+			if (!operatorIds.length) return res.send({ success: true, data: [] });
+		}
+
 		const ukePermitsRes = await db.query.ukePermits.findMany({
 			with: {
 				band: true,
 			},
-			where: (_, { and, like, inArray, eq }) => {
-				if (operator) conditions.push(like(ukePermits.operator_name, `%${operator}%`));
-				if (bandIds && bandIds.length > 0) conditions.push(inArray(ukePermits.band_id, bandIds));
-				if (decisionType) conditions.push(eq(ukePermits.decision_type, decisionType as "zmP" | "P"));
+			where: (fields, { and, like, inArray, eq }) => {
+				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
+				if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
+				if (decisionType) conditions.push(eq(fields.decision_type, decisionType as "zmP" | "P"));
 
 				return conditions.length > 0 ? and(...conditions) : undefined;
 			},
