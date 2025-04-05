@@ -2,7 +2,7 @@ import { read, utils } from "xlsx";
 import path from "node:path";
 import { eq } from "drizzle-orm";
 
-import { ukePermissions, bands } from "@openbts/drizzle";
+import { ukePermits, bands } from "@openbts/drizzle";
 
 import type { WorkBook, WorkSheet } from "xlsx";
 import type { NewUkePermission } from "@openbts/drizzle/types";
@@ -114,7 +114,7 @@ export async function importUkeData(filePath: string, db: db) {
 		const BATCH_SIZE = 100;
 		for (let i = 0; i < permissions.length; i += BATCH_SIZE) {
 			const batch = permissions.slice(i, i + BATCH_SIZE);
-			await db.insert(ukePermissions).values(batch);
+			await db.insert(ukePermits).values(batch);
 		}
 
 		return {

@@ -70,7 +70,7 @@ export const stations = pgTable(
 	(table) => [index("station_location_id_idx").on(table.location_id)],
 );
 
-export const ukePermissions = pgTable(
+export const ukePermits = pgTable(
 	"uke_permissions",
 	{
 		id: serial("id").primaryKey(),
@@ -325,18 +325,27 @@ export const submissions = pgTable(
 	],
 );
 
-export const AuditLogAction = pgEnum("audit_log_action", ["create", "update", "delete"]);
-
 export const auditLogs = pgTable(
 	"audit_logs",
 	{
 		id: serial("id").primaryKey(),
-		action: AuditLogAction("action").notNull(),
-		record_id: integer("record_id").notNull(),
+		action: varchar("action", { length: 100 }).notNull(),
+		table_name: varchar("table_name", { length: 100 }).notNull(),
+		record_id: integer("record_id"),
 		old_values: jsonb("old_values"),
 		new_values: jsonb("new_values"),
+		metadata: jsonb("metadata"),
+		source: varchar("source", { length: 50 }),
+		ip_address: varchar("ip_address", { length: 45 }),
+		user_agent: text("user_agent"),
 		invoked_by: integer("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [index("audit_logs_record_id_idx").on(table.record_id), index("audit_logs_invoked_by_idx").on(table.invoked_by)],
+	(table) => [
+		index("audit_logs_record_id_idx").on(table.record_id),
+		index("audit_logs_invoked_by_idx").on(table.invoked_by),
+		index("audit_logs_table_name_idx").on(table.table_name),
+		index("audit_logs_created_at_idx").on(table.created_at),
+		index("audit_logs_action_idx").on(table.action),
+	],
 );
