@@ -188,25 +188,6 @@ export const apiKeys = pgTable(
 	(table) => [index("api_keys_user_id_idx").on(table.userId)],
 );
 
-// // Legacy API Tokens table kept for backward compatibility
-// export const apiTokens = pgTable("api_tokens", {
-// 	id: serial("id").primaryKey(),
-// 	user_id: integer("user_id")
-// 		.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
-// 		.notNull(),
-// 	token: text("token")
-// 		.notNull()
-// 		.unique()
-// 		.$defaultFn(() => newId("api")),
-// 	tier: APITokenTier("tier").notNull().default("basic"),
-// 	expires_at: timestamp({ withTimezone: true }),
-// 	last_used_at: timestamp({ withTimezone: true }),
-// 	is_revoked: boolean("is_revoked").default(false),
-// 	scope: text("scope").notNull().default(""),
-// 	created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-// 	updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-// });
-
 export const userLists = pgTable(
 	"user_lists",
 	{
@@ -337,3 +318,51 @@ export const auditLogs = pgTable(
 		index("audit_logs_action_idx").on(table.action),
 	],
 );
+
+export const ukeRadioLines = pgTable(
+	"uke_radiolines",
+	{
+		id: serial("id").primaryKey(),
+		tx_longitude: integer("tx_longitude").notNull(),
+		tx_latitude: integer("tx_latitude").notNull(),
+		tx_height: integer("tx_height").notNull(),
+		rx_longitude: integer("rx_longitude").notNull(),
+		rx_latitude: integer("rx_latitude").notNull(),
+		rx_height: integer("rx_height").notNull(),
+		freq: integer("freq").notNull(),
+		ch_num: integer("ch_num"),
+		plan_symbol: varchar("plan_symbol", { length: 50 }),
+		ch_width: integer("ch_width"),
+		polarization: varchar("polarization", { length: 10 }),
+		modulation_type: varchar("modulation_type", { length: 50 }),
+		bandwidth: integer("bandwidth"),
+		tx_eirp: integer("tx_eirp"),
+		tx_antenna_attenuation: integer("tx_antenna_attenuation"),
+		tx_transmitter_type: varchar("tx_transmitter_type", { length: 100 }),
+		tx_transmitter_manufacturer: varchar("tx_transmitter_manufacturer", { length: 100 }),
+		tx_antenna_type: varchar("tx_antenna_type", { length: 100 }),
+		tx_antenna_manufacturer: varchar("tx_antenna_manufacturer", { length: 100 }),
+		tx_antenna_gain: integer("tx_antenna_gain"),
+		tx_antenna_height: integer("tx_antenna_height"),
+		rx_antenna_type: varchar("rx_antenna_type", { length: 100 }),
+		rx_antenna_manufacturer: varchar("rx_antenna_manufacturer", { length: 100 }),
+		rx_antenna_gain: integer("rx_antenna_gain"),
+		rx_antenna_height: integer("rx_antenna_height"),
+		rx_noise_figure: integer("rx_noise_figure"),
+		rx_atpc_attenuation: integer("rx_atpc_attenuation"),
+		// TODO: tbh i have no idea if i wanna reference another table in this case because there's many "ISPs" that are not "real ISPs" in this data
+		//operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
+		operator_name: varchar("operator_name", { length: 255 }),
+		permit_number: varchar("permit_number", { length: 100 }),
+		decision_type: varchar("decision_type", { length: 10 }),
+		expiry_date: timestamp({ withTimezone: true }).notNull(),
+		last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		//index("uke_radiolines_operator_id_idx").on(table.operator_id),
+		index("uke_radiolines_permit_number_idx").on(table.permit_number),
+	],
+);
+
+export type NewUkeRadioLine = typeof ukeRadioLines.$inferInsert;
