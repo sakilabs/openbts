@@ -133,6 +133,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		const ukePermitsRes = await db.query.ukePermits.findMany({
 			with: {
 				band: true,
+				operator: true,
 			},
 			where: (fields, { and, like, inArray, eq }) => {
 				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));

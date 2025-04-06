@@ -1,13 +1,13 @@
 import db from "../../../../../database/psql.js";
 import { i18n } from "../../../../../i18n/index.js";
 import { eq } from "drizzle-orm";
-import type { ukePermits, bands } from "@openbts/drizzle";
+import type { ukePermits, bands, operators } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-type Permit = typeof ukePermits.$inferSelect & { band?: typeof bands.$inferSelect | null };
+type Permit = typeof ukePermits.$inferSelect & { band: typeof bands.$inferSelect; operator: typeof operators.$inferSelect };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Permit>>) {
 	const { id } = req.params;
@@ -16,6 +16,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		const permit = await db.query.ukePermits.findFirst({
 			with: {
 				band: true,
+				operator: true,
 			},
 			where: (fields) => eq(fields.id, Number(id)),
 		});

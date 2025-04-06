@@ -1,18 +1,4 @@
-import {
-	type AnyPgColumn,
-	boolean,
-	index,
-	integer,
-	jsonb,
-	numeric,
-	pgEnum,
-	pgTable,
-	serial,
-	text,
-	timestamp,
-	uuid,
-	varchar,
-} from "drizzle-orm/pg-core";
+import { type AnyPgColumn, boolean, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
@@ -71,11 +57,13 @@ export const stations = pgTable(
 );
 
 export const ukePermits = pgTable(
-	"uke_permissions",
+	"uke_permits",
 	{
 		id: serial("id").primaryKey(),
 		station_id: varchar("station_id", { length: 10 }).notNull(),
-		operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
+		operator_id: integer("operator_id")
+			.references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
+			.notNull(),
 		decision_number: varchar("decision_number", { length: 100 }),
 		decision_type: UKEPermissionType("decision_type").notNull(),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),
@@ -89,7 +77,7 @@ export const ukePermits = pgTable(
 		last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [index("uke_permissions_station_id_idx").on(table.station_id)],
+	(table) => [index("uke_permits_station_id_idx").on(table.station_id)],
 );
 
 export const cells = pgTable("cells", {
