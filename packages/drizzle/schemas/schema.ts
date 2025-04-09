@@ -1,4 +1,18 @@
-import { type AnyPgColumn, boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+	type AnyPgColumn,
+	boolean,
+	doublePrecision,
+	index,
+	integer,
+	jsonb,
+	pgEnum,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+	uuid,
+	varchar,
+} from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
@@ -11,9 +25,9 @@ export const SubmissionTypeEnum = pgEnum("type", ["new", "update"]);
 /**
  * Operator table
  * @example
- * { id: 1, name: "NetWorkS!", parent_id: null, mnc_code: 26034 }
+ * { id: 1, name: "NetWorkS!", parent_id: null, mnc_code: 26034, is_visible: true }
  * @example
- * { id: 2, name: "T-Mobile", parent_id: 1, mnc_code: 26002 }
+ * { id: 2, name: "T-Mobile", parent_id: 1, mnc_code: 26002, is_visible: true }
  */
 export const operators = pgTable(
 	"operators",
@@ -22,6 +36,8 @@ export const operators = pgTable(
 		name: varchar("name", { length: 100 }).notNull().unique(),
 		parent_id: integer("parent_id").references((): AnyPgColumn => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		mnc_code: integer("mnc_code").notNull(),
+		//* We don't wanna show operators from radiolines (which are not real ISPs)
+		is_visible: boolean("is_visible").default(false),
 	},
 	(table) => [index("operator_parent_id_idx").on(table.parent_id)],
 );
