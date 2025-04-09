@@ -1,11 +1,12 @@
+import { and, lte, gte, type SQL } from "drizzle-orm";
+import { ukePermits, type bands } from "@openbts/drizzle";
+
 import db from "../../../../../database/psql.js";
 import { i18n } from "../../../../../i18n/index.js";
-import { and, lte, gte, type SQL } from "drizzle-orm";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
-import { ukePermits, type bands } from "@openbts/drizzle";
 
 type ReqQuery = {
 	Querystring: PermitFilterParams;
@@ -135,7 +136,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				band: true,
 				operator: true,
 			},
-			where: (fields, { and, like, inArray, eq }) => {
+			where: (fields, { and, inArray, eq }) => {
 				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
 				if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
 				if (decisionType) conditions.push(eq(fields.decision_type, decisionType as "zmP" | "P"));

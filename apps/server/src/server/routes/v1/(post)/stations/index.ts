@@ -45,7 +45,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 					cellsData.map((cell) => ({
 						...cell,
 						station_id: newStation.id,
-						is_confimed: false,
+						is_confirmed: false,
 						last_updated: new Date(),
 						date_created: new Date(),
 					})),

@@ -1,8 +1,9 @@
+import { eq } from "drizzle-orm/pg-core/expressions";
+
 import db from "../../../../../database/psql.js";
 import { i18n } from "../../../../../i18n/index.js";
-import { eq } from "drizzle-orm";
-import type { ukePermits, bands, operators } from "@openbts/drizzle";
 
+import type { ukePermits, bands, operators } from "@openbts/drizzle";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../../interfaces/routes.interface.js";

@@ -19,7 +19,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			.insert(cells)
 			.values({
 				...req.body,
-				is_confimed: false,
+				is_confirmed: false,
 				last_updated: new Date(),
 				date_created: new Date(),
 			})

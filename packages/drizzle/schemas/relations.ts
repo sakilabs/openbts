@@ -1,6 +1,24 @@
 import { relations } from "drizzle-orm/relations";
 
-import { apiKeys, bands, cells, locations, operators, regions, stationNotes, stations, userLists, users, attachments, ukePermits } from "./schema.js";
+import {
+	apiKeys,
+	bands,
+	cells,
+	locations,
+	operators,
+	regions,
+	stationNotes,
+	stations,
+	userLists,
+	users,
+	attachments,
+	ukePermits,
+	radioLinesManufacturers,
+	radioLinesAntennaTypes,
+	radioLinestTansmitterTypes,
+	ukeRadioLines,
+	stationsPermits,
+} from "./schema.js";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
 	parent: one(operators, {
@@ -91,13 +109,62 @@ export const attachmentRelations = relations(attachments, ({ one }) => ({
 	}),
 }));
 
+export const manufacturerRelations = relations(radioLinesManufacturers, ({ many }) => ({
+	radioLinesAntennaTypes: many(radioLinesAntennaTypes),
+	radioLinestTansmitterTypes: many(radioLinestTansmitterTypes),
+}));
+
+export const antennaTypeRelations = relations(radioLinesAntennaTypes, ({ one }) => ({
+	manufacturer: one(radioLinesManufacturers, {
+		fields: [radioLinesAntennaTypes.manufacturer_id],
+		references: [radioLinesManufacturers.id],
+	}),
+}));
+
+export const transmitterTypeRelations = relations(radioLinestTansmitterTypes, ({ one }) => ({
+	manufacturer: one(radioLinesManufacturers, {
+		fields: [radioLinestTansmitterTypes.manufacturer_id],
+		references: [radioLinesManufacturers.id],
+	}),
+}));
+
+export const ukeRadioLineRelations = relations(ukeRadioLines, ({ one }) => ({
+	txTransmitterType: one(radioLinestTansmitterTypes, {
+		fields: [ukeRadioLines.tx_transmitter_type_id],
+		references: [radioLinestTansmitterTypes.id],
+	}),
+	txAntennaType: one(radioLinesAntennaTypes, {
+		fields: [ukeRadioLines.tx_antenna_type_id],
+		references: [radioLinesAntennaTypes.id],
+	}),
+	rxAntennaType: one(radioLinesAntennaTypes, {
+		fields: [ukeRadioLines.rx_antenna_type_id],
+		references: [radioLinesAntennaTypes.id],
+	}),
+	operator: one(operators, {
+		fields: [ukeRadioLines.operator_id],
+		references: [operators.id],
+	}),
+}));
+
 export const permitsRelations = relations(ukePermits, ({ one }) => ({
 	band: one(bands, {
-		fields: [ukePermits.id],
+		fields: [ukePermits.band_id],
 		references: [bands.id],
 	}),
 	operator: one(operators, {
 		fields: [ukePermits.operator_id],
 		references: [operators.id],
+	}),
+}));
+
+export const stationsPermitsRelations = relations(stationsPermits, ({ one }) => ({
+	permit: one(ukePermits, {
+		fields: [stationsPermits.permit_id],
+		references: [ukePermits.id],
+	}),
+	station: one(stations, {
+		fields: [stationsPermits.station_id],
+		references: [stations.id],
 	}),
 }));
