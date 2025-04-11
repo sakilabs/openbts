@@ -2,7 +2,6 @@ import type { FastifyReply, FastifySchema } from "fastify";
 import type { RouteGenericInterface } from "fastify/types/route.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "./fastify.interface.js";
-import type { ErrorResponse } from "../utils/errorHelper.js";
 
 export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = unknown> = {
 	url: string;
@@ -17,10 +16,10 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
 };
 
 export type JSONBody<T = void> = RouteGenericInterface & {
-	Reply: Response<T> | ErrorResponse;
+	Reply: Response<T>;
 };
 
-type Response<T> = SuccessfulResponse<T> | ErrorResponse;
+type Response<T> = SuccessfulResponse<T>;
 
 interface SuccessfulResponse<T> {
 	success: true;

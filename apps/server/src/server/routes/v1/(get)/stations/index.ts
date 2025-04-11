@@ -1,5 +1,5 @@
 import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -79,12 +79,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	if (bounds) {
 		const coords = bounds.split(",").map(Number);
 		const [lat1, lon1, lat2, lon2] = coords;
-		if (!lat1 || !lon1 || !lat2 || !lon2) {
-			return res.status(400).send({
-				success: false,
-				error: i18n.t("errors.invalidFormat", req.language),
-			});
-		}
+		if (!lat1 || !lon1 || !lat2 || !lon2) throw new ErrorResponse("BAD_REQUEST");
 
 		const [north, south] = lat1 > lat2 ? [lat1, lat2] : [lat2, lat1];
 		const [east, west] = lon1 > lon2 ? [lon1, lon2] : [lon2, lon1];
@@ -179,10 +174,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		res.send({ success: true, data: filteredStations });
 	} catch (error) {
 		console.error("Error retrieving stations:", error);
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.internalServerError", req.language),
-		});
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }
 

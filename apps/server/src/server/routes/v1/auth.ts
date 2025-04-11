@@ -1,4 +1,5 @@
 import { auth } from "../../plugins/betterauth.plugin.js";
+import { ErrorResponse } from "../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { FastifyReply } from "fastify";
@@ -22,22 +23,11 @@ async function handler(req: FastifyRequest, res: FastifyReply) {
 
 		res.status(response.status);
 		response.headers.forEach((value, key) => res.header(key, value));
-		if (response.status === 500) {
-			res.send({
-				success: false,
-				error: "Internal authentication error",
-				code: "AUTH_FAILURE",
-			});
-			return;
-		}
+		if (response.status === 500) throw new ErrorResponse("AUTH_FAILURE");
 		res.send(response.body ? await response.text() : null);
 	} catch (error) {
 		console.error("Authentication Error:", error);
-		res.status(500).send({
-			success: false,
-			error: "Internal authentication error",
-			code: "AUTH_FAILURE",
-		});
+		throw new ErrorResponse("AUTH_FAILURE");
 	}
 }
 

@@ -1,5 +1,5 @@
 import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -16,10 +16,14 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		with: {
 			cells: true,
 			location: true,
-			operator: true,
+			operator: {
+				columns: {
+					is_visible: false,
+				},
+			},
 		},
 	});
-	if (!station) return res.status(404).send({ success: false, message: i18n.t("station.notFound") });
+	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	return res.send({ success: true, data: station });
 }

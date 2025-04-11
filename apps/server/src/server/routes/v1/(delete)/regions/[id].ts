@@ -1,7 +1,8 @@
-import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
-import { regions } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
+import { regions } from "@openbts/drizzle";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -24,28 +25,22 @@ const schemaRoute = {
 			type: "object",
 			properties: {
 				success: { type: "boolean" },
-				data: {
-					type: "object",
-					properties: {
-						message: { type: "string" },
-					},
-				},
 			},
 		},
-		404: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
-		500: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
+		// 404: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
+		// 500: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
 	},
 };
 
@@ -55,15 +50,15 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		where: (fields, { eq }) => eq(fields.id, Number(id)),
 	});
 
-	if (!region) return res.status(404).send({ success: false, message: i18n.t("region.notFound") });
+	if (!region) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		await db.delete(regions).where(eq(regions.id, Number(id)));
 	} catch (error) {
-		return res.status(500).send({ success: false, error: i18n.t("errors.failedToDelete", req.language) });
+		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 
-	return res.send({ success: true, data: { message: i18n.t("region.deleted") } });
+	return res.send({ success: true });
 }
 
 const deleteRegion: Route<IdParams, ResponseData> = {

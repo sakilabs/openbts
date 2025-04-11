@@ -1,9 +1,7 @@
-import { eq } from "drizzle-orm/pg-core/expressions";
-
 import db from "../../../../../../database/psql.js";
-import { i18n } from "../../../../../../i18n/index.js";
-import { type cells, stations } from "@openbts/drizzle";
+import { ErrorResponse } from "../../../../../../errors.js";
 
+import type { cells } from "@openbts/drizzle";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
@@ -18,15 +16,15 @@ type ReqParams = {
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cells>>) {
 	const { station_id } = req.params;
 
-	if (Number.isNaN(Number(station_id))) return res.status(400).send({ success: false, message: i18n.t("station.invalidId") });
+	if (Number.isNaN(Number(station_id))) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: eq(stations.id, Number(station_id)),
+		where: (fields, { eq }) => eq(fields.id, Number(station_id)),
 		with: {
 			cells: true,
 		},
 	});
-	if (!station) return res.status(404).send({ success: false, message: i18n.t("station.notFound") });
+	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	return res.send({ success: true, data: station.cells });
 }

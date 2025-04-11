@@ -11,7 +11,6 @@ declare module "fastify" {
 
 	export interface FastifyRequest {
 		requestStartTime: bigint;
-		language: string;
 		apiToken: Omit<ApiKey, "key"> | null;
 		userSession: Session | null;
 	}

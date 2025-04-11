@@ -1,14 +1,12 @@
-import { eq } from "drizzle-orm/pg-core/expressions";
-
 import db from "../../../../../database/psql.js";
-import { i18n } from "../../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../../errors.js";
 
 import type { ukePermits, bands, operators } from "@openbts/drizzle";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-type Permit = typeof ukePermits.$inferSelect & { band: typeof bands.$inferSelect; operator: typeof operators.$inferSelect };
+type Permit = typeof ukePermits.$inferSelect & { band: typeof bands.$inferSelect; operator: Omit<typeof operators.$inferSelect, "is_visible"> };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Permit>>) {
 	const { id } = req.params;
@@ -17,17 +15,15 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		const permit = await db.query.ukePermits.findFirst({
 			with: {
 				band: true,
-				operator: true,
+				operator: {
+					columns: {
+						is_visible: false,
+					},
+				},
 			},
-			where: (fields) => eq(fields.id, Number(id)),
+			where: (fields, { eq }) => eq(fields.id, Number(id)),
 		});
-
-		if (!permit) {
-			return res.status(404).send({
-				success: false,
-				message: i18n.t("uke.permit.notFound", req.language),
-			});
-		}
+		if (!permit) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({
 			success: true,
@@ -35,10 +31,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		});
 	} catch (error) {
 		console.error("Error retrieving UKE permit:", error);
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.internalServerError", req.language),
-		});
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }
 

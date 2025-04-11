@@ -1,7 +1,8 @@
-import db from "../../../../../../database/psql.js";
-import { i18n } from "../../../../../../i18n/index.js";
-import { cells, stations } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
+import { cells, stations } from "@openbts/drizzle";
+
+import db from "../../../../../../database/psql.js";
+import { ErrorResponse } from "../../../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
@@ -26,22 +27,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { station_id } = req.params;
 	const { cells: cellsData } = req.body;
 
-	if (!cellsData || cellsData.length === 0) {
-		return res.status(400).send({
-			success: false,
-			error: "Cells array is required and cannot be empty",
-		});
-	}
+	if (!cellsData || cellsData.length === 0) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
 		where: eq(stations.station_id, station_id),
 	});
-	if (!station) {
-		return res.status(404).send({
-			success: false,
-			error: "Station not found",
-		});
-	}
+	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		const newCells = await db
@@ -58,7 +49,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 		return res.send({ success: true, data: newCells });
 	} catch (error) {
-		return res.status(500).send({ success: false, error: i18n.t("errors.failedToCreate") });
+		throw new ErrorResponse("FAILED_TO_CREATE");
 	}
 }
 

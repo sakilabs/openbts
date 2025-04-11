@@ -410,7 +410,7 @@ export const auditLogs = pgTable(
  * @example
  * { id: 1, name: "Ericsson" }
  */
-export const radioLinesManufacturers = pgTable("radiolines_radioLinesManufacturers", {
+export const radioLinesManufacturers = pgTable("radiolines_manufacturers", {
 	id: serial("id").primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 });
@@ -431,7 +431,7 @@ export const radioLinesAntennaTypes = pgTable("radiolines_antenna_types", {
  * @example
  * { id: 1, name: "Transmitter Type 1", manufacturer_id: 1 }
  */
-export const radioLinestTansmitterTypes = pgTable("radiolines_transmitter_types", {
+export const radioLinesTransmitterTypes = pgTable("radiolines_transmitter_types", {
 	id: serial("id").primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 	manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
@@ -462,7 +462,7 @@ export const ukeRadioLines = pgTable(
 		bandwidth: varchar("bandwidth", { length: 100 }),
 		tx_eirp: integer("tx_eirp"),
 		tx_antenna_attenuation: integer("tx_antenna_attenuation"),
-		tx_transmitter_type_id: integer("tx_transmitter_type_id").references(() => radioLinestTansmitterTypes.id, {
+		tx_transmitter_type_id: integer("tx_transmitter_type_id").references(() => radioLinesAntennaTypes.id, {
 			onDelete: "set null",
 			onUpdate: "cascade",
 		}),

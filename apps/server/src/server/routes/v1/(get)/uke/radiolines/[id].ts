@@ -1,8 +1,6 @@
-import { eq } from "drizzle-orm/pg-core/expressions";
-
 import db from "../../../../../database/psql.js";
-import { i18n } from "../../../../../i18n/index.js";
 import { formatRadioLine } from "../../../../../utils/index.js";
+import { ErrorResponse } from "../../../../../errors.js";
 
 import type { FormattedRadioLine } from "@openbts/drizzle/types";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -14,21 +12,20 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
 	try {
 		const radioLine = await db.query.ukeRadioLines.findFirst({
-			where: (fields) => eq(fields.id, Number(id)),
+			where: (fields, { eq }) => eq(fields.id, Number(id)),
 			with: {
-				operator: true,
+				operator: {
+					columns: {
+						is_visible: false,
+					},
+				},
 			},
 			columns: {
 				operator_id: false,
 			},
 		});
 
-		if (!radioLine) {
-			return res.status(404).send({
-				success: false,
-				message: i18n.t("uke.radioline.notFound", req.language),
-			});
-		}
+		if (!radioLine) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({
 			success: true,
@@ -36,10 +33,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		});
 	} catch (error) {
 		console.error("Error retrieving UKE radioline:", error);
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.internalServerError", req.language),
-		});
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }
 

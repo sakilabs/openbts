@@ -1,18 +1,18 @@
 import { eq } from "drizzle-orm/pg-core/expressions";
 
-import { radioLinesAntennaTypes, radioLinestTansmitterTypes } from "@openbts/drizzle";
+import { radioLinesAntennaTypes, radioLinesTransmitterTypes } from "@openbts/drizzle";
 import db from "../database/psql.js";
 
 import type { operators, ukeRadioLines } from "@openbts/drizzle";
 import type { FormattedRadioLine } from "@openbts/drizzle/types";
 
-type RadioLine = Omit<typeof ukeRadioLines.$inferSelect, "operator_id"> & { operator: (typeof operators.$inferSelect) | null };
+type RadioLine = Omit<typeof ukeRadioLines.$inferSelect, "operator_id"> & { operator: Omit<typeof operators.$inferSelect, "is_visible"> | null };
 
 export async function formatRadioLine(radioLine: RadioLine): Promise<FormattedRadioLine> {
 	const [txTransmitterType, txAntennaType, rxAntennaType] = await Promise.all([
 		radioLine.tx_transmitter_type_id
-			? db.query.radioLinestTansmitterTypes.findFirst({
-					where: eq(radioLinestTansmitterTypes.id, radioLine.tx_transmitter_type_id),
+			? db.query.radioLinesTransmitterTypes.findFirst({
+					where: eq(radioLinesTransmitterTypes.id, radioLine.tx_transmitter_type_id),
 					with: {
 						manufacturer: true,
 					},

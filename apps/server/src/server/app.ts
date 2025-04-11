@@ -6,22 +6,35 @@ import { APIv1Controller } from "./controllers/v1.controller.js";
 import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
-import { i18n } from "./i18n/index.js";
+import { type ErrorResponse, ValidationError } from "./errors.js";
 
 import type { FastifyInstance } from "fastify";
 
 export default class App {
 	fastify: FastifyInstance;
 	logger: debug.Debugger;
-	private static translationsLoaded = false;
 
 	constructor() {
 		this.logger = logger.extend("app");
-		this.fastify = Fastify({ logger: false, trustProxy: true });
+		this.fastify = Fastify({
+			logger: false,
+			trustProxy: true,
+			ajv: {
+				customOptions: {
+					allErrors: true,
+				},
+			},
+			schemaErrorFormatter: (errors, _) => {
+				const formattedErrors = errors.map((err) => ({
+					field: String(err.instancePath?.slice(1) || err.params?.missingProperty || "unknown"),
+					validationMessage: err.message,
+				}));
+
+				return new ValidationError(formattedErrors);
+			},
+		});
 
 		debug.enable("sakilabs/openbts:*");
-
-		if (!App.translationsLoaded) throw new Error("Translations must be initialized before creating App instance");
 
 		this.checkEnvironment();
 		this.initHooks();
@@ -44,6 +57,23 @@ export default class App {
 		this.fastify.addHook("onRequest", OnRequestHook);
 		this.fastify.addHook("preHandler", PreHandlerHook);
 		this.fastify.addHook("onSend", OnSendHook);
+		this.fastify.setErrorHandler((error: ErrorResponse | ValidationError, req, res) => {
+			const statusCode = error.statusCode || 500;
+			const message = error.message || "An internal server error occurred.";
+			const code = error.code || "INTERNAL_SERVER_ERROR";
+			const errorResponse = {
+				success: false,
+				errors: [
+					{
+						code,
+						message,
+						details: (error as ValidationError)?.details || [],
+					},
+				],
+			};
+
+			return res.status(statusCode).send(errorResponse);
+		});
 	}
 
 	private initMiddlewares(): void {
@@ -54,11 +84,6 @@ export default class App {
 	private initControllers(): void {
 		this.logger("Registering controllers");
 		this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
-	}
-
-	public static async initializeTranslations(): Promise<void> {
-		await i18n.loadTranslationFiles();
-		App.translationsLoaded = true;
 	}
 
 	public async listen(port: number): Promise<void> {

@@ -1,5 +1,5 @@
 import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { cells, stations, bands } from "@openbts/drizzle";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -13,6 +13,7 @@ type ResponseData = typeof cells.$inferSelect & {
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { id } = req.params;
+
 	const cell = await db.query.cells.findFirst({
 		where: (fields, { eq }) => eq(fields.id, Number(id)),
 		with: {
@@ -20,8 +21,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 			band: true,
 		},
 	});
-
-	if (!cell) return res.status(404).send({ success: false, message: i18n.t("cell.notFound") });
+	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
 	return res.send({ success: true, data: cell });
 }

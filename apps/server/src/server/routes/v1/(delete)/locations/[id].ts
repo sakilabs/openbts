@@ -1,7 +1,8 @@
-import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
-import { locations } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
+import { locations } from "@openbts/drizzle";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -24,28 +25,22 @@ const schemaRoute = {
 			type: "object",
 			properties: {
 				success: { type: "boolean" },
-				data: {
-					type: "object",
-					properties: {
-						message: { type: "string" },
-					},
-				},
 			},
 		},
-		404: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
-		500: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
+		// 404: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
+		// 500: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
 	},
 };
 
@@ -55,16 +50,15 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		where: (fields, { eq }) => eq(fields.id, Number(id)),
 	});
 
-	if (!location) return res.status(404).send({ success: false, message: i18n.t("location.notFound") });
+	if (!location) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		await db.delete(locations).where(eq(locations.id, Number(id)));
 	} catch (error) {
-		console.error("Error deleting location:", error);
-		return res.status(500).send({ success: false, error: i18n.t("errors.failedToDelete", req.language) });
+		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 
-	return res.send({ success: true, data: { message: i18n.t("location.deleted") } });
+	return res.send({ success: true });
 }
 
 const deleteLocation: Route<IdParams, ResponseData> = {

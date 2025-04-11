@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
-import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
 import { cells } from "@openbts/drizzle";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -24,11 +25,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			})
 			.where(eq(cells.id, Number.parseInt(cell_id)))
 			.returning();
-		if (!cell.length) return res.status(404).send({ success: false, message: "Cell not found" });
+		if (!cell.length) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({ success: true, data: cell[0] });
 	} catch (error) {
-		return res.status(500).send({ success: false, error: i18n.t("errors.failedToUpdate") });
+		throw new ErrorResponse("FAILED_TO_UPDATE");
 	}
 }
 

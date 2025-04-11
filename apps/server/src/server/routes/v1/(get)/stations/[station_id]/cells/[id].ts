@@ -1,11 +1,10 @@
 import db from "../../../../../../database/psql.js";
-import { i18n } from "../../../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
-import { cells, type stations } from "@openbts/drizzle";
-import { eq } from "drizzle-orm/pg-core/expressions";
+import type { cells, stations } from "@openbts/drizzle";
 
 type Cell = typeof cells.$inferSelect & {
 	station: typeof stations.$inferSelect;
@@ -20,16 +19,15 @@ type ReqParams = {
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cell>>) {
 	const { station_id, cell_id } = req.params;
 
-	if (Number.isNaN(Number(station_id)) || Number.isNaN(Number(cell_id)))
-		return res.status(400).send({ success: false, message: i18n.t("station.invalidId") });
+	if (Number.isNaN(Number(station_id)) || Number.isNaN(Number(cell_id))) throw new ErrorResponse("INVALID_QUERY");
 
 	const cell = await db.query.cells.findFirst({
-		where: eq(cells.id, Number(cell_id)),
+		where: (fields, { eq }) => eq(fields.id, Number(cell_id)),
 		with: {
 			station: true,
 		},
 	});
-	if (!cell) return res.status(404).send({ success: false, message: i18n.t("cell.notFound") });
+	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
 	return res.send({ success: true, data: cell });
 }

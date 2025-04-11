@@ -2,8 +2,8 @@ import { and, lte, gte, eq, type SQL } from "drizzle-orm";
 import { ukeRadioLines } from "@openbts/drizzle";
 
 import db from "../../../../../database/psql.js";
-import { i18n } from "../../../../../i18n/index.js";
 import { formatRadioLine } from "../../../../../utils/index.js";
+import { ErrorResponse } from "../../../../../errors.js";
 
 import type { FormattedRadioLine } from "@openbts/drizzle/types";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -70,12 +70,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		if (bounds) {
 			const coords = bounds.split(",").map(Number);
 			const [lat1, lon1, lat2, lon2] = coords;
-			if (!lat1 || !lon1 || !lat2 || !lon2) {
-				return res.status(400).send({
-					success: false,
-					error: i18n.t("errors.invalidFormat", req.language),
-				});
-			}
+			if (!lat1 || !lon1 || !lat2 || !lon2) throw new ErrorResponse("INVALID_QUERY");
 
 			const [north, south] = lat1 > lat2 ? [lat1, lat2] : [lat2, lat1];
 			const [east, west] = lon1 > lon2 ? [lon1, lon2] : [lon2, lon1];
@@ -102,7 +97,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		const radioLinesRes = await db.query.ukeRadioLines.findMany({
 			where: conditions.length > 0 ? and(...conditions) : undefined,
 			with: {
-				operator: true,
+				operator: {
+					columns: {
+						is_visible: false,
+					},
+				},
 			},
 			columns: {
 				operator_id: false,
@@ -116,10 +115,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		res.send({ success: true, data: formattedRadioLines });
 	} catch (error) {
 		console.error("Error retrieving UKE radiolines:", error);
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.internalServerError", req.language),
-		});
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }
 

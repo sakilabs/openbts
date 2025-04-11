@@ -2,11 +2,12 @@ import { and, lte, gte, type SQL } from "drizzle-orm";
 import { ukePermits, type bands } from "@openbts/drizzle";
 
 import db from "../../../../../database/psql.js";
-import { i18n } from "../../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 type ReqQuery = {
 	Querystring: PermitFilterParams;
@@ -98,12 +99,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		if (bounds) {
 			const coords = bounds.split(",").map(Number);
 			const [lat1, lon1, lat2, lon2] = coords;
-			if (!lat1 || !lon1 || !lat2 || !lon2) {
-				return res.status(400).send({
-					success: false,
-					error: i18n.t("errors.invalidFormat", req.language),
-				});
-			}
+			if (!lat1 || !lon1 || !lat2 || !lon2) throw new ErrorResponse("INVALID_QUERY");
 
 			const [north, south] = lat1 > lat2 ? [lat1, lat2] : [lat2, lat1];
 			const [east, west] = lon1 > lon2 ? [lon1, lon2] : [lon2, lon1];
@@ -134,7 +130,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		const ukePermitsRes = await db.query.ukePermits.findMany({
 			with: {
 				band: true,
-				operator: true,
+				operator: {
+					columns: {
+						is_visible: false,
+					},
+				},
 			},
 			where: (fields, { and, inArray, eq }) => {
 				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
@@ -147,13 +147,33 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			offset: offset,
 		});
 
+		if (tech) {
+			const requestedTechs = tech.toLowerCase().split(",");
+			ukePermitsRes.filter((permit) => {
+				const bandName = permit.band?.name.toLowerCase();
+				return requestedTechs.some((tech) => {
+					switch (tech) {
+						case "cdma":
+							return bandName.includes("cdma");
+						case "gsm":
+							return bandName.includes("gsm");
+						case "umts":
+							return bandName.includes("umts");
+						case "lte":
+							return bandName.includes("lte");
+						case "5g":
+							return bandName.includes("5g");
+						default:
+							return false;
+					}
+				});
+			});
+		}
+
 		res.send({ success: true, data: ukePermitsRes });
 	} catch (error) {
 		console.error("Error retrieving UKE permits:", error);
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.internalServerError", req.language),
-		});
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }
 

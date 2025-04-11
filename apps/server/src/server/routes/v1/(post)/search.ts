@@ -1,6 +1,8 @@
-import db from "../../../database/psql.js";
 import { eq, or, sql, ilike } from "drizzle-orm";
 import { stations, cells } from "@openbts/drizzle";
+
+import db from "../../../database/psql.js";
+import { ErrorResponse } from "../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
@@ -33,12 +35,7 @@ const SIMILARITY_THRESHOLD = 0.6;
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
 	const { query } = req.body;
 
-	if (!query || query.trim() === "") {
-		return res.status(400).send({
-			success: false,
-			error: "Search query is required",
-		});
-	}
+	if (!query || query.trim() === "") throw new ErrorResponse("INVALID_QUERY");
 
 	const stationIds = new Set<number>();
 	const stationMap = new Map<number, StationWithCells>();
@@ -51,7 +48,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			with: {
 				cells: true,
 				location: true,
-				operator: true,
+				operator: {
+					columns: {
+						is_visible: false,
+					},
+				},
 			},
 		});
 
@@ -68,7 +69,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 		with: {
 			cells: true,
 			location: true,
-			operator: true,
+			operator: {
+				columns: {
+					is_visible: false,
+				},
+			},
 		},
 		orderBy: sql`similarity(${stations.station_id}, ${query}) DESC`,
 	});
@@ -93,7 +98,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			station: {
 				with: {
 					location: true,
-					operator: true,
+					operator: {
+						columns: {
+							is_visible: false,
+						},
+					},
 					cells: true,
 				},
 			},
@@ -124,7 +133,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	// 		station: {
 	// 			with: {
 	// 				location: true,
-	// 				operator: true,
+	// 				operator: {
+	//					columns: {
+	//						is_visible: false,
+	//					},
+	//				},
 	// 				cells: true,
 	// 			},
 	// 		},

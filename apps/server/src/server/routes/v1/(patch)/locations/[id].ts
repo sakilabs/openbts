@@ -1,7 +1,8 @@
-import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
-import { locations } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
+import { locations } from "@openbts/drizzle";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -63,22 +64,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { location_id } = req.params;
 	const locationId = Number(location_id);
 
-	if (Number.isNaN(locationId)) {
-		return res.status(400).send({
-			success: false,
-			error: i18n.t("errors.invalidLocationId", req.language),
-		});
-	}
+	if (Number.isNaN(locationId)) throw new ErrorResponse("INVALID_QUERY");
 
 	const location = await db.query.locations.findFirst({
 		where: (fields, { eq }) => eq(fields.id, locationId),
 	});
-	if (!location) {
-		return res.status(404).send({
-			success: false,
-			error: i18n.t("location.notFound", req.language),
-		});
-	}
+	if (!location) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		const updated = await db.update(locations).set(req.body).where(eq(locations.id, locationId)).returning();
@@ -88,10 +79,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			data: updated[0],
 		});
 	} catch (err) {
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.failedToUpdateLocation", req.language),
-		});
+		throw new ErrorResponse("FAILED_TO_UPDATE");
 	}
 }
 

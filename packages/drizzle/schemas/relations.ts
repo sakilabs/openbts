@@ -15,7 +15,7 @@ import {
 	ukePermits,
 	radioLinesManufacturers,
 	radioLinesAntennaTypes,
-	radioLinestTansmitterTypes,
+	radioLinesTransmitterTypes,
 	ukeRadioLines,
 	stationsPermits,
 } from "./schema.js";
@@ -111,7 +111,7 @@ export const attachmentRelations = relations(attachments, ({ one }) => ({
 
 export const manufacturerRelations = relations(radioLinesManufacturers, ({ many }) => ({
 	radioLinesAntennaTypes: many(radioLinesAntennaTypes),
-	radioLinestTansmitterTypes: many(radioLinestTansmitterTypes),
+	radioLinestTansmitterTypes: many(radioLinesTransmitterTypes),
 }));
 
 export const antennaTypeRelations = relations(radioLinesAntennaTypes, ({ one }) => ({
@@ -121,17 +121,17 @@ export const antennaTypeRelations = relations(radioLinesAntennaTypes, ({ one }) 
 	}),
 }));
 
-export const transmitterTypeRelations = relations(radioLinestTansmitterTypes, ({ one }) => ({
+export const transmitterTypeRelations = relations(radioLinesTransmitterTypes, ({ one }) => ({
 	manufacturer: one(radioLinesManufacturers, {
-		fields: [radioLinestTansmitterTypes.manufacturer_id],
+		fields: [radioLinesTransmitterTypes.manufacturer_id],
 		references: [radioLinesManufacturers.id],
 	}),
 }));
 
 export const ukeRadioLineRelations = relations(ukeRadioLines, ({ one }) => ({
-	txTransmitterType: one(radioLinestTansmitterTypes, {
+	txTransmitterType: one(radioLinesTransmitterTypes, {
 		fields: [ukeRadioLines.tx_transmitter_type_id],
-		references: [radioLinestTansmitterTypes.id],
+		references: [radioLinesTransmitterTypes.id],
 	}),
 	txAntennaType: one(radioLinesAntennaTypes, {
 		fields: [ukeRadioLines.tx_antenna_type_id],

@@ -1,3 +1,3 @@
-# server
+# sora
 
-BTS Finder server.
+Core backend service

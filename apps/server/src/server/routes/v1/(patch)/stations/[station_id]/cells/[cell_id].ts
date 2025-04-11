@@ -1,7 +1,8 @@
-import db from "../../../../../../database/psql.js";
-import { i18n } from "../../../../../../i18n/index.js";
-import { cells } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
+import { cells } from "@openbts/drizzle";
+
+import db from "../../../../../../database/psql.js";
+import { ErrorResponse } from "../../../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
@@ -79,32 +80,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const stationId = Number(station_id);
 	const cellId = Number(cell_id);
 
-	if (Number.isNaN(stationId) || Number.isNaN(cellId)) {
-		return res.status(400).send({
-			success: false,
-			error: i18n.t("errors.invalidId", req.language),
-		});
-	}
+	if (Number.isNaN(stationId) || Number.isNaN(cellId)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
 		where: (fields, { eq }) => eq(fields.bts_id, stationId),
 	});
-	if (!station) {
-		return res.status(404).send({
-			success: false,
-			error: i18n.t("station.notFound", req.language),
-		});
-	}
+	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	const cell = await db.query.cells.findFirst({
 		where: (fields, { and, eq }) => and(eq(fields.id, cellId), eq(fields.station_id, station.id)),
 	});
-	if (!cell) {
-		return res.status(404).send({
-			success: false,
-			error: i18n.t("cell.notFound", req.language),
-		});
-	}
+	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		const updated = await db
@@ -121,10 +107,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			data: updated[0],
 		});
 	} catch (err) {
-		return res.status(500).send({
-			success: false,
-			error: i18n.t("errors.failedToUpdateCell", req.language),
-		});
+		throw new ErrorResponse("FAILED_TO_UPDATE");
 	}
 }
 

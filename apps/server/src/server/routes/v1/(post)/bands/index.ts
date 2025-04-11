@@ -1,6 +1,7 @@
-import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
 import { bands } from "@openbts/drizzle";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -37,13 +38,13 @@ const schemaRoute = {
 				},
 			},
 		},
-		500: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				error: { type: "string" },
-			},
-		},
+		// 500: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		error: { type: "string" },
+		// 	},
+		// },
 	},
 };
 
@@ -53,7 +54,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
 		return res.send({ success: true, data: band[0] });
 	} catch (error) {
-		return res.status(500).send({ success: false, error: i18n.t("errors.failedToCreate") });
+		throw new ErrorResponse("FAILED_TO_CREATE");
 	}
 }
 

@@ -22,7 +22,7 @@ export const userRole = accessControl.newRole({
 });
 
 export const modRole = accessControl.newRole({
-	// tbh idk what to put for mod
+	// todo: tbh idk what to put for mod
 });
 
 export const adminRole = accessControl.newRole({

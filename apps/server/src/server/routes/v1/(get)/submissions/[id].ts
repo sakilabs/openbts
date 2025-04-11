@@ -1,6 +1,6 @@
 import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
 import { auth } from "../../../../plugins/betterauth.plugin.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -12,11 +12,7 @@ type Submission = typeof submissionsType.$inferSelect;
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Submission>>) {
 	const { id } = req.params;
 	const session = req.userSession;
-	if (!session)
-		return res.status(401).send({
-			success: false,
-			message: i18n.t("errors.forbidden"),
-		});
+	if (!session) throw new ErrorResponse("UNAUTHORIZED");
 
 	let hasAdminPermission = false;
 	if (session.user) {
@@ -38,10 +34,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		where: (fields, { eq }) => eq(fields.id, Number(id)),
 		with: withTables,
 	});
-	if (!submission) return res.status(404).send({ success: false, message: i18n.t("submission.notFound") });
+	if (!submission) throw new ErrorResponse("NOT_FOUND");
 
-	if (!hasAdminPermission && submission.submitter_id !== Number(session.user.id))
-		return res.status(403).send({ success: false, message: i18n.t("submission.forbidden") });
+	if (!hasAdminPermission && submission.submitter_id !== Number(session.user.id)) throw new ErrorResponse("FORBIDDEN");
 
 	return res.send({ success: true, data: submission });
 }

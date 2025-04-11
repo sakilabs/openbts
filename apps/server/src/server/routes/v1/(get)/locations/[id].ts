@@ -1,5 +1,5 @@
 import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { locations, regions } from "@openbts/drizzle";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -17,7 +17,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 			region: true,
 		},
 	});
-	if (!location) return res.status(404).send({ success: false, message: i18n.t("location.notFound") });
+	if (!location) throw new ErrorResponse("NOT_FOUND");
 
 	return res.send({ success: true, data: location });
 }

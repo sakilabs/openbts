@@ -1,4 +1,4 @@
-import { i18n } from "../i18n/index.js";
+import { ErrorResponse } from "../errors.js";
 import { auth } from "../plugins/betterauth.plugin.js";
 
 import type { FastifyRequest, FastifyReply } from "fastify";
@@ -66,12 +66,7 @@ export async function permissionsMiddleware(req: FastifyRequest, res: FastifyRep
 	}
 
 	const userId = req.userSession?.user?.id || null;
-	if (!userId) {
-		return res.status(403).send({
-			success: false,
-			message: i18n.t("errors.notLoggedIn", req.language),
-		});
-	}
+	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
 	const result = await auth.api.userHasPermission({
 		body: {
@@ -80,11 +75,5 @@ export async function permissionsMiddleware(req: FastifyRequest, res: FastifyRep
 		},
 	});
 
-	if (!result.success) {
-		return res.status(403).send({
-			success: false,
-			error: "Forbidden",
-			message: "Insufficient permissions",
-		});
-	}
+	if (!result.success) throw new ErrorResponse("INSUFFICIENT_PERMISSIONS");
 }

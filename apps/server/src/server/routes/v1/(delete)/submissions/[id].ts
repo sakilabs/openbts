@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
+import { submissions } from "@openbts/drizzle";
 
 import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
-import { submissions } from "@openbts/drizzle";
 import { auth } from "../../../../plugins/betterauth.plugin.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -26,46 +26,36 @@ const schemaRoute = {
 			type: "object",
 			properties: {
 				success: { type: "boolean" },
-				data: {
-					type: "object",
-					properties: {
-						message: { type: "string" },
-					},
-				},
 			},
 		},
-		404: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
-		403: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
-		500: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-				message: { type: "string" },
-			},
-		},
+		// 404: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
+		// 403: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
+		// 500: {
+		// 	type: "object",
+		// 	properties: {
+		// 		success: { type: "boolean" },
+		// 		message: { type: "string" },
+		// 	},
+		// },
 	},
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { id } = req.params;
 	const session = req.userSession;
-	if (!session)
-		return res.status(401).send({
-			success: false,
-			message: i18n.t("errors.forbidden"),
-		});
+	if (!session) throw new ErrorResponse("UNAUTHORIZED");
 
 	let hasAdminPermission = false;
 	if (session.user) {
@@ -89,32 +79,18 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		},
 	});
 
-	if (!submission) {
-		return res.status(404).send({
-			success: false,
-			message: i18n.t("errors.resourceNotFound"),
-		});
-	}
+	if (!submission) throw new ErrorResponse("NOT_FOUND");
 
-	if (!hasAdminPermission && submission.submitter_id !== Number(session.user.id)) {
-		return res.status(403).send({
-			success: false,
-			message: i18n.t("errors.forbidden"),
-		});
-	}
+	if (!hasAdminPermission && submission.submitter_id !== Number(session.user.id)) throw new ErrorResponse("FORBIDDEN");
 
 	try {
 		await db.delete(submissions).where(eq(submissions.id, Number(id)));
 	} catch (error) {
-		return res.status(500).send({
-			success: false,
-			message: i18n.t("errors.internalServerError"),
-		});
+		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 
 	return res.send({
 		success: true,
-		data: { message: i18n.t("submission.deleted") },
 	});
 }
 

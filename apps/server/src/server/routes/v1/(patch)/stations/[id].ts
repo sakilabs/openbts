@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
-import db from "../../../../database/psql.js";
-import { i18n } from "../../../../i18n/index.js";
 import { stations } from "@openbts/drizzle";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -21,11 +22,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			.set(req.body)
 			.where(eq(stations.id, Number.parseInt(station_id)))
 			.returning();
-		if (!station.length) return res.status(404).send({ success: false, message: "Station not found" });
+		if (!station.length) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({ success: true, data: station[0] });
 	} catch (error) {
-		return res.status(500).send({ success: false, error: i18n.t("errors.failedToUpdate") });
+		throw new ErrorResponse("FAILED_TO_UPDATE");
 	}
 }
 
