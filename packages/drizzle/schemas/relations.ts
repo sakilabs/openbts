@@ -7,7 +7,7 @@ import {
 	locations,
 	operators,
 	regions,
-	stationNotes,
+	stationComments,
 	stations,
 	userLists,
 	users,
@@ -75,26 +75,26 @@ export const userListRelations = relations(userLists, ({ one }) => ({
 	}),
 }));
 
-export const userNotesRelations = relations(stationNotes, ({ one }) => ({
+export const userNotesRelations = relations(stationComments, ({ one }) => ({
 	user: one(users, {
-		fields: [stationNotes.user_id],
+		fields: [stationComments.user_id],
 		references: [users.id],
 	}),
 	station: one(stations, {
-		fields: [stationNotes.station_id],
+		fields: [stationComments.station_id],
 		references: [stations.id],
 	}),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
 	user: one(users, {
-		fields: [apiKeys.userId],
+		fields: [apiKeys.user_id],
 		references: [users.id],
 	}),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
-	notes: many(stationNotes),
+	comments: many(stationComments),
 	lists: many(userLists),
 	apiKeys: many(apiKeys),
 	attachments: many(attachments, {

@@ -7,7 +7,6 @@ import {
 	jsonb,
 	pgEnum,
 	pgTable,
-	serial,
 	text,
 	timestamp,
 	uuid,
@@ -32,7 +31,7 @@ export const SubmissionTypeEnum = pgEnum("type", ["new", "update"]);
 export const operators = pgTable(
 	"operators",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		name: varchar("name", { length: 100 }).notNull().unique(),
 		parent_id: integer("parent_id").references((): AnyPgColumn => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		mnc_code: integer("mnc_code").notNull(),
@@ -48,7 +47,7 @@ export const operators = pgTable(
  * { id: 1, name: "Mazowieckie" }
  */
 export const regions = pgTable("regions", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 });
 
@@ -58,7 +57,7 @@ export const regions = pgTable("regions", {
  * { id: 1, region_id: 1, city: "Warsaw", address: "ul. Marszałkowska 1", longitude: 52.2297, latitude: 21.0122 }
  */
 export const locations = pgTable("locations", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	region_id: integer("region_id")
 		.references(() => regions.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
@@ -76,7 +75,7 @@ export const locations = pgTable("locations", {
 export const stations = pgTable(
 	"stations",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: varchar("station_id", { length: 16 }).notNull(),
 		bts_id: integer("bts_id"),
 		location_id: integer("location_id").references(() => locations.id, { onDelete: "set null", onUpdate: "cascade" }),
@@ -101,7 +100,7 @@ export const stations = pgTable(
 export const stationsPermits = pgTable(
 	"stations_permits",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		permit_id: integer("permit_id").references(() => ukePermits.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	},
@@ -116,7 +115,7 @@ export const stationsPermits = pgTable(
 export const ukePermits = pgTable(
 	"uke_permits",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: varchar("station_id", { length: 16 }).notNull(),
 		operator_id: integer("operator_id")
 			.references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
@@ -143,7 +142,7 @@ export const ukePermits = pgTable(
  * { id: 1, station_id: 1, band_id: 1, config: { lac: 123, cid: 456 }, is_confirmed: false, last_updated: new Date(), date_created: new Date() }
  */
 export const cells = pgTable("cells", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	station_id: integer("station_id")
 		.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
@@ -162,7 +161,7 @@ export const cells = pgTable("cells", {
  * { id: 1, value: 1800, name: "GSM1800", ua_freq: 1710, duplex: "FDD" }
  */
 export const bands = pgTable("bands", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	value: integer("value").unique(),
 	name: varchar("name", { length: 10 }).notNull(),
 	ua_freq: integer("ua_freq"),
@@ -172,7 +171,7 @@ export const bands = pgTable("bands", {
 export const users = pgTable(
 	"users",
 	{
-		id: serial("id").primaryKey(),
+		id: varchar("id").primaryKey().notNull(),
 		username: varchar("username", { length: 100 }).unique(),
 		email: varchar("email", { length: 100 }).notNull().unique(),
 		password: varchar("password", { length: 255 }),
@@ -232,17 +231,17 @@ export const apiKeys = pgTable(
 	"api_keys",
 	{
 		id: text("id").primaryKey().notNull(),
-		userId: integer("user_id")
+		user_id: varchar("user_id")
 			.references(() => users.id, { onDelete: "cascade" })
 			.notNull(),
 		name: text("name").notNull(),
 		key: text("key").notNull().unique(),
 		enabled: boolean("enabled").default(true).notNull(),
 		expiresAt: timestamp({ withTimezone: true }),
-		metadata: jsonb("metadata"),
+		metadata: text("metadata"),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		permissions: jsonb("permissions"),
+		permissions: text("permissions"),
 		remaining: integer("remaining"),
 		refillAmount: integer("refill_amount"),
 		refillInterval: integer("refill_interval"),
@@ -251,7 +250,7 @@ export const apiKeys = pgTable(
 		rateLimitTimeWindow: integer("rate_limit_time_window"),
 		rateLimitMax: integer("rate_limit_max"),
 	},
-	(table) => [index("api_keys_user_id_idx").on(table.userId)],
+	(table) => [index("api_keys_user_id_idx").on(table.user_id)],
 );
 
 /**
@@ -262,7 +261,7 @@ export const apiKeys = pgTable(
 export const userLists = pgTable(
 	"user_lists",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		uuid: text("uuid")
 			.notNull()
 			.$defaultFn(() => nanoid(14)),
@@ -280,14 +279,14 @@ export const userLists = pgTable(
 );
 
 /**
- * Station notes table
+ * Station comments table
  * @example
  * { id: 1, station_id: 1, user_id: 1, attachments: [{ uuid: "12345678901234", type: "image/jpeg" }], content: "My Note", created_at: new Date(), updated_at: new Date() }
  */
-export const stationNotes = pgTable(
+export const stationComments = pgTable(
 	"station_comments",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: integer("station_id")
 			.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
@@ -310,10 +309,10 @@ export const stationNotes = pgTable(
 export const attachments = pgTable(
 	"attachments",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		name: text("name").notNull(),
 		uuid: uuid("uuid").notNull().defaultRandom(),
-		author_id: integer("author_id")
+		author_id: varchar("author_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		mime_type: varchar("mime_type", { length: 100 }).notNull(),
@@ -332,9 +331,9 @@ export const attachments = pgTable(
 export const submissions = pgTable(
 	"submissions",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
-		submitter_id: integer("submitter_id")
+		submitter_id: varchar("submitter_id")
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
 		status: SubmissionStatus("status").notNull().default("pending"),
@@ -383,7 +382,7 @@ export const submissions = pgTable(
 export const auditLogs = pgTable(
 	"audit_logs",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		action: varchar("action", { length: 100 }).notNull(),
 		table_name: varchar("table_name", { length: 100 }).notNull(),
 		record_id: integer("record_id"),
@@ -391,9 +390,9 @@ export const auditLogs = pgTable(
 		new_values: jsonb("new_values"),
 		metadata: jsonb("metadata"),
 		source: varchar("source", { length: 50 }),
-		ip_address: varchar("ip_address", { length: 45 }),
+		ip_address: varchar("ip_address", { length: 60 }),
 		user_agent: text("user_agent"),
-		invoked_by: integer("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+		invoked_by: text("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [
@@ -411,7 +410,7 @@ export const auditLogs = pgTable(
  * { id: 1, name: "Ericsson" }
  */
 export const radioLinesManufacturers = pgTable("radiolines_manufacturers", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 });
 
@@ -421,7 +420,7 @@ export const radioLinesManufacturers = pgTable("radiolines_manufacturers", {
  * { id: 1, name: "Antenna Type 1", manufacturer_id: 1 }
  */
 export const radioLinesAntennaTypes = pgTable("radiolines_antenna_types", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 	manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
 });
@@ -432,7 +431,7 @@ export const radioLinesAntennaTypes = pgTable("radiolines_antenna_types", {
  * { id: 1, name: "Transmitter Type 1", manufacturer_id: 1 }
  */
 export const radioLinesTransmitterTypes = pgTable("radiolines_transmitter_types", {
-	id: serial("id").primaryKey(),
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 	manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
 });
@@ -445,7 +444,7 @@ export const radioLinesTransmitterTypes = pgTable("radiolines_transmitter_types"
 export const ukeRadioLines = pgTable(
 	"uke_radiolines",
 	{
-		id: serial("id").primaryKey(),
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		tx_longitude: doublePrecision("tx_longitude").notNull(),
 		tx_latitude: doublePrecision("tx_latitude").notNull(),
 		tx_height: integer("tx_height").notNull(),

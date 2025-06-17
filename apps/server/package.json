@@ -1,8 +1,8 @@
 {
-	"name": "@openbts/server",
+	"name": "@openbts/sora",
 	"version": "1.0.0",
 	"private": true,
-	"description": "Core server for OpenBTS",
+	"description": "Sora - Core backend service",
 	"license": "GPL-3.0",
 	"type": "module",
 	"scripts": {
@@ -14,29 +14,33 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@fastify/cors": "10.0.1",
-		"@fastify/multipart": "9.0.1",
-		"@node-rs/argon2": "^2.0.2",
+		"@fastify/cors": "11.0.1",
+		"@fastify/multipart": "9.0.3",
+		"@node-rs/argon2": "2.0.2",
 		"@openbts/drizzle": "workspace:*",
-		"@openbts/translations": "workspace:*",
-		"better-auth": "^1.2.4",
-		"debug": "4.3.7",
-		"dotenv": "16.4.5",
-		"drizzle-orm": "0.36.3",
-		"fast-jwt": "5.0.5",
-		"fastify": "5.1.0",
-		"ioredis": "5.5.0",
-		"nanoid": "5.0.8",
-		"postgres": "3.4.5"
+		"better-auth": "1.2.9",
+		"debug": "4.4.1",
+		"dotenv": "16.5.0",
+		"drizzle-orm": "0.44.2",
+		"drizzle-zod": "0.8.2",
+		"fast-jwt": "6.0.2",
+		"fastify": "5.4.0",
+		"fastify-type-provider-zod": "5.0.1",
+		"figlet": "^1.8.1",
+		"ioredis": "5.6.1",
+		"nanoid": "5.1.5",
+		"postgres": "3.4.7",
+		"zod": "3.25.67"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",
 		"@types/debug": "4.1.12",
+		"@types/figlet": "1.7.0",
 		"@types/json-schema": "7.0.15",
-		"@types/node": "22.9.0",
-		"drizzle-kit": "0.28.1",
-		"tsx": "4.19.2",
-		"typescript": "5.6.3"
+		"@types/node": "24.0.3",
+		"drizzle-kit": "0.31.1",
+		"tsx": "4.20.3",
+		"typescript": "5.8.3"
 	},
 	"engines": {
 		"node": ">=18",

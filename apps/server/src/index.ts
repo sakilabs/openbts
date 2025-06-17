@@ -1,6 +1,6 @@
 import figlet from "figlet";
-import App from "./server/app.js";
-import { port } from "./server/config.js";
+import App from "./app.js";
+import { port } from "./config.js";
 
 console.log(await figlet("sora"));
 const app = new App();

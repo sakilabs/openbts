@@ -173,7 +173,7 @@ async function main() {
 	const sql = postgres(process.env.DATABASE_URL as string);
 	const db = drizzle({
 		client: sql,
-		schema,
+		schema: schemaRoute,
 	});
 
 	const multibar = new cliProgress.MultiBar(
@@ -286,7 +286,6 @@ async function main() {
 
 			const clid = parseIntSafe(row.CLID) ?? 0;
 			await db.insert(cells).values({
-				// @ts-expect-error: Drizzle bug?
 				station_id: stationID,
 				standard: row.standard,
 				band_id: band?.id ?? processedBands.get(null, null).id,

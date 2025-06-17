@@ -1,0 +1,53 @@
+import { operators } from "@openbts/drizzle";
+import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
+
+import type { FastifyRequest } from "fastify/types/request.js";
+import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+
+type ReqBody = { Body: typeof operators.$inferInsert };
+type ResponseData = typeof operators.$inferSelect;
+const operatorsSelectSchema = createSelectSchema(operators).strict();
+const operatorsInsertSchema = createInsertSchema(operators);
+const schemaRoute = {
+	body: operatorsInsertSchema,
+	response: z.object({
+		200: z.object({
+			success: z.boolean(),
+			data: operatorsSelectSchema,
+		}),
+	}),
+};
+
+async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
+	const { name, parent_id, mnc_code } = req.body;
+
+	try {
+		const operator = await db
+			.insert(operators)
+			.values({
+				name,
+				parent_id,
+				mnc_code,
+			})
+			.returning();
+
+		return res.send({ success: true, data: operator[0] });
+	} catch {
+		throw new ErrorResponse("FAILED_TO_CREATE");
+	}
+}
+
+const createOperator: Route<ReqBody, ResponseData> = {
+	url: "/operators",
+	method: "POST",
+	config: { permissions: ["write:operators"] },
+	schema: schemaRoute,
+	handler,
+};
+
+export default createOperator;

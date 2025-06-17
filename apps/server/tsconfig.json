@@ -5,5 +5,5 @@
 		"baseUrl": "./src"
 	},
 	"include": ["./src/**/*"],
-	"exclude": ["node_modules", "dist", "./src/server/routes/v1/old/**/*"]
+	"exclude": ["node_modules", "dist", "src/v1/old/**/*"]
 }
