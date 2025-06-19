@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { submissions } from "@openbts/drizzle";
+import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
@@ -7,52 +8,20 @@ import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-
-type ResponseData = {
-	message: string;
-};
+import type { IdParams, Route, SuccessResponse } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
-	params: {
-		type: "object",
-		properties: {
-			id: { type: "string" },
-		},
-		required: ["id"],
-	},
-	response: {
-		200: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-			},
-		},
-		// 404: {
-		// 	type: "object",
-		// 	properties: {
-		// 		success: { type: "boolean" },
-		// 		message: { type: "string" },
-		// 	},
-		// },
-		// 403: {
-		// 	type: "object",
-		// 	properties: {
-		// 		success: { type: "boolean" },
-		// 		message: { type: "string" },
-		// 	},
-		// },
-		// 500: {
-		// 	type: "object",
-		// 	properties: {
-		// 		success: { type: "boolean" },
-		// 		message: { type: "string" },
-		// 	},
-		// },
-	},
+	params: z.object({
+		id: z.number(),
+	}),
+	response: z.object({
+		200: z.object({
+			success: z.boolean(),
+		}),
+	}),
 };
 
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
+async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
@@ -60,7 +29,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["delete"] })) || false;
 
 	const submission = await db.query.submissions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(id)),
+		where: (fields, { eq }) => eq(fields.id, id),
 		columns: {
 			id: true,
 			submitter_id: true,
@@ -72,8 +41,8 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");
 
 	try {
-		await db.delete(submissions).where(eq(submissions.id, Number(id)));
-	} catch (error) {
+		await db.delete(submissions).where(eq(submissions.id, id));
+	} catch {
 		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 
@@ -82,7 +51,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	});
 }
 
-const deleteSubmission: Route<IdParams, ResponseData> = {
+const deleteSubmission: Route<IdParams> = {
 	url: "/submissions/:id",
 	method: "DELETE",
 	schema: schemaRoute,

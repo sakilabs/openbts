@@ -9,10 +9,10 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type ReqBody = { Body: typeof locations.$inferInsert };
-type ResponseData = typeof locations.$inferSelect;
 const locationsSelectSchema = createSelectSchema(locations).strict();
 const locationsInsertSchema = createInsertSchema(locations);
+type ReqBody = { Body: z.infer<typeof locationsInsertSchema> };
+type ResponseData = z.infer<typeof locationsSelectSchema>;
 const schemaRoute = {
 	body: locationsInsertSchema,
 	response: z.object({

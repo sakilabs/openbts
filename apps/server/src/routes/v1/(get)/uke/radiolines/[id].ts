@@ -15,7 +15,7 @@ import { ukeRadioLines } from "@openbts/drizzle";
 const radioLineSchema = createSelectSchema(ukeRadioLines);
 // const schemaRoute = {
 // 	params: z.object({
-// 		id: z.string(),
+// 		id: z.number(),
 // 	}),
 // 	response: z.object({
 // 		200: z.object({
@@ -30,7 +30,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
 	try {
 		const radioLine = await db.query.ukeRadioLines.findFirst({
-			where: (fields, { eq }) => eq(fields.id, Number(id)),
+			where: (fields, { eq }) => eq(fields.id, id),
 			with: {
 				operator: {
 					columns: {

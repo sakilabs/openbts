@@ -47,9 +47,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const userId = req.userSession?.user.id;
 
 	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
-
 	if (Number.isNaN(Number(station_id))) throw new ErrorResponse("INVALID_QUERY");
-
 	if (!content) throw new ErrorResponse("BAD_REQUEST");
 
 	try {

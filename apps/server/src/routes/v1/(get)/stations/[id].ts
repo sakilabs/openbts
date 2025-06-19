@@ -16,7 +16,7 @@ const locationSchema = createSelectSchema(locations);
 const operatorSchema = createSelectSchema(operators).omit({ is_visible: true });
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -34,7 +34,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	const { id } = req.params;
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.bts_id, Number(id)),
+		where: (fields, { eq }) => eq(fields.bts_id, id),
 		with: {
 			cells: true,
 			location: true,

@@ -15,7 +15,7 @@ const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -41,7 +41,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 					},
 				},
 			},
-			where: (fields, { eq }) => eq(fields.id, Number(id)),
+			where: (fields, { eq }) => eq(fields.id, id),
 		});
 		if (!permit) throw new ErrorResponse("NOT_FOUND");
 

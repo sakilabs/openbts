@@ -14,7 +14,7 @@ const bandSelectSchema = createSelectSchema(bands);
 
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -27,7 +27,7 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Band>>) {
 	const { id } = req.params;
 	const band = await db.query.bands.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(id)),
+		where: (fields, { eq }) => eq(fields.id, id),
 	});
 	if (!band) throw new ErrorResponse("NOT_FOUND");
 

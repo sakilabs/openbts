@@ -9,21 +9,21 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
-type Cell = typeof cells.$inferSelect & {
-	station: typeof stations.$inferSelect;
+const cellsSchema = createSelectSchema(cells);
+const stationsSchema = createSelectSchema(stations);
+type Cell = z.infer<typeof cellsSchema> & {
+	station: z.infer<typeof stationsSchema>;
 };
 type ReqParams = {
 	Params: {
-		station_id: string;
-		cell_id: string;
+		station_id: number;
+		cell_id: number;
 	};
 };
-const cellsSchema = createSelectSchema(cells);
-const stationsSchema = createSelectSchema(stations);
 const schemaRoute = {
 	params: z.object({
-		station_id: z.string(),
-		cell_id: z.string(),
+		station_id: z.number(),
+		cell_id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -38,10 +38,10 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cell>>) {
 	const { station_id, cell_id } = req.params;
 
-	if (Number.isNaN(Number(station_id)) || Number.isNaN(Number(cell_id))) throw new ErrorResponse("INVALID_QUERY");
+	if (Number.isNaN(station_id) || Number.isNaN(cell_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const cell = await db.query.cells.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(cell_id)),
+		where: (fields, { eq }) => eq(fields.id, cell_id),
 		with: {
 			station: true,
 		},

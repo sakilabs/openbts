@@ -13,7 +13,7 @@ type Region = typeof regions.$inferSelect;
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -27,7 +27,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	const { id } = req.params;
 
 	const region = await db.query.regions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(id)),
+		where: (fields, { eq }) => eq(fields.id, id),
 	});
 	if (!region) throw new ErrorResponse("NOT_FOUND");
 

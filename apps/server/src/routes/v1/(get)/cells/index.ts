@@ -18,7 +18,7 @@ const stationsSchema = createSelectSchema(stations);
 const bandsSchema = createSelectSchema(bands);
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({

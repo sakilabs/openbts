@@ -10,15 +10,15 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type ReqBody = { Body: typeof cells.$inferInsert };
-type ReqParams = { Params: { cell_id: string } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = typeof cells.$inferSelect;
 const cellsUpdateSchema = createUpdateSchema(cells).strict();
 const cellsSelectSchema = createSelectSchema(cells);
+type ReqBody = { Body: z.infer<typeof cellsUpdateSchema> };
+type ReqParams = { Params: { cell_id: number } };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof cellsSelectSchema>;
 const schemaRoute = {
 	params: z.object({
-		cell_id: z.string(),
+		cell_id: z.number(),
 	}),
 	body: cellsUpdateSchema,
 	response: z.object({
@@ -39,7 +39,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 				...req.body,
 				last_updated: new Date(),
 			})
-			.where(eq(cells.id, Number.parseInt(cell_id)))
+			.where(eq(cells.id, cell_id))
 			.returning();
 		if (!cell.length) throw new ErrorResponse("NOT_FOUND");
 

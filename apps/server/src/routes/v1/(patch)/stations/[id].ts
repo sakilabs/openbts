@@ -10,15 +10,15 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type ReqBody = { Body: typeof stations.$inferInsert };
-type ReqParams = { Params: { station_id: string } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = typeof stations.$inferSelect;
 const stationsUpdateSchema = createUpdateSchema(stations).strict();
 const stationsSelectSchema = createSelectSchema(stations);
+type ReqBody = { Body: z.infer<typeof stationsUpdateSchema> };
+type ReqParams = { Params: { station_id: number } };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof stationsSelectSchema>;
 const schemaRoute = {
 	params: z.object({
-		station_id: z.string(),
+		station_id: z.number(),
 	}),
 	body: stationsUpdateSchema,
 	response: z.object({
@@ -33,11 +33,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { station_id } = req.params;
 
 	try {
-		const station = await db
-			.update(stations)
-			.set(req.body)
-			.where(eq(stations.id, Number.parseInt(station_id)))
-			.returning();
+		const station = await db.update(stations).set(req.body).where(eq(stations.id, station_id)).returning();
 		if (!station.length) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({ success: true, data: station[0] });

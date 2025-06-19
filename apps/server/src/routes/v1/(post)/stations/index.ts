@@ -9,23 +9,14 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type ReqBody = {
-	Body: typeof stations.$inferInsert & { cells: (typeof cells.$inferInsert)[] };
-};
-type ReqParams = {
-	Params: {
-		station_id: string;
-	};
-};
-type RequestData = ReqParams & ReqBody;
-type ResponseData = typeof stations.$inferSelect;
 const stationsSelectSchema = createSelectSchema(stations).strict();
 const stationsInsertSchema = createInsertSchema(stations);
 const cellsInsertSchema = createInsertSchema(cells).strict();
+type ReqBody = {
+	Body: z.infer<typeof stationsSelectSchema> & { cells: z.infer<typeof cellsInsertSchema>[] };
+};
+type ResponseData = z.infer<typeof stationsSelectSchema>;
 const schemaRoute = {
-	params: z.object({
-		station_id: z.string(),
-	}),
 	body: stationsInsertSchema.extend({
 		cells: z.array(cellsInsertSchema),
 	}),
@@ -37,7 +28,7 @@ const schemaRoute = {
 	}),
 };
 
-async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
+async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { cells: cellsData, ...stationData } = req.body;
 
 	try {
@@ -78,7 +69,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	}
 }
 
-const createStation: Route<RequestData, ResponseData> = {
+const createStation: Route<ReqBody, ResponseData> = {
 	url: "/stations",
 	method: "POST",
 	config: { permissions: ["write:stations"] },

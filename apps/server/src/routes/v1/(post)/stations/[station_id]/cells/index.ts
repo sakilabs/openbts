@@ -10,21 +10,21 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
+const cellsInsertSchema = createInsertSchema(cells).strict();
+const cellsSelectSchema = createSelectSchema(cells);
 type ReqBody = {
-	Body: { cells: (typeof cells.$inferInsert)[] };
+	Body: { cells: z.infer<typeof cellsInsertSchema>[] };
 };
 type ReqParams = {
 	Params: {
-		station_id: string;
+		station_id: number;
 	};
 };
 type RequestData = ReqParams & ReqBody;
-type ResponseData = (typeof cells.$inferSelect)[];
-const cellsInsertSchema = createInsertSchema(cells).strict();
-const cellsSelectSchema = createSelectSchema(cells);
+type ResponseData = z.infer<typeof cellsSelectSchema>[];
 const schemaRoute = {
 	params: z.object({
-		station_id: z.string(),
+		station_id: z.number(),
 	}),
 	body: z.object({
 		cells: z.array(cellsInsertSchema),
@@ -44,7 +44,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	if (!cellsData || cellsData.length === 0) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: eq(stations.station_id, station_id),
+		where: eq(stations.id, station_id),
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 

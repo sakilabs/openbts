@@ -10,15 +10,15 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type ReqBody = { Body: typeof locations.$inferInsert };
-type ReqParams = { Params: { location_id: string } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = typeof locations.$inferSelect;
 const locationsUpdateSchema = createUpdateSchema(locations).strict();
 const locationsSelectSchema = createSelectSchema(locations);
+type ReqBody = { Body: z.infer<typeof locationsUpdateSchema> };
+type ReqParams = { Params: { location_id: number } };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof locationsSelectSchema>;
 const schemaRoute = {
 	params: z.object({
-		location_id: z.string(),
+		location_id: z.number(),
 	}),
 	body: locationsUpdateSchema,
 	response: z.object({
@@ -31,17 +31,15 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { location_id } = req.params;
-	const locationId = Number(location_id);
-
-	if (Number.isNaN(locationId)) throw new ErrorResponse("INVALID_QUERY");
+	if (Number.isNaN(location_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const location = await db.query.locations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, locationId),
+		where: (fields, { eq }) => eq(fields.id, location_id),
 	});
 	if (!location) throw new ErrorResponse("NOT_FOUND");
 
 	try {
-		const updated = await db.update(locations).set(req.body).where(eq(locations.id, locationId)).returning();
+		const updated = await db.update(locations).set(req.body).where(eq(locations.id, location_id)).returning();
 
 		return res.send({
 			success: true,

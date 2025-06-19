@@ -1,41 +1,26 @@
 import { eq } from "drizzle-orm";
 import { stations } from "@openbts/drizzle";
+import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import type { IdParams, SuccessResponse, Route } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
-	params: {
-		type: "object",
-		properties: {
-			id: { type: "string" },
-		},
-		required: ["id"],
-	},
-	response: {
-		200: {
-			type: "object",
-			properties: {
-				success: { type: "boolean" },
-			},
-		},
-		// 404: {
-		// 	type: "object",
-		// 	properties: {
-		// 		success: { type: "boolean" },
-		// 		error: { type: "string" },
-		// 	},
-		// },
-	},
+	params: z.object({
+		id: z.number(),
+	}),
+	response: z.object({
+		200: z.object({
+			success: z.boolean(),
+		}),
+	}),
 };
-
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<unknown>>) {
-	const { id } = req.params;
-	const stationId = Number(id);
+async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
+	const { id: stationId } = req.params;
 
 	if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
 
@@ -50,7 +35,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		return res.send({
 			success: true,
 		});
-	} catch (error) {
+	} catch {
 		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 }

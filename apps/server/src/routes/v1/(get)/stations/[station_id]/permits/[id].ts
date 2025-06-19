@@ -9,22 +9,23 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
-type Permit = typeof ukePermits.$inferSelect & {
-	band: typeof bands.$inferSelect;
-	operator: Omit<typeof operators.$inferSelect, "is_visible">;
+const permitsSchema = createSelectSchema(ukePermits);
+const bandsSchema = createSelectSchema(bands);
+const ukePermitsSchema = createSelectSchema(ukePermits);
+const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
+type Permit = z.infer<typeof ukePermitsSchema> & {
+	band: z.infer<typeof bandsSchema>;
+	operator: z.infer<typeof operatorsSchema>;
 };
 type ReqParams = {
 	Params: {
-		station_id: string;
-		permit_id: string;
+		station_id: number;
+		permit_id: number;
 	};
 };
-const permitsSchema = createSelectSchema(ukePermits);
-const bandsSchema = createSelectSchema(bands);
-const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
 const schemaRoute = {
 	params: z.object({
-		station_id: z.string(),
+		station_id: z.number(),
 		permit_id: z.string(),
 	}),
 	response: z.object({
@@ -40,19 +41,16 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Permit>>) {
 	const { station_id, permit_id } = req.params;
-	const stationId = Number(station_id);
-	const permitId = Number(permit_id);
-
-	if (Number.isNaN(stationId) || Number.isNaN(permitId)) throw new ErrorResponse("INVALID_QUERY");
+	if (Number.isNaN(station_id) || Number.isNaN(permit_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	try {
 		const station = await db.query.stations.findFirst({
-			where: (fields, { eq }) => eq(fields.id, stationId),
+			where: (fields, { eq }) => eq(fields.id, station_id),
 		});
 		if (!station) throw new ErrorResponse("NOT_FOUND");
 
 		const permitLink = await db.query.stationsPermits.findFirst({
-			where: (fields, { and, eq }) => and(eq(fields.station_id, stationId), eq(fields.permit_id, permitId)),
+			where: (fields, { and, eq }) => and(eq(fields.station_id, station_id), eq(fields.permit_id, permit_id)),
 			with: {
 				permit: {
 					with: {

@@ -6,7 +6,7 @@ import type { ReplyPayload } from "./fastify.interface.js";
 export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = unknown> = {
 	url: string;
 	method: string;
-	handler: (req: FastifyRequest<T>, res: ReplyPayload<JSONBody<U>>) => Promise<void> | void;
+	handler: (req: FastifyRequest<T>, res: ReplyPayload<JSONBody<U> | SuccessResponse>) => Promise<void> | void;
 	onRequest?: ((req: FastifyRequest, res: FastifyReply, done: (err?: Error) => void) => void)[];
 	config?: {
 		permissions?: string[];
@@ -17,6 +17,10 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
 
 export type JSONBody<T = void> = RouteGenericInterface & {
 	Reply: Response<T>;
+};
+
+export type SuccessResponse = RouteGenericInterface & {
+	Reply: { success: true };
 };
 
 type Response<T> = SuccessfulResponse<T>;

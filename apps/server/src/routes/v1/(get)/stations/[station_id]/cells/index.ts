@@ -9,16 +9,16 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
-type Cells = (typeof cells.$inferSelect)[];
+const cellsSchema = createSelectSchema(cells);
+type Cells = z.infer<typeof cellsSchema>[];
 type ReqParams = {
 	Params: {
-		station_id: string;
+		station_id: number;
 	};
 };
-const cellsSchema = createSelectSchema(cells);
 const schemaRoute = {
 	params: z.object({
-		station_id: z.string(),
+		station_id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -30,11 +30,10 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cells>>) {
 	const { station_id } = req.params;
-
-	if (Number.isNaN(Number(station_id))) throw new ErrorResponse("INVALID_QUERY");
+	if (Number.isNaN(station_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(station_id)),
+		where: (fields, { eq }) => eq(fields.id, station_id),
 		with: {
 			cells: true,
 		},

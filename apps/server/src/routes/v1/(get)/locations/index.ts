@@ -14,7 +14,7 @@ const locationsSchema = createSelectSchema(locations);
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({

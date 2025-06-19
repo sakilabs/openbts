@@ -17,7 +17,7 @@ const submittersSchema = createSelectSchema(users);
 const reviewersSchema = createSelectSchema(users);
 const schemaRoute = {
 	params: z.object({
-		id: z.string(),
+		id: z.number(),
 	}),
 	response: z.object({
 		200: z.object({
@@ -41,7 +41,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	if (hasAdminPermission) withTables.reviewer = true;
 
 	const submission = await db.query.submissions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(id)),
+		where: (fields, { eq }) => eq(fields.id, id),
 		with: withTables,
 	});
 	if (!submission) throw new ErrorResponse("NOT_FOUND");

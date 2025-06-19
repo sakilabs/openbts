@@ -1,34 +1,55 @@
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
+import { ukePermits, bands, operators } from "@openbts/drizzle";
 
-import type { ukePermits, bands, operators } from "@openbts/drizzle";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
-type Permit = typeof ukePermits.$inferSelect & {
-	band?: typeof bands.$inferSelect;
-	operator?: Omit<typeof operators.$inferSelect, "is_visible">;
+const ukePermitsSchema = createSelectSchema(ukePermits);
+const bandsSchema = createSelectSchema(bands);
+const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
+type Permit = z.infer<typeof ukePermitsSchema> & {
+	band?: z.infer<typeof bandsSchema>;
+	operator?: z.infer<typeof operatorsSchema>;
 };
 type ReqParams = {
 	Params: {
-		station_id: string;
+		station_id: number;
 	};
+};
+const schemaRoute = {
+	params: z.object({
+		station_id: z.number(),
+	}),
+	response: z.object({
+		200: z.object({
+			success: z.boolean(),
+			data: z.array(
+				ukePermitsSchema.extend({
+					band: bandsSchema.optional(),
+					operator: operatorsSchema.optional(),
+				}),
+			),
+		}),
+	}),
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Permit[]>>) {
 	const { station_id } = req.params;
-
-	if (Number.isNaN(Number(station_id))) throw new ErrorResponse("INVALID_QUERY");
+	if (Number.isNaN(station_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, Number(station_id)),
+		where: (fields, { eq }) => eq(fields.id, station_id),
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		const permitsLinks = await db.query.stationsPermits.findMany({
-			where: (fields, { eq }) => eq(fields.station_id, Number(station_id)),
+			where: (fields, { eq }) => eq(fields.station_id, station_id),
 			with: {
 				permit: {
 					with: {
@@ -60,6 +81,7 @@ const getStationPermits: Route<ReqParams, Permit[]> = {
 	url: "/stations/:station_id/permits",
 	method: "GET",
 	config: { permissions: ["read:stations", "read:uke_permits"] },
+	schema: schemaRoute,
 	handler,
 };
 
