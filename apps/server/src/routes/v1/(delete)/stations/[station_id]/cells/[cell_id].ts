@@ -20,11 +20,11 @@ const schemaRoute = {
 		station_id: z.number(),
 		cell_id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<SuccessResponse>) {

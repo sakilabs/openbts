@@ -12,12 +12,12 @@ import type { RouteGenericInterface } from "fastify";
 type ResponseData = Omit<typeof operators.$inferSelect, "is_visible">;
 const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
 const schemaRoute = {
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: operatorsSchema,
 		}),
-	}),
+	},
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData[]>>) {

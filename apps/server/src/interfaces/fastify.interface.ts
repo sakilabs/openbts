@@ -1,13 +1,29 @@
-import type { FastifyReply, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault, RouteGenericInterface } from "fastify";
+import type {
+	FastifyBaseLogger,
+	FastifyInstance,
+	FastifyReply,
+	RawReplyDefaultExpression,
+	RawRequestDefaultExpression,
+	RawServerDefault,
+	RouteGenericInterface,
+} from "fastify";
 import type { auth } from "../plugins/betterauth.plugin.js";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
-type UserSession = Omit<(typeof auth.$Infer.Session)["user"], "id"> & { id: string };
-export type Session = Omit<typeof auth.$Infer.Session, "user"> & { user: UserSession };
+export type Session = typeof auth.$Infer.Session;
 type ApiKey = Awaited<ReturnType<typeof auth.api.getApiKey>>;
 export type ApiToken = Omit<
 	ApiKey,
 	"key" | "refillInterval" | "refillAmount" | "lastRefillAt" | "rateLimitEnabled" | "requestCount" | "remaining"
 > | null;
+
+export type FastifyZodInstance = FastifyInstance<
+	RawServerDefault,
+	RawRequestDefaultExpression<RawServerDefault>,
+	RawReplyDefaultExpression<RawServerDefault>,
+	FastifyBaseLogger,
+	ZodTypeProvider
+>;
 
 declare module "fastify" {
 	export interface FastifyInstance {

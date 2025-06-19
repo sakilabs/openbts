@@ -4,14 +4,14 @@ import { fileURLToPath } from "node:url";
 
 import { logger } from "../config.js";
 
-import type { FastifyInstance, RouteOptions } from "fastify";
-import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import type { RouteOptions } from "fastify";
+import type { FastifyZodInstance } from "../interfaces/fastify.interface.js";
 
 function walk(dir: string): string[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((file) => (file.isDirectory() ? walk(join(dir, file.name)) : join(dir, file.name)));
 }
 
-export async function APIv1Controller(fastify: FastifyInstance) {
+export async function APIv1Controller(fastify: FastifyZodInstance) {
 	const __dirname = fileURLToPath(new URL(".", import.meta.url));
 	const routeFiles = walk(join(__dirname, "..", "routes", "v1"));
 	const log = logger.extend("APIv1Controller");
@@ -32,7 +32,7 @@ export async function APIv1Controller(fastify: FastifyInstance) {
 			}
 
 			log("Registering route: %o %s", route.method, route.url);
-			fastify.withTypeProvider<ZodTypeProvider>().route(route);
+			fastify.route(route);
 		} catch (error) {
 			log("Error registering route %s: %o", file, error);
 		}

@@ -1,8 +1,9 @@
 import { RateLimitService } from "../services/ratelimit.service.js";
 import { redis } from "../database/redis.js";
+import { ErrorResponse } from "../errors.js";
 
-import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { ErrorResponse } from "errors.js";
+import type { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyZodInstance } from "../interfaces/fastify.interface.js";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -10,7 +11,7 @@ declare module "fastify" {
 	}
 }
 
-export const registerRateLimit = (fastify: FastifyInstance) => {
+export const registerRateLimit = (fastify: FastifyZodInstance) => {
 	const rateLimitService = new RateLimitService(redis);
 
 	fastify.decorate("rateLimitService", rateLimitService);

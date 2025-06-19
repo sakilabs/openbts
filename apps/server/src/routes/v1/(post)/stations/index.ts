@@ -20,12 +20,12 @@ const schemaRoute = {
 	body: stationsInsertSchema.extend({
 		cells: z.array(cellsInsertSchema),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: stationsSelectSchema,
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {

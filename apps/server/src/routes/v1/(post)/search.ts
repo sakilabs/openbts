@@ -28,7 +28,7 @@ const schemaRoute = {
 	body: z.object({
 		query: z.string().min(1, "Query must not be empty"),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(
@@ -39,7 +39,7 @@ const schemaRoute = {
 				}),
 			),
 		}),
-	}),
+	},
 };
 
 const SIMILARITY_THRESHOLD = 0.6;

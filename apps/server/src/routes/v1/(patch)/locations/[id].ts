@@ -21,12 +21,12 @@ const schemaRoute = {
 		location_id: z.number(),
 	}),
 	body: locationsUpdateSchema,
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: locationsSelectSchema,
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {

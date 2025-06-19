@@ -4,9 +4,9 @@ import { ErrorResponse } from "../errors.js";
 
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Route } from "../interfaces/routes.interface.js";
-import type { ApiToken, Session } from "../interfaces/fastify.interface.js";
+import type { ApiToken } from "../interfaces/fastify.interface.js";
 
-export async function authHook(req: FastifyRequest, res: FastifyReply) {
+export async function authHook(req: FastifyRequest, _: FastifyReply) {
 	const route = req.routeOptions as Route;
 	const url = req.url;
 
@@ -38,7 +38,7 @@ export async function authHook(req: FastifyRequest, res: FastifyReply) {
 		const apiKey = authHeader.split("")[1];
 		if (!apiKey) throw new ErrorResponse("UNAUTHORIZED");
 
-		let routePermissions: Record<string, string[]> | undefined = undefined;
+		let routePermissions: Record<string, string[]> | undefined;
 		if (route?.config?.permissions) {
 			// Example: ["read:users", "write:posts"] => { users: ["read"], posts: ["write"] }
 			routePermissions = {};

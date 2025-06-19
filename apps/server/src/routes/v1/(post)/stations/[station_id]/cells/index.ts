@@ -29,12 +29,12 @@ const schemaRoute = {
 	body: z.object({
 		cells: z.array(cellsInsertSchema),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(cellsSelectSchema),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {

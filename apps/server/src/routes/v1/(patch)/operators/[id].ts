@@ -21,12 +21,12 @@ const schemaRoute = {
 		operator_id: z.number(),
 	}),
 	body: operatorsUpdateSchema,
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: operatorsSelectSchema,
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {

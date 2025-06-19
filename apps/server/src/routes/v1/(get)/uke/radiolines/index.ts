@@ -36,12 +36,12 @@ const schemaRoute = {
 		page: z.number().min(1).default(1),
 		operator: z.string().optional(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(ukeRadioLinesSchema.extend({ operator: operatorsSchema })),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<FormattedRadioLine[]>>) {

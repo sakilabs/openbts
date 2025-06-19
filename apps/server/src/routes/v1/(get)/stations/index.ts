@@ -45,12 +45,12 @@ const schemaRoute = {
 			.regex(/^\d+(,\d+)*$/)
 			.optional(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(stationsSchema),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Station[]>>) {

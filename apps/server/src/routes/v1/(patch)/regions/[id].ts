@@ -21,12 +21,12 @@ const schemaRoute = {
 		region_id: z.number(),
 	}),
 	body: regionsUpdateSchema,
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: regionsSelectSchema,
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {

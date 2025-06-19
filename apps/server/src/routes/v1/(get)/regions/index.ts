@@ -12,12 +12,12 @@ import type { RouteGenericInterface } from "fastify";
 type Region = typeof regions.$inferSelect;
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(regionsSchema),
 		}),
-	}),
+	},
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Region[]>>) {

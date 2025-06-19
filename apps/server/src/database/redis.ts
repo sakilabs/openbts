@@ -1,25 +1,27 @@
-import { Redis } from "ioredis";
+import { createClient } from "redis";
 import { logger } from "../config.js";
 
 const redisLogger = logger.extend("redis");
 
-export const redis = new Redis({
-	host: process.env.REDIS_HOST || "localhost",
-	port: Number(process.env.REDIS_PORT) || 6379,
-	password: process.env.REDIS_PASSWORD,
-	retryStrategy: (times) => {
-		const delay = Math.min(times * 10000, 2000);
-		redisLogger("Retrying Redis connection in %d ms", delay);
-		return delay;
+export const redis = createClient({
+	url: process.env.REDIS_URL || "redis://localhost:6379",
+	socket: {
+		reconnectStrategy: (retries: number) => {
+			const delay = Math.min(retries * 1000, 2000);
+			redisLogger("Retrying Redis connection in %d ms", delay);
+			return delay;
+		},
+		connectTimeout: 1000,
 	},
-});
-
-redis.on("error", (err) => {
-	redisLogger("Redis error: %O", err);
-});
-
-redis.on("connect", () => {
-	redisLogger("Connected to Redis");
-});
+})
+	.on("error", (err: Error) => {
+		redisLogger("Redis error: %O", err);
+	})
+	.on("connect", () => {
+		redisLogger("Connected to Redis");
+	})
+	.on("ready", () => {
+		redisLogger("Redis is ready");
+	});
 
 export default redis;

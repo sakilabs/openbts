@@ -16,12 +16,12 @@ const schemaRoute = {
 	params: z.object({
 		id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(bandSelectSchema),
 		}),
-	}),
+	},
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Bands[]>>) {

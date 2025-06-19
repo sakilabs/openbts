@@ -16,14 +16,14 @@ const schemaRoute = {
 	params: z.object({
 		id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: locationsSchema.extend({
 				region: regionsSchema,
 			}),
 		}),
-	}),
+	},
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData[]>>) {

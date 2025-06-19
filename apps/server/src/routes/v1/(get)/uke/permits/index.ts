@@ -50,12 +50,12 @@ const schemaRoute = {
 			.optional(),
 		decisionType: z.literal(["zmP", "P"]).optional(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(ukePermitsSchema.extend({ band: bandsSchema, operator: operatorsSchema })),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {

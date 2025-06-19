@@ -99,7 +99,7 @@ export const auth = betterAuth({
 			return value ? value : null;
 		},
 		set: async (key, value, ttl) => {
-			if (ttl) await redis.set(`auth:${key}`, value, "EX", ttl);
+			if (ttl) await redis.setEx(`auth:${key}`, ttl, value);
 			else await redis.set(`auth:${key}`, value);
 		},
 		delete: async (key) => {

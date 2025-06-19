@@ -20,12 +20,12 @@ const schemaRoute = {
 	params: z.object({
 		station_id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(cellsSchema),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cells>>) {

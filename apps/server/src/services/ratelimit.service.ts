@@ -1,7 +1,8 @@
-import type { Redis } from "ioredis";
-import type { FastifyRequest } from "fastify";
 import { generateFingerprint } from "../utils/fingerprint.js";
+
+import type { FastifyRequest } from "fastify";
 import type { TokenTier, UserRole } from "../interfaces/auth.interface.js";
+import type { redis } from "../database/redis.js";
 
 export type RateLimitTier = {
 	max: number;
@@ -31,7 +32,7 @@ export interface RateLimitResult {
 }
 
 export class RateLimitService {
-	private redis: Redis;
+	private redis: typeof redis;
 	private prefix = "ratelimit:";
 
 	private defaultTiers: Required<NonNullable<RateLimitOptions["tiers"]>> = {
@@ -62,7 +63,7 @@ export class RateLimitService {
 	 * @param redisClient Redis client instance
 	 * @param options Rate limit configuration options
 	 */
-	constructor(redisClient: Redis, options: Partial<RateLimitOptions> = {}) {
+	constructor(redisClient: typeof redis, options: Partial<RateLimitOptions> = {}) {
 		this.redis = redisClient;
 
 		this.options = {
@@ -226,7 +227,7 @@ export class RateLimitService {
 			};
 		}
 
-		if (count === 0) await this.redis.setex(key, rateLimit.window, "1");
+		if (count === 0) await this.redis.setEx(key, rateLimit.window, "1");
 		else await this.redis.incr(key);
 
 		const ttl = await this.redis.ttl(key);

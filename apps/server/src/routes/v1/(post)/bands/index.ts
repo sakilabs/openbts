@@ -15,12 +15,12 @@ type ReqBody = { Body: z.infer<typeof bandsInsertSchema> };
 type ResponseData = z.infer<typeof bandsSelectSchema>;
 const schemaRoute = {
 	body: bandsInsertSchema,
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: bandsSelectSchema,
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {

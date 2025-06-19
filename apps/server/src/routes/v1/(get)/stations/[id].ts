@@ -18,7 +18,7 @@ const schemaRoute = {
 	params: z.object({
 		id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: stationSchema.extend({
@@ -27,7 +27,7 @@ const schemaRoute = {
 				operator: operatorSchema,
 			}),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Station>>) {

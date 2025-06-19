@@ -6,13 +6,13 @@ import { APIv1Controller } from "./controllers/v1.controller.js";
 import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
-import type { ErrorResponse, ValidationError } from "./errors.js";
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 
-import type { FastifyInstance } from "fastify";
-import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import type { ErrorResponse, ValidationError } from "./errors.js";
+import type { FastifyZodInstance } from "./interfaces/fastify.interface.js";
 
 export default class App {
-	fastify: FastifyInstance;
+	fastify: FastifyZodInstance;
 	logger: debug.Debugger;
 
 	constructor() {
@@ -33,7 +33,7 @@ export default class App {
 
 			// 	return new ValidationError(formattedErrors);
 			// },
-		});
+		}).withTypeProvider<ZodTypeProvider>();
 		this.fastify.setValidatorCompiler(validatorCompiler);
 		this.fastify.setSerializerCompiler(serializerCompiler);
 

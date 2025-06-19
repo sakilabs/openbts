@@ -25,7 +25,7 @@ const schemaRoute = {
 	params: z.object({
 		station_id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: z.array(
@@ -35,7 +35,7 @@ const schemaRoute = {
 				}),
 			),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Permit[]>>) {

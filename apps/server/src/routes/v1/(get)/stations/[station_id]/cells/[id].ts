@@ -25,20 +25,25 @@ const schemaRoute = {
 		station_id: z.number(),
 		cell_id: z.number(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: cellsSchema.extend({
 				station: stationsSchema,
 			}),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cell>>) {
 	const { station_id, cell_id } = req.params;
 
 	if (Number.isNaN(station_id) || Number.isNaN(cell_id)) throw new ErrorResponse("INVALID_QUERY");
+
+	const station = await db.query.stations.findFirst({
+		where: (fields, { eq }) => eq(fields.id, station_id),
+	});
+	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	const cell = await db.query.cells.findFirst({
 		where: (fields, { eq }) => eq(fields.id, cell_id),

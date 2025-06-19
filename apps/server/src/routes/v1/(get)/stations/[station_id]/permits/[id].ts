@@ -28,7 +28,7 @@ const schemaRoute = {
 		station_id: z.number(),
 		permit_id: z.string(),
 	}),
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: permitsSchema.extend({
@@ -36,7 +36,7 @@ const schemaRoute = {
 				operator: operatorsSchema,
 			}),
 		}),
-	}),
+	},
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Permit>>) {

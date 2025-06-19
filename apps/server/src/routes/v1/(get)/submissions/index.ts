@@ -14,7 +14,7 @@ const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const usersSchema = createSelectSchema(users).omit({ password: true });
 const schemaRoute = {
-	response: z.object({
+	response: {
 		200: z.object({
 			success: z.boolean(),
 			data: submissionsSchema.extend({
@@ -23,7 +23,7 @@ const schemaRoute = {
 				reviewer: usersSchema.optional(),
 			}),
 		}),
-	}),
+	},
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Submission[]>>) {
