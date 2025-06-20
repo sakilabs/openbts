@@ -70,7 +70,7 @@ export const locations = pgTable("locations", {
 /**
  * Stations table
  * @example
- * { id: 1, station_id: "1234567890123456", bts_id: 1, location_id: 1, operator_id: 1, rnc: 0, enbi: 0, is_cdma: false, notes: "Test station", last_updated: new Date(), date_created: new Date(), is_confirmed: false }
+ * { id: 1, station_id: "1234567890123456", bts_id: 1, location_id: 1, operator_id: 1, rnc: 0, enbi: 0, is_cdma: false, notes: "Test station", updatedAt: new Date(), createdAt: new Date(), is_confirmed: false }
  */
 export const stations = pgTable(
 	"stations",
@@ -84,8 +84,8 @@ export const stations = pgTable(
 		enbi: integer("enbi").default(0),
 		is_cdma: boolean("is_cdma").default(false),
 		notes: text("notes"),
-		last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		is_confirmed: boolean("is_confirmed").default(false),
 		status: varchar("status", { length: 100 }),
 	},
@@ -110,7 +110,7 @@ export const stationsPermits = pgTable(
 /**
  * UKE permits table
  * @example
- * { id: 1, station_id: "1234567890123456", operator_id: 1, decision_number: "123456", decision_type: "zmP", expiry_date: new Date(), longitude: 52.2297, latitude: 21.0122, city: "Warsaw", location: "ul. Marszałkowska 1", band_id: 1, last_updated: new Date(), date_created: new Date() }
+ * { id: 1, station_id: "1234567890123456", operator_id: 1, decision_number: "123456", decision_type: "zmP", expiry_date: new Date(), longitude: 52.2297, latitude: 21.0122, city: "Warsaw", location: "ul. Marszałkowska 1", band_id: 1, updatedAt: new Date(), createdAt: new Date() }
  */
 export const ukePermits = pgTable(
 	"uke_permits",
@@ -130,8 +130,8 @@ export const ukePermits = pgTable(
 		band_id: integer("band_id")
 			.references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
-		last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [index("uke_permits_station_id_idx").on(table.station_id)],
 );
@@ -139,7 +139,7 @@ export const ukePermits = pgTable(
 /**
  * Cells table
  * @example
- * { id: 1, station_id: 1, band_id: 1, config: { lac: 123, cid: 456 }, is_confirmed: false, last_updated: new Date(), date_created: new Date() }
+ * { id: 1, station_id: 1, band_id: 1, config: { lac: 123, cid: 456 }, is_confirmed: false, updatedAt: new Date(), createdAt: new Date() }
  */
 export const cells = pgTable("cells", {
 	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
@@ -151,8 +151,8 @@ export const cells = pgTable("cells", {
 		.notNull(),
 	config: jsonb("config").notNull().$type<{ lac: number | null; cid: number | null }>(),
 	is_confirmed: boolean("is_confirmed").default(false),
-	last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
 /**
@@ -177,11 +177,11 @@ export const users = pgTable(
 		password: varchar("password", { length: 255 }),
 		image: text("image"),
 		name: text("name"),
-		role: Role("role").notNull().default("user"),
+		role: text("role").notNull().default("user"),
 		last_login: timestamp({ withTimezone: true }),
 		emailVerified: timestamp({ withTimezone: true }),
-		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		isAnonymous: boolean("isAnonymous").default(false),
 	},
 	(table) => [index("users_id_idx").on(table.id), index("users_email_idx").on(table.email)],
@@ -256,7 +256,7 @@ export const apiKeys = pgTable(
 /**
  * User lists table
  * @example
- * { id: 1, uuid: "12345678901234", name: "My List", description: "My List Description", is_public: false, created_by: 1, stations: [1, 2, 3], created_at: new Date(), updated_at: new Date() }
+ * { id: 1, uuid: "12345678901234", name: "My List", description: "My List Description", is_public: false, created_by: 1, stations: [1, 2, 3], createdAt: new Date(), updatedAt: new Date() }
  */
 export const userLists = pgTable(
 	"user_lists",
@@ -272,8 +272,8 @@ export const userLists = pgTable(
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		stations: jsonb("stations").$type<number[]>().notNull(),
-		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [index("user_lists_id_idx").on(table.id)],
 );
@@ -281,7 +281,7 @@ export const userLists = pgTable(
 /**
  * Station comments table
  * @example
- * { id: 1, station_id: 1, user_id: 1, attachments: [{ uuid: "12345678901234", type: "image/jpeg" }], content: "My Note", created_at: new Date(), updated_at: new Date() }
+ * { id: 1, station_id: 1, user_id: 1, attachments: [{ uuid: "12345678901234", type: "image/jpeg" }], content: "My Note", createdAt: new Date(), updatedAt: new Date() }
  */
 export const stationComments = pgTable(
 	"station_comments",
@@ -295,8 +295,8 @@ export const stationComments = pgTable(
 			.notNull(),
 		attachments: jsonb("attachments").$type<{ uuid: string; type: string }[]>(),
 		content: text("content").notNull(),
-		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [index("station_comments_station_id_idx").on(table.station_id), index("station_comments_user_id_idx").on(table.user_id)],
 );
@@ -304,7 +304,7 @@ export const stationComments = pgTable(
 /**
  * Attachments table
  * @example
- * { id: 1, name: "myfile.jpg", uuid: "12345678901234", author_id: 1, mime_type: "image/jpeg", size: 123456, created_at: new Date(), updated_at: new Date() }
+ * { id: 1, name: "myfile.jpg", uuid: "12345678901234", author_id: 1, mime_type: "image/jpeg", size: 123456, createdAt: new Date(), updatedAt: new Date() }
  */
 export const attachments = pgTable(
 	"attachments",
@@ -317,8 +317,8 @@ export const attachments = pgTable(
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		mime_type: varchar("mime_type", { length: 100 }).notNull(),
 		size: integer("size").notNull(),
-		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [index("attachment_author_id_idx").on(table.author_id)],
 );
@@ -326,7 +326,7 @@ export const attachments = pgTable(
 /**
  * Submissions table
  * @example
- * { id: 1, station_id: 1, submitter_id: 1, status: "pending", type: "new", data: { station: { operator_id: 1, rnc: 0, enbi: 0, is_cdma: false, notes: "Test station" }, cells: [{ band: { value: 1800, name: "GSM1800", ua_freq: 1710, duplex: "FDD" }, config: { lac: 123, cid: 456 } }] }, reviewer_id: null, review_notes: null, created_at: new Date(), updated_at: new Date(), reviewed_at: null }
+ * { id: 1, station_id: 1, submitter_id: 1, status: "pending", type: "new", data: { station: { operator_id: 1, rnc: 0, enbi: 0, is_cdma: false, notes: "Test station" }, cells: [{ band: { value: 1800, name: "GSM1800", ua_freq: 1710, duplex: "FDD" }, config: { lac: 123, cid: 456 } }] }, reviewer_id: null, review_notes: null, createdAt: new Date(), updatedAt: new Date(), reviewed_at: null }
  */
 export const submissions = pgTable(
 	"submissions",
@@ -363,8 +363,8 @@ export const submissions = pgTable(
 		}>(),
 		reviewer_id: integer("reviewer_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		review_notes: text("review_notes"),
-		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		reviewed_at: timestamp({ withTimezone: true }),
 	},
 	(table) => [
@@ -377,7 +377,7 @@ export const submissions = pgTable(
 /**
  * Audit logs table
  * @example
- * { id: 1, action: "stations.create", table_name: "stations", record_id: 1, old_values: {}, new_values: {}, metadata: {}, source: "api", ip_address: "127.0.0.1", user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36", invoked_by: 1, created_at: new Date() }
+ * { id: 1, action: "stations.create", table_name: "stations", record_id: 1, old_values: {}, new_values: {}, metadata: {}, source: "api", ip_address: "127.0.0.1", user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36", invoked_by: 1, createdAt: new Date() }
  */
 export const auditLogs = pgTable(
 	"audit_logs",
@@ -393,13 +393,13 @@ export const auditLogs = pgTable(
 		ip_address: varchar("ip_address", { length: 60 }),
 		user_agent: text("user_agent"),
 		invoked_by: text("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
-		created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [
 		index("audit_logs_record_id_idx").on(table.record_id),
 		index("audit_logs_invoked_by_idx").on(table.invoked_by),
 		index("audit_logs_table_name_idx").on(table.table_name),
-		index("audit_logs_created_at_idx").on(table.created_at),
+		index("audit_logs_date_created_idx").on(table.createdAt),
 		index("audit_logs_action_idx").on(table.action),
 	],
 );
@@ -439,7 +439,7 @@ export const radioLinesTransmitterTypes = pgTable("radiolines_transmitter_types"
 /**
  * UKE radiolines table
  * @example
- * { id: 1, tx_longitude: 52.2297, tx_latitude: 21.0122, tx_height: 100, rx_longitude: 52.2297, rx_latitude: 21.0122, rx_height: 50, freq: 1800, ch_num: 1, plan_symbol: "A", ch_width: 5, polarization: "H", modulation_type: "QPSK", bandwidth: "20", tx_eirp: 30, tx_antenna_attenuation: 10, tx_transmitter_type_id: 1, tx_antenna_type_id: 1, tx_antenna_gain: 15, tx_antenna_height: 100, rx_antenna_type_id: 1, rx_antenna_gain: 10, rx_antenna_height: 50, rx_noise_figure: 5, rx_atpc_attenuation: 3, operator_id: 1, permit_number: "123456", decision_type: "zmP", expiry_date: new Date(), last_updated: new Date(), date_created: new Date() }
+ * { id: 1, tx_longitude: 52.2297, tx_latitude: 21.0122, tx_height: 100, rx_longitude: 52.2297, rx_latitude: 21.0122, rx_height: 50, freq: 1800, ch_num: 1, plan_symbol: "A", ch_width: 5, polarization: "H", modulation_type: "QPSK", bandwidth: "20", tx_eirp: 30, tx_antenna_attenuation: 10, tx_transmitter_type_id: 1, tx_antenna_type_id: 1, tx_antenna_gain: 15, tx_antenna_height: 100, rx_antenna_type_id: 1, rx_antenna_gain: 10, rx_antenna_height: 50, rx_noise_figure: 5, rx_atpc_attenuation: 3, operator_id: 1, permit_number: "123456", decision_type: "zmP", expiry_date: new Date(), updatedAt: new Date(), createdAt: new Date() }
  */
 export const ukeRadioLines = pgTable(
 	"uke_radiolines",
@@ -477,8 +477,8 @@ export const ukeRadioLines = pgTable(
 		permit_number: varchar("permit_number", { length: 100 }),
 		decision_type: varchar("decision_type", { length: 10 }),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),
-		last_updated: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		date_created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [
 		//index("uke_radiolines_operator_id_idx").on(table.operator_id),

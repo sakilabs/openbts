@@ -10,7 +10,12 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const stationsUpdateSchema = createUpdateSchema(stations).strict();
+const stationsUpdateSchema = createUpdateSchema(stations)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
 const stationsSelectSchema = createSelectSchema(stations);
 type ReqBody = { Body: z.infer<typeof stationsUpdateSchema> };
 type ReqParams = { Params: { station_id: number } };
@@ -33,7 +38,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { station_id } = req.params;
 
 	try {
-		const station = await db.update(stations).set(req.body).where(eq(stations.id, station_id)).returning();
+		const station = await db
+			.update(stations)
+			.set({
+				...req.body,
+				updatedAt: new Date(),
+			})
+			.where(eq(stations.id, station_id))
+			.returning();
 		if (!station.length) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({ success: true, data: station[0] });

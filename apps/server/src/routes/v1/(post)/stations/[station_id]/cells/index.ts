@@ -10,7 +10,12 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
-const cellsInsertSchema = createInsertSchema(cells).strict();
+const cellsInsertSchema = createInsertSchema(cells)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
 const cellsSelectSchema = createSelectSchema(cells);
 type ReqBody = {
 	Body: { cells: z.infer<typeof cellsInsertSchema>[] };
@@ -55,8 +60,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 				cellsData.map((cell) => ({
 					...cell,
 					station_id: station.id,
-					last_updated: new Date(),
-					date_created: new Date(),
 				})),
 			)
 			.returning();

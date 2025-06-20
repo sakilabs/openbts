@@ -9,11 +9,11 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type Station = typeof stations.$inferSelect;
-const stationSchema = createSelectSchema(stations);
+const stationSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSchema = createSelectSchema(cells);
 const locationSchema = createSelectSchema(locations);
 const operatorSchema = createSelectSchema(operators).omit({ is_visible: true });
+type Station = z.infer<typeof stationSchema>;
 const schemaRoute = {
 	params: z.object({
 		id: z.number(),
@@ -43,6 +43,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 					is_visible: false,
 				},
 			},
+		},
+		columns: {
+			status: false,
 		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");

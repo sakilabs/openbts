@@ -127,8 +127,8 @@ export async function formatRadioLine(radioLine: RadioLine): Promise<FormattedRa
 			permit_number: radioLine.permit_number ?? undefined,
 			decision_type: radioLine.decision_type ?? undefined,
 			expiry_date: radioLine.expiry_date,
-			last_updated: radioLine.last_updated,
-			date_created: radioLine.date_created,
+			updatedAt: radioLine.updatedAt,
+			createdAt: radioLine.createdAt,
 		};
 	} catch (error) {
 		console.error("Failed to format radio line:", error);

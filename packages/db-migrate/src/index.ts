@@ -270,7 +270,7 @@ async function main() {
 					rnc: row.RNC,
 					enbi: parseIntSafe(row.eNBI),
 					notes: row.uwagi,
-					last_updated: new Date(row.aktualizacja),
+					updatedAt: new Date(row.aktualizacja),
 				})
 				.onConflictDoNothing()
 				.returning();

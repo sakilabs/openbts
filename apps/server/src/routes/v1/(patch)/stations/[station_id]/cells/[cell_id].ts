@@ -10,7 +10,12 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
-const cellsUpdateSchema = createUpdateSchema(cells).strict();
+const cellsUpdateSchema = createUpdateSchema(cells)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
 const cellsSelectSchema = createSelectSchema(cells);
 type ReqBody = { Body: z.infer<typeof cellsUpdateSchema> };
 type ReqParams = { Params: { station_id: number; cell_id: number } };
@@ -49,7 +54,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			.update(cells)
 			.set({
 				...req.body,
-				last_updated: new Date(),
+				updatedAt: new Date(),
 			})
 			.where(eq(cells.id, cell_id))
 			.returning();

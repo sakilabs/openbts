@@ -22,8 +22,8 @@ interface StationFilterParams {
 	bands?: string;
 }
 
-type Station = typeof stations.$inferSelect;
-const stationsSchema = createSelectSchema(stations);
+const stationsSchema = createSelectSchema(stations).omit({ status: true });
+type Station = z.infer<typeof stationsSchema>;
 const schemaRoute = {
 	querystring: z.object({
 		bounds: z
@@ -54,7 +54,7 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Station[]>>) {
-	const { limit, page = 1, bounds, tech, operators, bands } = req.query;
+	const { limit = undefined, page = 1, bounds, tech, operators, bands } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let locationIds: number[] | undefined;
@@ -117,6 +117,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					where: (fields, { inArray }) => (bandIds ? inArray(fields.band_id, bandIds) : undefined),
 				},
 			},
+			columns: {
+				status: false,
+			},
 			where: (fields, { and, inArray }) => {
 				const conditions = [];
 				if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
@@ -124,7 +127,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 				return conditions.length > 0 ? and(...conditions) : undefined;
 			},
-			limit: limit ?? undefined,
+			limit,
 			offset,
 			orderBy: (fields, operators) => [operators.asc(fields.bts_id)],
 		});

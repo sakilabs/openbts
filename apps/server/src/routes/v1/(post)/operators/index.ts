@@ -9,8 +9,8 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const operatorsSelectSchema = createSelectSchema(operators).strict();
-const operatorsInsertSchema = createInsertSchema(operators);
+const operatorsSelectSchema = createSelectSchema(operators);
+const operatorsInsertSchema = createInsertSchema(operators).strict();
 type ReqBody = { Body: z.infer<typeof operatorsInsertSchema> };
 type ResponseData = z.infer<typeof operatorsSelectSchema>;
 const schemaRoute = {
@@ -24,17 +24,8 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { name, parent_id, mnc_code } = req.body;
-
 	try {
-		const operator = await db
-			.insert(operators)
-			.values({
-				name,
-				parent_id,
-				mnc_code,
-			})
-			.returning();
+		const operator = await db.insert(operators).values(req.body).returning();
 
 		return res.send({ success: true, data: operator[0] });
 	} catch {

@@ -16,13 +16,13 @@ type ReqBody = {
 interface SearchParams {
 	query?: string;
 }
-type StationWithCells = typeof stations.$inferSelect & {
-	cells: (typeof cells.$inferSelect)[];
-};
-const stationsSelectSchema = createSelectSchema(stations);
+const stationsSelectSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSelectSchema = createSelectSchema(cells);
 const locationSelectSchema = createSelectSchema(locations);
 const operatorsSelectSchema = createSelectSchema(operators).omit({ is_visible: true });
+type StationWithCells = z.infer<typeof stationsSelectSchema> & {
+	cells: z.infer<typeof cellsSelectSchema>[];
+};
 const schemaRoute = {
 	params: z.object({}),
 	body: z.object({
@@ -67,6 +67,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 					},
 				},
 			},
+			columns: {
+				status: false,
+			},
 		});
 
 		for (const station of stationsByBtsId) {
@@ -87,6 +90,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 					is_visible: false,
 				},
 			},
+		},
+		columns: {
+			status: false,
 		},
 		orderBy: sql`similarity(${stations.station_id}, ${query}) DESC`,
 	});
@@ -117,6 +123,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 						},
 					},
 					cells: true,
+				},
+				columns: {
+					status: false,
 				},
 			},
 		},

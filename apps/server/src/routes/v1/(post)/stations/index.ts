@@ -37,8 +37,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 				.insert(stations)
 				.values({
 					...stationData,
-					last_updated: new Date(),
-					date_created: new Date(),
+					updatedAt: new Date(),
+					createdAt: new Date(),
 				})
 				.returning();
 
@@ -53,8 +53,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 						...cell,
 						station_id: newStation.id,
 						is_confirmed: false,
-						last_updated: new Date(),
-						date_created: new Date(),
+						updatedAt: new Date(),
+						createdAt: new Date(),
 					})),
 				);
 			}

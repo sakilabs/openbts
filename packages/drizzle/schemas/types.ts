@@ -41,8 +41,8 @@ export interface FormattedRadioLine {
 	permit_number?: string;
 	decision_type?: string;
 	expiry_date: Date;
-	last_updated: Date;
-	date_created: Date;
+	updatedAt: Date;
+	createdAt: Date;
 }
 
 export interface RadioLineOperator {

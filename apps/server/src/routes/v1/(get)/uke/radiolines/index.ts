@@ -45,7 +45,7 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<FormattedRadioLine[]>>) {
-	const { limit, page = 1, bounds, operator } = req.query;
+	const { limit = undefined, page = 1, bounds, operator } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	try {
@@ -90,7 +90,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			columns: {
 				operator_id: false,
 			},
-			limit: limit ?? undefined,
+			limit: limit,
 			offset: offset,
 		});
 

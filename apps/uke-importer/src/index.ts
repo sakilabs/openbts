@@ -144,8 +144,8 @@ export function parseUkeXlsx(filePath: string, bandId: number, operatorId: numbe
 			location: row.Lokalizacja,
 			station_id: row.IdStacji,
 			band_id: bandId,
-			last_updated: new Date(),
-			date_created: new Date(),
+			updatedAt: new Date(),
+			createdAt: new Date(),
 		};
 	});
 }
@@ -256,8 +256,8 @@ export function parseRadioLinesXlsx(filePath: string): NewUkeRadioLine[] {
 			expiry_date: expiryDate,
 
 			// Metadata
-			last_updated: new Date(),
-			date_created: new Date(),
+			updatedAt: new Date(),
+			createdAt: new Date(),
 		};
 	});
 }

@@ -59,7 +59,7 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-	const { limit, page = 1, bounds, operators, tech, bands, decisionType } = req.query;
+	const { limit = undefined, page = 1, bounds, operators, tech, bands, decisionType } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let bandIds: number[] | undefined;
@@ -124,7 +124,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 				return conditions.length > 0 ? and(...conditions) : undefined;
 			},
-			limit: limit ?? undefined,
+			limit,
 			offset: offset,
 		});
 

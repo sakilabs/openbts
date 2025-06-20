@@ -9,8 +9,8 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const locationsSelectSchema = createSelectSchema(locations).strict();
-const locationsInsertSchema = createInsertSchema(locations);
+const locationsSelectSchema = createSelectSchema(locations);
+const locationsInsertSchema = createInsertSchema(locations).strict();
 type ReqBody = { Body: z.infer<typeof locationsInsertSchema> };
 type ResponseData = z.infer<typeof locationsSelectSchema>;
 const schemaRoute = {
@@ -24,10 +24,8 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { region_id, city, address, longitude, latitude } = req.body;
-
 	try {
-		const location = await db.insert(locations).values({ region_id, city, address, longitude, latitude }).returning();
+		const location = await db.insert(locations).values(req.body).returning();
 
 		return res.send({ success: true, data: location[0] });
 	} catch {
