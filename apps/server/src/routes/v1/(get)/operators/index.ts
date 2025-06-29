@@ -9,7 +9,6 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { RouteGenericInterface } from "fastify";
 
-type ResponseData = Omit<typeof operators.$inferSelect, "is_visible">;
 const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
 const schemaRoute = {
 	response: {
@@ -19,6 +18,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type ResponseData = z.infer<typeof operatorsSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData[]>>) {
 	const operators = await db.query.operators.findMany({

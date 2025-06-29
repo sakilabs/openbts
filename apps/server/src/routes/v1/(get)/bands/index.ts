@@ -9,8 +9,8 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { RouteGenericInterface } from "fastify";
 
-type Bands = typeof bands.$inferSelect;
 const bandSelectSchema = createSelectSchema(bands);
+type Bands = z.infer<typeof bandSelectSchema>;
 
 const schemaRoute = {
 	params: z.object({

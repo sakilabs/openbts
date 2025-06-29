@@ -9,7 +9,6 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type Region = typeof regions.$inferSelect;
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	params: z.object({
@@ -22,6 +21,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type Region = z.infer<typeof regionsSchema>;
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Region>>) {
 	const { id } = req.params;

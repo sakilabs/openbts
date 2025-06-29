@@ -43,7 +43,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<Success
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
 	try {
-		await db.delete(cells).where(eq(cells.id, cell_id)).returning({ id: cells.id });
+		await db.delete(cells).where(eq(cells.id, cell_id));
 
 		return res.send({
 			success: true,

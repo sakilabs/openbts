@@ -8,7 +8,7 @@ import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 
-import type { ErrorResponse, ValidationError } from "./errors.js";
+import { ValidationError, type ErrorResponse } from "./errors.js";
 import type { FastifyZodInstance } from "./interfaces/fastify.interface.js";
 
 export default class App {
@@ -64,16 +64,19 @@ export default class App {
 			const statusCode = error.statusCode || 500;
 			const message = error.message || "An internal server error occurred.";
 			const code = error.code || "INTERNAL_SERVER_ERROR";
-			const errorResponse = {
+			const errorResponse: { success: boolean; errors: { code: string; message: string; details?: {}[] }[] } = {
 				success: false,
 				errors: [
 					{
 						code,
 						message,
-						details: (error as ValidationError)?.details || [],
 					},
 				],
 			};
+			if (error instanceof ValidationError) {
+				// @ts-expect-error
+				errorResponse.details = (error as ValidationError)?.details || [];
+			}
 
 			return res.status(statusCode).send(errorResponse);
 		});

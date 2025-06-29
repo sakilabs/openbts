@@ -9,6 +9,7 @@ interface BrowserProperties {
 	acceptHeaders: string;
 	acceptEncoding: string;
 	secChUa: string;
+	dnt: string;
 }
 
 export function generateFingerprint(req: FastifyRequest): string | null {
@@ -26,6 +27,7 @@ export function generateFingerprint(req: FastifyRequest): string | null {
 		acceptHeaders: getHeaderValue(headers.accept),
 		acceptEncoding: getHeaderValue(headers["accept-encoding"]),
 		secChUa: getHeaderValue(headers["sec-ch-ua"]),
+		dnt: getHeaderValue(headers.dnt),
 	};
 
 	if (properties.userAgent === "unknown" || properties.acceptHeaders === "unknown") return null;

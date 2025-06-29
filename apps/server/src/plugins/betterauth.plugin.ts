@@ -72,6 +72,8 @@ export const auth = betterAuth({
 						operators: ["read"],
 						locations: ["read"],
 						bands: ["read"],
+						uke_permits: ["read"],
+						uke_radiolines: ["read"],
 					};
 				},
 			},

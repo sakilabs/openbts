@@ -9,7 +9,6 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-type Permit = typeof ukePermits.$inferSelect & { band: typeof bands.$inferSelect; operator: Omit<typeof operators.$inferSelect, "is_visible"> };
 const permitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
@@ -27,6 +26,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type Permit = z.infer<typeof permitsSchema> & { band: z.infer<typeof bandsSchema>; operator: z.infer<typeof operatorsSchema> };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Permit>>) {
 	const { id } = req.params;

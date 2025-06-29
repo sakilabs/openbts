@@ -10,7 +10,6 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-type Submission = typeof submissions.$inferSelect;
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const submittersSchema = createSelectSchema(users);
@@ -29,6 +28,11 @@ const schemaRoute = {
 			}),
 		}),
 	},
+};
+type Submission = z.infer<typeof submissionsSchema> & {
+	station: z.infer<typeof stationsSchema>;
+	submitter: z.infer<typeof submittersSchema>;
+	reviewer?: z.infer<typeof reviewersSchema>;
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Submission>>) {

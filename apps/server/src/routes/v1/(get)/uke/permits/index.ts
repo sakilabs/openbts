@@ -11,20 +11,6 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-type ReqQuery = {
-	Querystring: PermitFilterParams;
-};
-
-interface PermitFilterParams {
-	bounds?: string;
-	limit?: number;
-	page?: number;
-	operators?: string;
-	tech?: string;
-	bands?: string;
-	decisionType?: string;
-}
-type Permit = typeof ukePermits.$inferSelect & { band?: typeof bands.$inferSelect; operator?: Omit<typeof operators.$inferSelect, "is_visible"> };
 const ukePermitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
@@ -38,7 +24,7 @@ const schemaRoute = {
 		page: z.number().min(1).default(1),
 		tech: z
 			.string()
-			.regex(/^(cdma|umts|gsm|lte|5g)(,(cdma|umts|gsm|lte|5g))*$/i)
+			.regex(/^(umts|gsm|lte|5g)(,(umts|gsm|lte|5g))*$/i)
 			.optional(),
 		operators: z
 			.string()
@@ -49,6 +35,8 @@ const schemaRoute = {
 			.regex(/^\d+(,\d+)*$/)
 			.optional(),
 		decisionType: z.literal(["zmP", "P"]).optional(),
+		decision_number: z.string().optional(),
+		station_id: z.string().optional(),
 	}),
 	response: {
 		200: z.object({
@@ -57,9 +45,13 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqQuery = {
+	Querystring: z.infer<typeof schemaRoute.querystring>;
+};
+type Permit = z.infer<typeof ukePermitsSchema> & { band?: z.infer<typeof bandsSchema>; operator?: z.infer<typeof operatorsSchema> };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-	const { limit = undefined, page = 1, bounds, operators, tech, bands, decisionType } = req.query;
+	const { limit = undefined, page = 1, bounds, operators, tech, bands, decisionType, decision_number, station_id } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let bandIds: number[] | undefined;
@@ -120,7 +112,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			where: (fields, { and, inArray, eq }) => {
 				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
 				if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
-				if (decisionType) conditions.push(eq(fields.decision_type, decisionType as "zmP" | "P"));
+				if (decisionType) conditions.push(eq(fields.decision_type, decisionType));
+				if (decision_number) conditions.push(eq(fields.decision_number, decision_number));
+				if (station_id) conditions.push(eq(fields.station_id, station_id));
 
 				return conditions.length > 0 ? and(...conditions) : undefined;
 			},
@@ -130,12 +124,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		if (tech) {
 			const requestedTechs = tech.toLowerCase().split(",");
+
 			ukePermitsRes.filter((permit) => {
 				const bandName = permit.band?.name.toLowerCase();
 				return requestedTechs.some((tech) => {
 					switch (tech) {
-						case "cdma":
-							return bandName.includes("cdma");
 						case "gsm":
 							return bandName.includes("gsm");
 						case "umts":

@@ -9,7 +9,6 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { RouteGenericInterface } from "fastify";
 
-type Region = typeof regions.$inferSelect;
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	response: {
@@ -19,6 +18,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type Region = z.infer<typeof regionsSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Region[]>>) {
 	const regions = await db.query.regions.findMany();

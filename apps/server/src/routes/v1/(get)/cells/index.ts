@@ -9,10 +9,6 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { RouteGenericInterface } from "fastify";
 
-type ResponseData = typeof cells.$inferSelect & {
-	station: typeof stations.$inferSelect;
-	band: typeof bands.$inferSelect;
-};
 const cellsSchema = createSelectSchema(cells);
 const stationsSchema = createSelectSchema(stations);
 const bandsSchema = createSelectSchema(bands);
@@ -29,6 +25,10 @@ const schemaRoute = {
 			}),
 		}),
 	},
+};
+type ResponseData = z.infer<typeof cellsSchema> & {
+	station: z.infer<typeof stationsSchema>;
+	band: z.infer<typeof bandsSchema>;
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData[]>>) {

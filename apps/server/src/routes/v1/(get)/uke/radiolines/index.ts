@@ -13,17 +13,6 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-type ReqQuery = {
-	Querystring: RadioLineFilterParams;
-};
-
-interface RadioLineFilterParams {
-	bounds?: string;
-	limit?: number;
-	page?: number;
-	operator?: string;
-}
-
 const ukeRadioLinesSchema = createSelectSchema(ukeRadioLines).omit({ operator_id: true });
 const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
 const schemaRoute = {
@@ -42,6 +31,9 @@ const schemaRoute = {
 			data: z.array(ukeRadioLinesSchema.extend({ operator: operatorsSchema })),
 		}),
 	},
+};
+type ReqQuery = {
+	Querystring: z.infer<typeof schemaRoute.querystring>;
 };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<FormattedRadioLine[]>>) {
@@ -86,9 +78,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						is_visible: false,
 					},
 				},
-			},
-			columns: {
-				operator_id: false,
 			},
 			limit: limit,
 			offset: offset,
