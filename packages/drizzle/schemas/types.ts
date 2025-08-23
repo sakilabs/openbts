@@ -1,4 +1,4 @@
-import type { ukePermits, ukeRadioLines } from "./schema.js";
+import type { ukePermits, ukeRadioLines } from "./bts.js";
 
 export type UkePermission = typeof ukePermits.$inferSelect;
 export type NewUkePermission = typeof ukePermits.$inferInsert;

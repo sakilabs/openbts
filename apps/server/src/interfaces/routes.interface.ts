@@ -11,6 +11,7 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
 	config?: {
 		permissions?: string[];
 		allowLoggedIn?: boolean;
+		allowGuestAccess?: boolean;
 	};
 	schema?: FastifySchema;
 };

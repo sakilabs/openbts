@@ -25,6 +25,10 @@ export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown
 export const auth = betterAuth({
 	advanced: {
 		cookiePrefix: "openbts",
+		database: {
+			useNumberId: true,
+			generateId: false,
+		},
 	},
 	basePath: "/api/v1/auth",
 	database: drizzleAdapter(db, {
@@ -133,7 +137,7 @@ async function beforeAuthHook(
 		}
 
 		const keys = await db.query.apiKeys.findMany({
-			where: (apiKeys, { eq }) => eq(apiKeys.user_id, session.user.id),
+			where: (apiKeys, { eq }) => eq(apiKeys.user_id, session.user.id as unknown as number),
 		});
 
 		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {

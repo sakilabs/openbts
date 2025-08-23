@@ -1,24 +1,20 @@
 import { relations } from "drizzle-orm/relations";
 
 import {
-	apiKeys,
 	bands,
 	cells,
 	locations,
 	operators,
 	regions,
-	stationComments,
 	stations,
-	userLists,
-	users,
-	attachments,
 	ukePermits,
 	radioLinesManufacturers,
 	radioLinesAntennaTypes,
 	radioLinesTransmitterTypes,
 	ukeRadioLines,
 	stationsPermits,
-} from "./schema.js";
+} from "./bts.js";
+import { apiKeys, attachments, stationComments, userLists, users } from "./auth.js";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
 	parent: one(operators, {

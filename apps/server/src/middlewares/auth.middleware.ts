@@ -12,10 +12,10 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 
 	if (PUBLIC_ROUTES.some((publicRoute) => url?.startsWith(publicRoute))) return;
 
-	if (route?.config?.allowLoggedIn === false) {
-		const user = await getCurrentUser(req);
-		if (user) throw new ErrorResponse("ALREADY_LOGGED_IN");
-	}
+	// if (!route?.config?.allowLoggedIn) {
+	// 	const user = await getCurrentUser(req);
+	// 	if (user) throw new ErrorResponse("ALREADY_LOGGED_IN");
+	// }
 
 	const { headers } = req;
 	const authHeader = headers.authorization;
@@ -31,7 +31,6 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 		// 	},
 		// };
 		req.userSession = user;
-		return;
 	}
 
 	if (authHeader) {
@@ -55,8 +54,11 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 		if (!valid || !key) throw new ErrorResponse("FORBIDDEN");
 
 		req.apiToken = key as ApiToken;
-		return;
 	}
 
-	throw new ErrorResponse("UNAUTHORIZED");
+	if (!route?.config?.allowGuestAccess) {
+		const user = await getCurrentUser(req);
+		if (!user && !req.apiToken) throw new ErrorResponse("UNAUTHORIZED");
+		return;
+	}
 }

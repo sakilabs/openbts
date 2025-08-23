@@ -11,13 +11,14 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"dotenv": "16.5.0",
-		"drizzle-orm": "0.44.2",
-		"nanoid": "5.1.5"
+		"dotenv": "17.2.0",
+		"drizzle-orm": "0.44.3",
+		"nanoid": "5.1.5",
+		"tsx": "4.20.3"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",
-		"drizzle-kit": "0.31.1"
+		"drizzle-kit": "0.31.4"
 	},
 	"exports": {
 		".": {
