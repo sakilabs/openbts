@@ -2,7 +2,8 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { logger } from "../config.js";
+import { dlogger } from "../config.js";
+import { logger } from "../utils/logger.js";
 
 import type { RouteOptions } from "fastify";
 import type { FastifyZodInstance } from "../interfaces/fastify.interface.js";
@@ -14,7 +15,7 @@ function walk(dir: string): string[] {
 export async function APIv1Controller(fastify: FastifyZodInstance) {
 	const __dirname = fileURLToPath(new URL(".", import.meta.url));
 	const routeFiles = walk(join(__dirname, "..", "routes", "v1"));
-	const log = logger.extend("APIv1Controller");
+	const log = dlogger.extend("APIv1Controller");
 
 	for (const file of routeFiles) {
 		let route: RouteOptions;
@@ -34,6 +35,7 @@ export async function APIv1Controller(fastify: FastifyZodInstance) {
 			log("Registering route: %o %s", route.method, route.url);
 			fastify.route(route);
 		} catch (error) {
+			logger.error("Error registering route %s: %o", { file, error });
 			log("Error registering route %s: %o", file, error);
 		}
 	}

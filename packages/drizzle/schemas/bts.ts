@@ -171,7 +171,7 @@ export const ukePermits = pgTable(
 		location_id: integer("location_id")
 			.references(() => ukeLocations.id, { onDelete: "set null", onUpdate: "cascade" })
 			.notNull(),
-		decision_number: varchar("decision_number", { length: 100 }),
+		decision_number: varchar("decision_number", { length: 100 }).notNull(),
 		decision_type: UKEPermissionType("decision_type").notNull(),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),
 		band_id: integer("band_id")
@@ -208,9 +208,12 @@ export const gsmCells = pgTable(
 	{
 		cell_id: integer("cell_id")
 			.primaryKey()
-			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
 		lac: integer("lac").notNull(),
 		cid: integer("cid").notNull(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [unique("gsm_cells_lac_cid_unique").on(t.lac, t.cid)],
 );
@@ -220,7 +223,8 @@ export const umtsCells = pgTable(
 	{
 		cell_id: integer("cell_id")
 			.primaryKey()
-			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
 		lac: integer("lac"),
 		carrier: integer("carrier"),
 		rnc: integer("rnc").notNull(),
@@ -229,6 +233,8 @@ export const umtsCells = pgTable(
 			.notNull()
 			.generatedAlwaysAs((): SQL => sql`(${umtsCells.rnc} * 65536) + ${umtsCells.cid}`)
 			.unique(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [unique("umts_cells_rnc_cid_unique").on(t.rnc, t.cid)],
 );
@@ -238,7 +244,8 @@ export const lteCells = pgTable(
 	{
 		cell_id: integer("cell_id")
 			.primaryKey()
-			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
 		tac: integer("tac"),
 		enbid: integer("enbid").notNull(),
 		clid: integer("clid").notNull(),
@@ -247,6 +254,8 @@ export const lteCells = pgTable(
 			.generatedAlwaysAs((): SQL => sql`(${lteCells.enbid} * 256) + ${lteCells.clid}`)
 			.unique(),
 		supports_nb_iot: boolean("supports_nb_iot").default(false),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`), unique("lte_cells_enbid_clid_unique").on(t.enbid, t.clid)],
 );
@@ -256,12 +265,15 @@ export const nrCells = pgTable(
 	{
 		cell_id: integer("cell_id")
 			.primaryKey()
-			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+			.references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
 		nrtac: integer("nrtac"),
 		gnbid: integer("gnbid"),
 		clid: integer("clid").notNull(),
 		nci: integer("nci").unique(),
 		supports_nr_redcap: boolean("supports_nr_redcap").default(false),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid)],
 );
@@ -355,8 +367,8 @@ export const ukeRadioLines = pgTable(
 		rx_noise_figure: integer("rx_noise_figure"),
 		rx_atpc_attenuation: integer("rx_atpc_attenuation"),
 		operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
-		permit_number: varchar("permit_number", { length: 100 }),
-		decision_type: varchar("decision_type", { length: 10 }),
+		permit_number: varchar("permit_number", { length: 100 }).notNull(),
+		decision_type: UKEPermissionType("decision_type").notNull(),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

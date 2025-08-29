@@ -11,7 +11,7 @@ import type { IdParams, JSONBody, Route } from "../../../../../interfaces/routes
 
 const permitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
-const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
+const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
 	params: z.object({
 		id: z.number(),
@@ -37,7 +37,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 				band: true,
 				operator: {
 					columns: {
-						is_visible: false,
+						is_isp: false,
 					},
 				},
 			},

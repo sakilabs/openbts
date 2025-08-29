@@ -1,7 +1,8 @@
 import { createClient } from "redis";
-import { logger } from "../config.js";
+import { dlogger } from "../config.js";
+import { logger } from "../utils/logger.js";
 
-const redisLogger = logger.extend("redis");
+const redisLogger = dlogger.extend("redis");
 
 export const redis = createClient({
 	url: process.env.REDIS_URL || "redis://localhost:6379",
@@ -15,6 +16,7 @@ export const redis = createClient({
 	},
 })
 	.on("error", (err: Error) => {
+		logger.error("Redis error: %O", err);
 		redisLogger("Redis error: %O", err);
 	})
 	.on("connect", () => {

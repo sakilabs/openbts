@@ -9,7 +9,7 @@ export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited
 export const users = pgTable(
 	"users",
 	{
-		id: integer("id").primaryKey().notNull().generatedAlwaysAsIdentity(),
+		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
 		username: varchar("username", { length: 100 }).unique(),
 		email: varchar("email", { length: 100 }).notNull().unique(),
 		password: varchar("password", { length: 255 }),
@@ -37,39 +37,42 @@ export const users = pgTable(
 // 	lastActiveAt: timestamp({ withTimezone: true }),
 // });
 
-// export const accounts = pgTable("accounts", {
-// 	id: text("id").notNull().primaryKey(),
-// 	userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-// 	providerType: text("provider_type").notNull(),
-// 	providerId: text("provider_id").notNull(),
-// 	providerAccountId: text("provider_account_id").notNull(),
-// 	refreshToken: text("refresh_token"),
-// 	accessToken: text("access_token"),
-// 	expiresAt: timestamp({ withTimezone: true }),
-// 	idToken: text("id_token"),
-// 	scope: text("scope"),
-// 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-// 	updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-// }, (table) => {
-// 	return [
-// 		index("accounts_user_id_idx").on(table.userId),
-// 		index("accounts_provider_account_id_idx").on(table.providerAccountId),
-// 	];
-// });
+export const accounts = pgTable(
+	"accounts",
+	{
+		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
+		userId: uuid("user_id")
+			.references(() => users.id, { onDelete: "cascade" })
+			.notNull(),
+		providerType: text("provider_type").notNull(),
+		providerId: text("provider_id").notNull(),
+		providerAccountId: text("provider_account_id").notNull(),
+		refreshToken: text("refresh_token"),
+		accessToken: text("access_token"),
+		expiresAt: timestamp({ withTimezone: true }),
+		idToken: text("id_token"),
+		scope: text("scope"),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => {
+		return [index("accounts_user_id_idx").on(table.userId), index("accounts_provider_account_id_idx").on(table.providerAccountId)];
+	},
+);
 
-// export const verificationTokens = pgTable("verification_tokens", {
-// 	id: text("id").primaryKey().notNull(),
-// 	identifier: text("identifier").notNull(),
-// 	token: text("token").notNull().unique(),
-// 	expires: timestamp({ withTimezone: true }).notNull(),
-// 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-// });
+export const verificationTokens = pgTable("verification_tokens", {
+	id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
+	identifier: text("identifier").notNull(),
+	token: text("token").notNull().unique(),
+	expires: timestamp({ withTimezone: true }).notNull(),
+	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 export const apiKeys = pgTable(
 	"api_keys",
 	{
 		id: integer("id").primaryKey().notNull().generatedAlwaysAsIdentity(),
-		user_id: integer("user_id")
+		user_id: uuid("user_id")
 			.references(() => users.id, { onDelete: "cascade" })
 			.notNull(),
 		name: text("name").notNull(),
@@ -102,7 +105,7 @@ export const attachments = pgTable(
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		name: text("name").notNull(),
 		uuid: uuid("uuid").notNull().defaultRandom().unique(),
-		author_id: integer("author_id")
+		author_id: uuid("author_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		mime_type: varchar("mime_type", { length: 100 }).notNull(),
@@ -134,7 +137,7 @@ export const userLists = pgTable(
 		name: text("name").notNull(),
 		description: text("description"),
 		is_public: boolean("is_public").default(false),
-		created_by: integer("created_by")
+		created_by: uuid("created_by")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		stations: jsonb("stations").$type<number[]>().notNull(),
@@ -162,7 +165,7 @@ export const stationComments = pgTable(
 		station_id: integer("station_id")
 			.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
-		user_id: integer("user_id")
+		user_id: uuid("user_id")
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
 		attachments: jsonb("attachments").$type<{ uuid: string; type: string }[]>(),

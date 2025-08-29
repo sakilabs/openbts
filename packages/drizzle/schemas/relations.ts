@@ -13,8 +13,13 @@ import {
 	radioLinesTransmitterTypes,
 	ukeRadioLines,
 	stationsPermits,
+	gsmCells,
+	umtsCells,
+	lteCells,
+	nrCells,
 } from "./bts.js";
 import { apiKeys, attachments, stationComments, userLists, users } from "./auth.js";
+import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedStations, proposedUMTSCells } from "./submissions.ts";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
 	parent: one(operators, {
@@ -58,10 +63,54 @@ export const cellRelations = relations(cells, ({ one }) => ({
 		fields: [cells.band_id],
 		references: [bands.id],
 	}),
+	gsm: one(gsmCells, {
+		fields: [cells.id],
+		references: [gsmCells.cell_id],
+	}),
+	umts: one(umtsCells, {
+		fields: [cells.id],
+		references: [umtsCells.cell_id],
+	}),
+	lte: one(lteCells, {
+		fields: [cells.id],
+		references: [lteCells.cell_id],
+	}),
+	nr: one(nrCells, {
+		fields: [cells.id],
+		references: [nrCells.cell_id],
+	}),
 }));
 
 export const bandRelations = relations(bands, ({ many }) => ({
 	cells: many(cells),
+}));
+
+export const gsmCellRelations = relations(gsmCells, ({ one }) => ({
+	cell: one(cells, {
+		fields: [gsmCells.cell_id],
+		references: [cells.id],
+	}),
+}));
+
+export const umtsCellRelations = relations(umtsCells, ({ one }) => ({
+	cell: one(cells, {
+		fields: [umtsCells.cell_id],
+		references: [cells.id],
+	}),
+}));
+
+export const lteCellRelations = relations(lteCells, ({ one }) => ({
+	cell: one(cells, {
+		fields: [lteCells.cell_id],
+		references: [cells.id],
+	}),
+}));
+
+export const nrCellRelations = relations(nrCells, ({ one }) => ({
+	cell: one(cells, {
+		fields: [nrCells.cell_id],
+		references: [cells.id],
+	}),
 }));
 
 export const userListRelations = relations(userLists, ({ one }) => ({
@@ -162,5 +211,32 @@ export const stationsPermitsRelations = relations(stationsPermits, ({ one }) => 
 	station: one(stations, {
 		fields: [stationsPermits.station_id],
 		references: [stations.id],
+	}),
+}));
+
+export const proposedCellRelations = relations(proposedCells, ({ one }) => ({
+	station: one(proposedStations, {
+		fields: [proposedCells.station_id],
+		references: [proposedStations.id],
+	}),
+	band: one(bands, {
+		fields: [proposedCells.band_id],
+		references: [bands.id],
+	}),
+	gsm: one(proposedGSMCells, {
+		fields: [proposedCells.id],
+		references: [proposedGSMCells.proposed_cell_id],
+	}),
+	umts: one(proposedUMTSCells, {
+		fields: [proposedCells.id],
+		references: [proposedUMTSCells.proposed_cell_id],
+	}),
+	lte: one(proposedLTECells, {
+		fields: [proposedCells.id],
+		references: [proposedLTECells.proposed_cell_id],
+	}),
+	nr: one(proposedNRCells, {
+		fields: [proposedCells.id],
+		references: [proposedNRCells.proposed_cell_id],
 	}),
 }));

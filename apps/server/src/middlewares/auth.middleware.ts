@@ -1,6 +1,7 @@
 import { PUBLIC_ROUTES } from "../constants.js";
 import { getCurrentUser, verifyApiKey } from "../plugins/betterauth.plugin.js";
 import { ErrorResponse } from "../errors.js";
+import { getRuntimeSettings } from "../services/settings.service.js";
 
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Route } from "../interfaces/routes.interface.js";
@@ -10,12 +11,12 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 	const route = req.routeOptions as Route;
 	const url = req.url;
 
-	if (PUBLIC_ROUTES.some((publicRoute) => url?.startsWith(publicRoute))) return;
-
-	// if (!route?.config?.allowLoggedIn) {
-	// 	const user = await getCurrentUser(req);
-	// 	if (user) throw new ErrorResponse("ALREADY_LOGGED_IN");
-	// }
+	const settings = getRuntimeSettings();
+	if (settings.disabledRoutes.some((p) => url?.startsWith(p))) throw new ErrorResponse("FORBIDDEN");
+	const isPublicByStatic = PUBLIC_ROUTES.some((p) => url?.startsWith(p));
+	const isPublicByRuntime = settings.allowedUnauthenticatedRoutes.some((p) => url?.startsWith(p));
+	const isPublic = isPublicByStatic || isPublicByRuntime;
+	if (isPublic && !settings.enforceAuthForAllRoutes) return;
 
 	const { headers } = req;
 	const authHeader = headers.authorization;
@@ -56,7 +57,8 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 		req.apiToken = key as ApiToken;
 	}
 
-	if (!route?.config?.allowGuestAccess) {
+	const requireAuth = settings.enforceAuthForAllRoutes || !route?.config?.allowGuestAccess;
+	if (requireAuth) {
 		const user = await getCurrentUser(req);
 		if (!user && !req.apiToken) throw new ErrorResponse("UNAUTHORIZED");
 		return;

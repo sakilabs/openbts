@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
-import { stations } from "@openbts/drizzle";
+import { eq, inArray } from "drizzle-orm";
+import { stations, cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -25,12 +25,35 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessR
 	if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.bts_id, stationId),
+		where: (fields, { eq }) => eq(fields.id, stationId),
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	try {
-		await db.delete(stations).where(eq(stations.bts_id, stationId));
+		await db.transaction(async (tx) => {
+			const stationCells = await tx.query.cells.findMany({
+				where: (fields, { eq }) => eq(fields.station_id, stationId),
+				columns: { id: true, rat: true },
+			});
+			const cellIds = stationCells.map((c) => c.id);
+			if (cellIds.length === 0) {
+				await tx.delete(stations).where(eq(stations.id, stationId));
+				return;
+			}
+
+			const gsmIds = stationCells.filter((c) => c.rat === "GSM").map((c) => c.id);
+			const umtsIds = stationCells.filter((c) => c.rat === "UMTS").map((c) => c.id);
+			const lteIds = stationCells.filter((c) => c.rat === "LTE").map((c) => c.id);
+			const nrIds = stationCells.filter((c) => c.rat === "NR").map((c) => c.id);
+
+			if (gsmIds.length > 0) await tx.delete(gsmCells).where(inArray(gsmCells.cell_id, gsmIds));
+			if (umtsIds.length > 0) await tx.delete(umtsCells).where(inArray(umtsCells.cell_id, umtsIds));
+			if (lteIds.length > 0) await tx.delete(lteCells).where(inArray(lteCells.cell_id, lteIds));
+			if (nrIds.length > 0) await tx.delete(nrCells).where(inArray(nrCells.cell_id, nrIds));
+
+			await tx.delete(cells).where(inArray(cells.id, cellIds));
+			await tx.delete(stations).where(eq(stations.id, stationId));
+		});
 
 		return res.send({
 			success: true,

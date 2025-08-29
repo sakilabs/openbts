@@ -1,9 +1,8 @@
+import { eq, ilike, sql, type SQL } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-import { and, lte, gte, type SQL } from "drizzle-orm";
-import { bands, operators, ukePermits } from "@openbts/drizzle";
-
+import { bands, operators, ukePermits, ukeLocations } from "@openbts/drizzle";
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 
@@ -13,7 +12,7 @@ import type { JSONBody, Route } from "../../../../../interfaces/routes.interface
 
 const ukePermitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
-const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
+const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
 	querystring: z.object({
 		bounds: z
@@ -22,9 +21,9 @@ const schemaRoute = {
 			.optional(),
 		limit: z.number().min(1).optional(),
 		page: z.number().min(1).default(1),
-		tech: z
+		rat: z
 			.string()
-			.regex(/^(umts|gsm|lte|5g)(,(umts|gsm|lte|5g))*$/i)
+			.regex(/^(?:cdma|umts|gsm|lte|5g|iot)(?:,(?:cdma|umts|gsm|lte|5g|iot))*$/i)
 			.optional(),
 		operators: z
 			.string()
@@ -50,13 +49,25 @@ type ReqQuery = {
 };
 type Permit = z.infer<typeof ukePermitsSchema> & { band?: z.infer<typeof bandsSchema>; operator?: z.infer<typeof operatorsSchema> };
 
+const SIMILARITY_THRESHOLD = 0.6;
+
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-	const { limit = undefined, page = 1, bounds, operators, tech, bands, decisionType, decision_number, station_id } = req.query;
+	const {
+		limit = undefined,
+		page = 1,
+		bounds,
+		operators: operatorsQuery,
+		rat,
+		bands: bandsQuery,
+		decisionType,
+		decision_number,
+		station_id,
+	} = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let bandIds: number[] | undefined;
-	if (bands) {
-		const requestedBandIds = bands.split(",").map(Number);
+	if (bandsQuery) {
+		const requestedBandIds = bandsQuery.split(",").map(Number);
 		const validBands = await db.query.bands.findMany({
 			columns: { id: true },
 			where: (fields, { inArray }) => inArray(fields.value, requestedBandIds),
@@ -69,52 +80,63 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	try {
 		const conditions: (SQL<unknown> | undefined)[] = [];
 
+		let locationIds: number[] | undefined;
 		if (bounds) {
-			const coords = bounds.split(",").map(Number);
-			const [lat1, lon1, lat2, lon2] = coords;
-			if (!lat1 || !lon1 || !lat2 || !lon2) throw new ErrorResponse("INVALID_QUERY");
+			const splitBounds = bounds.split(",").map(Number);
+			if (splitBounds.length !== 4 || splitBounds.some(Number.isNaN)) throw new ErrorResponse("BAD_REQUEST");
+			const [la1, lo1, la2, lo2] = splitBounds as [number, number, number, number];
+			const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
+			const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
 
-			const [north, south] = lat1 > lat2 ? [lat1, lat2] : [lat2, lat1];
-			const [east, west] = lon1 > lon2 ? [lon1, lon2] : [lon2, lon1];
+			const boundaryLocations = await db
+				.select({ id: ukeLocations.id })
+				.from(ukeLocations)
+				.where(sql`ST_Intersects(${ukeLocations.point}, ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326))`);
 
-			conditions.push(
-				and(lte(ukePermits.latitude, north), gte(ukePermits.latitude, south), lte(ukePermits.longitude, east), gte(ukePermits.longitude, west)),
-			);
+			locationIds = boundaryLocations.map((loc) => loc.id);
+			if (!locationIds.length) return res.send({ success: true, data: [] });
 		}
 
 		let operatorIds: number[] | undefined;
-		if (operators) {
-			const operatorQueries = operators.split(",").map((op) => {
-				const mnc = Number.parseInt(op);
-				if (!Number.isNaN(mnc)) {
-					return db.query.operators.findMany({
-						columns: { id: true },
-						where: (fields, { eq }) => eq(fields.mnc_code, mnc),
-					});
-				}
-			});
+		if (operatorsQuery) {
+			const operatorMncs = operatorsQuery
+				.split(",")
+				.map((op) => Number.parseInt(op, 10))
+				.filter((mnc) => !Number.isNaN(mnc));
+			if (operatorMncs.length === 0) return res.send({ success: true, data: [] });
+
+			const operatorQueries = operatorMncs.map((mnc) =>
+				db.query.operators.findMany({
+					columns: { id: true },
+					where: (fields, { eq }) => eq(fields.mnc, mnc),
+				}),
+			);
 
 			const operatorResults = await Promise.all(operatorQueries);
-			const flattenedResults = operatorResults.flat().filter((op): op is NonNullable<typeof op> => op !== undefined);
-			operatorIds = flattenedResults.map((op) => op.id);
+			operatorIds = operatorResults.flat().map((op) => op.id);
 			if (!operatorIds.length) return res.send({ success: true, data: [] });
 		}
 
 		const ukePermitsRes = await db.query.ukePermits.findMany({
 			with: {
 				band: true,
-				operator: {
-					columns: {
-						is_visible: false,
-					},
-				},
+				operator: true,
 			},
-			where: (fields, { and, inArray, eq }) => {
+			where: (fields, { and, inArray, or }) => {
 				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
 				if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
+				if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
 				if (decisionType) conditions.push(eq(fields.decision_type, decisionType));
-				if (decision_number) conditions.push(eq(fields.decision_number, decision_number));
-				if (station_id) conditions.push(eq(fields.station_id, station_id));
+				if (decision_number) {
+					const like = `%${decision_number}%`;
+					conditions.push(
+						or(ilike(fields.decision_number, like), sql`similarity(${fields.decision_number}, ${decision_number}) > ${SIMILARITY_THRESHOLD}`),
+					);
+				}
+				if (station_id) {
+					const like = `%${station_id}%`;
+					conditions.push(or(ilike(fields.station_id, like), sql`similarity(${fields.station_id}, ${station_id}) > ${SIMILARITY_THRESHOLD}`));
+				}
 
 				return conditions.length > 0 ? and(...conditions) : undefined;
 			},
@@ -122,32 +144,19 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			offset: offset,
 		});
 
-		if (tech) {
-			const requestedTechs = tech.toLowerCase().split(",");
-
-			ukePermitsRes.filter((permit) => {
-				const bandName = permit.band?.name.toLowerCase();
-				return requestedTechs.some((tech) => {
-					switch (tech) {
-						case "gsm":
-							return bandName.includes("gsm");
-						case "umts":
-							return bandName.includes("umts");
-						case "lte":
-							return bandName.includes("lte");
-						case "5g":
-							return bandName.includes("5g");
-						default:
-							return false;
-					}
-				});
-			});
+		let data = ukePermitsRes;
+		if (rat) {
+			const requestedRats = rat.toLowerCase().split(",");
+			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr"> = { gsm: "gsm", umts: "umts", lte: "lte", "5g": "nr" } as const;
+			const allowedRats = requestedRats.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" => t !== undefined);
+			data = data.filter((permit) =>
+				permit.band?.rat ? allowedRats.includes(permit.band.rat.toLowerCase() as (typeof allowedRats)[number]) : false,
+			);
 		}
 
-		res.send({ success: true, data: ukePermitsRes });
+		res.send({ success: true, data });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		console.error("Error retrieving UKE permits:", error);
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }

@@ -25,9 +25,9 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	try {
-		const band = await db.insert(bands).values(req.body).returning();
+		const [band] = await db.insert(bands).values(req.body).returning();
 
-		return res.send({ success: true, data: band[0] });
+		return res.send({ success: true, data: band });
 	} catch {
 		throw new ErrorResponse("FAILED_TO_CREATE");
 	}

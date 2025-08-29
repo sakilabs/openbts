@@ -3,13 +3,18 @@ import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
-import { cells } from "@openbts/drizzle";
+import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
 const cellsSchema = createSelectSchema(cells);
+const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
+const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
+const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
+const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
+const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 type Cells = z.infer<typeof cellsSchema>[];
 type ReqParams = {
 	Params: {
@@ -23,9 +28,16 @@ const schemaRoute = {
 	response: {
 		200: z.object({
 			success: z.boolean(),
-			data: z.array(cellsSchema),
+			data: z.array(cellsSchema.extend({ details: cellDetailsSchema })),
 		}),
 	},
+};
+
+type CellWithRats = z.infer<typeof cellsSchema> & {
+	gsm?: z.infer<typeof gsmCellsSchema>;
+	umts?: z.infer<typeof umtsCellsSchema>;
+	lte?: z.infer<typeof lteCellsSchema>;
+	nr?: z.infer<typeof nrCellsSchema>;
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cells>>) {
@@ -35,12 +47,17 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 	const station = await db.query.stations.findFirst({
 		where: (fields, { eq }) => eq(fields.id, station_id),
 		with: {
-			cells: true,
+			cells: { with: { gsm: true, umts: true, lte: true, nr: true } },
 		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
-	return res.send({ success: true, data: station.cells });
+	const data = (station.cells as CellWithRats[]).map((cell) => {
+		const { gsm, umts, lte, nr, ...rest } = cell;
+		return { ...rest, details: gsm ?? umts ?? lte ?? nr ?? null };
+	});
+
+	return res.send({ success: true, data });
 }
 
 const getCellsFromStation: Route<ReqParams, Cells> = {

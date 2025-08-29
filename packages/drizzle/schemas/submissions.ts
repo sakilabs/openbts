@@ -1,4 +1,4 @@
-import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { bands, cells, locations, operators, ratEnum, regions, stations, StationStatus } from "./bts.js";
 import { sql } from "drizzle-orm/sql";
@@ -17,12 +17,12 @@ export const submissions = SubmissionsSchema.table(
 	{
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
-		submitter_id: integer("submitter_id")
+		submitter_id: uuid("submitter_id")
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
 		status: SubmissionStatus("status").notNull().default("pending"),
 		type: SubmissionTypeEnum("type").notNull().default("new"),
-		reviewer_id: integer("reviewer_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+		reviewer_id: uuid("reviewer_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		review_notes: text("review_notes"),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

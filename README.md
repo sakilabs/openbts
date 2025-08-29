@@ -4,8 +4,6 @@
 
 **OpenBTS** is an improved map of BTSearch that includes aggregated data of Polish BT stations & UKE permits and radiolines.
 
-**OpenBTS** is created by fantastic community in Poland.
-
 ## Features
 
 - View stations on simple to use map
@@ -32,8 +30,8 @@ todo.
 - [x] Add an option to load stations only for visible boundaries (to not download all stations at start)
 - [ ] Add an option to disable comments on station
 - [ ] Make sidebar (details of specific station) more modular (e.g. for cells, LAC, eNBID etc.)
-- [ ] Add support for UKE (Urząd Komunikacji Elektronicznej)'s data locations of stations
-- [ ] Add support to see radiolines (with data from [here](https://bts.mserv.ovh/))
+- [x] Add support for UKE (Urząd Komunikacji Elektronicznej)'s data locations of stations
+- [x] Add support to see radiolines (with data from [here](https://bts.mserv.ovh/))
 - [ ] Add support for calculating the distance from the marker
 - [x] Add docker support (Dockerfile & docker compose)
 - [ ] Redesign frontend

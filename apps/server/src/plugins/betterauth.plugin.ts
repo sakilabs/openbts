@@ -26,7 +26,6 @@ export const auth = betterAuth({
 	advanced: {
 		cookiePrefix: "openbts",
 		database: {
-			useNumberId: true,
 			generateId: false,
 		},
 	},
@@ -137,7 +136,7 @@ async function beforeAuthHook(
 		}
 
 		const keys = await db.query.apiKeys.findMany({
-			where: (apiKeys, { eq }) => eq(apiKeys.user_id, session.user.id as unknown as number),
+			where: (apiKeys, { eq }) => eq(apiKeys.user_id, session.user.id),
 		});
 
 		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {

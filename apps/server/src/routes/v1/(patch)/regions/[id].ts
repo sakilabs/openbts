@@ -32,11 +32,16 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { region_id } = req.params;
 
-	try {
-		const region = await db.update(regions).set(req.body).where(eq(regions.id, region_id)).returning();
-		if (!region.length) throw new ErrorResponse("NOT_FOUND");
+	const region = await db.query.regions.findFirst({
+		where: (fields, { eq }) => eq(fields.id, region_id),
+	});
+	if (!region) throw new ErrorResponse("NOT_FOUND");
 
-		return res.send({ success: true, data: region[0] });
+	try {
+		const [updated] = await db.update(regions).set(req.body).where(eq(regions.id, region_id)).returning();
+		if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+		return res.send({ success: true, data: updated });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_UPDATE");

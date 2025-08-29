@@ -4,7 +4,16 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { stations, submissions, users } from "@openbts/drizzle";
+import {
+	stations,
+	submissions,
+	users,
+	proposedCells,
+	proposedGSMCells,
+	proposedUMTSCells,
+	proposedLTECells,
+	proposedNRCells,
+} from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -14,6 +23,12 @@ const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const submittersSchema = createSelectSchema(users);
 const reviewersSchema = createSelectSchema(users);
+const proposedCellsSchema = createSelectSchema(proposedCells);
+const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
+const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
+const lteSchema = createSelectSchema(proposedLTECells).omit({ proposed_cell_id: true });
+const nrSchema = createSelectSchema(proposedNRCells).omit({ proposed_cell_id: true });
+const proposedDetailsSchema = z.union([gsmSchema, umtsSchema, lteSchema, nrSchema]).nullable();
 const schemaRoute = {
 	params: z.object({
 		id: z.number(),
@@ -21,11 +36,15 @@ const schemaRoute = {
 	response: {
 		200: z.object({
 			success: z.boolean(),
-			data: submissionsSchema.extend({
-				station: stationsSchema,
-				submitter: submittersSchema,
-				reviewer: reviewersSchema.optional(),
-			}),
+			data: submissionsSchema
+				.extend({
+					station: stationsSchema,
+					submitter: submittersSchema,
+					reviewer: reviewersSchema.optional(),
+				})
+				.extend({
+					cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
+				}),
 		}),
 	},
 };
@@ -33,6 +52,7 @@ type Submission = z.infer<typeof submissionsSchema> & {
 	station: z.infer<typeof stationsSchema>;
 	submitter: z.infer<typeof submittersSchema>;
 	reviewer?: z.infer<typeof reviewersSchema>;
+	cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Submission>>) {
@@ -49,10 +69,24 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		with: withTables,
 	});
 	if (!submission) throw new ErrorResponse("NOT_FOUND");
-
 	if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");
 
-	return res.send({ success: true, data: submission });
+	const rawCells = await db.query.proposedCells.findMany({
+		where: (fields, { eq }) => eq(fields.submission_id, submission.id),
+		with: {
+			gsm: true,
+			umts: true,
+			lte: true,
+			nr: true,
+		},
+	});
+
+	const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
+		...base,
+		details: gsm ?? umts ?? lte ?? nr ?? null,
+	}));
+
+	return res.send({ success: true, data: { ...submission, cells } });
 }
 
 const getSubmission: Route<IdParams, Submission> = {

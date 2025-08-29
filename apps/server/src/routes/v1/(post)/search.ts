@@ -1,5 +1,5 @@
-import { eq, or, sql, ilike } from "drizzle-orm";
-import { stations, cells, locations, operators } from "@openbts/drizzle";
+import { eq, or, sql, ilike, inArray } from "drizzle-orm";
+import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -18,13 +18,27 @@ interface SearchParams {
 }
 const stationsSelectSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSelectSchema = createSelectSchema(cells);
+const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
+const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
+const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
+const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
+const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const locationSelectSchema = createSelectSchema(locations);
-const operatorsSelectSchema = createSelectSchema(operators).omit({ is_visible: true });
+const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
+type CellWithRat = z.infer<typeof cellsSelectSchema> & {
+	gsm?: z.infer<typeof gsmCellsSchema>;
+	umts?: z.infer<typeof umtsCellsSchema>;
+	lte?: z.infer<typeof lteCellsSchema>;
+	nr?: z.infer<typeof nrCellsSchema>;
+};
+type StationWithRatCells = z.infer<typeof stationsSelectSchema> & { cells: CellWithRat[] };
+const cellWithDetailsSchema = cellsSelectSchema.extend({
+	details: cellDetailsSchema,
+});
 type StationWithCells = z.infer<typeof stationsSelectSchema> & {
-	cells: z.infer<typeof cellsSelectSchema>[];
+	cells: z.infer<typeof cellWithDetailsSchema>[];
 };
 const schemaRoute = {
-	params: z.object({}),
 	body: z.object({
 		query: z.string().min(1, "Query must not be empty"),
 	}),
@@ -33,7 +47,7 @@ const schemaRoute = {
 			success: z.boolean(),
 			data: z.array(
 				stationsSelectSchema.extend({
-					cells: z.array(cellsSelectSchema),
+					cells: z.array(cellWithDetailsSchema),
 					location: locationSelectSchema,
 					operator: operatorsSelectSchema,
 				}),
@@ -44,50 +58,38 @@ const schemaRoute = {
 
 const SIMILARITY_THRESHOLD = 0.6;
 
-// IMPORTANT: Requires `CREATE EXTENSION pg_trgm;` command to be executed inside the target database
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
 	const { query } = req.body;
-
 	if (!query || query.trim() === "") throw new ErrorResponse("INVALID_QUERY");
 
 	const stationIds = new Set<number>();
 	const stationMap = new Map<number, StationWithCells>();
 
-	const numericQuery = !Number.isNaN(Number.parseInt(query)) ? Number.parseInt(query) : null;
+	const withCellDetails = (station: StationWithRatCells): StationWithCells => ({
+		...station,
+		cells: station.cells.map((c: CellWithRat) => {
+			const { gsm, umts, lte, nr, ...rest } = c;
+			return { ...rest, details: gsm ?? umts ?? lte ?? nr ?? null };
+		}),
+	});
 
-	if (numericQuery) {
-		const stationsByBtsId = await db.query.stations.findMany({
-			where: eq(stations.bts_id, numericQuery),
-			with: {
-				cells: true,
-				location: true,
-				operator: {
-					columns: {
-						is_visible: false,
-					},
-				},
-			},
-			columns: {
-				status: false,
-			},
-		});
-
-		for (const station of stationsByBtsId) {
-			if (!stationIds.has(station.id)) {
-				stationIds.add(station.id);
-				stationMap.set(station.id, station);
-			}
-		}
-	}
+	const numericQuery = !Number.isNaN(Number.parseInt(query, 10)) ? Number.parseInt(query, 10) : null;
 
 	const stationsByStationId = await db.query.stations.findMany({
 		where: or(ilike(stations.station_id, `%${query}%`), sql`similarity(${stations.station_id}, ${query}) > ${SIMILARITY_THRESHOLD}`),
 		with: {
-			cells: true,
+			cells: {
+				with: {
+					gsm: true,
+					umts: true,
+					lte: true,
+					nr: true,
+				},
+			},
 			location: true,
 			operator: {
 				columns: {
-					is_visible: false,
+					is_isp: true,
 				},
 			},
 		},
@@ -100,47 +102,118 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	for (const station of stationsByStationId) {
 		if (!stationIds.has(station.id)) {
 			stationIds.add(station.id);
-			stationMap.set(station.id, station);
+			stationMap.set(station.id, withCellDetails(station));
 		}
 	}
 
-	const matchingCells = await db.query.cells.findMany({
-		where: or(
-			sql`${cells.config}->>'ecid' = ${query}`,
-			sql`${cells.config}->>'clid' = ${query}`,
-			sql`CAST(${cells.config}->>'ecid' AS TEXT) LIKE ${`%${query}%`}`,
-			sql`CAST(${cells.config}->>'clid' AS TEXT) LIKE ${`%${query}%`}`,
-			sql`similarity(CAST(${cells.config}->>'ecid' AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-			sql`similarity(CAST(${cells.config}->>'clid' AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-		),
-		with: {
-			station: {
-				with: {
-					location: true,
-					operator: {
-						columns: {
-							is_visible: false,
-						},
+	const likeQuery = `%${query}%`;
+	const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
+		db
+			.select({ stationId: stations.id })
+			.from(gsmCells)
+			.innerJoin(cells, eq(gsmCells.cell_id, cells.id))
+			.innerJoin(stations, eq(cells.station_id, stations.id))
+			.where(
+				or(
+					sql`CAST(${gsmCells.cid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`similarity(CAST(${gsmCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					...(numericQuery ? [sql`${gsmCells.cid} = ${numericQuery}`] : []),
+				),
+			),
+		db
+			.select({ stationId: stations.id })
+			.from(umtsCells)
+			.innerJoin(cells, eq(umtsCells.cell_id, cells.id))
+			.innerJoin(stations, eq(cells.station_id, stations.id))
+			.where(
+				or(
+					sql`CAST(${umtsCells.carrier} AS TEXT) ILIKE ${likeQuery}`,
+					sql`CAST(${umtsCells.cid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`CAST(${umtsCells.cid_long} AS TEXT) ILIKE ${likeQuery}`,
+					sql`similarity(CAST(${umtsCells.carrier} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${umtsCells.rnc} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${umtsCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${umtsCells.cid_long} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					...(numericQuery
+						? [
+								sql`${umtsCells.carrier} = ${numericQuery}`,
+								sql`${umtsCells.rnc} = ${numericQuery}`,
+								sql`${umtsCells.cid} = ${numericQuery}`,
+								sql`${umtsCells.cid_long} = ${numericQuery}`,
+							]
+						: []),
+				),
+			),
+		db
+			.select({ stationId: stations.id })
+			.from(lteCells)
+			.innerJoin(cells, eq(lteCells.cell_id, cells.id))
+			.innerJoin(stations, eq(cells.station_id, stations.id))
+			.where(
+				or(
+					sql`CAST(${lteCells.enbid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`CAST(${lteCells.clid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`CAST(${lteCells.ecid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`similarity(CAST(${lteCells.enbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${lteCells.clid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${lteCells.ecid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					...(numericQuery
+						? [sql`${lteCells.enbid} = ${numericQuery}`, sql`${lteCells.clid} = ${numericQuery}`, sql`${lteCells.ecid} = ${numericQuery}`]
+						: []),
+				),
+			),
+		db
+			.select({ stationId: stations.id })
+			.from(nrCells)
+			.innerJoin(cells, eq(nrCells.cell_id, cells.id))
+			.innerJoin(stations, eq(cells.station_id, stations.id))
+			.where(
+				or(
+					sql`CAST(${nrCells.gnbid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`CAST(${nrCells.clid} AS TEXT) ILIKE ${likeQuery}`,
+					sql`CAST(${nrCells.nci} AS TEXT) ILIKE ${likeQuery}`,
+					sql`similarity(CAST(${nrCells.gnbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${nrCells.clid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					sql`similarity(CAST(${nrCells.nci} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					...(numericQuery
+						? [sql`${nrCells.gnbid} = ${numericQuery}`, sql`${nrCells.clid} = ${numericQuery}`, sql`${nrCells.nci} = ${numericQuery}`]
+						: []),
+				),
+			),
+	]);
+
+	for (const row of [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches]) {
+		const sId = row.stationId;
+		if (!stationIds.has(sId)) stationIds.add(sId);
+	}
+
+	const missingStationIds = Array.from(stationIds).filter((id) => !stationMap.has(id));
+	if (missingStationIds.length > 0) {
+		const stationsByCells = await db.query.stations.findMany({
+			where: inArray(stations.id, missingStationIds),
+			with: {
+				cells: {
+					with: {
+						gsm: true,
+						umts: true,
+						lte: true,
+						nr: true,
 					},
-					cells: true,
 				},
-				columns: {
-					status: false,
+				location: true,
+				operator: {
+					columns: {
+						is_isp: false,
+					},
 				},
 			},
-		},
-		orderBy: [
-			sql`similarity(CAST(${cells.config}->>'ecid' AS TEXT), ${query}) DESC`,
-			sql`similarity(CAST(${cells.config}->>'clid' AS TEXT), ${query}) DESC`,
-		],
-	});
+			columns: {
+				status: false,
+			},
+		});
 
-	for (const cell of matchingCells) {
-		const stationId = cell.station.id;
-
-		if (!stationIds.has(stationId)) {
-			stationIds.add(stationId);
-			stationMap.set(stationId, cell.station);
+		for (const station of stationsByCells) {
+			if (!stationMap.has(station.id)) stationMap.set(station.id, withCellDetails(station));
 		}
 	}
 

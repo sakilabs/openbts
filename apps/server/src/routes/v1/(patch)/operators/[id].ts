@@ -11,7 +11,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const operatorsUpdateSchema = createUpdateSchema(operators).strict();
-const operatorsSelectSchema = createSelectSchema(operators).omit({ is_visible: true });
+const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
 type ReqBody = { Body: z.infer<typeof operatorsUpdateSchema> };
 type ReqParams = { Params: { operator_id: number } };
 type RequestData = ReqBody & ReqParams;
@@ -32,11 +32,16 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { operator_id } = req.params;
 
-	try {
-		const operator = await db.update(operators).set(req.body).where(eq(operators.id, operator_id)).returning();
-		if (!operator.length) throw new ErrorResponse("NOT_FOUND");
+	const operator = await db.query.operators.findFirst({
+		where: (fields, { eq }) => eq(fields.id, operator_id),
+	});
+	if (!operator) throw new ErrorResponse("NOT_FOUND");
 
-		return res.send({ success: true, data: operator[0] });
+	try {
+		const [updated] = await db.update(operators).set(req.body).where(eq(operators.id, operator_id)).returning();
+		if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+		return res.send({ success: true, data: updated });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_UPDATE");

@@ -26,6 +26,7 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Band>>) {
 	const { id } = req.params;
+
 	const band = await db.query.bands.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
 	});

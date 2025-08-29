@@ -9,6 +9,7 @@ const statement = {
 	locations: ["read", "create", "update", "delete"],
 	bands: ["read", "create", "update", "delete"],
 	submissions: ["read", "create", "update", "delete"],
+	settings: ["read", "update"],
 } as const;
 
 export const accessControl = createAccessControl(statement);
@@ -33,4 +34,5 @@ export const adminRole = accessControl.newRole({
 	locations: ["read", "create", "update", "delete"],
 	bands: ["read", "create", "update", "delete"],
 	submissions: ["read", "create", "update", "delete"],
+	settings: ["read", "update"],
 });

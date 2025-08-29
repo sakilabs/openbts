@@ -33,6 +33,8 @@ CREATE TABLE "gsm_cells" (
 	"cell_id" integer PRIMARY KEY NOT NULL,
 	"lac" integer NOT NULL,
 	"cid" integer NOT NULL,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "gsm_cells_lac_cid_unique" UNIQUE("lac","cid")
 );
 --> statement-breakpoint
@@ -57,6 +59,8 @@ CREATE TABLE "lte_cells" (
 	"clid" integer NOT NULL,
 	"ecid" integer GENERATED ALWAYS AS (("lte_cells"."enbid" * 256) + "lte_cells"."clid") STORED NOT NULL,
 	"supports_nb_iot" boolean DEFAULT false,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "lte_cells_ecid_unique" UNIQUE("ecid"),
 	CONSTRAINT "lte_cells_enbid_clid_unique" UNIQUE("enbid","clid"),
 	CONSTRAINT "clid_check" CHECK ("lte_cells"."clid" BETWEEN 0 AND 255)
@@ -69,6 +73,8 @@ CREATE TABLE "nr_cells" (
 	"clid" integer NOT NULL,
 	"nci" integer,
 	"supports_nr_redcap" boolean DEFAULT false,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "nr_cells_nci_unique" UNIQUE("nci"),
 	CONSTRAINT "nr_cells_gnbid_clid_unique" UNIQUE("gnbid","clid")
 );
@@ -149,7 +155,7 @@ CREATE TABLE "uke_permits" (
 	"station_id" varchar(16) NOT NULL,
 	"operator_id" integer NOT NULL,
 	"location_id" integer NOT NULL,
-	"decision_number" varchar(100),
+	"decision_number" varchar(100) NOT NULL,
 	"decision_type" "uke_permission_type" NOT NULL,
 	"expiry_date" timestamp with time zone NOT NULL,
 	"band_id" integer NOT NULL,
@@ -184,8 +190,8 @@ CREATE TABLE "uke_radiolines" (
 	"rx_noise_figure" integer,
 	"rx_atpc_attenuation" integer,
 	"operator_id" integer,
-	"permit_number" varchar(100),
-	"decision_type" varchar(10),
+	"permit_number" varchar(100) NOT NULL,
+	"decision_type" "uke_permission_type" NOT NULL,
 	"expiry_date" timestamp with time zone NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -200,13 +206,30 @@ CREATE TABLE "umts_cells" (
 	"rnc" integer NOT NULL,
 	"cid" integer NOT NULL,
 	"cid_long" integer GENERATED ALWAYS AS (("umts_cells"."rnc" * 65536) + "umts_cells"."cid") STORED NOT NULL,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "umts_cells_cid_long_unique" UNIQUE("cid_long"),
 	CONSTRAINT "umts_cells_rnc_cid_unique" UNIQUE("rnc","cid")
 );
 --> statement-breakpoint
+CREATE TABLE "accounts" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"provider_type" text NOT NULL,
+	"provider_id" text NOT NULL,
+	"provider_account_id" text NOT NULL,
+	"refresh_token" text,
+	"access_token" text,
+	"expiresAt" timestamp with time zone,
+	"id_token" text,
+	"scope" text,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "api_keys" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "api_keys_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"user_id" integer NOT NULL,
+	"user_id" uuid NOT NULL,
 	"name" text NOT NULL,
 	"key" text NOT NULL,
 	"enabled" boolean DEFAULT true NOT NULL,
@@ -229,7 +252,7 @@ CREATE TABLE "attachments" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "attachments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" text NOT NULL,
 	"uuid" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"author_id" integer NOT NULL,
+	"author_id" uuid NOT NULL,
 	"mime_type" varchar(100) NOT NULL,
 	"size" integer NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -257,7 +280,7 @@ CREATE TABLE "audit_logs" (
 CREATE TABLE "station_comments" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "station_comments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"station_id" integer NOT NULL,
-	"user_id" integer NOT NULL,
+	"user_id" uuid NOT NULL,
 	"attachments" jsonb,
 	"content" text NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -271,7 +294,7 @@ CREATE TABLE "user_lists" (
 	"name" text NOT NULL,
 	"description" text,
 	"is_public" boolean DEFAULT false,
-	"created_by" integer NOT NULL,
+	"created_by" uuid NOT NULL,
 	"stations" jsonb NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -281,7 +304,7 @@ CREATE TABLE "user_lists" (
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"username" varchar(100),
 	"email" varchar(100) NOT NULL,
 	"password" varchar(255),
@@ -295,6 +318,15 @@ CREATE TABLE "users" (
 	"isAnonymous" boolean DEFAULT false,
 	CONSTRAINT "users_username_unique" UNIQUE("username"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "verification_tokens" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"identifier" text NOT NULL,
+	"token" text NOT NULL,
+	"expires" timestamp with time zone NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "verification_tokens_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_cells" (
@@ -372,10 +404,10 @@ CREATE TABLE "submissions"."proposed_umts_cells" (
 CREATE TABLE "submissions"."submissions" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."submissions_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"station_id" integer,
-	"submitter_id" integer NOT NULL,
+	"submitter_id" uuid NOT NULL,
 	"status" "submission_status" DEFAULT 'pending' NOT NULL,
 	"type" "type" DEFAULT 'new' NOT NULL,
-	"reviewer_id" integer,
+	"reviewer_id" uuid,
 	"review_notes" text,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -404,6 +436,7 @@ ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_tx_antenna_type_id_r
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_rx_antenna_type_id_radiolines_antenna_types_id_fk" FOREIGN KEY ("rx_antenna_type_id") REFERENCES "public"."radiolines_antenna_types"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_operator_id_operators_id_fk" FOREIGN KEY ("operator_id") REFERENCES "public"."operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fk" FOREIGN KEY ("invoked_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
@@ -439,6 +472,8 @@ CREATE INDEX "uke_permits_station_id_idx" ON "uke_permits" USING btree ("station
 CREATE INDEX "uke_permits_location_id_idx" ON "uke_permits" USING btree ("location_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_operator_id_idx" ON "uke_radiolines" USING btree ("operator_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_idx" ON "uke_radiolines" USING btree ("permit_number");--> statement-breakpoint
+CREATE INDEX "accounts_user_id_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "accounts_provider_account_id_idx" ON "accounts" USING btree ("provider_account_id");--> statement-breakpoint
 CREATE INDEX "api_keys_user_id_idx" ON "api_keys" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "attachment_author_id_idx" ON "attachments" USING btree ("author_id");--> statement-breakpoint
 CREATE INDEX "attachments_created_at_idx" ON "attachments" USING btree ("createdAt");--> statement-breakpoint

@@ -1,4 +1,4 @@
-import { cells } from "@openbts/drizzle";
+import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -33,7 +33,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<Success
 	if (Number.isNaN(station_id) || Number.isNaN(cell_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.bts_id, station_id),
+		where: (fields, { eq }) => eq(fields.id, station_id),
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
@@ -43,7 +43,24 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<Success
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
 	try {
-		await db.delete(cells).where(eq(cells.id, cell_id));
+		await db.transaction(async (tx) => {
+			switch (cell.rat) {
+				case "GSM":
+					await tx.delete(gsmCells).where(eq(gsmCells.cell_id, cell.id));
+					break;
+				case "UMTS":
+					await tx.delete(umtsCells).where(eq(umtsCells.cell_id, cell.id));
+					break;
+				case "LTE":
+					await tx.delete(lteCells).where(eq(lteCells.cell_id, cell.id));
+					break;
+				case "NR":
+					await tx.delete(nrCells).where(eq(nrCells.cell_id, cell.id));
+					break;
+			}
+
+			await tx.delete(cells).where(eq(cells.id, cell_id));
+		});
 
 		return res.send({
 			success: true,

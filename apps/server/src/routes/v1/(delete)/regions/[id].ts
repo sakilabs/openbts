@@ -22,10 +22,10 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
 	const { id } = req.params;
+	
 	const region = await db.query.regions.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
 	});
-
 	if (!region) throw new ErrorResponse("NOT_FOUND");
 
 	try {

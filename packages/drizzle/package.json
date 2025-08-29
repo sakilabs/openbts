@@ -11,10 +11,10 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"dotenv": "17.2.0",
-		"drizzle-orm": "0.44.3",
+		"dotenv": "17.2.1",
+		"drizzle-orm": "0.44.5",
 		"nanoid": "5.1.5",
-		"tsx": "4.20.3"
+		"tsx": "4.20.5"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",

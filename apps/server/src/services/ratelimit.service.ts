@@ -1,4 +1,5 @@
 import { generateFingerprint } from "../utils/fingerprint.js";
+import { logger } from "../utils/logger.js";
 
 import type { FastifyRequest } from "fastify";
 import type { TokenTier, UserRole } from "../interfaces/auth.interface.js";
@@ -121,7 +122,7 @@ export class RateLimitService {
 
 			return null;
 		} catch (error) {
-			console.error("Error fetching API key rate limit:", error);
+			logger.error("ratelimit.service.getApiKeyRateLimit", { error });
 			return null;
 		}
 	}
@@ -258,7 +259,7 @@ export class RateLimitService {
 
 			return await this.check(key, rateLimit);
 		} catch (err) {
-			console.error("Rate limit error:", err);
+			logger.error("ratelimit.service.processRequest", { err });
 			return null;
 		}
 	}

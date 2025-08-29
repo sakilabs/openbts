@@ -49,7 +49,7 @@ export async function permissionsMiddleware(req: FastifyRequest, _: FastifyReply
 
 	const result = await auth.api.userHasPermission({
 		body: {
-			userId: String(userId),
+			userId: userId,
 			permissions,
 		},
 	});

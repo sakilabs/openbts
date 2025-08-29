@@ -11,7 +11,7 @@ import type { JSONBody, Route } from "../../../../../../interfaces/routes.interf
 
 const ukePermitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
-const operatorsSchema = createSelectSchema(operators).omit({ is_visible: true });
+const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 type Permit = z.infer<typeof ukePermitsSchema> & {
 	band?: z.infer<typeof bandsSchema>;
 	operator?: z.infer<typeof operatorsSchema>;
@@ -56,7 +56,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 						band: true,
 						operator: {
 							columns: {
-								is_visible: false,
+								is_isp: false,
 							},
 						},
 					},
@@ -72,7 +72,6 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 		return res.send({ success: true, data: stationPermits });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		console.error("Error retrieving station permits:", error);
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }

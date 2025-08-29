@@ -22,6 +22,7 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
 	const { id } = req.params;
+	
 	const cell = await db.query.cells.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
 	});

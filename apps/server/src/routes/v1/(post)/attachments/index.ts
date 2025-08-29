@@ -7,6 +7,7 @@ import fs from "node:fs/promises";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { logger } from "../../../../utils/logger.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -18,7 +19,7 @@ async function ensureUploadDir() {
 	try {
 		await fs.mkdir(UPLOAD_DIR, { recursive: true });
 	} catch (error) {
-		console.error("Failed to create upload directory:", error);
+		logger.error("attachments.error", { error });
 	}
 }
 ensureUploadDir();
@@ -27,16 +28,12 @@ type ResponseData = typeof attachments.$inferSelect;
 
 async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const userId = req.userSession?.user.id;
-
-	if (!userId)
-		throw new ErrorResponse("UNAUTHORIZED");
+	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
 	const data = await req.file();
+	if (!data) throw new ErrorResponse("BAD_REQUEST");
 
-	if (!data)
-		throw new ErrorResponse("BAD_REQUEST");
-
-	const { file, filename, mimetype, encoding } = data;
+	const { file, filename, mimetype } = data;
 
 	if (!mimetype.startsWith("image/") && !mimetype.startsWith("video/") && mimetype !== "application/pdf") throw new ErrorResponse("BAD_REQUEST");
 
@@ -64,7 +61,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseD
 			try {
 				await fs.unlink(filePath);
 			} catch (unlinkError) {
-				console.error("Failed to cleanup uploaded file after DB error:", unlinkError);
+				logger.error("attachments.unlinkError", { unlinkError });
 			}
 			throw new ErrorResponse("FAILED_TO_CREATE");
 		}
@@ -75,11 +72,10 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseD
 			await fs.access(filePath);
 			await fs.unlink(filePath);
 		} catch (cleanupError) {
-			console.error("Failed to cleanup uploaded file:", cleanupError);
+			logger.error("attachments.cleanupError", { cleanupError });
 		}
 
 		if (error instanceof ErrorResponse) throw error;
-		console.error("Error uploading attachment:", error);
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }

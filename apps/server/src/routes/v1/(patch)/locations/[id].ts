@@ -39,11 +39,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	if (!location) throw new ErrorResponse("NOT_FOUND");
 
 	try {
-		const updated = await db.update(locations).set(req.body).where(eq(locations.id, location_id)).returning();
+		const [updated] = await db.update(locations).set(req.body).where(eq(locations.id, location_id)).returning();
+		if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
 		return res.send({
 			success: true,
-			data: updated[0],
+			data: updated,
 		});
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
