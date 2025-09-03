@@ -42,13 +42,9 @@ const requestSchema = cellsUpdateSchema.extend({
 	details: z.union([gsmUpdateSchema, umtsUpdateSchema, lteUpdateSchema, nrUpdateSchema]).optional(),
 });
 
-type ReqBody = { Body: z.infer<typeof requestSchema> };
-type ReqParams = { Params: { cell_id: number } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = z.infer<typeof cellsSelectSchema> & { details: z.infer<typeof cellDetailsSchema> };
 const schemaRoute = {
 	params: z.object({
-		cell_id: z.number(),
+		cell_id: z.coerce.number<number>(),
 	}),
 	body: requestSchema,
 	response: {
@@ -58,6 +54,10 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqBody = { Body: z.infer<typeof requestSchema> };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof cellsSelectSchema> & { details: z.infer<typeof cellDetailsSchema> };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { cell_id } = req.params;

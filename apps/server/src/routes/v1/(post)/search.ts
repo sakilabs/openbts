@@ -23,7 +23,7 @@ const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
 const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
-const locationSelectSchema = createSelectSchema(locations);
+const locationSelectSchema = createSelectSchema(locations).omit({ point: true });
 const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
 type CellWithRat = z.infer<typeof cellsSelectSchema> & {
 	gsm?: z.infer<typeof gsmCellsSchema>;
@@ -86,7 +86,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 					nr: true,
 				},
 			},
-			location: true,
+			location: { columns: { point: false } },
 			operator: {
 				columns: {
 					is_isp: true,
@@ -200,7 +200,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 						nr: true,
 					},
 				},
-				location: true,
+				location: { columns: { point: false } },
 				operator: {
 					columns: {
 						is_isp: false,

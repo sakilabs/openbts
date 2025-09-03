@@ -199,7 +199,7 @@ export const auditLogs = pgTable(
 		source: varchar("source", { length: 50 }),
 		ip_address: varchar("ip_address", { length: 60 }),
 		user_agent: text("user_agent"),
-		invoked_by: integer("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+		invoked_by: uuid("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [

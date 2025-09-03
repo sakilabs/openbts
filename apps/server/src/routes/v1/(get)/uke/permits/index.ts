@@ -165,7 +165,7 @@ const getUkePermits: Route<ReqQuery, Permit[]> = {
 	url: "/uke/permits",
 	method: "GET",
 	schema: schemaRoute,
-	config: { permissions: ["read:uke_permits"] },
+	config: { permissions: ["read:uke_permits"], allowGuestAccess: true },
 	handler,
 };
 

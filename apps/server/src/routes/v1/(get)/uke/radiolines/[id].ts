@@ -1,7 +1,9 @@
 import { z } from "zod/v4";
+import { createSelectSchema } from "drizzle-zod";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
+import { operators } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -43,7 +45,7 @@ const linkSchema = z.object({
 	modulation_type: z.string().optional(),
 	bandwidth: z.string().optional(),
 });
-const operatorSchema = z.object({ id: z.number(), name: z.string(), mnc_code: z.number() }).nullable().optional();
+const operatorSchema = createSelectSchema(operators).omit({ is_isp: true, full_name: true, mnc: true, parent_id: true }).nullable().optional();
 const permitSchema = z.object({
 	number: z.string().optional(),
 	decision_type: z.string().optional(),
@@ -62,7 +64,7 @@ const radioLineResponseSchema = z.object({
 
 type RadioLineResponse = z.infer<typeof radioLineResponseSchema>;
 const schemaRoute = {
-	params: z.object({ id: z.number() }),
+	params: z.object({ id: z.coerce.number<number>() }),
 	response: {
 		200: z.object({ success: z.boolean(), data: radioLineResponseSchema }),
 	},
@@ -93,8 +95,6 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		});
 
 		if (!radioLine) throw new ErrorResponse("NOT_FOUND");
-
-		const operator = radioLine.operator ? { id: radioLine.operator.id, name: radioLine.operator.name, mnc_code: radioLine.operator.mnc } : null;
 
 		const mapType = (t: { id: number; name: string; manufacturer: { id: number; name: string } | null } | null | undefined) =>
 			t
@@ -139,7 +139,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 				modulation_type: radioLine.modulation_type ?? undefined,
 				bandwidth: radioLine.bandwidth ?? undefined,
 			},
-			operator,
+			operator: radioLine.operator ? { id: radioLine.operator.id, name: radioLine.operator.name } : null,
 			permit: {
 				number: radioLine.permit_number ?? undefined,
 				decision_type: radioLine.decision_type ?? undefined,
@@ -159,7 +159,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getUkeRadioLine: Route<IdParams, RadioLineResponse> = {
 	url: "/uke/radiolines/:id",
 	method: "GET",
-	config: { permissions: ["read:uke_radiolines"] },
+	config: { permissions: ["read:uke_radiolines"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

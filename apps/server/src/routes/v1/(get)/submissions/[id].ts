@@ -31,7 +31,7 @@ const nrSchema = createSelectSchema(proposedNRCells).omit({ proposed_cell_id: tr
 const proposedDetailsSchema = z.union([gsmSchema, umtsSchema, lteSchema, nrSchema]).nullable();
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({

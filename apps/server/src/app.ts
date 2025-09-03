@@ -1,5 +1,6 @@
 import debug from "debug";
 import Fastify from "fastify";
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { dlogger } from "./config.js";
 import { APIv1Controller } from "./controllers/v1.controller.js";
@@ -7,8 +8,8 @@ import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
 import { initRuntimeSettings } from "./services/settings.service.js";
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import { ValidationError, type ErrorResponse } from "./errors.js";
+import { registerRateLimit } from "./plugins/ratelimit.plugin.js";
 import { logger, serializeError } from "./utils/logger.js";
 
 import type { FastifyZodInstance } from "./interfaces/fastify.interface.js";
@@ -67,22 +68,25 @@ export default class App {
 		this.fastify.addHook("onRequest", OnRequestHook);
 		this.fastify.addHook("preHandler", PreHandlerHook);
 		this.fastify.addHook("onSend", OnSendHook);
+		registerRateLimit(this.fastify);
 		this.fastify.setErrorHandler((error: ErrorResponse | ValidationError, req, res) => {
 			const statusCode = error.statusCode || 500;
 			const message = error.message || "An internal server error occurred.";
 			const code = error.code || "INTERNAL_SERVER_ERROR";
+			if (error.statusCode !== 401) {
+				logger.error("INTERNAL_SERVER_ERROR", {
+					...serializeError(error),
+					statusCode,
+					code,
+					method: req?.method,
+					url: req?.url,
+					ip: req?.ip,
+					host: req?.hostname,
+					reqId: req?.id,
+					userId: req?.userSession?.user?.id ?? undefined,
+				});
+			}
 
-			logger.error("INTERNAL_SERVER_ERROR", {
-				...serializeError(error),
-				statusCode,
-				code,
-				method: req?.method,
-				url: req?.url,
-				ip: req?.ip,
-				host: req?.hostname,
-				reqId: req?.id,
-				userId: req?.userSession?.user?.id ?? undefined,
-			});
 			const errorResponse: {
 				success: boolean;
 				errors: {

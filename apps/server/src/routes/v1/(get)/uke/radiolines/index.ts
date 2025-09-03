@@ -1,9 +1,10 @@
 import { z } from "zod/v4";
 import { and, eq, sql, type SQL } from "drizzle-orm";
-import { ukeRadioLines } from "@openbts/drizzle";
+import { createSelectSchema } from "drizzle-zod";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
+import { operators, ukeRadioLines } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -45,7 +46,7 @@ const linkSchema = z.object({
 	modulation_type: z.string().optional(),
 	bandwidth: z.string().optional(),
 });
-const operatorSchema = z.object({ id: z.number(), name: z.string(), mnc_code: z.number() }).nullable().optional();
+const operatorSchema = createSelectSchema(operators).omit({ is_isp: true, full_name: true, mnc: true, parent_id: true }).nullable().optional();
 const permitSchema = z.object({
 	number: z.string().optional(),
 	decision_type: z.string().optional(),
@@ -175,7 +176,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				modulation_type: radioLine.modulation_type ?? undefined,
 				bandwidth: radioLine.bandwidth ?? undefined,
 			},
-			operator: radioLine.operator ? { id: radioLine.operator.id, name: radioLine.operator.name, mnc_code: radioLine.operator.mnc } : null,
+			operator: radioLine.operator ? { id: radioLine.operator.id, name: radioLine.operator.name } : null,
 			permit: {
 				number: radioLine.permit_number ?? undefined,
 				decision_type: radioLine.decision_type ?? undefined,
@@ -196,7 +197,7 @@ const getUkeRadioLines: Route<ReqQuery, RadioLineResponse[]> = {
 	url: "/uke/radiolines",
 	method: "GET",
 	schema: schemaRoute,
-	config: { permissions: ["read:uke_radiolines"] },
+	config: { permissions: ["read:uke_radiolines"], allowGuestAccess: true },
 	handler,
 };
 

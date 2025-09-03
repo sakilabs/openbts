@@ -9,8 +9,8 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { RouteGenericInterface } from "fastify";
 
-const cellsSchema = createSelectSchema(cells);
-const stationsSchema = createSelectSchema(stations);
+const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ status: true });
 const bandsSchema = createSelectSchema(bands);
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
 const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
@@ -23,9 +23,6 @@ const cellResponseSchema = cellsSchema.extend({
 	details: cellDetailsSchema,
 });
 const schemaRoute = {
-	params: z.object({
-		id: z.number(),
-	}),
 	response: {
 		200: z.object({
 			success: z.boolean(),
@@ -70,7 +67,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 const getCells: Route<RouteGenericInterface, ResponseData> = {
 	url: "/cells",
 	method: "GET",
-	config: { permissions: ["read:cells"] },
+	config: { permissions: ["read:cells"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

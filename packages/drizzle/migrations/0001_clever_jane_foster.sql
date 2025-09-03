@@ -7,12 +7,12 @@ CREATE TYPE "public"."rat" AS ENUM('GSM', 'UMTS', 'LTE', 'NR');--> statement-bre
 CREATE TYPE "public"."api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
 CREATE TYPE "public"."submission_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
-CREATE TYPE "public"."type" AS ENUM('new', 'update');--> statement-breakpoint
+CREATE TYPE "public"."submission_type" AS ENUM('new', 'update');--> statement-breakpoint
 CREATE TABLE "bands" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "bands_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"value" integer,
 	"rat" "rat" NOT NULL,
-	"name" varchar(10) GENERATED ALWAYS AS (concat("bands"."rat"::text, ' ', "bands"."value")) STORED NOT NULL,
+	"name" varchar(15) NOT NULL,
 	"duplex" "duplex",
 	CONSTRAINT "bands_rat_value_unique" UNIQUE("rat","value"),
 	CONSTRAINT "bands_name_unique" UNIQUE("name")
@@ -48,6 +48,7 @@ CREATE TABLE "locations" (
 	"point" geometry(point) GENERATED ALWAYS AS (ST_SetSRID(ST_MakePoint("locations"."longitude", "locations"."latitude"), 4326)) STORED NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "locations_lonlat_unique" UNIQUE("longitude","latitude"),
 	CONSTRAINT "locations_latitude_range" CHECK ("locations"."latitude" BETWEEN -90 AND 90),
 	CONSTRAINT "locations_longitude_range" CHECK ("locations"."longitude" BETWEEN -180 AND 180)
 );
@@ -84,9 +85,10 @@ CREATE TABLE "operators" (
 	"name" varchar(100) NOT NULL,
 	"full_name" varchar(250) NOT NULL,
 	"parent_id" integer,
-	"mnc_code" integer NOT NULL,
+	"mnc" integer NOT NULL,
 	"is_isp" boolean DEFAULT true,
-	CONSTRAINT "operators_name_unique" UNIQUE("name")
+	CONSTRAINT "operators_name_unique" UNIQUE("name"),
+	CONSTRAINT "operators_mnc_unique" UNIQUE("mnc")
 );
 --> statement-breakpoint
 CREATE TABLE "radiolines_antenna_types" (
@@ -126,7 +128,7 @@ CREATE TABLE "stations" (
 	"is_confirmed" boolean DEFAULT false,
 	"status" "station_status" DEFAULT 'pending' NOT NULL,
 	CONSTRAINT "stations_station_id_operator_unique" UNIQUE("station_id","operator_id"),
-	CONSTRAINT "stations_station_id_16_digits" CHECK ("stations"."station_id" ~ '^[0-9]{16}$')
+	CONSTRAINT "stations_station_id_16_length" CHECK ("stations"."station_id" ~ '(^.{1,16}$)')
 );
 --> statement-breakpoint
 CREATE TABLE "stations_permits" (
@@ -146,6 +148,8 @@ CREATE TABLE "uke_locations" (
 	"point" geometry(point) GENERATED ALWAYS AS (ST_SetSRID(ST_MakePoint("uke_locations"."longitude", "uke_locations"."latitude"), 4326)) STORED NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "uke_locations_longitude_unique" UNIQUE("longitude"),
+	CONSTRAINT "uke_locations_latitude_unique" UNIQUE("latitude"),
 	CONSTRAINT "uke_locations_latitude_range" CHECK ("uke_locations"."latitude" BETWEEN -90 AND 90),
 	CONSTRAINT "uke_locations_longitude_range" CHECK ("uke_locations"."longitude" BETWEEN -180 AND 180)
 );
@@ -273,7 +277,7 @@ CREATE TABLE "audit_logs" (
 	"source" varchar(50),
 	"ip_address" varchar(60),
 	"user_agent" text,
-	"invoked_by" integer,
+	"invoked_by" uuid,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -406,7 +410,7 @@ CREATE TABLE "submissions"."submissions" (
 	"station_id" integer,
 	"submitter_id" uuid NOT NULL,
 	"status" "submission_status" DEFAULT 'pending' NOT NULL,
-	"type" "type" DEFAULT 'new' NOT NULL,
+	"type" "submission_type" DEFAULT 'new' NOT NULL,
 	"reviewer_id" uuid,
 	"review_notes" text,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,

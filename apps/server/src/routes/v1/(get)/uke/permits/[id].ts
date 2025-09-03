@@ -14,7 +14,7 @@ const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -58,7 +58,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getUkePermit: Route<IdParams, Permit> = {
 	url: "/uke/permits/:id",
 	method: "GET",
-	config: { permissions: ["read:uke_permits"] },
+	config: { permissions: ["read:uke_permits"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

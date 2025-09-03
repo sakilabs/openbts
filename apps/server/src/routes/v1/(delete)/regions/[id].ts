@@ -11,7 +11,7 @@ import type { IdParams, SuccessResponse, Route } from "../../../../interfaces/ro
 
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -22,7 +22,7 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
 	const { id } = req.params;
-	
+
 	const region = await db.query.regions.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
 	});

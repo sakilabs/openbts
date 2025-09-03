@@ -13,9 +13,6 @@ const bandSelectSchema = createSelectSchema(bands);
 type Bands = z.infer<typeof bandSelectSchema>;
 
 const schemaRoute = {
-	params: z.object({
-		id: z.number(),
-	}),
 	response: {
 		200: z.object({
 			success: z.boolean(),
@@ -32,7 +29,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Bands[]>
 const getBands: Route<RouteGenericInterface, Bands[]> = {
 	url: "/bands",
 	method: "GET",
-	config: { permissions: ["read:bands"] },
+	config: { permissions: ["read:bands"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

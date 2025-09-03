@@ -28,16 +28,10 @@ type CellWithRats = CellBase & {
 	nr?: z.infer<typeof nrCellsSchema>;
 };
 type Cell = CellBase & { station: z.infer<typeof stationsSchema>; band: z.infer<typeof bandsSchema>; details: CellDetails };
-type ReqParams = {
-	Params: {
-		station_id: number;
-		cell_id: number;
-	};
-};
 const schemaRoute = {
 	params: z.object({
-		station_id: z.number(),
-		cell_id: z.number(),
+		station_id: z.coerce.number<number>(),
+		cell_id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -46,6 +40,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cell>>) {
 	const { station_id, cell_id } = req.params;
@@ -72,7 +67,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 const getCellFromStation: Route<ReqParams, Cell> = {
 	url: "/stations/:station_id/cells/:cell_id",
 	method: "GET",
-	config: { permissions: ["read:stations", "read:cells"] },
+	config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

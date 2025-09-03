@@ -8,6 +8,7 @@ import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, statio
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { omit } from "zod/mini";
 
 const stationSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true });
@@ -17,7 +18,7 @@ const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
 const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
-const locationSchema = createSelectSchema(locations);
+const locationSchema = createSelectSchema(locations).omit({ point: true });
 const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
 type StationBase = z.infer<typeof stationSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
@@ -36,7 +37,7 @@ type StationResponse = StationBase & {
 };
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -53,11 +54,12 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
 	const { id } = req.params;
 
+	console.log(id);
 	const station = await db.query.stations.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
 		with: {
 			cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
-			location: true,
+			location: { columns: { point: false } },
 			operator: true,
 		},
 		columns: { status: false },
@@ -76,7 +78,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getStation: Route<IdParams, StationResponse> = {
 	url: "/stations/:id",
 	method: "GET",
-	config: { permissions: ["read:stations"] },
+	config: { permissions: ["read:stations"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

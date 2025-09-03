@@ -12,8 +12,15 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1756510703840,
-      "tag": "0001_stale_tag",
+      "when": 1756843975561,
+      "tag": "0001_clever_jane_foster",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756868089095,
+      "tag": "0002_magical_black_panther",
       "breakpoints": true
     }
   ]

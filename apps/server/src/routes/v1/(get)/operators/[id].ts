@@ -12,7 +12,7 @@ import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.in
 const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -40,7 +40,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getOperator: Route<IdParams, ResponseData> = {
 	url: "/operators/:id",
 	method: "GET",
-	config: { permissions: ["read:operators"] },
+	config: { permissions: ["read:operators"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

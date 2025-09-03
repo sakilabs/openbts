@@ -11,7 +11,7 @@ import type { IdParams, SuccessResponse, Route } from "../../../../interfaces/ro
 
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({

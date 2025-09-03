@@ -17,13 +17,9 @@ const stationsUpdateSchema = createUpdateSchema(stations)
 	})
 	.strict();
 const stationsSelectSchema = createSelectSchema(stations);
-type ReqBody = { Body: z.infer<typeof stationsUpdateSchema> };
-type ReqParams = { Params: { station_id: number } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = z.infer<typeof stationsSelectSchema>;
 const schemaRoute = {
 	params: z.object({
-		station_id: z.number(),
+		station_id: z.coerce.number<number>(),
 	}),
 	body: stationsUpdateSchema,
 	response: {
@@ -33,6 +29,10 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqBody = { Body: z.infer<typeof stationsUpdateSchema> };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof stationsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { station_id } = req.params;

@@ -9,18 +9,17 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import type { RouteGenericInterface } from "fastify";
 
-const locationsSchema = createSelectSchema(locations);
+const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
-	params: z.object({
-		id: z.number(),
-	}),
 	response: {
 		200: z.object({
 			success: z.boolean(),
-			data: locationsSchema.extend({
-				region: regionsSchema,
-			}),
+			data: z.array(
+				locationsSchema.extend({
+					region: regionsSchema,
+				}),
+			),
 		}),
 	},
 };
@@ -31,6 +30,9 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 		with: {
 			region: true,
 		},
+		columns: {
+			region_id: false,
+		},
 	});
 	return res.send({ success: true, data: locations });
 }
@@ -38,7 +40,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 const getLocations: Route<RouteGenericInterface, ResponseData[]> = {
 	url: "/locations",
 	method: "GET",
-	config: { permissions: ["read:locations"] },
+	config: { permissions: ["read:locations"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

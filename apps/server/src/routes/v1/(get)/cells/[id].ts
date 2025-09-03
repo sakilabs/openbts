@@ -9,7 +9,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const cellsSchema = createSelectSchema(cells);
+const cellsSchema = createSelectSchema(cells).omit({ band_id: true });
 const stationsSchema = createSelectSchema(stations);
 const bandsSchema = createSelectSchema(bands);
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
@@ -19,7 +19,7 @@ const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -77,7 +77,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getCell: Route<IdParams, ResponseData> = {
 	url: "/cells/:id",
 	method: "GET",
-	config: { permissions: ["read:cells"] },
+	config: { permissions: ["read:cells"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

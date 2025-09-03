@@ -14,7 +14,7 @@ const schemaRoute = {
 	response: {
 		200: z.object({
 			success: z.boolean(),
-			data: operatorsSchema,
+			data: z.array(operatorsSchema),
 		}),
 	},
 };
@@ -33,7 +33,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 const getOperators: Route<RouteGenericInterface, ResponseData[]> = {
 	url: "/operators",
 	method: "GET",
-	config: { permissions: ["read:operators"] },
+	config: { permissions: ["read:operators"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

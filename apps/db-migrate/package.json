@@ -2,7 +2,7 @@
 	"name": "@openbts/db-migrate",
 	"version": "1.0.0",
 	"private": true,
-	"description": "Migrate CSV data to OpenBTS' PostgreSQL database",
+	"description": "Migrate sql files to OpenBTS' PostgreSQL database",
 	"license": "GPL-3.0",
 	"type": "module",
 	"scripts": {
@@ -13,20 +13,21 @@
 	"dependencies": {
 		"@openbts/drizzle": "workspace:*",
 		"cli-progress": "3.12.0",
-		"dotenv": "17.2.0",
-		"drizzle-orm": "0.44.3",
-		"node-sql-parser": "5.3.10",
+		"dotenv": "17.2.1",
+		"drizzle-orm": "0.44.5",
+		"node-sql-parser": "5.3.12",
 		"papaparse": "5.5.3",
 		"postgres": "3.4.7"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",
 		"@types/cli-progress": "3.11.6",
-		"@types/node": "24.1.0",
+		"@types/node": "24.3.0",
 		"@types/papaparse": "5.3.16",
-		"@types/pg": "8.15.4",
+		"@types/pg": "8.15.5",
 		"drizzle-kit": "0.31.4",
-		"typescript": "5.8.3"
+		"tsx": "4.20.5",
+		"typescript": "5.9.2"
 	},
 	"engines": {
 		"node": ">=18",

@@ -4,7 +4,7 @@ import { bands, cells, locations, operators, ratEnum, regions, stations, Station
 import { sql } from "drizzle-orm/sql";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
-export const SubmissionTypeEnum = pgEnum("type", ["new", "update"]);
+export const SubmissionTypeEnum = pgEnum("submission_type", ["new", "update"]);
 export const SubmissionsSchema = pgSchema("submissions");
 
 /**

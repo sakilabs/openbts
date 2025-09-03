@@ -91,6 +91,9 @@ export const auth = betterAuth({
 			// },
 		}),
 	],
+	telemetry: {
+		enabled: false,
+	},
 	rateLimit: {
 		enabled: false,
 	},

@@ -42,6 +42,7 @@ function isSettings(obj: unknown): obj is RuntimeSettings {
 function deepMergeSettings(base: RuntimeSettings, patch: Partial<RuntimeSettings>): RuntimeSettings {
 	const next: RuntimeSettings = { ...base };
 	if (typeof patch.enforceAuthForAllRoutes === "boolean") next.enforceAuthForAllRoutes = patch.enforceAuthForAllRoutes;
+	if (typeof patch.enableStationComments === "boolean") next.enableStationComments = patch.enableStationComments;
 	if (Array.isArray(patch.allowedUnauthenticatedRoutes))
 		next.allowedUnauthenticatedRoutes = patch.allowedUnauthenticatedRoutes.filter(isNonEmptyString) as NonEmptyString[];
 	if (Array.isArray(patch.disabledRoutes)) next.disabledRoutes = patch.disabledRoutes.filter(isNonEmptyString) as NonEmptyString[];

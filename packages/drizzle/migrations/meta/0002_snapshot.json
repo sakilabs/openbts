@@ -1,6 +1,6 @@
 {
-  "id": "e6d71061-161e-4063-a3e7-f2516ef55d13",
-  "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
+  "id": "596585d0-bcb3-4acc-9192-f9d40dc2df0f",
+  "prevId": "e6d71061-161e-4063-a3e7-f2516ef55d13",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -200,6 +200,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "e_gsm": {
+          "name": "e_gsm",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -634,7 +641,7 @@
           "name": "mnc",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "is_isp": {
           "name": "is_isp",

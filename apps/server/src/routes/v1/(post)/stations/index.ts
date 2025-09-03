@@ -18,7 +18,7 @@ const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
 const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
-const locationSchema = createSelectSchema(locations);
+const locationSchema = createSelectSchema(locations).omit({ point: true });
 const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
 const baseCellsInsertSchema = createInsertSchema(cells).omit({ createdAt: true, updatedAt: true }).strict();
 const gsmInsertSchema = createInsertSchema(gsmCells).omit({ createdAt: true, updatedAt: true });
@@ -108,12 +108,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 				);
 			}
 
-			// Fetch full station with relations inside the transaction
 			const full = await tx.query.stations.findFirst({
 				where: (fields, { eq }) => eq(fields.id, newStation.id),
 				with: {
 					cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
-					location: true,
+					location: { columns: { point: false } },
 					operator: true,
 				},
 				columns: { status: false },

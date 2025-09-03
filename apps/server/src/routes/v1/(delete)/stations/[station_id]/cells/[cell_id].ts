@@ -9,16 +9,10 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { Route, SuccessResponse } from "../../../../../../interfaces/routes.interface.js";
 
-type ReqParams = {
-	Params: {
-		station_id: number;
-		cell_id: number;
-	};
-};
 const schemaRoute = {
 	params: z.object({
-		station_id: z.number(),
-		cell_id: z.number(),
+		station_id: z.coerce.number<number>(),
+		cell_id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -26,6 +20,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<SuccessResponse>) {
 	const { station_id, cell_id } = req.params;

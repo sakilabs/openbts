@@ -16,14 +16,10 @@ type Permit = z.infer<typeof ukePermitsSchema> & {
 	band?: z.infer<typeof bandsSchema>;
 	operator?: z.infer<typeof operatorsSchema>;
 };
-type ReqParams = {
-	Params: {
-		station_id: number;
-	};
-};
+
 const schemaRoute = {
 	params: z.object({
-		station_id: z.number(),
+		station_id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -37,6 +33,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Permit[]>>) {
 	const { station_id } = req.params;
@@ -79,7 +76,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 const getStationPermits: Route<ReqParams, Permit[]> = {
 	url: "/stations/:station_id/permits",
 	method: "GET",
-	config: { permissions: ["read:stations", "read:uke_permits"] },
+	config: { permissions: ["read:stations", "read:uke_permits"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

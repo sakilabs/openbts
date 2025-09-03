@@ -34,7 +34,7 @@ export const operators = pgTable(
 		name: varchar("name", { length: 100 }).notNull().unique(),
 		full_name: varchar("full_name", { length: 250 }).notNull(),
 		parent_id: integer("parent_id").references((): AnyPgColumn => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
-		mnc: integer("mnc_code").notNull(),
+		mnc: integer("mnc").unique(),
 		//* We don't wanna show operators from radiolines (which are not real ISPs)
 		is_isp: boolean("is_isp").default(true),
 	},
@@ -78,6 +78,7 @@ export const locations = pgTable(
 		check("locations_longitude_range", sql`${t.longitude} BETWEEN -180 AND 180`),
 		index("locations_region_id_idx").on(t.region_id),
 		index("locations_point_gist").using("gist", t.point),
+		unique("locations_lonlat_unique").on(t.longitude, t.latitude),
 	],
 );
 
@@ -95,8 +96,8 @@ export const ukeLocations = pgTable(
 			.notNull(),
 		city: varchar("city", { length: 100 }),
 		address: text("address"),
-		longitude: doublePrecision("longitude").notNull(),
-		latitude: doublePrecision("latitude").notNull(),
+		longitude: doublePrecision("longitude").notNull().unique(),
+		latitude: doublePrecision("latitude").notNull().unique(),
 		point: geometry("point", { type: "point", mode: "xy", srid: 4326 })
 			.notNull()
 			.generatedAlwaysAs((): SQL => sql`ST_SetSRID(ST_MakePoint(${ukeLocations.longitude}, ${ukeLocations.latitude}), 4326)`),
@@ -133,7 +134,7 @@ export const stations = pgTable(
 		index("station_location_id_idx").on(table.location_id),
 		index("stations_operator_id_idx").on(table.operator_id),
 		unique("stations_station_id_operator_unique").on(table.station_id, table.operator_id),
-		check("stations_station_id_16_digits", sql`${table.station_id} ~ '^[0-9]{16}$'`),
+		check("stations_station_id_16_length", sql`${table.station_id} ~ '(^.{1,16}$)'`),
 	],
 );
 
@@ -212,6 +213,7 @@ export const gsmCells = pgTable(
 			.notNull(),
 		lac: integer("lac").notNull(),
 		cid: integer("cid").notNull(),
+		e_gsm: boolean("e_gsm").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
@@ -289,9 +291,7 @@ export const bands = pgTable(
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		value: integer("value"),
 		rat: ratEnum("rat").notNull(),
-		name: varchar("name", { length: 10 })
-			.notNull()
-			.generatedAlwaysAs((): SQL => sql`concat(${bands.rat}::text, ' ', ${bands.value})`),
+		name: varchar("name", { length: 15 }).notNull(),
 		duplex: DuplexType("duplex"),
 	},
 	(t) => [unique("bands_rat_value_unique").on(t.rat, t.value), unique("bands_name_unique").on(t.name)],

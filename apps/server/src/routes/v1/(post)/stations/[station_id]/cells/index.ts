@@ -30,21 +30,11 @@ const nrInsertSchema = createInsertSchema(nrCells).omit({ createdAt: true, updat
 const cellWithDetailsInsert = cellsInsertSchema.extend({
 	details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
 });
-
-type ReqBody = {
-	Body: { cells: z.infer<typeof cellWithDetailsInsert>[] };
-};
-type ReqParams = {
-	Params: {
-		station_id: number;
-	};
-};
-type RequestData = ReqParams & ReqBody;
 const cellWithDetailsSelectSchema = cellsSelectSchema.extend({ details: cellDetailsSchema });
-type ResponseData = z.infer<typeof cellWithDetailsSelectSchema>[];
+
 const schemaRoute = {
 	params: z.object({
-		station_id: z.number(),
+		station_id: z.coerce.number<number>(),
 	}),
 	body: z.object({
 		cells: z.array(cellWithDetailsInsert),
@@ -56,6 +46,14 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqBody = {
+	Body: { cells: z.infer<typeof cellWithDetailsInsert>[] };
+};
+type ReqParams = {
+	Params: z.infer<typeof schemaRoute.params>;
+};
+type RequestData = ReqParams & ReqBody;
+type ResponseData = z.infer<typeof cellWithDetailsSelectSchema>[];
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { station_id } = req.params;

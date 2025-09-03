@@ -1,4 +1,0 @@
-{
-	"extends": "@openbts/typescript-configs/base.json",
-	"include": ["src/**/*"]
-}

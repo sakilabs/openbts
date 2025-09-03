@@ -9,11 +9,11 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const locationsSchema = createSelectSchema(locations);
+const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -43,7 +43,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getLocation: Route<IdParams, ResponseData> = {
 	url: "/locations/:id",
 	method: "GET",
-	config: { permissions: ["read:locations"] },
+	config: { permissions: ["read:locations"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

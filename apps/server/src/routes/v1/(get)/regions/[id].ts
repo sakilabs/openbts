@@ -12,7 +12,7 @@ import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.in
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	params: z.object({
-		id: z.number(),
+		id: z.coerce.number<number>(),
 	}),
 	response: {
 		200: z.object({
@@ -37,7 +37,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getRegion: Route<IdParams, Region> = {
 	url: "/regions/:id",
 	method: "GET",
-	config: { permissions: ["read:regions"] },
+	config: { permissions: ["read:regions"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

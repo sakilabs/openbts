@@ -12,13 +12,9 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const locationsUpdateSchema = createUpdateSchema(locations).strict();
 const locationsSelectSchema = createSelectSchema(locations);
-type ReqBody = { Body: z.infer<typeof locationsUpdateSchema> };
-type ReqParams = { Params: { location_id: number } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = z.infer<typeof locationsSelectSchema>;
 const schemaRoute = {
 	params: z.object({
-		location_id: z.number(),
+		location_id: z.coerce.number<number>(),
 	}),
 	body: locationsUpdateSchema,
 	response: {
@@ -28,6 +24,10 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqBody = { Body: z.infer<typeof locationsUpdateSchema> };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof locationsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { location_id } = req.params;

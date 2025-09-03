@@ -81,7 +81,7 @@ export class SQLParser {
 		if (!this.enableRegexFallback) return [];
 
 		this.log("info", `${filename || "Content"}: falling back to regex for INSERT extraction`);
-		const insertRegex = /insert\s+into\s+[^;]+;/gis;
+		const insertRegex = /\binsert\s+into\b[\s\S]*?(?:;|$)/gi;
 		const matches = cleanContent.match(insertRegex) ?? [];
 
 		const results: ParsedInsert[] = [];
@@ -156,7 +156,13 @@ export class SQLParser {
 
 	private parseInsertAstSafely(statement: string, filename?: string): ParsedInsert | null {
 		try {
-			const cleanStatement = ensureSemicolon(statement.replace(/`/g, "").replace(/\s+/g, " ").trim());
+			const normalized = statement
+				.replace(/`/g, "")
+				.replace(/\bIF\s+NOT\s+EXISTS\b/gi, "")
+				.replace(/\)\s*ENGINE\b[\s\S]*?;/gi, ")")
+				.replace(/\)\s*CHARSET\b[\s\S]*?;/gi, ")")
+				.trim();
+			const cleanStatement = ensureSemicolon(normalized.replace(/\s+/g, " "));
 			const ast = this.parser.astify(cleanStatement, { database: this.db }) as unknown as AnyAst | AnyAst[];
 			const first = Array.isArray(ast) ? ast[0] : ast;
 			if (!first || get<string>(first, "type") !== "insert") return null;
@@ -226,7 +232,8 @@ export class SQLParser {
 
 	private extractValues(insertAst: AnyAst): (string | number | null)[][] {
 		const out: (string | number | null)[][] = [];
-		const values = get<unknown>(insertAst, "values");
+		let values: unknown = [];
+		if (isRecord(insertAst.values)) values = get<unknown>(insertAst.values as Record<string, unknown>, "values");
 		if (!Array.isArray(values)) return out;
 
 		for (const rowNode of values) {
@@ -247,7 +254,7 @@ export class SQLParser {
 	}
 
 	private extractScalar(expr: unknown): string | number | null {
-		if (expr == null) return null;
+		if (!expr) return null;
 
 		if (!isRecord(expr)) {
 			if (typeof expr === "string" || typeof expr === "number") return expr;

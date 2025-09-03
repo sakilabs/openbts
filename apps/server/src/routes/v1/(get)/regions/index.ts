@@ -28,7 +28,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Region[]
 const getRegions: Route<RouteGenericInterface, Region[]> = {
 	url: "/regions",
 	method: "GET",
-	config: { permissions: ["read:regions"] },
+	config: { permissions: ["read:regions"], allowGuestAccess: true },
 	schema: schemaRoute,
 	handler,
 };

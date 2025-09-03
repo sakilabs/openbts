@@ -22,7 +22,7 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 	const authHeader = headers.authorization;
 	if (!authHeader) {
 		const user = await getCurrentUser(req);
-		if (!user) throw new ErrorResponse("UNAUTHORIZED");
+		if (!user && !route?.config?.allowGuestAccess) throw new ErrorResponse("UNAUTHORIZED");
 
 		// const sessionData: Session = {
 		// 	...user,
@@ -55,12 +55,5 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
 		if (!valid || !key) throw new ErrorResponse("FORBIDDEN");
 
 		req.apiToken = key as ApiToken;
-	}
-
-	const requireAuth = settings.enforceAuthForAllRoutes || !route?.config?.allowGuestAccess;
-	if (requireAuth) {
-		const user = await getCurrentUser(req);
-		if (!user && !req.apiToken) throw new ErrorResponse("UNAUTHORIZED");
-		return;
 	}
 }

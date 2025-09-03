@@ -29,15 +29,10 @@ const nrCellsUpdateSchema = createUpdateSchema(nrCells).strict();
 const requestSchema = cellsUpdateSchema.extend({
 	details: z.union([gsmCellsUpdateSchema, umtsCellsUpdateSchema, lteCellsUpdateSchema, nrCellsUpdateSchema]).optional(),
 });
-
-type ReqBody = { Body: z.infer<typeof requestSchema> };
-type ReqParams = { Params: { station_id: number; cell_id: number } };
-type RequestData = ReqBody & ReqParams;
-type ResponseData = z.infer<typeof cellsSelectSchema> & { details: z.infer<typeof cellDetailsSchema> };
 const schemaRoute = {
 	params: z.object({
-		station_id: z.number(),
-		cell_id: z.number(),
+		station_id: z.coerce.number<number>(),
+		cell_id: z.coerce.number<number>(),
 	}),
 	body: requestSchema,
 	response: {
@@ -47,6 +42,10 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
+type ReqBody = { Body: z.infer<typeof requestSchema> };
+type RequestData = ReqBody & ReqParams;
+type ResponseData = z.infer<typeof cellsSelectSchema> & { details: z.infer<typeof cellDetailsSchema> };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { station_id, cell_id } = req.params;
