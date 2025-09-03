@@ -8,7 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { locations, stations, cells, bands, gsmCells, umtsCells, lteCells, nrCells, operators } from "@openbts/drizzle";
+import { locations, stations, cells, bands, gsmCells, umtsCells, lteCells, nrCells, operators, regions } from "@openbts/drizzle";
 
 type ReqQuery = {
 	Querystring: StationFilterParams;
@@ -26,7 +26,8 @@ interface StationFilterParams {
 const stationsSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
-const locationSchema = createSelectSchema(locations).omit({ point: true });
+const regionSchema = createSelectSchema(regions);
+const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
 const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
@@ -34,7 +35,11 @@ const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const cellResponseSchema = cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema });
-const stationResponseSchema = stationsSchema.extend({ cells: z.array(cellResponseSchema), location: locationSchema, operator: operatorSchema });
+const stationResponseSchema = stationsSchema.extend({
+	cells: z.array(cellResponseSchema),
+	location: locationSchema.extend({ region: regionSchema }),
+	operator: operatorSchema,
+});
 type Station = z.infer<typeof stationResponseSchema>;
 type CellWithRats = z.infer<typeof cellsSchema> & {
 	band: z.infer<typeof bandsSchema>;
@@ -153,7 +158,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						return undefined;
 					},
 				},
-				location: { columns: { point: false } },
+				location: { columns: { point: false, region_id: false }, with: { region: true } },
 				operator: true,
 			},
 			columns: {
