@@ -17,8 +17,9 @@ import {
 	umtsCells,
 	lteCells,
 	nrCells,
-} from "./bts.js";
-import { apiKeys, attachments, stationComments, userLists, users } from "./auth.js";
+	networksIds,
+} from "./bts.ts";
+import { apiKeys, attachments, stationComments, userLists, users } from "./auth.ts";
 import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedStations, proposedUMTSCells } from "./submissions.ts";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
@@ -52,6 +53,10 @@ export const stationRelations = relations(stations, ({ one, many }) => ({
 		references: [operators.id],
 	}),
 	cells: many(cells),
+	networksNumber: one(networksIds, {
+		fields: [stations.id],
+		references: [networksIds.station_id],
+	}),
 }));
 
 export const cellRelations = relations(cells, ({ one }) => ({
@@ -120,8 +125,8 @@ export const userListRelations = relations(userLists, ({ one }) => ({
 	}),
 }));
 
-export const userNotesRelations = relations(stationComments, ({ one }) => ({
-	user: one(users, {
+export const userCommentsRelations = relations(stationComments, ({ one }) => ({
+	author: one(users, {
 		fields: [stationComments.user_id],
 		references: [users.id],
 	}),
@@ -144,13 +149,6 @@ export const usersRelations = relations(users, ({ many }) => ({
 	apiKeys: many(apiKeys),
 	attachments: many(attachments, {
 		relationName: "author",
-	}),
-}));
-
-export const attachmentRelations = relations(attachments, ({ one }) => ({
-	author: one(users, {
-		fields: [attachments.author_id],
-		references: [users.id],
 	}),
 }));
 
@@ -210,6 +208,13 @@ export const stationsPermitsRelations = relations(stationsPermits, ({ one }) => 
 	}),
 	station: one(stations, {
 		fields: [stationsPermits.station_id],
+		references: [stations.id],
+	}),
+}));
+
+export const networksIdsRelations = relations(networksIds, ({ one }) => ({
+	station: one(stations, {
+		fields: [networksIds.station_id],
 		references: [stations.id],
 	}),
 }));

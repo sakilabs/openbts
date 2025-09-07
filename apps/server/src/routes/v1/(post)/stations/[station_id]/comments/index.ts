@@ -1,33 +1,29 @@
-import { stationComments, attachments } from "@openbts/drizzle";
 import { z } from "zod/v4";
 import { createSelectSchema } from "drizzle-zod";
-import { inArray } from "drizzle-orm";
+import { pipeline } from "node:stream/promises";
+import { createWriteStream } from "node:fs";
+import path from "node:path";
+import fs from "node:fs/promises";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../../services/settings.service.js";
+import { stationComments, attachments } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
+import type { MultipartFile, MultipartValue } from "@fastify/multipart";
 
 const stationCommentSelectSchema = createSelectSchema(stationComments);
+const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
+
+async function ensureUploadDir() {
+	try {
+		await fs.mkdir(UPLOAD_DIR, { recursive: true });
+	} catch {}
+}
 const schemaRoute = {
-	body: z
-		.object({
-			content: z.string().min(1),
-			attachments: z
-				.array(
-					z
-						.object({
-							uuid: z.string().min(1),
-							type: z.string().min(1),
-						})
-						.strict(),
-				)
-				.optional(),
-		})
-		.strict(),
 	params: z
 		.object({
 			station_id: z.string().regex(/^\d+$/),
@@ -42,19 +38,19 @@ const schemaRoute = {
 			.strict(),
 	},
 };
-type ReqBody = { Body: z.infer<typeof schemaRoute.body> };
+
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
-type RequestData = ReqParams & ReqBody;
+type RequestData = ReqParams;
 type ResponseData = z.infer<typeof stationCommentSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { station_id } = req.params;
-	const { content, attachments: commentAttachments } = req.body;
+	const isMultipart = (req.headers["content-type"] ?? "").includes("multipart/form-data");
 	const userId = req.userSession?.user.id;
 	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 	if (Number.isNaN(Number(station_id))) throw new ErrorResponse("INVALID_QUERY");
-	if (!content) throw new ErrorResponse("BAD_REQUEST");
 	if (!getRuntimeSettings().enableStationComments) throw new ErrorResponse("FORBIDDEN");
+	if (!isMultipart) throw new ErrorResponse("BAD_REQUEST");
 
 	try {
 		const station = await db.query.stations.findFirst({
@@ -62,27 +58,52 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		});
 		if (!station) throw new ErrorResponse("NOT_FOUND");
 
-		let validatedAttachments: { uuid: string; type: string }[] | null = null;
-		if (commentAttachments && commentAttachments.length > 0) {
-			const attachmentUuids = commentAttachments.map((att) => att.uuid);
-			const existingAttachments = await db.query.attachments.findMany({
-				where: inArray(attachments.uuid, attachmentUuids),
-				columns: {
-					uuid: true,
-					mime_type: true,
-				},
-			});
+		let content: string | undefined;
+		const validatedAttachments: { uuid: string; type: string }[] | null = [];
 
-			const existingUuids = new Set(existingAttachments.map((att) => att.uuid));
-			const invalidUuids = attachmentUuids.filter((uuid) => !existingUuids.has(uuid));
+		await ensureUploadDir();
+		const savedPaths: string[] = [];
+		try {
+			for await (const part of (req as unknown as { parts: () => AsyncIterableIterator<MultipartFile | MultipartValue> }).parts()) {
+				if ((part as MultipartFile).type === "file" && (part as MultipartFile).file) {
+					const filePart = part as MultipartFile;
+					const mimetype: string = filePart.mimetype;
+					if (!mimetype.startsWith("image/") && !mimetype.startsWith("video/") && mimetype !== "application/pdf")
+						throw new ErrorResponse("BAD_REQUEST");
+					const fileExtension = path.extname(filePart.filename ?? "");
+					const uniqueFilename = `${Date.now()}-${Math.random().toString(36).slice(2)}${fileExtension}`;
+					const filePath = path.join(UPLOAD_DIR, uniqueFilename);
+					savedPaths.push(filePath);
+					await pipeline(filePart.file, createWriteStream(filePath));
+					const stats = await fs.stat(filePath);
+					const fileSize = stats.size;
+					const [newAttachment] = await db
+						.insert(attachments)
+						.values({ name: filePart.filename ?? uniqueFilename, author_id: userId, mime_type: mimetype, size: fileSize })
+						.returning();
+					if (!newAttachment) throw new ErrorResponse("FAILED_TO_CREATE");
+					(validatedAttachments as { uuid: string; type: string }[]).push({ uuid: newAttachment.uuid, type: newAttachment.mime_type });
+					continue;
+				}
 
-			if (invalidUuids.length > 0) throw new ErrorResponse("BAD_REQUEST");
-
-			validatedAttachments = existingAttachments.map((att) => ({
-				uuid: att.uuid,
-				type: att.mime_type,
-			}));
+				if ((part as MultipartValue).type === "field") {
+					const field = part as MultipartValue;
+					if (field.fieldname === "content") content = String(field.value ?? "");
+				}
+			}
+		} catch {
+			await Promise.all(
+				savedPaths.map(async (p) => {
+					try {
+						await fs.access(p);
+						await fs.unlink(p);
+					} catch {}
+				}),
+			);
+			throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 		}
+
+		if (!content) throw new ErrorResponse("BAD_REQUEST");
 
 		const [newComment] = await db
 			.insert(stationComments)

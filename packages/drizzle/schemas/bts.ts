@@ -156,6 +156,20 @@ export const stationsPermits = pgTable(
 	],
 );
 
+export const networksIds = pgTable(
+	"networks_ids",
+	{
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+		station_id: integer("station_id")
+			.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
+		networks_id: varchar("networks_id", { length: 16 }).notNull(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(t) => [index("networks_ids_station_idx").on(t.station_id), unique("networks_ids_networks_id_unique").on(t.station_id, t.networks_id)],
+);
+
 /**
  * UKE permits table
  * @example
