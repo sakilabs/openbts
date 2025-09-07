@@ -140,41 +140,25 @@ export async function writeLocations(items: PreparedLocation[], regionIds: Regio
 	}));
 
 	const batchSize = options.batchSize ?? values.length;
-	const insertedKv = new Map<string, number>();
+	const inserted: Array<{ id: number }> = [];
 	if (values.length) {
 		for (const group of chunkArray(values, batchSize)) {
 			if (group.length === 0) continue;
 			const part = await db
 				.insert(locations)
 				.values(group)
-				.returning({ id: locations.id, longitude: locations.longitude, latitude: locations.latitude })
+				.returning({ id: locations.id })
 				.onConflictDoNothing({ target: [locations.longitude, locations.latitude] });
-			for (const row of part) insertedKv.set(`${row.longitude}:${row.latitude}`, row.id);
+			inserted.push(...part);
 			options.onProgress?.(group.length);
 		}
 	}
 
-	// Build final map from original_id -> id using (longitude, latitude) pairing
-	const wantedKeys = new Set<string>();
-	for (const item of withRegions) wantedKeys.add(`${item.original.longitude}:${item.original.latitude}`);
-	const missingKeys = new Set<string>([...wantedKeys].filter((k) => !insertedKv.has(k)));
-
-	// If any pairs were already present (conflicts), fetch them and fill in
-	if (missingKeys.size) {
-		const pairs = [...missingKeys].map((k) => k.split(":").map((n) => Number(n)) as [number, number]);
-		const conditions = pairs.map(([lon, lat]) => and(eq(locations.longitude, lon), eq(locations.latitude, lat)));
-		const rows = conditions.length ? await db.query.locations.findMany({ where: or(...conditions) }) : [];
-		for (const row of rows) {
-			const key = `${row.longitude}:${row.latitude}`;
-			if (missingKeys.has(key)) insertedKv.set(key, row.id);
-		}
-	}
-
 	const map: LocationIdMap = new Map();
-	for (const item of withRegions) {
-		const key = `${item.original.longitude}:${item.original.latitude}`;
-		const id = insertedKv.get(key);
-		if (typeof id === "number") map.set(item.original.original_id, id);
+	for (let i = 0; i < withRegions.length; i++) {
+		const insert = inserted[i];
+		const region = withRegions[i];
+		if (insert && region) map.set(region.original.original_id, insert.id);
 	}
 	return map;
 }
