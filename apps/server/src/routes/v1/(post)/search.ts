@@ -1,5 +1,5 @@
 import { eq, or, sql, ilike, inArray } from "drizzle-orm";
-import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, networksIds } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -25,18 +25,20 @@ const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const locationSelectSchema = createSelectSchema(locations).omit({ point: true });
 const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
+const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
 type CellWithRat = z.infer<typeof cellsSelectSchema> & {
 	gsm?: z.infer<typeof gsmCellsSchema>;
 	umts?: z.infer<typeof umtsCellsSchema>;
 	lte?: z.infer<typeof lteCellsSchema>;
 	nr?: z.infer<typeof nrCellsSchema>;
 };
-type StationWithRatCells = z.infer<typeof stationsSelectSchema> & { cells: CellWithRat[] };
+type StationWithRatCells = z.infer<typeof stationsSelectSchema> & { cells: CellWithRat[]; networks?: z.infer<typeof networksSchema> | null };
 const cellWithDetailsSchema = cellsSelectSchema.extend({
 	details: cellDetailsSchema,
 });
 type StationWithCells = z.infer<typeof stationsSelectSchema> & {
 	cells: z.infer<typeof cellWithDetailsSchema>[];
+	networks?: z.infer<typeof networksSchema>;
 };
 const schemaRoute = {
 	body: z.object({
@@ -50,6 +52,7 @@ const schemaRoute = {
 					cells: z.array(cellWithDetailsSchema),
 					location: locationSelectSchema,
 					operator: operatorsSelectSchema,
+					networks: networksSchema.optional(),
 				}),
 			),
 		}),
@@ -65,13 +68,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	const stationIds = new Set<number>();
 	const stationMap = new Map<number, StationWithCells>();
 
-	const withCellDetails = (station: StationWithRatCells): StationWithCells => ({
-		...station,
-		cells: station.cells.map((c: CellWithRat) => {
+	const withCellDetails = (station: StationWithRatCells): StationWithCells => {
+		const cells = station.cells.map((c: CellWithRat) => {
 			const { gsm, umts, lte, nr, ...rest } = c;
 			return { ...rest, details: gsm ?? umts ?? lte ?? nr ?? null };
-		}),
-	});
+		});
+		const result = { ...station, cells } as StationWithCells & { networks?: z.infer<typeof networksSchema> | null };
+		if (!result.networks) delete (result as { networks?: unknown }).networks;
+		return result;
+	};
 
 	const numericQuery = !Number.isNaN(Number.parseInt(query, 10)) ? Number.parseInt(query, 10) : null;
 
@@ -92,6 +97,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 					is_isp: true,
 				},
 			},
+			networks: { columns: { station_id: false } },
 		},
 		columns: {
 			status: false,
@@ -206,6 +212,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 						is_isp: false,
 					},
 				},
+				networks: { columns: { station_id: false } },
 			},
 			columns: {
 				status: false,

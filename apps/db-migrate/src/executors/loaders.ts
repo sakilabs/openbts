@@ -23,9 +23,17 @@ function mapRows<T extends object>(columns: string[], values: (string | number |
 function readSingleFile<T extends object>(dir: string, name: string): T[] {
 	const file = path.join(dir, `${name}.sql`);
 	const inserts = sqlParser.parseSQLFile(file);
-	const first = inserts.find((insert) => insert.table.toLowerCase().includes(name));
-	if (!first) return [];
-	return mapRows<T>(first.columns, first.values);
+	const relevant = inserts.filter((insert) => insert.table.toLowerCase().includes(name));
+	if (!relevant.length) return [];
+	const candidate = relevant.find((i) => i.columns.length);
+	const base = candidate ?? relevant[0];
+	if (!base) return [];
+	const columns = base.columns.slice();
+	const allValues: (string | number | null)[][] = [];
+	for (const ins of relevant) {
+		for (const row of ins.values) allValues.push(row);
+	}
+	return mapRows<T>(columns, allValues);
 }
 
 export function loadLegacyData(partialDir: string): LegacyData {

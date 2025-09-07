@@ -31,7 +31,6 @@ export async function permissionsMiddleware(req: FastifyRequest, _: FastifyReply
 	const requireAuth = settings.enforceAuthForAllRoutes || !route?.config?.allowGuestAccess;
 	if (requireAuth) {
 		const user = await getCurrentUser(req);
-		console.log(user, req.apiToken);
 		if (!user && !req.apiToken) throw new ErrorResponse("UNAUTHORIZED");
 		return;
 	}

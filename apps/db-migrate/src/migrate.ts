@@ -32,35 +32,47 @@ export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 	const stationsById = new Map(legacy.baseStations.map((station) => [station.id, station]));
 	const cells = prepareCells(legacy.cells, stationsById);
 
-	const totalCount =
-		regions.length +
-		operators.length +
-		locations.length +
-		bandKeys.length +
-		stations.length +
-		cells.length +
-		// 1 detail per cell
-		cells.length;
-
 	const bar = new cliProgress.SingleBar(
-		{ clearOnComplete: true, hideCursor: true, format: "{bar} {percentage}% | {value}/{total} | {step}" },
+		{ hideCursor: true, format: "{bar} {percentage}% | {value}/{total} | {step}" },
 		cliProgress.Presets.shades_classic,
 	);
-	bar.start(totalCount || 1, 0, { step: "start" });
-	const inc = (amount: number, payload?: Record<string, unknown>) => bar.increment(amount, payload);
+	bar.start(1, 0, { step: "start" });
 
-	const regionIds = await writeRegions(regions, { batchSize, onProgress: (n) => inc(n, { step: "regions" }) });
-	const operatorIds = await writeOperators(operators, { batchSize, onProgress: (n) => inc(n, { step: "operators" }) });
+	let processed = 0;
+	let currentStep = "start";
+	const setTotal = (t: number) => (bar as unknown as { setTotal?: (t: number) => void }).setTotal?.(t || 1);
+	const beginStep = (step: string, total: number) => {
+		currentStep = step;
+		processed = 0;
+		setTotal(total || 1);
+		bar.update(0, { step });
+	};
+	const inc = (amount: number) => {
+		processed += amount;
+		bar.update(processed, { step: currentStep });
+	};
+
+	beginStep("regions", regions.length);
+	const regionIds = await writeRegions(regions, { batchSize, onProgress: (n) => inc(n) });
+
+	beginStep("operators", operators.length);
+	const operatorIds = await writeOperators(operators, { batchSize, onProgress: (n) => inc(n) });
 	await updateOperatorParents();
 
-	const locationIds = await writeLocations(locations, regionIds, { batchSize, onProgress: (n) => inc(n, { step: "locations" }) });
-	const bandIds = await writeBands(bandKeys, { batchSize, onProgress: (n) => inc(n, { step: "bands" }) });
-	const stationIds = await writeStations(stations, operatorIds, locationIds, {
-		batchSize,
-		onProgress: (n) => inc(n, { step: "stations" }),
-	});
-	const cellIds = await writeCells(cells, stationIds, bandIds, { batchSize, onProgress: (n) => inc(n, { step: "cells" }) });
-	await writeRatDetails(cells, cellIds, { batchSize, onProgress: (n) => inc(n, { step: "RAT details" }) });
+	beginStep("locations", locations.length);
+	const locationIds = await writeLocations(locations, regionIds, { batchSize, onProgress: (n) => inc(n) });
+
+	beginStep("bands", bandKeys.length);
+	const bandIds = await writeBands(bandKeys, { batchSize, onProgress: (n) => inc(n) });
+
+	beginStep("stations", stations.length);
+	const stationIds = await writeStations(stations, operatorIds, locationIds, { batchSize, onProgress: (n) => inc(n) });
+
+	beginStep("cells", cells.length);
+	const cellIds = await writeCells(cells, stationIds, bandIds, { batchSize, onProgress: (n) => inc(n) });
+
+	beginStep("RAT details", cells.length);
+	await writeRatDetails(cells, cellIds, { batchSize, onProgress: (n) => inc(n) });
 
 	bar.stop();
 }

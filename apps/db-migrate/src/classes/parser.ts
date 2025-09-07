@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import pkg from "node-sql-parser";
+import ora from "ora";
 const { Parser } = pkg;
 
 export interface ParsedInsert {
@@ -12,12 +13,10 @@ export interface ParsedInsert {
 export interface SQLParserOptions {
 	database?: "MySQL" | "PostgresQL" | "MariaDB" | "SQLite" | "Hive" | "N1QL" | "PLSQL" | "SparkSQL" | "tsql";
 	log?: (level: "debug" | "info" | "warn" | "error", message: string, meta?: unknown) => void;
-	enableRegexFallback?: boolean;
 }
 
 type AnyAst = Record<string, unknown>;
 
-// Narrowing helpers
 function isRecord(v: unknown): v is Record<string, unknown> {
 	return typeof v === "object" && v !== null;
 }
@@ -41,29 +40,16 @@ function defaultLog(level: "debug" | "info" | "warn" | "error", message: string,
 	}
 }
 
-function cleanSqlContent(raw: string): string {
-	return raw
-		.replace(/--.*$/gm, "")
-		.replace(/\/\*[\s\S]*?\*\//g, "")
-		.replace(/\r\n/g, "\n")
-		.trim();
-}
-function ensureSemicolon(sql: string): string {
-	const trimmed = sql.trim();
-	return trimmed.endsWith(";") ? trimmed : `${trimmed};`;
-}
-
 export class SQLParser {
 	private parser: InstanceType<typeof Parser>;
 	private log: NonNullable<SQLParserOptions["log"]>;
 	private db: NonNullable<SQLParserOptions["database"]>;
-	private enableRegexFallback: boolean;
+	private progressIncrement?: (n: number) => void;
 
 	constructor(options: SQLParserOptions = {}) {
 		this.parser = new Parser();
 		this.log = options.log ?? defaultLog;
 		this.db = options.database ?? "MySQL";
-		this.enableRegexFallback = options.enableRegexFallback ?? true;
 	}
 
 	parseSQLFile(filePath: string): ParsedInsert[] {
@@ -72,36 +58,33 @@ export class SQLParser {
 	}
 
 	parseSQLContent(content: string, filename?: string): ParsedInsert[] {
-		const cleanContent = cleanSqlContent(content);
-		if (!cleanContent) return [];
+		const normalized = content.replace(/\r\n/g, "\n");
+		if (!normalized.trim()) return [];
 
-		const parsedByParser = this.parseAllStatementsWithParser(cleanContent, filename);
-		if (parsedByParser.length) return parsedByParser;
-
-		if (!this.enableRegexFallback) return [];
-
-		this.log("info", `${filename || "Content"}: falling back to regex for INSERT extraction`);
-		const insertRegex = /\binsert\s+into\b[\s\S]*?(?:;|$)/gi;
-		const matches = cleanContent.match(insertRegex) ?? [];
-
-		const results: ParsedInsert[] = [];
-		for (const match of matches) {
-			const parsed = this.parseInsertAstSafely(match, filename);
-			if (parsed) results.push(parsed);
+		const startedAt = Date.now();
+		let processed = 0;
+		const label = filename || "SQL";
+		let spinner: ReturnType<typeof ora> | null = null;
+		const insertCount = this.countInsertStatements(normalized, filename);
+		if (insertCount > 0) {
+			spinner = ora({
+				text: `${label}: Parsing ${insertCount} INSERTs`,
+				hideCursor: true,
+				spinner: "dots",
+			}).start();
+			this.progressIncrement = (n: number) => {
+				processed += n;
+			};
 		}
 
-		if (results.length === 0) {
-			const statements = cleanContent
-				.split(";")
-				.map((s) => s.trim())
-				.filter(Boolean);
-			for (const stmt of statements) {
-				if (/^insert\s+/i.test(stmt)) {
-					const parsed = this.parseInsertAstSafely(ensureSemicolon(stmt), filename);
-					if (parsed) results.push(parsed);
-				}
-			}
+		const results = this.parseAllStatementsWithParser(normalized, filename);
+
+		if (spinner) {
+			const elapsedMs = Date.now() - startedAt;
+			const seconds = (elapsedMs / 1000).toFixed(elapsedMs < 10000 ? 2 : 0);
+			spinner.succeed(`${label}: Parsed ${processed} values in ${seconds}s`);
 		}
+		this.progressIncrement = undefined;
 
 		return results;
 	}
@@ -154,22 +137,24 @@ export class SQLParser {
 		}
 	}
 
-	private parseInsertAstSafely(statement: string, filename?: string): ParsedInsert | null {
+	private countInsertStatements(content: string, filename?: string): number {
 		try {
-			const normalized = statement
-				.replace(/`/g, "")
-				.replace(/\bIF\s+NOT\s+EXISTS\b/gi, "")
-				.replace(/\)\s*ENGINE\b[\s\S]*?;/gi, ")")
-				.replace(/\)\s*CHARSET\b[\s\S]*?;/gi, ")")
-				.trim();
-			const cleanStatement = ensureSemicolon(normalized.replace(/\s+/g, " "));
-			const ast = this.parser.astify(cleanStatement, { database: this.db }) as unknown as AnyAst | AnyAst[];
-			const first = Array.isArray(ast) ? ast[0] : ast;
-			if (!first || get<string>(first, "type") !== "insert") return null;
-			return this.extractInsert(first);
+			const ast = this.parser.astify(content, { database: this.db }) as unknown as AnyAst | AnyAst[];
+			const stmts = asArray(ast);
+			let count = 0;
+			for (const stmt of stmts) {
+				const type = get<string>(stmt, "type");
+				if (type === "insert") {
+					count++;
+				} else if (type === "block" && Array.isArray(get(stmt, "stmt"))) {
+					const innerStmts = get<AnyAst[]>(stmt, "stmt") ?? [];
+					for (const inner of innerStmts) if (get<string>(inner, "type") === "insert") count++;
+				}
+			}
+			return count;
 		} catch (error) {
-			this.log("warn", `Failed to parse INSERT in ${filename || "content"}`, error);
-			return null;
+			this.log("warn", `Parser failed to count INSERTs for ${filename || "content"}`, error);
+			return 0;
 		}
 	}
 
@@ -232,12 +217,40 @@ export class SQLParser {
 
 	private extractValues(insertAst: AnyAst): (string | number | null)[][] {
 		const out: (string | number | null)[][] = [];
-		let values: unknown = [];
-		if (isRecord(insertAst.values)) values = get<unknown>(insertAst.values as Record<string, unknown>, "values");
-		if (!Array.isArray(values)) return out;
 
-		for (const rowNode of values) {
+		const root = get<unknown>(insertAst as Record<string, unknown>, "values");
+
+		function isExprList(node: unknown): node is Record<string, unknown> {
+			return isRecord(node) && get<string>(node, "type") === "expr_list" && Array.isArray(get(node, "value"));
+		}
+
+		function collectRowNodes(node: unknown): unknown[] {
+			if (!node) return [];
+			if (isExprList(node)) {
+				const children = get<unknown[]>(node, "value") ?? [];
+				const hasNested = children.some((c) => isExprList(c));
+				if (!hasNested) return [node];
+				let acc: unknown[] = [];
+				for (const child of children) acc = acc.concat(collectRowNodes(child));
+				return acc;
+			}
+			if (Array.isArray(node)) {
+				let acc: unknown[] = [];
+				for (const item of node) acc = acc.concat(collectRowNodes(item));
+				return acc;
+			}
+			if (isRecord(node)) {
+				const v1 = get<unknown>(node, "values");
+				const v2 = get<unknown>(node, "value");
+				return [...collectRowNodes(v1), ...collectRowNodes(v2)];
+			}
+			return [];
+		}
+
+		const rows = collectRowNodes(root);
+		for (const rowNode of rows) {
 			out.push(this.extractRowValues(rowNode));
+			this.progressIncrement?.(1);
 		}
 		return out;
 	}
@@ -262,30 +275,36 @@ export class SQLParser {
 		}
 
 		const type = get<string>(expr, "type");
+		const rawVal = get<unknown>(expr, "value");
 
 		if (type === "null") return null;
-
 		if (type === "number") {
-			const raw = get<unknown>(expr, "value");
-			const n = Number(raw);
+			const n = Number(rawVal);
 			return Number.isNaN(n) ? null : n;
 		}
-
-		if (type === "string" || type === "single_quote_string" || type === "double_quote_string") {
-			return String(get(expr, "value") ?? "");
-		}
-
 		if (type === "bool" || type === "boolean") {
-			const v = get<unknown>(expr, "value");
-			if (typeof v === "boolean") return v ? 1 : 0;
-			if (typeof v === "string") return v.toLowerCase() === "true" ? 1 : 0;
+			if (typeof rawVal === "boolean") return rawVal ? 1 : 0;
+			if (typeof rawVal === "string") return rawVal.toLowerCase() === "true" || rawVal === "1" ? 1 : 0;
+			if (typeof rawVal === "number") return rawVal ? 1 : 0;
 			return null;
 		}
-
-		if (type === "date" || type === "time" || type === "timestamp") {
-			return String(get(expr, "value") ?? "");
-		}
-
+		if (
+			type === "string" ||
+			type === "single_quote_string" ||
+			type === "double_quote_string" ||
+			type === "backticks_quote_string" ||
+			type === "regex_string" ||
+			type === "hex_string" ||
+			type === "full_hex_string" ||
+			type === "natural_string" ||
+			type === "bit_string" ||
+			type === "var_string"
+		)
+			return String(rawVal ?? "");
+		if (type === "date" || type === "datetime" || type === "time" || type === "timestamp") return String(rawVal ?? "");
+		if (type === "star") return "*";
+		if (type === "param" || type === "origin") return String(rawVal ?? "");
+		if (type === "default") return null;
 		if (type === "unary_expr" && hasKey(expr, "operator") && hasKey(expr, "expr")) {
 			const op = String(expr.operator);
 			const val = this.extractScalar(expr.expr);
@@ -293,17 +312,13 @@ export class SQLParser {
 			if (typeof val === "number" && op === "+") return +val;
 			return val;
 		}
-
 		if (type === "function" || type === "binary_expr" || type === "expr_list" || type === "column_ref") {
-			const val = get(expr, "value");
 			const name = get(expr, "name");
 			const column = get(expr, "column");
-			return String(val ?? name ?? column ?? "");
+			return String(rawVal ?? name ?? column ?? "");
 		}
 
-		if (type === "default") return null;
-
-		return String(get(expr, "value") ?? "");
+		return String(rawVal ?? "");
 	}
 }
 

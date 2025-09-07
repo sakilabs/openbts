@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, or } from "drizzle-orm";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 
@@ -140,24 +140,41 @@ export async function writeLocations(items: PreparedLocation[], regionIds: Regio
 	}));
 
 	const batchSize = options.batchSize ?? values.length;
-	const inserted: Array<{ id: number }> = [];
+	const insertedKv = new Map<string, number>();
 	if (values.length) {
 		for (const group of chunkArray(values, batchSize)) {
 			if (group.length === 0) continue;
 			const part = await db
 				.insert(locations)
 				.values(group)
-				.returning({ id: locations.id })
+				.returning({ id: locations.id, longitude: locations.longitude, latitude: locations.latitude })
 				.onConflictDoNothing({ target: [locations.longitude, locations.latitude] });
-			inserted.push(...part);
+			for (const row of part) insertedKv.set(`${row.longitude}:${row.latitude}`, row.id);
 			options.onProgress?.(group.length);
 		}
 	}
+
+	// Build final map from original_id -> id using (longitude, latitude) pairing
+	const wantedKeys = new Set<string>();
+	for (const item of withRegions) wantedKeys.add(`${item.original.longitude}:${item.original.latitude}`);
+	const missingKeys = new Set<string>([...wantedKeys].filter((k) => !insertedKv.has(k)));
+
+	// If any pairs were already present (conflicts), fetch them and fill in
+	if (missingKeys.size) {
+		const pairs = [...missingKeys].map((k) => k.split(":").map((n) => Number(n)) as [number, number]);
+		const conditions = pairs.map(([lon, lat]) => and(eq(locations.longitude, lon), eq(locations.latitude, lat)));
+		const rows = conditions.length ? await db.query.locations.findMany({ where: or(...conditions) }) : [];
+		for (const row of rows) {
+			const key = `${row.longitude}:${row.latitude}`;
+			if (missingKeys.has(key)) insertedKv.set(key, row.id);
+		}
+	}
+
 	const map: LocationIdMap = new Map();
-	for (let i = 0; i < withRegions.length; i++) {
-		const insert = inserted[i];
-		const region = withRegions[i];
-		if (insert && region) map.set(region.original.original_id, insert.id);
+	for (const item of withRegions) {
+		const key = `${item.original.longitude}:${item.original.latitude}`;
+		const id = insertedKv.get(key);
+		if (typeof id === "number") map.set(item.original.original_id, id);
 	}
 	return map;
 }
@@ -222,10 +239,10 @@ export async function writeBands(keys: PreparedBandKey[], options: WriteOptions 
 						rat: band.rat,
 						value: band.value,
 						duplex: band.duplex,
-						name: `${band.duplex ? `${band.rat.toUpperCase()} ${band.value} (${band.duplex})` : ""}`,
+						name: `${band.rat.toUpperCase()} ${band.value} ${band.duplex ? `(${band.duplex})` : ""}`,
 					})),
 				)
-				.onConflictDoNothing({ target: [bands.rat, bands.value] });
+				.onConflictDoNothing();
 			options.onProgress?.(group.length);
 		}
 	}
@@ -282,7 +299,7 @@ export async function writeCells(
 export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap, options: WriteOptions = {}): Promise<void> {
 	const gsm = items
 		.filter((cell): cell is Extract<PreparedCell, { rat: "GSM" }> => cell.rat === "GSM")
-		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.gsm, e_gsm: cell.notes?.includes("[E-GSM]") ?? false }));
+		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.gsm }));
 	const umts = items
 		.filter((cell): cell is Extract<PreparedCell, { rat: "UMTS" }> => cell.rat === "UMTS")
 		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.umts }));
@@ -295,7 +312,7 @@ export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap,
 
 	const gsmValues = gsm
 		.filter((val) => val.id && val.details.lac != null && val.details.cid != null)
-		.map((cell) => ({ cell_id: cell.id, lac: cell.details.lac as number, cid: cell.details.cid as number, e_gsm: cell.e_gsm }));
+		.map((cell) => ({ cell_id: cell.id, lac: cell.details.lac as number, cid: cell.details.cid as number, e_gsm: cell.details.e_gsm }));
 	if (gsmValues.length) {
 		for (const group of chunkArray(gsmValues, options.batchSize ?? gsmValues.length)) {
 			if (group.length === 0) continue;

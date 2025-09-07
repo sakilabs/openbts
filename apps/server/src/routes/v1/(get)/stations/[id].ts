@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
+import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells, networksIds } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -20,6 +20,7 @@ const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
+const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
 type StationBase = z.infer<typeof stationSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
 type CellWithRats = z.infer<typeof cellsSchema> & {
@@ -34,6 +35,7 @@ type StationResponse = StationBase & {
 	cells: CellResponse[];
 	location: z.infer<typeof locationSchema>;
 	operator: z.infer<typeof operatorSchema>;
+	networks?: z.infer<typeof networksSchema>;
 };
 const schemaRoute = {
 	params: z.object({
@@ -46,6 +48,7 @@ const schemaRoute = {
 				cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
 				location: locationSchema.extend({ region: regionSchema }),
 				operator: operatorSchema,
+				networks: networksSchema.optional(),
 			}),
 		}),
 	},
@@ -60,6 +63,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 			cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
 			location: { columns: { point: false, region_id: false }, with: { region: true } },
 			operator: true,
+			networks: { columns: { station_id: false } },
 		},
 		columns: { status: false },
 	});
@@ -71,7 +75,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		return { ...rest, band, details };
 	});
 
-	return res.send({ success: true, data: { ...station, cells } as StationResponse });
+	const data = { ...station, cells } as StationResponse & { networks?: z.infer<typeof networksSchema> | null };
+	if (!data.networks) delete (data as { networks?: unknown }).networks;
+	return res.send({ success: true, data });
 }
 
 const getStation: Route<IdParams, StationResponse> = {

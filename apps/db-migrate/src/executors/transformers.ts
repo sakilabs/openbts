@@ -1,5 +1,5 @@
 import type { LegacyBaseStationRow, LegacyCellRow, LegacyLocationRow, LegacyNetworkRow, LegacyRegionRow } from "../legacyTypes.js";
-import { mapDuplex, mapStandardToRat, stripNetworksNote, convertDMSToDD, toInt, type Rat } from "../utils.js";
+import { mapDuplex, mapStandardToRat, stripNotes, toInt, type Rat } from "../utils.js";
 
 export interface PreparedRegion {
 	name: string;
@@ -50,6 +50,7 @@ export interface PreparedCellBase {
 export interface PreparedGSMDetails {
 	lac: number | null;
 	cid: number | null;
+	e_gsm: boolean;
 }
 export interface PreparedUMTSDetails {
 	lac: number | null;
@@ -93,30 +94,34 @@ export function prepareOperators(rows: LegacyNetworkRow[]): PreparedOperator[] {
 export function prepareLocations(rows: LegacyLocationRow[], regions: LegacyRegionRow[]): PreparedLocation[] {
 	const regionById = new Map<number, LegacyRegionRow>();
 	for (const reg of regions) regionById.set(reg.id, reg);
-	return rows.map((loc) => ({
-		original_id: loc.id,
-		region_name: regionById.get(loc.region_id)?.name ?? "",
-		city: loc.town?.trim() || null,
-		address: loc.address?.trim() || null,
-		longitude: convertDMSToDD(loc.longitude) ?? 0,
-		latitude: convertDMSToDD(loc.latitude) ?? 0,
-		date_added: new Date(loc.date_added),
-		date_updated: new Date(loc.date_updated),
-	}));
+	return rows
+		.filter((loc) => !(loc.address === "" && loc.town === "" && loc.latitude === "0.000000" && loc.longitude === "0.000000"))
+		.map((loc) => ({
+			original_id: loc.id,
+			region_name: regionById.get(loc.region_id)?.name ?? "",
+			city: loc.town?.trim() || null,
+			address: loc.address?.trim() || null,
+			longitude: toInt(loc.longitude) ?? 0,
+			latitude: toInt(loc.latitude) ?? 0,
+			date_added: new Date(loc.date_added),
+			date_updated: new Date(loc.date_updated),
+		}));
 }
 
 export function prepareStations(rows: LegacyBaseStationRow[]): PreparedStation[] {
-	return rows.map((station) => ({
-		original_id: station.id,
-		operator_mnc: Number(String(station.network_id).trim()),
-		location_original_id: station.location_id,
-		station_id: station.station_id,
-		notes: station.notes ? stripNetworksNote(station.notes.trim()) : null,
-		status: normalizeStatus(station.station_status),
-		is_confirmed: true,
-		date_added: new Date(station.date_added),
-		date_updated: new Date(station.date_updated),
-	}));
+	return rows
+		.filter((station) => !(station.station_id === ""))
+		.map((station) => ({
+			original_id: station.id,
+			operator_mnc: Number(String(station.network_id).trim()),
+			location_original_id: station.location_id,
+			station_id: station.station_id.replace(/\?,/g, ""),
+			notes: station.notes ? stripNotes(station.notes.trim(), [/\bnetworks?\b/gi]) : null,
+			status: normalizeStatus(station.station_status),
+			is_confirmed: station.edit_status.toLowerCase() === "published",
+			date_added: new Date(station.date_added),
+			date_updated: new Date(station.date_updated),
+		}));
 }
 
 export function prepareBands(cells: LegacyCellRow[]): PreparedBandKey[] {
@@ -158,13 +163,13 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 			station_original_id: cell.base_station_id,
 			band_key,
 			rat,
-			notes: cell.notes ? stripNetworksNote(cell.notes?.trim()) : null,
+			notes: cell.notes ? stripNotes(cell.notes?.trim(), [/\bnetworks?\b/gi, /\b[E-GSM]\b/gi]) : null,
 			is_confirmed: cell.is_confirmed === 1,
 			date_added: new Date(cell.date_added),
 			date_updated: new Date(cell.date_updated),
 		};
 		if (rat === "GSM") {
-			out.push({ ...base, rat, gsm: { lac: toInt(cell.lac), cid: toInt(cell.cid) } });
+			out.push({ ...base, rat, gsm: { lac: toInt(cell.lac), cid: toInt(cell.cid), e_gsm: cell.notes?.includes("[E-GSM]") ?? false } });
 			continue;
 		}
 		if (rat === "UMTS") {

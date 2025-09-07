@@ -55,8 +55,8 @@ export function mapDuplex(val: string | null | undefined): "FDD" | "TDD" | null 
 	return null;
 }
 
-export function stripNetworksNote(note: string): string | null {
-	const removed = note.replace(/\bnetworks?\b/gi, "");
+export function stripNotes(note: string, regexes: RegExp[]): string | null {
+	const removed = regexes.reduce((acc, regex) => acc.replace(regex, ""), note);
 	const tight = removed.replace(/\s{2,}/g, " ");
 	const compactDelims = tight.replace(/\s*([,;|/-])\s*/g, "$1");
 	const trimmedDelims = compactDelims.replace(/^([,;|/-])+|([,;|/-])+$/g, "");

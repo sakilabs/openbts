@@ -53,7 +53,7 @@ export const stationRelations = relations(stations, ({ one, many }) => ({
 		references: [operators.id],
 	}),
 	cells: many(cells),
-	networksNumber: one(networksIds, {
+	networks: one(networksIds, {
 		fields: [stations.id],
 		references: [networksIds.station_id],
 	}),
