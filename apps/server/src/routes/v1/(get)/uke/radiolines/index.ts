@@ -70,8 +70,8 @@ const schemaRoute = {
 			.string()
 			.regex(/^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$/)
 			.optional(),
-		limit: z.number().min(1).optional(),
-		page: z.number().min(1).default(1),
+		limit: z.coerce.number().min(1).optional().default(150),
+		page: z.coerce.number().min(1).default(1),
 		operator: z.string().optional(),
 		permit_number: z.string().optional(),
 		decision_type: z.literal(["zmP", "P"]).optional(),

@@ -19,8 +19,8 @@ const schemaRoute = {
 			.string()
 			.regex(/^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$/)
 			.optional(),
-		limit: z.number().min(1).optional(),
-		page: z.number().min(1).default(1),
+		limit: z.coerce.number().min(1).optional().default(150),
+		page: z.coerce.number().min(1).default(1),
 		rat: z
 			.string()
 			.regex(/^(?:cdma|umts|gsm|lte|5g|iot)(?:,(?:cdma|umts|gsm|lte|5g|iot))*$/i)
