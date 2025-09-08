@@ -21,7 +21,7 @@ export interface MigratorOptions {
 export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 	const baseDir = options.directory;
 	if (!baseDir) throw new Error("Directory is not specified");
-	const batchSize = options.batchSize && options.batchSize > 0 ? options.batchSize : 100;
+	const batchSize = options.batchSize && options.batchSize > 0 ? options.batchSize : 500;
 	const legacy = loadLegacyData(baseDir);
 
 	const regions = prepareRegions(legacy.regions);

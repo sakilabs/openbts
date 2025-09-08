@@ -65,17 +65,13 @@ export class SQLParser {
 		let processed = 0;
 		const label = filename || "SQL";
 		let spinner: ReturnType<typeof ora> | null = null;
-		const insertCount = this.countInsertStatements(normalized, filename);
-		if (insertCount > 0) {
-			spinner = ora({
-				text: `${label}: Parsing ${insertCount} INSERTs`,
-				hideCursor: true,
-				spinner: "dots",
-			}).start();
-			this.progressIncrement = (n: number) => {
-				processed += n;
-			};
-		}
+		spinner = ora({
+			text: `${label}: Parsing the file for INSERT statements...`,
+			spinner: "dots",
+		}).start();
+		this.progressIncrement = (n: number) => {
+			processed += n;
+		};
 
 		const results = this.parseAllStatementsWithParser(normalized, filename);
 
@@ -134,27 +130,6 @@ export class SQLParser {
 		} catch (error) {
 			this.log("warn", `Parser failed for ${filename || "content"}`, error);
 			return [];
-		}
-	}
-
-	private countInsertStatements(content: string, filename?: string): number {
-		try {
-			const ast = this.parser.astify(content, { database: this.db }) as unknown as AnyAst | AnyAst[];
-			const stmts = asArray(ast);
-			let count = 0;
-			for (const stmt of stmts) {
-				const type = get<string>(stmt, "type");
-				if (type === "insert") {
-					count++;
-				} else if (type === "block" && Array.isArray(get(stmt, "stmt"))) {
-					const innerStmts = get<AnyAst[]>(stmt, "stmt") ?? [];
-					for (const inner of innerStmts) if (get<string>(inner, "type") === "insert") count++;
-				}
-			}
-			return count;
-		} catch (error) {
-			this.log("warn", `Parser failed to count INSERTs for ${filename || "content"}`, error);
-			return 0;
 		}
 	}
 

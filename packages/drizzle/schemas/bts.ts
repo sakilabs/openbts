@@ -308,7 +308,7 @@ export const bands = pgTable(
 		name: varchar("name", { length: 15 }).notNull(),
 		duplex: DuplexType("duplex"),
 	},
-	(t) => [unique("bands_rat_value_unique").on(t.rat, t.value), unique("bands_name_unique").on(t.name)],
+	(t) => [unique("bands_rat_value_unique").on(t.rat, t.value, t.duplex).nullsNotDistinct(), unique("bands_name_unique").on(t.name)],
 );
 
 /**

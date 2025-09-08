@@ -207,7 +207,7 @@ export async function writeBands(keys: PreparedBandKey[], options: WriteOptions 
 		rat: band.rat,
 		value: band.value,
 		duplex: band.duplex,
-		name: `${band.rat.toUpperCase()} ${band.value} ${band.duplex ? `(${band.duplex})` : ""}`,
+		name: `${band.rat.toUpperCase()} ${band.value}${band.duplex ? ` (${band.duplex})` : ""}`,
 	}));
 	const unique = new Map<string, BandIdKey>();
 	for (const band of normKeys) unique.set(bandKeyId(band), band);
@@ -223,21 +223,14 @@ export async function writeBands(keys: PreparedBandKey[], options: WriteOptions 
 						rat: band.rat,
 						value: band.value,
 						duplex: band.duplex,
-						name: `${band.rat.toUpperCase()} ${band.value} ${band.duplex ? `(${band.duplex})` : ""}`,
+						name: `${band.rat.toUpperCase()} ${band.value}${band.duplex ? ` (${band.duplex})` : ""}`,
 					})),
 				)
 				.onConflictDoNothing();
 			options.onProgress?.(group.length);
 		}
 	}
-	const rows = dedup.length
-		? await db.query.bands.findMany({
-				where: inArray(
-					bands.value,
-					dedup.map((band) => band.value),
-				),
-			})
-		: [];
+	const rows = dedup.length ? await db.query.bands.findMany() : [];
 	const map: BandIdMap = new Map();
 	for (const band of rows) {
 		map.set(bandKeyId({ rat: band.rat, value: band.value ?? 0, duplex: band.duplex }), band.id);
@@ -254,7 +247,7 @@ export async function writeCells(
 ): Promise<CellIdMap> {
 	const baseValues = items.map((cell) => ({
 		station_id: stationIds.get(cell.station_original_id) ?? 0,
-		band_id: bandIds.get(`${cell.band_key.rat}:${cell.band_key.value}:${cell.band_key.duplex ?? ""}`) ?? 0,
+		band_id: bandIds.get(bandKeyId({ rat: cell.band_key.rat, value: cell.band_key.value, duplex: cell.band_key.duplex })) ?? 0,
 		rat: cell.rat,
 		notes: cell.notes ?? undefined,
 		is_confirmed: cell.is_confirmed,
