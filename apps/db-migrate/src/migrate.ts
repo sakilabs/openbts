@@ -2,10 +2,9 @@ import { loadLegacyData } from "./executors/loaders.js";
 import { prepareBands, prepareCells, prepareLocations, prepareOperators, prepareRegions, prepareStations } from "./executors/transformers.js";
 import {
 	writeBands,
-	writeCells,
+	writeCellsAndDetails,
 	writeLocations,
 	writeOperators,
-	writeRatDetails,
 	writeRegions,
 	writeStations,
 	updateOperatorParents,
@@ -69,10 +68,16 @@ export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 	const stationIds = await writeStations(stations, operatorIds, locationIds, { batchSize, onProgress: (n) => inc(n) });
 
 	beginStep("cells", cells.length);
-	const cellIds = await writeCells(cells, stationIds, bandIds, { batchSize, onProgress: (n) => inc(n) });
-
-	beginStep("RAT details", cells.length);
-	await writeRatDetails(cells, cellIds, { batchSize, onProgress: (n) => inc(n) });
+	await writeCellsAndDetails(cells, stationIds, bandIds, {
+		batchSize,
+		onProgress: (n) => inc(n),
+		onBeginPhase: (phase, total) => {
+			beginStep(`cells:${phase}`, total);
+		},
+		onPhase: (_phase, processed) => {
+			inc(processed);
+		},
+	});
 
 	bar.stop();
 }

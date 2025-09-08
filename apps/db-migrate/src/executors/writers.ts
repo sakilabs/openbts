@@ -38,6 +38,8 @@ function bandKeyId(k: BandIdKey): string {
 interface WriteOptions {
 	batchSize?: number;
 	onProgress?: (processed: number) => void;
+	onBeginPhase?: (phase: "base" | "GSM" | "UMTS" | "LTE" | "NR", total: number) => void;
+	onPhase?: (phase: "base" | "GSM" | "UMTS" | "LTE" | "NR", processed: number) => void;
 }
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -169,35 +171,46 @@ export async function writeStations(
 	locationIds: LocationIdMap,
 	options: WriteOptions = {},
 ): Promise<StationIdMap> {
-	const values = items.map((station) => ({
-		station_id: station.station_id,
-		location_id: locationIds.get(station.location_original_id) ?? null,
-		operator_id: operatorIds.get(station.operator_mnc) ?? null,
-		notes: station.notes ?? undefined,
-		status: station.status,
-		is_confirmed: station.is_confirmed,
-		createdAt: station.date_added ?? undefined,
-		updatedAt: station.date_updated ?? undefined,
+	const prepared = items.map((station) => ({
+		station,
+		operatorId: operatorIds.get(station.operator_mnc) ?? (null as number | null),
+		locationId: locationIds.get(station.location_original_id) ?? (null as number | null),
+	}));
+
+	const values = prepared.map((p) => ({
+		station_id: p.station.station_id,
+		location_id: p.locationId,
+		operator_id: p.operatorId,
+		notes: p.station.notes ?? undefined,
+		status: p.station.status,
+		is_confirmed: p.station.is_confirmed,
+		createdAt: p.station.date_added ?? undefined,
+		updatedAt: p.station.date_updated ?? undefined,
 	}));
 	const batchSize = options.batchSize ?? values.length;
-	const inserted: Array<{ id: number }> = [];
 	if (values.length) {
 		for (const group of chunkArray(values, batchSize)) {
 			if (group.length === 0) continue;
-			const part = await db
+			await db
 				.insert(stations)
 				.values(group)
-				.returning({ id: stations.id })
 				.onConflictDoNothing({ target: [stations.station_id, stations.operator_id] });
-			inserted.push(...part);
 			options.onProgress?.(group.length);
 		}
 	}
+	const uniqueStationIds = Array.from(new Set(prepared.map((p) => p.station.station_id)));
+	const rows = uniqueStationIds.length ? await db.query.stations.findMany({ where: inArray(stations.station_id, uniqueStationIds) }) : [];
+	const pairToId = new Map<string, number>();
+	for (const row of rows) {
+		const key = row.station_id;
+		if (!pairToId.has(key)) pairToId.set(key, row.id);
+	}
+
 	const map: StationIdMap = new Map();
-	for (let i = 0; i < items.length; i++) {
-		const insert = inserted[i];
-		const item = items[i];
-		if (insert && item) map.set(item.original_id, insert.id);
+	for (const p of prepared) {
+		const key = p.station.station_id;
+		const id = pairToId.get(key);
+		if (typeof id === "number") map.set(p.station.original_id, id);
 	}
 	return map;
 }
@@ -245,16 +258,69 @@ export async function writeCells(
 	bandIds: BandIdMap,
 	options: WriteOptions = {},
 ): Promise<CellIdMap> {
-	const baseValues = items.map((cell) => ({
-		station_id: stationIds.get(cell.station_original_id) ?? 0,
-		band_id: bandIds.get(bandKeyId({ rat: cell.band_key.rat, value: cell.band_key.value, duplex: cell.band_key.duplex })) ?? 0,
-		rat: cell.rat,
-		notes: cell.notes ?? undefined,
-		is_confirmed: cell.is_confirmed,
-		createdAt: cell.date_added ?? undefined,
-		updatedAt: cell.date_updated ?? undefined,
+	const prepared = items
+		.map((cell) => ({
+			cell,
+			stationId: stationIds.get(cell.station_original_id) ?? (null as number | null),
+			bandId: bandIds.get(bandKeyId({ rat: cell.band_key.rat, value: cell.band_key.value, duplex: cell.band_key.duplex })) ?? (null as number | null),
+		}))
+		.filter((p) => typeof p.stationId === "number" && typeof p.bandId === "number");
+
+	const values = prepared.map((p) => ({
+		station_id: p.stationId as number,
+		band_id: p.bandId as number,
+		rat: p.cell.rat,
+		notes: p.cell.notes ?? undefined,
+		is_confirmed: p.cell.is_confirmed,
+		createdAt: p.cell.date_added ?? undefined,
+		updatedAt: p.cell.date_updated ?? undefined,
+	}));
+
+	const batchSize = options.batchSize ?? values.length;
+	const inserted: Array<{ id: number }> = [];
+	if (values.length) {
+		for (const group of chunkArray(values, batchSize)) {
+			if (group.length === 0) continue;
+			const part = await db.insert(cells).values(group).returning({ id: cells.id });
+			inserted.push(...part);
+			options.onProgress?.(group.length);
+		}
+	}
+
+	const idMap: CellIdMap = new Map();
+	for (let i = 0; i < prepared.length; i++) {
+		const insert = inserted[i];
+		const p = prepared[i];
+		if (insert && p) idMap.set(p.cell.original_id, insert.id);
+	}
+	return idMap;
+}
+
+export async function writeCellsAndDetails(
+	items: PreparedCell[],
+	stationIds: StationIdMap,
+	bandIds: BandIdMap,
+	options: WriteOptions = {},
+): Promise<void> {
+	const prepared = items
+		.map((cell) => ({
+			cell,
+			stationId: stationIds.get(cell.station_original_id) ?? (null as number | null),
+			bandId: bandIds.get(bandKeyId({ rat: cell.band_key.rat, value: cell.band_key.value, duplex: cell.band_key.duplex })) ?? (null as number | null),
+		}))
+		.filter((p) => typeof p.stationId === "number" && typeof p.bandId === "number");
+
+	const baseValues = prepared.map((p) => ({
+		station_id: p.stationId as number,
+		band_id: p.bandId as number,
+		rat: p.cell.rat,
+		notes: p.cell.notes ?? undefined,
+		is_confirmed: p.cell.is_confirmed,
+		createdAt: p.cell.date_added ?? undefined,
+		updatedAt: p.cell.date_updated ?? undefined,
 	}));
 	const batchSize = options.batchSize ?? baseValues.length;
+	options.onBeginPhase?.("base", baseValues.length);
 	const inserted: Array<{ id: number }> = [];
 	if (baseValues.length) {
 		for (const group of chunkArray(baseValues, batchSize)) {
@@ -262,34 +328,17 @@ export async function writeCells(
 			const part = await db.insert(cells).values(group).returning({ id: cells.id });
 			inserted.push(...part);
 			options.onProgress?.(group.length);
+			options.onPhase?.("base", group.length);
 		}
 	}
-	const idMap: CellIdMap = new Map();
-	for (let i = 0; i < items.length; i++) {
-		const insert = inserted[i];
-		const item = items[i];
-		if (insert && item) idMap.set(item.original_id, insert.id);
-	}
-	return idMap;
-}
 
-export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap, options: WriteOptions = {}): Promise<void> {
-	const gsm = items
-		.filter((cell): cell is Extract<PreparedCell, { rat: "GSM" }> => cell.rat === "GSM")
-		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.gsm }));
-	const umts = items
-		.filter((cell): cell is Extract<PreparedCell, { rat: "UMTS" }> => cell.rat === "UMTS")
-		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.umts }));
-	const lte = items
-		.filter((cell): cell is Extract<PreparedCell, { rat: "LTE" }> => cell.rat === "LTE")
-		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.lte }));
-	const nr = items
-		.filter((cell): cell is Extract<PreparedCell, { rat: "NR" }> => cell.rat === "NR")
-		.map((cell) => ({ id: cellIds.get(cell.original_id) ?? 0, details: cell.nr }));
+	const withIds = prepared.map((prep, i) => ({ id: inserted[i]?.id ?? 0, cell: prep.cell }));
 
-	const gsmValues = gsm
-		.filter((val) => val.id && val.details.lac != null && val.details.cid != null)
-		.map((cell) => ({ cell_id: cell.id, lac: cell.details.lac as number, cid: cell.details.cid as number, e_gsm: cell.details.e_gsm }));
+	const gsmValues = withIds
+		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "GSM" }> } => val.cell.rat === "GSM" && !!val.id)
+		.filter((val) => val.cell.gsm.lac != null && val.cell.gsm.cid != null)
+		.map((val) => ({ cell_id: val.id, lac: val.cell.gsm.lac as number, cid: val.cell.gsm.cid as number, e_gsm: val.cell.gsm.e_gsm }));
+	options.onBeginPhase?.("GSM", gsmValues.length);
 	if (gsmValues.length) {
 		for (const group of chunkArray(gsmValues, options.batchSize ?? gsmValues.length)) {
 			if (group.length === 0) continue;
@@ -298,10 +347,14 @@ export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap,
 				.values(group)
 				.onConflictDoNothing({ target: [gsmCells.lac, gsmCells.cid] });
 			options.onProgress?.(group.length);
+			options.onPhase?.("GSM", group.length);
 		}
 	}
 
-	const umtsValues = umts.map((cell) => ({ cell_id: cell.id, lac: cell.details.lac, rnc: cell.details.rnc, cid: cell.details.cid }));
+	const umtsValues = withIds
+		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "UMTS" }> } => val.cell.rat === "UMTS" && !!val.id)
+		.map((val) => ({ cell_id: val.id, lac: val.cell.umts.lac, rnc: val.cell.umts.rnc, cid: val.cell.umts.cid }));
+	options.onBeginPhase?.("UMTS", umtsValues.length);
 	if (umtsValues.length) {
 		for (const group of chunkArray(umtsValues, options.batchSize ?? umtsValues.length)) {
 			if (group.length === 0) continue;
@@ -310,16 +363,20 @@ export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap,
 				.values(group)
 				.onConflictDoNothing({ target: [umtsCells.rnc, umtsCells.cid] });
 			options.onProgress?.(group.length);
+			options.onPhase?.("UMTS", group.length);
 		}
 	}
 
-	const lteValues = lte.map((cell) => ({
-		cell_id: cell.id,
-		tac: cell.details.tac,
-		enbid: cell.details.enbid,
-		clid: cell.details.clid,
-		supports_nb_iot: cell.details.supports_nb_iot,
-	}));
+	const lteValues = withIds
+		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "LTE" }> } => val.cell.rat === "LTE" && !!val.id)
+		.map((val) => ({
+			cell_id: val.id,
+			tac: val.cell.lte.tac,
+			enbid: val.cell.lte.enbid,
+			clid: val.cell.lte.clid,
+			supports_nb_iot: val.cell.lte.supports_nb_iot,
+		}));
+	options.onBeginPhase?.("LTE", lteValues.length);
 	if (lteValues.length) {
 		for (const group of chunkArray(lteValues, options.batchSize ?? lteValues.length)) {
 			if (group.length === 0) continue;
@@ -328,16 +385,20 @@ export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap,
 				.values(group)
 				.onConflictDoNothing({ target: [lteCells.enbid, lteCells.clid] });
 			options.onProgress?.(group.length);
+			options.onPhase?.("LTE", group.length);
 		}
 	}
 
-	const nrValues = nr.map((cell) => ({
-		cell_id: cell.id,
-		nrtac: cell.details.nrtac,
-		gnbid: cell.details.gnbid,
-		clid: cell.details.clid,
-		supports_nr_redcap: cell.details.supports_nr_redcap,
-	}));
+	const nrValues = withIds
+		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "NR" }> } => val.cell.rat === "NR" && !!val.id)
+		.map((val) => ({
+			cell_id: val.id,
+			nrtac: val.cell.nr.nrtac,
+			gnbid: val.cell.nr.gnbid,
+			clid: val.cell.nr.clid,
+			supports_nr_redcap: val.cell.nr.supports_nr_redcap,
+		}));
+	options.onBeginPhase?.("NR", nrValues.length);
 	if (nrValues.length) {
 		for (const group of chunkArray(nrValues, options.batchSize ?? nrValues.length)) {
 			if (group.length === 0) continue;
@@ -346,6 +407,7 @@ export async function writeRatDetails(items: PreparedCell[], cellIds: CellIdMap,
 				.values(group)
 				.onConflictDoNothing({ target: [nrCells.gnbid, nrCells.clid] });
 			options.onProgress?.(group.length);
+			options.onPhase?.("NR", group.length);
 		}
 	}
 }
