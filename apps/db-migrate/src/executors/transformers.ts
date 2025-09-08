@@ -163,7 +163,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 			station_original_id: cell.base_station_id,
 			band_key,
 			rat,
-			notes: cell.notes ? stripNotes(cell.notes?.trim(), [/\bnetworks?\b/gi, /\b[E-GSM]\b/gi]) : null,
+			notes: cell.notes ? stripNotes(cell.notes?.trim(), [/\bnetworks?\b/gi, /\[E-GSM\]/gi]) : null,
 			is_confirmed: cell.is_confirmed === 1,
 			date_added: new Date(cell.date_added),
 			date_updated: new Date(cell.date_updated),
