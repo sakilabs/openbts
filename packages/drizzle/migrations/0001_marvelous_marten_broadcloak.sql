@@ -14,7 +14,7 @@ CREATE TABLE "bands" (
 	"rat" "rat" NOT NULL,
 	"name" varchar(15) NOT NULL,
 	"duplex" "duplex",
-	CONSTRAINT "bands_rat_value_unique" UNIQUE("rat","value"),
+	CONSTRAINT "bands_rat_value_unique" UNIQUE NULLS NOT DISTINCT("rat","value","duplex"),
 	CONSTRAINT "bands_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
@@ -33,6 +33,7 @@ CREATE TABLE "gsm_cells" (
 	"cell_id" integer PRIMARY KEY NOT NULL,
 	"lac" integer NOT NULL,
 	"cid" integer NOT NULL,
+	"e_gsm" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "gsm_cells_lac_cid_unique" UNIQUE("lac","cid")
@@ -67,6 +68,15 @@ CREATE TABLE "lte_cells" (
 	CONSTRAINT "clid_check" CHECK ("lte_cells"."clid" BETWEEN 0 AND 255)
 );
 --> statement-breakpoint
+CREATE TABLE "networks_ids" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "networks_ids_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"station_id" integer NOT NULL,
+	"networks_id" varchar(16) NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "networks_ids_networks_id_unique" UNIQUE("station_id","networks_id")
+);
+--> statement-breakpoint
 CREATE TABLE "nr_cells" (
 	"cell_id" integer PRIMARY KEY NOT NULL,
 	"nrtac" integer,
@@ -85,7 +95,7 @@ CREATE TABLE "operators" (
 	"name" varchar(100) NOT NULL,
 	"full_name" varchar(250) NOT NULL,
 	"parent_id" integer,
-	"mnc" integer NOT NULL,
+	"mnc" integer,
 	"is_isp" boolean DEFAULT true,
 	CONSTRAINT "operators_name_unique" UNIQUE("name"),
 	CONSTRAINT "operators_mnc_unique" UNIQUE("mnc")
@@ -423,6 +433,7 @@ ALTER TABLE "cells" ADD CONSTRAINT "cells_band_id_bands_id_fk" FOREIGN KEY ("ban
 ALTER TABLE "gsm_cells" ADD CONSTRAINT "gsm_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "locations" ADD CONSTRAINT "locations_region_id_regions_id_fk" FOREIGN KEY ("region_id") REFERENCES "public"."regions"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "lte_cells" ADD CONSTRAINT "lte_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "networks_ids" ADD CONSTRAINT "networks_ids_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "nr_cells" ADD CONSTRAINT "nr_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "operators" ADD CONSTRAINT "operators_parent_id_operators_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "radiolines_antenna_types" ADD CONSTRAINT "radiolines_antenna_types_manufacturer_id_radiolines_manufacturers_id_fk" FOREIGN KEY ("manufacturer_id") REFERENCES "public"."radiolines_manufacturers"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
@@ -464,11 +475,16 @@ ALTER TABLE "submissions"."proposed_umts_cells" ADD CONSTRAINT "proposed_umts_ce
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_submitter_id_users_id_fk" FOREIGN KEY ("submitter_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_reviewer_id_users_id_fk" FOREIGN KEY ("reviewer_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
+CREATE INDEX "bands_value_idx" ON "bands" USING btree ("value");--> statement-breakpoint
+CREATE INDEX "cells_station_band_rat_idx" ON "cells" USING btree ("station_id","band_id","rat");--> statement-breakpoint
+CREATE INDEX "cells_station_rat_idx" ON "cells" USING btree ("station_id","rat");--> statement-breakpoint
 CREATE INDEX "locations_region_id_idx" ON "locations" USING btree ("region_id");--> statement-breakpoint
 CREATE INDEX "locations_point_gist" ON "locations" USING gist ("point");--> statement-breakpoint
+CREATE INDEX "networks_ids_station_idx" ON "networks_ids" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "operator_parent_id_idx" ON "operators" USING btree ("parent_id");--> statement-breakpoint
 CREATE INDEX "station_location_id_idx" ON "stations" USING btree ("location_id");--> statement-breakpoint
 CREATE INDEX "stations_operator_id_idx" ON "stations" USING btree ("operator_id");--> statement-breakpoint
+CREATE INDEX "stations_operator_location_id_idx" ON "stations" USING btree ("operator_id","location_id","id");--> statement-breakpoint
 CREATE INDEX "stations_permits_station_id_idx" ON "stations_permits" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_region_id_idx" ON "uke_locations" USING btree ("region_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_point_gist" ON "uke_locations" USING gist ("point");--> statement-breakpoint

@@ -133,6 +133,7 @@ export const stations = pgTable(
 	(table) => [
 		index("station_location_id_idx").on(table.location_id),
 		index("stations_operator_id_idx").on(table.operator_id),
+		index("stations_operator_location_id_idx").on(table.operator_id, table.location_id, table.id),
 		unique("stations_station_id_operator_unique").on(table.station_id, table.operator_id),
 		check("stations_station_id_16_length", sql`${table.station_id} ~ '(^.{1,16}$)'`),
 	],
@@ -203,20 +204,24 @@ export const ukePermits = pgTable(
  * @example
  * { id: 1, station_id: 1, band_id: 1, lac: 123, cid: 456, cid_long: 123456789, carrier: 1, is_confirmed: false, updatedAt: new Date(), createdAt: new Date() }
  */
-export const cells = pgTable("cells", {
-	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-	station_id: integer("station_id")
-		.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
-		.notNull(),
-	band_id: integer("band_id")
-		.references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
-		.notNull(),
-	rat: ratEnum("rat").notNull(),
-	notes: text("notes"),
-	is_confirmed: boolean("is_confirmed").default(false),
-	updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const cells = pgTable(
+	"cells",
+	{
+		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+		station_id: integer("station_id")
+			.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
+		band_id: integer("band_id")
+			.references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
+			.notNull(),
+		rat: ratEnum("rat").notNull(),
+		notes: text("notes"),
+		is_confirmed: boolean("is_confirmed").default(false),
+		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(t) => [index("cells_station_band_rat_idx").on(t.station_id, t.band_id, t.rat), index("cells_station_rat_idx").on(t.station_id, t.rat)],
+);
 
 export const gsmCells = pgTable(
 	"gsm_cells",
@@ -308,7 +313,11 @@ export const bands = pgTable(
 		name: varchar("name", { length: 15 }).notNull(),
 		duplex: DuplexType("duplex"),
 	},
-	(t) => [unique("bands_rat_value_unique").on(t.rat, t.value, t.duplex).nullsNotDistinct(), unique("bands_name_unique").on(t.name)],
+	(t) => [
+		unique("bands_rat_value_unique").on(t.rat, t.value, t.duplex).nullsNotDistinct(),
+		unique("bands_name_unique").on(t.name),
+		index("bands_value_idx").on(t.value),
+	],
 );
 
 /**

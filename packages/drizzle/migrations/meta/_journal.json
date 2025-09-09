@@ -12,29 +12,8 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1756843975561,
-      "tag": "0001_clever_jane_foster",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1756868089095,
-      "tag": "0002_magical_black_panther",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1757212409877,
-      "tag": "0003_illegal_leech",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1757292631856,
-      "tag": "0004_deep_vance_astro",
+      "when": 1757376126953,
+      "tag": "0001_marvelous_marten_broadcloak",
       "breakpoints": true
     }
   ]

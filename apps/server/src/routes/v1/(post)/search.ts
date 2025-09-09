@@ -32,13 +32,20 @@ type CellWithRat = z.infer<typeof cellsSelectSchema> & {
 	lte?: z.infer<typeof lteCellsSchema>;
 	nr?: z.infer<typeof nrCellsSchema>;
 };
-type StationWithRatCells = z.infer<typeof stationsSelectSchema> & { cells: CellWithRat[]; networks?: z.infer<typeof networksSchema> | null };
+type StationWithRatCells = z.infer<typeof stationsSelectSchema> & {
+	cells: CellWithRat[];
+	location: z.infer<typeof locationSelectSchema>;
+	operator: z.infer<typeof operatorsSelectSchema>;
+	networks?: z.infer<typeof networksSchema> | null;
+};
 const cellWithDetailsSchema = cellsSelectSchema.extend({
 	details: cellDetailsSchema,
 });
 type StationWithCells = z.infer<typeof stationsSelectSchema> & {
 	cells: z.infer<typeof cellWithDetailsSchema>[];
 	networks?: z.infer<typeof networksSchema>;
+	location: z.infer<typeof locationSelectSchema>;
+	operator: z.infer<typeof operatorsSelectSchema>;
 };
 const schemaRoute = {
 	body: z.object({
@@ -92,11 +99,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 				},
 			},
 			location: { columns: { point: false } },
-			operator: {
-				columns: {
-					is_isp: true,
-				},
-			},
+			operator: { columns: { is_isp: false } },
 			networks: { columns: { station_id: false } },
 		},
 		columns: {
@@ -234,7 +237,7 @@ const searchRoute: Route<ReqBody, StationWithCells[]> = {
 	url: "/search",
 	method: "POST",
 	schema: schemaRoute,
-	config: { permissions: ["read:stations", "read:cells"] },
+	config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
 	handler,
 };
 

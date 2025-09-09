@@ -1,5 +1,5 @@
 {
-  "id": "e6d71061-161e-4063-a3e7-f2516ef55d13",
+  "id": "945f5536-4cb6-41d9-8a76-6f3db6ff35d6",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -52,16 +52,33 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "bands_value_idx": {
+          "name": "bands_value_idx",
+          "columns": [
+            {
+              "expression": "value",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "bands_rat_value_unique": {
           "name": "bands_rat_value_unique",
-          "nullsNotDistinct": false,
+          "nullsNotDistinct": true,
           "columns": [
             "rat",
-            "value"
+            "value",
+            "duplex"
           ]
         },
         "bands_name_unique": {
@@ -144,7 +161,56 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "cells_station_band_rat_idx": {
+          "name": "cells_station_band_rat_idx",
+          "columns": [
+            {
+              "expression": "station_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "band_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "rat",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "cells_station_rat_idx": {
+          "name": "cells_station_rat_idx",
+          "columns": [
+            {
+              "expression": "station_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "rat",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "cells_station_id_stations_id_fk": {
           "name": "cells_station_id_stations_id_fk",
@@ -200,6 +266,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "e_gsm": {
+          "name": "e_gsm",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -497,6 +570,101 @@
       },
       "isRLSEnabled": false
     },
+    "public.networks_ids": {
+      "name": "networks_ids",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "networks_ids_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "station_id": {
+          "name": "station_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "networks_id": {
+          "name": "networks_id",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "networks_ids_station_idx": {
+          "name": "networks_ids_station_idx",
+          "columns": [
+            {
+              "expression": "station_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "networks_ids_station_id_stations_id_fk": {
+          "name": "networks_ids_station_id_stations_id_fk",
+          "tableFrom": "networks_ids",
+          "tableTo": "stations",
+          "columnsFrom": [
+            "station_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "networks_ids_networks_id_unique": {
+          "name": "networks_ids_networks_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "station_id",
+            "networks_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.nr_cells": {
       "name": "nr_cells",
       "schema": "",
@@ -634,7 +802,7 @@
           "name": "mnc",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "is_isp": {
           "name": "is_isp",
@@ -1009,6 +1177,33 @@
           "columns": [
             {
               "expression": "operator_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stations_operator_location_id_idx": {
+          "name": "stations_operator_location_id_idx",
+          "columns": [
+            {
+              "expression": "operator_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "location_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
