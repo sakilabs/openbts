@@ -7,7 +7,6 @@ import { cells, stations, bands, gsmCells, umtsCells, lteCells, nrCells } from "
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import type { RouteGenericInterface } from "fastify";
 
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const stationsSchema = createSelectSchema(stations).omit({ status: true });
@@ -23,6 +22,10 @@ const cellResponseSchema = cellsSchema.extend({
 	details: cellDetailsSchema,
 });
 const schemaRoute = {
+	querystring: z.object({
+		limit: z.coerce.number().min(1).max(1000).optional().default(150),
+		page: z.coerce.number().min(1).default(1),
+	}),
 	response: {
 		200: z.object({
 			success: z.boolean(),
@@ -31,7 +34,6 @@ const schemaRoute = {
 	},
 };
 type ResponseData = z.infer<typeof cellResponseSchema>[];
-
 type CellWithRat = z.infer<typeof cellsSchema> & {
 	station: z.infer<typeof stationsSchema>;
 	band: z.infer<typeof bandsSchema>;
@@ -40,8 +42,12 @@ type CellWithRat = z.infer<typeof cellsSchema> & {
 	lte?: z.infer<typeof lteCellsSchema> | null;
 	nr?: z.infer<typeof nrCellsSchema> | null;
 };
+type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
-async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData>>) {
+async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseData>>) {
+	const { limit = undefined, page = 1 } = req.query;
+	const offset = limit ? (page - 1) * limit : undefined;
+
 	const rows = await db.query.cells.findMany({
 		with: {
 			station: true,
@@ -51,6 +57,9 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 			lte: true,
 			nr: true,
 		},
+		limit,
+		offset,
+		orderBy: (fields, operators) => [operators.asc(fields.id)],
 	});
 
 	const data: ResponseData = rows.map((cell: CellWithRat) => {
@@ -64,7 +73,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 	return res.send({ success: true, data });
 }
 
-const getCells: Route<RouteGenericInterface, ResponseData> = {
+const getCells: Route<ReqQuery, ResponseData> = {
 	url: "/cells",
 	method: "GET",
 	config: { permissions: ["read:cells"], allowGuestAccess: true },
