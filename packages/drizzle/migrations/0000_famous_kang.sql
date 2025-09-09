@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-CREATE FUNCTION uuidv7() RETURNS uuid
+CREATE OR REPLACE FUNCTION uuidv7() RETURNS uuid
 AS $$
   -- Replace the first 48 bits of a uuidv4 with the current
   -- number of milliseconds since 1970-01-01 UTC

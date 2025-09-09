@@ -96,8 +96,8 @@ export const ukeLocations = pgTable(
 			.notNull(),
 		city: varchar("city", { length: 100 }),
 		address: text("address"),
-		longitude: doublePrecision("longitude").notNull().unique(),
-		latitude: doublePrecision("latitude").notNull().unique(),
+		longitude: doublePrecision("longitude").notNull(),
+		latitude: doublePrecision("latitude").notNull(),
 		point: geometry("point", { type: "point", mode: "xy", srid: 4326 })
 			.notNull()
 			.generatedAlwaysAs((): SQL => sql`ST_SetSRID(ST_MakePoint(${ukeLocations.longitude}, ${ukeLocations.latitude}), 4326)`),
@@ -109,6 +109,7 @@ export const ukeLocations = pgTable(
 		check("uke_locations_longitude_range", sql`${t.longitude} BETWEEN -180 AND 180`),
 		index("uke_locations_region_id_idx").on(t.region_id),
 		index("uke_locations_point_gist").using("gist", t.point),
+		unique("uke_locations_lonlat_unique").on(t.longitude, t.latitude),
 	],
 );
 
@@ -134,6 +135,7 @@ export const stations = pgTable(
 		index("station_location_id_idx").on(table.location_id),
 		index("stations_operator_id_idx").on(table.operator_id),
 		index("stations_operator_location_id_idx").on(table.operator_id, table.location_id, table.id),
+		index("stations_station_id_trgm_idx").using("gin", sql`(${table.station_id}) gin_trgm_ops`),
 		unique("stations_station_id_operator_unique").on(table.station_id, table.operator_id),
 		check("stations_station_id_16_length", sql`${table.station_id} ~ '(^.{1,16}$)'`),
 	],
@@ -196,7 +198,17 @@ export const ukePermits = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [index("uke_permits_station_id_idx").on(table.station_id), index("uke_permits_location_id_idx").on(table.location_id)],
+	(table) => [
+		index("uke_permits_station_id_idx").on(table.station_id),
+		index("uke_permits_location_id_idx").on(table.location_id),
+		index("uke_permits_operator_id_idx").on(table.operator_id),
+		index("uke_permits_band_id_idx").on(table.band_id),
+		index("uke_permits_decision_type_idx").on(table.decision_type),
+		index("uke_permits_decision_number_trgm_idx").using("gin", sql`(${table.decision_number}) gin_trgm_ops`),
+		index("uke_permits_station_id_trgm_idx").using("gin", sql`(${table.station_id}) gin_trgm_ops`),
+		index("uke_permits_operator_band_idx").on(table.operator_id, table.band_id),
+		index("uke_permits_operator_location_idx").on(table.operator_id, table.location_id),
+	],
 );
 
 /**
@@ -236,7 +248,11 @@ export const gsmCells = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(t) => [unique("gsm_cells_lac_cid_unique").on(t.lac, t.cid)],
+	(t) => [
+		unique("gsm_cells_lac_cid_unique").on(t.lac, t.cid),
+		index("gsm_cells_cid_idx").on(t.cid),
+		index("gsm_cells_cid_trgm_idx").using("gin", sql`(${t.cid}::text) gin_trgm_ops`),
+	],
 );
 
 export const umtsCells = pgTable(
@@ -257,7 +273,12 @@ export const umtsCells = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(t) => [unique("umts_cells_rnc_cid_unique").on(t.rnc, t.cid)],
+	(t) => [
+		unique("umts_cells_rnc_cid_unique").on(t.rnc, t.cid),
+		index("umts_cells_cid_idx").on(t.cid),
+		index("umts_cells_cid_trgm_idx").using("gin", sql`(${t.cid}::text) gin_trgm_ops`),
+		index("umts_cells_cid_long_trgm_idx").using("gin", sql`(${t.cid_long}::text) gin_trgm_ops`),
+	],
 );
 
 export const lteCells = pgTable(
@@ -278,7 +299,13 @@ export const lteCells = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`), unique("lte_cells_enbid_clid_unique").on(t.enbid, t.clid)],
+	(t) => [
+		check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`),
+		unique("lte_cells_enbid_clid_unique").on(t.enbid, t.clid),
+		index("lte_cells_nb_iot_true_idx").on(t.enbid, t.clid).where(sql`${t.supports_nb_iot} = true`),
+		index("lte_cells_enbid_trgm_idx").using("gin", sql`(${t.enbid}::text) gin_trgm_ops`),
+		index("lte_cells_ecid_trgm_idx").using("gin", sql`(${t.ecid}::text) gin_trgm_ops`),
+	],
 );
 
 export const nrCells = pgTable(
@@ -296,9 +323,13 @@ export const nrCells = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(t) => [unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid)],
+	(t) => [
+		unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid),
+		index("nr_cells_redcap_true_idx").on(t.gnbid, t.clid).where(sql`${t.supports_nr_redcap} = true`),
+		index("nr_cells_gnbid_trgm_idx").using("gin", sql`(${t.gnbid}::text) gin_trgm_ops`),
+		index("nr_cells_nci_trgm_idx").using("gin", sql`(${t.nci}::text) gin_trgm_ops`),
+	],
 );
-
 /**
  * Bands table
  * @example
@@ -399,6 +430,9 @@ export const ukeRadioLines = pgTable(
 	(table) => [
 		index("uke_radiolines_operator_id_idx").on(table.operator_id),
 		index("uke_radiolines_permit_number_idx").on(table.permit_number),
+		index("uke_radiolines_permit_number_trgm_idx").using("gin", sql`(${table.permit_number}) gin_trgm_ops`),
+		index("uke_radiolines_tx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${table.tx_longitude}, ${table.tx_latitude}), 4326))`),
+		index("uke_radiolines_rx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${table.rx_longitude}, ${table.rx_latitude}), 4326))`),
 		check("uke_radiolines_tx_height_nonneg", sql`${table.tx_height} >= 0`),
 		check("uke_radiolines_rx_height_nonneg", sql`${table.rx_height} >= 0`),
 	],

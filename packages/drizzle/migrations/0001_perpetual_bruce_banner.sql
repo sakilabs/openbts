@@ -158,8 +158,7 @@ CREATE TABLE "uke_locations" (
 	"point" geometry(point) GENERATED ALWAYS AS (ST_SetSRID(ST_MakePoint("uke_locations"."longitude", "uke_locations"."latitude"), 4326)) STORED NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "uke_locations_longitude_unique" UNIQUE("longitude"),
-	CONSTRAINT "uke_locations_latitude_unique" UNIQUE("latitude"),
+	CONSTRAINT "uke_locations_lonlat_unique" UNIQUE("longitude","latitude"),
 	CONSTRAINT "uke_locations_latitude_range" CHECK ("uke_locations"."latitude" BETWEEN -90 AND 90),
 	CONSTRAINT "uke_locations_longitude_range" CHECK ("uke_locations"."longitude" BETWEEN -180 AND 180)
 );
@@ -478,20 +477,42 @@ ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_reviewer_id_
 CREATE INDEX "bands_value_idx" ON "bands" USING btree ("value");--> statement-breakpoint
 CREATE INDEX "cells_station_band_rat_idx" ON "cells" USING btree ("station_id","band_id","rat");--> statement-breakpoint
 CREATE INDEX "cells_station_rat_idx" ON "cells" USING btree ("station_id","rat");--> statement-breakpoint
+CREATE INDEX "gsm_cells_cid_idx" ON "gsm_cells" USING btree ("cid");--> statement-breakpoint
+CREATE INDEX "gsm_cells_cid_trgm_idx" ON "gsm_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "locations_region_id_idx" ON "locations" USING btree ("region_id");--> statement-breakpoint
 CREATE INDEX "locations_point_gist" ON "locations" USING gist ("point");--> statement-breakpoint
+CREATE INDEX "lte_cells_nb_iot_true_idx" ON "lte_cells" USING btree ("enbid","clid") WHERE "lte_cells"."supports_nb_iot" = true;--> statement-breakpoint
+CREATE INDEX "lte_cells_enbid_trgm_idx" ON "lte_cells" USING gin (("enbid"::text) gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "lte_cells_ecid_trgm_idx" ON "lte_cells" USING gin (("ecid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "networks_ids_station_idx" ON "networks_ids" USING btree ("station_id");--> statement-breakpoint
+CREATE INDEX "nr_cells_redcap_true_idx" ON "nr_cells" USING btree ("gnbid","clid") WHERE "nr_cells"."supports_nr_redcap" = true;--> statement-breakpoint
+CREATE INDEX "nr_cells_gnbid_trgm_idx" ON "nr_cells" USING gin (("gnbid"::text) gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "nr_cells_nci_trgm_idx" ON "nr_cells" USING gin (("nci"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "operator_parent_id_idx" ON "operators" USING btree ("parent_id");--> statement-breakpoint
 CREATE INDEX "station_location_id_idx" ON "stations" USING btree ("location_id");--> statement-breakpoint
 CREATE INDEX "stations_operator_id_idx" ON "stations" USING btree ("operator_id");--> statement-breakpoint
 CREATE INDEX "stations_operator_location_id_idx" ON "stations" USING btree ("operator_id","location_id","id");--> statement-breakpoint
+CREATE INDEX "stations_station_id_trgm_idx" ON "stations" USING gin (("station_id") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "stations_permits_station_id_idx" ON "stations_permits" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_region_id_idx" ON "uke_locations" USING btree ("region_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_point_gist" ON "uke_locations" USING gist ("point");--> statement-breakpoint
 CREATE INDEX "uke_permits_station_id_idx" ON "uke_permits" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_location_id_idx" ON "uke_permits" USING btree ("location_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_operator_id_idx" ON "uke_permits" USING btree ("operator_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_band_id_idx" ON "uke_permits" USING btree ("band_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_decision_type_idx" ON "uke_permits" USING btree ("decision_type");--> statement-breakpoint
+CREATE INDEX "uke_permits_decision_number_trgm_idx" ON "uke_permits" USING gin (("decision_number") gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "uke_permits_station_id_trgm_idx" ON "uke_permits" USING gin (("station_id") gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "uke_permits_operator_band_idx" ON "uke_permits" USING btree ("operator_id","band_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_operator_location_idx" ON "uke_permits" USING btree ("operator_id","location_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_operator_id_idx" ON "uke_radiolines" USING btree ("operator_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_idx" ON "uke_radiolines" USING btree ("permit_number");--> statement-breakpoint
+CREATE INDEX "uke_radiolines_permit_number_trgm_idx" ON "uke_radiolines" USING gin (("permit_number") gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "uke_radiolines_tx_point_gist" ON "uke_radiolines" USING gist ((ST_SetSRID(ST_MakePoint("tx_longitude", "tx_latitude"), 4326)));--> statement-breakpoint
+CREATE INDEX "uke_radiolines_rx_point_gist" ON "uke_radiolines" USING gist ((ST_SetSRID(ST_MakePoint("rx_longitude", "rx_latitude"), 4326)));--> statement-breakpoint
+CREATE INDEX "umts_cells_cid_idx" ON "umts_cells" USING btree ("cid");--> statement-breakpoint
+CREATE INDEX "umts_cells_cid_trgm_idx" ON "umts_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "umts_cells_cid_long_trgm_idx" ON "umts_cells" USING gin (("cid_long"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "accounts_user_id_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "accounts_provider_account_id_idx" ON "accounts" USING btree ("provider_account_id");--> statement-breakpoint
 CREATE INDEX "api_keys_user_id_idx" ON "api_keys" USING btree ("user_id");--> statement-breakpoint

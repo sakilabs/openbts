@@ -66,7 +66,7 @@ const schemaRoute = {
 	},
 };
 
-const SIMILARITY_THRESHOLD = 0.6;
+const SIMILARITY_THRESHOLD = 0.7;
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
 	const { query } = req.body;
@@ -116,84 +116,94 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	}
 
 	const likeQuery = `%${query}%`;
-	const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
-		db
-			.select({ stationId: stations.id })
-			.from(gsmCells)
-			.innerJoin(cells, eq(gsmCells.cell_id, cells.id))
-			.innerJoin(stations, eq(cells.station_id, stations.id))
-			.where(
-				or(
-					sql`CAST(${gsmCells.cid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`similarity(CAST(${gsmCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					...(numericQuery ? [sql`${gsmCells.cid} = ${numericQuery}`] : []),
-				),
-			),
-		db
-			.select({ stationId: stations.id })
-			.from(umtsCells)
-			.innerJoin(cells, eq(umtsCells.cell_id, cells.id))
-			.innerJoin(stations, eq(cells.station_id, stations.id))
-			.where(
-				or(
-					sql`CAST(${umtsCells.carrier} AS TEXT) ILIKE ${likeQuery}`,
-					sql`CAST(${umtsCells.cid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`CAST(${umtsCells.cid_long} AS TEXT) ILIKE ${likeQuery}`,
-					sql`similarity(CAST(${umtsCells.carrier} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${umtsCells.rnc} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${umtsCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${umtsCells.cid_long} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					...(numericQuery
-						? [
-								sql`${umtsCells.carrier} = ${numericQuery}`,
-								sql`${umtsCells.rnc} = ${numericQuery}`,
-								sql`${umtsCells.cid} = ${numericQuery}`,
-								sql`${umtsCells.cid_long} = ${numericQuery}`,
-							]
-						: []),
-				),
-			),
-		db
-			.select({ stationId: stations.id })
-			.from(lteCells)
-			.innerJoin(cells, eq(lteCells.cell_id, cells.id))
-			.innerJoin(stations, eq(cells.station_id, stations.id))
-			.where(
-				or(
-					sql`CAST(${lteCells.enbid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`CAST(${lteCells.clid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`CAST(${lteCells.ecid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`similarity(CAST(${lteCells.enbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${lteCells.clid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${lteCells.ecid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					...(numericQuery
-						? [sql`${lteCells.enbid} = ${numericQuery}`, sql`${lteCells.clid} = ${numericQuery}`, sql`${lteCells.ecid} = ${numericQuery}`]
-						: []),
-				),
-			),
-		db
-			.select({ stationId: stations.id })
-			.from(nrCells)
-			.innerJoin(cells, eq(nrCells.cell_id, cells.id))
-			.innerJoin(stations, eq(cells.station_id, stations.id))
-			.where(
-				or(
-					sql`CAST(${nrCells.gnbid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`CAST(${nrCells.clid} AS TEXT) ILIKE ${likeQuery}`,
-					sql`CAST(${nrCells.nci} AS TEXT) ILIKE ${likeQuery}`,
-					sql`similarity(CAST(${nrCells.gnbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${nrCells.clid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					sql`similarity(CAST(${nrCells.nci} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					...(numericQuery
-						? [sql`${nrCells.gnbid} = ${numericQuery}`, sql`${nrCells.clid} = ${numericQuery}`, sql`${nrCells.nci} = ${numericQuery}`]
-						: []),
-				),
-			),
-	]);
+	if (/^\d+$/.test(query)) {
+		const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
+			db
+				.select({ stationId: cells.station_id })
+				.from(gsmCells)
+				.innerJoin(cells, eq(gsmCells.cell_id, cells.id))
+				.where(sql`${gsmCells.cid} = ${numericQuery}`),
 
-	for (const row of [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches]) {
-		const sId = row.stationId;
-		if (!stationIds.has(sId)) stationIds.add(sId);
+			db
+				.select({ stationId: cells.station_id })
+				.from(umtsCells)
+				.innerJoin(cells, eq(umtsCells.cell_id, cells.id))
+				.where(or(sql`${umtsCells.cid} = ${numericQuery}`, sql`${umtsCells.cid_long} = ${numericQuery}`)),
+
+			db
+				.select({ stationId: cells.station_id })
+				.from(lteCells)
+				.innerJoin(cells, eq(lteCells.cell_id, cells.id))
+				.where(or(sql`${lteCells.enbid} = ${numericQuery}`, sql`${lteCells.ecid} = ${numericQuery}`)),
+
+			db
+				.select({ stationId: cells.station_id })
+				.from(nrCells)
+				.innerJoin(cells, eq(nrCells.cell_id, cells.id))
+				.where(or(sql`${nrCells.gnbid} = ${numericQuery}`, sql`${nrCells.nci} = ${numericQuery}`)),
+		]);
+
+		for (const row of [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches]) {
+			const sId = row.stationId;
+			if (!stationIds.has(sId)) stationIds.add(sId);
+		}
+	} else {
+		const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
+			db
+				.select({ stationId: cells.station_id })
+				.from(gsmCells)
+				.innerJoin(cells, eq(gsmCells.cell_id, cells.id))
+				.where(
+					or(
+						sql`CAST(${gsmCells.cid} AS TEXT) ILIKE ${likeQuery}`,
+						sql`similarity(CAST(${gsmCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					),
+				),
+
+			db
+				.select({ stationId: cells.station_id })
+				.from(umtsCells)
+				.innerJoin(cells, eq(umtsCells.cell_id, cells.id))
+				.where(
+					or(
+						sql`CAST(${umtsCells.cid} AS TEXT) ILIKE ${likeQuery}`,
+						sql`CAST(${umtsCells.cid_long} AS TEXT) ILIKE ${likeQuery}`,
+						sql`similarity(CAST(${umtsCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+						sql`similarity(CAST(${umtsCells.cid_long} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					),
+				),
+
+			db
+				.select({ stationId: cells.station_id })
+				.from(lteCells)
+				.innerJoin(cells, eq(lteCells.cell_id, cells.id))
+				.where(
+					or(
+						sql`CAST(${lteCells.enbid} AS TEXT) ILIKE ${likeQuery}`,
+						sql`CAST(${lteCells.ecid} AS TEXT) ILIKE ${likeQuery}`,
+						sql`similarity(CAST(${lteCells.enbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+						sql`similarity(CAST(${lteCells.ecid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					),
+				),
+
+			db
+				.select({ stationId: cells.station_id })
+				.from(nrCells)
+				.innerJoin(cells, eq(nrCells.cell_id, cells.id))
+				.where(
+					or(
+						sql`CAST(${nrCells.gnbid} AS TEXT) ILIKE ${likeQuery}`,
+						sql`CAST(${nrCells.nci} AS TEXT) ILIKE ${likeQuery}`,
+						sql`similarity(CAST(${nrCells.gnbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+						sql`similarity(CAST(${nrCells.nci} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+					),
+				),
+		]);
+
+		for (const row of [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches]) {
+			const sId = row.stationId;
+			if (!stationIds.has(sId)) stationIds.add(sId);
+		}
 	}
 
 	const missingStationIds = Array.from(stationIds).filter((id) => !stationMap.has(id));

@@ -35,6 +35,7 @@ export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 		{ hideCursor: true, format: "{bar} {percentage}% | {value}/{total} | {step}" },
 		cliProgress.Presets.shades_classic,
 	);
+	const startTime = Date.now();
 	bar.start(1, 0, { step: "start" });
 
 	let processed = 0;
@@ -80,6 +81,8 @@ export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 	});
 
 	bar.stop();
+	const endTime = Date.now();
+	console.log(`Migration completed in ${((endTime - startTime) / 1000).toFixed(2)} seconds`);
 }
 
 export async function runMigrate(options: MigratorOptions = {}): Promise<void> {

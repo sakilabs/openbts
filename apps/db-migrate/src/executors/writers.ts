@@ -337,7 +337,14 @@ export async function writeCellsAndDetails(
 	const gsmValues = withIds
 		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "GSM" }> } => val.cell.rat === "GSM" && !!val.id)
 		.filter((val) => val.cell.gsm.lac != null && val.cell.gsm.cid != null)
-		.map((val) => ({ cell_id: val.id, lac: val.cell.gsm.lac as number, cid: val.cell.gsm.cid as number, e_gsm: val.cell.gsm.e_gsm }));
+		.map((val) => ({
+			cell_id: val.id,
+			lac: val.cell.gsm.lac as number,
+			cid: val.cell.gsm.cid as number,
+			e_gsm: val.cell.gsm.e_gsm,
+			createdAt: val.cell.date_added ?? new Date(),
+			updatedAt: val.cell.date_updated ?? new Date(),
+		}));
 	options.onBeginPhase?.("GSM", gsmValues.length);
 	if (gsmValues.length) {
 		for (const group of chunkArray(gsmValues, options.batchSize ?? gsmValues.length)) {
@@ -353,7 +360,15 @@ export async function writeCellsAndDetails(
 
 	const umtsValues = withIds
 		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "UMTS" }> } => val.cell.rat === "UMTS" && !!val.id)
-		.map((val) => ({ cell_id: val.id, lac: val.cell.umts.lac, rnc: val.cell.umts.rnc, cid: val.cell.umts.cid }));
+		.map((val) => ({
+			cell_id: val.id,
+			lac: val.cell.umts.lac,
+			rnc: val.cell.umts.rnc,
+			cid: val.cell.umts.cid,
+			carrier: val.cell.umts.carrier,
+			createdAt: val.cell.date_added ?? new Date(),
+			updatedAt: val.cell.date_updated ?? new Date(),
+		}));
 	options.onBeginPhase?.("UMTS", umtsValues.length);
 	if (umtsValues.length) {
 		for (const group of chunkArray(umtsValues, options.batchSize ?? umtsValues.length)) {
@@ -375,6 +390,8 @@ export async function writeCellsAndDetails(
 			enbid: val.cell.lte.enbid,
 			clid: val.cell.lte.clid,
 			supports_nb_iot: val.cell.lte.supports_nb_iot,
+			createdAt: val.cell.date_added ?? new Date(),
+			updatedAt: val.cell.date_updated ?? new Date(),
 		}));
 	options.onBeginPhase?.("LTE", lteValues.length);
 	if (lteValues.length) {
@@ -397,6 +414,8 @@ export async function writeCellsAndDetails(
 			gnbid: val.cell.nr.gnbid,
 			clid: val.cell.nr.clid,
 			supports_nr_redcap: val.cell.nr.supports_nr_redcap,
+			createdAt: val.cell.date_added ?? new Date(),
+			updatedAt: val.cell.date_updated ?? new Date(),
 		}));
 	options.onBeginPhase?.("NR", nrValues.length);
 	if (nrValues.length) {

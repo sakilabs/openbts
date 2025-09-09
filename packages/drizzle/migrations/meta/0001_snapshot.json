@@ -1,5 +1,5 @@
 {
-  "id": "945f5536-4cb6-41d9-8a76-6f3db6ff35d6",
+  "id": "2d576ccd-7ef6-4270-9622-8be73dbf3d35",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -289,7 +289,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "gsm_cells_cid_idx": {
+          "name": "gsm_cells_cid_idx",
+          "columns": [
+            {
+              "expression": "cid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "gsm_cells_cid_trgm_idx": {
+          "name": "gsm_cells_cid_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"cid\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "gsm_cells_cell_id_cells_id_fk": {
           "name": "gsm_cells_cell_id_cells_id_fk",
@@ -527,7 +558,60 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "lte_cells_nb_iot_true_idx": {
+          "name": "lte_cells_nb_iot_true_idx",
+          "columns": [
+            {
+              "expression": "enbid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "clid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"lte_cells\".\"supports_nb_iot\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "lte_cells_enbid_trgm_idx": {
+          "name": "lte_cells_enbid_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"enbid\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "lte_cells_ecid_trgm_idx": {
+          "name": "lte_cells_ecid_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"ecid\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "lte_cells_cell_id_cells_id_fk": {
           "name": "lte_cells_cell_id_cells_id_fk",
@@ -721,7 +805,60 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "nr_cells_redcap_true_idx": {
+          "name": "nr_cells_redcap_true_idx",
+          "columns": [
+            {
+              "expression": "gnbid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "clid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"nr_cells\".\"supports_nr_redcap\" = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "nr_cells_gnbid_trgm_idx": {
+          "name": "nr_cells_gnbid_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"gnbid\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "nr_cells_nci_trgm_idx": {
+          "name": "nr_cells_nci_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"nci\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "nr_cells_cell_id_cells_id_fk": {
           "name": "nr_cells_cell_id_cells_id_fk",
@@ -1213,6 +1350,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "stations_station_id_trgm_idx": {
+          "name": "stations_station_id_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"station_id\") gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -1482,17 +1634,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "uke_locations_longitude_unique": {
-          "name": "uke_locations_longitude_unique",
+        "uke_locations_lonlat_unique": {
+          "name": "uke_locations_lonlat_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "longitude"
-          ]
-        },
-        "uke_locations_latitude_unique": {
-          "name": "uke_locations_latitude_unique",
-          "nullsNotDistinct": false,
-          "columns": [
+            "longitude",
             "latitude"
           ]
         }
@@ -1608,6 +1754,123 @@
         "uke_permits_location_id_idx": {
           "name": "uke_permits_location_id_idx",
           "columns": [
+            {
+              "expression": "location_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uke_permits_operator_id_idx": {
+          "name": "uke_permits_operator_id_idx",
+          "columns": [
+            {
+              "expression": "operator_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uke_permits_band_id_idx": {
+          "name": "uke_permits_band_id_idx",
+          "columns": [
+            {
+              "expression": "band_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uke_permits_decision_type_idx": {
+          "name": "uke_permits_decision_type_idx",
+          "columns": [
+            {
+              "expression": "decision_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uke_permits_decision_number_trgm_idx": {
+          "name": "uke_permits_decision_number_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"decision_number\") gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "uke_permits_station_id_trgm_idx": {
+          "name": "uke_permits_station_id_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"station_id\") gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "uke_permits_operator_band_idx": {
+          "name": "uke_permits_operator_band_idx",
+          "columns": [
+            {
+              "expression": "operator_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "band_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uke_permits_operator_location_idx": {
+          "name": "uke_permits_operator_location_idx",
+          "columns": [
+            {
+              "expression": "operator_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
             {
               "expression": "location_id",
               "isExpression": false,
@@ -1903,6 +2166,51 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "uke_radiolines_permit_number_trgm_idx": {
+          "name": "uke_radiolines_permit_number_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"permit_number\") gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "uke_radiolines_tx_point_gist": {
+          "name": "uke_radiolines_tx_point_gist",
+          "columns": [
+            {
+              "expression": "(ST_SetSRID(ST_MakePoint(\"tx_longitude\", \"tx_latitude\"), 4326))",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
+        },
+        "uke_radiolines_rx_point_gist": {
+          "name": "uke_radiolines_rx_point_gist",
+          "columns": [
+            {
+              "expression": "(ST_SetSRID(ST_MakePoint(\"rx_longitude\", \"rx_latitude\"), 4326))",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gist",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -2033,7 +2341,53 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "umts_cells_cid_idx": {
+          "name": "umts_cells_cid_idx",
+          "columns": [
+            {
+              "expression": "cid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "umts_cells_cid_trgm_idx": {
+          "name": "umts_cells_cid_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"cid\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "umts_cells_cid_long_trgm_idx": {
+          "name": "umts_cells_cid_long_trgm_idx",
+          "columns": [
+            {
+              "expression": "(\"cid_long\"::text) gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "umts_cells_cell_id_cells_id_fk": {
           "name": "umts_cells_cell_id_cells_id_fk",

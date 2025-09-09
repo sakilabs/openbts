@@ -57,7 +57,7 @@ const schemaRoute = {
 			.string()
 			.regex(/^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$/)
 			.optional(),
-		limit: z.coerce.number().min(1).optional().default(150),
+		limit: z.coerce.number().min(1).max(1000).optional().default(150),
 		page: z.coerce.number().min(1).default(1),
 		rat: z
 			.string()

@@ -56,6 +56,7 @@ export interface PreparedUMTSDetails {
 	lac: number | null;
 	rnc: number;
 	cid: number;
+	carrier: number | null;
 }
 export interface PreparedLTEDetails {
 	tac: number | null;
@@ -176,7 +177,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 			const rnc = toInt(station.rnc) ?? 0;
 			const cid = toInt(cell.cid) ?? 0;
 			if (!rnc || !cid) continue;
-			out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid } });
+			out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid, carrier: toInt(cell.ua_freq) } });
 			continue;
 		}
 		if (rat === "LTE") {
