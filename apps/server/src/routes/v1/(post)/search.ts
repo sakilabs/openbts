@@ -34,8 +34,8 @@ type CellWithRat = z.infer<typeof cellsSelectSchema> & {
 };
 type StationWithRatCells = z.infer<typeof stationsSelectSchema> & {
 	cells: CellWithRat[];
-	location: z.infer<typeof locationSelectSchema>;
-	operator: z.infer<typeof operatorsSelectSchema>;
+	location: z.infer<typeof locationSelectSchema> | null;
+	operator: z.infer<typeof operatorsSelectSchema> | null;
 	networks?: z.infer<typeof networksSchema> | null;
 };
 const cellWithDetailsSchema = cellsSelectSchema.extend({
@@ -44,8 +44,8 @@ const cellWithDetailsSchema = cellsSelectSchema.extend({
 type StationWithCells = z.infer<typeof stationsSelectSchema> & {
 	cells: z.infer<typeof cellWithDetailsSchema>[];
 	networks?: z.infer<typeof networksSchema>;
-	location: z.infer<typeof locationSelectSchema>;
-	operator: z.infer<typeof operatorsSelectSchema>;
+	location: z.infer<typeof locationSelectSchema> | null;
+	operator: z.infer<typeof operatorsSelectSchema> | null;
 };
 const schemaRoute = {
 	body: z.object({
@@ -57,8 +57,8 @@ const schemaRoute = {
 			data: z.array(
 				stationsSelectSchema.extend({
 					cells: z.array(cellWithDetailsSchema),
-					location: locationSelectSchema,
-					operator: operatorsSelectSchema,
+					location: locationSelectSchema.nullable(),
+					operator: operatorsSelectSchema.nullable(),
 					networks: networksSchema.optional(),
 				}),
 			),
