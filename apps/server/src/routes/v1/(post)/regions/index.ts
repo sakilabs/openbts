@@ -17,7 +17,6 @@ const schemaRoute = {
 	body: regionsInsertSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: regionsSelectSchema,
 		}),
 	},
@@ -27,14 +26,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	const { name } = req.body;
 
 	try {
-		const region = await db
+		const [region] = await db
 			.insert(regions)
 			.values({
 				name,
 			})
 			.returning();
 
-		return res.send({ success: true, data: region[0] });
+		if (!region) throw new ErrorResponse("FAILED_TO_CREATE");
+		return res.send({ data: region });
 	} catch {
 		throw new ErrorResponse("FAILED_TO_CREATE");
 	}

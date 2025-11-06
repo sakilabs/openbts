@@ -18,7 +18,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(stationCommentSelectSchema),
 		}),
 	},
@@ -29,7 +28,6 @@ type ResponseData = z.infer<typeof stationCommentSelectSchema>[];
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const { station_id } = req.params;
-	if (Number.isNaN(station_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	if (!getRuntimeSettings().enableStationComments) throw new ErrorResponse("FORBIDDEN");
 
@@ -47,7 +45,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 			orderBy: (fields, { desc }) => [desc(fields.createdAt)],
 		});
 
-		return res.send({ success: true, data: comments });
+		return res.send({ data: comments });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

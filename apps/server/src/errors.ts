@@ -1,8 +1,9 @@
 export class ErrorResponse extends Error {
 	code: ErrorCode;
 	statusCode: number;
+	cause?: unknown;
 
-	constructor(code: ErrorCode, options?: { message: string }) {
+	constructor(code: ErrorCode, options?: { message?: string; cause?: unknown }) {
 		super();
 
 		const error = errors[code];
@@ -12,6 +13,7 @@ export class ErrorResponse extends Error {
 		this.name = this.constructor.name;
 		this.code = code;
 		this.statusCode = error.statusCode;
+		if (options?.cause !== undefined) this.cause = options.cause;
 
 		Error.captureStackTrace(this, this.constructor);
 	}

@@ -18,28 +18,45 @@ const schemaRoute = {
 		bounds: z
 			.string()
 			.regex(/^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined => (val ? val.split(",").map(Number) : undefined)),
 		limit: z.coerce.number().min(1).optional().default(150),
 		page: z.coerce.number().min(1).default(1),
 		rat: z
 			.string()
 			.regex(/^(?:cdma|umts|gsm|lte|5g|iot)(?:,(?:cdma|umts|gsm|lte|5g|iot))*$/i)
-			.optional(),
+			.optional()
+			.transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
 		operators: z
 			.string()
 			.regex(/^\d+(,\d+)*$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined =>
+				val
+					? val
+							.split(",")
+							.map(Number)
+							.filter((n) => !Number.isNaN(n))
+					: undefined,
+			),
 		bands: z
 			.string()
 			.regex(/^\d+(,\d+)*$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined =>
+				val
+					? val
+							.split(",")
+							.map(Number)
+							.filter((n) => !Number.isNaN(n))
+					: undefined,
+			),
 		decisionType: z.literal(["zmP", "P"]).optional(),
 		decision_number: z.string().optional(),
 		station_id: z.string().optional(),
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(ukePermitsSchema.extend({ band: bandsSchema, operator: operatorsSchema })),
 		}),
 	},
@@ -56,9 +73,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		limit = undefined,
 		page = 1,
 		bounds,
-		operators: operatorsQuery,
+		operators: operatorMncs,
 		rat,
-		bands: bandsQuery,
+		bands: bandValues,
 		decisionType,
 		decision_number,
 		station_id,
@@ -66,15 +83,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let bandIds: number[] | undefined;
-	if (bandsQuery) {
-		const requestedBandIds = bandsQuery.split(",").map(Number);
+	if (bandValues) {
 		const validBands = await db.query.bands.findMany({
 			columns: { id: true },
-			where: (fields, { inArray }) => inArray(fields.value, requestedBandIds),
+			where: (fields, { inArray }) => inArray(fields.value, bandValues),
 		});
 
 		bandIds = validBands.map((band) => band.id);
-		if (bandIds.length === 0) return res.send({ success: true, data: [] });
+		if (bandIds.length === 0) return res.send({ data: [] });
 	}
 
 	try {
@@ -82,9 +98,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		let locationIds: number[] | undefined;
 		if (bounds) {
-			const splitBounds = bounds.split(",").map(Number);
-			if (splitBounds.length !== 4 || splitBounds.some(Number.isNaN)) throw new ErrorResponse("BAD_REQUEST");
-			const [la1, lo1, la2, lo2] = splitBounds as [number, number, number, number];
+			const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
 			const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
 			const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
 
@@ -94,16 +108,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				.where(sql`ST_Intersects(${ukeLocations.point}, ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326))`);
 
 			locationIds = boundaryLocations.map((loc) => loc.id);
-			if (!locationIds.length) return res.send({ success: true, data: [] });
+			if (!locationIds.length) return res.send({ data: [] });
 		}
 
 		let operatorIds: number[] | undefined;
-		if (operatorsQuery) {
-			const operatorMncs = operatorsQuery
-				.split(",")
-				.map((op) => Number.parseInt(op, 10))
-				.filter((mnc) => !Number.isNaN(mnc));
-			if (operatorMncs.length === 0) return res.send({ success: true, data: [] });
+		if (operatorMncs) {
+			if (operatorMncs.length === 0) return res.send({ data: [] });
 
 			const operatorQueries = operatorMncs.map((mnc) =>
 				db.query.operators.findMany({
@@ -114,7 +124,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 			const operatorResults = await Promise.all(operatorQueries);
 			operatorIds = operatorResults.flat().map((op) => op.id);
-			if (!operatorIds.length) return res.send({ success: true, data: [] });
+			if (!operatorIds.length) return res.send({ data: [] });
 		}
 
 		const ukePermitsRes = await db.query.ukePermits.findMany({
@@ -146,15 +156,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		let data = ukePermitsRes;
 		if (rat) {
-			const requestedRats = rat.toLowerCase().split(",");
 			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr"> = { gsm: "gsm", umts: "umts", lte: "lte", "5g": "nr" } as const;
-			const allowedRats = requestedRats.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" => t !== undefined);
+			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" => t !== undefined);
 			data = data.filter((permit) =>
 				permit.band?.rat ? allowedRats.includes(permit.band.rat.toLowerCase() as (typeof allowedRats)[number]) : false,
 			);
 		}
 
-		res.send({ success: true, data });
+		res.send({ data });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

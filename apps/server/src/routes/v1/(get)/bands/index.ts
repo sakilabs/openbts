@@ -15,7 +15,6 @@ type Bands = z.infer<typeof bandSelectSchema>;
 const schemaRoute = {
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(bandSelectSchema),
 		}),
 	},
@@ -23,7 +22,7 @@ const schemaRoute = {
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Bands[]>>) {
 	const bands = await db.query.bands.findMany();
-	return res.send({ success: true, data: bands });
+	return res.send({ data: bands });
 }
 
 const getBands: Route<RouteGenericInterface, Bands[]> = {

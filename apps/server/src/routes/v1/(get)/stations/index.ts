@@ -8,20 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { locations, stations, cells, bands, gsmCells, umtsCells, lteCells, nrCells, operators, regions, networksIds } from "@openbts/drizzle";
-
-type ReqQuery = {
-	Querystring: StationFilterParams;
-};
-
-interface StationFilterParams {
-	bounds?: string;
-	limit?: number;
-	page?: number;
-	rat?: string;
-	operators?: string;
-	bands?: string;
-}
+import { locations, stations, cells, bands, operators, regions, networksIds } from "@openbts/drizzle";
 
 const stationsSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
@@ -29,13 +16,8 @@ const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
 const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
-const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
-const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
-const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
-const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
-const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
-const cellResponseSchema = cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema });
+const cellResponseSchema = cellsSchema.extend({ band: bandsSchema });
 const stationResponseSchema = stationsSchema.extend({
 	cells: z.array(cellResponseSchema),
 	location: locationSchema.extend({ region: regionSchema }),
@@ -43,97 +25,89 @@ const stationResponseSchema = stationsSchema.extend({
 	networks: networksSchema.optional(),
 });
 type Station = z.infer<typeof stationResponseSchema>;
-type CellWithRats = z.infer<typeof cellsSchema> & {
-	band: z.infer<typeof bandsSchema>;
-	gsm?: z.infer<typeof gsmCellsSchema>;
-	umts?: z.infer<typeof umtsCellsSchema>;
-	lte?: z.infer<typeof lteCellsSchema>;
-	nr?: z.infer<typeof nrCellsSchema>;
-};
-type StationRaw = z.infer<typeof stationsSchema> & { cells: CellWithRats[]; networks?: z.infer<typeof networksSchema> | null };
+type CellWithBand = z.infer<typeof cellsSchema> & { band: z.infer<typeof bandsSchema> };
+type StationRaw = z.infer<typeof stationsSchema> & { cells: CellWithBand[]; networks?: z.infer<typeof networksSchema> | null };
 const schemaRoute = {
 	querystring: z.object({
 		bounds: z
 			.string()
 			.regex(/^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined => (val ? val.split(",").map(Number) : undefined)),
 		limit: z.coerce.number().min(1).max(1000).optional().default(150),
 		page: z.coerce.number().min(1).default(1),
 		rat: z
 			.string()
 			.regex(/^(?:cdma|umts|gsm|lte|5g|iot)(?:,(?:cdma|umts|gsm|lte|5g|iot))*$/i)
-			.optional(),
+			.optional()
+			.transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
 		operators: z
 			.string()
 			.regex(/^\d+(,\d+)*$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined =>
+				val
+					? val
+							.split(",")
+							.map(Number)
+							.filter((n) => !Number.isNaN(n))
+					: undefined,
+			),
 		bands: z
 			.string()
 			.regex(/^\d+(,\d+)*$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined =>
+				val
+					? val
+							.split(",")
+							.map(Number)
+							.filter((n) => !Number.isNaN(n))
+					: undefined,
+			),
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(stationResponseSchema),
 		}),
 	},
 };
 
+type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
+
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Station[]>>) {
-	const { limit = undefined, page = 1, bounds, rat, operators, bands } = req.query;
+	const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
-	let locationIds: number[] | undefined;
-
+	let envelope: ReturnType<typeof sql> | undefined;
 	if (bounds) {
-		const splitBounds = bounds.split(",").map(Number);
-		if (splitBounds.length !== 4 || splitBounds.some(Number.isNaN)) throw new ErrorResponse("BAD_REQUEST");
-		const [la1, lo1, la2, lo2] = splitBounds as [number, number, number, number];
+		const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
 		const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
 		const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
-
-		const boundaryLocations = await db
-			.select({ id: locations.id })
-			.from(locations)
-			.where(sql`ST_Intersects(${locations.point}, ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326))`);
-
-		locationIds = boundaryLocations.map((loc) => loc.id);
-		if (!locationIds.length) return res.send({ success: true, data: [] });
+		envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
 	}
 
 	let bandIds: number[] | undefined;
-	if (bands) {
-		const requestedBandIds = bands.split(",").map(Number);
+	if (bandValues) {
 		const validBands = await db.query.bands.findMany({
 			columns: { id: true },
-			where: (fields, { inArray }) => inArray(fields.value, requestedBandIds),
+			where: (fields, { inArray }) => inArray(fields.value, bandValues),
 		});
 
 		bandIds = validBands.map((band) => band.id);
-		if (!bandIds.length) return res.send({ success: true, data: [] });
+		if (!bandIds.length) return res.send({ data: [] });
 	}
 
-	let operatorIds: number[] | undefined;
-	if (operators) {
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: nah
-		const operatorQueries = operators.split(",").map((op) => {
-			const mnc = Number.parseInt(op, 10);
-			if (!Number.isNaN(mnc)) {
-				return db.query.operators.findMany({
-					columns: { id: true },
-					where: (fields, { eq }) => eq(fields.mnc, mnc),
-				});
-			}
-		});
+	const operatorRows = operatorMncs?.length
+		? await db.query.operators.findMany({
+				columns: { id: true },
+				where: (f, { inArray }) => inArray(f.mnc, operatorMncs),
+			})
+		: [];
 
-		const operatorResults = await Promise.all(operatorQueries);
-		const flattenedResults = operatorResults.flat().filter((op): op is NonNullable<typeof op> => op !== undefined);
-		operatorIds = flattenedResults.map((op) => op.id);
-		if (!operatorIds.length) return res.send({ success: true, data: [] });
-	}
+	const operatorIds = operatorRows.map((r) => r.id);
 
-	const requestedRats = rat ? rat.toLowerCase().split(",").filter(Boolean) : [];
+	const requestedRats = rat ?? [];
 	type NonIotRat = "GSM" | "UMTS" | "LTE" | "NR";
 	const ratMap: Record<string, NonIotRat> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR" } as const;
 	const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
@@ -141,38 +115,69 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 	try {
 		const btsStations = await db.query.stations.findMany({
-			with: {
-				cells: {
-					columns: {
-						band_id: false,
-					},
-					with: {
-						band: true,
-						gsm: true,
-						umts: true,
-						lte: true,
-						nr: true,
-					},
-					where: (fields, { and, inArray, or, eq }) => {
-						if (bandIds && nonIotRats.length) return and(inArray(fields.band_id, bandIds), or(...nonIotRats.map((r) => eq(fields.rat, r))));
-						if (bandIds) return inArray(fields.band_id, bandIds);
-						if (nonIotRats.length) return or(...nonIotRats.map((r) => eq(fields.rat, r)));
-						return undefined;
-					},
-				},
-				location: { columns: { point: false, region_id: false }, with: { region: true } },
-				operator: true,
-				networks: { columns: { station_id: false } },
+			where: (fields, { and, inArray }) => {
+				const conditions = [];
+				if (operatorIds.length) conditions.push(inArray(fields.operator_id, operatorIds));
+				if (envelope)
+					conditions.push(sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND ST_Intersects(l.point, ${envelope}))`);
+
+				if ((bandIds?.length ?? 0) || nonIotRats.length || iotRequested) {
+					const bandCond = bandIds?.length
+						? sql` AND c.band_id = ANY(ARRAY[${sql.join(
+								bandIds.map((id) => sql`${id}`),
+								sql`,`,
+							)}]::int4[])`
+						: sql``;
+					const ratCond = nonIotRats.length
+						? sql` AND c.rat IN (${sql.join(
+								nonIotRats.map((r) => sql`${r}`),
+								sql`,`,
+							)})`
+						: sql``;
+					const iotCond = iotRequested
+						? sql` AND (
+								EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
+								OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
+							)`
+						: sql``;
+
+					conditions.push(sql`
+						EXISTS (
+							SELECT 1
+							FROM cells c
+							WHERE c.station_id = ${stations.id}
+							${bandCond}
+							${ratCond}
+							${iotCond}
+						)
+					`);
+				}
+
+				return conditions.length ? and(...conditions) : undefined;
 			},
 			columns: {
 				status: false,
 			},
-			where: (fields, { and, inArray }) => {
-				const conditions = [];
-				if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
-				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
-
-				return conditions.length > 0 ? and(...conditions) : undefined;
+			with: {
+				cells: {
+					columns: { band_id: false },
+					with: { band: true },
+					where: (fields, { and, inArray, or, eq }) => {
+						const cellConds = [];
+						if (bandIds) cellConds.push(inArray(fields.band_id, bandIds));
+						if (nonIotRats.length) cellConds.push(or(...nonIotRats.map((r) => eq(fields.rat, r))));
+						if (iotRequested) {
+							cellConds.push(
+								sql`(EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = ${fields.id} AND lc.supports_nb_iot = true)
+								     OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = ${fields.id} AND nc.supports_nr_redcap = true))`,
+							);
+						}
+						return cellConds.length ? and(...cellConds) : undefined;
+					},
+				},
+				location: { columns: { point: false, region_id: false }, with: { region: true } },
+				operator: { columns: { is_isp: false } },
+				networks: { columns: { station_id: false } },
 			},
 			limit,
 			offset,
@@ -180,42 +185,20 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		});
 
 		const mappedStations: Station[] = btsStations.map((station: StationRaw) => {
-			const cellsWithDetails = station.cells.map((cell: CellWithRats) => {
-				const { gsm, umts, lte, nr, band, ...rest } = cell;
-				return { ...rest, band, details: gsm ?? umts ?? lte ?? nr ?? null };
+			const cellsWithoutDetails = station.cells.map((cell) => {
+				const { band, ...rest } = cell;
+				return { ...rest, band };
 			});
 
-			const stationWithNetworks = { ...station, cells: cellsWithDetails } as Station & { networks?: z.infer<typeof networksSchema> | null };
+			const stationWithNetworks = { ...station, cells: cellsWithoutDetails } as Station & { networks?: z.infer<typeof networksSchema> | null };
 			if (!stationWithNetworks.networks) delete (stationWithNetworks as { networks?: unknown }).networks;
 			return stationWithNetworks as Station;
 		});
 
-		const hasNbIot = (d: z.infer<typeof cellDetailsSchema>): d is z.infer<typeof lteCellsSchema> =>
-			Boolean(d && typeof d === "object" && "supports_nb_iot" in d);
-		const hasNrRedcap = (d: z.infer<typeof cellDetailsSchema>): d is z.infer<typeof nrCellsSchema> =>
-			Boolean(d && typeof d === "object" && "supports_nr_redcap" in d);
-
-		const finalStations: Station[] = mappedStations.map((station) => {
-			if (!iotRequested && !nonIotRats.length) return station;
-			const nextCells = station.cells.filter((cell) => {
-				const matchesNonIot = nonIotRats.length ? nonIotRats.includes(cell.rat as NonIotRat) : true;
-				const iotCapable =
-					(cell.rat === "LTE" && hasNbIot(cell.details) && cell?.details?.supports_nb_iot) ||
-					(cell.rat === "NR" && hasNrRedcap(cell.details) && cell?.details?.supports_nr_redcap);
-				if (iotRequested && !nonIotRats.length) return iotCapable;
-				if (iotRequested && nonIotRats.length) return matchesNonIot || iotCapable;
-				return matchesNonIot;
-			});
-			return { ...station, cells: nextCells } as Station;
-		});
-
-		const filteredStations = rat ? finalStations.filter((station) => station.cells.length > 0) : finalStations;
-
-		res.send({ success: true, data: filteredStations });
+		return res.send({ data: mappedStations });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		console.log(error);
-		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR", { cause: error });
 	}
 }
 

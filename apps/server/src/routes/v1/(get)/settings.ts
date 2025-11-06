@@ -9,7 +9,6 @@ type Response = RuntimeSettings;
 const schemaRoute = {
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.object({
 				enforceAuthForAllRoutes: z.boolean(),
 				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
@@ -21,7 +20,7 @@ const schemaRoute = {
 
 async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>) {
 	const settings = getRuntimeSettings();
-	res.send({ success: true, data: settings });
+	res.send({ data: settings });
 }
 
 const getSettings: Route<never, Response> = {

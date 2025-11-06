@@ -49,6 +49,7 @@ export const operators = pgTable(
 export const regions = pgTable("regions", {
 	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
+	code: varchar("code", { length: 3 }).notNull().unique(),
 });
 
 /**
@@ -317,14 +318,14 @@ export const nrCells = pgTable(
 			.notNull(),
 		nrtac: integer("nrtac"),
 		gnbid: integer("gnbid"),
-		clid: integer("clid").notNull(),
+		clid: integer("clid"),
 		nci: integer("nci").unique(),
 		supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
-		unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid),
+		unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid).nullsNotDistinct(),
 		index("nr_cells_redcap_true_idx").on(t.gnbid, t.clid).where(sql`${t.supports_nr_redcap} = true`),
 		index("nr_cells_gnbid_trgm_idx").using("gin", sql`(${t.gnbid}::text) gin_trgm_ops`),
 		index("nr_cells_nci_trgm_idx").using("gin", sql`(${t.nci}::text) gin_trgm_ops`),

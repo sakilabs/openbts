@@ -53,7 +53,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(
 				stationsSelectSchema.extend({
 					cells: z.array(cellWithDetailsSchema),
@@ -238,7 +237,6 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	}
 
 	return res.send({
-		success: true,
 		data: Array.from(stationMap.values()),
 	});
 }

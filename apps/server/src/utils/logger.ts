@@ -3,8 +3,19 @@ import { Axiom } from "@axiomhq/js";
 
 import type { Transport } from "@axiomhq/logging";
 
-function serializeError(err: unknown): { name: string; message: string; stack?: string } {
-	if (err instanceof Error) return { name: err.name, message: err.message, stack: err.stack };
+function serializeError(err: unknown): { name: string; message: string; stack?: string; cause?: unknown } {
+	if (err instanceof Error) {
+		const anyErr = err as unknown as { cause?: unknown };
+		const serialized: { name: string; message: string; stack?: string; cause?: unknown } = {
+			name: err.name,
+			message: err.message,
+			stack: err.stack,
+		};
+		if (anyErr.cause !== undefined) {
+			serialized.cause = anyErr.cause instanceof Error ? serializeError(anyErr.cause) : String(anyErr.cause);
+		}
+		return serialized;
+	}
 	return { name: "UnknownError", message: String(err) };
 }
 

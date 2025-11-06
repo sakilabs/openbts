@@ -37,7 +37,6 @@ const schemaRoute = {
 	body: requestSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: cellsSelectSchema.extend({ details: cellDetailsSchema }),
 		}),
 	},
@@ -101,7 +100,7 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
 			}
 		}
 
-		return res.send({ success: true, data: { ...inserted, details } as ResponseData });
+		return res.send({ data: { ...inserted, details } as ResponseData });
 	} catch {
 		throw new ErrorResponse("FAILED_TO_CREATE");
 	}

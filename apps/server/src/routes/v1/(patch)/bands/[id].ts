@@ -19,7 +19,6 @@ const schemaRoute = {
 	body: bandsUpdateSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: bandsSelectSchema,
 		}),
 	},
@@ -41,7 +40,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		const [updated] = await db.update(bands).set(req.body).where(eq(bands.id, band_id)).returning();
 		if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-		return res.send({ success: true, data: updated });
+		return res.send({ data: updated });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_UPDATE");

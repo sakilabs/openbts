@@ -25,7 +25,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: permitsSchema.extend({
 				band: bandsSchema,
 				operator: operatorsSchema,
@@ -63,7 +62,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 		if (!permitLink || !permitLink.permit) throw new ErrorResponse("NOT_FOUND");
 		const stationPermit = permitLink.permit;
 
-		return res.send({ success: true, data: stationPermit });
+		return res.send({ data: stationPermit });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

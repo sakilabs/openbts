@@ -35,7 +35,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: cellsSchema.extend({ station: stationsSchema, band: bandsSchema, details: cellDetailsSchema }),
 		}),
 	},
@@ -44,8 +43,6 @@ type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cell>>) {
 	const { station_id, cell_id } = req.params;
-
-	if (Number.isNaN(station_id) || Number.isNaN(cell_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
 		where: (fields, { eq }) => eq(fields.id, station_id),
@@ -58,10 +55,11 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 		columns: { band_id: false },
 	});
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
+	if (cell.station_id !== station_id) throw new ErrorResponse("INVALID_QUERY", { message: "Requested cell does not belong to this station" });
 
 	const { gsm, umts, lte, nr, ...rest } = cell as CellWithRats;
 	const details: CellDetails = gsm ?? umts ?? lte ?? nr ?? null;
-	return res.send({ success: true, data: { ...rest, details } as Cell });
+	return res.send({ data: { ...rest, details } as Cell });
 }
 
 const getCellFromStation: Route<ReqParams, Cell> = {

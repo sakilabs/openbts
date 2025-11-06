@@ -66,7 +66,7 @@ type RadioLineResponse = z.infer<typeof radioLineResponseSchema>;
 const schemaRoute = {
 	params: z.object({ id: z.coerce.number<number>() }),
 	response: {
-		200: z.object({ success: z.boolean(), data: radioLineResponseSchema }),
+		200: z.object({ data: radioLineResponseSchema }),
 	},
 };
 
@@ -149,7 +149,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 			createdAt: radioLine.createdAt,
 		};
 
-		return res.send({ success: true, data });
+		return res.send({ data });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

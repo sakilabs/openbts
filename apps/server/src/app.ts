@@ -88,7 +88,6 @@ export default class App {
 			}
 
 			const errorResponse: {
-				success: boolean;
 				errors: {
 					code: string;
 					message: string;
@@ -98,7 +97,6 @@ export default class App {
 					}[];
 				}[];
 			} = {
-				success: false,
 				errors: [
 					{
 						code,

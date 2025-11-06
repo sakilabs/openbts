@@ -13,7 +13,6 @@ const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(operatorsSchema),
 		}),
 	},
@@ -27,7 +26,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Response
 			is_isp: false,
 		},
 	});
-	return res.send({ success: true, data: operators });
+	return res.send({ data: operators });
 }
 
 const getOperators: Route<RouteGenericInterface, ResponseData[]> = {

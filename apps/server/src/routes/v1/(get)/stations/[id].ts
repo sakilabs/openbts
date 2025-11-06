@@ -43,7 +43,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: stationSchema.extend({
 				cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
 				location: locationSchema.extend({ region: regionSchema }),
@@ -62,14 +61,14 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		with: {
 			cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
 			location: { columns: { point: false, region_id: false }, with: { region: true } },
-			operator: true,
+			operator: { columns: { is_isp: false } },
 			networks: { columns: { station_id: false } },
 		},
 		columns: { status: false },
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
-	const cells: CellResponse[] = (station.cells as CellWithRats[]).map((cell: CellWithRats) => {
+	const cells: CellResponse[] = (station.cells as CellWithRats[]).map((cell) => {
 		const { gsm, umts, lte, nr, band, ...rest } = cell;
 		const details: CellDetails = gsm ?? umts ?? lte ?? nr ?? null;
 		return { ...rest, band, details };
@@ -77,7 +76,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
 	const data = { ...station, cells } as StationResponse & { networks?: z.infer<typeof networksSchema> | null };
 	if (!data.networks) delete (data as { networks?: unknown }).networks;
-	return res.send({ success: true, data });
+	return res.send({ data });
 }
 
 const getStation: Route<IdParams, StationResponse> = {

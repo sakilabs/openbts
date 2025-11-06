@@ -20,7 +20,6 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const submissionsSelectSchema = createSelectSchema(submissions);
 
-// Build request schema using drizzle-zod insert schemas
 const submissionsInsertBase = createInsertSchema(submissions).omit({ createdAt: true, updatedAt: true, submitter_id: true });
 const proposedStationInsert = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
@@ -48,7 +47,6 @@ const schemaRoute = {
 	body: requestSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: submissionsSelectSchema,
 		}),
 	},
@@ -126,7 +124,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			}
 		}
 
-		return res.send({ success: true, data: submission });
+		return res.send({ data: submission });
 	} catch {
 		throw new ErrorResponse("FAILED_TO_CREATE");
 	}

@@ -23,7 +23,6 @@ async function handler(req: FastifyRequest, res: FastifyReply) {
 		const response = await auth.handler(request);
 
 		res.status(response.status);
-		// biome-ignore lint/suspicious/useIterableCallbackReturn: bc no
 		response.headers.forEach((value, key) => res.header(key, value));
 		if (response.status === 500) throw new ErrorResponse("AUTH_FAILURE");
 		res.send(response.body ? await response.text() : null);

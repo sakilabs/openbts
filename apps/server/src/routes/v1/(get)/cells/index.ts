@@ -28,7 +28,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(cellResponseSchema),
 		}),
 	},
@@ -50,7 +49,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 	const rows = await db.query.cells.findMany({
 		with: {
-			station: true,
+			station: {
+				columns: { status: false },
+			},
 			band: true,
 			gsm: true,
 			umts: true,
@@ -70,7 +71,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		};
 	});
 
-	return res.send({ success: true, data });
+	return res.send({ data });
 }
 
 const getCells: Route<ReqQuery, ResponseData> = {

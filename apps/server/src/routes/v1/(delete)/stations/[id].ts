@@ -7,19 +7,14 @@ import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, SuccessResponse, Route } from "../../../../interfaces/routes.interface.js";
+import type { IdParams, EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
 	params: z.object({
 		id: z.coerce.number<number>(),
 	}),
-	response: {
-		200: z.object({
-			success: z.boolean(),
-		}),
-	},
 };
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
+async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyResponse>) {
 	const { id: stationId } = req.params;
 
 	if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
@@ -55,15 +50,13 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessR
 			await tx.delete(stations).where(eq(stations.id, stationId));
 		});
 
-		return res.send({
-			success: true,
-		});
+		return res.status(204).send();
 	} catch {
 		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 }
 
-const deleteStation: Route<IdParams> = {
+const deleteStation: Route<IdParams, void> = {
 	url: "/stations/:id",
 	method: "DELETE",
 	schema: schemaRoute,

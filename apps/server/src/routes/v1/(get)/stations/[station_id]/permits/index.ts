@@ -23,7 +23,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(
 				ukePermitsSchema.extend({
 					band: bandsSchema.optional(),
@@ -66,7 +65,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 		const stationPermits = permitsLinks.map((link) => link.permit).filter((permit): permit is NonNullable<typeof permit> => permit !== null);
 		if (!stationPermits.length) throw new ErrorResponse("NOT_FOUND");
 
-		return res.send({ success: true, data: stationPermits });
+		return res.send({ data: stationPermits });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

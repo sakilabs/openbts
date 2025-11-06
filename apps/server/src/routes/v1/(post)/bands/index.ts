@@ -17,7 +17,6 @@ const schemaRoute = {
 	body: bandsInsertSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: bandsSelectSchema,
 		}),
 	},
@@ -27,7 +26,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	try {
 		const [band] = await db.insert(bands).values(req.body).returning();
 
-		return res.send({ success: true, data: band });
+		if (!band) throw new ErrorResponse("FAILED_TO_CREATE");
+		return res.send({ data: band });
 	} catch {
 		throw new ErrorResponse("FAILED_TO_CREATE");
 	}

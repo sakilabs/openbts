@@ -1,6 +1,4 @@
-import { eq, inArray, and, or } from "drizzle-orm";
-import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
+import { eq, inArray } from "drizzle-orm";
 
 import {
 	bands,
@@ -16,7 +14,8 @@ import {
 	type ratEnum,
 	type DuplexType,
 } from "@openbts/drizzle";
-import * as schema from "@openbts/drizzle";
+import { sql, db } from "@openbts/drizzle/db";
+import type { Database } from "@openbts/drizzle/db";
 import type { PreparedBandKey, PreparedCell, PreparedLocation, PreparedOperator, PreparedRegion, PreparedStation } from "./transformers.js";
 
 export interface RegionIdMap extends Map<string, number> {}
@@ -49,14 +48,8 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 	return out;
 }
 
-const url = process.env.DATABASE_URL as string;
-if (!url) {
-	throw new Error("DATABASE_URL is not set");
-}
-
-export const sql = postgres(url);
-export const db = drizzle({ client: sql, schema });
-export type Database = typeof db;
+export { sql, db };
+export type { Database };
 
 export async function writeRegions(items: PreparedRegion[], options: WriteOptions = {}): Promise<RegionIdMap> {
 	const unique = new Map<string, PreparedRegion>();
@@ -68,7 +61,7 @@ export async function writeRegions(items: PreparedRegion[], options: WriteOption
 			if (group.length === 0) continue;
 			await db
 				.insert(regions)
-				.values(group.map((r) => ({ name: r.name })))
+				.values(group.map((r) => ({ name: r.name, code: r.code })))
 				.onConflictDoNothing({ target: [regions.name] });
 			options.onProgress?.(group.length);
 		}
@@ -424,7 +417,7 @@ export async function writeCellsAndDetails(
 			await db
 				.insert(nrCells)
 				.values(group)
-				.onConflictDoNothing({ target: [nrCells.gnbid, nrCells.clid] });
+				.onConflictDoNothing({ target: [nrCells.cell_id] });
 			options.onProgress?.(group.length);
 			options.onPhase?.("NR", group.length);
 		}

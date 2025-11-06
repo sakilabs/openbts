@@ -27,7 +27,7 @@ export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 	const operators = prepareOperators(legacy.networks);
 	const locations = prepareLocations(legacy.locations, legacy.regions);
 	const bandKeys = prepareBands(legacy.cells);
-	const stations = prepareStations(legacy.baseStations);
+	const stations = prepareStations(legacy.baseStations, operators);
 	const stationsById = new Map(legacy.baseStations.map((station) => [station.id, station]));
 	const cells = prepareCells(legacy.cells, stationsById);
 

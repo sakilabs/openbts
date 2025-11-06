@@ -3,6 +3,7 @@ import { mapDuplex, mapStandardToRat, stripNotes, toInt, type Rat } from "../uti
 
 export interface PreparedRegion {
 	name: string;
+	code: string;
 }
 export interface PreparedOperator {
 	name: string;
@@ -67,7 +68,7 @@ export interface PreparedLTEDetails {
 export interface PreparedNRDetails {
 	nrtac: number | null;
 	gnbid: number | null;
-	clid: number;
+	clid: number | null;
 	supports_nr_redcap: boolean;
 }
 
@@ -78,7 +79,7 @@ export type PreparedCell =
 	| (PreparedCellBase & { rat: "NR"; nr: PreparedNRDetails });
 
 export function prepareRegions(rows: LegacyRegionRow[]): PreparedRegion[] {
-	return rows.map((r) => ({ name: r.name }));
+	return rows.map((r) => ({ name: r.name.trim(), code: r.code.trim() }));
 }
 
 export function prepareOperators(rows: LegacyNetworkRow[]): PreparedOperator[] {
@@ -109,20 +110,44 @@ export function prepareLocations(rows: LegacyLocationRow[], regions: LegacyRegio
 		}));
 }
 
-export function prepareStations(rows: LegacyBaseStationRow[]): PreparedStation[] {
+export function prepareStations(rows: LegacyBaseStationRow[], operators: PreparedOperator[]): PreparedStation[] {
+	const mncToOperatorName = new Map<number, string>();
+	for (const operator of operators) {
+		mncToOperatorName.set(operator.mnc, operator.name);
+	}
+
 	return rows
 		.filter((station) => !(station.station_id === ""))
-		.map((station) => ({
-			original_id: station.id,
-			operator_mnc: Number(String(station.network_id).trim()),
-			location_original_id: station.location_id,
-			station_id: station.station_id.replace(/\?,/g, ""),
-			notes: station.notes ? stripNotes(station.notes.trim(), [/\bnetworks?\b/gi]) : null,
-			status: normalizeStatus(station.station_status),
-			is_confirmed: station.edit_status.toLowerCase() === "published",
-			date_added: new Date(station.date_added),
-			date_updated: new Date(station.date_updated),
-		}));
+		.map((station) => {
+			const operator_mnc = Number(String(station.network_id).trim());
+			let stationId = station.station_id;
+
+			if (stationId.startsWith("?,")) {
+				stationId = stationId.substring(2);
+				const operatorName = mncToOperatorName.get(operator_mnc);
+
+				switch (operatorName) {
+					case "T-Mobile":
+						stationId = `O-${stationId}`;
+						break;
+					case "Orange":
+						stationId = `T-${stationId}`;
+						break;
+				}
+			}
+
+			return {
+				original_id: station.id,
+				operator_mnc,
+				location_original_id: station.location_id,
+				station_id: stationId,
+				notes: station.notes ? stripNotes(station.notes.trim(), [/\bnetworks?\b/gi]) : null,
+				status: normalizeStatus(station.station_status),
+				is_confirmed: station.edit_status.toLowerCase() === "published",
+				date_added: new Date(station.date_added),
+				date_updated: new Date(station.date_updated),
+			};
+		});
 }
 
 export function prepareBands(cells: LegacyCellRow[]): PreparedBandKey[] {
@@ -169,32 +194,37 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 			date_added: new Date(cell.date_added),
 			date_updated: new Date(cell.date_updated),
 		};
-		if (rat === "GSM") {
-			out.push({ ...base, rat, gsm: { lac: toInt(cell.lac), cid: toInt(cell.cid), e_gsm: cell.notes?.includes("[E-GSM]") ?? false } });
-			continue;
-		}
-		if (rat === "UMTS") {
-			const rnc = toInt(station.rnc) ?? 0;
-			const cid = toInt(cell.cid) ?? 0;
-			if (!rnc || !cid) continue;
-			out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid, carrier: toInt(cell.ua_freq) } });
-			continue;
-		}
-		if (rat === "LTE") {
-			const enbid = toInt(station.enbi) ?? 0;
-			const tac = toInt(cell.lac) ?? null;
-			let clid = toInt(cell.cid) ?? 0;
-			if (clid < 0) clid = 0;
-			if (clid > 255) clid = clid % 256;
-			if (!enbid || !clid) continue;
-			out.push({ ...base, rat, lte: { tac, enbid, clid, supports_nb_iot: false } });
-			continue;
-		}
-		if (rat === "NR") {
-			const gnbid = toInt(station.enbi) ?? null;
-			const clid = toInt(cell.cid) ?? 0;
-			if (!clid) continue;
-			out.push({ ...base, rat, nr: { nrtac: null, gnbid, clid, supports_nr_redcap: false } });
+
+		switch (rat) {
+			case "GSM":
+				out.push({ ...base, rat, gsm: { lac: toInt(cell.lac), cid: toInt(cell.cid), e_gsm: cell.notes?.includes("[E-GSM]") ?? false } });
+				break;
+			case "UMTS":
+				{
+					const rnc = toInt(station.rnc) ?? 0;
+					const cid = toInt(cell.cid) ?? 0;
+					if (!rnc || !cid) continue;
+					out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid, carrier: toInt(cell.ua_freq) } });
+				}
+				break;
+			case "LTE":
+				{
+					const enbid = toInt(station.enbi) ?? 0;
+					const tac = toInt(cell.lac) ?? null;
+					let clid = toInt(cell.cid) ?? 0;
+					if (clid < 0) clid = 0;
+					if (clid > 255) clid = clid % 256;
+					if (!enbid || !clid) continue;
+					out.push({ ...base, rat, lte: { tac, enbid, clid, supports_nb_iot: false } });
+				}
+				break;
+			case "NR":
+				{
+					const gnbid = toInt(station.enbi) ?? null;
+					const clid = toInt(cell.cid) ?? null;
+					out.push({ ...base, rat, nr: { nrtac: null, gnbid, clid, supports_nr_redcap: false } });
+				}
+				break;
 		}
 	}
 	return out;

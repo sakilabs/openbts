@@ -94,7 +94,7 @@ export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {
 		.references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	nrtac: integer("nrtac"),
 	gnbid: integer("gnbid"),
-	clid: integer("clid").notNull(),
+	clid: integer("clid"),
 	nci: integer("nci").unique(),
 });
 

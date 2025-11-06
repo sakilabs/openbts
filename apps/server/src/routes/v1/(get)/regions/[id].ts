@@ -16,7 +16,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: regionsSchema,
 		}),
 	},
@@ -31,7 +30,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	});
 	if (!region) throw new ErrorResponse("NOT_FOUND");
 
-	return res.send({ success: true, data: region });
+	return res.send({ data: region });
 }
 
 const getRegion: Route<IdParams, Region> = {

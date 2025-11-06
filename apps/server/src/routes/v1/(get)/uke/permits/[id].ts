@@ -18,7 +18,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: permitsSchema.extend({
 				band: bandsSchema,
 				operator: operatorsSchema,
@@ -46,7 +45,6 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		if (!permit) throw new ErrorResponse("NOT_FOUND");
 
 		return res.send({
-			success: true,
 			data: permit,
 		});
 	} catch (error) {

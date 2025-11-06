@@ -30,5 +30,8 @@
 		"npm": "please-use-pnpm",
 		"pnpm": ">=8",
 		"yarn": "please-use-pnpm"
+	},
+	"dependencies": {
+		"tsx": "4.20.5"
 	}
 }

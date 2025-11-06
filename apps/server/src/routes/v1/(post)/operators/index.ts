@@ -17,7 +17,6 @@ const schemaRoute = {
 	body: operatorsInsertSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: operatorsSelectSchema,
 		}),
 	},
@@ -25,9 +24,10 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	try {
-		const operator = await db.insert(operators).values(req.body).returning();
+		const [operator] = await db.insert(operators).values(req.body).returning();
 
-		return res.send({ success: true, data: operator[0] });
+		if (!operator) throw new ErrorResponse("FAILED_TO_CREATE");
+		return res.send({ data: operator });
 	} catch {
 		throw new ErrorResponse("FAILED_TO_CREATE");
 	}

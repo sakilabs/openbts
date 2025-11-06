@@ -11,14 +11,15 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"dotenv": "17.2.1",
-		"drizzle-orm": "0.44.5",
-		"nanoid": "5.1.5",
-		"tsx": "4.20.5"
+		"dotenv": "17.2.3",
+		"drizzle-orm": "0.44.7",
+		"nanoid": "5.1.6",
+		"postgres": "3.4.7",
+		"tsx": "4.20.6"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",
-		"drizzle-kit": "0.31.4"
+		"drizzle-kit": "0.31.6"
 	},
 	"exports": {
 		".": {
@@ -28,6 +29,10 @@
 		"./types": {
 			"types": "./schemas/types.ts",
 			"default": "./dist/schemas/types.js"
+		},
+		"./db": {
+			"types": "./db.ts",
+			"default": "./dist/db.js"
 		}
 	}
 }

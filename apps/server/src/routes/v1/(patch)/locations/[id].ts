@@ -19,7 +19,6 @@ const schemaRoute = {
 	body: locationsUpdateSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: locationsSelectSchema,
 		}),
 	},
@@ -43,7 +42,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
 		return res.send({
-			success: true,
 			data: updated,
 		});
 	} catch (error) {

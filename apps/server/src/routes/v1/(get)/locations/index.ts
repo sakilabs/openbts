@@ -25,7 +25,6 @@ const schemaRoute = {
 		.optional(),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(
 				locationsSchema.extend({
 					region: regionsSchema,
@@ -61,7 +60,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		},
 		where: whereClause,
 	});
-	return res.send({ success: true, data: locationRows });
+	return res.send({ data: locationRows });
 }
 
 const getLocations: Route<ReqQuery, ResponseData[]> = {

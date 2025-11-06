@@ -81,13 +81,13 @@ CREATE TABLE "nr_cells" (
 	"cell_id" integer PRIMARY KEY NOT NULL,
 	"nrtac" integer,
 	"gnbid" integer,
-	"clid" integer NOT NULL,
+	"clid" integer,
 	"nci" integer,
 	"supports_nr_redcap" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "nr_cells_nci_unique" UNIQUE("nci"),
-	CONSTRAINT "nr_cells_gnbid_clid_unique" UNIQUE("gnbid","clid")
+	CONSTRAINT "nr_cells_gnbid_clid_unique" UNIQUE NULLS NOT DISTINCT("gnbid","clid")
 );
 --> statement-breakpoint
 CREATE TABLE "operators" (
@@ -386,7 +386,7 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 	"proposed_cell_id" integer PRIMARY KEY NOT NULL,
 	"nrtac" integer,
 	"gnbid" integer,
-	"clid" integer NOT NULL,
+	"clid" integer,
 	"nci" integer,
 	CONSTRAINT "proposed_nr_cells_nci_unique" UNIQUE("nci")
 );

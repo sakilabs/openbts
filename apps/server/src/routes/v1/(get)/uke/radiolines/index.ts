@@ -69,7 +69,8 @@ const schemaRoute = {
 		bounds: z
 			.string()
 			.regex(/^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$/)
-			.optional(),
+			.optional()
+			.transform((val): number[] | undefined => (val ? val.split(",").map(Number) : undefined)),
 		limit: z.coerce.number().min(1).optional().default(150),
 		page: z.coerce.number().min(1).default(1),
 		operator: z.string().optional(),
@@ -78,7 +79,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(radioLineResponseSchema),
 		}),
 	},
@@ -97,9 +97,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		const conditions: (SQL<unknown> | undefined)[] = [];
 
 		if (bounds) {
-			const coords = bounds.split(",").map(Number);
-			if (coords.length !== 4 || coords.some(Number.isNaN)) throw new ErrorResponse("INVALID_QUERY");
-			const [la1, lo1, la2, lo2] = coords as [number, number, number, number];
+			const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
 			const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
 			const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
 
@@ -186,7 +184,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			createdAt: radioLine.createdAt,
 		}));
 
-		res.send({ success: true, data });
+		res.send({ data });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

@@ -13,7 +13,6 @@ const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(regionsSchema),
 		}),
 	},
@@ -22,7 +21,7 @@ type Region = z.infer<typeof regionsSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Region[]>>) {
 	const regions = await db.query.regions.findMany();
-	return res.send({ success: true, data: regions });
+	return res.send({ data: regions });
 }
 
 const getRegions: Route<RouteGenericInterface, Region[]> = {

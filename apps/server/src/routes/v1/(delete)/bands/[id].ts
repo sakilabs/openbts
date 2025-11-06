@@ -7,20 +7,15 @@ import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, SuccessResponse, Route } from "../../../../interfaces/routes.interface.js";
+import type { IdParams, EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
 	params: z.object({
 		id: z.coerce.number<number>(),
 	}),
-	response: {
-		200: z.object({
-			success: z.boolean(),
-		}),
-	},
 };
 
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessResponse>) {
+async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyResponse>) {
 	const { id } = req.params;
 
 	const band = await db.query.bands.findFirst({
@@ -34,10 +29,10 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<SuccessR
 		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
 
-	return res.send({ success: true });
+	return res.status(204).send();
 }
 
-const deleteBand: Route<IdParams> = {
+const deleteBand: Route<IdParams, void> = {
 	url: "/bands/:id",
 	method: "DELETE",
 	config: { permissions: ["delete:bands"] },

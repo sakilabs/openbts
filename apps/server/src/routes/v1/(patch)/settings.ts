@@ -18,7 +18,6 @@ const schemaRoute = {
 		.strict(),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.object({
 				enforceAuthForAllRoutes: z.boolean(),
 				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
@@ -32,7 +31,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	const patch = req.body;
 	if (!patch || typeof patch !== "object") throw new ErrorResponse("BAD_REQUEST");
 	const updated = await updateRuntimeSettings(patch);
-	res.send({ success: true, data: updated });
+	res.send({ data: updated });
 }
 
 const patchSettings: Route<ReqBody, Response> = {

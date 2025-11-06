@@ -32,7 +32,6 @@ const proposedCellWithDetails = proposedCellsSchema.extend({ details: proposedDe
 const schemaRoute = {
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(
 				submissionsSchema.extend({
 					station: stationsSchema,
@@ -87,7 +86,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Submissi
 		cells: cellsBySubmission.get(s.id) ?? [],
 	}));
 
-	return res.send({ success: true, data });
+	return res.send({ data });
 }
 
 const getSubmissions: Route<RouteGenericInterface, Submission[]> = {

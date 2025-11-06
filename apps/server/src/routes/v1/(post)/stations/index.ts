@@ -44,7 +44,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: stationSchema.extend({
 				cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
 				location: locationSchema,
@@ -142,7 +141,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			return response;
 		});
 
-		return res.send({ success: true, data: station });
+		return res.send({ data: station });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_CREATE");

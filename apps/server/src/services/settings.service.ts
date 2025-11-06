@@ -70,9 +70,7 @@ export async function initRuntimeSettings(): Promise<void> {
 		try {
 			const parsed = JSON.parse(message);
 			if (isSettings(parsed)) inMemorySettings = parsed;
-		} catch {
-			// no catch
-		}
+		} catch {}
 	});
 
 	initialized = true;

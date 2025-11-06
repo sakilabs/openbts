@@ -23,7 +23,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: cellsSchema
 				.extend({
 					station: stationsSchema,
@@ -71,7 +70,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		details: gsm ?? umts ?? lte ?? nr ?? null,
 	};
 
-	return res.send({ success: true, data: mapped });
+	return res.send({ data: mapped });
 }
 
 const getCell: Route<IdParams, ResponseData> = {

@@ -49,7 +49,6 @@ const schemaRoute = {
 	body: requestSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: cellsSelectSchema.extend({ details: cellDetailsSchema }),
 		}),
 	},
@@ -133,7 +132,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		});
 		const details = full?.gsm ?? full?.umts ?? full?.lte ?? full?.nr ?? null;
 
-		return res.send({ success: true, data: { ...updated, details } });
+		return res.send({ data: { ...updated, details } });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_UPDATE");

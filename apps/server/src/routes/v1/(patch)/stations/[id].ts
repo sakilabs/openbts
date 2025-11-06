@@ -24,7 +24,6 @@ const schemaRoute = {
 	body: stationsUpdateSchema,
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: stationsSelectSchema,
 		}),
 	},
@@ -53,7 +52,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			.returning();
 		if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-		return res.send({ success: true, data: updated });
+		return res.send({ data: updated });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_UPDATE");

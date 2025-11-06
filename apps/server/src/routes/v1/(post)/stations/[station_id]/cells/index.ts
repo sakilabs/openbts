@@ -41,7 +41,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(cellWithDetailsSelectSchema),
 		}),
 	},
@@ -118,7 +117,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 		const response: ResponseData = created.map((cell) => ({ ...cell, details: idToDetails.get(cell.id) ?? null }));
 
-		return res.send({ success: true, data: response });
+		return res.send({ data: response });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("FAILED_TO_CREATE");

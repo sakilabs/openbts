@@ -32,7 +32,6 @@ const schemaRoute = {
 	response: {
 		201: z
 			.object({
-				success: z.boolean(),
 				data: stationCommentSelectSchema,
 			})
 			.strict(),
@@ -117,7 +116,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 		if (!newComment) throw new ErrorResponse("FAILED_TO_CREATE");
 
-		return res.code(201).send({ success: true, data: newComment });
+		return res.code(201).send({ data: newComment });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

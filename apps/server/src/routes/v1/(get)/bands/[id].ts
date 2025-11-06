@@ -18,7 +18,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: bandSelectSchema,
 		}),
 	},
@@ -32,7 +31,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	});
 	if (!band) throw new ErrorResponse("NOT_FOUND");
 
-	return res.send({ success: true, data: band });
+	return res.send({ data: band });
 }
 
 const getBand: Route<IdParams, Band> = {

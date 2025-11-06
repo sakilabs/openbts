@@ -23,7 +23,6 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			success: z.boolean(),
 			data: z.array(cellsSchema.extend({ details: cellDetailsSchema, band: bandSchema })),
 		}),
 	},
@@ -39,7 +38,6 @@ type CellWithRats = z.infer<typeof cellsSchema> & {
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cells>>) {
 	const { station_id } = req.params;
-	if (Number.isNaN(station_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
 		where: (fields, { eq }) => eq(fields.id, station_id),
@@ -54,7 +52,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 		return { ...rest, details: gsm ?? umts ?? lte ?? nr ?? null };
 	});
 
-	return res.send({ success: true, data });
+	return res.send({ data });
 }
 
 const getCellsFromStation: Route<ReqParams, Cells> = {
