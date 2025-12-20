@@ -12,14 +12,15 @@
 	},
 	"dependencies": {
 		"dotenv": "17.2.3",
-		"drizzle-orm": "0.44.7",
+		"drizzle-orm": "0.45.1",
 		"nanoid": "5.1.6",
 		"postgres": "3.4.7",
-		"tsx": "4.20.6"
+		"redis": "5.10.0",
+		"tsx": "4.21.0"
 	},
 	"devDependencies": {
 		"@openbts/typescript-configs": "workspace:*",
-		"drizzle-kit": "0.31.6"
+		"drizzle-kit": "0.31.8"
 	},
 	"exports": {
 		".": {

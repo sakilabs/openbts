@@ -1,5 +1,5 @@
 import { inArray } from "drizzle-orm";
-import { bands, operators, regions, ukeLocations, type ratEnum } from "@openbts/drizzle";
+import { bands, regions, ukeLocations, ukeOperators, type ratEnum } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
@@ -9,14 +9,14 @@ export async function upsertRegions(items: Array<{ name: string; code: string }>
 	if (unique.length) {
 		await db
 			.insert(regions)
-			.values(unique.map((i) => ({ name: i.name, code: i.code })))
+			.values(unique.map((region) => ({ name: region.name, code: region.code })))
 			.onConflictDoNothing({ target: [regions.name] });
 	}
 	const rows = unique.length
 		? await db.query.regions.findMany({
 				where: inArray(
 					regions.name,
-					unique.map((i) => i.name),
+					unique.map((region) => region.name),
 				),
 			})
 		: [];
@@ -37,8 +37,8 @@ export async function upsertBands(keys: Array<{ rat: (typeof ratEnum.enumValues)
 	if (unique.length) {
 		await db
 			.insert(bands)
-			.values(unique.map((k) => ({ rat: k.rat, value: k.value, duplex: null, name: `${k.rat} ${k.value}` })))
-			.onConflictDoNothing({ target: [bands.rat, bands.value] });
+			.values(unique.map((band) => ({ rat: band.rat, value: band.value, duplex: null, name: `${band.rat} ${band.value}` })))
+			.onConflictDoNothing({ target: [bands.rat, bands.value, bands.duplex] });
 	}
 	const rows = unique.length
 		? await db.query.bands.findMany({
@@ -67,14 +67,15 @@ export async function upsertOperators(rawNames: string[]): Promise<Map<string, n
 	const values = Array.from(uniqueByName.values());
 	if (values.length) {
 		await db
-			.insert(operators)
-			.values(values.map((v) => ({ name: v.name, full_name: v.full_name, mnc: null, is_isp: false })))
-			.onConflictDoNothing({ target: [operators.name] });
+			.insert(ukeOperators)
+			.values(values.map((op) => ({ name: op.name, full_name: op.full_name })))
+			.onConflictDoNothing({ target: [ukeOperators.name] });
 	}
+
 	const rows = values.length
-		? await db.query.operators.findMany({
+		? await db.query.ukeOperators.findMany({
 				where: inArray(
-					operators.name,
+					ukeOperators.name,
 					values.map((v) => v.name),
 				),
 			})
@@ -101,15 +102,15 @@ export async function upsertUkeLocations(
 			await db
 				.insert(ukeLocations)
 				.values(
-					group.map((l) => ({
-						region_id: regionIds.get(l.regionName) ?? 0,
-						city: l.city ?? undefined,
-						address: l.address ?? undefined,
-						longitude: l.lon,
-						latitude: l.lat,
+					group.map((loc) => ({
+						region_id: regionIds.get(loc.regionName) ?? 0,
+						city: loc.city ?? undefined,
+						address: loc.address ?? undefined,
+						longitude: loc.lon,
+						latitude: loc.lat,
 					})),
 				)
-				.onConflictDoNothing({ target: [ukeLocations.longitude] });
+				.onConflictDoNothing({ target: [ukeLocations.longitude, ukeLocations.latitude] });
 		}
 	}
 

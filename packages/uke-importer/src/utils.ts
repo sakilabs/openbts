@@ -1,15 +1,13 @@
-import fs from "node:fs";
-import path from "node:path";
-import url from "node:url";
+import { unlinkSync, existsSync, mkdirSync, writeFileSync, rmdirSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { URL } from "node:url";
 import * as XLSX from "xlsx";
 import { DOWNLOAD_DIR } from "./config.js";
 
 export function convertDMSToDD(input: string): number {
 	const s = input.trim();
-	const m = s.match(/^(\d{1,3})([NSEW])(\d{2})'(\d{2})"$/);
-	if (!m) {
-		throw new Error("Invalid format. Expected <deg><N|S|E|W><mm>'<ss>\"");
-	}
+	const m = s.match(/^(?<deg>\d{1,3})(?<hemi>[NSEW])(?<min>\d{2})'(?<sec>\d{2})"$/);
+	if (!m) throw new Error("Invalid format. Expected <deg><N|S|E|W><mm>'<ss>\"");
 
 	const { deg, hemi, min, sec } = m.groups as {
 		deg: string;
@@ -27,7 +25,7 @@ export function convertDMSToDD(input: string): number {
 	let dd = degrees + minutes / 60 + seconds / 3600;
 	if (hemi === "S" || hemi === "W") dd = -dd;
 
-	return dd;
+	return Number(dd.toFixed(6));
 }
 
 export function stripCompanySuffixForName(name: string): string {
@@ -44,20 +42,20 @@ export function stripCompanySuffixForName(name: string): string {
 }
 
 export function ensureDownloadDir(): void {
-	if (!fs.existsSync(DOWNLOAD_DIR)) {
-		fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
+	if (!existsSync(DOWNLOAD_DIR)) {
+		mkdirSync(DOWNLOAD_DIR, { recursive: true });
 	}
 }
 
 export async function downloadFile(fileUrl: string, outPath: string): Promise<void> {
 	const res = await fetch(fileUrl);
 	const ab = await res.arrayBuffer();
-	fs.writeFileSync(outPath, Buffer.from(ab));
+	writeFileSync(outPath, Buffer.from(ab));
 }
 
 export function absolutize(base: string, href: string): string {
 	try {
-		return new url.URL(href, base).toString();
+		return new URL(href, base).toString();
 	} catch {
 		return href;
 	}
@@ -80,14 +78,14 @@ export function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 export async function cleanupDownloads(): Promise<void> {
-	if (!fs.existsSync(DOWNLOAD_DIR)) return;
-	for (const f of fs.readdirSync(DOWNLOAD_DIR)) {
-		const p = path.join(DOWNLOAD_DIR, f);
+	if (!existsSync(DOWNLOAD_DIR)) return;
+	for (const file of readdirSync(DOWNLOAD_DIR)) {
+		const p = join(DOWNLOAD_DIR, file);
 		try {
-			fs.unlinkSync(p);
+			unlinkSync(p);
 		} catch {}
 	}
 	try {
-		fs.rmdirSync(DOWNLOAD_DIR);
+		rmdirSync(DOWNLOAD_DIR);
 	} catch {}
 }

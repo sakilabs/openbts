@@ -3,6 +3,20 @@
 	"version": "1.0.0",
 	"private": true,
 	"type": "module",
+	"exports": {
+		"./stations": {
+			"types": "./src/stations.ts",
+			"default": "./dist/stations.js"
+		},
+		"./radiolines": {
+			"types": "./src/radiolines.ts",
+			"default": "./dist/radiolines.js"
+		},
+		"./utils": {
+			"types": "./src/utils.ts",
+			"default": "./dist/utils.js"
+		}
+	},
 	"scripts": {
 		"build": "tsc",
 		"start": "tsx src/index.ts"
@@ -16,9 +30,9 @@
 	"dependencies": {
 		"cheerio": "1.1.2",
 		"dotenv": "17.2.3",
-		"drizzle-orm": "0.44.7",
+		"drizzle-orm": "0.45.1",
 		"postgres": "3.4.7",
-		"tsx": "4.20.6",
+		"tsx": "4.21.0",
 		"xlsx": "0.18.5"
 	}
 }

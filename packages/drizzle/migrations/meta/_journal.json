@@ -1,20 +1,20 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1755983963531,
-			"tag": "0000_famous_kang",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1762469558558,
-			"tag": "0001_cynical_mojo",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1755983963531,
+      "tag": "0000_famous_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766232970097,
+      "tag": "0001_daily_lady_vermin",
+      "breakpoints": true
+    }
+  ]
 }

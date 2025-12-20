@@ -23,13 +23,14 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { name } = req.body;
+	const { name, code } = req.body;
 
 	try {
 		const [region] = await db
 			.insert(regions)
 			.values({
 				name,
+				code,
 			})
 			.returning();
 

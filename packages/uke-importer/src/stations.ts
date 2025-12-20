@@ -1,12 +1,15 @@
 import path from "node:path";
 import url from "node:url";
+
 import { ukePermits, type ratEnum } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
+import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertBands, upsertOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
-import type { RawUkeData } from "./types.js";
 import { db } from "@openbts/drizzle/db";
+
+import type { RawUkeData } from "./types.js";
 
 function parseBandFromLabel(label: string): { rat: (typeof ratEnum.enumValues)[number]; value: number } | null {
 	const firstToken = (label.trim().toLowerCase().split(/\s|-/)[0] ?? "").trim();
@@ -14,7 +17,7 @@ function parseBandFromLabel(label: string): { rat: (typeof ratEnum.enumValues)[n
 	const m = firstToken.match(/^(gsm|umts|lte|5g)(\d{3,4})$/i);
 	if (!m) return null;
 	const tech = m[1]?.toLowerCase() ?? "";
-	const bandStr = m[2] ?? "";
+  const bandStr = m[2] ?? "";
 	const value = Number(bandStr);
 	if (!Number.isFinite(value)) return null;
 	const rat = tech === "gsm" ? ("GSM" as const) : tech === "umts" ? ("UMTS" as const) : tech === "lte" ? ("LTE" as const) : ("NR" as const);
@@ -61,13 +64,15 @@ async function insertUkePermits(
 	}
 }
 
-export async function importStations(): Promise<void> {
+export async function importStations(): Promise<boolean> {
 	const links = await scrapeXlsxLinks(STATIONS_URL);
 	const filtered = links.filter((l) => {
 		const token = (l.text || l.href).toLowerCase();
 		return !token.startsWith("gsm-r");
 	});
-	if (!filtered.length) return;
+	if (!filtered.length) return false;
+
+	if (await isDataUpToDate("stations", filtered)) return false;
 	ensureDownloadDir();
 	const bandKeys: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number }> = [];
 	for (const l of filtered) {
@@ -106,4 +111,7 @@ export async function importStations(): Promise<void> {
 	for (const fr of fileRows) {
 		await insertUkePermits(fr.rows, bandMap, operatorIdByName, locationIdByLonLat, parseBandFromLabel, fr.label);
 	}
+
+	await recordImportMetadata("stations", filtered, "success");
+	return true;
 }

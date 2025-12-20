@@ -325,8 +325,10 @@ export const nrCells = pgTable(
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
-		unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid).nullsNotDistinct(),
-		index("nr_cells_redcap_true_idx").on(t.gnbid, t.clid).where(sql`${t.supports_nr_redcap} = true`),
+		// unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid).nullsNotDistinct(),
+		index("nr_cells_redcap_true_idx")
+			.on(t.gnbid, t.clid)
+			.where(sql`${t.supports_nr_redcap} = true`),
 		index("nr_cells_gnbid_trgm_idx").using("gin", sql`(${t.gnbid}::text) gin_trgm_ops`),
 		index("nr_cells_nci_trgm_idx").using("gin", sql`(${t.nci}::text) gin_trgm_ops`),
 	],
@@ -438,3 +440,22 @@ export const ukeRadioLines = pgTable(
 		check("uke_radiolines_rx_height_nonneg", sql`${table.rx_height} >= 0`),
 	],
 );
+
+export const ukeOperators = pgTable("uke_operators", {
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+	name: varchar("full_name", { length: 150 }).notNull(),
+	full_name: varchar("name", { length: 250 }).notNull().unique(),
+});
+
+/**
+ * UKE import metadata table
+ * @example
+ * { id: 1, import_type: "stations", file_list: ["https://uke.gov.pl/file1.xlsx", "https://uke.gov.pl/file2.xlsx"], last_import_date: new Date(), status: "success" }
+ */
+export const ukeImportMetadata = pgTable("uke_import_metadata", {
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+	import_type: varchar("import_type", { length: 20 }).notNull(),
+	file_list: text("file_list").notNull(),
+	last_import_date: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	status: varchar("status", { length: 20 }).notNull(),
+});

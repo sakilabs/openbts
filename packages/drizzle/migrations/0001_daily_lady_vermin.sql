@@ -86,8 +86,7 @@ CREATE TABLE "nr_cells" (
 	"supports_nr_redcap" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "nr_cells_nci_unique" UNIQUE("nci"),
-	CONSTRAINT "nr_cells_gnbid_clid_unique" UNIQUE NULLS NOT DISTINCT("gnbid","clid")
+	CONSTRAINT "nr_cells_nci_unique" UNIQUE("nci")
 );
 --> statement-breakpoint
 CREATE TABLE "operators" (
@@ -124,7 +123,9 @@ CREATE TABLE "radiolines_transmitter_types" (
 CREATE TABLE "regions" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "regions_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" varchar(100) NOT NULL,
-	CONSTRAINT "regions_name_unique" UNIQUE("name")
+	"code" varchar(3) NOT NULL,
+	CONSTRAINT "regions_name_unique" UNIQUE("name"),
+	CONSTRAINT "regions_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
 CREATE TABLE "stations" (
@@ -148,6 +149,14 @@ CREATE TABLE "stations_permits" (
 	CONSTRAINT "stations_permits_pair_unique" UNIQUE("station_id","permit_id")
 );
 --> statement-breakpoint
+CREATE TABLE "uke_import_metadata" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "uke_import_metadata_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"import_type" varchar(20) NOT NULL,
+	"file_list" text NOT NULL,
+	"last_import_date" timestamp with time zone DEFAULT now() NOT NULL,
+	"status" varchar(20) NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "uke_locations" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "uke_locations_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"region_id" integer NOT NULL,
@@ -161,6 +170,13 @@ CREATE TABLE "uke_locations" (
 	CONSTRAINT "uke_locations_lonlat_unique" UNIQUE("longitude","latitude"),
 	CONSTRAINT "uke_locations_latitude_range" CHECK ("uke_locations"."latitude" BETWEEN -90 AND 90),
 	CONSTRAINT "uke_locations_longitude_range" CHECK ("uke_locations"."longitude" BETWEEN -180 AND 180)
+);
+--> statement-breakpoint
+CREATE TABLE "uke_operators" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "uke_operators_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"full_name" varchar(150) NOT NULL,
+	"name" varchar(250) NOT NULL,
+	CONSTRAINT "uke_operators_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "uke_permits" (

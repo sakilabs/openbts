@@ -1,23 +1,28 @@
 import path from "node:path";
 import url from "node:url";
 import { inArray } from "drizzle-orm";
+
 import { radioLinesAntennaTypes, radioLinesManufacturers, radioLinesTransmitterTypes, ukeRadioLines } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, RADIOLINES_URL } from "./config.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertOperators } from "./upserts.js";
-import type { RawRadioLineData } from "./types.js";
 import { db } from "@openbts/drizzle/db";
+import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 
+import type { RawRadioLineData } from "./types.js";
 function isNonEmptyName<T extends { name: string | undefined }>(v: T): v is T & { name: string } {
 	return typeof v.name === "string" && v.name.length > 0;
 }
 
-export async function importRadiolines(): Promise<void> {
+export async function importRadiolines(): Promise<boolean> {
 	const links = await scrapeXlsxLinks(RADIOLINES_URL);
-	if (!links[0]) return;
+	if (!links[0]) return false;
+
+	if (await isDataUpToDate("radiolines", links)) return false;
+
 	ensureDownloadDir();
-	const first = links[0]!;
+	const first = links[0];
 	const fileName = `${(first.text || path.basename(new url.URL(first.href).pathname)).replace(/\s+/g, "_")}`;
 	const filePath = path.join(DOWNLOAD_DIR, fileName);
 	await downloadFile(first.href, filePath);
@@ -141,4 +146,7 @@ export async function importRadiolines(): Promise<void> {
 	for (const group of chunk(values, BATCH_SIZE)) {
 		if (group.length) await db.insert(ukeRadioLines).values(group);
 	}
+
+	await recordImportMetadata("radiolines", links, "success");
+	return true;
 }
