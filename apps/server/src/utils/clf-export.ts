@@ -29,7 +29,7 @@ export function toCLF20(cell: CellExportData): string | null {
 
 	const cellHex = cellId.toString(16).toUpperCase().padStart(4, "0");
 	const lacHex = lac.toString(16).toUpperCase().padStart(4, "0");
-	const mccmnc = getMCCMNC(cell);
+	const mccmnc = cell.operator_mnc;
 	const description = getDescription(cell);
 
 	return `${cellHex}${lacHex}${mccmnc}\t${description}`;
@@ -42,7 +42,7 @@ export function toCLF21(cell: CellExportData): string | null {
 
 	const cellDec = cellId.toString().padStart(5, "0");
 	const lacDec = lac.toString().padStart(5, "0");
-	const mccmnc = getMCCMNC(cell);
+	const mccmnc = cell.operator_mnc;
 	const description = getDescription(cell);
 
 	return `${cellDec}${lacDec}${mccmnc}\t${description}`;
@@ -53,7 +53,7 @@ export function toCLF30Hex(cell: CellExportData): string | null {
 	const cellId = getCellIdForExport(cell);
 	if (!cellId) return null;
 
-	const mccmnc = getMCCMNC(cell);
+	const mccmnc = cell.operator_mnc;
 	const cidHex = `0x${cellId.toString(16).toUpperCase().padStart(4, "0")}`;
 	const lacHex = `0x${lac.toString(16).toUpperCase().padStart(4, "0")}`;
 	const rncHex = `0x${(cell.rnc ?? 0).toString(16).toUpperCase().padStart(4, "0")}`;
@@ -70,7 +70,7 @@ export function toCLF30Dec(cell: CellExportData): string | null {
 	const cellId = getCellIdForExport(cell);
 	if (!cellId) return null;
 
-	const mccmnc = getMCCMNC(cell);
+	const mccmnc = cell.operator_mnc;
 	const cidDec = cellId.toString().padStart(5, "0");
 	const lacDec = lac.toString().padStart(5, "0");
 	const rncDec = (cell.rnc ?? 0).toString().padStart(5, "0");
@@ -87,7 +87,7 @@ export function toCLF40(cell: CellExportData): string | null {
 	const cellId = getCellIdForExport(cell);
 	if (!cellId) return null;
 
-	const mccmnc = getMCCMNC(cell);
+	const mccmnc = cell.operator_mnc;
 	const type = getRatCode(cell.rat);
 	const lat = cell.latitude ?? 0;
 	const lon = cell.longitude ?? 0;
@@ -120,24 +120,24 @@ function getCellIdForExport(cell: CellExportData): number | null {
 	}
 }
 
-function getMCCMNC(cell: CellExportData): string {
-	const mcc = "260";
-	const mnc = cell.operator_mnc?.toString().padStart(2, "0") ?? "00";
-	return `${mcc}${mnc}`;
-}
+// function getMCCMNC(cell: CellExportData): string {
+// 	const mcc = "260";
+// 	const mnc = cell.operator_mnc?.toString().padStart(2, "0") ?? "00";
+// 	return `${mcc}${mnc}`;
+// }
 
 function getRatCode(rat: "GSM" | "UMTS" | "LTE" | "NR"): number {
 	switch (rat) {
 		case "GSM":
-			return 0;
-		case "UMTS":
 			return 1;
-		case "LTE":
-			return 2;
-		case "NR":
+		case "UMTS":
 			return 3;
+		case "LTE":
+			return 4;
+		case "NR":
+			return 5;
 		default:
-			return -1;
+			return 0;
 	}
 }
 
