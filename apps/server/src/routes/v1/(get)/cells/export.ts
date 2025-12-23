@@ -33,14 +33,14 @@ const schemaRoute = {
 							.filter((code) => code.length === 3)
 					: undefined,
 			),
-		rats: z
+		rat: z
 			.string()
 			.optional()
 			.transform((val) => {
 				if (!val) return undefined;
-				const validRats = ["GSM", "UMTS", "LTE", "NR"];
+				const validRats = ["GSM", "UMTS", "LTE", "NR", "IOT"];
 				const rats = val.split(",").filter((r) => validRats.includes(r.toUpperCase()));
-				return rats.length > 0 ? (rats.map((r) => r.toUpperCase()) as ("GSM" | "UMTS" | "LTE" | "NR")[]) : undefined;
+				return rats.length > 0 ? (rats.map((r) => r.toUpperCase()) as ("GSM" | "UMTS" | "LTE" | "NR" | "IOT")[]) : undefined;
 			}),
 		bands: z
 			.string()
@@ -59,10 +59,10 @@ const schemaRoute = {
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
-	const { format, operators: operatorIds, regions: regionCodes, rats, bands: bandIds } = req.query;
+	const { format, operators: operatorIds, regions: regionCodes, rat, bands: bandIds } = req.query;
 
 	const rows = await db.query.cells.findMany({
-		where: (fields, { and, inArray }) => {
+		where: (fields, { and, or, inArray }) => {
 			const conditions = [];
 			if (operatorIds && operatorIds.length > 0) {
 				conditions.push(
@@ -90,7 +90,28 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
 				)`,
 				);
 			}
-			if (rats && rats.length > 0) conditions.push(inArray(fields.rat, rats));
+			if (rat && rat.length > 0) {
+				const ratConditions = [];
+				const standardRats = rat.filter((r) => r !== "IOT") as ("GSM" | "UMTS" | "LTE" | "NR")[];
+				if (standardRats.length > 0) ratConditions.push(inArray(fields.rat, standardRats));
+				if (rat.includes("IOT")) {
+					ratConditions.push(
+						sql`EXISTS (
+							SELECT 1 FROM lte_cells lc
+							WHERE lc.cell_id = ${fields.id}
+							AND lc.supports_nb_iot = true
+						)`,
+						sql`EXISTS (
+							SELECT 1 FROM nr_cells nc
+							WHERE nc.cell_id = ${fields.id}
+							AND nc.supports_nr_redcap = true
+						)`,
+					);
+				}
+				if (ratConditions.length > 0) {
+					conditions.push(or(...ratConditions));
+				}
+			}
 			if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
 
 			return conditions.length ? and(...conditions) : undefined;
@@ -99,7 +120,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
 			station: {
 				with: {
 					operator: true,
-					location: true,
+					location: { columns: { point: false } },
 				},
 			},
 			band: true,
