@@ -1,4 +1,4 @@
-import { eq, or, sql, ilike, inArray } from "drizzle-orm";
+import { eq, or, sql, inArray } from "drizzle-orm";
 import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, networksIds } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -65,8 +65,6 @@ const schemaRoute = {
 	},
 };
 
-const SIMILARITY_THRESHOLD = 0.7;
-
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
 	const { query } = req.body;
 	if (!query || query.trim() === "") throw new ErrorResponse("INVALID_QUERY");
@@ -85,9 +83,38 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	};
 
 	const numericQuery = !Number.isNaN(Number.parseInt(query, 10)) ? Number.parseInt(query, 10) : null;
+	const upperQuery = query.toUpperCase();
+
+	const exactMatch = await db.query.stations.findMany({
+		where: eq(stations.station_id, upperQuery),
+		with: {
+			cells: {
+				with: {
+					gsm: true,
+					umts: true,
+					lte: true,
+					nr: true,
+				},
+			},
+			location: { columns: { point: false } },
+			operator: { columns: { is_isp: false } },
+			networks: { columns: { station_id: false } },
+		},
+		columns: {
+			status: false,
+		},
+	});
+
+	if (exactMatch.length > 0) {
+		for (const station of exactMatch) {
+			stationIds.add(station.id);
+			stationMap.set(station.id, withCellDetails(station));
+		}
+		return res.send({ data: Array.from(stationMap.values()) });
+	}
 
 	const stationsByStationId = await db.query.stations.findMany({
-		where: or(ilike(stations.station_id, `%${query}%`), sql`similarity(${stations.station_id}, ${query}) > ${SIMILARITY_THRESHOLD}`),
+		where: sql`${stations.station_id} % ${query} OR ${stations.station_id} ILIKE ${`%${query}%`}`,
 		with: {
 			cells: {
 				with: {
@@ -114,50 +141,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 		}
 	}
 
-	const likeQuery = `%${query}%`;
-	if (/^\d+$/.test(query)) {
+	const isNumericQuery = /^\d+$/.test(query);
+	if (isNumericQuery && numericQuery !== null) {
+		const likeQuery = `%${query}%`;
 		const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
 			db
 				.select({ stationId: cells.station_id })
 				.from(gsmCells)
 				.innerJoin(cells, eq(gsmCells.cell_id, cells.id))
-				.where(sql`${gsmCells.cid} = ${numericQuery}`),
-
-			db
-				.select({ stationId: cells.station_id })
-				.from(umtsCells)
-				.innerJoin(cells, eq(umtsCells.cell_id, cells.id))
-				.where(or(sql`${umtsCells.cid} = ${numericQuery}`, sql`${umtsCells.cid_long} = ${numericQuery}`)),
-
-			db
-				.select({ stationId: cells.station_id })
-				.from(lteCells)
-				.innerJoin(cells, eq(lteCells.cell_id, cells.id))
-				.where(or(sql`${lteCells.enbid} = ${numericQuery}`, sql`${lteCells.ecid} = ${numericQuery}`)),
-
-			db
-				.select({ stationId: cells.station_id })
-				.from(nrCells)
-				.innerJoin(cells, eq(nrCells.cell_id, cells.id))
-				.where(or(sql`${nrCells.gnbid} = ${numericQuery}`, sql`${nrCells.nci} = ${numericQuery}`)),
-		]);
-
-		for (const row of [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches]) {
-			const sId = row.stationId;
-			if (!stationIds.has(sId)) stationIds.add(sId);
-		}
-	} else {
-		const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
-			db
-				.select({ stationId: cells.station_id })
-				.from(gsmCells)
-				.innerJoin(cells, eq(gsmCells.cell_id, cells.id))
-				.where(
-					or(
-						sql`CAST(${gsmCells.cid} AS TEXT) ILIKE ${likeQuery}`,
-						sql`similarity(CAST(${gsmCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-					),
-				),
+				.where(or(sql`${gsmCells.cid} = ${numericQuery}`, sql`CAST(${gsmCells.cid} AS TEXT) LIKE ${likeQuery}`)),
 
 			db
 				.select({ stationId: cells.station_id })
@@ -165,10 +157,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 				.innerJoin(cells, eq(umtsCells.cell_id, cells.id))
 				.where(
 					or(
-						sql`CAST(${umtsCells.cid} AS TEXT) ILIKE ${likeQuery}`,
-						sql`CAST(${umtsCells.cid_long} AS TEXT) ILIKE ${likeQuery}`,
-						sql`similarity(CAST(${umtsCells.cid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-						sql`similarity(CAST(${umtsCells.cid_long} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+						sql`${umtsCells.cid} = ${numericQuery}`,
+						sql`${umtsCells.cid_long} = ${numericQuery}`,
+						sql`CAST(${umtsCells.cid} AS TEXT) LIKE ${likeQuery}`,
+						sql`CAST(${umtsCells.cid_long} AS TEXT) LIKE ${likeQuery}`,
 					),
 				),
 
@@ -178,10 +170,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 				.innerJoin(cells, eq(lteCells.cell_id, cells.id))
 				.where(
 					or(
-						sql`CAST(${lteCells.enbid} AS TEXT) ILIKE ${likeQuery}`,
-						sql`CAST(${lteCells.ecid} AS TEXT) ILIKE ${likeQuery}`,
-						sql`similarity(CAST(${lteCells.enbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-						sql`similarity(CAST(${lteCells.ecid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+						sql`${lteCells.enbid} = ${numericQuery}`,
+						sql`${lteCells.ecid} = ${numericQuery}`,
+						sql`CAST(${lteCells.enbid} AS TEXT) LIKE ${likeQuery}`,
+						sql`CAST(${lteCells.ecid} AS TEXT) LIKE ${likeQuery}`,
 					),
 				),
 
@@ -191,10 +183,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 				.innerJoin(cells, eq(nrCells.cell_id, cells.id))
 				.where(
 					or(
-						sql`CAST(${nrCells.gnbid} AS TEXT) ILIKE ${likeQuery}`,
-						sql`CAST(${nrCells.nci} AS TEXT) ILIKE ${likeQuery}`,
-						sql`similarity(CAST(${nrCells.gnbid} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
-						sql`similarity(CAST(${nrCells.nci} AS TEXT), ${query}) > ${SIMILARITY_THRESHOLD}`,
+						sql`${nrCells.gnbid} = ${numericQuery}`,
+						sql`${nrCells.nci} = ${numericQuery}`,
+						sql`CAST(${nrCells.gnbid} AS TEXT) LIKE ${likeQuery}`,
+						sql`CAST(${nrCells.nci} AS TEXT) LIKE ${likeQuery}`,
 					),
 				),
 		]);
