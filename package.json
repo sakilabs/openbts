@@ -22,11 +22,12 @@
 			"@parcel/watcher",
 			"argon2",
 			"esbuild",
+			"msw",
 			"sharp",
 			"vue-demi"
 		]
 	},
-	"packageManager": "pnpm@10.15.1",
+	"packageManager": "pnpm@10.27.0",
 	"engines": {
 		"node": ">=18",
 		"npm": "please-use-pnpm",
