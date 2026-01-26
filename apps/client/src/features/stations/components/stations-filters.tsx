@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Search02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Checkbox as UICheckbox } from "@/components/ui/checkbox";
 import {
@@ -20,7 +20,6 @@ import type { Operator, Region, StationFilters } from "@/types/station";
 const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
 	{ value: "umts", label: "UMTS", gen: "3G" },
-	{ value: "cdma", label: "CDMA", gen: "3G" },
 	{ value: "lte", label: "LTE", gen: "4G" },
 	{ value: "5g", label: "NR", gen: "5G" },
 	{ value: "iot", label: "IoT", gen: "NB" },
@@ -63,6 +62,10 @@ export function StationsFilters({
 
 	const [localSearchQuery, setLocalSearchQuery] = useState(parentSearchQuery);
 	const searchDebounceRef = useRef<number | null>(null);
+
+	useEffect(() => {
+		setLocalSearchQuery(parentSearchQuery);
+	}, [parentSearchQuery]);
 
 	const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -107,7 +110,7 @@ export function StationsFilters({
 				<div>
 					<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("filters.search")}</span>
 					<div className="relative">
-						<HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+						<HugeiconsIcon icon={Search02Icon} className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
 						<input
 							type="text"
 							value={localSearchQuery}

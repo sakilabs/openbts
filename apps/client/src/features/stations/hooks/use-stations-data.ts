@@ -35,7 +35,6 @@ export function useStationsData() {
 	const [selectedRegions, setSelectedRegions] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
 
-	// Reference data queries
 	const { data: operators = [] } = useQuery({
 		queryKey: ["operators"],
 		queryFn: fetchOperators,
@@ -54,7 +53,6 @@ export function useStationsData() {
 		staleTime: 1000 * 60 * 30,
 	});
 
-	// Stations infinite query (no server-side filtering)
 	const { data, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery({
 		queryKey: ["stations-list", FETCH_LIMIT],
 		queryFn: ({ pageParam }) =>
@@ -67,7 +65,7 @@ export function useStationsData() {
 			return lastPage.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
 		},
 		staleTime: 1000 * 60 * 5,
-		enabled: searchQuery.trim().length === 0, // Only fetch when not searching
+		enabled: searchQuery.trim().length === 0,
 	});
 
 	// Search query for stations
@@ -78,18 +76,14 @@ export function useStationsData() {
 		staleTime: 1000 * 60 * 5,
 	});
 
-	// ✅ Good: Calculate stations during rendering with client-side filtering
 	const stations = useMemo(() => {
 		const rawStations = searchQuery.trim().length > 0 ? searchResults : (data?.pages.flat() ?? []);
 
-		// Apply client-side filters
 		return rawStations.filter((station) => {
-			// Filter by operator
 			if (filters.operators.length > 0 && !filters.operators.includes(station.operator.mnc)) {
 				return false;
 			}
 
-			// Filter by region
 			if (selectedRegions.length > 0) {
 				const regionMatches = selectedRegions.some((regionId) => {
 					const region = regions.find((r) => r.id === regionId);
@@ -98,23 +92,20 @@ export function useStationsData() {
 				if (!regionMatches) return false;
 			}
 
-			// Filter by bands - station must have at least one cell with matching band
 			if (filters.bands.length > 0) {
 				const hasBand = station.cells?.some((cell) => filters.bands.includes(cell.band?.value));
 				if (!hasBand) return false;
 			}
 
-			// Filter by RAT - station must have at least one cell with matching RAT
 			if (filters.rat.length > 0) {
-				const hasRat = station.cells?.some((cell) => {
-					const cellRat = cell.rat?.toLowerCase();
-					return filters.rat.some((filterRat) => {
-						// Map filter values to cell RAT values
-						if (filterRat === "5g" && cellRat === "nr") return true;
-						return cellRat === filterRat;
-					});
-				});
-				if (!hasRat) return false;
+				const stationRats = new Set(
+					station.cells?.map((cell) => {
+						const cellRat = cell.rat?.toLowerCase();
+						return cellRat === "nr" ? "5g" : cellRat;
+					}) || [],
+				);
+				const hasAllRats = filters.rat.every((filterRat) => stationRats.has(filterRat));
+				if (!hasAllRats) return false;
 			}
 
 			return true;
@@ -126,6 +117,7 @@ export function useStationsData() {
 	}, [bands]);
 
 	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length + selectedRegions.length;
+	const hasFiltersActive = activeFilterCount > 0;
 
 	return {
 		// Data
@@ -147,7 +139,7 @@ export function useStationsData() {
 
 		// Loading state
 		isLoading: searchQuery.trim().length > 0 ? isSearching : isLoading,
-		hasMore: searchQuery.trim().length > 0 ? false : hasNextPage,
-		loadMore: hasNextPage && searchQuery.trim().length === 0 ? fetchNextPage : undefined,
+		hasMore: searchQuery.trim().length > 0 || hasFiltersActive ? false : hasNextPage,
+		loadMore: hasNextPage && searchQuery.trim().length === 0 && !hasFiltersActive ? fetchNextPage : undefined,
 	};
 }
