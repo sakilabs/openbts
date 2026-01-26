@@ -23,10 +23,10 @@ const submissionsSelectSchema = createSelectSchema(submissions);
 const submissionsInsertBase = createInsertSchema(submissions).omit({ createdAt: true, updatedAt: true, submitter_id: true });
 const proposedStationInsert = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
-const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ createdAt: true, updatedAt: true, proposed_cell_id: true });
-const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ createdAt: true, updatedAt: true, proposed_cell_id: true });
-const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ createdAt: true, updatedAt: true, proposed_cell_id: true });
-const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ createdAt: true, updatedAt: true, proposed_cell_id: true });
+const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true });
+const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
+const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true });
+const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true });
 const proposedCellInsert = createInsertSchema(proposedCells)
 	.omit({ createdAt: true, updatedAt: true, submission_id: true })
 	.extend({ details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]) })
