@@ -1,0 +1,38 @@
+"use client";
+
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Moon02Icon, Sun03Icon, ComputerIcon } from "@hugeicons/core-free-icons";
+import { useTheme } from "next-themes";
+
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
+
+export function ThemeToggle() {
+	const { setTheme, theme } = useTheme();
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger render={<SidebarMenuButton />}>
+				<HugeiconsIcon icon={Sun03Icon} className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+				<HugeiconsIcon icon={Moon02Icon} className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+				<span>Theme</span>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="start">
+				<DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+					<DropdownMenuRadioItem value="light">
+						<HugeiconsIcon icon={Sun03Icon} className="size-4" />
+						<span>Light</span>
+					</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="dark">
+						<HugeiconsIcon icon={Moon02Icon} className="size-4" />
+						<span>Dark</span>
+					</DropdownMenuRadioItem>
+					<DropdownMenuRadioItem value="system">
+						<HugeiconsIcon icon={ComputerIcon} className="size-4" />
+						<span>System</span>
+					</DropdownMenuRadioItem>
+				</DropdownMenuRadioGroup>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+}

@@ -1,0 +1,55 @@
+{
+	"search": {
+		"placeholder": "Search for a location or station(s)...",
+		"placeholderAddMore": "Add more...",
+		"searching": "Searching for results...",
+		"noResults": "No results found",
+		"noResultsHint": "Try different keywords or filters",
+		"found": "{{count}} found",
+		"showingTop": "Showing top {{shown}} of {{total}} stations"
+	},
+	"filters": {
+		"title": "Filter Stations",
+		"clearAll": "Clear all",
+		"dataSource": "Data Source",
+		"internalDb": "Internal DB",
+		"ukePermits": "UKE Permits",
+		"operator": "Operator",
+		"standard": "standard",
+		"band": "Band (MHz)",
+		"all": "All",
+		"none": "None",
+		"filtersActive_one": "{{count}} filter active",
+		"filtersActive_other": "{{count}} filters active",
+		"operators_one": "{{count}} operator",
+		"operators_other": "{{count}} operators",
+		"techs_one": "{{count}} tech",
+		"techs_other": "{{count}} techs",
+		"bands_one": "{{count}} band",
+		"bands_other": "{{count}} bands"
+	},
+	"autocomplete": {
+		"availableFilters": "Available Filters",
+		"tip": "Tip:",
+		"tipText": "Use comma-separated values for multiple items.",
+		"example": "Example:"
+	},
+	"results": {
+		"locations": "Geographical Locations",
+		"stations": "Cellular Stations",
+		"city": "City",
+		"btsStation": "BTS Station"
+	},
+	"popup": {
+		"unknownOperator": "Unknown Operator"
+	},
+	"overlay": {
+		"stations": "stations",
+		"filtered": "filtered",
+		"operators": "Operators",
+		"zoom": "Zoom"
+	},
+	"loading": {
+		"loadingMap": "Loading map..."
+	}
+}

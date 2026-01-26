@@ -36,10 +36,6 @@ function parseStrings(v: FilterValue): string[] {
 	return stringListSchema.parse(String(v));
 }
 
-function parseUpperStrings(v: FilterValue): string[] {
-	return parseStrings(v).map((item) => item.toUpperCase());
-}
-
 function parseRats(v: FilterValue): ("GSM" | "UMTS" | "LTE" | "NR")[] {
 	return ratListSchema.parse(String(v));
 }
@@ -73,10 +69,6 @@ const buildInArrayFromSubquery =
 
 export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
 	// stations
-	station_id: {
-		table: "stations",
-		buildCondition: (v) => inArray(stations.station_id, parseUpperStrings(v)),
-	},
 	bts_id: {
 		table: "stations",
 		buildCondition: buildLikeAny(stations.station_id),

@@ -1,0 +1,68 @@
+{
+	"dialog": {
+		"closeLabel": "Zamknij okno",
+		"btsStation": "Stacja BTS",
+		"confirmed": "Potwierdzona",
+		"loadError": "Nie udało się załadować szczegółów stacji"
+	},
+	"tabs": {
+		"specs": "Specyfikacja",
+		"permits": "Pozwolenia UKE",
+		"comments": "Komentarze"
+	},
+	"specs": {
+		"basicInfo": "Podstawowe informacje",
+		"coordinates": "Współrzędne:",
+		"region": "Województwo:",
+		"operator": "Operator:",
+		"stationId": "ID stacji:",
+		"cellDetails": "Szczegóły celek",
+		"internalNotes": "Notatki wewnętrzne",
+		"created": "Utworzono:",
+		"updated": "Zaktualizowano:",
+		"networkIdTooltip": "Numer pochodzi z wewnętrznej bazy danych NetWorkS"
+	},
+	"cells": {
+		"cell_one": "{{count}} celka",
+		"cell_few": "{{count}} celki",
+		"cell_many": "{{count}} celek",
+		"frequency": "Częstotliwość",
+		"duplex": "Duplex",
+		"notes": "Notatki",
+		"cellNotConfirmed": "Komórka niepotwierdzona",
+		"nbIot": "NB-IoT",
+		"carrierAggregation": "Agregacja nośnych",
+		"redCap": "RedCap",
+		"dss": "DSS"
+	},
+	"network": {
+		"title": "Identyfikatory sieci",
+		"mccMnc": "MCC-MNC:",
+		"eNodeBId": "eNodeB ID:",
+		"rncId": "RNC ID:"
+	},
+	"permits": {
+		"title": "Pozwolenia UKE",
+		"loading": "Ładowanie pozwoleń...",
+		"loadError": "Nie udało się załadować pozwoleń",
+		"noPermits": "Brak pozwoleń UKE powiązanych z tą stacją",
+		"inactive": "Nieaktywne",
+		"expires": "Wygasa:"
+	},
+	"comments": {
+		"title": "Komentarze społeczności",
+		"loading": "Ładowanie komentarzy...",
+		"unavailable": "Komentarze są obecnie niedostępne",
+		"noComments": "Brak komentarzy",
+		"noCommentsHint": "Bądź pierwszą osobą, która podzieli się informacjami o tej stacji.",
+		"anonymousUser": "Anonimowy użytkownik",
+		"file": "Plik"
+	},
+	"addComment": {
+		"placeholder": "Podziel się informacjami o tej stacji...",
+		"addImages": "Dodaj zdjęcia",
+		"posting": "Wysyłanie...",
+		"postComment": "Opublikuj komentarz",
+		"postError": "Nie udało się opublikować komentarza. Spróbuj ponownie."
+	}
+}

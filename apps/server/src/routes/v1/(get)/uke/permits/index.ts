@@ -11,6 +11,7 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const ukePermitsSchema = createSelectSchema(ukePermits);
+const ukeLocationsSchema = createSelectSchema(ukeLocations);
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
@@ -57,14 +58,24 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			data: z.array(ukePermitsSchema.extend({ band: bandsSchema, operator: operatorsSchema })),
+			data: z.array(
+				ukePermitsSchema.extend({
+					band: bandsSchema,
+					operator: operatorsSchema,
+					location: ukeLocationsSchema,
+				}),
+			),
 		}),
 	},
 };
 type ReqQuery = {
 	Querystring: z.infer<typeof schemaRoute.querystring>;
 };
-type Permit = z.infer<typeof ukePermitsSchema> & { band?: z.infer<typeof bandsSchema>; operator?: z.infer<typeof operatorsSchema> };
+type Permit = z.infer<typeof ukePermitsSchema> & {
+	band?: z.infer<typeof bandsSchema>;
+	operator?: z.infer<typeof operatorsSchema>;
+	location?: z.infer<typeof ukeLocationsSchema>;
+};
 
 const SIMILARITY_THRESHOLD = 0.6;
 
@@ -131,6 +142,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			with: {
 				band: true,
 				operator: true,
+				location: true,
 			},
 			where: (fields, { and, inArray, or }) => {
 				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));

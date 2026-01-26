@@ -185,7 +185,7 @@ export const ukePermits = pgTable(
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: varchar("station_id", { length: 16 }).notNull(),
 		operator_id: integer("operator_id")
-			.references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
+			.references(() => ukeOperators.id, { onDelete: "set null", onUpdate: "cascade" })
 			.notNull(),
 		location_id: integer("location_id")
 			.references(() => ukeLocations.id, { onDelete: "set null", onUpdate: "cascade" })

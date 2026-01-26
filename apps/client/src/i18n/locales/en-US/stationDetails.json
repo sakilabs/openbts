@@ -1,0 +1,67 @@
+{
+	"dialog": {
+		"closeLabel": "Close dialog",
+		"btsStation": "BTS Station",
+		"confirmed": "Confirmed",
+		"loadError": "Failed to load station details"
+	},
+	"tabs": {
+		"specs": "Specifications",
+		"permits": "UKE Permits",
+		"comments": "Comments"
+	},
+	"specs": {
+		"basicInfo": "Basic Information",
+		"coordinates": "Coordinates:",
+		"region": "Region:",
+		"operator": "Operator:",
+		"stationId": "Station ID:",
+		"cellDetails": "Cell details",
+		"internalNotes": "Internal Notes",
+		"created": "Created:",
+		"updated": "Updated:",
+		"networkIdTooltip": "Number comes from internal NetWorkS database"
+	},
+	"cells": {
+		"cell_one": "{{count}} cell",
+		"cell_other": "{{count}} cells",
+		"frequency": "Frequency",
+		"duplex": "Duplex",
+		"notes": "Notes",
+		"cellNotConfirmed": "Cell not confirmed",
+		"nbIot": "NB-IoT",
+		"carrierAggregation": "Carrier Aggregation",
+		"redCap": "RedCap",
+		"dss": "DSS"
+	},
+	"network": {
+		"title": "Network Identifiers",
+		"mccMnc": "MCC-MNC:",
+		"eNodeBId": "eNodeB ID:",
+		"rncId": "RNC ID:"
+	},
+	"permits": {
+		"title": "UKE Permits",
+		"loading": "Loading permits...",
+		"loadError": "Failed to load permits",
+		"noPermits": "No UKE permits linked to this station",
+		"inactive": "Inactive",
+		"expires": "Expires:"
+	},
+	"comments": {
+		"title": "Community Comments",
+		"loading": "Loading comments...",
+		"unavailable": "Comments are currently unavailable",
+		"noComments": "No comments yet",
+		"noCommentsHint": "Be the first to share information about this station.",
+		"anonymousUser": "Anonymous User",
+		"file": "File"
+	},
+	"addComment": {
+		"placeholder": "Share information about this station...",
+		"addImages": "Add Images",
+		"posting": "Posting...",
+		"postComment": "Post Comment",
+		"postError": "Failed to post comment. Please try again."
+	}
+}

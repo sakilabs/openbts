@@ -1,0 +1,18 @@
+{
+	"appName": "OpenBTS",
+	"main": {
+		"map": "Mapa",
+		"stationsList": "Lista stacji",
+		"statistics": "Statystyki"
+	},
+	"secondary": {
+		"settings": "Ustawienia",
+		"help": "Pomoc",
+		"about": "O aplikacji"
+	},
+	"user": {
+		"profile": "Profil",
+		"logout": "Wyloguj się",
+		"login": "Zaloguj się"
+	}
+}

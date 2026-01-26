@@ -1,5 +1,5 @@
 import { eq, or, and, sql, inArray, type SQL } from "drizzle-orm";
-import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, networksIds } from "@openbts/drizzle";
+import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, networksIds, regions } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -19,6 +19,7 @@ const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const locationSelectSchema = createSelectSchema(locations).omit({ point: true });
+const regionSelectSchema = createSelectSchema(regions);
 const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
 const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
 const cellWithDetailsSchema = cellsSelectSchema.extend({ details: cellDetailsSchema });
@@ -54,7 +55,11 @@ const schemaRoute = {
 			data: z.array(
 				stationsSelectSchema.extend({
 					cells: z.array(cellWithDetailsSchema),
-					location: locationSelectSchema.nullable(),
+					location: locationSelectSchema
+						.extend({
+							region: regionSelectSchema,
+						})
+						.nullable(),
 					operator: operatorsSelectSchema.nullable(),
 					networks: networksSchema.optional(),
 				}),
@@ -66,7 +71,7 @@ const schemaRoute = {
 const stationQueryConfig = {
 	with: {
 		cells: { with: { gsm: true, umts: true, lte: true, nr: true } },
-		location: { columns: { point: false } },
+		location: { with: { region: true }, columns: { point: false } },
 		operator: { columns: { is_isp: false } },
 		networks: { columns: { station_id: false } },
 	},

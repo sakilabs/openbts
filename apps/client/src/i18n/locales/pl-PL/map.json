@@ -1,0 +1,59 @@
+{
+	"search": {
+		"placeholder": "Szukaj lokalizacji lub stacji...",
+		"placeholderAddMore": "Dodaj więcej...",
+		"searching": "Wyszukiwanie wyników...",
+		"noResults": "Brak wyników",
+		"noResultsHint": "Spróbuj innych słów kluczowych lub filtrów",
+		"found": "Znaleziono: {{count}}",
+		"showingTop": "Pokazano {{shown}} z {{total}} stacji"
+	},
+	"filters": {
+		"title": "Filtruj stacje",
+		"clearAll": "Wyczyść wszystko",
+		"dataSource": "Źródło danych",
+		"internalDb": "Wewnętrzna baza",
+		"ukePermits": "Pozwolenia UKE",
+		"operator": "Operator",
+		"standard": "Standard",
+		"band": "Pasmo (MHz)",
+		"all": "Wszystkie",
+		"none": "Żadne",
+		"filtersActive_one": "{{count}} aktywny filtr",
+		"filtersActive_few": "{{count}} aktywne filtry",
+		"filtersActive_many": "{{count}} aktywnych filtrów",
+		"operators_one": "{{count}} operator",
+		"operators_few": "{{count}} operatorów",
+		"operators_many": "{{count}} operatorów",
+		"techs_one": "{{count}} standard",
+		"techs_few": "{{count}} standardy",
+		"techs_many": "{{count}} standardów",
+		"bands_one": "{{count}} pasmo",
+		"bands_few": "{{count}} pasma",
+		"bands_many": "{{count}} pasm"
+	},
+	"autocomplete": {
+		"availableFilters": "Dostępne filtry",
+		"tip": "Wskazówka:",
+		"tipText": "Użyj wartości oddzielonych przecinkami dla wielu elementów.",
+		"example": "Przykład:"
+	},
+	"results": {
+		"locations": "Lokalizacje geograficzne",
+		"stations": "Stacje bazowe",
+		"city": "Miasto",
+		"btsStation": "Stacja BTS"
+	},
+	"popup": {
+		"unknownOperator": "Nieznany operator"
+	},
+	"overlay": {
+		"stations": "stacji",
+		"filtered": "przefiltrowano",
+		"operators": "Legenda",
+		"zoom": "Zoom"
+	},
+	"loading": {
+		"loadingMap": "Ładowanie mapy..."
+	}
+}

@@ -1,0 +1,47 @@
+{
+	"actions": {
+		"save": "Save",
+		"cancel": "Cancel",
+		"delete": "Delete",
+		"edit": "Edit",
+		"add": "Add",
+		"search": "Search",
+		"filter": "Filter",
+		"clear": "Clear",
+		"clearAll": "Clear all",
+		"apply": "Apply",
+		"close": "Close",
+		"back": "Back",
+		"next": "Next",
+		"previous": "Previous",
+		"loading": "Loading...",
+		"copy": "Copy",
+		"copied": "Copied!"
+	},
+	"pagination": {
+		"page": "Page",
+		"of": "of",
+		"showing": "Showing",
+		"items": "items",
+		"rowsPerPage": "Rows per page"
+	},
+	"time": {
+		"justNow": "just now",
+		"minutesAgo_one": "{{count}} minute ago",
+		"minutesAgo_other": "{{count}} minutes ago",
+		"hoursAgo_one": "{{count}} hour ago",
+		"hoursAgo_other": "{{count}} hours ago",
+		"daysAgo_one": "{{count}} day ago",
+		"daysAgo_other": "{{count}} days ago",
+		"weeksAgo_one": "{{count}} week ago",
+		"weeksAgo_other": "{{count}} weeks ago",
+		"monthsAgo_one": "{{count}} month ago",
+		"monthsAgo_other": "{{count}} months ago",
+		"yearsAgo_one": "{{count}} year ago",
+		"yearsAgo_other": "{{count}} years ago"
+	},
+	"validation": {
+		"required": "This field is required",
+		"invalid": "Invalid value"
+	}
+}

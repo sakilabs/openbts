@@ -1,0 +1,53 @@
+{
+	"actions": {
+		"save": "Zapisz",
+		"cancel": "Anuluj",
+		"delete": "Usuń",
+		"edit": "Edytuj",
+		"add": "Dodaj",
+		"search": "Szukaj",
+		"filter": "Filtruj",
+		"clear": "Wyczyść",
+		"clearAll": "Wyczyść wszystko",
+		"apply": "Zastosuj",
+		"close": "Zamknij",
+		"back": "Wstecz",
+		"next": "Dalej",
+		"previous": "Poprzedni",
+		"loading": "Ładowanie...",
+		"copy": "Kopiuj",
+		"copied": "Skopiowano!"
+	},
+	"pagination": {
+		"page": "Strona",
+		"of": "z",
+		"showing": "Wyświetlanie",
+		"items": "elementów",
+		"rowsPerPage": "Wierszy na stronę"
+	},
+	"time": {
+		"justNow": "przed chwilą",
+		"minutesAgo_one": "{{count}} minutę temu",
+		"minutesAgo_few": "{{count}} minuty temu",
+		"minutesAgo_many": "{{count}} minut temu",
+		"hoursAgo_one": "{{count}} godzinę temu",
+		"hoursAgo_few": "{{count}} godziny temu",
+		"hoursAgo_many": "{{count}} godzin temu",
+		"daysAgo_one": "{{count}} dzień temu",
+		"daysAgo_few": "{{count}} dni temu",
+		"daysAgo_many": "{{count}} dni temu",
+		"weeksAgo_one": "{{count}} tydzień temu",
+		"weeksAgo_few": "{{count}} tygodnie temu",
+		"weeksAgo_many": "{{count}} tygodni temu",
+		"monthsAgo_one": "{{count}} miesiąc temu",
+		"monthsAgo_few": "{{count}} miesiące temu",
+		"monthsAgo_many": "{{count}} miesięcy temu",
+		"yearsAgo_one": "{{count}} rok temu",
+		"yearsAgo_few": "{{count}} lata temu",
+		"yearsAgo_many": "{{count}} lat temu"
+	},
+	"validation": {
+		"required": "To pole jest wymagane",
+		"invalid": "Nieprawidłowa wartość"
+	}
+}

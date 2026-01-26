@@ -13,6 +13,7 @@ const schemaRoute = {
 				enforceAuthForAllRoutes: z.boolean(),
 				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
 				disabledRoutes: z.array(z.string().min(1)),
+				enableStationComments: z.boolean(),
 			}),
 		}),
 	},
@@ -27,7 +28,7 @@ const getSettings: Route<never, Response> = {
 	url: "/settings",
 	method: "GET",
 	schema: schemaRoute,
-	config: { permissions: ["read:settings"] },
+	config: { permissions: ["read:settings"], allowGuestAccess: true },
 	handler,
 };
 

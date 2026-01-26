@@ -18,6 +18,7 @@ import {
 	lteCells,
 	nrCells,
 	networksIds,
+	ukeLocations,
 } from "./bts.ts";
 import { apiKeys, attachments, stationComments, userLists, users } from "./auth.ts";
 import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedStations, proposedUMTSCells } from "./submissions.ts";
@@ -198,6 +199,10 @@ export const permitsRelations = relations(ukePermits, ({ one }) => ({
 	operator: one(operators, {
 		fields: [ukePermits.operator_id],
 		references: [operators.id],
+	}),
+	location: one(ukeLocations, {
+		fields: [ukePermits.location_id],
+		references: [ukeLocations.id],
 	}),
 }));
 

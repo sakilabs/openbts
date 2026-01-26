@@ -1,0 +1,36 @@
+{
+	"title": "Lista stacji",
+	"breadcrumb": "Lista stacji",
+	"filters": {
+		"title": "Filtry",
+		"search": "Wyszukiwanie",
+		"searchPlaceholder": "Szukaj stacji...",
+		"searchResults": "{{count}} wyników wyszukiwania",
+		"network": "Operator",
+		"region": "Województwo",
+		"selectRegions": "Wybierz województwa...",
+		"standard": "Standard",
+		"band": "Pasmo (MHz)",
+		"selectBands": "Wybierz pasma...",
+		"noRegionsFound": "Nie znaleziono województw",
+		"noBandsFound": "Nie znaleziono pasm",
+		"showingStations": "Wyświetlanie {{count}} stacji"
+	},
+	"table": {
+		"stationId": "ID stacji",
+		"operator": "Operator",
+		"technologies": "Technologie",
+		"bands": "Pasma",
+		"location": "Lokalizacja",
+		"region": "Województwo",
+		"updatedAt": "Aktualizacja",
+		"noStationsFound": "Nie znaleziono stacji",
+		"tryAdjustingFilters": "Spróbuj zmienić filtry"
+	},
+	"technologies": {
+		"2G": "2G",
+		"3G": "3G",
+		"4G": "4G",
+		"5G": "5G"
+	}
+}

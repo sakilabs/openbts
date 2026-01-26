@@ -28,10 +28,10 @@
 		"typescript": "5.9.3"
 	},
 	"dependencies": {
-		"cheerio": "1.1.2",
+		"cheerio": "1.2.0",
 		"dotenv": "17.2.3",
 		"drizzle-orm": "0.45.1",
-		"postgres": "3.4.7",
+		"postgres": "3.4.8",
 		"tsx": "4.21.0",
 		"xlsx": "0.18.5"
 	}

@@ -65,6 +65,11 @@ const schemaRoute = {
 							.filter((n) => !Number.isNaN(n))
 					: undefined,
 			),
+		regions: z
+			.string()
+			.regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
+			.optional()
+			.transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
 	}),
 	response: {
 		200: z.object({
@@ -76,7 +81,7 @@ const schemaRoute = {
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Station[]>>) {
-	const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues } = req.query;
+	const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues, regions } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let envelope: ReturnType<typeof sql> | undefined;
@@ -104,7 +109,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				where: (f, { inArray }) => inArray(f.mnc, operatorMncs),
 			})
 		: [];
+	const regionsRows = regions?.length
+		? await db.query.regions.findMany({
+				columns: { id: true },
+				where: (f, { inArray }) => inArray(f.name, regions),
+			})
+		: [];
 
+	const regionIds = regionsRows.map((r) => r.id);
 	const operatorIds = operatorRows.map((r) => r.id);
 
 	const requestedRats = rat ?? [];
@@ -120,6 +132,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				if (operatorIds.length) conditions.push(inArray(fields.operator_id, operatorIds));
 				if (envelope)
 					conditions.push(sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND ST_Intersects(l.point, ${envelope}))`);
+
+				if (regionIds.length) {
+					conditions.push(
+						sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND l.region_id = ANY(ARRAY[${sql.join(
+							regionIds.map((id) => sql`${id}`),
+							sql`,`,
+						)}]::int4[]))`,
+					);
+				}
 
 				if ((bandIds?.length ?? 0) || nonIotRats.length || iotRequested) {
 					const bandCond = bandIds?.length
@@ -162,18 +183,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				cells: {
 					columns: { band_id: false },
 					with: { band: true },
-					where: (fields, { and, inArray, or, eq }) => {
-						const cellConds = [];
-						if (bandIds) cellConds.push(inArray(fields.band_id, bandIds));
-						if (nonIotRats.length) cellConds.push(or(...nonIotRats.map((r) => eq(fields.rat, r))));
-						if (iotRequested) {
-							cellConds.push(
-								sql`(EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = ${fields.id} AND lc.supports_nb_iot = true)
-								     OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = ${fields.id} AND nc.supports_nr_redcap = true))`,
-							);
-						}
-						return cellConds.length ? and(...cellConds) : undefined;
-					},
 				},
 				location: { columns: { point: false, region_id: false }, with: { region: true } },
 				operator: { columns: { is_isp: false } },
@@ -181,7 +190,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			},
 			limit,
 			offset,
-			orderBy: (fields, operators) => [operators.asc(fields.id)],
+			orderBy: (fields, operators) => [operators.desc(fields.id)],
 		});
 
 		const mappedStations: Station[] = btsStations.map((station: StationRaw) => {

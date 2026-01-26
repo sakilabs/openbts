@@ -1,0 +1,92 @@
+import type { Table } from "@tanstack/react-table";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon, ArrowRight01Icon, ArrowLeftDoubleIcon, ArrowRightDoubleIcon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface DataTablePaginationProps<TData> {
+	table: Table<TData>;
+	pageSizeOptions?: number[];
+	totalItems?: number;
+	showRowsPerPage?: boolean;
+}
+
+export function DataTablePagination<TData>({
+	table,
+	pageSizeOptions = [10, 20, 30, 50, 100],
+	totalItems,
+	showRowsPerPage = true,
+}: DataTablePaginationProps<TData>) {
+	const pageIndex = table.getState().pagination.pageIndex;
+	const pageSize = table.getState().pagination.pageSize;
+	const pageCount = table.getPageCount();
+
+	const startRow = pageIndex * pageSize + 1;
+	const endRow = Math.min((pageIndex + 1) * pageSize, totalItems ?? table.getRowCount());
+
+	return (
+		<div className="flex items-center justify-between gap-4 px-2">
+			<div className="text-muted-foreground text-sm tabular-nums">
+				{totalItems !== undefined ? (
+					<>
+						{startRow}-{endRow} of {totalItems.toLocaleString()}
+					</>
+				) : (
+					<>
+						Page {pageIndex + 1} of {pageCount}
+					</>
+				)}
+			</div>
+
+			<div className="flex items-center gap-2">
+				{showRowsPerPage && (
+					<div className="flex items-center gap-2">
+						<span className="text-muted-foreground text-sm hidden sm:block">Rows</span>
+						<Select
+							value={pageSize}
+							onValueChange={(value) => {
+								table.setPageSize(Number(value));
+							}}
+						>
+							<SelectTrigger size="sm" className="w-16">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{pageSizeOptions.map((size) => (
+									<SelectItem key={size} value={size}>
+										{size}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				)}
+
+				<div className="flex items-center gap-1">
+					<Button variant="outline" size="icon" className="size-8" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+						<HugeiconsIcon icon={ArrowLeftDoubleIcon} className="size-4" />
+						<span className="sr-only">First page</span>
+					</Button>
+					<Button variant="outline" size="icon" className="size-8" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+						<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+						<span className="sr-only">Previous page</span>
+					</Button>
+					<Button variant="outline" size="icon" className="size-8" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+						<HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+						<span className="sr-only">Next page</span>
+					</Button>
+					<Button
+						variant="outline"
+						size="icon"
+						className="size-8"
+						onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+						disabled={!table.getCanNextPage()}
+					>
+						<HugeiconsIcon icon={ArrowRightDoubleIcon} className="size-4" />
+						<span className="sr-only">Last page</span>
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+}
