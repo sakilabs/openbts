@@ -10,7 +10,7 @@ export default function MapView() {
 	return (
 		<LibreMap center={[19.1451, 51.9194]} zoom={7} maxBounds={POLAND_BOUNDS} minZoom={5} maxZoom={18}>
 			<StationsLayer />
-			<MapControls />
+			<MapControls showLocate />
 		</LibreMap>
 	);
 }

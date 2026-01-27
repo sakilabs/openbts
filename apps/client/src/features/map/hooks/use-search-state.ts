@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FilterKeyword, ParsedFilter } from "./types";
+import type { FilterKeyword, ParsedFilter } from "../types";
 
 type OverlayType = "autocomplete" | "results" | null;
 
@@ -29,9 +29,7 @@ function getAutocompleteMatches(input: string, keywords: FilterKeyword[]): Filte
 	const lastWord = getLastWord(input);
 	if (lastWord.length === 0 || lastWord.includes(":")) return [];
 
-	return keywords.filter((kw) =>
-		kw.key.toLowerCase().startsWith(lastWord.toLowerCase())
-	);
+	return keywords.filter((kw) => kw.key.toLowerCase().startsWith(lastWord.toLowerCase()));
 }
 
 export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateArgs) {
@@ -44,28 +42,17 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 	const containerRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	// Derived: full query string
-	const query = useMemo(
-		() => [...parsedFilters.map((f) => f.raw), inputValue].filter(Boolean).join(" "),
-		[parsedFilters, inputValue]
-	);
+	const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue].filter(Boolean).join(" "), [parsedFilters, inputValue]);
 
-	// Derived: search mode
 	const searchMode = debouncedQuery.trim() === "" ? "bounds" : "search";
 
-	// Derived: autocomplete options
-	const autocompleteOptions = useMemo(
-		() => getAutocompleteMatches(inputValue, filterKeywords),
-		[inputValue, filterKeywords]
-	);
+	const autocompleteOptions = useMemo(() => getAutocompleteMatches(inputValue, filterKeywords), [inputValue, filterKeywords]);
 
-	// Effect: debounce query (legitimate - synchronizing with time)
 	useEffect(() => {
 		const timer = setTimeout(() => setDebouncedQuery(query), 500);
 		return () => clearTimeout(timer);
 	}, [query]);
 
-	// Event handlers - no useCallback needed since not passed to memoized children
 	function handleContainerBlur(e: React.FocusEvent) {
 		const relatedTarget = e.relatedTarget as Node | null;
 		if (!containerRef.current?.contains(relatedTarget)) {
@@ -78,11 +65,8 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 		const value = e.target.value;
 		setInputValue(value);
 
-		// Parse filters when user finishes typing one (ends with space)
 		if (value.endsWith(" ") || value === "") {
-			const fullQuery = [...parsedFilters.map((f) => f.raw), value]
-				.filter(Boolean)
-				.join(" ");
+			const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
 			const { filters: detected, remainingText } = parseFilters(fullQuery);
 
 			if (detected.length > parsedFilters.length) {
@@ -138,23 +122,19 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 	}
 
 	return {
-		// Derived state
 		query,
 		searchMode,
 		autocompleteOptions,
 
-		// UI state
 		inputValue,
 		debouncedQuery,
 		isFocused,
 		parsedFilters,
 		activeOverlay,
 
-		// Refs
 		containerRef,
 		inputRef,
 
-		// Event handlers
 		handleContainerBlur,
 		handleInputChange,
 		handleInputFocus,

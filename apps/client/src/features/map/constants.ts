@@ -1,6 +1,5 @@
 import type { FilterKeyword } from "./types";
 
-// Map layer constants
 export const SOURCE_ID = "stations-source";
 export const POINT_LAYER_ID = "stations-layer";
 
@@ -12,49 +11,42 @@ export const RAT_OPTIONS = [
 	{ value: "iot", label: "IoT", gen: "NB" },
 ] as const;
 
-// Available filter keywords for autocomplete (based on backend FILTER_DEFINITIONS)
 export const FILTER_KEYWORDS: FilterKeyword[] = [
 	// Station filters
-	{ key: "station_id:", description: "Exact station ID match (comma-separated)" },
-	{ key: "bts_id:", description: "Search station ID (partial match)" },
-	{ key: "mnc:", description: "Filter by operator MNC code" },
+	{ key: "bts_id:", description: "Search station ID (partial match)", availableOn: ["map", "stations"] },
+	{ key: "mnc:", description: "Filter by operator MNC code", availableOn: ["map"] },
+
+	// Location filters
+	{ key: "region:", description: "Filter by region code (e.g., MAZ, SL, WP)", availableOn: [] },
 
 	// Cell filters
-	{ key: "band_id:", description: "Filter by band ID" },
-	{ key: "band:", description: "Filter by frequency in MHz (e.g., 800, 1800, 2100)" },
-	{ key: "rat:", description: "Filter by standard (GSM, UMTS, LTE, NR)" },
-	{ key: "is_confirmed:", description: "Filter by confirmation status (true, false)" },
+	{ key: "band:", description: "Filter by frequency in MHz (e.g., 800, 1800, 2100)", availableOn: ["map"] },
+	{ key: "rat:", description: "Filter by standard (GSM, UMTS, LTE, NR)", availableOn: ["map"] },
+	{ key: "is_confirmed:", description: "Filter by confirmation status (true, false)", availableOn: ["map", "stations"] },
 
 	// GSM cell filters
-	{ key: "lac:", description: "GSM Location Area Code" },
-	{ key: "cid:", description: "GSM Cell ID" },
+	{ key: "lac:", description: "GSM Location Area Code", availableOn: ["map", "stations"] },
+	{ key: "cid:", description: "GSM Cell ID", availableOn: ["map", "stations"] },
 
 	// UMTS cell filters
-	{ key: "rnc:", description: "UMTS Radio Network Controller ID" },
-	{ key: "umts_cid:", description: "UMTS Cell ID" },
-	{ key: "cid_long:", description: "UMTS Long Cell ID" },
-	{ key: "umts_lac:", description: "UMTS Location Area Code" },
+	{ key: "rnc:", description: "UMTS Radio Network Controller ID", availableOn: ["map", "stations"] },
+	{ key: "umts_cid:", description: "UMTS Cell ID", availableOn: ["map", "stations"] },
+	{ key: "cid_long:", description: "UMTS Long Cell ID", availableOn: ["map", "stations"] },
+	{ key: "umts_lac:", description: "UMTS Location Area Code", availableOn: ["map", "stations"] },
 
 	// LTE cell filters
-	{ key: "enbid:", description: "LTE eNodeB ID" },
-	{ key: "ecid:", description: "LTE E-UTRAN Cell ID" },
-	{ key: "lte_clid:", description: "LTE Cell Local ID" },
-	{ key: "tac:", description: "LTE Tracking Area Code" },
-	{
-		key: "supports_nb_iot:",
-		description: "Supports NB-IoT (true, false)",
-	},
+	{ key: "enbid:", description: "LTE eNodeB ID", availableOn: ["map", "stations"] },
+	{ key: "ecid:", description: "LTE E-UTRAN Cell ID", availableOn: ["map", "stations"] },
+	{ key: "lte_clid:", description: "LTE Cell Local ID", availableOn: ["map", "stations"] },
+	{ key: "tac:", description: "LTE Tracking Area Code", availableOn: ["map", "stations"] },
+	{ key: "supports_nb_iot:", description: "Supports NB-IoT (true, false)", availableOn: ["map", "stations"] },
 
 	// NR (5G) cell filters
-	{ key: "gnbid:", description: "5G gNodeB ID" },
-	{ key: "nci:", description: "5G NR Cell Identity" },
-	{ key: "nr_clid:", description: "5G Cell Local ID" },
-	{ key: "nrtac:", description: "5G Tracking Area Code" },
-	{
-		key: "supports_nr_redcap:",
-		description: "Supports NR RedCap (true, false)",
-	},
+	{ key: "gnbid:", description: "5G gNodeB ID", availableOn: ["map", "stations"] },
+	{ key: "nci:", description: "5G NR Cell Identity", availableOn: ["map", "stations"] },
+	{ key: "nr_clid:", description: "5G Cell Local ID", availableOn: ["map", "stations"] },
+	{ key: "nrtac:", description: "5G Tracking Area Code", availableOn: ["map", "stations"] },
+	{ key: "supports_nr_redcap:", description: "Supports NR RedCap (true, false)", availableOn: ["map", "stations"] },
 ];
 
-// Regex to match filter syntax - only match complete filters (with space after or at end)
 export const FILTER_REGEX = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|([^\s]+))(?=\s|$)/gi;

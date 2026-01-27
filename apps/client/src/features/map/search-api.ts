@@ -6,10 +6,8 @@ export const fetchOperators = () => fetchApiData<Operator[]>("operators");
 
 export const fetchBands = () => fetchApiData<Band[]>("bands");
 
-export const searchStations = (query: string) =>
-	postApiData<Station[], { query: string }>("search", { query });
+export const searchStations = (query: string) => postApiData<Station[], { query: string }>("search", { query });
 
-/** Search OpenStreetMap for locations, prioritizing cities */
 export async function searchLocations(query: string): Promise<OSMResult[]> {
 	if (query.length < 3) return [];
 
@@ -22,7 +20,6 @@ export async function searchLocations(query: string): Promise<OSMResult[]> {
 	try {
 		const results = await fetchJson<OSMResult[]>(url.toString());
 
-		// Sort cities first, then limit to 5 results
 		const isCity = (r: OSMResult) => r.addresstype === "city" || r.type === "city";
 		return results.sort((a, b) => Number(isCity(b)) - Number(isCity(a))).slice(0, 5);
 	} catch {

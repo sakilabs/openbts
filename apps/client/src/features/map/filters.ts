@@ -1,9 +1,7 @@
 import { FILTER_KEYWORDS, FILTER_REGEX } from "./constants";
 import type { ParsedFilter } from "./types";
 
-const VALID_FILTER_KEYS = new Set(
-	FILTER_KEYWORDS.map((f) => f.key.replace(":", ""))
-);
+const VALID_FILTER_KEYS = new Set(FILTER_KEYWORDS.map((f) => f.key.replace(":", "")));
 
 export function parseFilters(query: string): {
 	filters: ParsedFilter[];
@@ -29,7 +27,6 @@ export function parseFilters(query: string): {
 			raw: match[0],
 		});
 
-		// Remove from remaining text
 		remainingText = remainingText.replace(match[0], "").trim();
 	}
 

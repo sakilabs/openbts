@@ -166,11 +166,9 @@ export class RateLimitService {
 	 * @returns Rate limit configuration for the request
 	 */
 	async getRateLimitTier(req: FastifyRequest): Promise<RateLimitTier> {
-		// First check for route-specific rate limits
 		const routeLimit = this.getRouteRateLimit(req);
 		if (routeLimit) return routeLimit;
 
-		// Then check for API token rate limits
 		if (req.apiToken) {
 			const apiKeyRateLimit = await this.getApiKeyRateLimit(req);
 			if (apiKeyRateLimit) return apiKeyRateLimit;

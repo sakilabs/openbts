@@ -184,6 +184,18 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			);
 		}
 
+		if (grouped.locations.length > 0) {
+			const locationIds = await db.selectDistinct({ id: locations.id }).from(locations).where(combineConditions(grouped.locations));
+
+			if (locationIds.length === 0) return res.send({ data: [] });
+			stationConditions.push(
+				inArray(
+					stations.location_id,
+					locationIds.map((r) => r.id),
+				),
+			);
+		}
+
 		const filteredStations = await fetchStations(combineConditions(stationConditions), limit);
 		return res.send({ data: filteredStations.map(withCellDetails) });
 	}
@@ -192,7 +204,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	const upperQuery = searchQuery.toUpperCase();
 	const stationMap = new Map<number, StationWithCells>();
 
-	const exactMatch = await fetchStations(eq(stations.station_id, upperQuery));
+	const exactMatch = upperQuery.length > 3 ? await fetchStations(eq(stations.station_id, upperQuery)) : [];
 	if (exactMatch.length > 0) return res.send({ data: exactMatch.map(withCellDetails) });
 
 	const fuzzyStations = await db.query.stations.findMany({

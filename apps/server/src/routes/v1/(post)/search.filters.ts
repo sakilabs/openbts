@@ -1,9 +1,9 @@
 import { sql, inArray, or, type SQL } from "drizzle-orm";
-import { stations, cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 export type FilterValue = string | number | boolean;
-export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells";
+export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells" | "locations";
 export type FilterCondition = {
 	table: FilterTable;
 	buildCondition: (value: FilterValue) => SQL;
@@ -67,6 +67,11 @@ const buildInArrayFromSubquery =
 	(value: FilterValue) =>
 		inArray(column as never, buildSubquery(parseNumbers(value)));
 
+const buildInArrayFromStringSubquery =
+	<T>(column: T, buildSubquery: (values: string[]) => SQL) =>
+	(value: FilterValue) =>
+		inArray(column as never, buildSubquery(parseStrings(value)));
+
 export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
 	// stations
 	bts_id: {
@@ -79,10 +84,6 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
 	},
 
 	// cells
-	band_id: {
-		table: "cells",
-		buildCondition: buildInArray(cells.band_id, parseNumbers),
-	},
 	band: {
 		table: "cells",
 		buildCondition: buildInArrayFromSubquery(cells.band_id, (values) => sql`(SELECT id FROM bands WHERE value IN ${values})`),
@@ -167,6 +168,19 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
 		table: "nrCells",
 		buildCondition: buildBooleanEq(nrCells.supports_nr_redcap),
 	},
+
+	// locations
+	region: {
+		table: "locations",
+		buildCondition: buildInArrayFromStringSubquery(
+			locations.region_id,
+			(values) =>
+				sql`(SELECT id FROM regions WHERE code IN (${sql.join(
+					values.map((v) => sql`${v.toUpperCase()}`),
+					sql`, `,
+				)}))`,
+		),
+	},
 };
 
 export type ParsedFilters = Record<string, FilterValue>;
@@ -178,9 +192,10 @@ export type GroupedFilters = {
 	umtsCells: SQL[];
 	lteCells: SQL[];
 	nrCells: SQL[];
+	locations: SQL[];
 };
 
-const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(\d+(?:,\s*\d+)*)|(true|false))/gi;
+const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(\d+(?:,\s*\d+)*)|(true|false)|([a-zA-Z][a-zA-Z0-9]*(?:,\s*[a-zA-Z][a-zA-Z0-9]*)*))/gi;
 
 type FilterMatch = {
 	key: string;
@@ -195,10 +210,12 @@ const parseFilterMatch = (match: RegExpMatchArray): FilterMatch | null => {
 	const stringValue = match[2] ?? match[3];
 	const numericValue = match[4];
 	const booleanValue = match[5];
+	const alphanumericValue = match[6];
 
 	if (stringValue !== undefined) return { key, value: stringValue, raw: match[0] };
 	if (numericValue !== undefined) return { key, value: numericValue, raw: match[0] };
 	if (booleanValue !== undefined) return { key, value: booleanValue === "true", raw: match[0] };
+	if (alphanumericValue !== undefined) return { key, value: alphanumericValue, raw: match[0] };
 
 	return null;
 };
@@ -210,6 +227,7 @@ const createEmptyGroupedFilters = (): GroupedFilters => ({
 	umtsCells: [],
 	lteCells: [],
 	nrCells: [],
+	locations: [],
 });
 
 export function parseFilterQuery(query: string): { filters: ParsedFilters; remainingQuery: string } {

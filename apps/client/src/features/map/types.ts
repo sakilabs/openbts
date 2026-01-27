@@ -20,4 +20,8 @@ export type ParsedFilter = {
 	raw: string;
 };
 
-export type FilterKeyword = { key: string; description: string };
+export type FilterKeyword = {
+	key: string;
+	description: string;
+	availableOn: ("map" | "stations")[];
+};

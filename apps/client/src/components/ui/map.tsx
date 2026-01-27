@@ -72,9 +72,13 @@ function useResolvedTheme(themeProp?: "light" | "dark"): "light" | "dark" {
 	return themeProp ?? detectedTheme;
 }
 
+type MapStyle = "carto" | "osm" | "satellite";
+
 type MapContextValue = {
 	map: MapLibreGL.Map | null;
 	isLoaded: boolean;
+	mapStyle: MapStyle;
+	setMapStyle: (style: MapStyle) => void;
 };
 
 const MapContext = createContext<MapContextValue | null>(null);
@@ -90,6 +94,27 @@ function useMap() {
 const defaultStyles = {
 	dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 	light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+};
+
+const mapStyleOptions: Record<MapStyle, { dark: string; light: string; label: string; thumbnail: string }> = {
+	carto: {
+		dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+		light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+		label: "Standard",
+		thumbnail: "https://a.basemaps.cartocdn.com/dark_all/13/4400/2686.png",
+	},
+	osm: {
+		dark: "https://tiles.openfreemap.org/styles/bright",
+		light: "https://tiles.openfreemap.org/styles/bright",
+		label: "OpenStreetMap",
+		thumbnail: "https://tile.openstreetmap.org/13/4400/2686.png",
+	},
+	satellite: {
+		dark: "https://raw.githubusercontent.com/go2garret/maps/main/src/assets/json/arcgis_hybrid.json",
+		light: "https://raw.githubusercontent.com/go2garret/maps/main/src/assets/json/arcgis_hybrid.json",
+		label: "Esri Satellite",
+		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
+	},
 };
 
 type MapStyleOption = string | MapLibreGL.StyleSpecification;
@@ -108,28 +133,48 @@ type MapProps = {
 		light?: MapStyleOption;
 		dark?: MapStyleOption;
 	};
+	/** Initial map style preset (default: "carto") */
+	initialMapStyle?: MapStyle;
 	/** Map projection type. Use `{ type: "globe" }` for 3D globe view. */
 	projection?: MapLibreGL.ProjectionSpecification;
 } & Omit<MapLibreGL.MapOptions, "container" | "style">;
 
 type MapRef = MapLibreGL.Map;
 
-const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent({ children, theme: themeProp, styles, projection, ...props }, ref) {
+const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
+	{ children, theme: themeProp, styles, initialMapStyle = "carto", projection, ...props },
+	ref,
+) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [mapInstance, setMapInstance] = useState<MapLibreGL.Map | null>(null);
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [isStyleLoaded, setIsStyleLoaded] = useState(false);
+	const [mapStyle, setMapStyle] = useState<MapStyle>(() => {
+		if (typeof window === "undefined") return initialMapStyle;
+		const saved = localStorage.getItem("map-style");
+		return (saved as MapStyle) || initialMapStyle;
+	});
 	const currentStyleRef = useRef<MapStyleOption | null>(null);
 	const styleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const resolvedTheme = useResolvedTheme(themeProp);
 
-	const mapStyles = useMemo(
-		() => ({
-			dark: styles?.dark ?? defaultStyles.dark,
-			light: styles?.light ?? defaultStyles.light,
-		}),
-		[styles],
-	);
+	const mapStyles = useMemo(() => {
+		if (styles?.dark || styles?.light) {
+			return {
+				dark: styles?.dark ?? defaultStyles.dark,
+				light: styles?.light ?? defaultStyles.light,
+			};
+		}
+		return {
+			dark: mapStyleOptions[mapStyle].dark,
+			light: mapStyleOptions[mapStyle].light,
+		};
+	}, [styles, mapStyle]);
+
+	const handleSetMapStyle = useCallback((style: MapStyle) => {
+		setMapStyle(style);
+		localStorage.setItem("map-style", style);
+	}, []);
 
 	useImperativeHandle(ref, () => mapInstance as MapLibreGL.Map, [mapInstance]);
 
@@ -204,8 +249,10 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent({ childr
 		() => ({
 			map: mapInstance,
 			isLoaded: isLoaded && isStyleLoaded,
+			mapStyle,
+			setMapStyle: handleSetMapStyle,
 		}),
-		[mapInstance, isLoaded, isStyleLoaded],
+		[mapInstance, isLoaded, isStyleLoaded, mapStyle, handleSetMapStyle],
 	);
 
 	return (
@@ -724,6 +771,84 @@ function CompassButton({ onClick }: { onClick: () => void }) {
 	);
 }
 
+type MapStyleSwitcherProps = {
+	/** Position of the switcher on the map (default: "bottom-left") */
+	position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+	/** Additional CSS classes for the switcher container */
+	className?: string;
+};
+
+const styleSwitcherPositionClasses = {
+	"top-left": "top-2 left-2",
+	"top-right": "top-2 right-2",
+	"bottom-left": "bottom-20 left-2 md:bottom-2",
+	"bottom-right": "bottom-20 right-2 md:bottom-10",
+};
+
+function MapStyleSwitcher({ position = "bottom-left", className }: MapStyleSwitcherProps) {
+	const { mapStyle, setMapStyle } = useMap();
+	const [isOpen, setIsOpen] = useState(false);
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	const styleKeys = Object.keys(mapStyleOptions) as MapStyle[];
+
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleClickOutside = (e: MouseEvent) => {
+			if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [isOpen]);
+
+	return (
+		<div ref={containerRef} className={cn("absolute z-10", styleSwitcherPositionClasses[position], className)}>
+			{isOpen ? (
+				<div className="flex gap-2 p-2 rounded-lg bg-background/90 backdrop-blur-sm border border-border shadow-lg">
+					{styleKeys.map((key) => {
+						const style = mapStyleOptions[key];
+						const isSelected = mapStyle === key;
+						return (
+							<button
+								key={key}
+								type="button"
+								onClick={() => {
+									setMapStyle(key);
+									setIsOpen(false);
+								}}
+								className="flex flex-col items-center gap-1 group"
+							>
+								<div
+									className={cn(
+										"w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors",
+										isSelected ? "border-blue-500" : "border-transparent group-hover:border-muted-foreground/50",
+									)}
+								>
+									<img src={style.thumbnail} alt={style.label} className="w-full h-full object-cover" />
+								</div>
+								<span className={cn("text-xs font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>{style.label}</span>
+							</button>
+						);
+					})}
+				</div>
+			) : (
+				<button
+					type="button"
+					onClick={() => setIsOpen(true)}
+					className="w-12 h-12 rounded-lg overflow-hidden border-2 border-border bg-background shadow-md hover:border-muted-foreground/50 transition-colors"
+					aria-label="Change map style"
+				>
+					<img src={mapStyleOptions[mapStyle].thumbnail} alt={mapStyleOptions[mapStyle].label} className="w-full h-full object-cover" />
+				</button>
+			)}
+		</div>
+	);
+}
+
 type MapPopupProps = {
 	/** Longitude coordinate for popup position */
 	longitude: number;
@@ -1200,8 +1325,9 @@ export {
 	MarkerLabel,
 	MapPopup,
 	MapControls,
+	MapStyleSwitcher,
 	MapRoute,
 	MapClusterLayer,
 };
 
-export type { MapRef };
+export type { MapRef, MapStyle };

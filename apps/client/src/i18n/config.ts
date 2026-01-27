@@ -1,7 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
-// Import all locale namespaces
 import enUSCommon from "./locales/en-US/common.json";
 import enUSStations from "./locales/en-US/stations.json";
 import enUSNav from "./locales/en-US/nav.json";
@@ -39,7 +38,6 @@ export const supportedLanguages = [
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
 
-// Detect browser language or fallback to Polish
 function getDefaultLanguage(): SupportedLanguage {
 	if (typeof window === "undefined") return "pl-PL";
 

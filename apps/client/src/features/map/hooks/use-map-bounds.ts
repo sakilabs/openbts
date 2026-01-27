@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type UseMapBoundsArgs = {
 	map: maplibregl.Map | null;
@@ -11,24 +11,20 @@ export function useMapBounds({ map, isLoaded, debounceMs = 300 }: UseMapBoundsAr
 	const [zoom, setZoom] = useState(0);
 	const [isMoving, setIsMoving] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-	const updateBounds = useCallback(() => {
-		if (!map) return;
-
-		setZoom(map.getZoom());
-
-		if (debounceRef.current) clearTimeout(debounceRef.current);
-
-		debounceRef.current = setTimeout(() => {
-			const mapBounds = map.getBounds();
-			setBounds(
-				`${mapBounds.getSouth()},${mapBounds.getWest()},${mapBounds.getNorth()},${mapBounds.getEast()}`
-			);
-		}, debounceMs);
-	}, [map, debounceMs]);
+	const debounceMsRef = useRef(debounceMs);
+	debounceMsRef.current = debounceMs;
 
 	useEffect(() => {
 		if (!map || !isLoaded) return;
+
+		const updateBounds = () => {
+			setZoom(map.getZoom());
+			if (debounceRef.current) clearTimeout(debounceRef.current);
+			debounceRef.current = setTimeout(() => {
+				const mapBounds = map.getBounds();
+				setBounds(`${mapBounds.getSouth()},${mapBounds.getWest()},${mapBounds.getNorth()},${mapBounds.getEast()}`);
+			}, debounceMsRef.current);
+		};
 
 		const onMoveStart = () => setIsMoving(true);
 		const onMoveEnd = () => {
@@ -36,7 +32,6 @@ export function useMapBounds({ map, isLoaded, debounceMs = 300 }: UseMapBoundsAr
 			updateBounds();
 		};
 
-		// Initial bounds
 		updateBounds();
 
 		map.on("movestart", onMoveStart);
@@ -47,7 +42,7 @@ export function useMapBounds({ map, isLoaded, debounceMs = 300 }: UseMapBoundsAr
 			map.off("moveend", onMoveEnd);
 			if (debounceRef.current) clearTimeout(debounceRef.current);
 		};
-	}, [map, isLoaded, updateBounds]);
+	}, [map, isLoaded]);
 
 	return { bounds, zoom, isMoving };
 }

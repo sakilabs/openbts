@@ -10,6 +10,7 @@ import {
 	Location01Icon,
 	Note01Icon,
 	RefreshIcon,
+	SignalFull02Icon,
 	Tag01Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
@@ -121,11 +122,18 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 
 									<section>
 										<h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.cellDetails")}</h3>
-										<div className="space-y-4">
-											{RAT_ORDER.filter((rat) => cellGroups[rat]).map((rat) => (
-												<CellTable key={rat} rat={rat} cells={cellGroups[rat]} />
-											))}
-										</div>
+										{Object.keys(cellGroups).length === 0 ? (
+											<div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+												<HugeiconsIcon icon={SignalFull02Icon} className="size-8 mb-2 opacity-20" />
+												<p className="text-sm">{t("cells.noCells")}</p>
+											</div>
+										) : (
+											<div className="space-y-4">
+												{RAT_ORDER.filter((rat) => cellGroups[rat]).map((rat) => (
+													<CellTable key={rat} rat={rat} cells={cellGroups[rat]} />
+												))}
+											</div>
+										)}
 									</section>
 
 									{station?.networks && <NetWorkSIds networks={station.networks} />}

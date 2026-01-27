@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
@@ -15,6 +15,10 @@ import {
 	ComboboxList,
 } from "@/components/ui/combobox";
 import { getOperatorColor } from "@/lib/operator-utils";
+import { useSearchState } from "@/features/map/hooks/use-search-state";
+import { AutocompleteDropdown } from "@/features/map/components/search-overlay/autocomplete-dropdown";
+import { FILTER_KEYWORDS } from "@/features/map/constants";
+import { parseFilters } from "@/features/map/filters";
 import type { Operator, Region, StationFilters } from "@/types/station";
 
 const RAT_OPTIONS = [
@@ -60,27 +64,40 @@ export function StationsFilters({
 	const { t: tCommon } = useTranslation("common");
 	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length + selectedRegions.length;
 
-	const [localSearchQuery, setLocalSearchQuery] = useState(parentSearchQuery);
+	const stationsFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("stations")), []);
+
+	const {
+		query,
+		inputValue,
+		parsedFilters,
+		autocompleteOptions,
+		activeOverlay,
+		isFocused,
+		containerRef,
+		inputRef,
+		handleContainerBlur,
+		handleInputChange,
+		handleInputFocus,
+		handleInputClick,
+		applyAutocomplete,
+		clearSearch,
+		removeFilter,
+	} = useSearchState({ filterKeywords: stationsFilterKeywords, parseFilters });
+
 	const searchDebounceRef = useRef<number | null>(null);
 
 	useEffect(() => {
-		setLocalSearchQuery(parentSearchQuery);
-	}, [parentSearchQuery]);
-
-	const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value;
-		setLocalSearchQuery(value);
 		if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 		searchDebounceRef.current = setTimeout(() => {
-			onSearchQueryChange(value);
-		}, 800);
-	};
+			onSearchQueryChange(query);
+		}, 500);
+		return () => {
+			if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+		};
+	}, [query, onSearchQueryChange]);
 
-	const handleClearSearchInput = () => {
-		setLocalSearchQuery("");
-		if (searchDebounceRef.current) {
-			clearTimeout(searchDebounceRef.current);
-		}
+	const handleClearSearch = () => {
+		clearSearch();
 		onSearchQueryChange("");
 	};
 
@@ -107,32 +124,50 @@ export function StationsFilters({
 	return (
 		<aside className={cn("shrink-0 overflow-y-auto h-full", isSheet ? "w-full" : "w-72 border-r bg-muted/20")}>
 			<div className="p-3 space-y-4">
-				<div>
-					<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("filters.search")}</span>
-					<div className="relative">
-						<HugeiconsIcon icon={Search02Icon} className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-						<input
-							type="text"
-							value={localSearchQuery}
-							onChange={handleSearchInputChange}
-							placeholder={t("filters.searchPlaceholder")}
-							className={cn(
-								"w-full pl-9 pr-9 py-2 rounded-lg border bg-background text-sm outline-none transition-all",
-								"placeholder:text-muted-foreground/60",
-								"focus:ring-2 focus:ring-primary/20 focus:border-primary/30",
+				<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("filters.search")}</span>
+				<search ref={containerRef} onBlur={handleContainerBlur} className="relative">
+					<div className={cn("rounded-lg border bg-background transition-all", isFocused && "ring-2 ring-primary/20 border-primary/30")}>
+						<div className="flex items-center gap-1 px-3 py-2">
+							<HugeiconsIcon icon={Search02Icon} className="size-4 text-muted-foreground shrink-0" />
+							<div className="flex items-center gap-1 flex-1 flex-wrap">
+								{parsedFilters.map((filter, index) => (
+									<div
+										key={`${filter.key}-${index}`}
+										className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium border border-primary/20 shrink-0"
+									>
+										<span className="font-mono text-[10px]">{filter.key}:</span>
+										<span className="text-[10px] max-w-20 truncate" title={filter.value}>
+											{filter.value}
+										</span>
+										<button onClick={() => removeFilter(filter)} className="hover:bg-primary/20 rounded p-0.5 transition-colors" type="button">
+											<HugeiconsIcon icon={Cancel01Icon} className="size-2.5" />
+										</button>
+									</div>
+								))}
+								<input
+									ref={inputRef}
+									type="text"
+									value={inputValue}
+									onChange={handleInputChange}
+									onFocus={handleInputFocus}
+									onClick={handleInputClick}
+									placeholder={parsedFilters.length > 0 ? "" : t("filters.searchPlaceholder")}
+									className="flex-1 min-w-16 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+								/>
+							</div>
+							{(inputValue || parsedFilters.length > 0) && (
+								<button type="button" onClick={handleClearSearch} className="p-0.5 hover:bg-muted rounded transition-colors shrink-0">
+									<HugeiconsIcon icon={Cancel01Icon} className="size-4 text-muted-foreground" />
+								</button>
 							)}
-						/>
-						{localSearchQuery && (
-							<button
-								type="button"
-								onClick={handleClearSearchInput}
-								className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-muted rounded transition-colors"
-							>
-								<HugeiconsIcon icon={Cancel01Icon} className="size-4 text-muted-foreground" />
-							</button>
+						</div>
+						{activeOverlay === "autocomplete" && autocompleteOptions.length > 0 && (
+							<div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border bg-background shadow-lg">
+								<AutocompleteDropdown options={autocompleteOptions} onSelect={applyAutocomplete} />
+							</div>
 						)}
 					</div>
-				</div>
+				</search>
 
 				{!isSheet && (
 					<div className="flex items-center justify-between">

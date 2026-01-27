@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type MapLibreGL from "maplibre-gl";
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
 import type { Station } from "@/types/station";
+import { getOperatorColor } from "@/lib/operator-utils";
 
 type UseMapLayerArgs = {
 	map: maplibregl.Map | null;
@@ -10,32 +11,87 @@ type UseMapLayerArgs = {
 	onFeatureClick: (coordinates: [number, number], stations: Station[], source: string) => void;
 };
 
-const LAYER_CONFIG = {
+function makePieImageData(segments: { value: number; color: string }[], size = 32): ImageData | null {
+	const canvas = document.createElement("canvas");
+	canvas.width = size;
+	canvas.height = size;
+
+	const ctx = canvas.getContext("2d", { willReadFrequently: true });
+	if (!ctx) return null;
+
+	const r = size / 2;
+	const cx = r,
+		cy = r;
+
+	const fillRadius = 12;
+	const strokeCenterRadius = 14;
+	const actualStrokeWidth = 4;
+
+	const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+
+	let a0 = -Math.PI / 2;
+	for (const seg of segments) {
+		const a1 = a0 + (seg.value / total) * Math.PI * 2;
+		ctx.beginPath();
+		ctx.moveTo(cx, cy);
+		ctx.arc(cx, cy, fillRadius + 0.5, a0, a1);
+		ctx.closePath();
+		ctx.fillStyle = seg.color;
+		ctx.fill();
+		a0 = a1;
+	}
+
+	ctx.beginPath();
+	ctx.arc(cx, cy, strokeCenterRadius, 0, Math.PI * 2);
+	ctx.strokeStyle = "#fff";
+	ctx.lineWidth = actualStrokeWidth;
+	ctx.stroke();
+
+	return ctx.getImageData(0, 0, size, size);
+}
+
+const SYMBOL_LAYER_ID = `${POINT_LAYER_ID}-symbol`;
+const LAYER_IDS = [POINT_LAYER_ID, SYMBOL_LAYER_ID];
+
+const CIRCLE_LAYER_CONFIG = {
 	id: POINT_LAYER_ID,
 	type: "circle" as const,
 	source: SOURCE_ID,
+	filter: ["!", ["get", "isMultiOperator"]],
 	paint: {
 		"circle-color": ["get", "color"],
-		"circle-radius": ["case", ["get", "isMultiOperator"], 7, 6],
-		"circle-stroke-width": ["case", ["get", "isMultiOperator"], 3, 2],
+		"circle-radius": 6,
+		"circle-stroke-width": 2,
 		"circle-stroke-color": "#fff",
 	},
 };
 
+const SYMBOL_LAYER_CONFIG = {
+	id: SYMBOL_LAYER_ID,
+	type: "symbol" as const,
+	source: SOURCE_ID,
+	filter: ["get", "isMultiOperator"],
+	layout: {
+		"icon-image": ["get", "pieImageId"],
+		"icon-size": 0.5,
+		"icon-allow-overlap": true,
+	},
+};
+
 export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLayerArgs) {
-	const layersAddedRef = useRef(false);
 	const onFeatureClickRef = useRef(onFeatureClick);
 	onFeatureClickRef.current = onFeatureClick;
+	const addedImagesRef = useRef(new Set<string>());
 
 	useEffect(() => {
-		if (!map || !isLoaded || layersAddedRef.current) return;
+		if (!map || !isLoaded) return;
 
-		map.addSource(SOURCE_ID, { type: "geojson", data: geoJSON });
-		map.addLayer(LAYER_CONFIG as maplibregl.LayerSpecification);
-		layersAddedRef.current = true;
+		map.addSource(SOURCE_ID, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+		map.addLayer(CIRCLE_LAYER_CONFIG as maplibregl.LayerSpecification);
+		map.addLayer(SYMBOL_LAYER_CONFIG as maplibregl.LayerSpecification);
 
 		const handleClick = (e: maplibregl.MapMouseEvent) => {
-			const features = map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER_ID] });
+			const features = map.queryRenderedFeatures(e.point, { layers: LAYER_IDS });
 			if (!features.length) return;
 
 			const feature = features[0];
@@ -55,25 +111,48 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLa
 			map.getCanvas().style.cursor = "";
 		};
 
-		map.on("click", POINT_LAYER_ID, handleClick);
-		map.on("mouseenter", POINT_LAYER_ID, handleMouseEnter);
-		map.on("mouseleave", POINT_LAYER_ID, handleMouseLeave);
+		for (const id of LAYER_IDS) {
+			map.on("click", id, handleClick);
+			map.on("mouseenter", id, handleMouseEnter);
+			map.on("mouseleave", id, handleMouseLeave);
+		}
 
 		return () => {
-			map.off("click", POINT_LAYER_ID, handleClick);
-			map.off("mouseenter", POINT_LAYER_ID, handleMouseEnter);
-			map.off("mouseleave", POINT_LAYER_ID, handleMouseLeave);
+			for (const id of LAYER_IDS) {
+				map.off("click", id, handleClick);
+				map.off("mouseenter", id, handleMouseEnter);
+				map.off("mouseleave", id, handleMouseLeave);
+			}
 
 			try {
-				if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID);
+				for (const id of LAYER_IDS) {
+					if (map.getLayer(id)) map.removeLayer(id);
+				}
 				if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
 			} catch {}
-			layersAddedRef.current = false;
+
+			addedImagesRef.current.clear();
 		};
-	}, [map, isLoaded, geoJSON]);
+	}, [map, isLoaded]);
 
 	useEffect(() => {
-		if (!map || !isLoaded || !layersAddedRef.current) return;
+		if (!map || !isLoaded) return;
+
+		for (const feature of geoJSON.features) {
+			const pieImageId = feature.properties?.pieImageId;
+			if (pieImageId && !addedImagesRef.current.has(pieImageId)) {
+				const mncs = JSON.parse(feature.properties?.operators || "[]") as number[];
+				const segments = mncs.map((mnc) => ({
+					value: 1,
+					color: getOperatorColor(mnc),
+				}));
+				const imageData = makePieImageData(segments);
+				if (imageData) {
+					map.addImage(pieImageId, imageData);
+					addedImagesRef.current.add(pieImageId);
+				}
+			}
+		}
 
 		const source = map.getSource(SOURCE_ID) as MapLibreGL.GeoJSONSource;
 		source?.setData(geoJSON);

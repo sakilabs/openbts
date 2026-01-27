@@ -1,7 +1,6 @@
 import type { StationFilters } from "@/types/station";
 import { API_BASE, fetchJson } from "@/lib/api";
 
-/** Build URL search params from filter values */
 function buildFilterParams(filters: StationFilters): URLSearchParams {
 	const params = new URLSearchParams();
 
@@ -13,13 +12,12 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
 	return params;
 }
 
-/** Fetch stations within map bounds */
-export async function fetchStations(bounds: string, filters: StationFilters): Promise<any[]> {
+export async function fetchStations(bounds: string, filters: StationFilters): Promise<unknown[]> {
 	const endpoint = filters.source === "uke" ? "uke/permits" : "stations";
 	const params = buildFilterParams(filters);
 	params.set("limit", "500");
 	params.set("bounds", bounds);
 
-	const result = await fetchJson<{ data: any[] }>(`${API_BASE}/${endpoint}?${params}`);
+	const result = await fetchJson<{ data: unknown[] }>(`${API_BASE}/${endpoint}?${decodeURIComponent(params.toString())}`);
 	return result.data ?? [];
 }

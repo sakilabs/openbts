@@ -168,6 +168,9 @@ export const networksIds = pgTable(
 			.references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
 			.notNull(),
 		networks_id: varchar("networks_id", { length: 16 }).notNull(),
+		networks_name: varchar("networks_name", { length: 50 }),
+		//* Putting MNO name here because it comes from NetWorkS! database and will only be available for T-Mobile & Orange
+		mno_name: varchar("mno_name", { length: 50 }),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
