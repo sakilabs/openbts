@@ -1,6 +1,6 @@
 import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
-import { users } from "./auth.js";
-import { bands, cells, locations, operators, ratEnum, regions, stations, StationStatus } from "./bts.js";
+import { users } from "./auth.ts";
+import { bands, cells, locations, operators, ratEnum, regions, stations, StationStatus } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);

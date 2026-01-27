@@ -1,6 +1,6 @@
 import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
-import { stations } from "./bts.js";
+import { stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);

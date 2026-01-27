@@ -1,4 +1,4 @@
-export const API_BASE = "https://openbts.sakilabs.com/api/v1";
+export const API_BASE = import.meta.env.VITE_API_URL || "https://openbts.sakilabs.com/api/v1";
 
 type FetchOptions = RequestInit & {
 	allowedErrors?: number[];

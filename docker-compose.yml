@@ -3,39 +3,46 @@ version: '3.8'
 services:
   client:
     build:
-      context: ./apps/client
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/client/Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - NUXT_PUBLIC_BASE_API_URL=http://localhost:3030/api/v1
+      - VITE_API_URL=http://localhost:3030/api/v1
     depends_on:
       - server
 
   server:
     build:
-      context: ./apps/server
-      dockerfile: docker/Dockerfile
+      context: .
+      dockerfile: apps/server/docker/Dockerfile
     ports:
       - "3030:3030"
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/btsfinder
-      - JWT_SECRET=your-secret-key-here
-      - PUBLIC_ACCESS=true
-      - ENABLE_COMMENTS=false
+      - DATABASE_URL=postgres://user:password@db:5432/openbts
+      - REDIS_URL=redis://redis:6379
+      - BETTER_AUTH_SECRET=your-generated-secret
     depends_on:
       - db
+      - redis
 
   db:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: docker/postgres/Dockerfile
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=btsfinder
+      - POSTGRES_DB=openbts
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-volume:/var/lib/postgresql/18/docker
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
 volumes:
-  postgres_data:
+  postgres-volume:
