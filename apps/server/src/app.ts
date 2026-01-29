@@ -124,7 +124,7 @@ export default class App {
 
 	public async listen(port: number): Promise<void> {
 		try {
-			await this.fastify.listen({ port, host: "10.0.0.69" });
+			await this.fastify.listen({ port, host: "127.0.0.1" });
 			this.dlogger("Server is ready on port %d", port);
 		} catch (err) {
 			this.dlogger("Error starting server: %O", err);
