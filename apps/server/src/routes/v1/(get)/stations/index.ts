@@ -1,5 +1,5 @@
 import { createSelectSchema } from "drizzle-zod";
-import { sql } from "drizzle-orm";
+import { sql, count, and as drizzleAnd } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -74,15 +74,19 @@ const schemaRoute = {
 	response: {
 		200: z.object({
 			data: z.array(stationResponseSchema),
+			totalCount: z.number(),
 		}),
 	},
 };
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
+type ResponseBody = { data: Station[]; totalCount: number };
 
-async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Station[]>>) {
+async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
 	const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues, regions } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
+
+	const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
 	let envelope: ReturnType<typeof sql> | undefined;
 	if (bounds) {
@@ -92,32 +96,32 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
 	}
 
-	let bandIds: number[] | undefined;
-	if (bandValues) {
-		const validBands = await db.query.bands.findMany({
-			columns: { id: true },
-			where: (fields, { inArray }) => inArray(fields.value, bandValues),
-		});
+	const [bandRows, operatorRows, regionsRows] = await Promise.all([
+		bandValues?.length
+			? db.query.bands.findMany({
+					columns: { id: true },
+					where: (fields, { inArray }) => inArray(fields.value, bandValues),
+				})
+			: [],
+		expandedOperatorMncs?.length
+			? db.query.operators.findMany({
+					columns: { id: true },
+					where: (f, { inArray }) => inArray(f.mnc, expandedOperatorMncs),
+				})
+			: [],
+		regions?.length
+			? db.query.regions.findMany({
+					columns: { id: true },
+					where: (f, { inArray }) => inArray(f.name, regions),
+				})
+			: [],
+	]);
 
-		bandIds = validBands.map((band) => band.id);
-		if (!bandIds.length) return res.send({ data: [] });
-	}
-
-	const operatorRows = operatorMncs?.length
-		? await db.query.operators.findMany({
-				columns: { id: true },
-				where: (f, { inArray }) => inArray(f.mnc, operatorMncs),
-			})
-		: [];
-	const regionsRows = regions?.length
-		? await db.query.regions.findMany({
-				columns: { id: true },
-				where: (f, { inArray }) => inArray(f.name, regions),
-			})
-		: [];
-
-	const regionIds = regionsRows.map((r) => r.id);
+	const bandIds = bandRows.map((b) => b.id);
 	const operatorIds = operatorRows.map((r) => r.id);
+	const regionIds = regionsRows.map((r) => r.id);
+
+	if (bandValues?.length && !bandIds.length) return res.send({ data: [], totalCount: 0 });
 
 	const requestedRats = rat ?? [];
 	type NonIotRat = "GSM" | "UMTS" | "LTE" | "NR";
@@ -125,73 +129,90 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
 	const iotRequested = requestedRats.includes("iot");
 
+	const buildStationConditions = (): ReturnType<typeof sql>[] => {
+		const conditions: ReturnType<typeof sql>[] = [];
+
+		if (operatorIds.length) {
+			conditions.push(
+				sql`${stations.operator_id} = ANY(ARRAY[${sql.join(
+					operatorIds.map((id) => sql`${id}`),
+					sql`,`,
+				)}]::int4[])`,
+			);
+		}
+		if (envelope)
+			conditions.push(sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND ST_Intersects(l.point, ${envelope}))`);
+		if (regionIds.length) {
+			conditions.push(
+				sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND l.region_id = ANY(ARRAY[${sql.join(
+					regionIds.map((id) => sql`${id}`),
+					sql`,`,
+				)}]::int4[]))`,
+			);
+		}
+		if (bandIds.length || nonIotRats.length || iotRequested) {
+			const bandCond = bandIds.length
+				? sql` AND c.band_id = ANY(ARRAY[${sql.join(
+						bandIds.map((id) => sql`${id}`),
+						sql`,`,
+					)}]::int4[])`
+				: sql``;
+			const ratCond = nonIotRats.length
+				? sql` AND c.rat IN (${sql.join(
+						nonIotRats.map((r) => sql`${r}`),
+						sql`,`,
+					)})`
+				: sql``;
+			const iotCond = iotRequested
+				? sql` AND (
+						EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
+						OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
+					)`
+				: sql``;
+
+			conditions.push(sql`
+				EXISTS (
+					SELECT 1
+					FROM cells c
+					WHERE c.station_id = ${stations.id}
+					${bandCond}
+					${ratCond}
+					${iotCond}
+				)
+			`);
+		}
+
+		return conditions;
+	};
+
+	const stationConditions = buildStationConditions();
+
 	try {
-		const btsStations = await db.query.stations.findMany({
-			where: (fields, { and, inArray }) => {
-				const conditions = [];
-				if (operatorIds.length) conditions.push(inArray(fields.operator_id, operatorIds));
-				if (envelope)
-					conditions.push(sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND ST_Intersects(l.point, ${envelope}))`);
+		const whereClause = stationConditions.length ? drizzleAnd(...stationConditions) : undefined;
 
-				if (regionIds.length) {
-					conditions.push(
-						sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND l.region_id = ANY(ARRAY[${sql.join(
-							regionIds.map((id) => sql`${id}`),
-							sql`,`,
-						)}]::int4[]))`,
-					);
-				}
-
-				if ((bandIds?.length ?? 0) || nonIotRats.length || iotRequested) {
-					const bandCond = bandIds?.length
-						? sql` AND c.band_id = ANY(ARRAY[${sql.join(
-								bandIds.map((id) => sql`${id}`),
-								sql`,`,
-							)}]::int4[])`
-						: sql``;
-					const ratCond = nonIotRats.length
-						? sql` AND c.rat IN (${sql.join(
-								nonIotRats.map((r) => sql`${r}`),
-								sql`,`,
-							)})`
-						: sql``;
-					const iotCond = iotRequested
-						? sql` AND (
-								EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
-								OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
-							)`
-						: sql``;
-
-					conditions.push(sql`
-						EXISTS (
-							SELECT 1
-							FROM cells c
-							WHERE c.station_id = ${stations.id}
-							${bandCond}
-							${ratCond}
-							${iotCond}
-						)
-					`);
-				}
-
-				return conditions.length ? and(...conditions) : undefined;
-			},
-			columns: {
-				status: false,
-			},
-			with: {
-				cells: {
-					columns: { band_id: false },
-					with: { band: true },
+		const [countResult, btsStations] = await Promise.all([
+			db.select({ count: count() }).from(stations).where(whereClause),
+			db.query.stations.findMany({
+				where: whereClause,
+				columns: {
+					status: false,
 				},
-				location: { columns: { point: false, region_id: false }, with: { region: true } },
-				operator: { columns: { is_isp: false } },
-				networks: { columns: { station_id: false } },
-			},
-			limit,
-			offset,
-			orderBy: (fields, operators) => [operators.desc(fields.id)],
-		});
+				with: {
+					cells: {
+						columns: { band_id: false },
+						with: { band: true },
+					},
+					location: { columns: { point: false, region_id: false }, with: { region: true } },
+					operator: { columns: { is_isp: false } },
+					networks: { columns: { station_id: false } },
+				},
+				limit,
+				offset,
+				orderBy: (fields, operators) => [operators.desc(fields.id)],
+			}),
+		]);
+
+		const totalCount = countResult[0]?.count ?? 0;
 
 		const mappedStations: Station[] = btsStations.map((station: StationRaw) => {
 			const cellsWithoutDetails = station.cells.map((cell) => {
@@ -204,14 +225,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			return stationWithNetworks as Station;
 		});
 
-		return res.send({ data: mappedStations });
+		return res.send({ data: mappedStations, totalCount });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR", { cause: error });
 	}
 }
 
-const getStations: Route<ReqQuery, Station[]> = {
+const getStations: Route<ReqQuery, ResponseBody> = {
 	url: "/stations",
 	method: "GET",
 	schema: schemaRoute,

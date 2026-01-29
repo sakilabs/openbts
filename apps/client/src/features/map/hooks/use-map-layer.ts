@@ -1,14 +1,22 @@
 import { useEffect, useRef } from "react";
 import type MapLibreGL from "maplibre-gl";
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
-import type { Station } from "@/types/station";
 import { getOperatorColor } from "@/lib/operator-utils";
+
+type FeatureClickData = {
+	coordinates: [number, number];
+	locationId: number;
+	city?: string;
+	address?: string;
+	source: string;
+};
 
 type UseMapLayerArgs = {
 	map: maplibregl.Map | null;
 	isLoaded: boolean;
 	geoJSON: GeoJSON.FeatureCollection;
-	onFeatureClick: (coordinates: [number, number], stations: Station[], source: string) => void;
+	onFeatureClick: (data: FeatureClickData) => void;
+	onFeatureMouseDown?: (locationId: number) => void;
 };
 
 function makePieImageData(segments: { value: number; color: string }[], size = 32): ImageData | null {
@@ -78,17 +86,34 @@ const SYMBOL_LAYER_CONFIG = {
 	},
 };
 
-export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLayerArgs) {
+export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick, onFeatureMouseDown }: UseMapLayerArgs) {
 	const onFeatureClickRef = useRef(onFeatureClick);
 	onFeatureClickRef.current = onFeatureClick;
+	const onFeatureMouseDownRef = useRef(onFeatureMouseDown);
+	onFeatureMouseDownRef.current = onFeatureMouseDown;
 	const addedImagesRef = useRef(new Set<string>());
 
 	useEffect(() => {
 		if (!map || !isLoaded) return;
 
-		map.addSource(SOURCE_ID, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-		map.addLayer(CIRCLE_LAYER_CONFIG as maplibregl.LayerSpecification);
-		map.addLayer(SYMBOL_LAYER_CONFIG as maplibregl.LayerSpecification);
+		if (!map.getSource(SOURCE_ID)) map.addSource(SOURCE_ID, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+		if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(CIRCLE_LAYER_CONFIG as maplibregl.LayerSpecification);
+		if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(SYMBOL_LAYER_CONFIG as maplibregl.LayerSpecification);
+
+		addedImagesRef.current.clear();
+
+		const handleMouseDown = (e: maplibregl.MapMouseEvent) => {
+			if (!onFeatureMouseDownRef.current) return;
+
+			const features = map.queryRenderedFeatures(e.point, { layers: LAYER_IDS });
+			if (!features.length) return;
+
+			const feature = features[0];
+			const locationId = feature.properties?.locationId;
+			if (!locationId) return;
+
+			onFeatureMouseDownRef.current(locationId);
+		};
 
 		const handleClick = (e: maplibregl.MapMouseEvent) => {
 			const features = map.queryRenderedFeatures(e.point, { layers: LAYER_IDS });
@@ -97,11 +122,16 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLa
 			const feature = features[0];
 			if (feature.geometry.type !== "Point") return;
 
-			const stations = JSON.parse(feature.properties?.stations || "[]");
-			if (!stations.length) return;
+			const locationId = feature.properties?.locationId;
+			if (!locationId) return;
 
-			const source = feature.properties?.source || "internal";
-			onFeatureClickRef.current(feature.geometry.coordinates as [number, number], stations, source);
+			onFeatureClickRef.current({
+				coordinates: feature.geometry.coordinates as [number, number],
+				locationId,
+				city: feature.properties?.city,
+				address: feature.properties?.address,
+				source: feature.properties?.source || "internal",
+			});
 		};
 
 		const handleMouseEnter = () => {
@@ -112,6 +142,7 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLa
 		};
 
 		for (const id of LAYER_IDS) {
+			map.on("mousedown", id, handleMouseDown);
 			map.on("click", id, handleClick);
 			map.on("mouseenter", id, handleMouseEnter);
 			map.on("mouseleave", id, handleMouseLeave);
@@ -119,6 +150,7 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLa
 
 		return () => {
 			for (const id of LAYER_IDS) {
+				map.off("mousedown", id, handleMouseDown);
 				map.off("click", id, handleClick);
 				map.off("mouseenter", id, handleMouseEnter);
 				map.off("mouseleave", id, handleMouseLeave);
@@ -138,23 +170,25 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick }: UseMapLa
 	useEffect(() => {
 		if (!map || !isLoaded) return;
 
+		const source = map.getSource(SOURCE_ID) as MapLibreGL.GeoJSONSource;
+		if (!source) return;
+
 		for (const feature of geoJSON.features) {
 			const pieImageId = feature.properties?.pieImageId;
 			if (pieImageId && !addedImagesRef.current.has(pieImageId)) {
-				const mncs = JSON.parse(feature.properties?.operators || "[]") as number[];
-				const segments = mncs.map((mnc) => ({
-					value: 1,
-					color: getOperatorColor(mnc),
-				}));
-				const imageData = makePieImageData(segments);
-				if (imageData) {
-					map.addImage(pieImageId, imageData);
-					addedImagesRef.current.add(pieImageId);
+				if (!map.hasImage(pieImageId)) {
+					const mncs = JSON.parse(feature.properties?.operators || "[]") as number[];
+					const segments = mncs.map((mnc) => ({
+						value: 1,
+						color: getOperatorColor(mnc),
+					}));
+					const imageData = makePieImageData(segments);
+					if (imageData) map.addImage(pieImageId, imageData);
 				}
+				addedImagesRef.current.add(pieImageId);
 			}
 		}
 
-		const source = map.getSource(SOURCE_ID) as MapLibreGL.GeoJSONSource;
-		source?.setData(geoJSON);
+		source.setData(geoJSON);
 	}, [map, isLoaded, geoJSON]);
 }

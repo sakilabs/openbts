@@ -1,5 +1,18 @@
 export const API_BASE = import.meta.env.VITE_API_URL || "https://openbts.sakilabs.com/api/v1";
 
+type ApiError = { code: string; message: string };
+
+export class ApiResponseError extends Error {
+	errors: ApiError[];
+	status: number;
+
+	constructor(status: number, errors: ApiError[]) {
+		super(errors[0]?.message || `Request failed: ${status}`);
+		this.status = status;
+		this.errors = errors;
+	}
+}
+
 type FetchOptions = RequestInit & {
 	allowedErrors?: number[];
 };
@@ -13,6 +26,16 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 		if (allowedErrors?.includes(response.status)) {
 			return null as T;
 		}
+
+		try {
+			const errorData = await response.json();
+			if (errorData.errors?.length) {
+				throw new ApiResponseError(response.status, errorData.errors);
+			}
+		} catch (e) {
+			if (e instanceof ApiResponseError) throw e;
+		}
+
 		throw new Error(`Request failed: ${response.status}`);
 	}
 

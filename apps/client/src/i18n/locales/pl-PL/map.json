@@ -9,12 +9,17 @@
 		"showingTop": "Pokazano {{shown}} z {{total}} stacji"
 	},
 	"filters": {
-		"title": "Filtruj stacje",
+		"button": "Filtry",
+		"title": "Filtrowanie stacji",
 		"clearAll": "Wyczyść wszystko",
 		"dataSource": "Źródło danych",
 		"internalDb": "Wewnętrzna baza",
 		"ukePermits": "Pozwolenia UKE",
 		"operator": "Operator",
+		"otherOperators_one": "{{count}} inny operator",
+		"otherOperators_few": "{{count}} innych operatorów",
+		"otherOperators_many": "{{count}} innych operatorów",
+		"selected": "wybranych",
 		"standard": "Standard",
 		"band": "Pasmo (MHz)",
 		"all": "Wszystkie",
@@ -45,13 +50,16 @@
 		"btsStation": "Stacja BTS"
 	},
 	"popup": {
-		"unknownOperator": "Nieznany operator"
+		"unknownOperator": "Nieznany operator",
+		"loading": "Ładowanie stacji...",
+		"noStations": "Brak stacji"
 	},
 	"overlay": {
-		"stations": "stacji",
+		"locations": "lokalizacji",
 		"filtered": "przefiltrowano",
 		"operators": "Legenda",
-		"zoom": "Zoom"
+		"zoom": "Zoom",
+		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie."
 	},
 	"loading": {
 		"loadingMap": "Ładowanie mapy..."

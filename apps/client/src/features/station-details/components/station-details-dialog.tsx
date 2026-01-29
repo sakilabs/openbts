@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor } from "@/lib/operator-utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { fetchStation } from "../api";
 import { StationDetailsBody } from "./dialog-body";
 import type { TabId } from "../tabs";
@@ -18,6 +19,12 @@ type StationDetailsDialogProps = {
 
 function getDefaultTab(source: "internal" | "uke"): TabId {
 	return source === "uke" ? "permits" : "specs";
+}
+
+function getHardwareLeaseOperator(stationId: string): string | null {
+	if (stationId.startsWith("T-")) return "T-Mobile";
+	if (stationId.startsWith("O-")) return "Orange";
+	return null;
 }
 
 export function StationDetailsDialog({ stationId, source, onClose }: StationDetailsDialogProps) {
@@ -74,24 +81,36 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 									<div className="h-4 w-32 bg-muted rounded animate-pulse" />
 								</div>
 							) : station ? (
-								<div className="flex items-start justify-between gap-3">
-									<div className="min-w-0">
-										<div className="flex items-center gap-2 mb-1">
-											<h2 className="text-xl font-bold tracking-tight flex items-baseline gap-2">
-												<span style={{ color: operatorColor }}>{station.operator.name}</span>
-												<span className="text-lg text-muted-foreground font-mono font-medium tracking-normal">{station.station_id}</span>
+								<div className="flex flex-col gap-1.5">
+									<div className="flex items-center justify-between gap-2">
+										<div className="flex items-center gap-2 min-w-0">
+											<h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
+												{station.operator.name}
 											</h2>
+											{getHardwareLeaseOperator(station.station_id) ? (
+												<Tooltip>
+													<TooltipTrigger className="text-sm text-muted-foreground font-mono font-medium cursor-help underline decoration-dashed decoration-amber-500/50 underline-offset-2 shrink-0">
+														{station.station_id}
+													</TooltipTrigger>
+													<TooltipContent>{t("dialog.hardwareLease", { operator: getHardwareLeaseOperator(station.station_id) })}</TooltipContent>
+												</Tooltip>
+											) : (
+												<span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
+											)}
 										</div>
-										<div className="flex flex-col">
-											<p className="text-sm font-medium text-foreground/90 truncate">{station.location.address || t("dialog.btsStation")}</p>
-											<p className="text-xs text-muted-foreground font-medium opacity-80">{station.location.city}</p>
+										<div className="flex items-center gap-2 shrink-0">
+											{station.is_confirmed && (
+												<span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-sm">
+													<HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
+													<span className="hidden sm:inline">{t("dialog.confirmed")}</span>
+												</span>
+											)}
 										</div>
 									</div>
-									{station.is_confirmed && (
-										<span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-sm">
-											<HugeiconsIcon icon={Tick02Icon} className="size-3.5" /> {t("dialog.confirmed")}
-										</span>
-									)}
+									<div className="flex flex-col gap-0.5">
+										<p className="text-sm font-medium text-foreground/90 truncate">{station.location.address || t("dialog.btsStation")}</p>
+										<p className="text-xs text-muted-foreground font-medium opacity-80">{station.location.city}</p>
+									</div>
 								</div>
 							) : null}
 						</div>

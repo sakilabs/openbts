@@ -97,6 +97,25 @@ export type StationFilters = {
 	source: StationSource;
 };
 
+export type StationWithoutCells = Omit<Station, "location" | "cells"> & {
+	cells?: Cell[];
+};
+
+export type LocationInfo = {
+	id: number;
+	city?: string;
+	address?: string;
+	latitude: number;
+	longitude: number;
+};
+
+export type LocationWithStations = LocationInfo & {
+	updatedAt: string;
+	createdAt: string;
+	region: Region;
+	stations: StationWithoutCells[];
+};
+
 export type UkePermit = {
 	id: number;
 	case_id: string;

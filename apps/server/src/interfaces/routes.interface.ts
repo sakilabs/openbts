@@ -37,7 +37,7 @@ export type EmptyResponse = RouteGenericInterface & {
 	Reply: Record<string, never>;
 };
 
-type Response<T> = DataResponse<T>;
+type Response<T> = T extends { data: unknown } ? T : DataResponse<T>;
 
 interface DataResponse<T> {
 	data: T;

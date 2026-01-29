@@ -37,14 +37,14 @@ export class RateLimitService {
 	private prefix = "ratelimit:";
 
 	private defaultTiers: Required<NonNullable<RateLimitOptions["tiers"]>> = {
-		basic: { max: 100, window: 60 },
+		basic: { max: 100, window: 300 },
 		pro: { max: 1000, window: 60 },
 		unlimited: { max: Number.POSITIVE_INFINITY, window: 60 },
 	};
 
 	private defaultRoles: Required<NonNullable<RateLimitOptions["roles"]>> = {
-		guest: { max: 60, window: 300 },
-		user: { max: 100, window: 60 },
+		guest: { max: 120, window: 300 },
+		user: { max: 300, window: 60 },
 		moderator: { max: 1000, window: 60 },
 		admin: { max: Number.POSITIVE_INFINITY, window: 60 },
 	};

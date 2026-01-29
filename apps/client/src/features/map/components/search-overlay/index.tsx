@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon, Loading03Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useMap, type MapStyle } from "@/components/ui/map";
 import type { Station, StationFilters } from "@/types/station";
 import { fetchBands, fetchOperators, searchLocations, searchStations } from "../../search-api";
@@ -32,7 +33,8 @@ const mapStyleOptions: Record<MapStyle, { label: string; thumbnail: string }> = 
 };
 
 type MapSearchOverlayProps = {
-	stationCount: number;
+	locationCount: number;
+	totalCount: number;
 	isLoading: boolean;
 	isFetching?: boolean;
 	filters: StationFilters;
@@ -47,7 +49,8 @@ function toggleValue<T>(values: T[], value: T): T[] {
 }
 
 export function MapSearchOverlay({
-	stationCount,
+	locationCount,
+	totalCount,
 	isLoading,
 	isFetching = false,
 	filters,
@@ -119,6 +122,7 @@ export function MapSearchOverlay({
 	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length;
 	const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
 	const showResults = activeOverlay === "results" && (isSearching || osmResults.length > 0 || stationResults.length > 0);
+	const hasMoreLocations = totalCount > locationCount;
 
 	const uniqueBandValues = useMemo(() => {
 		const values = [...new Set(bands.map((b) => b.value))];
@@ -165,7 +169,7 @@ export function MapSearchOverlay({
 
 	return (
 		<>
-			<div className="absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-105 z-10">
+			<div className={cn("absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-105 z-10", showFilters && "z-20")}>
 				<search
 					ref={containerRef}
 					onBlur={handleContainerBlur}
@@ -174,7 +178,7 @@ export function MapSearchOverlay({
 						isFocused && "ring-2 ring-primary/20 border-primary/30",
 					)}
 				>
-					<div className="flex items-center gap-2 px-4 py-3">
+					<div className="flex items-center gap-2 px-3 py-2">
 						<HugeiconsIcon icon={Search01Icon} className="size-5 text-muted-foreground shrink-0" />
 
 						<div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide">
@@ -202,7 +206,7 @@ export function MapSearchOverlay({
 								onFocus={handleInputFocus}
 								onClick={handleInputClick}
 								placeholder={parsedFilters.length > 0 ? t("search.placeholderAddMore") : t("search.placeholder")}
-								className="flex-1 min-w-25 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+								className="flex-1 min-w-25 bg-transparent text-base md:text-sm outline-none placeholder:text-muted-foreground/60"
 							/>
 						</div>
 
@@ -221,14 +225,14 @@ export function MapSearchOverlay({
 							onClick={() => setShowFilters(!showFilters)}
 							type="button"
 							className={cn(
-								"flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all font-medium text-sm shrink-0 whitespace-nowrap",
+								"flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all font-medium text-sm shrink-0 whitespace-nowrap",
 								showFilters || activeFilterCount > 0
 									? "bg-primary text-primary-foreground shadow-sm"
 									: "bg-muted hover:bg-muted/80 text-muted-foreground",
 							)}
 						>
 							<HugeiconsIcon icon={SlidersHorizontalIcon} className="size-4" />
-							<span className="hidden sm:inline">{t("filters.title")}</span>
+							<span className="hidden sm:inline">{t("filters.button")}</span>
 							{activeFilterCount > 0 && (
 								<span
 									className={cn(
@@ -278,27 +282,39 @@ export function MapSearchOverlay({
 				)}
 			</div>
 
-			<div className="hidden md:flex absolute top-4 left-4 z-10 items-start gap-2">
-				<div className="flex items-stretch shadow-xl rounded-xl overflow-hidden border bg-background/95 backdrop-blur-md">
-					<div className="px-3 py-2 flex items-center gap-2.5 border-r border-border/50">
-						{isLoading || isFetching ? (
-							<HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin text-primary" />
-						) : (
-							<div className="size-2 rounded-full shrink-0 bg-emerald-500" />
-						)}
-						<div className="flex items-baseline gap-1.5">
-							<span className="text-base font-bold tabular-nums leading-none tracking-tight">{stationCount.toLocaleString()}</span>
-							<span className="text-[10px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
-								{activeFilterCount > 0 ? t("overlay.filtered") : t("overlay.stations")}
-							</span>
-						</div>
-					</div>
-					<div className="bg-muted/30 px-2.5 py-2 flex items-center gap-2">
-						<span className="text-[9px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
+			<div className="hidden md:flex absolute top-4 left-4 z-10 flex-col items-start gap-1.5">
+				<div className="flex items-stretch shadow-xl rounded-lg overflow-hidden border bg-background/95 backdrop-blur-md">
+					<Tooltip>
+						<TooltipTrigger
+							className={cn("px-2 py-1.5 flex items-center gap-2 border-r border-border/50", hasMoreLocations && "cursor-help")}
+							disabled={!hasMoreLocations}
+						>
+							{isLoading || isFetching ? (
+								<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
+							) : hasMoreLocations ? (
+								<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+							) : (
+								<div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
+							)}
+							<div className="flex items-baseline gap-1">
+								<span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
+									{locationCount.toLocaleString()}
+								</span>
+								<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+									{activeFilterCount > 0 ? t("overlay.filtered") : t("overlay.locations")}
+								</span>
+							</div>
+						</TooltipTrigger>
+						<TooltipContent side="bottom">
+							{t("overlay.moreStations", { total: totalCount.toLocaleString(), shown: locationCount.toLocaleString() })}
+						</TooltipContent>
+					</Tooltip>
+					<div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
+						<span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
 							{filters.source === "uke" ? t("filters.ukePermits") : t("filters.internalDb")}
 						</span>
-						<div className="w-px h-2.5 bg-border/60" />
-						<span className="text-[9px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">
+						<div className="w-px h-2 bg-border/60" />
+						<span className="text-[8px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">
 							{t("overlay.zoom")} {zoom?.toFixed(1) || "-"}
 						</span>
 					</div>
@@ -310,7 +326,7 @@ export function MapSearchOverlay({
 							onClick={(e) => e.stopPropagation()}
 							onKeyDown={(e) => e.stopPropagation()}
 							role="listbox"
-							className="flex gap-2 p-2 rounded-xl bg-background/95 backdrop-blur-md border shadow-xl"
+							className="flex gap-1.5 p-1.5 rounded-lg bg-background/95 backdrop-blur-md border shadow-xl"
 						>
 							{(Object.keys(mapStyleOptions) as MapStyle[]).map((key) => {
 								const style = mapStyleOptions[key];
@@ -323,19 +339,17 @@ export function MapSearchOverlay({
 											setMapStyle(key);
 											setShowStylePicker(false);
 										}}
-										className="flex flex-col items-center gap-1 group"
+										className="flex flex-col items-center gap-0.5 group cursor-pointer"
 									>
 										<div
 											className={cn(
-												"w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors",
+												"w-12 h-12 rounded-md overflow-hidden border-2 transition-colors",
 												isSelected ? "border-blue-500" : "border-transparent group-hover:border-muted-foreground/50",
 											)}
 										>
 											<img src={style.thumbnail} alt={style.label} className="w-full h-full object-cover" />
 										</div>
-										<span className={cn("text-xs font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>
-											{style.label}
-										</span>
+										<span className={cn("text-[10px] font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>{style.label}</span>
 									</button>
 								);
 							})}
@@ -344,51 +358,23 @@ export function MapSearchOverlay({
 						<button
 							type="button"
 							onClick={() => setShowStylePicker(true)}
-							className="w-10 h-10 rounded-lg overflow-hidden border bg-background shadow-xl hover:border-muted-foreground/50 transition-colors"
+							className="w-8 h-8 rounded-md overflow-hidden border bg-background shadow-xl hover:border-muted-foreground/50 transition-colors cursor-pointer"
 							aria-label="Change map style"
 						>
-							<img
-								src={mapStyleOptions[mapStyle].thumbnail}
-								alt={mapStyleOptions[mapStyle].label}
-								className="w-full h-full object-cover"
-							/>
+							<img src={mapStyleOptions[mapStyle].thumbnail} alt={mapStyleOptions[mapStyle].label} className="w-full h-full object-cover" />
 						</button>
 					)}
 				</div>
 			</div>
 
-			<div className="md:hidden absolute bottom-4 left-4 z-5 flex items-end gap-2">
-				<div className="bg-background/95 backdrop-blur-md border rounded-xl shadow-lg overflow-hidden">
-					<div className="px-3 py-2 bg-muted/30 flex items-center gap-3">
-						{isLoading || isFetching ? (
-							<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
-						) : (
-							<div className={cn("size-1.5 rounded-full shrink-0", searchMode === "search" ? "bg-primary" : "bg-emerald-500")} />
-						)}
-						<div className="flex flex-col gap-1">
-							<div className="flex items-center gap-1.5">
-								<span className="text-sm font-bold leading-none">{stationCount.toLocaleString()}</span>
-								<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.stations")}</span>
-							</div>
-							<div className="flex items-center gap-1.5">
-								<span className="text-[8px] uppercase font-bold text-primary border-b border-primary/20 leading-none">
-									{filters.source === "uke" ? "UKE" : "INT"}
-								</span>
-								<span className="text-[8px] uppercase font-bold text-blue-600 dark:text-blue-400 border-b border-blue-500/20 leading-none">
-									Z{zoom?.toFixed(1) || "-"}
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-
+			<div className="md:hidden absolute bottom-4 left-4 z-5 flex flex-col items-start gap-1">
 				<div className="relative">
 					{showStylePicker ? (
 						<div
 							onClick={(e) => e.stopPropagation()}
 							onKeyDown={(e) => e.stopPropagation()}
 							role="listbox"
-							className="absolute bottom-0 left-0 flex gap-2 p-2 rounded-xl bg-background/95 backdrop-blur-md border shadow-xl"
+							className="absolute bottom-0 left-0 flex gap-1.5 p-1.5 rounded-lg bg-background/95 backdrop-blur-md border shadow-xl"
 						>
 							{(Object.keys(mapStyleOptions) as MapStyle[]).map((key) => {
 								const style = mapStyleOptions[key];
@@ -401,19 +387,17 @@ export function MapSearchOverlay({
 											setMapStyle(key);
 											setShowStylePicker(false);
 										}}
-										className="flex flex-col items-center gap-1 group"
+										className="flex flex-col items-center gap-1 group cursor-pointer"
 									>
 										<div
 											className={cn(
-												"w-14 h-14 rounded-lg overflow-hidden border-2 transition-colors",
+												"w-12 h-12 rounded-md overflow-hidden border-2 transition-colors",
 												isSelected ? "border-blue-500" : "border-transparent group-hover:border-muted-foreground/50",
 											)}
 										>
 											<img src={style.thumbnail} alt={style.label} className="w-full h-full object-cover" />
 										</div>
-										<span className={cn("text-[10px] font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>
-											{style.label}
-										</span>
+										<span className={cn("text-[10px] font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>{style.label}</span>
 									</button>
 								);
 							})}
@@ -422,16 +406,46 @@ export function MapSearchOverlay({
 						<button
 							type="button"
 							onClick={() => setShowStylePicker(true)}
-							className="w-10 h-10 rounded-lg overflow-hidden border bg-background shadow-lg hover:border-muted-foreground/50 transition-colors"
+							className="w-8 h-8 rounded-md overflow-hidden border bg-background shadow-lg hover:border-muted-foreground/50 transition-colors cursor-pointer"
 							aria-label="Change map style"
 						>
-							<img
-								src={mapStyleOptions[mapStyle].thumbnail}
-								alt={mapStyleOptions[mapStyle].label}
-								className="w-full h-full object-cover"
-							/>
+							<img src={mapStyleOptions[mapStyle].thumbnail} alt={mapStyleOptions[mapStyle].label} className="w-full h-full object-cover" />
 						</button>
 					)}
+				</div>
+
+				<div className="bg-background/95 backdrop-blur-md border rounded-lg shadow-lg overflow-hidden">
+					<Tooltip>
+						<TooltipTrigger
+							className={cn("px-2 py-1.5 bg-muted/30 flex items-center gap-2", hasMoreLocations && "cursor-help")}
+							disabled={!hasMoreLocations}
+						>
+							{isLoading || isFetching ? (
+								<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
+							) : hasMoreLocations ? (
+								<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+							) : (
+								<div className={cn("size-1.5 rounded-full shrink-0", searchMode === "search" ? "bg-primary" : "bg-emerald-500")} />
+							)}
+							<div className="flex flex-col gap-0.5">
+								<div className="flex items-center gap-1">
+									<span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>{locationCount.toLocaleString()}</span>
+									<span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+								</div>
+								<div className="flex items-center gap-1">
+									<span className="text-[7px] uppercase font-bold text-primary border-b border-primary/20 leading-none">
+										{filters.source === "uke" ? "UKE" : "INT"}
+									</span>
+									<span className="text-[7px] uppercase font-bold text-blue-600 dark:text-blue-400 border-b border-blue-500/20 leading-none">
+										Z{zoom?.toFixed(1) || "-"}
+									</span>
+								</div>
+							</div>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							{t("overlay.moreStations", { total: totalCount.toLocaleString(), shown: locationCount.toLocaleString() })}
+						</TooltipContent>
+					</Tooltip>
 				</div>
 			</div>
 		</>

@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";
-import type { Station, StationSource } from "@/types/station";
+import type { StationSource, LocationInfo, StationWithoutCells } from "@/types/station";
 import { PopupContent } from "../components/popup-content";
 
 type UseMapPopupArgs = {
@@ -13,18 +13,13 @@ export function useMapPopup({ map, onOpenDetails }: UseMapPopupArgs) {
 	const popupRef = useRef<MapLibreGL.Popup | null>(null);
 	const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
-	const showPopup = useCallback(
-		(coordinates: [number, number], stations: Station[], source: StationSource) => {
-			if (!map) return;
-			if (popupRef.current) popupRef.current.remove();
-			if (popupRootRef.current) popupRootRef.current.unmount();
+	const renderPopup = useCallback(
+		(location: LocationInfo, stations: StationWithoutCells[] | null, source: StationSource) => {
+			if (!popupRootRef.current) return;
 
-			const container = document.createElement("div");
-			container.className = "station-popup-container";
-
-			popupRootRef.current = createRoot(container);
 			popupRootRef.current.render(
 				<PopupContent
+					location={location}
 					stations={stations}
 					source={source}
 					onOpenDetails={(id) => {
@@ -33,6 +28,22 @@ export function useMapPopup({ map, onOpenDetails }: UseMapPopupArgs) {
 					}}
 				/>,
 			);
+		},
+		[onOpenDetails],
+	);
+
+	const showPopup = useCallback(
+		(coordinates: [number, number], location: LocationInfo, stations: StationWithoutCells[] | null, source: StationSource) => {
+			if (!map) return;
+
+			popupRef.current?.remove();
+			popupRootRef.current?.unmount();
+
+			const container = document.createElement("div");
+			container.className = "station-popup-container";
+
+			popupRootRef.current = createRoot(container);
+			renderPopup(location, stations, source);
 
 			popupRef.current = new MapLibreGL.Popup({
 				closeButton: true,
@@ -44,17 +55,20 @@ export function useMapPopup({ map, onOpenDetails }: UseMapPopupArgs) {
 				.setDOMContent(container)
 				.addTo(map);
 		},
-		[map, onOpenDetails],
+		[map, renderPopup],
 	);
 
-	const closePopup = useCallback(() => {
-		popupRef.current?.remove();
-	}, []);
+	const updatePopupStations = useCallback(
+		(location: LocationInfo, stations: StationWithoutCells[], source: StationSource) => {
+			renderPopup(location, stations, source);
+		},
+		[renderPopup],
+	);
 
 	const cleanup = useCallback(() => {
 		popupRef.current?.remove();
 		popupRootRef.current?.unmount();
 	}, []);
 
-	return { showPopup, closePopup, cleanup };
+	return { showPopup, updatePopupStations, cleanup };
 }

@@ -56,11 +56,12 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 								<button
 									type="button"
 									key={result.place_id}
+									onMouseDown={(e) => e.preventDefault()}
 									onClick={() => {
 										onLocationSelect?.(Number.parseFloat(result.lat), Number.parseFloat(result.lon));
 										onClose();
 									}}
-									className="w-full flex flex-col gap-0.5 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group"
+									className="w-full flex flex-col gap-0.5 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
 								>
 									<div className="flex items-center gap-2">
 										<span className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">
@@ -93,11 +94,12 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 								<button
 									type="button"
 									key={station.id}
+									onMouseDown={(e) => e.preventDefault()}
 									onClick={() => {
 										onStationSelect?.(station);
 										onClose();
 									}}
-									className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group"
+									className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
 								>
 									<div
 										className="size-2.5 rounded-full shrink-0 shadow-sm border border-white dark:border-gray-800 transition-transform group-hover:scale-125"

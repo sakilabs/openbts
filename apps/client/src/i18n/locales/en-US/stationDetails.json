@@ -3,7 +3,8 @@
 		"closeLabel": "Close dialog",
 		"btsStation": "BTS Station",
 		"confirmed": "Confirmed",
-		"loadError": "Failed to load station details"
+		"loadError": "Failed to load station details",
+		"hardwareLease": "Hardware lease from {{operator}}"
 	},
 	"tabs": {
 		"specs": "Specifications",

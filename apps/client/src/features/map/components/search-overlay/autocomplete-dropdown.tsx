@@ -20,8 +20,9 @@ export function AutocompleteDropdown({ options, onSelect }: AutocompleteDropdown
 						<button
 							type="button"
 							key={option.key}
+							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => onSelect(option.key)}
-							className="w-full flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-left"
+							className="w-full flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-left cursor-pointer"
 						>
 							<span className="font-mono text-sm text-primary font-medium shrink-0 mt-0.5">{option.key}</span>
 							<span className="text-xs text-muted-foreground leading-relaxed">{option.description}</span>

@@ -3,7 +3,8 @@
 		"closeLabel": "Zamknij okno",
 		"btsStation": "Stacja BTS",
 		"confirmed": "Potwierdzona",
-		"loadError": "Nie udało się załadować szczegółów stacji"
+		"loadError": "Nie udało się załadować szczegółów stacji",
+		"hardwareLease": "Dzierżawa sprzętu od {{operator}}"
 	},
 	"tabs": {
 		"specs": "Specyfikacja",

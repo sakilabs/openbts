@@ -67,7 +67,7 @@ const TableRowInner = <T,>({ row, onClick, className }: TableRowProps<T>) => (
 		onClick={() => onClick?.(row.original)}
 	>
 		{row.getVisibleCells().map((cell) => (
-			<td key={cell.id} className="p-2 align-middle" style={{ width: cell.column.getSize() }}>
+			<td key={cell.id} className="p-2 align-middle overflow-hidden" style={{ width: cell.column.getSize() }}>
 				{flexRender(cell.column.columnDef.cell, cell.getContext())}
 			</td>
 		))}

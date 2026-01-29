@@ -9,12 +9,16 @@
 		"showingTop": "Showing top {{shown}} of {{total}} stations"
 	},
 	"filters": {
-		"title": "Filter Stations",
+		"button": "Filters",
+		"title": "Filter stations",
 		"clearAll": "Clear all",
 		"dataSource": "Data Source",
 		"internalDb": "Internal DB",
 		"ukePermits": "UKE Permits",
 		"operator": "Operator",
+		"otherOperators_one": "{{count}} other operator",
+		"otherOperators_other": "{{count}} other operators",
+		"selected": "selected",
 		"standard": "standard",
 		"band": "Band (MHz)",
 		"all": "All",
@@ -41,13 +45,16 @@
 		"btsStation": "BTS Station"
 	},
 	"popup": {
-		"unknownOperator": "Unknown Operator"
+		"unknownOperator": "Unknown Operator",
+		"loading": "Loading stations...",
+		"noStations": "No stations found"
 	},
 	"overlay": {
-		"stations": "stations",
+		"locations": "locations",
 		"filtered": "filtered",
 		"operators": "Operators",
-		"zoom": "Zoom"
+		"zoom": "Zoom",
+		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all."
 	},
 	"loading": {
 		"loadingMap": "Loading map..."

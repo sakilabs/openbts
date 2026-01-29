@@ -78,7 +78,7 @@ export function createStationsColumns({ t, tCommon, locale, isSearchActive = fal
 				return RAT_ORDER.filter((rat) => rats.has(rat));
 			},
 			cell: ({ getValue }) => (
-				<div className="flex items-center gap-1">
+				<div className="flex items-center gap-1 flex-wrap">
 					{getValue<(keyof typeof RAT_CONFIG)[]>().map((rat) => (
 						<TechBadge key={rat} rat={rat} />
 					))}
@@ -129,9 +129,9 @@ export function createStationsColumns({ t, tCommon, locale, isSearchActive = fal
 				const location = getValue<Station["location"]>();
 				if (!location) return <span className="text-muted-foreground">-</span>;
 				return (
-					<div className="flex items-start gap-2">
+					<div className="flex items-start gap-2 overflow-hidden">
 						<HugeiconsIcon icon={MapPinIcon} className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-						<div className="flex flex-col min-w-0">
+						<div className="flex flex-col min-w-0 overflow-hidden">
 							<span className="font-medium truncate">{location.city}</span>
 							<span className="text-xs text-muted-foreground truncate">{location.address}</span>
 						</div>
