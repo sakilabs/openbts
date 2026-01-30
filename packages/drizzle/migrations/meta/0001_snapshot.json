@@ -1,5 +1,5 @@
 {
-  "id": "1e658e67-ec04-416d-81f6-93dddad07b6a",
+  "id": "1ac19a89-2967-41f5-9929-7f0ca3cc56fe",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -2058,7 +2058,8 @@
             "location_id",
             "band_id",
             "decision_number",
-            "decision_type"
+            "decision_type",
+            "expiry_date"
           ]
         }
       },
@@ -4649,9 +4650,11 @@
       "schema": "public",
       "values": [
         "GSM",
+        "CDMA",
         "UMTS",
         "LTE",
-        "NR"
+        "NR",
+        "IOT"
       ]
     },
     "public.api_token_tier": {

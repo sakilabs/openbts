@@ -43,6 +43,8 @@ export function stripCompanySuffixForName(name: string): string {
 		.replace(/\s+[.,-]+\s+/g, " ")
 		.replace(/\s{2,}/g, " ")
 		.trim();
+
+	if (stripped.toLowerCase().includes("nordisk")) return "Nordisk";
 	return stripped;
 }
 

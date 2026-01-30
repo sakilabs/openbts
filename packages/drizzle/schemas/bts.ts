@@ -17,7 +17,7 @@ import { type SQL, sql } from "drizzle-orm";
 
 export const UKEPermissionType = pgEnum("uke_permission_type", ["zmP", "P"]);
 export const DuplexType = pgEnum("duplex", ["FDD", "TDD"]);
-export const ratEnum = pgEnum("rat", ["GSM", "UMTS", "LTE", "NR"]);
+export const ratEnum = pgEnum("rat", ["GSM", "CDMA", "UMTS", "LTE", "NR", "IOT"]);
 export const StationStatus = pgEnum("station_status", ["published", "inactive", "pending"]);
 
 /**
@@ -210,6 +210,7 @@ export const ukePermits = pgTable(
 			table.band_id,
 			table.decision_number,
 			table.decision_type,
+			table.expiry_date,
 		),
 		index("uke_permits_station_id_idx").on(table.station_id),
 		index("uke_permits_location_id_idx").on(table.location_id),

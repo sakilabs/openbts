@@ -155,8 +155,22 @@ export async function upsertUkeLocations(
 	}
 
 	const map = new Map<string, number>();
-	const longs = uniq.map((l) => l.lon);
-	const rows = longs.length ? await db.query.ukeLocations.findMany({ where: inArray(ukeLocations.longitude, longs) }) : [];
+	const latLong = uniq.map((l) => ({ lat: l.lat, lon: l.lon }));
+	const rows = latLong.length
+		? await db.query.ukeLocations.findMany({
+				where: (fields, { and }) =>
+					and(
+						inArray(
+							fields.longitude,
+							latLong.map((l) => l.lon),
+						),
+						inArray(
+							fields.latitude,
+							latLong.map((l) => l.lat),
+						),
+					),
+			})
+		: [];
 	for (const r of rows) map.set(`${r.longitude}:${r.latitude}`, r.id);
 	return map;
 }

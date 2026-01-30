@@ -19,7 +19,7 @@ export const PERMIT_FILE_OPERATOR_MAP: Record<string, string> = {
 	polkomtel: "Plus",
 };
 
-export const BATCH_SIZE = 50;
+export const BATCH_SIZE = 1000;
 
 export const REGION_BY_TERYT_PREFIX: Record<string, { name: string; code: string }> = {
 	"02": { name: "Dolnośląskie", code: "DLN" },

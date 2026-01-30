@@ -28,13 +28,17 @@
 	"devDependencies": {
 		"@openbts/drizzle": "workspace:*",
 		"@openbts/typescript-configs": "workspace:*",
+		"@types/geojson": "^7946.0.16",
 		"@types/node": "20",
 		"typescript": "5.9.3"
 	},
 	"dependencies": {
+		"@turf/boolean-point-in-polygon": "7.2.0",
+		"@turf/helpers": "7.2.0",
 		"cheerio": "1.2.0",
 		"dotenv": "17.2.3",
 		"drizzle-orm": "0.45.1",
+		"geojson-rbush": "~3.2.0",
 		"postgres": "3.4.8",
 		"tsx": "4.21.0",
 		"xlsx": "0.18.5"

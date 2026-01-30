@@ -11,21 +11,32 @@ import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir } from "./utils.
 import { isDataUpToDate, recordImportMetadata } from "./import-check.ts";
 import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
+import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
 import { db } from "@openbts/drizzle/db";
+
+function getRegionByTeryt(teryt: string): { name: string; code: string } | null {
+	return REGION_BY_TERYT_PREFIX[teryt] ?? null;
+}
 
 function parseBandFromSystemType(systemType: string | null): { rat: (typeof ratEnum.enumValues)[number]; value: number } | null {
 	if (!systemType || typeof systemType !== "string") return null;
-
 	const normalized = systemType.trim().toUpperCase();
-	const m = normalized.match(/^(GSM|UMTS|LTE|5G|NR)(\d{3,4})$/);
+	const m = normalized.match(/^(GSM|UMTS|LTE|5G|NR|IOT)(\d{3,4})$/);
 	if (!m) return null;
-
 	const tech = m[1] ?? "";
 	let value = Number(m[2] ?? "");
 	if (!Number.isFinite(value)) return null;
-
 	if ((tech === "5G" || tech === "NR") && value === 3600) value = 3500;
-	const rat = tech === "GSM" ? ("GSM" as const) : tech === "UMTS" ? ("UMTS" as const) : tech === "LTE" ? ("LTE" as const) : ("NR" as const);
+	const rat =
+		tech === "GSM"
+			? ("GSM" as const)
+			: tech === "UMTS"
+				? ("UMTS" as const)
+				: tech === "LTE"
+					? ("LTE" as const)
+					: tech === "NR"
+						? ("NR" as const)
+						: ("IOT" as const);
 
 	return { rat, value };
 }
@@ -40,12 +51,6 @@ function parseLongLat(val: string | null, direction: "N" | "E"): number | null {
 	const sec = str.slice(4, 6);
 	const dms = `${deg}${direction}${min}'${sec}''`;
 	return convertDMSToDD(dms);
-}
-
-function extractRegionFromGUS(gusCode: string | null): string | null {
-	if (!gusCode) return null;
-	const prefix = gusCode.trim().slice(0, 2);
-	return REGION_BY_TERYT_PREFIX[prefix]?.name ?? null;
 }
 
 interface ColumnIndices {
@@ -210,22 +215,42 @@ async function processOperatorFile(
 
 		rowCount++;
 		const cells = parseCSVLine(line);
+		if (cells.every((cell) => !cell || cell.trim() === "")) continue;
 
 		const lon = parseLongLat(cells[cols.dlGeogr] ?? null, "E");
 		const lat = parseLongLat(cells[cols.szerGeogr] ?? null, "N");
-		if (!lon || !lat) continue;
+		if (!lon || !lat) {
+			console.warn(`[device-registry] Invalid coordinates in row ${rowCount} for operator ${operatorKey}`);
+			continue;
+		}
 
 		const stationId = (cells[cols.idStacji] ?? "").trim();
-		if (!stationId) continue;
+		if (!stationId) {
+			console.warn(`[device-registry] Missing station ID in row ${rowCount} for operator ${operatorKey}`);
+			continue;
+		}
 
 		const bandInfo = parseBandFromSystemType(cells[cols.rodzajSystemuKomorki] ?? null);
-		if (!bandInfo) continue;
+		if (!bandInfo) {
+			console.warn(`[device-registry] Could not parse band from system type "${cells[cols.rodzajSystemuKomorki] ?? ""}" for station ${stationId}`);
+			continue;
+		}
 
 		const bandKey = `${bandInfo.rat}:${bandInfo.value}`;
 		fileBandKeys.add(bandKey);
 
-		const regionName = extractRegionFromGUS(cells[cols.kodGUS] ?? null);
-		if (!regionName) continue;
+		const terytCode = findVoivodeshipByTeryt(lon, lat);
+		if (!terytCode) {
+			console.warn(`[device-registry] Could not determine region from GPS coordinates (${lon}, ${lat}) for station ${stationId}`);
+			continue;
+		}
+
+		const regionInfo = getRegionByTeryt(terytCode);
+		if (!regionInfo) {
+			console.warn(`[device-registry] Could not find region mapping for teryt code "${terytCode}" for station ${stationId}`);
+			continue;
+		}
+		const regionName = regionInfo.name;
 
 		const addressParts: string[] = [];
 		const ulica = cells[cols.ulica];
@@ -251,7 +276,6 @@ async function processOperatorFile(
 		if (chunkRows.length >= CHUNK_SIZE) {
 			const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys);
 			insertedCount += inserted;
-
 			chunkRows = [];
 		}
 	}
@@ -270,9 +294,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 	for (const key of fileBandKeys) {
 		const [rat, valueStr] = key.split(":");
 		const value = Number(valueStr);
-		if (rat && Number.isFinite(value)) {
-			bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value });
-		}
+		if (rat && Number.isFinite(value)) bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value });
 	}
 	const bandMap = await upsertBands(bandKeysArray);
 
@@ -289,10 +311,16 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 		.map((r) => {
 			const locationKey = `${r.lon}:${r.lat}`;
 			const location_id = locationIdByLonLat.get(locationKey);
-			if (!location_id) return null;
+			if (!location_id) {
+				console.log("Missing location_id for key:", locationKey);
+				return null;
+			}
 
 			const bandId = bandMap.get(r.bandKey);
-			if (!bandId) return null;
+			if (!bandId) {
+				console.log("Missing bandId for key:", r.bandKey);
+				return null;
+			}
 
 			return {
 				station_id: r.stationId,
@@ -320,6 +348,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 						ukePermits.band_id,
 						ukePermits.decision_number,
 						ukePermits.decision_type,
+						ukePermits.expiry_date,
 					],
 				});
 			insertedCount += group.length;

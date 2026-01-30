@@ -15,13 +15,22 @@ import type { RawUkeData } from "./types.js";
 function parseBandFromLabel(label: string): { rat: (typeof ratEnum.enumValues)[number]; value: number } | null {
 	const firstToken = (label.trim().toLowerCase().split(/\s|-/)[0] ?? "").trim();
 	if (!firstToken) return null;
-	const m = firstToken.match(/^(gsm|umts|lte|5g)(\d{3,4})$/i);
+	const m = firstToken.match(/^(gsm|cdma|umts|lte|5g)(\d{3,4})$/i);
 	if (!m) return null;
 	const tech = m[1]?.toLowerCase() ?? "";
 	const bandStr = m[2] ?? "";
 	const value = Number(bandStr);
 	if (!Number.isFinite(value)) return null;
-	const rat = tech === "gsm" ? ("GSM" as const) : tech === "umts" ? ("UMTS" as const) : tech === "lte" ? ("LTE" as const) : ("NR" as const);
+	const rat =
+		tech === "gsm"
+			? ("GSM" as const)
+			: tech === "cdma"
+				? ("CDMA" as const)
+				: tech === "umts"
+					? ("UMTS" as const)
+					: tech === "lte"
+						? ("LTE" as const)
+						: ("NR" as const);
 	return { rat, value };
 }
 
@@ -93,6 +102,7 @@ export async function importStations(): Promise<boolean> {
 	const locationItems: Array<{ regionName: string; city: string | null; address: string | null; lon: number; lat: number }> = [];
 	const fileRows: Array<{ label: string; rows: RawUkeData[] }> = [];
 
+	let totalCount = 0;
 	for (const l of links) {
 		const fileName = `${(l.text || path.basename(new url.URL(l.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
 		const filePath = path.join(DOWNLOAD_DIR, fileName);
@@ -100,7 +110,8 @@ export async function importStations(): Promise<boolean> {
 		await downloadFile(l.href, filePath);
 		const rows = readSheetAsJson<RawUkeData>(filePath);
 		console.log(`[stations] Read ${rows.length} rows`);
-		fileRows.push({ label: fileName, rows });
+		totalCount += rows.length;
+		fileRows.push({ label: l.text, rows });
 		for (const r of rows) {
 			const fullOp = String(r["Nazwa Operatora"] || "").trim();
 			if (fullOp) operatorNamesSet.add(fullOp);
@@ -109,10 +120,11 @@ export async function importStations(): Promise<boolean> {
 			const region = REGION_BY_TERYT_PREFIX[prefix];
 			const lon = convertDMSToDD(r["Dł geogr stacji"]);
 			const lat = convertDMSToDD(r["Szer geogr stacji"]);
-			if (region && lon != null && lat != null)
+			if (region && lon !== null && lat !== null)
 				locationItems.push({ regionName: region.name, city: r.Miejscowość || null, address: r.Lokalizacja || null, lon, lat });
 		}
 	}
+	console.log(`[stations] Processed a total of ${totalCount} rows`);
 	console.log(`[stations] Found ${operatorNamesSet.size} unique operators`);
 	console.log(`[stations] Found ${locationItems.length} locations`);
 	console.log("[stations] Upserting operators...");
