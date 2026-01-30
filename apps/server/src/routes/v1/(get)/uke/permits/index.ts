@@ -80,16 +80,7 @@ type Permit = z.infer<typeof ukePermitsSchema> & {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-	const {
-		limit = undefined,
-		page = 1,
-		bounds,
-		rat,
-		bands: bandValues,
-		decisionType,
-		decision_number,
-		station_id,
-	} = req.query;
+	const { limit = undefined, page = 1, bounds, rat, bands: bandValues, decisionType, decision_number, station_id } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	let bandIds: number[] | undefined;
@@ -162,8 +153,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		let data = ukePermitsRes;
 		if (rat) {
-			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr" | "cdma"> = { gsm: "gsm", umts: "umts", lte: "lte", "5g": "nr", cdma: "cdma" } as const;
-			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" | "cdma" => t !== undefined);
+			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr" | "cdma" | "iot"> = {
+				gsm: "gsm",
+				umts: "umts",
+				lte: "lte",
+				"5g": "nr",
+				cdma: "cdma",
+				iot: "iot",
+			} as const;
+			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" | "cdma" | "iot" => t !== undefined);
 			data = data.filter((permit) =>
 				permit.band?.rat ? allowedRats.includes(permit.band.rat.toLowerCase() as (typeof allowedRats)[number]) : false,
 			);

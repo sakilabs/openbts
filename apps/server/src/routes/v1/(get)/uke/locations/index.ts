@@ -128,8 +128,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	if (bandValues?.length && !bandIds.length) return res.send({ data: [], totalCount: 0 });
 
 	const requestedRats = rat ?? [];
-	type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA";
-	const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA" } as const;
+	type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA" | "IOT";
+	const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" } as const;
 	const mappedRats: RatType[] = requestedRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
 
 	const hasPermitFilters = operatorIds.length || bandIds.length || mappedRats.length;
