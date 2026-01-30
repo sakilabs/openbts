@@ -47,14 +47,29 @@
 	"popup": {
 		"unknownOperator": "Unknown Operator",
 		"loading": "Loading stations...",
-		"noStations": "No stations found"
+		"noStations": "No stations found",
+		"noPermits": "No permits found",
+		"expired": "Expired",
+		"permit": "permit",
+		"permits": "permits"
 	},
 	"overlay": {
 		"locations": "locations",
-		"filtered": "filtered",
 		"operators": "Operators",
 		"zoom": "Zoom",
 		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all."
+	},
+	"stats": {
+		"dataInfo": "Data Info",
+		"lastUpdated": "Last updated",
+		"internalData": "Internal database",
+		"ukeStations": "UKE stations",
+		"ukePermits": "UKE permits",
+		"never": "Never",
+		"locations": "Locations amount",
+		"stations": "Stations amount",
+		"cells": "Cells amount",
+		"permits": "Permits amount"
 	},
 	"loading": {
 		"loadingMap": "Loading map..."

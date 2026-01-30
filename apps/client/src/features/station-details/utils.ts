@@ -1,4 +1,6 @@
 import type { Cell } from "@/types/station";
+import { FlashIcon, SignalFull02Icon, SmartPhone01Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 
 export function groupCellsByRat(cells: Cell[]): Record<string, Cell[]> {
 	return cells.reduce<Record<string, Cell[]>>((groups, cell) => {
@@ -7,3 +9,10 @@ export function groupCellsByRat(cells: Cell[]): Record<string, Cell[]> {
 		return groups;
 	}, {});
 }
+
+export const RAT_ICONS: Record<string, IconSvgElement> = {
+	GSM: SignalFull02Icon,
+	UMTS: Wifi01Icon,
+	LTE: SmartPhone01Icon,
+	NR: FlashIcon,
+};

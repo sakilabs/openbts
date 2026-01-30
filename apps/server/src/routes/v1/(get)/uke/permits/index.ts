@@ -11,7 +11,7 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const ukePermitsSchema = createSelectSchema(ukePermits);
-const ukeLocationsSchema = createSelectSchema(ukeLocations);
+const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
 const schemaRoute = {
@@ -84,7 +84,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		limit = undefined,
 		page = 1,
 		bounds,
-		operators: operatorMncs,
 		rat,
 		bands: bandValues,
 		decisionType,
@@ -107,45 +106,40 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	try {
 		const conditions: (SQL<unknown> | undefined)[] = [];
 
-		let locationIds: number[] | undefined;
+		let envelope: ReturnType<typeof sql> | undefined;
 		if (bounds) {
 			const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
 			const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
 			const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
+			envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
+		}
 
+		let locationIds: number[] | undefined;
+		if (envelope) {
 			const boundaryLocations = await db
 				.select({ id: ukeLocations.id })
 				.from(ukeLocations)
-				.where(sql`ST_Intersects(${ukeLocations.point}, ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326))`);
+				.where(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
 
 			locationIds = boundaryLocations.map((loc) => loc.id);
 			if (!locationIds.length) return res.send({ data: [] });
 		}
 
-		let operatorIds: number[] | undefined;
-		if (operatorMncs) {
-			if (operatorMncs.length === 0) return res.send({ data: [] });
-
-			const operatorQueries = operatorMncs.map((mnc) =>
-				db.query.operators.findMany({
-					columns: { id: true },
-					where: (fields, { eq }) => eq(fields.mnc, mnc),
-				}),
-			);
-
-			const operatorResults = await Promise.all(operatorQueries);
-			operatorIds = operatorResults.flat().map((op) => op.id);
-			if (!operatorIds.length) return res.send({ data: [] });
-		}
-
 		const ukePermitsRes = await db.query.ukePermits.findMany({
 			with: {
 				band: true,
-				operator: true,
-				location: true,
+				operator: {
+					columns: {
+						is_isp: false,
+					},
+				},
+				location: {
+					columns: {
+						point: false,
+					},
+				},
 			},
 			where: (fields, { and, inArray, or }) => {
-				if (operatorIds) conditions.push(inArray(fields.operator_id, operatorIds));
 				if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
 				if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
 				if (decisionType) conditions.push(eq(fields.decision_type, decisionType));
@@ -168,8 +162,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		let data = ukePermitsRes;
 		if (rat) {
-			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr"> = { gsm: "gsm", umts: "umts", lte: "lte", "5g": "nr" } as const;
-			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" => t !== undefined);
+			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr" | "cdma"> = { gsm: "gsm", umts: "umts", lte: "lte", "5g": "nr", cdma: "cdma" } as const;
+			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" | "cdma" => t !== undefined);
 			data = data.filter((permit) =>
 				permit.band?.rat ? allowedRats.includes(permit.band.rat.toLowerCase() as (typeof allowedRats)[number]) : false,
 			);
@@ -178,7 +172,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		res.send({ data });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+		req.log.error(error, "Failed to fetch UKE permits");
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR", {
+			message: error instanceof Error ? error.message : "Unknown error",
+		});
 	}
 }
 

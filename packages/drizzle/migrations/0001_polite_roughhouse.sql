@@ -72,6 +72,8 @@ CREATE TABLE "networks_ids" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "networks_ids_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"station_id" integer NOT NULL,
 	"networks_id" varchar(16) NOT NULL,
+	"networks_name" varchar(50),
+	"mno_name" varchar(50),
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "networks_ids_networks_id_unique" UNIQUE("station_id","networks_id")
@@ -189,43 +191,51 @@ CREATE TABLE "uke_permits" (
 	"expiry_date" timestamp with time zone NOT NULL,
 	"band_id" integer NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "uke_permits_unique_permit" UNIQUE("station_id","operator_id","location_id","band_id","decision_number","decision_type")
 );
 --> statement-breakpoint
 CREATE TABLE "uke_radiolines" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "uke_radiolines_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"tx_longitude" double precision NOT NULL,
 	"tx_latitude" double precision NOT NULL,
-	"tx_height" integer NOT NULL,
+	"tx_height" double precision NOT NULL,
+	"tx_city" varchar(100),
+	"tx_province" varchar(50),
+	"tx_street" varchar(200),
+	"tx_location_description" text,
 	"rx_longitude" double precision NOT NULL,
 	"rx_latitude" double precision NOT NULL,
-	"rx_height" integer NOT NULL,
+	"rx_height" double precision NOT NULL,
+	"rx_city" varchar(100),
+	"rx_province" varchar(50),
+	"rx_street" varchar(200),
+	"rx_location_description" text,
 	"freq" integer NOT NULL,
 	"ch_num" integer,
 	"plan_symbol" varchar(50),
-	"ch_width" integer,
+	"ch_width" double precision,
 	"polarization" varchar(10),
 	"modulation_type" varchar(50),
 	"bandwidth" varchar(100),
-	"tx_eirp" integer,
-	"tx_antenna_attenuation" integer,
+	"tx_eirp" double precision,
+	"tx_antenna_attenuation" double precision,
 	"tx_transmitter_type_id" integer,
 	"tx_antenna_type_id" integer,
-	"tx_antenna_gain" integer,
-	"tx_antenna_height" integer,
+	"tx_antenna_gain" double precision,
+	"tx_antenna_height" double precision,
 	"rx_antenna_type_id" integer,
-	"rx_antenna_gain" integer,
-	"rx_antenna_height" integer,
-	"rx_noise_figure" integer,
-	"rx_atpc_attenuation" integer,
+	"rx_antenna_gain" double precision,
+	"rx_antenna_height" double precision,
+	"rx_noise_figure" double precision,
+	"rx_atpc_attenuation" double precision,
 	"operator_id" integer,
 	"permit_number" varchar(100) NOT NULL,
 	"decision_type" "uke_permission_type" NOT NULL,
+	"issue_date" timestamp with time zone,
 	"expiry_date" timestamp with time zone NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "uke_radiolines_tx_height_nonneg" CHECK ("uke_radiolines"."tx_height" >= 0),
-	CONSTRAINT "uke_radiolines_rx_height_nonneg" CHECK ("uke_radiolines"."rx_height" >= 0)
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "umts_cells" (
@@ -464,7 +474,7 @@ ALTER TABLE "uke_permits" ADD CONSTRAINT "uke_permits_band_id_bands_id_fk" FOREI
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_tx_transmitter_type_id_radiolines_transmitter_types_id_fk" FOREIGN KEY ("tx_transmitter_type_id") REFERENCES "public"."radiolines_transmitter_types"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_tx_antenna_type_id_radiolines_antenna_types_id_fk" FOREIGN KEY ("tx_antenna_type_id") REFERENCES "public"."radiolines_antenna_types"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_rx_antenna_type_id_radiolines_antenna_types_id_fk" FOREIGN KEY ("rx_antenna_type_id") REFERENCES "public"."radiolines_antenna_types"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_operator_id_operators_id_fk" FOREIGN KEY ("operator_id") REFERENCES "public"."operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_operator_id_uke_operators_id_fk" FOREIGN KEY ("operator_id") REFERENCES "public"."uke_operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

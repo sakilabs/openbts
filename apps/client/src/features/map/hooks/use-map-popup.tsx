@@ -1,39 +1,51 @@
 import { useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";
-import type { StationSource, LocationInfo, StationWithoutCells } from "@/types/station";
+import type { StationSource, LocationInfo, StationWithoutCells, UkeStation } from "@/types/station";
 import { PopupContent } from "../components/popup-content";
 
 type UseMapPopupArgs = {
 	map: maplibregl.Map | null;
-	onOpenDetails: (id: number, source: StationSource) => void;
+	onOpenStationDetails: (id: number, source: StationSource) => void;
+	onOpenUkeStationDetails: (station: UkeStation) => void;
 };
 
-export function useMapPopup({ map, onOpenDetails }: UseMapPopupArgs) {
+export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails }: UseMapPopupArgs) {
 	const popupRef = useRef<MapLibreGL.Popup | null>(null);
 	const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
 	const renderPopup = useCallback(
-		(location: LocationInfo, stations: StationWithoutCells[] | null, source: StationSource) => {
+		(location: LocationInfo, stations: StationWithoutCells[] | null, ukeStations: UkeStation[] | null, source: StationSource) => {
 			if (!popupRootRef.current) return;
 
 			popupRootRef.current.render(
 				<PopupContent
 					location={location}
 					stations={stations}
+					ukeStations={ukeStations ?? undefined}
 					source={source}
-					onOpenDetails={(id) => {
-						onOpenDetails(id, source);
+					onOpenStationDetails={(id) => {
+						onOpenStationDetails(id, source);
+						popupRef.current?.remove();
+					}}
+					onOpenUkeStationDetails={(station) => {
+						onOpenUkeStationDetails(station);
 						popupRef.current?.remove();
 					}}
 				/>,
 			);
 		},
-		[onOpenDetails],
+		[onOpenStationDetails, onOpenUkeStationDetails],
 	);
 
 	const showPopup = useCallback(
-		(coordinates: [number, number], location: LocationInfo, stations: StationWithoutCells[] | null, source: StationSource) => {
+		(
+			coordinates: [number, number],
+			location: LocationInfo,
+			stations: StationWithoutCells[] | null,
+			ukeStations: UkeStation[] | null,
+			source: StationSource,
+		) => {
 			if (!map) return;
 
 			popupRef.current?.remove();
@@ -43,7 +55,7 @@ export function useMapPopup({ map, onOpenDetails }: UseMapPopupArgs) {
 			container.className = "station-popup-container";
 
 			popupRootRef.current = createRoot(container);
-			renderPopup(location, stations, source);
+			renderPopup(location, stations, ukeStations, source);
 
 			popupRef.current = new MapLibreGL.Popup({
 				closeButton: true,
@@ -60,7 +72,7 @@ export function useMapPopup({ map, onOpenDetails }: UseMapPopupArgs) {
 
 	const updatePopupStations = useCallback(
 		(location: LocationInfo, stations: StationWithoutCells[], source: StationSource) => {
-			renderPopup(location, stations, source);
+			renderPopup(location, stations, null, source);
 		},
 		[renderPopup],
 	);

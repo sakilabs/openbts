@@ -1,26 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import {
-	SignalFull02Icon,
-	Wifi01Icon,
-	SmartPhone01Icon,
-	FlashIcon,
-	WifiConnected01Icon,
-	Link01Icon,
-	BatteryLowIcon,
-	ArrowDataTransferHorizontalIcon,
-	AlertCircleIcon,
-} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { WifiConnected01Icon, BatteryLowIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import type { Cell } from "@/types/station";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
-export const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"];
-export const RAT_ICONS: Record<string, IconSvgElement> = {
-	GSM: SignalFull02Icon,
-	UMTS: Wifi01Icon,
-	LTE: SmartPhone01Icon,
-	NR: FlashIcon,
-};
+import { RAT_ICONS } from "../utils";
 
 type CellTableProps = {
 	rat: string;

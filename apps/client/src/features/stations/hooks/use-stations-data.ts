@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchApiData } from "@/lib/api";
 import { fetchOperators, fetchBands } from "@/features/map/search-api";
+import { fetchStats } from "@/features/map/stats-api";
 import { parseFilters } from "@/features/map/filters";
 import type { Station, Region, StationFilters } from "@/types/station";
 
@@ -86,6 +87,12 @@ export function useStationsData() {
 		staleTime: 1000 * 60 * 30,
 	});
 
+	const { data: stats } = useQuery({
+		queryKey: ["stats"],
+		queryFn: fetchStats,
+		staleTime: 1000 * 60 * 5,
+	});
+
 	const selectedRegionNames = useMemo(() => {
 		return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
 	}, [selectedRegions, regions]);
@@ -138,6 +145,7 @@ export function useStationsData() {
 		operators,
 		regions,
 		uniqueBandValues,
+		totalStations: stats?.counts.stations,
 
 		filters,
 		setFilters,

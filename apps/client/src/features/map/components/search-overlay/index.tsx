@@ -1,36 +1,21 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon, Loading03Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+import { cn, toggleValue } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useMap, type MapStyle } from "@/components/ui/map";
 import type { Station, StationFilters } from "@/types/station";
 import { fetchBands, fetchOperators, searchLocations, searchStations } from "../../search-api";
 import { AutocompleteDropdown } from "./autocomplete-dropdown";
 import { FilterPanel } from "./filter-panel";
 import { SearchResults } from "./search-results";
-import { FILTER_KEYWORDS, RAT_OPTIONS } from "../../constants";
+import { MapStyleSwitcher } from "./map-style-switcher";
+import { FILTER_KEYWORDS, RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
 import { parseFilters } from "../../filters";
 import { useSearchState } from "../../hooks/use-search-state";
-
-const mapStyleOptions: Record<MapStyle, { label: string; thumbnail: string }> = {
-	carto: {
-		label: "Standard",
-		thumbnail: "https://a.basemaps.cartocdn.com/dark_all/13/4400/2686.png",
-	},
-	osm: {
-		label: "OpenStreetMap",
-		thumbnail: "https://tile.openstreetmap.org/13/4400/2686.png",
-	},
-	satellite: {
-		label: "Esri Satellite",
-		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
-	},
-};
 
 type MapSearchOverlayProps = {
 	locationCount: number;
@@ -44,10 +29,6 @@ type MapSearchOverlayProps = {
 	onStationSelect?: (station: Station) => void;
 };
 
-function toggleValue<T>(values: T[], value: T): T[] {
-	return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
-}
-
 export function MapSearchOverlay({
 	locationCount,
 	totalCount,
@@ -60,9 +41,7 @@ export function MapSearchOverlay({
 	onStationSelect,
 }: MapSearchOverlayProps) {
 	const { t } = useTranslation("map");
-	const { mapStyle, setMapStyle } = useMap();
 	const [showFilters, setShowFilters] = useState(false);
-	const [showStylePicker, setShowStylePicker] = useState(false);
 	const filterPanelRef = useRef<HTMLFieldSetElement>(null);
 
 	const mapFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map")), []);
@@ -129,15 +108,6 @@ export function MapSearchOverlay({
 		return values.sort((a, b) => a - b);
 	}, [bands]);
 
-	useEffect(() => {
-		if (!showStylePicker) return;
-
-		const handleClickOutside = () => setShowStylePicker(false);
-
-		document.addEventListener("click", handleClickOutside);
-		return () => document.removeEventListener("click", handleClickOutside);
-	}, [showStylePicker]);
-
 	function handleFilterPanelBlur(e: React.FocusEvent) {
 		const relatedTarget = e.relatedTarget as Node | null;
 		const isInsidePanel = filterPanelRef.current?.contains(relatedTarget);
@@ -163,9 +133,39 @@ export function MapSearchOverlay({
 		}
 	}
 
-	function updateFilters(patch: Partial<StationFilters>) {
-		onFiltersChange({ ...filters, ...patch });
-	}
+	const handleToggleOperator = useCallback(
+		(mnc: number) => onFiltersChange({ ...filters, operators: toggleValue(filters.operators, mnc) }),
+		[filters, onFiltersChange],
+	);
+
+	const handleToggleBand = useCallback(
+		(value: number) => onFiltersChange({ ...filters, bands: toggleValue(filters.bands, value) }),
+		[filters, onFiltersChange],
+	);
+
+	const handleToggleRat = useCallback(
+		(rat: string) => onFiltersChange({ ...filters, rat: toggleValue(filters.rat, rat) }),
+		[filters, onFiltersChange],
+	);
+
+	const handleSelectAllRats = useCallback(
+		() => onFiltersChange({ ...filters, rat: (filters.source === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((r) => r.value) }),
+		[filters, onFiltersChange],
+	);
+
+	const handleClearAllRats = useCallback(() => onFiltersChange({ ...filters, rat: [] }), [filters, onFiltersChange]);
+
+	const handleSelectAllBands = useCallback(
+		() => onFiltersChange({ ...filters, bands: uniqueBandValues }),
+		[filters, onFiltersChange, uniqueBandValues],
+	);
+
+	const handleClearAllBands = useCallback(() => onFiltersChange({ ...filters, bands: [] }), [filters, onFiltersChange]);
+
+	const handleClearFilters = useCallback(
+		() => onFiltersChange({ operators: [], bands: [], rat: [], source: filters.source }),
+		[filters.source, onFiltersChange],
+	);
 
 	return (
 		<>
@@ -269,14 +269,14 @@ export function MapSearchOverlay({
 							uniqueBandValues={uniqueBandValues}
 							activeFilterCount={activeFilterCount}
 							onFiltersChange={onFiltersChange}
-							onToggleOperator={(mnc) => updateFilters({ operators: toggleValue(filters.operators, mnc) })}
-							onToggleBand={(value) => updateFilters({ bands: toggleValue(filters.bands, value) })}
-							onToggleRat={(rat) => updateFilters({ rat: toggleValue(filters.rat, rat) })}
-							onSelectAllRats={() => updateFilters({ rat: RAT_OPTIONS.map((r) => r.value) })}
-							onClearAllRats={() => updateFilters({ rat: [] })}
-							onSelectAllBands={() => updateFilters({ bands: uniqueBandValues })}
-							onClearAllBands={() => updateFilters({ bands: [] })}
-							onClearFilters={() => onFiltersChange({ operators: [], bands: [], rat: [], source: "internal" })}
+							onToggleOperator={handleToggleOperator}
+							onToggleBand={handleToggleBand}
+							onToggleRat={handleToggleRat}
+							onSelectAllRats={handleSelectAllRats}
+							onClearAllRats={handleClearAllRats}
+							onSelectAllBands={handleSelectAllBands}
+							onClearAllBands={handleClearAllBands}
+							onClearFilters={handleClearFilters}
 						/>
 					</fieldset>
 				)}
@@ -300,9 +300,7 @@ export function MapSearchOverlay({
 								<span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
 									{locationCount.toLocaleString()}
 								</span>
-								<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
-									{activeFilterCount > 0 ? t("overlay.filtered") : t("overlay.locations")}
-								</span>
+								<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
 							</div>
 						</TooltipTrigger>
 						<TooltipContent side="bottom">
@@ -321,97 +319,13 @@ export function MapSearchOverlay({
 				</div>
 
 				<div className="relative">
-					{showStylePicker ? (
-						<div
-							onClick={(e) => e.stopPropagation()}
-							onKeyDown={(e) => e.stopPropagation()}
-							role="listbox"
-							className="flex gap-1.5 p-1.5 rounded-lg bg-background/95 backdrop-blur-md border shadow-xl"
-						>
-							{(Object.keys(mapStyleOptions) as MapStyle[]).map((key) => {
-								const style = mapStyleOptions[key];
-								const isSelected = mapStyle === key;
-								return (
-									<button
-										key={key}
-										type="button"
-										onClick={() => {
-											setMapStyle(key);
-											setShowStylePicker(false);
-										}}
-										className="flex flex-col items-center gap-0.5 group cursor-pointer"
-									>
-										<div
-											className={cn(
-												"w-12 h-12 rounded-md overflow-hidden border-2 transition-colors",
-												isSelected ? "border-blue-500" : "border-transparent group-hover:border-muted-foreground/50",
-											)}
-										>
-											<img src={style.thumbnail} alt={style.label} className="w-full h-full object-cover" />
-										</div>
-										<span className={cn("text-[10px] font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>{style.label}</span>
-									</button>
-								);
-							})}
-						</div>
-					) : (
-						<button
-							type="button"
-							onClick={() => setShowStylePicker(true)}
-							className="w-8 h-8 rounded-md overflow-hidden border bg-background shadow-xl hover:border-muted-foreground/50 transition-colors cursor-pointer"
-							aria-label="Change map style"
-						>
-							<img src={mapStyleOptions[mapStyle].thumbnail} alt={mapStyleOptions[mapStyle].label} className="w-full h-full object-cover" />
-						</button>
-					)}
+					<MapStyleSwitcher />
 				</div>
 			</div>
 
 			<div className="md:hidden absolute bottom-4 left-4 z-5 flex flex-col items-start gap-1">
 				<div className="relative">
-					{showStylePicker ? (
-						<div
-							onClick={(e) => e.stopPropagation()}
-							onKeyDown={(e) => e.stopPropagation()}
-							role="listbox"
-							className="absolute bottom-0 left-0 flex gap-1.5 p-1.5 rounded-lg bg-background/95 backdrop-blur-md border shadow-xl"
-						>
-							{(Object.keys(mapStyleOptions) as MapStyle[]).map((key) => {
-								const style = mapStyleOptions[key];
-								const isSelected = mapStyle === key;
-								return (
-									<button
-										key={key}
-										type="button"
-										onClick={() => {
-											setMapStyle(key);
-											setShowStylePicker(false);
-										}}
-										className="flex flex-col items-center gap-1 group cursor-pointer"
-									>
-										<div
-											className={cn(
-												"w-12 h-12 rounded-md overflow-hidden border-2 transition-colors",
-												isSelected ? "border-blue-500" : "border-transparent group-hover:border-muted-foreground/50",
-											)}
-										>
-											<img src={style.thumbnail} alt={style.label} className="w-full h-full object-cover" />
-										</div>
-										<span className={cn("text-[10px] font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>{style.label}</span>
-									</button>
-								);
-							})}
-						</div>
-					) : (
-						<button
-							type="button"
-							onClick={() => setShowStylePicker(true)}
-							className="w-8 h-8 rounded-md overflow-hidden border bg-background shadow-lg hover:border-muted-foreground/50 transition-colors cursor-pointer"
-							aria-label="Change map style"
-						>
-							<img src={mapStyleOptions[mapStyle].thumbnail} alt={mapStyleOptions[mapStyle].label} className="w-full h-full object-cover" />
-						</button>
-					)}
+					<MapStyleSwitcher position="mobile" />
 				</div>
 
 				<div className="bg-background/95 backdrop-blur-md border rounded-lg shadow-lg overflow-hidden">

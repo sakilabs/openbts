@@ -1,17 +1,13 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-	DocumentCodeIcon,
-	Calendar03Icon,
-	Loading03Icon,
-	AlertCircleIcon,
-	Globe02Icon,
-	Building02Icon,
-	SignalFull02Icon,
-} from "@hugeicons/core-free-icons";
+import { DocumentCodeIcon, Calendar03Icon, Loading03Icon, AlertCircleIcon, SignalFull02Icon } from "@hugeicons/core-free-icons";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { UkePermit } from "@/types/station";
 import { fetchApiData } from "@/lib/api";
+import { isPermitExpired } from "@/lib/date-utils";
+import { RAT_ICONS } from "../utils";
 
 async function fetchPermits(stationId: number, isUkeSource: boolean): Promise<UkePermit[]> {
 	if (isUkeSource) {
@@ -23,6 +19,28 @@ async function fetchPermits(stationId: number, isUkeSource: boolean): Promise<Uk
 		allowedErrors: [404],
 	});
 	return permits ?? [];
+}
+
+function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
+	const groups = new Map<string, UkePermit[]>();
+
+	for (const permit of permits) {
+		const rat = permit.band?.rat?.toUpperCase() || "OTHER";
+		const existing = groups.get(rat) ?? [];
+		existing.push(permit);
+		groups.set(rat, existing);
+	}
+
+	const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "OTHER"];
+	const sorted = new Map<string, UkePermit[]>();
+	for (const rat of ratOrder) {
+		if (groups.has(rat)) {
+			const groupGet = groups.get(rat);
+			if (groupGet) sorted.set(rat, groupGet);
+		}
+	}
+
+	return sorted;
 }
 
 type PermitsListProps = {
@@ -42,6 +60,8 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
 		enabled: !!stationId,
 		staleTime: 1000 * 60 * 10,
 	});
+
+	const permitsByRat = useMemo(() => groupPermitsByRat(permits), [permits]);
 
 	if (isLoading) {
 		return (
@@ -73,54 +93,67 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
 
 	return (
 		<div className="space-y-4">
-			{permits.map((permit) => (
-				<div key={permit.id} className="p-4 border rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
-					<div className="flex flex-wrap items-start justify-between gap-4">
-						<div className="space-y-1">
-							<div className="flex items-center gap-2">
-								<HugeiconsIcon icon={DocumentCodeIcon} className="size-4 text-primary" />
-								<span className="font-mono font-bold text-sm">{permit.case_id}</span>
-								{!permit.is_active && (
-									<span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[10px] font-bold uppercase">
-										{t("permits.inactive")}
-									</span>
-								)}
-							</div>
-							<p className="text-xs text-muted-foreground">
-								{permit.address}, {permit.city}
-							</p>
-						</div>
-
-						<div className="flex flex-wrap gap-2">
-							{permit.operator && (
-								<div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background border text-[11px] font-medium">
-									<HugeiconsIcon icon={Building02Icon} className="size-3 text-muted-foreground" />
-									{permit.operator.name}
-								</div>
-							)}
-							{permit.band && (
-								<div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background border text-[11px] font-medium font-mono">
-									<HugeiconsIcon icon={SignalFull02Icon} className="size-3 text-muted-foreground" />
-									{permit.band.value} MHz
-								</div>
-							)}
-						</div>
+			{Array.from(permitsByRat.entries()).map(([rat, ratPermits]) => (
+				<div key={rat} className="rounded-xl border overflow-hidden">
+					<div className="px-4 py-2.5 bg-muted/30 border-b flex items-center gap-2">
+						<HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-muted-foreground" />
+						<span className="font-bold text-sm">{rat}</span>
+						<span className="text-xs text-muted-foreground">({t("permits.permitsCount", { count: ratPermits.length })})</span>
 					</div>
 
-					<div className="mt-4 flex items-center justify-between pt-3 border-t border-border/50">
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
-								<HugeiconsIcon icon={Globe02Icon} className="size-3.5" />
-								{permit.latitude.toFixed(5)}, {permit.longitude.toFixed(5)}
-							</div>
-						</div>
+					<div className="overflow-x-auto">
+						<table className="w-full text-sm">
+							<thead>
+								<tr className="border-b bg-muted/10">
+									<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("permits.band")}</th>
+									<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+										{t("permits.decisionNumber")}
+									</th>
+									<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+										{t("permits.expiryDate")}
+									</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-border/50">
+								{ratPermits.map((permit) => {
+									const expiryDate = new Date(permit.expiry_date);
+									const isExpired = isPermitExpired(permit.expiry_date);
+									const neverExpires = expiryDate.getFullYear() >= 2099;
 
-						{permit.expiry_date && (
-							<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-								<HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-								{t("permits.expires")} {new Date(permit.expiry_date).toLocaleDateString(i18n.language)}
-							</div>
-						)}
+									return (
+										<tr key={permit.id} className="hover:bg-muted/20 transition-colors">
+											<td className="px-4 py-2.5 font-mono font-medium">{permit.band?.value ? `${permit.band.value} MHz` : "-"}</td>
+											<td className="px-4 py-2.5">
+												<div className="flex items-center gap-2">
+													<span className="font-mono text-xs">{permit.decision_number}</span>
+													<Tooltip>
+														<TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+															{permit.decision_type}
+														</TooltipTrigger>
+														<TooltipContent>
+															{permit.decision_type === "zmP" ? t("permits.decisionTypeZmP") : t("permits.decisionTypeP")}
+														</TooltipContent>
+													</Tooltip>
+												</div>
+											</td>
+											<td className="px-4 py-2.5">
+												{isExpired ? (
+													<div className="flex items-center gap-2">
+														<HugeiconsIcon icon={Calendar03Icon} className="size-3.5 text-destructive" />
+														<span className="text-destructive font-medium">{expiryDate.toLocaleDateString(i18n.language)}</span>
+														<span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
+															{t("permits.expired")}
+														</span>
+													</div>
+												) : (
+													<span>{neverExpires ? t("permits.neverExpires") : expiryDate.toLocaleDateString(i18n.language)}</span>
+												)}
+											</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
 					</div>
 				</div>
 			))}

@@ -1,4 +1,4 @@
-import type { Station, StationSource, LocationWithStations } from "@/types/station";
+import type { StationSource, LocationWithStations, UkeLocationWithPermits } from "@/types/station";
 import { getOperatorColor } from "@/lib/operator-utils";
 
 const DEFAULT_COLOR = "#3b82f6";
@@ -17,11 +17,7 @@ function getOperatorData(mncs: OperatorMnc[]) {
 	};
 }
 
-function createPointFeature(
-	lng: number,
-	lat: number,
-	properties: GeoJSON.GeoJsonProperties,
-): GeoJSON.Feature {
+function createPointFeature(lng: number, lat: number, properties: GeoJSON.GeoJsonProperties): GeoJSON.Feature {
 	return {
 		type: "Feature",
 		geometry: { type: "Point", coordinates: [lng, lat] },
@@ -35,9 +31,7 @@ export function locationsToGeoJSON(locations: LocationWithStations[], source: St
 	for (const location of locations) {
 		if (location.latitude == null || location.longitude == null || !location.stations?.length) continue;
 
-		const { operators, isMultiOperator, pieImageId, color } = getOperatorData(
-			location.stations.map((s) => s.operator?.mnc),
-		);
+		const { operators, isMultiOperator, pieImageId, color } = getOperatorData(location.stations.map((s) => s.operator?.mnc));
 
 		features.push(
 			createPointFeature(location.longitude, location.latitude, {
@@ -58,37 +52,21 @@ export function locationsToGeoJSON(locations: LocationWithStations[], source: St
 	return { type: "FeatureCollection", features };
 }
 
-export function stationsToGeoJSON(items: Station[], source: StationSource): GeoJSON.FeatureCollection {
-	const groups = new Map<string, Station[]>();
-
-	for (const item of items) {
-		const lat = item.location?.latitude ?? (item as any).latitude;
-		const lng = item.location?.longitude ?? (item as any).longitude;
-		if (lat == null || lng == null) continue;
-
-		const key = `${lng.toFixed(6)},${lat.toFixed(6)}`;
-		const group = groups.get(key) ?? [];
-		group.push(item);
-		groups.set(key, group);
-	}
-
+export function ukeLocationsToGeoJSON(locations: UkeLocationWithPermits[], source: StationSource): GeoJSON.FeatureCollection {
 	const features: GeoJSON.Feature[] = [];
 
-	for (const [, groupItems] of groups) {
-		const first = groupItems[0];
-		const lat = first.location?.latitude ?? (first as any).latitude;
-		const lng = first.location?.longitude ?? (first as any).longitude;
+	for (const location of locations) {
+		if (location.latitude == null || location.longitude == null || !location.permits?.length) continue;
 
-		const { operators, isMultiOperator, pieImageId, color } = getOperatorData(
-			groupItems.map((s) => s.operator?.mnc),
-		);
+		const { operators, isMultiOperator, pieImageId, color } = getOperatorData(location.permits.map((p) => p.operator?.mnc));
 
 		features.push(
-			createPointFeature(lng, lat, {
-				stations: JSON.stringify(groupItems),
+			createPointFeature(location.longitude, location.latitude, {
+				locationId: location.id,
 				source,
-				locationId: first.id,
-				stationCount: groupItems.length,
+				city: location.city,
+				address: location.address,
+				stationCount: location.permits.length,
 				operatorCount: operators.length,
 				operators: JSON.stringify(operators),
 				color,

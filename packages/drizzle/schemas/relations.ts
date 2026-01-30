@@ -34,6 +34,7 @@ export const operatorRelations = relations(operators, ({ one, many }) => ({
 
 export const regionRelations = relations(regions, ({ many }) => ({
 	locations: many(locations),
+	ukeLocations: many(ukeLocations),
 }));
 
 export const locationRelations = relations(locations, ({ one, many }) => ({
@@ -204,6 +205,14 @@ export const permitsRelations = relations(ukePermits, ({ one }) => ({
 		fields: [ukePermits.location_id],
 		references: [ukeLocations.id],
 	}),
+}));
+
+export const ukeLocationsRelations = relations(ukeLocations, ({ one, many }) => ({
+	region: one(regions, {
+		fields: [ukeLocations.region_id],
+		references: [regions.id],
+	}),
+	permits: many(ukePermits),
 }));
 
 export const stationsPermitsRelations = relations(stationsPermits, ({ one }) => ({

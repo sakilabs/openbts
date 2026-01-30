@@ -12,6 +12,10 @@
 			"types": "./src/radiolines.ts",
 			"default": "./dist/radiolines.js"
 		},
+		"./device-registry": {
+			"types": "./src/device-registry.ts",
+			"default": "./dist/device-registry.js"
+		},
 		"./utils": {
 			"types": "./src/utils.ts",
 			"default": "./dist/utils.js"

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+import { cn, toggleValue } from "@/lib/utils";
 import { Checkbox as UICheckbox } from "@/components/ui/checkbox";
 import {
 	Combobox,
@@ -40,12 +40,9 @@ type StationsFiltersProps = {
 	onRegionsChange: (regionIds: number[]) => void;
 	onSearchQueryChange: (query: string) => void;
 	stationCount: number;
+	totalStations?: number;
 	isSheet?: boolean;
 };
-
-function toggleValue<T>(values: T[], value: T): T[] {
-	return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
-}
 
 export function StationsFilters({
 	filters,
@@ -58,6 +55,7 @@ export function StationsFilters({
 	onRegionsChange,
 	onSearchQueryChange,
 	stationCount,
+	totalStations,
 	isSheet = false,
 }: StationsFiltersProps) {
 	const { t } = useTranslation("stations");
@@ -285,7 +283,11 @@ export function StationsFilters({
 					</Combobox>
 				</div>
 
-				<div className="text-xs text-muted-foreground pt-2 border-t">{t("filters.showingStations", { count: stationCount })}</div>
+				<div className="text-xs text-muted-foreground pt-2 border-t">
+					{totalStations !== undefined
+						? t("filters.showingStationsOfTotal", { count: stationCount, total: totalStations.toLocaleString() })
+						: t("filters.showingStations", { count: stationCount })}
+				</div>
 			</div>
 		</aside>
 	);

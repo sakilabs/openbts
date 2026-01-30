@@ -3,6 +3,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 import i18n from "@/i18n/config";
 import "./index.css";
@@ -39,7 +40,7 @@ export function Layout({ children }: { children: ReactNode }) {
 				<body>
 					<QueryClientProvider client={queryClient}>
 						<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-							{children}
+							<ErrorBoundary>{children}</ErrorBoundary>
 						</ThemeProvider>
 					</QueryClientProvider>
 					<ScrollRestoration />

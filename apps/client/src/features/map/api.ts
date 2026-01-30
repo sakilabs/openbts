@@ -1,8 +1,13 @@
-import type { StationFilters, LocationWithStations } from "@/types/station";
+import type { StationFilters, LocationWithStations, UkeLocationWithPermits } from "@/types/station";
 import { API_BASE, fetchJson } from "@/lib/api";
 
 export type LocationsResponse = {
 	data: LocationWithStations[];
+	totalCount: number;
+};
+
+export type UkeLocationsResponse = {
+	data: UkeLocationWithPermits[];
 	totalCount: number;
 };
 
@@ -18,13 +23,13 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
 }
 
 export async function fetchLocations(bounds: string, filters: StationFilters): Promise<LocationsResponse> {
-	// if (filters.source === "uke") {
-	// 	const params = buildFilterParams(filters);
-	// 	params.set("limit", "500");
-	// 	params.set("bounds", bounds);
-	// 	const result = await fetchJson<{ data: unknown[]; totalCount?: number }>(`${API_BASE}/uke/permits?${decodeURIComponent(params.toString())}`);
-	// 	return { data: result.data as LocationWithStations[], totalCount: result.totalCount ?? result.data.length };
-	// }
+	if (filters.source === "uke") {
+		const params = buildFilterParams(filters);
+		params.set("limit", "500");
+		params.set("bounds", bounds);
+		const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
+		return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
+	}
 
 	const params = buildFilterParams(filters);
 	params.set("limit", "500");

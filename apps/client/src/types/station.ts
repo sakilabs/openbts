@@ -116,19 +116,64 @@ export type LocationWithStations = LocationInfo & {
 	stations: StationWithoutCells[];
 };
 
+export type UkeOperator = {
+	id: number;
+	name: string;
+	full_name: string;
+	parent_id?: number | null;
+	mnc?: number | null;
+};
+
+export type UkeLocation = {
+	id: number;
+	region_id: number;
+	city: string | null;
+	address: string | null;
+	longitude: number;
+	latitude: number;
+	updatedAt: string;
+	createdAt: string;
+};
+
 export type UkePermit = {
 	id: number;
-	case_id: string;
-	address: string;
-	city: string;
-	latitude: number;
-	longitude: number;
-	expiry_date: string | null;
-	is_active: boolean;
-	operator?: Operator;
-	band?: Band;
-	createdAt: string;
+	station_id: string;
+	operator_id: number;
+	location_id?: number;
+	decision_number: string;
+	decision_type: "zmP" | "P";
+	expiry_date: string;
+	band_id: number;
 	updatedAt: string;
+	createdAt: string;
+	band?: Band | null;
+	operator?: UkeOperator | null;
+	location?: UkeLocation;
+};
+
+export type UkeLocationWithPermits = {
+	id: number;
+	city: string | null;
+	address: string | null;
+	longitude: number;
+	latitude: number;
+	updatedAt: string;
+	createdAt: string;
+	region: Region;
+	permits: UkePermit[];
+};
+
+export type UkeStation = {
+	station_id: string;
+	operator: UkeOperator | null;
+	permits: UkePermit[];
+	location: {
+		city: string | null;
+		address: string | null;
+		latitude: number;
+		longitude: number;
+		region?: Region;
+	} | null;
 };
 
 export type CommentAttachment = {

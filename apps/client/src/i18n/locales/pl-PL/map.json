@@ -52,14 +52,29 @@
 	"popup": {
 		"unknownOperator": "Nieznany operator",
 		"loading": "Ładowanie stacji...",
-		"noStations": "Brak stacji"
+		"noStations": "Brak stacji",
+		"noPermits": "Brak pozwoleń",
+		"expired": "Wygasłe",
+		"permit": "pozwolenie",
+		"permits": "pozwoleń"
 	},
 	"overlay": {
 		"locations": "lokalizacji",
-		"filtered": "przefiltrowano",
 		"operators": "Legenda",
 		"zoom": "Zoom",
 		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie."
+	},
+	"stats": {
+		"dataInfo": "Informacje o danych",
+		"lastUpdated": "Ostatnia aktualizacja",
+		"internalData": "Wewnętrzna baza",
+		"ukeStations": "Stacje UKE",
+		"ukePermits": "Pozwolenia UKE",
+		"never": "Nigdy",
+		"locations": "Ilość lokalizacji",
+		"stations": "Ilość stacji",
+		"cells": "Ilość komórek",
+		"permits": "Ilość pozwoleń"
 	},
 	"loading": {
 		"loadingMap": "Ładowanie mapy..."

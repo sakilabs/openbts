@@ -14,7 +14,8 @@
 		"selectBands": "Wybierz pasma...",
 		"noRegionsFound": "Nie znaleziono województw",
 		"noBandsFound": "Nie znaleziono pasm",
-		"showingStations": "Wyświetlanie {{count}} stacji"
+		"showingStations": "Wyświetlanie {{count}} stacji",
+		"showingStationsOfTotal": "Wyświetlanie {{count}} z {{total}} stacji"
 	},
 	"table": {
 		"stationId": "ID stacji",

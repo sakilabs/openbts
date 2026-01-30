@@ -43,5 +43,11 @@
 	"validation": {
 		"required": "This field is required",
 		"invalid": "Invalid value"
+	},
+	"error": {
+		"title": "Something went wrong",
+		"description": "An unexpected error occurred. Please try again or reload the page.",
+		"tryAgain": "Try again",
+		"reload": "Reload page"
 	}
 }

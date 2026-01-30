@@ -1,8 +1,15 @@
 import { inArray } from "drizzle-orm";
-import { bands, regions, ukeLocations, ukeOperators, type ratEnum } from "@openbts/drizzle";
+import { bands, regions, ukeLocations, operators, ukeOperators, type ratEnum } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
+
+const UKE_OPERATOR_NAME_MAP: Record<string, string> = {
+	P4: "Play",
+	"Orange Polska": "Orange",
+	"T-Mobile Polska": "T-Mobile",
+	Polkomtel: "Plus",
+};
 
 export async function upsertRegions(items: Array<{ name: string; code: string }>): Promise<Map<string, number>> {
 	const unique = Array.from(new Map(items.filter((i) => i.name && i.code).map((i) => [i.name, i])).values());
@@ -56,6 +63,39 @@ export async function upsertBands(keys: Array<{ rat: (typeof ratEnum.enumValues)
 export async function upsertOperators(rawNames: string[]): Promise<Map<string, number>> {
 	const prepared = rawNames
 		.map((full) => {
+			const strippedName = stripCompanySuffixForName(full);
+			const mappedName = UKE_OPERATOR_NAME_MAP[strippedName] ?? strippedName;
+			return { originalName: strippedName, mappedName };
+		})
+		.filter((o) => o.mappedName.length > 0);
+
+	const uniqueMappedNames = [...new Set(prepared.map((p) => p.mappedName))];
+
+	const existingOperators = uniqueMappedNames.length
+		? await db.query.operators.findMany({
+				where: inArray(operators.name, uniqueMappedNames),
+			})
+		: [];
+
+	const operatorIdByName = new Map<string, number>();
+	for (const op of existingOperators) {
+		operatorIdByName.set(op.name, op.id);
+	}
+
+	const map = new Map<string, number>();
+	for (const p of prepared) {
+		const operatorId = operatorIdByName.get(p.mappedName);
+		if (operatorId != null) {
+			map.set(p.originalName, operatorId);
+		}
+	}
+
+	return map;
+}
+
+export async function upsertUkeOperators(rawNames: string[]): Promise<Map<string, number>> {
+	const prepared = rawNames
+		.map((full) => {
 			const name = stripCompanySuffixForName(full);
 			return { name, full_name: full.trim() };
 		})
@@ -69,7 +109,7 @@ export async function upsertOperators(rawNames: string[]): Promise<Map<string, n
 		await db
 			.insert(ukeOperators)
 			.values(values.map((op) => ({ name: op.name, full_name: op.full_name })))
-			.onConflictDoNothing({ target: [ukeOperators.name] });
+			.onConflictDoNothing({ target: [ukeOperators.full_name] });
 	}
 
 	const rows = values.length

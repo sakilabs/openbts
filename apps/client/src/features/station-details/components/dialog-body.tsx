@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Station } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -14,7 +15,8 @@ import {
 	Tag01Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
-import { CellTable, RAT_ORDER } from "./cell-table";
+import { CellTable } from "./cell-table";
+import { RAT_ORDER } from "@/features/map/constants";
 import { NetWorkSIds } from "./networks-ids";
 import { PermitsList } from "./permits-list";
 import { CommentsList } from "./comments-list";
@@ -38,13 +40,16 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 	const { i18n } = useTranslation();
 	const { data: settings } = useSettings();
 	const cellGroups = station ? groupCellsByRat(station.cells) : {};
-	const visibleTabs =
-		source === "uke"
-			? TAB_OPTIONS.filter((tab) => tab.id === "permits")
-			: TAB_OPTIONS.filter((tab) => {
-					if (tab.id === "comments" && !settings?.enableStationComments) return false;
-					return true;
-				});
+	const visibleTabs = useMemo(
+		() =>
+			source === "uke"
+				? TAB_OPTIONS.filter((tab) => tab.id === "permits")
+				: TAB_OPTIONS.filter((tab) => {
+						if (tab.id === "comments" && !settings?.enableStationComments) return false;
+						return true;
+					}),
+		[source, settings?.enableStationComments],
+	);
 
 	return (
 		<div className="flex-1 overflow-y-auto custom-scrollbar">

@@ -2,7 +2,7 @@ import { desc } from "drizzle-orm";
 import { ukeImportMetadata } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
 
-type ImportType = "stations" | "radiolines";
+type ImportType = "stations" | "radiolines" | "stations_permits" | "permits";
 
 export async function isDataUpToDate(importType: ImportType, fileLinks: Array<{ href: string; text: string }>): Promise<boolean> {
 	const fileList = JSON.stringify(fileLinks.map((l) => l.href).sort());
@@ -15,7 +15,11 @@ export async function isDataUpToDate(importType: ImportType, fileLinks: Array<{ 
 	return latestImport.file_list === fileList;
 }
 
-export async function recordImportMetadata(importType: ImportType, fileLinks: Array<{ href: string; text: string }>, status: "success" | "failed"): Promise<void> {
+export async function recordImportMetadata(
+	importType: ImportType,
+	fileLinks: Array<{ href: string; text: string }>,
+	status: "success" | "failed",
+): Promise<void> {
 	const fileList = JSON.stringify(fileLinks.map((l) => l.href).sort());
 	await db.insert(ukeImportMetadata).values({
 		import_type: importType,

@@ -3,8 +3,17 @@ import type { FilterKeyword } from "./types";
 export const SOURCE_ID = "stations-source";
 export const POINT_LAYER_ID = "stations-layer";
 
+export const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"] as const;
 export const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
+	{ value: "umts", label: "UMTS", gen: "3G" },
+	{ value: "lte", label: "LTE", gen: "4G" },
+	{ value: "5g", label: "NR", gen: "5G" },
+	{ value: "iot", label: "IoT", gen: "NB" },
+] as const;
+export const UKE_RAT_OPTIONS = [
+	{ value: "gsm", label: "GSM", gen: "2G" },
+	{ value: "cdma", label: "CDMA", gen: "3G" },
 	{ value: "umts", label: "UMTS", gen: "3G" },
 	{ value: "lte", label: "LTE", gen: "4G" },
 	{ value: "5g", label: "NR", gen: "5G" },

@@ -12,15 +12,8 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1766232970097,
-      "tag": "0001_daily_lady_vermin",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1769552912603,
-      "tag": "0002_grey_blizzard",
+      "when": 1769796187539,
+      "tag": "0001_polite_roughhouse",
       "breakpoints": true
     }
   ]

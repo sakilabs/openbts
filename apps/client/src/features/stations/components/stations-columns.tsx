@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { Station } from "@/types/station";
 import { getOperatorColor } from "@/lib/operator-utils";
 import { formatRelativeTime, formatFullDate } from "@/lib/format";
+import { RAT_ORDER } from "@/features/map/constants";
 
 const RAT_CONFIG = {
 	GSM: { icon: SignalFull02Icon, color: "bg-amber-500/10 text-amber-600 dark:text-amber-400", label: "2G" },
@@ -15,8 +16,6 @@ const RAT_CONFIG = {
 	LTE: { icon: SmartPhone01Icon, color: "bg-purple-500/10 text-purple-600 dark:text-purple-400", label: "4G" },
 	NR: { icon: FlashIcon, color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", label: "5G" },
 } as const;
-
-const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"] as const;
 
 const TechBadge = memo(({ rat }: { rat: keyof typeof RAT_CONFIG }) => {
 	const config = RAT_CONFIG[rat];

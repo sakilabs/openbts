@@ -13,13 +13,15 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useSyncExternalStore,
 	type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, MinusSignIcon, PlusSignIcon, Location01Icon, MaximizeIcon, Loading03Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, MinusSignIcon, PlusSignIcon, Location01Icon, MaximizeIcon, Loading03Icon, CompassIcon } from "@hugeicons/core-free-icons";
 
 import { cn } from "@/lib/utils";
+import { useClickOutside } from "@/hooks/use-click-outside";
 
 // Check document class for theme (works with next-themes, etc.)
 function getDocumentTheme(): Theme | null {
@@ -35,40 +37,34 @@ function getSystemTheme(): Theme {
 	return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function getThemeSnapshot(): Theme {
+	return getDocumentTheme() ?? getSystemTheme();
+}
+
+function getThemeServerSnapshot(): Theme {
+	return "light";
+}
+
+function subscribeToTheme(callback: () => void): () => void {
+	// Watch for document class changes (e.g., next-themes toggling dark class)
+	const observer = new MutationObserver(callback);
+	observer.observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ["class"],
+	});
+
+	// Also watch for system preference changes
+	const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+	mediaQuery.addEventListener("change", callback);
+
+	return () => {
+		observer.disconnect();
+		mediaQuery.removeEventListener("change", callback);
+	};
+}
+
 function useResolvedTheme(themeProp?: "light" | "dark"): "light" | "dark" {
-	const [detectedTheme, setDetectedTheme] = useState<"light" | "dark">(() => getDocumentTheme() ?? getSystemTheme());
-
-	useEffect(() => {
-		if (themeProp) return; // Skip detection if theme is provided via prop
-
-		// Watch for document class changes (e.g., next-themes toggling dark class)
-		const observer = new MutationObserver(() => {
-			const docTheme = getDocumentTheme();
-			if (docTheme) {
-				setDetectedTheme(docTheme);
-			}
-		});
-		observer.observe(document.documentElement, {
-			attributes: true,
-			attributeFilter: ["class"],
-		});
-
-		// Also watch for system preference changes
-		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-		const handleSystemChange = (e: MediaQueryListEvent) => {
-			// Only use system preference if no document class is set
-			if (!getDocumentTheme()) {
-				setDetectedTheme(e.matches ? "dark" : "light");
-			}
-		};
-		mediaQuery.addEventListener("change", handleSystemChange);
-
-		return () => {
-			observer.disconnect();
-			mediaQuery.removeEventListener("change", handleSystemChange);
-		};
-	}, [themeProp]);
-
+	const detectedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getThemeServerSnapshot);
 	return themeProp ?? detectedTheme;
 }
 
@@ -760,13 +756,7 @@ function CompassButton({ onClick }: { onClick: () => void }) {
 
 	return (
 		<ControlButton onClick={onClick} label="Reset bearing to north">
-			<svg ref={compassRef} viewBox="0 0 24 24" className="size-5 transition-transform duration-200" style={{ transformStyle: "preserve-3d" }}>
-				<title>Compass</title>
-				<path d="M12 2L16 12H12V2Z" className="fill-red-500" />
-				<path d="M12 2L8 12H12V2Z" className="fill-red-300" />
-				<path d="M12 22L16 12H12V22Z" className="fill-muted-foreground/60" />
-				<path d="M12 22L8 12H12V22Z" className="fill-muted-foreground/30" />
-			</svg>
+			<HugeiconsIcon icon={CompassIcon} className="size-4 transform-gpu transition-transform" ref={compassRef} />
 		</ControlButton>
 	);
 }
@@ -792,18 +782,7 @@ function MapStyleSwitcher({ position = "bottom-left", className }: MapStyleSwitc
 
 	const styleKeys = Object.keys(mapStyleOptions) as MapStyle[];
 
-	useEffect(() => {
-		if (!isOpen) return;
-
-		const handleClickOutside = (e: MouseEvent) => {
-			if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-				setIsOpen(false);
-			}
-		};
-
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => document.removeEventListener("mousedown", handleClickOutside);
-	}, [isOpen]);
+	useClickOutside(containerRef, () => setIsOpen(false), isOpen);
 
 	return (
 		<div ref={containerRef} className={cn("absolute z-10", styleSwitcherPositionClasses[position], className)}>

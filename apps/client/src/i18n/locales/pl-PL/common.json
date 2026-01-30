@@ -49,5 +49,11 @@
 	"validation": {
 		"required": "To pole jest wymagane",
 		"invalid": "Nieprawidłowa wartość"
+	},
+	"error": {
+		"title": "Coś poszło nie tak",
+		"description": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie lub odśwież stronę.",
+		"tryAgain": "Spróbuj ponownie",
+		"reload": "Odśwież stronę"
 	}
 }

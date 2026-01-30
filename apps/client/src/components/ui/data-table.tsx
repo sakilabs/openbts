@@ -1,5 +1,5 @@
 import { createContext, useContext, memo, useMemo, type ReactNode } from "react";
-import { flexRender, type Table as TableInstance, type Row, type Header, type HeaderGroup } from "@tanstack/react-table";
+import { flexRender, type Table as TableInstance, type Row, type Header as HeaderType, type HeaderGroup } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 
 // Context for sharing table instance
@@ -38,7 +38,7 @@ function Header({ className }: { className?: string }) {
 		<thead className={cn("sticky top-0 z-10 bg-card [&_tr]:border-b", className)}>
 			{table.getHeaderGroups().map((headerGroup: HeaderGroup<unknown>) => (
 				<tr key={headerGroup.id} className="border-b transition-colors hover:bg-transparent">
-					{headerGroup.headers.map((header: Header<unknown, unknown>) => (
+					{headerGroup.headers.map((header: HeaderType<unknown, unknown>) => (
 						<th
 							key={header.id}
 							className="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap"
@@ -80,9 +80,11 @@ const TableRow = memo(TableRowInner) as typeof TableRowInner;
 interface BodyProps<T> {
 	onRowClick?: (row: T) => void;
 	rowClassName?: string;
+	skeletonRows?: number;
+	skeletonColumns?: number;
 }
 
-function Body<T>({ onRowClick, rowClassName }: BodyProps<T>) {
+function Body<T>({ onRowClick, rowClassName, skeletonRows, skeletonColumns }: BodyProps<T>) {
 	const table = useDataTable<T>();
 	const rows = table.getRowModel().rows;
 
@@ -91,6 +93,7 @@ function Body<T>({ onRowClick, rowClassName }: BodyProps<T>) {
 			{rows.map((row: Row<T>) => (
 				<TableRow key={row.id} row={row} onClick={onRowClick} className={rowClassName} />
 			))}
+			{skeletonRows != null && skeletonRows > 0 && skeletonColumns != null && <SkeletonRows rows={skeletonRows} columns={skeletonColumns} />}
 		</tbody>
 	);
 }
@@ -117,6 +120,31 @@ function Skeleton({ rows, columns }: SkeletonProps) {
 				</tr>
 			))}
 		</tbody>
+	);
+}
+
+// Skeleton rows without tbody wrapper - for appending to existing body
+interface SkeletonRowsProps {
+	rows: number;
+	columns: number;
+}
+
+function SkeletonRows({ rows, columns }: SkeletonRowsProps) {
+	const rowArray = useMemo(() => Array.from({ length: rows }, (_, i) => i), [rows]);
+	const colArray = useMemo(() => Array.from({ length: columns }, (_, i) => i), [columns]);
+
+	return (
+		<>
+			{rowArray.map((rowIndex) => (
+				<tr key={`skeleton-${rowIndex}`} className="h-16 border-b transition-colors">
+					{colArray.map((colIndex) => (
+						<td key={colIndex} className="p-2 align-middle">
+							<div className="h-4 w-24 animate-pulse rounded bg-muted" />
+						</td>
+					))}
+				</tr>
+			))}
+		</>
 	);
 }
 
@@ -161,6 +189,7 @@ export const DataTable = {
 	Header,
 	Body,
 	Skeleton,
+	SkeletonRows,
 	Empty,
 	Footer,
 };

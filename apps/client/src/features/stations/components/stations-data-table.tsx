@@ -10,6 +10,7 @@ import type { Station } from "@/types/station";
 interface StationsDataTableProps {
 	data: Station[];
 	isLoading?: boolean;
+	isFetchingMore?: boolean;
 	onRowClick?: (station: Station) => void;
 	onLoadMore?: () => void;
 	hasMore?: boolean;
@@ -17,7 +18,16 @@ interface StationsDataTableProps {
 	isSearchActive?: boolean;
 }
 
-export function StationsDataTable({ data, isLoading, onRowClick, onLoadMore, hasMore, totalItems, isSearchActive = false }: StationsDataTableProps) {
+export function StationsDataTable({
+	data,
+	isLoading,
+	isFetchingMore,
+	onRowClick,
+	onLoadMore,
+	hasMore,
+	totalItems,
+	isSearchActive = false,
+}: StationsDataTableProps) {
 	const { t, i18n } = useTranslation("stations");
 	const { t: tCommon } = useTranslation("common");
 
@@ -46,13 +56,16 @@ export function StationsDataTable({ data, isLoading, onRowClick, onLoadMore, has
 	const columnCount = columns.length;
 
 	useEffect(() => {
-		if (hasMore && onLoadMore && pagination.pageIndex + 1 >= pageCount - 2) {
-			onLoadMore();
-		}
+		if (hasMore && onLoadMore && pagination.pageIndex + 1 >= pageCount - 2) onLoadMore();
 	}, [pagination.pageIndex, pageCount, hasMore, onLoadMore]);
 
 	const showSkeleton = isLoading && data.length === 0;
 	const isEmpty = !isLoading && table.getRowModel().rows.length === 0;
+
+	const currentPageRows = table.getRowModel().rows.length;
+	const isOnLastLoadedPage = pagination.pageIndex === pageCount - 1;
+	const skeletonRowsToShow =
+		isFetchingMore && hasMore && isOnLastLoadedPage && currentPageRows < pagination.pageSize ? pagination.pageSize - currentPageRows : 0;
 
 	return (
 		<div ref={containerRef} className="h-full overflow-auto">
@@ -71,7 +84,7 @@ export function StationsDataTable({ data, isLoading, onRowClick, onLoadMore, has
 							</DataTable.Empty>
 						</tbody>
 					) : (
-						<DataTable.Body onRowClick={onRowClick} />
+						<DataTable.Body onRowClick={onRowClick} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
 					)}
 					<DataTable.Footer columns={columnCount}>
 						<DataTablePagination table={table} totalItems={totalItems ?? data.length} showRowsPerPage={false} />

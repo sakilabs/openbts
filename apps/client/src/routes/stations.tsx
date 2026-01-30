@@ -23,6 +23,7 @@ export default function StationsListPage() {
 		operators,
 		regions,
 		uniqueBandValues,
+		totalStations,
 		filters,
 		setFilters,
 		selectedRegions,
@@ -31,6 +32,7 @@ export default function StationsListPage() {
 		searchQuery,
 		setSearchQuery,
 		isLoading,
+		isFetching,
 		hasMore,
 		loadMore,
 	} = useStationsData();
@@ -80,6 +82,7 @@ export default function StationsListPage() {
 							onRegionsChange={setSelectedRegions}
 							onSearchQueryChange={setSearchQuery}
 							stationCount={stations.length}
+							totalStations={totalStations}
 						/>
 					</div>
 
@@ -100,6 +103,7 @@ export default function StationsListPage() {
 									onRegionsChange={setSelectedRegions}
 									onSearchQueryChange={setSearchQuery}
 									stationCount={stations.length}
+									totalStations={totalStations}
 									isSheet
 								/>
 							</div>
@@ -110,10 +114,11 @@ export default function StationsListPage() {
 						<StationsDataTable
 							data={stations}
 							isLoading={isLoading}
+							isFetchingMore={isFetching && !isLoading}
 							onRowClick={(station) => setSelectedStationId(station.id)}
 							onLoadMore={loadMore}
 							hasMore={hasMore}
-							totalItems={stations.length}
+							totalItems={totalStations ?? stations.length}
 							isSearchActive={!!searchQuery}
 						/>
 					</div>

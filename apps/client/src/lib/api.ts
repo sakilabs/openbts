@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 export const API_BASE = import.meta.env.VITE_API_URL || "https://openbts.sakilabs.com/api/v1";
 
 type ApiError = { code: string; message: string };
@@ -54,4 +56,16 @@ export async function postApiData<T, B = unknown>(endpoint: string, body: B): Pr
 		body: JSON.stringify(body),
 	});
 	return result.data;
+}
+
+export function showApiError(error: unknown) {
+	if (error instanceof ApiResponseError) {
+		for (const err of error.errors) {
+			toast.error(err.message || err.code);
+		}
+	} else if (error instanceof Error) {
+		toast.error(error.message);
+	} else {
+		toast.error("An unexpected error occurred");
+	}
 }

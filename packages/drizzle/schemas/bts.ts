@@ -188,7 +188,7 @@ export const ukePermits = pgTable(
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		station_id: varchar("station_id", { length: 16 }).notNull(),
 		operator_id: integer("operator_id")
-			.references(() => ukeOperators.id, { onDelete: "set null", onUpdate: "cascade" })
+			.references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
 			.notNull(),
 		location_id: integer("location_id")
 			.references(() => ukeLocations.id, { onDelete: "set null", onUpdate: "cascade" })
@@ -203,6 +203,14 @@ export const ukePermits = pgTable(
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [
+		unique("uke_permits_unique_permit").on(
+			table.station_id,
+			table.operator_id,
+			table.location_id,
+			table.band_id,
+			table.decision_number,
+			table.decision_type,
+		),
 		index("uke_permits_station_id_idx").on(table.station_id),
 		index("uke_permits_location_id_idx").on(table.location_id),
 		index("uke_permits_operator_id_idx").on(table.operator_id),
@@ -389,10 +397,14 @@ export const radioLinesTransmitterTypes = pgTable("radiolines_transmitter_types"
 	manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
 });
 
+export const ukeOperators = pgTable("uke_operators", {
+	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+	name: varchar("full_name", { length: 150 }).notNull(),
+	full_name: varchar("name", { length: 250 }).notNull().unique(),
+});
+
 /**
  * UKE radiolines table
- * @example
- * { id: 1, tx_longitude: 52.2297, tx_latitude: 21.0122, tx_height: 100, rx_longitude: 52.2297, rx_latitude: 21.0122, rx_height: 50, freq: 1800, ch_num: 1, plan_symbol: "A", ch_width: 5, polarization: "H", modulation_type: "QPSK", bandwidth: "20", tx_eirp: 30, tx_antenna_attenuation: 10, tx_transmitter_type_id: 1, tx_antenna_type_id: 1, tx_antenna_gain: 15, tx_antenna_height: 100, rx_antenna_type_id: 1, rx_antenna_gain: 10, rx_antenna_height: 50, rx_noise_figure: 5, rx_atpc_attenuation: 3, operator_id: 1, permit_number: "123456", decision_type: "zmP", expiry_date: new Date(), updatedAt: new Date(), createdAt: new Date() }
  */
 export const ukeRadioLines = pgTable(
 	"uke_radiolines",
@@ -400,35 +412,44 @@ export const ukeRadioLines = pgTable(
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		tx_longitude: doublePrecision("tx_longitude").notNull(),
 		tx_latitude: doublePrecision("tx_latitude").notNull(),
-		tx_height: integer("tx_height").notNull(),
+		tx_height: doublePrecision("tx_height").notNull(),
+		tx_city: varchar("tx_city", { length: 100 }),
+		tx_province: varchar("tx_province", { length: 50 }),
+		tx_street: varchar("tx_street", { length: 200 }),
+		tx_location_description: text("tx_location_description"),
 		rx_longitude: doublePrecision("rx_longitude").notNull(),
 		rx_latitude: doublePrecision("rx_latitude").notNull(),
-		rx_height: integer("rx_height").notNull(),
+		rx_height: doublePrecision("rx_height").notNull(),
+		rx_city: varchar("rx_city", { length: 100 }),
+		rx_province: varchar("rx_province", { length: 50 }),
+		rx_street: varchar("rx_street", { length: 200 }),
+		rx_location_description: text("rx_location_description"),
 		freq: integer("freq").notNull(),
 		ch_num: integer("ch_num"),
 		plan_symbol: varchar("plan_symbol", { length: 50 }),
-		ch_width: integer("ch_width"),
+		ch_width: doublePrecision("ch_width"),
 		polarization: varchar("polarization", { length: 10 }),
 		modulation_type: varchar("modulation_type", { length: 50 }),
 		//* This has to be in text varchar because UKE does not follow their own schema and types some bandwith in e.g. `2x1000` etc. If the value only has a number, it will be treated as Mb/s.
 		bandwidth: varchar("bandwidth", { length: 100 }),
-		tx_eirp: integer("tx_eirp"),
-		tx_antenna_attenuation: integer("tx_antenna_attenuation"),
+		tx_eirp: doublePrecision("tx_eirp"),
+		tx_antenna_attenuation: doublePrecision("tx_antenna_attenuation"),
 		tx_transmitter_type_id: integer("tx_transmitter_type_id").references(() => radioLinesTransmitterTypes.id, {
 			onDelete: "set null",
 			onUpdate: "cascade",
 		}),
 		tx_antenna_type_id: integer("tx_antenna_type_id").references(() => radioLinesAntennaTypes.id, { onDelete: "set null", onUpdate: "cascade" }),
-		tx_antenna_gain: integer("tx_antenna_gain"),
-		tx_antenna_height: integer("tx_antenna_height"),
+		tx_antenna_gain: doublePrecision("tx_antenna_gain"),
+		tx_antenna_height: doublePrecision("tx_antenna_height"),
 		rx_antenna_type_id: integer("rx_antenna_type_id").references(() => radioLinesAntennaTypes.id, { onDelete: "set null", onUpdate: "cascade" }),
-		rx_antenna_gain: integer("rx_antenna_gain"),
-		rx_antenna_height: integer("rx_antenna_height"),
-		rx_noise_figure: integer("rx_noise_figure"),
-		rx_atpc_attenuation: integer("rx_atpc_attenuation"),
-		operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
+		rx_antenna_gain: doublePrecision("rx_antenna_gain"),
+		rx_antenna_height: doublePrecision("rx_antenna_height"),
+		rx_noise_figure: doublePrecision("rx_noise_figure"),
+		rx_atpc_attenuation: doublePrecision("rx_atpc_attenuation"),
+		operator_id: integer("operator_id").references(() => ukeOperators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		permit_number: varchar("permit_number", { length: 100 }).notNull(),
 		decision_type: UKEPermissionType("decision_type").notNull(),
+		issue_date: timestamp({ withTimezone: true }),
 		expiry_date: timestamp({ withTimezone: true }).notNull(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -439,16 +460,8 @@ export const ukeRadioLines = pgTable(
 		index("uke_radiolines_permit_number_trgm_idx").using("gin", sql`(${table.permit_number}) gin_trgm_ops`),
 		index("uke_radiolines_tx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${table.tx_longitude}, ${table.tx_latitude}), 4326))`),
 		index("uke_radiolines_rx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${table.rx_longitude}, ${table.rx_latitude}), 4326))`),
-		check("uke_radiolines_tx_height_nonneg", sql`${table.tx_height} >= 0`),
-		check("uke_radiolines_rx_height_nonneg", sql`${table.rx_height} >= 0`),
 	],
 );
-
-export const ukeOperators = pgTable("uke_operators", {
-	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-	name: varchar("full_name", { length: 150 }).notNull(),
-	full_name: varchar("name", { length: 250 }).notNull().unique(),
-});
 
 /**
  * UKE import metadata table

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Database02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { Database02Icon, ArrowDown01Icon, File02Icon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "./checkbox";
 import { getOperatorColor } from "@/lib/operator-utils";
-import { RAT_OPTIONS } from "../../constants";
+import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
+import { fetchStats } from "../../stats-api";
 
 const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
 
@@ -41,8 +43,14 @@ export function FilterPanel({
 	onClearAllBands,
 	onClearFilters,
 }: FilterPanelProps) {
-	const { t } = useTranslation("map");
+	const { t, i18n } = useTranslation("map");
 	const [showOtherOperators, setShowOtherOperators] = useState(false);
+
+	const { data: stats } = useQuery({
+		queryKey: ["stats"],
+		queryFn: fetchStats,
+		staleTime: 1000 * 60 * 5,
+	});
 
 	const topOperators = operators.filter((op) => TOP4_MNCS.includes(op.mnc));
 	const otherOperators = operators.filter((op) => !TOP4_MNCS.includes(op.mnc));
@@ -50,7 +58,7 @@ export function FilterPanel({
 
 	const dataSources = [
 		{ id: "internal", label: t("filters.internalDb"), icon: Database02Icon },
-		// { id: "uke", label: t("filters.ukePermits"), icon: File02Icon },
+		{ id: "uke", label: t("filters.ukePermits"), icon: File02Icon },
 	];
 
 	return (
@@ -142,7 +150,7 @@ export function FilterPanel({
 						</div>
 					</div>
 					<div className="flex flex-wrap gap-1">
-						{RAT_OPTIONS.map((rat) => (
+						{(filters.source === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((rat) => (
 							<button
 								type="button"
 								key={rat.value}
@@ -202,6 +210,39 @@ export function FilterPanel({
 						{filters.rat.length > 0 && <> · {t("filters.techs", { count: filters.rat.length })}</>}
 						{filters.bands.length > 0 && <> · {t("filters.bands", { count: filters.bands.length })}</>}
 					</p>
+				</div>
+			)}
+
+			{stats && (
+				<div className="px-3 py-2 border-t bg-muted/20 shrink-0">
+					<div className="flex items-center gap-1.5 mb-1.5">
+						<HugeiconsIcon icon={InformationCircleIcon} className="size-3.5 text-muted-foreground" />
+						<h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t("stats.dataInfo")}</h4>
+					</div>
+					<div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+						<div className="flex justify-between">
+							<span className="text-muted-foreground">{t("stats.internalData")}:</span>
+							<span className="font-medium tabular-nums">
+								{stats.lastUpdated.stations ? new Date(stats.lastUpdated.stations).toLocaleDateString(i18n.language) : t("stats.never")}
+							</span>
+						</div>
+						<div className="flex justify-between">
+							<span className="text-muted-foreground">{t("stats.ukePermits")}:</span>
+							<span className="font-medium tabular-nums">
+								{stats.lastUpdated.stations_permits
+									? new Date(stats.lastUpdated.stations_permits).toLocaleDateString(i18n.language)
+									: t("stats.never")}
+							</span>
+						</div>
+						<div className="flex justify-between">
+							<span className="text-muted-foreground">{t("stats.stations")}:</span>
+							<span className="font-medium tabular-nums">{stats.counts.stations.toLocaleString(i18n.language)}</span>
+						</div>
+						<div className="flex justify-between">
+							<span className="text-muted-foreground">{t("stats.permits")}:</span>
+							<span className="font-medium tabular-nums">{stats.counts.uke_permits.toLocaleString(i18n.language)}</span>
+						</div>
+					</div>
 				</div>
 			)}
 		</div>

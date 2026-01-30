@@ -6,10 +6,18 @@ dotenv.config();
 export const DATABASE_URL = process.env.DATABASE_URL as string;
 if (!DATABASE_URL) throw new Error("DATABASE_URL is not set");
 
-export const DOWNLOAD_DIR = path.join(process.cwd(), "apps", "uke-importer", "downloads");
+export const DOWNLOAD_DIR = path.join(process.cwd(), "downloads");
 
 export const STATIONS_URL = "https://bip.uke.gov.pl/pozwolenia-radiowe/wykaz-pozwolen-radiowych-tresci/stacje-gsm-umts-lte-5gnr-oraz-cdma,12,0.html";
 export const RADIOLINES_URL = "https://bip.uke.gov.pl/pozwolenia-radiowe/wykaz-pozwolen-radiowych-tresci/linie-radiowe,7.html";
+export const PERMITS_DEVICES_URL = "https://bip.uke.gov.pl/pozwolenia-radiowe/rejestr-urzadzen/";
+
+export const PERMIT_FILE_OPERATOR_MAP: Record<string, string> = {
+	orange: "Orange",
+	p4: "Play",
+	"t-mobile": "T-Mobile",
+	polkomtel: "Plus",
+};
 
 export const BATCH_SIZE = 50;
 

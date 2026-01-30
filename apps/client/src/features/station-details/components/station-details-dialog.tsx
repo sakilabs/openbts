@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor } from "@/lib/operator-utils";
+import { getHardwareLeaseOperator } from "@/lib/station-utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useEscapeKey } from "@/hooks/use-escape-key";
 import { fetchStation } from "../api";
 import { StationDetailsBody } from "./dialog-body";
 import type { TabId } from "../tabs";
@@ -19,12 +21,6 @@ type StationDetailsDialogProps = {
 
 function getDefaultTab(source: "internal" | "uke"): TabId {
 	return source === "uke" ? "permits" : "specs";
-}
-
-function getHardwareLeaseOperator(stationId: string): string | null {
-	if (stationId.startsWith("T-")) return "T-Mobile";
-	if (stationId.startsWith("O-")) return "Orange";
-	return null;
 }
 
 export function StationDetailsDialog({ stationId, source, onClose }: StationDetailsDialogProps) {
@@ -42,14 +38,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 		staleTime: 1000 * 60 * 5,
 	});
 
-	useEffect(() => {
-		if (!stationId) return;
-		function handleEsc(e: KeyboardEvent) {
-			if (e.key === "Escape") onClose();
-		}
-		window.addEventListener("keydown", handleEsc);
-		return () => window.removeEventListener("keydown", handleEsc);
-	}, [onClose, stationId]);
+	useEscapeKey(onClose, !!stationId);
 
 	if (!stationId) return null;
 

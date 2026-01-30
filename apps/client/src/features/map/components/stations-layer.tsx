@@ -2,18 +2,28 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { useMap } from "@/components/ui/map";
 import { MapSearchOverlay } from "./search-overlay";
 import { StationDetailsDialog } from "@/features/station-details/components/station-details-dialog";
-import type { StationFilters, StationSource, LocationWithStations, LocationInfo, StationWithoutCells } from "@/types/station";
-import { fetchLocations, fetchLocationWithStations, type LocationsResponse } from "../api";
-import { locationsToGeoJSON, stationsToGeoJSON } from "../geojson";
+import { UkePermitDetailsDialog } from "@/features/station-details/components/uke-permit-details-dialog";
+import type {
+	StationFilters,
+	StationSource,
+	LocationWithStations,
+	LocationInfo,
+	StationWithoutCells,
+	UkeStation,
+	UkeLocationWithPermits,
+	Station,
+} from "@/types/station";
+import { fetchLocations, fetchLocationWithStations } from "../api";
+import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
+import { groupPermitsByStation } from "../utils";
 import { useUrlSync } from "../hooks/use-url-sync";
 import { useMapPopup } from "../hooks/use-map-popup";
 import { useMapLayer } from "../hooks/use-map-layer";
 import { useMapBounds } from "../hooks/use-map-bounds";
-import { ApiResponseError } from "@/lib/api";
+import { showApiError } from "@/lib/api";
 
 const DEFAULT_FILTERS: StationFilters = {
 	operators: [],
@@ -30,18 +40,6 @@ type PrefetchCache = Map<
 	}
 >;
 
-function showApiError(error: unknown) {
-	if (error instanceof ApiResponseError) {
-		for (const err of error.errors) {
-			toast.error(err.message || err.code);
-		}
-	} else if (error instanceof Error) {
-		toast.error(error.message);
-	} else {
-		toast.error("An unexpected error occurred");
-	}
-}
-
 function toLocationInfo(loc: LocationWithStations): LocationInfo {
 	return {
 		id: loc.id,
@@ -56,6 +54,7 @@ export function StationsLayer() {
 	const { map, isLoaded } = useMap();
 	const [filters, setFilters] = useState<StationFilters>(DEFAULT_FILTERS);
 	const [selectedStation, setSelectedStation] = useState<{ id: number; source: StationSource } | null>(null);
+	const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
 	const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
 
 	useUrlSync({
@@ -75,7 +74,8 @@ export function StationsLayer() {
 		cleanup: cleanupPopup,
 	} = useMapPopup({
 		map,
-		onOpenDetails: useCallback((id, source) => setSelectedStation({ id, source }), []),
+		onOpenStationDetails: useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []),
+		onOpenUkeStationDetails: useCallback((station: UkeStation) => setSelectedUkeStation(station), []),
 	});
 
 	const {
@@ -96,11 +96,13 @@ export function StationsLayer() {
 	const locationCount = locations.length;
 
 	const geoJSON = useMemo(() => {
-		return filters.source === "uke" ? stationsToGeoJSON(locations as any, filters.source) : locationsToGeoJSON(locations, filters.source);
+		return filters.source === "uke"
+			? ukeLocationsToGeoJSON(locations as unknown as UkeLocationWithPermits[], filters.source)
+			: locationsToGeoJSON(locations, filters.source);
 	}, [locations, filters.source]);
 
 	const fetchAndUpdatePopup = useCallback(
-		async (locationId: number, location: LocationInfo, source: StationSource) => {
+		async (locationId: number, _location: LocationInfo, source: StationSource) => {
 			const cached = prefetchCache.get(locationId);
 
 			try {
@@ -136,12 +138,9 @@ export function StationsLayer() {
 			const [lng, lat] = coordinates;
 
 			if (source === "uke") {
-				const ukeStations = (locations as any[]).filter((s: any) => {
-					const sLat = s.location?.latitude ?? s.latitude;
-					const sLng = s.location?.longitude ?? s.longitude;
-					return sLat?.toFixed(6) === lat.toFixed(6) && sLng?.toFixed(6) === lng.toFixed(6);
-				});
-				showPopup(coordinates, { id: locationId, city, address, latitude: lat, longitude: lng }, ukeStations, source as StationSource);
+				const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === locationId);
+				const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
+				showPopup(coordinates, { id: locationId, city, address, latitude: lat, longitude: lng }, null, ukeStations, source as StationSource);
 				return;
 			}
 
@@ -154,7 +153,7 @@ export function StationsLayer() {
 				longitude: lng,
 			};
 
-			showPopup(coordinates, location, locationData?.stations ?? null, source as StationSource);
+			showPopup(coordinates, location, locationData?.stations ?? null, null, source as StationSource);
 			await fetchAndUpdatePopup(locationId, location, source as StationSource);
 		},
 		[locations, showPopup, fetchAndUpdatePopup],
@@ -178,31 +177,28 @@ export function StationsLayer() {
 	);
 
 	const handleStationSelect = useCallback(
-		async (station: any) => {
+		async (station: Station) => {
 			if (!map) return;
 
-			const lat = station.location?.latitude ?? station.latitude;
-			const lng = station.location?.longitude ?? station.longitude;
-			if (lat == null || lng == null) return;
+			const lat = station.location?.latitude;
+			const lng = station.location?.longitude;
+			if (!lat || !lng) return;
 
 			map.flyTo({ center: [lng, lat], zoom: 16, essential: true });
 
 			if (filters.source === "uke") {
-				const colocatedStations = (locations as any[]).filter((s: any) => {
-					const sLat = s.location?.latitude ?? s.latitude;
-					const sLng = s.location?.longitude ?? s.longitude;
-					return sLat?.toFixed(6) === lat.toFixed(6) && sLng?.toFixed(6) === lng.toFixed(6);
-				});
-				if (!colocatedStations.some((s: any) => s.id === station.id)) colocatedStations.push(station);
+				const ukeLocations = locations as unknown as UkeLocationWithPermits[];
+				const ukeLocation = ukeLocations.find((loc) => loc.latitude.toFixed(6) === lat.toFixed(6) && loc.longitude.toFixed(6) === lng.toFixed(6));
+				const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
 
 				const location: LocationInfo = {
-					id: station.location?.id ?? station.id,
-					city: station.location?.city ?? station.city,
-					address: station.location?.address ?? station.address,
+					id: ukeLocation?.id ?? station.id,
+					city: ukeLocation?.city ?? station.location?.city,
+					address: ukeLocation?.address ?? station.location?.address,
 					latitude: lat,
 					longitude: lng,
 				};
-				showPopup([lng, lat], location, colocatedStations, filters.source);
+				showPopup([lng, lat], location, null, ukeStations, filters.source);
 				return;
 			}
 
@@ -210,12 +206,15 @@ export function StationsLayer() {
 
 			if (locationData) {
 				const location = toLocationInfo(locationData);
-				showPopup([lng, lat], location, locationData.stations as StationWithoutCells[], filters.source);
+				showPopup([lng, lat], location, locationData.stations as StationWithoutCells[], null, filters.source);
 				await fetchAndUpdatePopup(locationData.id, location, filters.source);
 			}
 		},
 		[map, filters, locations, showPopup, fetchAndUpdatePopup],
 	);
+
+	const handleCloseStationDetails = useCallback(() => setSelectedStation(null), []);
+	const handleCloseUkeDetails = useCallback(() => setSelectedUkeStation(null), []);
 
 	if (!isLoaded) return null;
 
@@ -236,8 +235,9 @@ export function StationsLayer() {
 				key={selectedStation?.id}
 				stationId={selectedStation?.id ?? null}
 				source={selectedStation?.source ?? "internal"}
-				onClose={() => setSelectedStation(null)}
+				onClose={handleCloseStationDetails}
 			/>
+			<UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} />
 		</>
 	);
 }

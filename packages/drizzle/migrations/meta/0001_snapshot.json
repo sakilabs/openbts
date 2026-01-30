@@ -1,5 +1,5 @@
 {
-  "id": "8b7899ec-2147-4800-87e5-644e59ccdbae",
+  "id": "1e658e67-ec04-416d-81f6-93dddad07b6a",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -686,6 +686,18 @@
           "type": "varchar(16)",
           "primaryKey": false,
           "notNull": true
+        },
+        "networks_name": {
+          "name": "networks_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mno_name": {
+          "name": "mno_name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
         },
         "createdAt": {
           "name": "createdAt",
@@ -2036,7 +2048,20 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "uke_permits_unique_permit": {
+          "name": "uke_permits_unique_permit",
+          "nullsNotDistinct": false,
+          "columns": [
+            "station_id",
+            "operator_id",
+            "location_id",
+            "band_id",
+            "decision_number",
+            "decision_type"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2076,9 +2101,33 @@
         },
         "tx_height": {
           "name": "tx_height",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
+        },
+        "tx_city": {
+          "name": "tx_city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tx_province": {
+          "name": "tx_province",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tx_street": {
+          "name": "tx_street",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tx_location_description": {
+          "name": "tx_location_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "rx_longitude": {
           "name": "rx_longitude",
@@ -2094,9 +2143,33 @@
         },
         "rx_height": {
           "name": "rx_height",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
+        },
+        "rx_city": {
+          "name": "rx_city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rx_province": {
+          "name": "rx_province",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rx_street": {
+          "name": "rx_street",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rx_location_description": {
+          "name": "rx_location_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "freq": {
           "name": "freq",
@@ -2118,7 +2191,7 @@
         },
         "ch_width": {
           "name": "ch_width",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
@@ -2142,13 +2215,13 @@
         },
         "tx_eirp": {
           "name": "tx_eirp",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
         "tx_antenna_attenuation": {
           "name": "tx_antenna_attenuation",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
@@ -2166,13 +2239,13 @@
         },
         "tx_antenna_gain": {
           "name": "tx_antenna_gain",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
         "tx_antenna_height": {
           "name": "tx_antenna_height",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
@@ -2184,25 +2257,25 @@
         },
         "rx_antenna_gain": {
           "name": "rx_antenna_gain",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
         "rx_antenna_height": {
           "name": "rx_antenna_height",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
         "rx_noise_figure": {
           "name": "rx_noise_figure",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
         "rx_atpc_attenuation": {
           "name": "rx_atpc_attenuation",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": false
         },
@@ -2224,6 +2297,12 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
+        },
+        "issue_date": {
+          "name": "issue_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         },
         "expiry_date": {
           "name": "expiry_date",
@@ -2363,10 +2442,10 @@
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
-        "uke_radiolines_operator_id_operators_id_fk": {
-          "name": "uke_radiolines_operator_id_operators_id_fk",
+        "uke_radiolines_operator_id_uke_operators_id_fk": {
+          "name": "uke_radiolines_operator_id_uke_operators_id_fk",
           "tableFrom": "uke_radiolines",
-          "tableTo": "operators",
+          "tableTo": "uke_operators",
           "columnsFrom": [
             "operator_id"
           ],
@@ -2380,16 +2459,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "uke_radiolines_tx_height_nonneg": {
-          "name": "uke_radiolines_tx_height_nonneg",
-          "value": "\"uke_radiolines\".\"tx_height\" >= 0"
-        },
-        "uke_radiolines_rx_height_nonneg": {
-          "name": "uke_radiolines_rx_height_nonneg",
-          "value": "\"uke_radiolines\".\"rx_height\" >= 0"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.umts_cells": {
