@@ -31,18 +31,22 @@ export function convertDMSToDD(input: string): number {
 	return dd;
 }
 
-export type Rat = "GSM" | "UMTS" | "LTE" | "NR";
+export type Rat = "GSM" | "CDMA" | "UMTS" | "LTE" | "NR" | "IOT";
 export function mapStandardToRat(std: string): Rat | null {
 	switch (std.toUpperCase()) {
 		case "GSM":
 			return "GSM";
 		case "UMTS":
 			return "UMTS";
+		case "CDMA":
+			return "CDMA";
 		case "LTE":
 			return "LTE";
 		case "5G":
 		case "NR":
 			return "NR";
+		case "IOT":
+			return "IOT";
 		default:
 			return null;
 	}

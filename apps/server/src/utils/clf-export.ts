@@ -12,7 +12,7 @@ export interface CellExportData {
 	ecid?: number | null;
 	gnbid?: number | null;
 	nci?: number | null;
-	rat: "GSM" | "UMTS" | "LTE" | "NR";
+	rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR" | "IOT";
 	band_value?: number | null;
 	band_name: string;
 	station_id: string;
@@ -109,6 +109,8 @@ function getCellIdForExport(cell: CellExportData): number | null {
 	switch (cell.rat) {
 		case "GSM":
 			return cell.cid;
+		case "CDMA":
+			return cell.clid ?? cell.cid;
 		case "UMTS":
 			return cell.cid_long ?? cell.cid;
 		case "LTE":
@@ -119,17 +121,12 @@ function getCellIdForExport(cell: CellExportData): number | null {
 			return null;
 	}
 }
-
-// function getMCCMNC(cell: CellExportData): string {
-// 	const mcc = "260";
-// 	const mnc = cell.operator_mnc?.toString().padStart(2, "0") ?? "00";
-// 	return `${mcc}${mnc}`;
-// }
-
-function getRatCode(rat: "GSM" | "UMTS" | "LTE" | "NR"): number {
+function getRatCode(rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR" | "IOT"): number {
 	switch (rat) {
 		case "GSM":
 			return 1;
+		case "CDMA":
+			return 2;
 		case "UMTS":
 			return 3;
 		case "LTE":
