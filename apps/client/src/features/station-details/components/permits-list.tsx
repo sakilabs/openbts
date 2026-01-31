@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { DocumentCodeIcon, Calendar03Icon, Loading03Icon, AlertCircleIcon, SignalFull02Icon } from "@hugeicons/core-free-icons";
+import { DocumentCodeIcon, Calendar03Icon, Loading03Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { UkePermit } from "@/types/station";
 import { fetchApiData } from "@/lib/api";
@@ -31,7 +31,7 @@ function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
 		groups.set(rat, existing);
 	}
 
-	const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "OTHER"];
+	const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "IOT", "OTHER"];
 	const sorted = new Map<string, UkePermit[]>();
 	for (const rat of ratOrder) {
 		if (groups.has(rat)) {

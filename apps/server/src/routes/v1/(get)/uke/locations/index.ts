@@ -1,4 +1,4 @@
-import { sql, count, and as drizzleAnd, type SQL } from "drizzle-orm";
+import { sql, count, type SQL, inArray, eq, and } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -101,24 +101,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	}
 
 	const [bandRows, operatorRows, regionsRows] = await Promise.all([
-		bandValues?.length
-			? db.query.bands.findMany({
-					columns: { id: true },
-					where: (fields, { inArray }) => inArray(fields.value, bandValues),
-				})
-			: [],
-		expandedOperatorMncs?.length
-			? db.query.operators.findMany({
-					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.mnc, expandedOperatorMncs),
-				})
-			: [],
-		regionNames?.length
-			? db.query.regions.findMany({
-					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.name, regionNames),
-				})
-			: [],
+		bandValues?.length ? db.select({ id: bands.id }).from(bands).where(inArray(bands.value, bandValues)) : [],
+		expandedOperatorMncs?.length ? db.select({ id: operators.id }).from(operators).where(inArray(operators.mnc, expandedOperatorMncs)) : [],
+		regionNames?.length ? db.select({ id: regions.id }).from(regions).where(inArray(regions.name, regionNames)) : [],
 	]);
 
 	const bandIds = bandRows.map((b) => b.id);
@@ -131,154 +116,90 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA" | "IOT";
 	const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" } as const;
 	const mappedRats: RatType[] = requestedRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
-
 	const hasPermitFilters = operatorIds.length || bandIds.length || mappedRats.length;
 
-	const buildPermitFilter = (): SQL<unknown> | undefined => {
-		if (!hasPermitFilters) return undefined;
+	const locationConditions: SQL<unknown>[] = [];
 
-		const conditions: SQL<unknown>[] = [];
+	if (envelope) locationConditions.push(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
+	if (regionIds.length) locationConditions.push(inArray(ukeLocations.region_id, regionIds));
+	if (hasPermitFilters) {
+		const permitConditions: SQL<unknown>[] = [sql`ps.location_id = ${ukeLocations.id}`];
 
 		if (operatorIds.length) {
-			conditions.push(
-				sql`${ukePermits.operator_id} = ANY(ARRAY[${sql.join(
+			permitConditions.push(
+				sql`ps.operator_id IN (${sql.join(
 					operatorIds.map((id) => sql`${id}`),
 					sql`,`,
-				)}]::int4[])`,
+				)})`,
 			);
 		}
 
-		if (bandIds.length || mappedRats.length) {
-			const bandConditions: SQL<unknown>[] = [];
-
-			if (bandIds.length) {
-				bandConditions.push(
-					sql`${ukePermits.band_id} = ANY(ARRAY[${sql.join(
-						bandIds.map((id) => sql`${id}`),
-						sql`,`,
-					)}]::int4[])`,
-				);
-			}
-
-			if (mappedRats.length) {
-				bandConditions.push(
-					sql`EXISTS (
-						SELECT 1 FROM ${bands} b
-						WHERE b.id = ${ukePermits.band_id}
-						AND UPPER(b.rat) IN (${sql.join(
-							mappedRats.map((r) => sql`${r}`),
-							sql`,`,
-						)})
-					)`,
-				);
-			}
-
-			if (bandConditions.length > 1) {
-				conditions.push(sql`(${sql.join(bandConditions, sql` AND `)})`);
-			} else if (bandConditions[0]) {
-				conditions.push(bandConditions[0]);
-			}
-		}
-
-		return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
-	};
-
-	const buildLocationConditions = (): SQL<unknown>[] => {
-		const conditions: SQL<unknown>[] = [];
-
-		if (envelope) {
-			conditions.push(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
-		}
-
-		if (regionIds.length) {
-			conditions.push(
-				sql`${ukeLocations.region_id} = ANY(ARRAY[${sql.join(
-					regionIds.map((id) => sql`${id}`),
+		if (bandIds.length) {
+			permitConditions.push(
+				sql`ps.band_id IN (${sql.join(
+					bandIds.map((id) => sql`${id}`),
 					sql`,`,
-				)}]::int4[])`,
+				)})`,
 			);
 		}
 
-		if (hasPermitFilters) {
-			const operatorCond = operatorIds.length
-				? sql` AND p.operator_id = ANY(ARRAY[${sql.join(
-						operatorIds.map((id) => sql`${id}`),
+		if (mappedRats.length) {
+			permitConditions.push(
+				sql`EXISTS (
+					SELECT 1 FROM ${bands}
+					WHERE ${bands}.id = ps.band_id
+					AND ${bands}.rat IN (${sql.join(
+						mappedRats.map((r) => sql`${r}`),
 						sql`,`,
-					)}]::int4[])`
-				: sql``;
-
-			const bandCond = bandIds.length
-				? sql` AND p.band_id = ANY(ARRAY[${sql.join(
-						bandIds.map((id) => sql`${id}`),
-						sql`,`,
-					)}]::int4[])`
-				: sql``;
-
-			const ratCond = mappedRats.length
-				? sql` AND EXISTS (
-						SELECT 1 FROM ${bands} b
-						WHERE b.id = p.band_id
-						AND UPPER(b.rat) IN (${sql.join(
-							mappedRats.map((r) => sql`${r}`),
-							sql`,`,
-						)})
-					)`
-				: sql``;
-
-			conditions.push(sql`
-				EXISTS (
-					SELECT 1
-					FROM ${ukePermits} p
-					WHERE p.location_id = ${ukeLocations.id}
-					${operatorCond}
-					${bandCond}
-					${ratCond}
-				)
-			`);
-		} else {
-			conditions.push(sql`
-				EXISTS (
-					SELECT 1
-					FROM ${ukePermits} p
-					WHERE p.location_id = ${ukeLocations.id}
-				)
-			`);
+					)})
+				)`,
+			);
 		}
 
-		return conditions;
-	};
-
-	const locationConditions = buildLocationConditions();
+		locationConditions.push(
+			sql`EXISTS (
+				SELECT 1 FROM uke_permits ps
+				WHERE ${and(...permitConditions)}
+			)`,
+		);
+	} else {
+		locationConditions.push(
+			sql`EXISTS (
+				SELECT 1 FROM uke_permits ps
+				WHERE ps.location_id = ${ukeLocations.id}
+			)`,
+		);
+	}
 
 	try {
-		const whereClause = locationConditions.length ? drizzleAnd(...locationConditions) : undefined;
+		const whereClause = and(...locationConditions);
+		const countResult = await db.select({ count: count() }).from(ukeLocations).where(whereClause);
+		const totalCount = countResult[0]?.count ?? 0;
 
-		const [countResult, locationRows] = await Promise.all([
-			db.select({ count: count() }).from(ukeLocations).where(whereClause),
-			db.query.ukeLocations.findMany({
-				with: {
-					region: true,
-					permits: {
-						columns: { location_id: false },
-						where: buildPermitFilter(),
-						with: {
-							band: true,
-							operator: { columns: { is_isp: false } },
-						},
+		if (totalCount === 0) {
+			return res.send({ data: [], totalCount: 0 });
+		}
+
+		const locationRows = await db.query.ukeLocations.findMany({
+			with: {
+				region: true,
+				permits: {
+					columns: { location_id: false },
+					with: {
+						band: true,
+						operator: { columns: { is_isp: false } },
 					},
 				},
-				columns: {
-					point: false,
-					region_id: false,
-				},
-				where: whereClause,
-				limit,
-				offset,
-				orderBy: (fields, operators) => [operators.desc(fields.id)],
-			}),
-		]);
-
-		const totalCount = countResult[0]?.count ?? 0;
+			},
+			columns: {
+				point: false,
+				region_id: false,
+			},
+			where: whereClause,
+			limit,
+			offset,
+			orderBy: (fields, ops) => [ops.desc(fields.id)],
+		});
 
 		return res.send({ data: locationRows, totalCount });
 	} catch (error) {

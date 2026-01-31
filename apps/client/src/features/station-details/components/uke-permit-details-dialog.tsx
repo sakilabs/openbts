@@ -10,6 +10,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { CopyButton } from "./copy-button";
 import type { UkeStation, UkePermit } from "@/types/station";
+import { RAT_ICONS } from "../utils";
 
 type UkeStationDetailsDialogProps = {
 	station: UkeStation | null;
@@ -26,7 +27,7 @@ function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
 		groups.set(rat, existing);
 	}
 
-	const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "OTHER"];
+	const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "IOT", "OTHER"];
 	const sorted = new Map<string, UkePermit[]>();
 	for (const rat of ratOrder) {
 		if (groups.has(rat)) {
@@ -146,7 +147,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 							{Array.from(permitsByRat.entries()).map(([rat, permits]) => (
 								<div key={rat} className="rounded-xl border overflow-hidden">
 									<div className="px-4 py-2.5 bg-muted/30 border-b flex items-center gap-2">
-										<HugeiconsIcon icon={SignalFull02Icon} className="size-4 text-muted-foreground" />
+										<HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
 										<span className="font-bold text-sm">{rat}</span>
 										<span className="text-xs text-muted-foreground">({t("permits.permitsCount", { count: permits.length })})</span>
 									</div>
