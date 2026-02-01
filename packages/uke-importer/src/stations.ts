@@ -7,7 +7,7 @@ import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 import { scrapeXlsxLinks } from "./scrape.js";
-import { upsertBands, upsertOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
+import { upsertBands, getOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
 
 import type { RawUkeData } from "./types.js";
@@ -31,7 +31,8 @@ function parseBandFromLabel(label: string): { rat: (typeof ratEnum.enumValues)[n
 					: tech === "lte"
 						? ("LTE" as const)
 						: ("NR" as const);
-	return { rat, value };
+	const bandValue = rat === "NR" && value === 3600 ? 3500 : value;
+	return { rat, value: bandValue };
 }
 
 async function insertUkePermits(
@@ -43,21 +44,36 @@ async function insertUkePermits(
 	fileLabel: string,
 ): Promise<void> {
 	const bandKey = labelToBandKey(fileLabel);
-	if (!bandKey) return;
+	if (!bandKey) {
+		console.warn(`[stations] Warning: Could not parse band from file label: ${fileLabel}`);
+		return;
+	}
 	const bandId = bandMap.get(`${bandKey.rat}:${bandKey.value}`);
-	if (!bandId) return;
+	if (!bandId) {
+		console.warn(`[stations] Warning: No band ID found for band ${bandKey.rat}${bandKey.value} in file: ${fileLabel}`);
+		return;
+	}
 	const values = raws
 		.map((r) => {
 			const lon = convertDMSToDD(r["Dł geogr stacji"]) ?? null;
 			const lat = convertDMSToDD(r["Szer geogr stacji"]) ?? null;
-			if (!lon || !lat) return null;
+			if (!lon || !lat) {
+				console.warn(`[stations] Warning: Invalid coordinates for station ID ${r.IdStacji} GPS(${r["Dł geogr stacji"]}, ${r["Szer geogr stacji"]})`);
+				return null;
+			}
 			const permitDate = parseExcelDate(r["Data ważności"]) ?? new Date();
 			const opName = stripCompanySuffixForName(String(r["Nazwa Operatora"] || "").trim());
 			const operator_id = operatorIdByName.get(opName) ?? null;
-			if (!operator_id) return null;
+			if (!operator_id) {
+				console.warn(`[stations] Warning: No operator ID found for operator name: ${opName} Station ID: ${r.IdStacji}`);
+				return null;
+			}
 			const locationKey = `${lon}:${lat}`;
 			const location_id = locationIdByLonLat.get(locationKey) ?? null;
-			if (!location_id) return null;
+			if (!location_id) {
+				console.warn(`[stations] Warning: No location ID found for coordinates GPS(${lon}, ${lat}) Station ID: ${r.IdStacji}`);
+				return null;
+			}
 			return {
 				station_id: String(r.IdStacji || "").trim(),
 				operator_id,
@@ -70,7 +86,21 @@ async function insertUkePermits(
 		})
 		.filter((v): v is NonNullable<typeof v> => v != null);
 	for (const group of chunk(values, BATCH_SIZE)) {
-		if (group.length) await db.insert(ukePermits).values(group);
+		if (group.length)
+			await db
+				.insert(ukePermits)
+				.values(group)
+				.onConflictDoNothing({
+					target: [
+						ukePermits.station_id,
+						ukePermits.operator_id,
+						ukePermits.location_id,
+						ukePermits.band_id,
+						ukePermits.decision_number,
+						ukePermits.decision_type,
+						ukePermits.expiry_date,
+					],
+				});
 	}
 }
 
@@ -118,17 +148,24 @@ export async function importStations(): Promise<boolean> {
 			const teryt = String(r.TERYT || "");
 			const prefix = teryt.slice(0, 2);
 			const region = REGION_BY_TERYT_PREFIX[prefix];
+			if (!region) {
+				console.warn(`[stations] Warning: No region found for TERYT prefix: ${prefix} (full TERYT: ${teryt})`);
+				continue;
+			}
 			const lon = convertDMSToDD(r["Dł geogr stacji"]);
 			const lat = convertDMSToDD(r["Szer geogr stacji"]);
-			if (region && lon !== null && lat !== null)
-				locationItems.push({ regionName: region.name, city: r.Miejscowość || null, address: r.Lokalizacja || null, lon, lat });
+			if (lon === null || lat === null) {
+				console.warn(`[stations] Warning: Invalid coordinates for station ID ${r.IdStacji} GPS(${r["Dł geogr stacji"]}, ${r["Szer geogr stacji"]})`);
+				continue;
+			}
+			locationItems.push({ regionName: region.name, city: r.Miejscowość || null, address: r.Lokalizacja || null, lon, lat });
 		}
 	}
 	console.log(`[stations] Processed a total of ${totalCount} rows`);
 	console.log(`[stations] Found ${operatorNamesSet.size} unique operators`);
 	console.log(`[stations] Found ${locationItems.length} locations`);
 	console.log("[stations] Upserting operators...");
-	const operatorIdByName = await upsertOperators(Array.from(operatorNamesSet));
+	const operatorIdByName = await getOperators(Array.from(operatorNamesSet));
 	console.log("[stations] Upserting locations...");
 	const locationIdByLonLat = await upsertUkeLocations(locationItems, regionIds);
 
