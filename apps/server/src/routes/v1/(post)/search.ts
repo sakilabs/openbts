@@ -20,7 +20,7 @@ const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const locationSelectSchema = createSelectSchema(locations).omit({ point: true });
 const regionSelectSchema = createSelectSchema(regions);
-const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorsSelectSchema = createSelectSchema(operators);
 const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
 const cellWithDetailsSchema = cellsSelectSchema.extend({ details: cellDetailsSchema });
 
@@ -72,7 +72,7 @@ const stationQueryConfig = {
 	with: {
 		cells: { with: { gsm: true, umts: true, lte: true, nr: true } },
 		location: { with: { region: true }, columns: { point: false } },
-		operator: { columns: { is_isp: false } },
+		operator: true,
 		networks: { columns: { station_id: false } },
 	},
 	columns: { status: false },

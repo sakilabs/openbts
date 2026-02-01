@@ -19,6 +19,7 @@ import {
 	nrCells,
 	networksIds,
 	ukeLocations,
+	ukeOperators,
 } from "./bts.ts";
 import { apiKeys, attachments, stationComments, userLists, users } from "./auth.ts";
 import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedStations, proposedUMTSCells } from "./submissions.ts";
@@ -186,9 +187,9 @@ export const ukeRadioLineRelations = relations(ukeRadioLines, ({ one }) => ({
 		fields: [ukeRadioLines.rx_antenna_type_id],
 		references: [radioLinesAntennaTypes.id],
 	}),
-	operator: one(operators, {
+	operator: one(ukeOperators, {
 		fields: [ukeRadioLines.operator_id],
-		references: [operators.id],
+		references: [ukeOperators.id],
 	}),
 }));
 

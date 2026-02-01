@@ -15,7 +15,7 @@ const regionsSchema = createSelectSchema(regions);
 const stationsSchema = createSelectSchema(stations).omit({ status: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
-const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorSchema = createSelectSchema(operators);
 const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
 const cellResponseSchema = cellsSchema.extend({ band: bandsSchema });
 const stationResponseSchema = stationsSchema.extend({
@@ -171,7 +171,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 						columns: { band_id: false, station_id: false },
 						with: { band: true },
 					},
-					operator: { columns: { is_isp: false } },
+					operator: true,
 					networks: { columns: { station_id: false } },
 				},
 			},

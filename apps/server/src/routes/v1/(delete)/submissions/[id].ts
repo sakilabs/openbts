@@ -42,7 +42,6 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 	});
 
 	if (!submission) throw new ErrorResponse("NOT_FOUND");
-
 	if (!hasAdminPermission && submission.submitter_id !== userId) throw new ErrorResponse("FORBIDDEN");
 
 	try {

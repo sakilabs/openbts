@@ -10,10 +10,10 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-const ukePermitsSchema = createSelectSchema(ukePermits);
+const ukePermitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, operator_id: true, location_id: true });
 const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true });
 const bandsSchema = createSelectSchema(bands);
-const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorsSchema = createSelectSchema(operators);
 const schemaRoute = {
 	querystring: z.object({
 		bounds: z
@@ -117,13 +117,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		}
 
 		const ukePermitsRes = await db.query.ukePermits.findMany({
+			columns: {
+				band_id: false,
+				location_id: false,
+				operator_id: false,
+			},
 			with: {
 				band: true,
-				operator: {
-					columns: {
-						is_isp: false,
-					},
-				},
+				operator: true,
 				location: {
 					columns: {
 						point: false,

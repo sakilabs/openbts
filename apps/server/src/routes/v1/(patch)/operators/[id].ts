@@ -11,7 +11,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const operatorsUpdateSchema = createUpdateSchema(operators).strict();
-const operatorsSelectSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorsSelectSchema = createSelectSchema(operators);
 const schemaRoute = {
 	params: z.object({
 		operator_id: z.coerce.number<number>(),

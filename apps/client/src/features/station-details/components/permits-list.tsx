@@ -2,8 +2,9 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { DocumentCodeIcon, Calendar03Icon, Loading03Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
+import { DocumentCodeIcon, Calendar03Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { UkePermit } from "@/types/station";
 import { fetchApiData } from "@/lib/api";
 import { isPermitExpired } from "@/lib/date-utils";
@@ -65,8 +66,32 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center py-10">
-				<HugeiconsIcon icon={Loading03Icon} className="size-6 animate-spin text-muted-foreground" />
+			<div className="space-y-4">
+				{[1, 2].map((i) => (
+					<div key={i} className="rounded-xl border overflow-hidden">
+						<div className="px-4 py-2.5 bg-muted/30 border-b flex items-center gap-2">
+							<Skeleton className="size-4 rounded" />
+							<Skeleton className="h-4 w-12 rounded" />
+							<Skeleton className="h-3 w-16 rounded ml-auto" />
+						</div>
+						<div className="overflow-x-auto">
+							<div className="w-full">
+								<div className="flex border-b bg-muted/10 px-4 py-2">
+									<Skeleton className="h-3 w-16 rounded mr-8" />
+									<Skeleton className="h-3 w-24 rounded mr-8" />
+									<Skeleton className="h-3 w-20 rounded" />
+								</div>
+								{[1, 2, 3].map((j) => (
+									<div key={j} className="flex px-4 py-2.5 border-b last:border-0">
+										<Skeleton className="h-4 w-20 rounded mr-8" />
+										<Skeleton className="h-4 w-32 rounded mr-8" />
+										<Skeleton className="h-4 w-24 rounded" />
+									</div>
+								))}
+							</div>
+						</div>
+					</div>
+				))}
 			</div>
 		);
 	}
@@ -105,7 +130,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
 						<table className="w-full text-sm">
 							<thead>
 								<tr className="border-b bg-muted/10">
-									<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("permits.band")}</th>
+									<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("cells.band")}</th>
 									<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
 										{t("permits.decisionNumber")}
 									</th>

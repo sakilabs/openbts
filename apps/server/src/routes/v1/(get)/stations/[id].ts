@@ -19,7 +19,7 @@ const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
-const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorSchema = createSelectSchema(operators);
 const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
 type StationBase = z.infer<typeof stationSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
@@ -61,7 +61,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 		with: {
 			cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
 			location: { columns: { point: false, region_id: false }, with: { region: true } },
-			operator: { columns: { is_isp: false } },
+			operator: true,
 			networks: { columns: { station_id: false } },
 		},
 		columns: { status: false },

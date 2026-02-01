@@ -83,7 +83,7 @@ export async function writeOperators(items: PreparedOperator[], options: WriteOp
 			if (group.length === 0) continue;
 			await db
 				.insert(operators)
-				.values(group.map((o) => ({ name: o.name, full_name: o.full_name, mnc: o.mnc, is_isp: o.is_isp })))
+				.values(group.map((o) => ({ name: o.name, full_name: o.full_name, mnc: o.mnc })))
 				.onConflictDoNothing({ target: [operators.mnc] });
 			options.onProgress?.(group.length);
 		}

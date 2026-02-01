@@ -1,5 +1,5 @@
 {
-  "id": "1ac19a89-2967-41f5-9929-7f0ca3cc56fe",
+  "id": "1b896ce4-9c26-475d-9b6a-e2bbc9b7deb7",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -944,13 +944,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
-        },
-        "is_isp": {
-          "name": "is_isp",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
         }
       },
       "indexes": {

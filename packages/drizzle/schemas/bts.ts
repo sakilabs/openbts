@@ -23,9 +23,9 @@ export const StationStatus = pgEnum("station_status", ["published", "inactive", 
 /**
  * Operator table
  * @example
- * { id: 1, name: "NetWorkS!", full_name: "NetWorks Sp. z o.o.", parent_id: null, mnc_code: 26034, is_isp: true }
+ * { id: 1, name: "NetWorkS!", full_name: "NetWorks Sp. z o.o.", parent_id: null, mnc_code: 26034 }
  * @example
- * { id: 2, name: "T-Mobile", full_name: "T-Mobile Polska Sp. z o.o.", parent_id: 1, mnc_code: 26002, is_isp: true }
+ * { id: 2, name: "T-Mobile", full_name: "T-Mobile Polska Sp. z o.o.", parent_id: 1, mnc_code: 26002 }
  */
 export const operators = pgTable(
 	"operators",
@@ -35,8 +35,6 @@ export const operators = pgTable(
 		full_name: varchar("full_name", { length: 250 }).notNull(),
 		parent_id: integer("parent_id").references((): AnyPgColumn => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		mnc: integer("mnc").unique(),
-		//* We don't wanna show operators from radiolines (which are not real ISPs)
-		is_isp: boolean("is_isp").default(true),
 	},
 	(table) => [index("operator_parent_id_idx").on(table.parent_id)],
 );

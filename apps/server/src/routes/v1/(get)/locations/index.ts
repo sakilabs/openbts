@@ -1,5 +1,5 @@
 import { createSelectSchema } from "drizzle-zod";
-import { sql, count, and as drizzleAnd } from "drizzle-orm";
+import { sql, count, and } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -13,7 +13,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
 const stationsSchema = createSelectSchema(stations).omit({ status: true, location_id: true });
-const operatorSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorSchema = createSelectSchema(operators);
 const stationResponseSchema = stationsSchema.extend({
 	operator: operatorSchema.nullable(),
 });
@@ -258,7 +258,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const locationConditions = buildLocationConditions();
 
 	try {
-		const whereClause = locationConditions.length ? drizzleAnd(...locationConditions) : undefined;
+		const whereClause = locationConditions.length ? and(...locationConditions) : undefined;
 
 		const [countResult, locationRows] = await Promise.all([
 			db.select({ count: count() }).from(locations).where(whereClause),
@@ -269,7 +269,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						columns: { status: false, location_id: false },
 						where: buildStationFilter(),
 						with: {
-							operator: { columns: { is_isp: false } },
+							operator: true,
 						},
 					},
 				},

@@ -9,7 +9,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorsSchema = createSelectSchema(operators);
 const schemaRoute = {
 	params: z.object({
 		id: z.coerce.number<number>(),
@@ -27,9 +27,6 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
 	const operator = await db.query.operators.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
-		columns: {
-			is_isp: false,
-		},
 	});
 	if (!operator) throw new ErrorResponse("NOT_FOUND");
 

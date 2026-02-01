@@ -9,7 +9,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-const permitsSchema = createSelectSchema(ukePermits);
+const permitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, operator_id: true, location_id: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
 const ukeLocationsSchema = createSelectSchema(ukeLocations);
@@ -38,6 +38,11 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
 	try {
 		const permit = await db.query.ukePermits.findFirst({
+			columns: {
+				band_id: false,
+				operator_id: false,
+				location_id: false,
+			},
 			with: {
 				band: true,
 				operator: true,

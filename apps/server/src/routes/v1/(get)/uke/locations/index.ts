@@ -1,4 +1,4 @@
-import { sql, count, type SQL, inArray, eq, and } from "drizzle-orm";
+import { sql, count, type SQL, inArray, and } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,9 +11,9 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true, region_id: true });
-const ukePermitsSchema = createSelectSchema(ukePermits).omit({ location_id: true });
+const ukePermitsSchema = createSelectSchema(ukePermits).omit({ location_id: true, operator_id: true, band_id: true });
 const bandsSchema = createSelectSchema(bands);
-const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorsSchema = createSelectSchema(operators);
 const regionsSchema = createSelectSchema(regions);
 
 const permitResponseSchema = ukePermitsSchema.extend({
@@ -184,10 +184,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			with: {
 				region: true,
 				permits: {
-					columns: { location_id: false },
+					columns: { location_id: false, operator_id: false, band_id: false },
 					with: {
 						band: true,
-						operator: { columns: { is_isp: false } },
+						operator: true,
 					},
 				},
 			},

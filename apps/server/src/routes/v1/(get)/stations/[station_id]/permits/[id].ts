@@ -12,7 +12,7 @@ import type { JSONBody, Route } from "../../../../../../interfaces/routes.interf
 const permitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
 const ukePermitsSchema = createSelectSchema(ukePermits);
-const operatorsSchema = createSelectSchema(operators).omit({ is_isp: true });
+const operatorsSchema = createSelectSchema(operators);
 type Permit = z.infer<typeof ukePermitsSchema> & {
 	band: z.infer<typeof bandsSchema>;
 	operator: z.infer<typeof operatorsSchema>;
@@ -50,11 +50,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 				permit: {
 					with: {
 						band: true,
-						operator: {
-							columns: {
-								is_isp: false,
-							},
-						},
+						operator: true,
 					},
 				},
 			},

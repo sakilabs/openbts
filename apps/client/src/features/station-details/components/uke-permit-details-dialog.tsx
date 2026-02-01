@@ -102,7 +102,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 						<h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t("specs.basicInfo")}</h3>
 
 						<div className="rounded-xl border bg-muted/20 p-4">
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								{station.location && (
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
@@ -157,7 +157,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 											<thead>
 												<tr className="border-b bg-muted/10">
 													<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-														{t("permits.band")}
+														{t("cells.band")}
 													</th>
 													<th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
 														{t("permits.decisionNumber")}

@@ -97,7 +97,6 @@ CREATE TABLE "operators" (
 	"full_name" varchar(250) NOT NULL,
 	"parent_id" integer,
 	"mnc" integer,
-	"is_isp" boolean DEFAULT true,
 	CONSTRAINT "operators_name_unique" UNIQUE("name"),
 	CONSTRAINT "operators_mnc_unique" UNIQUE("mnc")
 );

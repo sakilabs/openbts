@@ -9,7 +9,6 @@ export interface PreparedOperator {
 	name: string;
 	full_name: string;
 	mnc: number;
-	is_isp: boolean;
 }
 export interface PreparedLocation {
 	original_id: number;
@@ -88,7 +87,6 @@ export function prepareOperators(rows: LegacyNetworkRow[]): PreparedOperator[] {
 			name: n.name.trim(),
 			full_name: n.operator_name.trim(),
 			mnc: Number(String(n.code).trim()),
-			is_isp: true,
 		}))
 		.filter((r) => Number.isFinite(r.mnc));
 }

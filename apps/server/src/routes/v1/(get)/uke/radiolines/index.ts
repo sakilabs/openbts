@@ -4,7 +4,7 @@ import { createSelectSchema } from "drizzle-zod";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { operators, ukeRadioLines } from "@openbts/drizzle";
+import { ukeOperators, ukeRadioLines } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -46,7 +46,7 @@ const linkSchema = z.object({
 	modulation_type: z.string().optional(),
 	bandwidth: z.string().optional(),
 });
-const operatorSchema = createSelectSchema(operators).omit({ is_isp: true, full_name: true, mnc: true, parent_id: true }).nullable().optional();
+const operatorSchema = createSelectSchema(ukeOperators);
 const permitSchema = z.object({
 	number: z.string().optional(),
 	decision_type: z.string().optional(),
@@ -57,7 +57,7 @@ const radioLineResponseSchema = z.object({
 	tx: txSchema,
 	rx: rxSchema,
 	link: linkSchema,
-	operator: operatorSchema,
+	operator: operatorSchema.optional(),
 	permit: permitSchema,
 	updatedAt: z.date(),
 	createdAt: z.date(),
@@ -118,11 +118,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		const radioLinesRes = await db.query.ukeRadioLines.findMany({
 			where: conditions.length > 0 ? and(...conditions) : undefined,
 			with: {
-				operator: {
-					columns: {
-						is_isp: false,
-					},
-				},
+				operator: true,
 				txTransmitterType: { with: { manufacturer: true } },
 				txAntennaType: { with: { manufacturer: true } },
 				rxAntennaType: { with: { manufacturer: true } },
@@ -174,7 +170,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				modulation_type: radioLine.modulation_type ?? undefined,
 				bandwidth: radioLine.bandwidth ?? undefined,
 			},
-			operator: radioLine.operator ? { id: radioLine.operator.id, name: radioLine.operator.name } : null,
+			operator: radioLine.operator ?? undefined,
 			permit: {
 				number: radioLine.permit_number ?? undefined,
 				decision_type: radioLine.decision_type ?? undefined,
