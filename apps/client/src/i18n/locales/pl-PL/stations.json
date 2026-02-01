@@ -15,7 +15,8 @@
 		"noRegionsFound": "Nie znaleziono województw",
 		"noBandsFound": "Nie znaleziono pasm",
 		"showingStations": "Wyświetlanie {{count}} stacji",
-		"showingStationsOfTotal": "Wyświetlanie {{count}} z {{total}} stacji"
+		"showingStationsOfTotal": "Wyświetlanie {{count}} z {{total}} stacji",
+		"otherOperators": "Inni operatorzy"
 	},
 	"table": {
 		"stationId": "ID stacji",

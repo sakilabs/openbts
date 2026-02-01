@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Search02Icon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { cn, toggleValue } from "@/lib/utils";
 import { Checkbox as UICheckbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import {
 	Combobox,
 	ComboboxChips,
@@ -20,6 +21,8 @@ import { AutocompleteDropdown } from "@/features/map/components/search-overlay/a
 import { FILTER_KEYWORDS } from "@/features/map/constants";
 import { parseFilters } from "@/features/map/filters";
 import type { Operator, Region, StationFilters } from "@/types/station";
+
+const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
 
 const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
@@ -61,6 +64,12 @@ export function StationsFilters({
 	const { t } = useTranslation("stations");
 	const { t: tCommon } = useTranslation("common");
 	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length + selectedRegions.length;
+
+	const [showOtherOperators, setShowOtherOperators] = useState(false);
+
+	const topOperators = useMemo(() => operators.filter((op) => TOP4_MNCS.includes(op.mnc)), [operators]);
+	const otherOperators = useMemo(() => operators.filter((op) => !TOP4_MNCS.includes(op.mnc)), [operators]);
+	const hasSelectedOther = otherOperators.some((op) => filters.operators.includes(op.mnc));
 
 	const stationsFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("stations")), []);
 
@@ -167,6 +176,8 @@ export function StationsFilters({
 					</div>
 				</search>
 
+				<Separator />
+
 				{!isSheet && (
 					<div className="flex items-center justify-between">
 						<h2 className="font-semibold text-sm">{t("filters.title")}</h2>
@@ -186,7 +197,7 @@ export function StationsFilters({
 				<div>
 					<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("filters.network")}</span>
 					<div className="space-y-0.5">
-						{operators.map((op) => (
+						{topOperators.map((op) => (
 							<label
 								htmlFor={`operator-${op.mnc}`}
 								key={op.mnc}
@@ -205,6 +216,45 @@ export function StationsFilters({
 							</label>
 						))}
 					</div>
+
+					{otherOperators.length > 0 && (
+						<div className="mt-1.5">
+							<button
+								type="button"
+								onClick={() => setShowOtherOperators(!showOtherOperators)}
+								className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1"
+							>
+								<HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
+								<span>
+									{t("filters.otherOperators", { count: otherOperators.length })}
+									{hasSelectedOther && ` (${otherOperators.filter((op) => filters.operators.includes(op.mnc)).length} ${t("filters.selected")})`}
+								</span>
+							</button>
+
+							{showOtherOperators && (
+								<div className="space-y-0.5 mt-1.5 pt-1.5 border-t border-border/50">
+									{otherOperators.map((op) => (
+										<label
+											htmlFor={`operator-${op.mnc}`}
+											key={op.mnc}
+											className={cn(
+												"flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition-colors",
+												filters.operators.includes(op.mnc) ? "bg-primary/10" : "hover:bg-muted",
+											)}
+										>
+											<UICheckbox
+												id={`operator-${op.mnc}`}
+												checked={filters.operators.includes(op.mnc)}
+												onCheckedChange={() => handleToggleOperator(op.mnc)}
+											/>
+											<div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+											<span className="text-sm truncate">{op.name}</span>
+										</label>
+									))}
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 
 				<div>

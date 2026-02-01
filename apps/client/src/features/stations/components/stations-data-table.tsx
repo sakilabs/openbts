@@ -49,7 +49,7 @@ export function StationsDataTable({
 		getPaginationRowModel: getPaginationRowModel(),
 		state: { pagination },
 		onPaginationChange: setPagination,
-		autoResetPageIndex: false,
+		autoResetPageIndex: true,
 	});
 
 	const pageCount = table.getPageCount();

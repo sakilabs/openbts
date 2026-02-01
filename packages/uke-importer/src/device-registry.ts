@@ -7,7 +7,9 @@ import XLSX from "xlsx";
 
 import { ukePermits, operators, type ratEnum } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP } from "./config.ts";
-import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir } from "./utils.ts";
+import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
+
+const logger = createLogger("device-registry");
 import { isDataUpToDate, recordImportMetadata } from "./import-check.ts";
 import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
@@ -176,18 +178,18 @@ async function processOperatorFile(
 	operatorId: number,
 	regionIds: Map<string, number>,
 ): Promise<{ rowCount: number; insertedCount: number }> {
-	console.log(`[device-registry] Reading file for ${operatorKey}`);
+	logger.log(`Reading file for ${operatorKey}`);
 
 	const wb = XLSX.readFile(filePath, { dense: true });
 	const sheetName = wb.SheetNames[1];
 	if (!sheetName) {
-		console.warn(`[device-registry] No second sheet found in ${operatorKey}`);
+		logger.warn(`No second sheet found in ${operatorKey}`);
 		return { rowCount: 0, insertedCount: 0 };
 	}
 
 	const ws = wb.Sheets[sheetName];
 	if (!ws) return { rowCount: 0, insertedCount: 0 };
-	console.log("[device-registry] Streaming data...");
+	logger.log("Streaming data...");
 
 	const csvStream = XLSX.stream.to_csv(ws);
 	const rl = readline.createInterface({ input: csvStream, crlfDelay: Number.POSITIVE_INFINITY });
@@ -204,7 +206,7 @@ async function processOperatorFile(
 			const headerCells = parseCSVLine(line);
 			cols = findColumnIndices(headerCells);
 			if (!cols) {
-				console.error(`[device-registry] Could not find required columns in header row of ${operatorKey}`);
+				logger.error(`Could not find required columns in header row of ${operatorKey}`);
 				return { rowCount: 0, insertedCount: 0 };
 			}
 			rowCount++;
@@ -220,19 +222,19 @@ async function processOperatorFile(
 		const lon = parseLongLat(cells[cols.dlGeogr] ?? null, "E");
 		const lat = parseLongLat(cells[cols.szerGeogr] ?? null, "N");
 		if (!lon || !lat) {
-			console.warn(`[device-registry] Invalid coordinates in row ${rowCount} for operator ${operatorKey}`);
+			logger.warn(`Invalid coordinates in row ${rowCount} for operator ${operatorKey}`);
 			continue;
 		}
 
 		const stationId = (cells[cols.idStacji] ?? "").trim();
 		if (!stationId) {
-			console.warn(`[device-registry] Missing station ID in row ${rowCount} for operator ${operatorKey}`);
+			logger.warn(`Missing station ID in row ${rowCount} for operator ${operatorKey}`);
 			continue;
 		}
 
 		const bandInfo = parseBandFromSystemType(cells[cols.rodzajSystemuKomorki] ?? null);
 		if (!bandInfo) {
-			console.warn(`[device-registry] Could not parse band from system type "${cells[cols.rodzajSystemuKomorki] ?? ""}" for station ${stationId}`);
+			logger.warn(`Could not parse band from system type "${cells[cols.rodzajSystemuKomorki] ?? ""}" for station ${stationId}`);
 			continue;
 		}
 
@@ -241,13 +243,13 @@ async function processOperatorFile(
 
 		const terytCode = findVoivodeshipByTeryt(lon, lat);
 		if (!terytCode) {
-			console.warn(`[device-registry] Could not determine region from GPS coordinates (${lon}, ${lat}) for station ${stationId}`);
+			logger.warn(`Could not determine region from GPS coordinates (${lon}, ${lat}) for station ${stationId}`);
 			continue;
 		}
 
 		const regionInfo = getRegionByTeryt(terytCode);
 		if (!regionInfo) {
-			console.warn(`[device-registry] Could not find region mapping for teryt code "${terytCode}" for station ${stationId}`);
+			logger.warn(`Could not find region mapping for teryt code "${terytCode}" for station ${stationId}`);
 			continue;
 		}
 		const regionName = regionInfo.name;
@@ -285,7 +287,7 @@ async function processOperatorFile(
 		insertedCount += inserted;
 	}
 
-	console.log(`[device-registry] Done: ${rowCount - 1} data rows, ${insertedCount} permits inserted`);
+	logger.log(`Done: ${rowCount - 1} data rows, ${insertedCount} permits inserted`);
 	return { rowCount: rowCount - 1, insertedCount };
 }
 
@@ -312,13 +314,13 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 			const locationKey = `${r.lon}:${r.lat}`;
 			const location_id = locationIdByLonLat.get(locationKey);
 			if (!location_id) {
-				console.log("Missing location_id for key:", locationKey);
+				logger.log("Missing location_id for key:", locationKey);
 				return null;
 			}
 
 			const bandId = bandMap.get(r.bandKey);
 			if (!bandId) {
-				console.log("Missing bandId for key:", r.bandKey);
+				logger.log("Missing bandId for key:", r.bandKey);
 				return null;
 			}
 
@@ -359,20 +361,20 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 }
 
 export async function importPermitDevices(): Promise<boolean> {
-	console.log("[device-registry] Starting import from device registry...");
-	console.log("[device-registry] Scraping file links from:", PERMITS_DEVICES_URL);
+	logger.log("Starting import from device registry...");
+	logger.log("Scraping file links from:", PERMITS_DEVICES_URL);
 	const links = await scrapePermitDeviceLinks(PERMITS_DEVICES_URL);
-	console.log(`[device-registry] Found ${links.length} files:`, links.map((l) => l.operatorKey).join(", "));
+	logger.log(`Found ${links.length} files:`, links.map((l) => l.operatorKey).join(", "));
 
 	const linksForCheck = links.map((l) => ({ href: l.href, text: l.text }));
 	if (await isDataUpToDate("permits", linksForCheck)) {
-		console.log("[device-registry] Data is up-to-date, skipping import");
+		logger.log("Data is up-to-date, skipping import");
 		return false;
 	}
 
 	ensureDownloadDir();
 
-	console.log("[device-registry] Looking up operators...");
+	logger.log("Looking up operators...");
 	const operatorNamesNeeded = links.map((l) => PERMIT_FILE_OPERATOR_MAP[l.operatorKey]).filter((n): n is string => n != null);
 
 	const operatorIds = new Map<string, number>();
@@ -383,39 +385,39 @@ export async function importPermitDevices(): Promise<boolean> {
 		for (const op of existingOperators) {
 			operatorIds.set(op.name, op.id);
 		}
-		console.log(`[device-registry] Found ${operatorIds.size}/${operatorNamesNeeded.length} operators in database`);
+		logger.log(`Found ${operatorIds.size}/${operatorNamesNeeded.length} operators in database`);
 	}
 
-	console.log("[device-registry] Upserting regions...");
+	logger.log("Upserting regions...");
 	const regionItems = Object.values(REGION_BY_TERYT_PREFIX);
 	const regionIds = await upsertRegions(regionItems);
 
-	console.log("[device-registry] Downloading all files...");
+	logger.log("Downloading all files...");
 	const downloadedFiles: Array<{ filePath: string; operatorKey: string; operatorId: number }> = [];
 
 	for (const l of links) {
 		const operatorName = PERMIT_FILE_OPERATOR_MAP[l.operatorKey];
 		if (!operatorName) {
-			console.warn(`[device-registry] Unknown operator key: ${l.operatorKey}`);
+			logger.warn(`Unknown operator key: ${l.operatorKey}`);
 			continue;
 		}
 
 		const operatorId = operatorIds.get(operatorName);
 		if (!operatorId) {
-			console.warn(`[device-registry] Operator not found in database: ${operatorName}`);
+			logger.warn(`Operator not found in database: ${operatorName}`);
 			continue;
 		}
 
 		const fileName = `${(l.text || path.basename(new url.URL(l.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
 		const filePath = path.join(DOWNLOAD_DIR, fileName);
 
-		console.log(`[device-registry] Downloading: ${fileName}`);
+		logger.log(`Downloading: ${fileName}`);
 		await downloadFile(l.href, filePath);
 
 		downloadedFiles.push({ filePath, operatorKey: l.operatorKey, operatorId });
 	}
 
-	console.log(`[device-registry] Downloaded ${downloadedFiles.length} files`);
+	logger.log(`Downloaded ${downloadedFiles.length} files`);
 
 	let totalRows = 0;
 	let totalInserted = 0;
@@ -428,13 +430,13 @@ export async function importPermitDevices(): Promise<boolean> {
 		} finally {
 			try {
 				unlinkSync(filePath);
-				console.log(`[device-registry] Deleted: ${path.basename(filePath)}`);
+				logger.log(`Deleted: ${path.basename(filePath)}`);
 			} catch {}
 		}
 	}
 
-	console.log(`[device-registry] Total: ${totalRows} rows processed, ${totalInserted} records inserted`);
+	logger.log(`Total: ${totalRows} rows processed, ${totalInserted} records inserted`);
 	await recordImportMetadata("permits", linksForCheck, "success");
-	console.log("[device-registry] Import completed successfully");
+	logger.log("Import completed successfully");
 	return true;
 }

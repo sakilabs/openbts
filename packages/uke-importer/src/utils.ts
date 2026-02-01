@@ -110,3 +110,14 @@ export async function cleanupDownloads(): Promise<void> {
 		rmdirSync(DOWNLOAD_DIR);
 	} catch {}
 }
+
+export function createLogger(prefix: string) {
+	const formatMessage = (args: unknown[]) => [`[${prefix}]`, ...args];
+	return {
+		log: (...args: unknown[]) => console.log(...formatMessage(args)),
+		warn: (...args: unknown[]) => console.warn(...formatMessage(args)),
+		error: (...args: unknown[]) => console.error(...formatMessage(args)),
+		info: (...args: unknown[]) => console.info(...formatMessage(args)),
+		debug: (...args: unknown[]) => console.debug(...formatMessage(args)),
+	};
+}

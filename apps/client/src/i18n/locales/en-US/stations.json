@@ -15,7 +15,8 @@
 		"noRegionsFound": "No regions found",
 		"noBandsFound": "No bands found",
 		"showingStations": "Showing {{count}} stations",
-		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations"
+		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
+		"otherOperators": "Other operators"
 	},
 	"table": {
 		"stationId": "Station ID",

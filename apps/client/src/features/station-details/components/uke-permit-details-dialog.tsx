@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Globe02Icon, Wifi01Icon, Calendar03Icon, SignalFull02Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Globe02Icon, Wifi01Icon, Calendar03Icon, Location01Icon, Building02Icon, Tag01Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor } from "@/lib/operator-utils";
 import { isPermitExpired } from "@/lib/date-utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -97,22 +97,22 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 					</div>
 				</div>
 
-				<div className="flex-1 overflow-y-auto">
+				<div className="flex-1 overflow-y-auto custom-scrollbar">
 					<div className="px-6 py-5">
 						<h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t("specs.basicInfo")}</h3>
 
 						<div className="rounded-xl border bg-muted/20 p-4">
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-								{station.location && (
-									<div className="flex items-center gap-2">
-										<HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
-										<span className="text-sm text-muted-foreground">{t("specs.coordinates")}</span>
-										<span className="font-mono text-sm font-medium">
-											{station.location.latitude.toFixed(5)}, {station.location.longitude.toFixed(5)}
-										</span>
-										<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
-									</div>
-								)}
+							{station.location && (
+								<div className="flex items-center gap-2">
+									<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
+									<span className="text-sm text-muted-foreground">{t("specs.coordinates")}</span>
+									<span className="font-mono text-sm font-medium">
+										{station.location.latitude.toFixed(5)}, {station.location.longitude.toFixed(5)}
+									</span>
+									<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
+								</div>
+							)}
 
 								{station.location?.region && (
 									<div className="flex items-center gap-2">
@@ -122,16 +122,16 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 									</div>
 								)}
 
-								{station.operator && (
-									<div className="flex items-center gap-2">
-										<HugeiconsIcon icon={Wifi01Icon} className="size-4 text-muted-foreground shrink-0" />
-										<span className="text-sm text-muted-foreground">{t("specs.operator")}</span>
-										<span className="text-sm font-medium">{station.operator.name}</span>
-									</div>
-								)}
+							{station.operator && (
+								<div className="flex items-center gap-2">
+									<HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
+									<span className="text-sm text-muted-foreground">{t("specs.operator")}</span>
+									<span className="text-sm font-medium">{station.operator.name}</span>
+								</div>
+							)}
 
 								<div className="flex items-center gap-2">
-									<HugeiconsIcon icon={SignalFull02Icon} className="size-4 text-muted-foreground shrink-0" />
+									<HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
 									<span className="text-sm text-muted-foreground">{t("specs.stationId")}</span>
 									<span className="font-mono text-sm font-medium">{station.station_id}</span>
 									<CopyButton text={station.station_id} />
