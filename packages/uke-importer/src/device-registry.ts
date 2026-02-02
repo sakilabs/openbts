@@ -23,12 +23,12 @@ function getRegionByTeryt(teryt: string): { name: string; code: string } | null 
 function parseBandFromSystemType(systemType: string | null): { rat: (typeof ratEnum.enumValues)[number]; value: number } | null {
 	if (!systemType || typeof systemType !== "string") return null;
 	const normalized = systemType.trim().toUpperCase();
-	const m = normalized.match(/^(GSM|UMTS|LTE|5G|NR|IOT)(\d{3,4})$/);
+	const m = normalized.match(/^(GSM|UMTS|LTE|5G|IOT)(\d{3,4})$/);
 	if (!m) return null;
 	const tech = m[1] ?? "";
 	let value = Number(m[2] ?? "");
 	if (!Number.isFinite(value)) return null;
-	if ((tech === "5G" || tech === "NR") && value === 3600) value = 3500;
+	if (tech === "5G" && value === 3600) value = 3500;
 	const rat =
 		tech === "GSM"
 			? ("GSM" as const)
@@ -36,10 +36,13 @@ function parseBandFromSystemType(systemType: string | null): { rat: (typeof ratE
 				? ("UMTS" as const)
 				: tech === "LTE"
 					? ("LTE" as const)
-					: tech === "NR"
+					: tech === "5G"
 						? ("NR" as const)
-						: ("IOT" as const);
+						: tech === "IOT"
+							? ("IOT" as const)
+							: null;
 
+	if (!rat) return null;
 	return { rat, value };
 }
 
