@@ -39,7 +39,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
 									<th className="px-4 py-2 text-left font-medium text-muted-foreground">RNC</th>
 									<th className="px-4 py-2 text-left font-medium text-muted-foreground">CID</th>
 									<th className="px-4 py-2 text-left font-medium text-muted-foreground">LongCID</th>
-									<th className="px-4 py-2 text-left font-medium text-muted-foreground">Carrier</th>
+									<th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("cells.carrier")}</th>
 								</>
 							)}
 							{rat === "LTE" && (
@@ -63,35 +63,35 @@ export function CellTable({ rat, cells }: CellTableProps) {
 					<tbody>
 						{cells.map((cell) => (
 							<tr key={cell.id} className="border-b last:border-0 hover:bg-muted/20">
-<td className="px-4 py-2 font-mono">
-											<div className="flex items-center gap-1.5">
-												<span>{cell.band.value} MHz</span>
-												{rat === "GSM" && cell.details?.e_gsm && (
-													<Tooltip>
-														<TooltipTrigger>
-															<span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
-																E
-															</span>
-														</TooltipTrigger>
-														<TooltipContent side="top">
-															<p>E-GSM</p>
-														</TooltipContent>
-													</Tooltip>
-												)}
-												{!cell.is_confirmed && (
-													<Tooltip>
-														<TooltipTrigger>
-															<span className="inline-flex items-center justify-center size-5 rounded-md bg-destructive/10 text-destructive cursor-help">
-																<HugeiconsIcon icon={AlertCircleIcon} className="size-3.5" />
-															</span>
-														</TooltipTrigger>
-														<TooltipContent side="top">
-															<p>{t("cells.cellNotConfirmed")}</p>
-														</TooltipContent>
-													</Tooltip>
-												)}
-											</div>
-										</td>
+								<td className="px-4 py-2 font-mono">
+									<div className="flex items-center gap-1.5">
+										<span>{cell.band.value} MHz</span>
+										{rat === "GSM" && cell.details?.e_gsm && (
+											<Tooltip>
+												<TooltipTrigger>
+													<span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
+														E
+													</span>
+												</TooltipTrigger>
+												<TooltipContent side="top">
+													<p>E-GSM</p>
+												</TooltipContent>
+											</Tooltip>
+										)}
+										{!cell.is_confirmed && (
+											<Tooltip>
+												<TooltipTrigger>
+													<span className="inline-flex items-center justify-center size-5 rounded-md bg-destructive/10 text-destructive cursor-help">
+														<HugeiconsIcon icon={AlertCircleIcon} className="size-3.5" />
+													</span>
+												</TooltipTrigger>
+												<TooltipContent side="top">
+													<p>{t("cells.cellNotConfirmed")}</p>
+												</TooltipContent>
+											</Tooltip>
+										)}
+									</div>
+								</td>
 								<td className="px-4 py-2">{cell.band.duplex || "-"}</td>
 								{rat === "GSM" && (
 									<>

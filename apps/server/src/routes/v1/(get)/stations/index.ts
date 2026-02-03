@@ -70,6 +70,7 @@ const schemaRoute = {
 			.regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
 			.optional()
 			.transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
+		sort: z.enum(["asc", "desc"]).optional().default("desc"),
 	}),
 	response: {
 		200: z.object({
@@ -83,7 +84,7 @@ type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 type ResponseBody = { data: Station[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-	const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues, regions } = req.query;
+	const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues, regions, sort } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
@@ -208,7 +209,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				},
 				limit,
 				offset,
-				orderBy: (fields, operators) => [operators.desc(fields.id)],
+				orderBy: (fields, operators) => [sort === "asc" ? operators.asc(fields.id) : operators.desc(fields.id)],
 			}),
 		]);
 

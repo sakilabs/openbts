@@ -6,7 +6,9 @@
 		"noResults": "Brak wyników",
 		"noResultsHint": "Spróbuj innych słów kluczowych lub filtrów",
 		"found": "Znaleziono: {{count}}",
-		"showingTop": "Pokazano {{shown}} z {{total}} stacji"
+		"showingTop": "Pokazano {{shown}} z {{total}} stacji",
+		"open": "Otwórz wyszukiwanie",
+		"close": "Zamknij wyszukiwanie"
 	},
 	"filters": {
 		"button": "Filtry",
@@ -15,6 +17,7 @@
 		"dataSource": "Źródło danych",
 		"internalDb": "Wewnętrzna baza",
 		"ukePermits": "Pozwolenia UKE",
+		"newOnly": "Pokaż nowe (ostatnie 30 dni)",
 		"operator": "Operator",
 		"otherOperators_one": "{{count}} inny operator",
 		"otherOperators_few": "{{count}} innych operatorów",
@@ -62,6 +65,7 @@
 		"locations": "lokalizacji",
 		"operators": "Legenda",
 		"zoom": "Zoom",
+		"mapStyle": "Styl mapy",
 		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie."
 	},
 	"stats": {
@@ -71,10 +75,10 @@
 		"ukeStations": "Stacje UKE",
 		"ukePermits": "Pozwolenia UKE",
 		"never": "Nigdy",
-		"locations": "Ilość lokalizacji",
-		"stations": "Ilość stacji",
-		"cells": "Ilość komórek",
-		"permits": "Ilość pozwoleń"
+		"locations": "Liczba lokalizacji",
+		"stations": "Liczba stacji",
+		"cells": "Liczba komórek",
+		"permits": "Liczba pozwoleń"
 	},
 	"loading": {
 		"loadingMap": "Ładowanie mapy..."

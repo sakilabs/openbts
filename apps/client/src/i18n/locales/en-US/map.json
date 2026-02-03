@@ -6,7 +6,9 @@
 		"noResults": "No results found",
 		"noResultsHint": "Try different keywords or filters",
 		"found": "{{count}} found",
-		"showingTop": "Showing top {{shown}} of {{total}} stations"
+		"showingTop": "Showing top {{shown}} of {{total}} stations",
+		"open": "Open search",
+		"close": "Close search"
 	},
 	"filters": {
 		"button": "Filters",
@@ -15,6 +17,7 @@
 		"dataSource": "Data Source",
 		"internalDb": "Internal DB",
 		"ukePermits": "UKE Permits",
+		"newOnly": "Show latest (last 30 days)",
 		"operator": "Operator",
 		"otherOperators_one": "{{count}} other operator",
 		"otherOperators_other": "{{count}} other operators",
@@ -57,6 +60,7 @@
 		"locations": "locations",
 		"operators": "Operators",
 		"zoom": "Zoom",
+		"mapStyle": "Map Style",
 		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all."
 	},
 	"stats": {

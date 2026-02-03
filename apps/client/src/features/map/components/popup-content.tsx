@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { getOperatorColor } from "@/lib/operator-utils";
-import { getStationTechs, getPermitTechs } from "../utils";
+import { getStationBands, getPermitBands } from "../utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LocationInfo, StationWithoutCells, StationSource, UkeStation } from "@/types/station";
 
@@ -57,8 +57,8 @@ export const PopupContent = memo(function PopupContent({
 	return (
 		<div className="w-72 text-sm">
 			<div className="px-3 py-2 border-b border-border/50">
-				<h3 className="font-medium text-sm leading-tight pr-4">{location.address || location.city}</h3>
-				<p className="text-[11px] text-muted-foreground">{location.city}</p>
+				<h3 className="font-medium text-sm leading-tight pr-4">{location.city}</h3>
+				{location.address && <p className="text-[11px] text-muted-foreground">{location.address}</p>}
 			</div>
 
 			<div className="max-h-52 overflow-y-auto custom-scrollbar">
@@ -74,7 +74,7 @@ export const PopupContent = memo(function PopupContent({
 						const mnc = station.operator?.mnc;
 						const operatorName = station.operator?.name || t("popup.unknownOperator");
 						const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
-						const techs = getPermitTechs(station.permits);
+						const bands = getPermitBands(station.permits);
 						const hasExpired = station.permits.some((p) => {
 							const expiryDate = new Date(p.expiry_date);
 							return expiryDate < new Date();
@@ -95,19 +95,19 @@ export const PopupContent = memo(function PopupContent({
 									<span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
 								</div>
 								<div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-									{techs.map((tech) => (
+									{bands.map((band) => (
 										<span
-											key={tech}
-											className="px-1.5 py-0.5 rounded-md bg-muted text-[9px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+											key={band}
+											className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
 										>
-											{tech}
+											{band}
 										</span>
 									))}
-									<span className="px-1.5 py-0.5 rounded-md bg-muted text-[9px] font-mono font-medium text-muted-foreground border border-border/50">
+									<span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
 										{station.permits.length} {station.permits.length === 1 ? t("popup.permit") : t("popup.permits")}
 									</span>
 									{hasExpired && (
-										<span className="px-1.5 py-0.5 rounded-md bg-destructive/10 text-[9px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
+										<span className="px-1 py-px rounded-md bg-destructive/10 text-[8px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
 											{t("popup.expired")}
 										</span>
 									)}
@@ -122,7 +122,7 @@ export const PopupContent = memo(function PopupContent({
 						const stationId = station.station_id;
 						const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
 						const hasCells = station.cells !== undefined;
-						const techs = hasCells && station.cells?.length ? getStationTechs(station.cells) : [];
+						const bands = hasCells && station.cells?.length ? getStationBands(station.cells) : [];
 
 						return (
 							<button
@@ -139,14 +139,14 @@ export const PopupContent = memo(function PopupContent({
 									<span className="text-[10px] text-muted-foreground">{stationId}</span>
 								</div>
 								{hasCells ? (
-									techs.length > 0 && (
+									bands.length > 0 && (
 										<div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-											{techs.map((tech) => (
+											{bands.map((band) => (
 												<span
-													key={tech}
-													className="px-1.5 py-0.5 rounded-md bg-muted text-[9px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+													key={band}
+													className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
 												>
-													{tech}
+													{band}
 												</span>
 											))}
 										</div>

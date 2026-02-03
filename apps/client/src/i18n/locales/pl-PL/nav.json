@@ -1,9 +1,16 @@
 {
-	"appName": "OpenBTS",
-	"main": {
-		"map": "Mapa",
-		"stationsList": "Lista stacji",
-		"statistics": "Statystyki"
+	"groups": {
+		"platform": "Platforma"
+	},
+	"sections": {
+		"stations": "Stacje",
+		"contribute": "Współtworzenie"
+	},
+	"items": {
+		"mapView": "Widok mapy",
+		"database": "Baza danych",
+		"clfExport": "Eksport CLF",
+		"submitStation": "Dodaj stację"
 	},
 	"secondary": {
 		"settings": "Ustawienia",

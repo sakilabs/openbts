@@ -32,6 +32,7 @@
 		"duplex": "Duplex",
 		"notes": "Notes",
 		"cellNotConfirmed": "Cell not confirmed",
+		"carrier": "Carrier",
 		"nbIot": "NB-IoT",
 		"redCap": "RedCap",
 		"noCells": "No cells data in our database for this station"

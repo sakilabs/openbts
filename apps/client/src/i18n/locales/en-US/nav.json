@@ -1,9 +1,16 @@
 {
-	"appName": "OpenBTS",
-	"main": {
-		"map": "Map",
-		"stationsList": "Stations List",
-		"statistics": "Statistics"
+	"groups": {
+		"platform": "Platform"
+	},
+	"sections": {
+		"stations": "Stations",
+		"contribute": "Contribute"
+	},
+	"items": {
+		"mapView": "Map View",
+		"database": "Database",
+		"clfExport": "CLF Export",
+		"submitStation": "Submit Station"
 	},
 	"secondary": {
 		"settings": "Settings",

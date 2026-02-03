@@ -2,44 +2,53 @@
 
 import type * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AirportTowerIcon } from "@hugeicons/core-free-icons";
+import { AirportTowerIcon, AddCircleIcon } from "@hugeicons/core-free-icons";
+import { useTranslation } from "react-i18next";
 
 import { NavMain } from "./nav-main";
 // import { NavProjects } from "./nav-projects";
 // import { NavSecondary } from "./nav-secondary";
-import { NavUser } from "./nav-user";
+// import { NavUser } from "./nav-user";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Link } from "react-router";
 
-const data = {
-	user: {
-		name: "test",
-		email: "test",
-		avatar: "/avatars/shadcn.jpg",
+const navMainConfig = [
+	{
+		titleKey: "sections.stations",
+		key: "stations",
+		url: "#",
+		icon: AirportTowerIcon,
+		items: [
+			{ titleKey: "items.mapView", url: "/" },
+			{ titleKey: "items.database", url: "/stations" },
+			{ titleKey: "items.clfExport", url: "/clf-export" },
+		],
 	},
-	navMain: [
-		{
-			title: "Stations",
-			url: "#",
-			icon: AirportTowerIcon,
-			isActive: true,
-			items: [
-				{
-					title: "Map View",
-					url: "/",
-				},
-				{
-					title: "Database",
-					url: "/stations",
-				},
-			],
-		},
-	],
-};
+	// {
+	// 	titleKey: "sections.contribute",
+	// 	key: "contribute",
+	// 	url: "#",
+	// 	icon: AddCircleIcon,
+	// 	items: [{ titleKey: "items.submitStation", url: "/submissions" }],
+	// },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+	const { t } = useTranslation("nav");
+
+	const navItems = navMainConfig.map((section) => ({
+		title: t(section.titleKey),
+		key: section.key,
+		url: section.url,
+		icon: section.icon,
+		items: section.items.map((item) => ({
+			title: t(item.titleKey),
+			url: item.url,
+		})),
+	}));
+
 	return (
 		<Sidebar variant="inset" {...props}>
 			<SidebarHeader>
@@ -57,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				<NavMain items={data.navMain} />
+				<NavMain items={navItems} groupLabel={t("groups.platform")} />
 				{/* <NavProjects projects={data.projects} /> */}
 				{/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
 			</SidebarContent>
@@ -70,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						<LanguageSwitcher />
 					</SidebarMenuItem>
 				</SidebarMenu>
-				<NavUser user={data.user} />
+				{/* <NavUser user={user} /> */}
 			</SidebarFooter>
 		</Sidebar>
 	);

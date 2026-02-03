@@ -24,12 +24,14 @@ import { useMapPopup } from "../hooks/use-map-popup";
 import { useMapLayer } from "../hooks/use-map-layer";
 import { useMapBounds } from "../hooks/use-map-bounds";
 import { showApiError } from "@/lib/api";
+import { POINT_LAYER_ID } from "../constants";
 
 const DEFAULT_FILTERS: StationFilters = {
 	operators: [],
 	bands: [],
 	rat: [],
 	source: "internal",
+	recentOnly: false,
 };
 
 type PrefetchCache = Map<
@@ -55,6 +57,7 @@ export function StationsLayer() {
 	const [filters, setFilters] = useState<StationFilters>(DEFAULT_FILTERS);
 	const [selectedStation, setSelectedStation] = useState<{ id: number; source: StationSource } | null>(null);
 	const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
+	const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
 	const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
 
 	useUrlSync({
@@ -76,6 +79,7 @@ export function StationsLayer() {
 		map,
 		onOpenStationDetails: useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []),
 		onOpenUkeStationDetails: useCallback((station: UkeStation) => setSelectedUkeStation(station), []),
+		onClose: useCallback(() => setActiveMarker(null), []),
 	});
 
 	const {
@@ -141,6 +145,7 @@ export function StationsLayer() {
 				const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === locationId);
 				const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
 				showPopup(coordinates, { id: locationId, city, address, latitude: lat, longitude: lng }, null, ukeStations, source as StationSource);
+				setActiveMarker({ latitude: lat, longitude: lng });
 				return;
 			}
 
@@ -159,15 +164,39 @@ export function StationsLayer() {
 		[locations, showPopup, fetchAndUpdatePopup],
 	);
 
+	const handleFeatureContextMenu = useCallback(
+		async (data: { coordinates: [number, number]; locationId: number; city?: string; address?: string; source: string }) => {
+			const { coordinates } = data;
+			const [lng, lat] = coordinates;
+			setActiveMarker({ latitude: lat, longitude: lng });
+		},
+		[],
+	);
+
 	useMapLayer({
 		map,
 		isLoaded,
 		geoJSON,
 		onFeatureClick: handleFeatureClick,
+		onFeatureContextMenu: handleFeatureContextMenu,
 		onFeatureMouseDown: handleFeatureMouseDown,
 	});
 
 	useEffect(() => cleanupPopup, [cleanupPopup]);
+
+	useEffect(() => {
+		if (!map) return;
+
+		const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
+			const features = map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER_ID, `${POINT_LAYER_ID}-symbol`] });
+			if (features.length === 0) setActiveMarker(null);
+		};
+
+		map.on("contextmenu", handleContextMenu);
+		return () => {
+			map.off("contextmenu", handleContextMenu);
+		};
+	}, [map]);
 
 	const handleLocationSelect = useCallback(
 		(lat: number, lng: number) => {
@@ -199,6 +228,7 @@ export function StationsLayer() {
 					longitude: lng,
 				};
 				showPopup([lng, lat], location, null, ukeStations, filters.source);
+				setActiveMarker({ latitude: lat, longitude: lng });
 				return;
 			}
 
@@ -207,6 +237,7 @@ export function StationsLayer() {
 			if (locationData) {
 				const location = toLocationInfo(locationData);
 				showPopup([lng, lat], location, locationData.stations as StationWithoutCells[], null, filters.source);
+				setActiveMarker({ latitude: lat, longitude: lng });
 				await fetchAndUpdatePopup(locationData.id, location, filters.source);
 			}
 		},
@@ -227,6 +258,7 @@ export function StationsLayer() {
 				isFetching={isFetching}
 				filters={filters}
 				zoom={zoom}
+				activeMarker={activeMarker}
 				onFiltersChange={setFilters}
 				onLocationSelect={handleLocationSelect}
 				onStationSelect={handleStationSelect}

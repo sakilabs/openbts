@@ -1,4 +1,11 @@
 {
+	"and": "oraz",
+	"theme": {
+		"title": "Motyw",
+		"light": "Jasny",
+		"dark": "Ciemny",
+		"system": "System"
+	},
 	"actions": {
 		"save": "Zapisz",
 		"cancel": "Anuluj",

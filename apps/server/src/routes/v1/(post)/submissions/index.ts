@@ -28,11 +28,11 @@ const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_c
 const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true });
 const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true });
 const proposedCellInsert = createInsertSchema(proposedCells)
-	.omit({ createdAt: true, updatedAt: true, submission_id: true })
+	.omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true })
 	.extend({ details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]) })
 	.strict();
 
-const requestSchema = z
+const singleSubmissionSchema = z
 	.object({
 		station_id: submissionsInsertBase.shape.station_id.optional(),
 		type: submissionsInsertBase.shape.type.optional(),
@@ -42,17 +42,95 @@ const requestSchema = z
 	})
 	.strict();
 
+type SingleSubmission = z.infer<typeof singleSubmissionSchema>;
+
+const requestSchema = z.union([
+	singleSubmissionSchema,
+	z.array(singleSubmissionSchema).min(1).max(10),
+]);
+
 type ReqBody = { Body: z.infer<typeof requestSchema> };
 const schemaRoute = {
 	body: requestSchema,
 	response: {
 		200: z.object({
-			data: submissionsSelectSchema,
+			data: z.array(submissionsSelectSchema),
 		}),
 	},
 };
 
-type ResponseData = z.infer<typeof submissionsSelectSchema>;
+type ResponseData = z.infer<typeof submissionsSelectSchema>[];
+
+async function processSubmission(
+	tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+	input: SingleSubmission,
+	userId: string,
+): Promise<z.infer<typeof submissionsSelectSchema>> {
+	const { station_id, type, proposedStation, proposedLocation, cells: proposedCellsInput } = input;
+
+	if (station_id) {
+		const stationId = Number(station_id);
+		if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
+		const station = await tx.query.stations.findFirst({ where: (fields, { eq }) => eq(fields.id, stationId) });
+		if (!station) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+	}
+
+	const [submission] = await tx
+		.insert(submissions)
+		.values({ submitter_id: userId, station_id: station_id ?? null, type })
+		.returning();
+	if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
+
+	if (proposedStation) await tx.insert(proposedStations).values({ ...proposedStation, submission_id: submission.id });
+	if (proposedLocation) await tx.insert(proposedLocations).values({ ...proposedLocation, submission_id: submission.id });
+
+	if (proposedCellsInput && proposedCellsInput.length > 0) {
+		for (const cell of proposedCellsInput) {
+			const [base] = await tx
+				.insert(proposedCells)
+				.values({
+					submission_id: submission.id,
+					target_cell_id: cell.target_cell_id ?? null,
+					station_id: cell.station_id ?? station_id ?? null,
+					band_id: cell.band_id,
+					rat: cell.rat,
+					notes: cell.notes ?? null,
+					is_confirmed: false,
+				})
+				.returning();
+			if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
+
+			switch (cell.rat) {
+				case "GSM":
+					{
+						const details = cell.details as z.infer<typeof gsmInsertSchema>;
+						await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
+					}
+					break;
+				case "UMTS":
+					{
+						const details = cell.details as z.infer<typeof umtsInsertSchema>;
+						await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
+					}
+					break;
+				case "LTE":
+					{
+						const details = cell.details as z.infer<typeof lteInsertSchema>;
+						await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
+					}
+					break;
+				case "NR":
+					{
+						const details = cell.details as z.infer<typeof nrInsertSchema>;
+						await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
+					}
+					break;
+			}
+		}
+	}
+
+	return submission;
+}
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
 	const userSession = req.userSession;
@@ -60,73 +138,19 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	const userId = userSession.user.id;
 	if (Number.isNaN(userId)) throw new ErrorResponse("UNAUTHORIZED");
 
-	const { station_id, type, proposedStation, proposedLocation, cells: proposedCellsInput } = req.body;
-
-	if (station_id) {
-		const stationId = Number(station_id);
-		if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
-		const station = await db.query.stations.findFirst({ where: (fields, { eq }) => eq(fields.id, stationId) });
-		if (!station) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
-	}
+	const submissionInputs: SingleSubmission[] = Array.isArray(req.body) ? req.body : [req.body];
 
 	try {
-		await db.transaction(async (tx) => {
-			const [submission] = await tx
-				.insert(submissions)
-				.values({ submitter_id: userId, station_id: station_id ?? null, type })
-				.returning();
-			if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
-
-			if (proposedStation) await tx.insert(proposedStations).values({ ...proposedStation, submission_id: submission.id });
-			if (proposedLocation) await tx.insert(proposedLocations).values({ ...proposedLocation, submission_id: submission.id });
-
-			if (proposedCellsInput && proposedCellsInput.length > 0) {
-				for (const cell of proposedCellsInput) {
-					const [base] = await tx
-						.insert(proposedCells)
-						.values({
-							submission_id: submission.id,
-							target_cell_id: cell.target_cell_id ?? null,
-							station_id: cell.station_id ?? station_id ?? null,
-							band_id: cell.band_id,
-							rat: cell.rat,
-							notes: cell.notes ?? null,
-							is_confirmed: cell.is_confirmed ?? null,
-						})
-						.returning();
-					if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
-
-					switch (cell.rat) {
-						case "GSM":
-							{
-								const details = cell.details as z.infer<typeof gsmInsertSchema>;
-								await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
-							}
-							break;
-						case "UMTS":
-							{
-								const details = cell.details as z.infer<typeof umtsInsertSchema>;
-								await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
-							}
-							break;
-						case "LTE":
-							{
-								const details = cell.details as z.infer<typeof lteInsertSchema>;
-								await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
-							}
-							break;
-						case "NR":
-							{
-								const details = cell.details as z.infer<typeof nrInsertSchema>;
-								await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
-							}
-							break;
-					}
-				}
+		const results = await db.transaction(async (tx) => {
+			const created: z.infer<typeof submissionsSelectSchema>[] = [];
+			for (const input of submissionInputs) {
+				const submission = await processSubmission(tx, input, userId);
+				created.push(submission);
 			}
-
-			return res.send({ data: submission });
+			return created;
 		});
+
+		return res.send({ data: results });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");

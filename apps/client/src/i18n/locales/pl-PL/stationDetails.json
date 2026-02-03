@@ -33,6 +33,7 @@
 		"duplex": "Duplex",
 		"notes": "Notatki",
 		"cellNotConfirmed": "Komórka niepotwierdzona",
+		"carrier": "Nośna",
 		"nbIot": "NB-IoT",
 		"redCap": "RedCap",
 		"noCells": "Brak danych zawierających komórki dla tej stacji"

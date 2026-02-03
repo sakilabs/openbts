@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, ArrowRight01Icon, ArrowLeftDoubleIcon, ArrowRightDoubleIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import i18n from "@/i18n/config";
 
 interface DataTablePaginationProps<TData> {
 	table: Table<TData>;
@@ -29,7 +30,7 @@ export function DataTablePagination<TData>({
 			<div className="text-muted-foreground text-sm tabular-nums">
 				{totalItems !== undefined ? (
 					<>
-						{startRow}-{endRow} of {totalItems.toLocaleString()}
+						{startRow}-{endRow} of {totalItems.toLocaleString(i18n.language)}
 					</>
 				) : (
 					<>

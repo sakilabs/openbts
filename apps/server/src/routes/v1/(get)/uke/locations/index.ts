@@ -64,6 +64,7 @@ const schemaRoute = {
 			.regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
 			.optional()
 			.transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
+		new: z.coerce.boolean().optional().default(false),
 	}),
 	response: {
 		200: z.object({
@@ -87,7 +88,7 @@ type ResponseData = z.infer<typeof ukeLocationsSchema> & {
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-	const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames } = req.query;
+	const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentOnly } = req.query;
 	const offset = (page - 1) * limit;
 
 	const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
@@ -122,6 +123,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 	if (envelope) locationConditions.push(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
 	if (regionIds.length) locationConditions.push(inArray(ukeLocations.region_id, regionIds));
+	if (recentOnly) {
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+		locationConditions.push(sql`(${ukeLocations.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${ukeLocations.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
+	}
 	if (hasPermitFilters) {
 		const permitConditions: SQL<unknown>[] = [sql`ps.location_id = ${ukeLocations.id}`];
 

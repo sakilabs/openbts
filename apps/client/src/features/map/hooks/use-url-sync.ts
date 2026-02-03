@@ -34,9 +34,10 @@ function parseUrlFilters(): {
 			.filter((n) => !Number.isNaN(n)) || [];
 	const rat = params.get("rat")?.split(",").filter(Boolean) || [];
 	const source = (params.get("source") as StationSource) || "internal";
+	const recentOnly = params.get("new") === "true";
 
 	return {
-		filters: { operators, bands, rat, source },
+		filters: { operators, bands, rat, source, recentOnly },
 		center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
 		zoom: !Number.isNaN(z) ? z : undefined,
 	};
@@ -49,6 +50,7 @@ function buildUrlParams(filters: StationFilters, map: maplibregl.Map): string {
 	if (filters.bands.length > 0) params.set("bands", filters.bands.join(","));
 	if (filters.rat.length > 0) params.set("rat", filters.rat.join(","));
 	params.set("source", filters.source);
+	if (filters.recentOnly) params.set("new", "true");
 
 	const center = map.getCenter();
 	params.set("lat", center.lat.toFixed(6));
@@ -75,6 +77,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 				bands: urlFilters.bands || [],
 				rat: urlFilters.rat || [],
 				source: urlFilters.source || "internal",
+				recentOnly: urlFilters.recentOnly || false,
 			},
 			center,
 			zoom: urlZoom,

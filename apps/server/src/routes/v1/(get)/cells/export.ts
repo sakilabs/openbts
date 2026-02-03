@@ -10,7 +10,7 @@ import type { Route } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
 	querystring: z.object({
-		format: z.enum(["2.0", "2.1", "3.0-dec", "3.0-hex", "4.0"]).default("4.0"),
+		format: z.enum(["2.0", "2.1", "3.0-dec", "3.0-hex", "4.0", "ntm", "netmonitor"]).default("4.0"),
 		operators: z
 			.string()
 			.optional()
@@ -146,7 +146,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
 			ecid: row.lte?.ecid,
 			gnbid: row.nr?.gnbid,
 			nci: row.nr?.nci,
-			rat: row.rat,
+			rat: row.rat as "GSM" | "CDMA" | "UMTS" | "LTE" | "NR",
 			band_value: row.band.value,
 			band_name: row.band.name,
 			station_id: row.station.station_id,
@@ -162,8 +162,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
 
 	const sortedLines = sortCLFLines(clfLines);
 
+	const fileExtension = format === "ntm" ? "ntm" : format === "netmonitor" ? "csv" : "clf";
 	res.header("Content-Type", "text/plain; charset=utf-8");
-	res.header("Content-Disposition", `attachment; filename="cells_export_${format}.clf"`);
+	res.header("Content-Disposition", `attachment; filename="cells_export_${format}.${fileExtension}"`);
 
 	return res.send(sortedLines.join("\n"));
 }

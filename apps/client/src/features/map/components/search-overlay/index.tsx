@@ -13,9 +13,11 @@ import { AutocompleteDropdown } from "./autocomplete-dropdown";
 import { FilterPanel } from "./filter-panel";
 import { SearchResults } from "./search-results";
 import { MapStyleSwitcher } from "./map-style-switcher";
+import { MapCursorInfo } from "../map-cursor-info";
 import { FILTER_KEYWORDS, RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
 import { parseFilters } from "../../filters";
 import { useSearchState } from "../../hooks/use-search-state";
+import i18n from "@/i18n/config";
 
 type MapSearchOverlayProps = {
 	locationCount: number;
@@ -24,6 +26,7 @@ type MapSearchOverlayProps = {
 	isFetching?: boolean;
 	filters: StationFilters;
 	zoom?: number;
+	activeMarker?: { latitude: number; longitude: number } | null;
 	onFiltersChange: (filters: StationFilters) => void;
 	onLocationSelect?: (lat: number, lon: number) => void;
 	onStationSelect?: (station: Station) => void;
@@ -36,6 +39,7 @@ export function MapSearchOverlay({
 	isFetching = false,
 	filters,
 	zoom,
+	activeMarker,
 	onFiltersChange,
 	onLocationSelect,
 	onStationSelect,
@@ -98,7 +102,7 @@ export function MapSearchOverlay({
 	});
 
 	const isSearching = isOsmLoading || isStationSearchLoading;
-	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length;
+	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length + (filters.recentOnly ? 1 : 0);
 	const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
 	const showResults = activeOverlay === "results" && (isSearching || osmResults.length > 0 || stationResults.length > 0);
 	const hasMoreLocations = totalCount > locationCount;
@@ -162,8 +166,10 @@ export function MapSearchOverlay({
 
 	const handleClearAllBands = useCallback(() => onFiltersChange({ ...filters, bands: [] }), [filters, onFiltersChange]);
 
+	const handleToggleRecentOnly = useCallback(() => onFiltersChange({ ...filters, recentOnly: !filters.recentOnly }), [filters, onFiltersChange]);
+
 	const handleClearFilters = useCallback(
-		() => onFiltersChange({ operators: [], bands: [], rat: [], source: filters.source }),
+		() => onFiltersChange({ operators: [], bands: [], rat: [], source: filters.source, recentOnly: false }),
 		[filters.source, onFiltersChange],
 	);
 
@@ -272,6 +278,7 @@ export function MapSearchOverlay({
 							onToggleOperator={handleToggleOperator}
 							onToggleBand={handleToggleBand}
 							onToggleRat={handleToggleRat}
+							onToggleRecentOnly={handleToggleRecentOnly}
 							onSelectAllRats={handleSelectAllRats}
 							onClearAllRats={handleClearAllRats}
 							onSelectAllBands={handleSelectAllBands}
@@ -283,39 +290,43 @@ export function MapSearchOverlay({
 			</div>
 
 			<div className="hidden md:flex absolute top-4 left-4 z-10 flex-col items-start gap-1.5">
-				<div className="flex items-stretch shadow-xl rounded-lg overflow-hidden border bg-background/95 backdrop-blur-md">
-					<Tooltip>
-						<TooltipTrigger
-							className={cn("px-2 py-1.5 flex items-center gap-2 border-r border-border/50", hasMoreLocations && "cursor-help")}
-							disabled={!hasMoreLocations}
-						>
-							{isLoading || isFetching ? (
-								<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
-							) : hasMoreLocations ? (
-								<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
-							) : (
-								<div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
-							)}
-							<div className="flex items-baseline gap-1">
-								<span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
-									{locationCount.toLocaleString()}
-								</span>
-								<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
-							</div>
-						</TooltipTrigger>
-						<TooltipContent side="bottom">
-							{t("overlay.moreStations", { total: totalCount.toLocaleString(), shown: locationCount.toLocaleString() })}
-						</TooltipContent>
-					</Tooltip>
-					<div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
-						<span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
-							{filters.source === "uke" ? t("filters.ukePermits") : t("filters.internalDb")}
-						</span>
-						<div className="w-px h-2 bg-border/60" />
-						<span className="text-[8px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">
-							{t("overlay.zoom")} {zoom?.toFixed(1) || "-"}
-						</span>
+				<div className="flex items-center gap-1.5">
+					<div className="flex items-stretch shadow-xl rounded-lg overflow-hidden border bg-background/95 backdrop-blur-md">
+						<Tooltip>
+							<TooltipTrigger
+								className={cn("px-2 py-1.5 flex items-center gap-2 border-r border-border/50", hasMoreLocations && "cursor-help")}
+								disabled={!hasMoreLocations}
+							>
+								{isLoading || isFetching ? (
+									<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
+								) : hasMoreLocations ? (
+									<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+								) : (
+									<div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
+								)}
+								<div className="flex items-baseline gap-1">
+									<span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
+										{locationCount.toLocaleString(i18n.language)}
+									</span>
+									<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+								</div>
+							</TooltipTrigger>
+							<TooltipContent side="bottom">
+								{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
+							</TooltipContent>
+						</Tooltip>
+						<div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
+							<span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
+								{filters.source === "uke" ? t("filters.ukePermits") : t("filters.internalDb")}
+							</span>
+							<div className="w-px h-2 bg-border/60" />
+							<span className="text-[8px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">
+								{t("overlay.zoom")} {zoom?.toFixed(1) || "-"}
+							</span>
+						</div>
 					</div>
+
+					<MapCursorInfo activeMarker={activeMarker} />
 				</div>
 
 				<div className="relative">
@@ -343,7 +354,9 @@ export function MapSearchOverlay({
 							)}
 							<div className="flex flex-col gap-0.5">
 								<div className="flex items-center gap-1">
-									<span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>{locationCount.toLocaleString()}</span>
+									<span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>
+										{locationCount.toLocaleString(i18n.language)}
+									</span>
 									<span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
 								</div>
 								<div className="flex items-center gap-1">
@@ -357,7 +370,7 @@ export function MapSearchOverlay({
 							</div>
 						</TooltipTrigger>
 						<TooltipContent side="top">
-							{t("overlay.moreStations", { total: totalCount.toLocaleString(), shown: locationCount.toLocaleString() })}
+							{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
 						</TooltipContent>
 					</Tooltip>
 				</div>

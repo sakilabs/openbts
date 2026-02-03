@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useMap, type MapStyle } from "@/components/ui/map";
 
@@ -13,6 +14,10 @@ const MAP_STYLE_OPTIONS: Record<MapStyle, { label: string; thumbnail: string }> 
 		label: "OpenStreetMap",
 		thumbnail: "https://tile.openstreetmap.org/13/4400/2686.png",
 	},
+	openfreemap: {
+		label: "OpenFreeMap",
+		thumbnail: "https://a.basemaps.cartocdn.com/light_all/13/4400/2686.png",
+	},
 	satellite: {
 		label: "Esri Satellite",
 		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
@@ -24,6 +29,7 @@ type MapStyleSwitcherProps = {
 };
 
 export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps) {
+	const { t } = useTranslation("map");
 	const { mapStyle, setMapStyle } = useMap();
 	const [showPicker, setShowPicker] = useState(false);
 
@@ -56,7 +62,7 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 				onClick={handleStopPropagation}
 				onKeyDown={handleStopPropagation}
 				role="listbox"
-				className={cn("flex gap-1.5 p-1.5 rounded-lg bg-background/95 backdrop-blur-md border shadow-xl", isMobile && "absolute bottom-0 left-0")}
+				className={cn("flex gap-1.5 p-1.5 rounded-lg bg-background border shadow-xl", isMobile && "absolute bottom-0 left-0")}
 			>
 				{(Object.keys(MAP_STYLE_OPTIONS) as MapStyle[]).map((key) => {
 					const style = MAP_STYLE_OPTIONS[key];
@@ -87,14 +93,23 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 	return (
 		<button
 			type="button"
-			onClick={() => setShowPicker(true)}
+			onClick={(e) => {
+				e.stopPropagation();
+				setShowPicker(true);
+			}}
 			className={cn(
-				"w-8 h-8 rounded-md overflow-hidden border bg-background hover:border-muted-foreground/50 transition-colors cursor-pointer",
+				"group flex items-center gap-2 p-1 pr-3 rounded-lg bg-background border transition-all text-left",
 				isMobile ? "shadow-lg" : "shadow-xl",
 			)}
 			aria-label="Change map style"
 		>
-			<img src={MAP_STYLE_OPTIONS[mapStyle].thumbnail} alt={MAP_STYLE_OPTIONS[mapStyle].label} className="w-full h-full object-cover" />
+			<div className="w-8 h-8 rounded-md overflow-hidden border border-border/50 group-hover:border-border transition-colors">
+				<img src={MAP_STYLE_OPTIONS[mapStyle].thumbnail} alt={MAP_STYLE_OPTIONS[mapStyle].label} className="w-full h-full object-cover" />
+			</div>
+			<div className="flex flex-col">
+				<span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider leading-none mb-0.5">{t("overlay.mapStyle")}</span>
+				<span className="text-xs font-semibold text-foreground leading-none">{MAP_STYLE_OPTIONS[mapStyle].label}</span>
+			</div>
 		</button>
 	);
 }

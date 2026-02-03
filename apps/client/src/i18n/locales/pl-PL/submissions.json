@@ -1,0 +1,101 @@
+{
+	"page": {
+		"title": "Zgłoś stację",
+		"description": "Zgłoś nową stację BTS lub dodaj komórki do istniejącej. Twoje zgłoszenie zostanie zweryfikowane przez moderatorów."
+	},
+	"stationSelector": {
+		"title": "Wybierz stację",
+		"existingStation": "Istniejąca stacja",
+		"newStation": "Nowa stacja",
+		"searchPlaceholder": "Szukaj po ID stacji lub adresie...",
+		"noResults": "Nie znaleziono stacji",
+		"noAddress": "Brak adresu",
+		"region": "Województwo",
+		"gps": "GPS",
+		"noRegion": "Brak województwa",
+		"noGps": "Brak GPS",
+		"newStationHint": "Wypełnij poniżej dane stacji i lokalizacji.",
+		"cellsCount_one": "{{count}} komórka",
+		"cellsCount_few": "{{count}} komórki",
+		"cellsCount_many": "{{count}} komórek"
+	},
+	"newStation": {
+		"title": "Dane stacji",
+		"stationId": "ID stacji",
+		"stationIdPlaceholder": "np. WAR001",
+		"stationIdHint": "Unikalny identyfikator stacji (zwykle prefix operatora + numer)",
+		"operator": "Operator",
+		"selectOperator": "Wybierz operatora",
+		"notes": "Notatki",
+		"notesPlaceholder": "Dodatkowe informacje o stacji..."
+	},
+	"locationPicker": {
+		"title": "Lokalizacja",
+		"fetchAddress": "Pobierz adres",
+		"latitude": "Szerokość geograficzna",
+		"longitude": "Długość geograficzna",
+		"region": "Województwo",
+		"selectRegion": "Wybierz województwo",
+		"city": "Miasto",
+		"cityPlaceholder": "np. Warszawa",
+		"address": "Adres",
+		"addressPlaceholder": "np. ul. Marszałkowska 1"
+	},
+	"ratSelector": {
+		"title": "Technologie radiowe",
+		"description": "Wybierz technologie radiowe (RAT) dostępne na tej stacji.",
+		"noSelection": "Wybierz co najmniej jedną technologię, aby dodać komórki."
+	},
+	"cellDetails": {
+		"cells": "Komórki",
+		"cellsCount_one": "{{count}} komórka",
+		"cellsCount_few": "{{count}} komórki",
+		"cellsCount_many": "{{count}} komórek",
+		"addCell": "Dodaj komórkę",
+		"noCells": "Brak komórek. Kliknij 'Dodaj komórkę', aby dodać nową.",
+		"band": "Pasmo",
+		"duplex": "Duplex",
+		"selectBand": "Wybierz",
+		"actions": "Akcje",
+		"notes": "Notatki",
+		"notesPlaceholder": "np. pikokomórka",
+		"diffAdded": "Nowa",
+		"diffModified": "Zmieniona"
+	},
+	"form": {
+		"submit": "Wyślij",
+		"submitting": "Wysyłanie...",
+		"submitted": "Wysłano!",
+		"submitSuccess": "Twoje zgłoszenie zostało przyjęte i będzie zweryfikowane.",
+		"updateStation": "Aktualizacja stacji {{id}}",
+		"createStation": "Tworzenie nowej stacji {{id}}",
+		"selectStationFirst": "Najpierw wybierz lub utwórz stację",
+		"fillStationDetails": "Wypełnij dane stacji",
+		"cellsCount_one": "{{count}} komórka",
+		"cellsCount_few": "{{count}} komórki",
+		"cellsCount_many": "{{count}} komórek"
+	},
+	"common": {
+		"clear": "Wyczyść",
+		"loading": "Ładowanie..."
+	},
+	"validation": {
+		"selectStation": "Wybierz stację",
+		"stationIdRequired": "ID stacji jest wymagane",
+		"stationIdTooShort": "ID stacji musi mieć co najmniej 2 znaki",
+		"operatorRequired": "Wybierz operatora",
+		"latitudeRequired": "Szerokość geograficzna jest wymagana",
+		"latitudeInvalid": "Szerokość musi być między -90 a 90",
+		"longitudeRequired": "Długość geograficzna jest wymagana",
+		"longitudeInvalid": "Długość musi być między -180 a 180",
+		"regionRequired": "Wybierz województwo",
+		"bandRequired": "Pasmo jest wymagane",
+		"lacRequired": "LAC jest wymagany",
+		"cidRequired": "CID jest wymagany",
+		"rncRequired": "RNC jest wymagany",
+		"enbidRequired": "eNBID jest wymagany",
+		"clidRequired": "CLID jest wymagany",
+		"nciRequired": "NCI jest wymagany",
+		"mustBePositive": "Wartość nie może być ujemna"
+	}
+}

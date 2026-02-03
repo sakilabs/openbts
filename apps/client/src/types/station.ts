@@ -95,6 +95,7 @@ export type StationFilters = {
 	bands: number[];
 	rat: string[];
 	source: StationSource;
+	recentOnly: boolean;
 };
 
 export type StationWithoutCells = Omit<Station, "location" | "cells"> & {

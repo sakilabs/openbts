@@ -1,4 +1,6 @@
-export type ClfFormat = "2.0" | "2.1" | "3.0-dec" | "3.0-hex" | "4.0";
+export type ClfFormat = "2.0" | "2.1" | "3.0-dec" | "3.0-hex" | "4.0" | "ntm" | "netmonitor";
+
+const NTM_UNKNOWN = 2147483647; // 2^31-1
 
 export interface CellExportData {
 	cid: number;
@@ -12,7 +14,7 @@ export interface CellExportData {
 	ecid?: number | null;
 	gnbid?: number | null;
 	nci?: number | null;
-	rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR" | "IOT";
+	rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR";
 	band_value?: number | null;
 	band_name: string;
 	station_id: string;
@@ -158,6 +160,59 @@ export function convertToCLF(cell: CellExportData, format: ClfFormat): string | 
 			return toCLF30Hex(cell);
 		case "4.0":
 			return toCLF40(cell);
+		case "ntm":
+			return toNTM(cell);
+		case "netmonitor":
+			return toNetMonitor(cell);
+		default:
+			return null;
+	}
+}
+
+export function toNTM(cell: CellExportData): string | null {
+	const mcc = "260";
+	const mnc = cell.operator_mnc?.toString().slice(-2).padStart(2, "0") ?? "00";
+	const lat = cell.latitude ?? 0;
+	const lon = cell.longitude ?? 0;
+	const location = getDescription(cell).replace(/;/g, ",");
+
+	switch (cell.rat) {
+		case "GSM": {
+			const cid = cell.cid ?? NTM_UNKNOWN;
+			const lac = cell.lac ?? NTM_UNKNOWN;
+			const bsic = NTM_UNKNOWN;
+			const arfcn = NTM_UNKNOWN;
+			return `2G;${mcc};${mnc};${cid};${lac};;${bsic};${lat};${lon};${location};${arfcn}`;
+		}
+		case "UMTS": {
+			const cid = cell.cid_long ?? cell.cid ?? NTM_UNKNOWN;
+			const lac = cell.lac ?? NTM_UNKNOWN;
+			const rnc = cell.rnc ?? NTM_UNKNOWN;
+			const psc = NTM_UNKNOWN;
+			const uarfcn = NTM_UNKNOWN;
+			return `3G;${mcc};${mnc};${cid};${lac};${rnc};${psc};${lat};${lon};${location};${uarfcn}`;
+		}
+		case "LTE": {
+			const ci = cell.clid ?? NTM_UNKNOWN;
+			const tac = cell.tac ?? NTM_UNKNOWN;
+			const enb = cell.enbid ?? NTM_UNKNOWN;
+			const pci = NTM_UNKNOWN;
+			const earfcn = NTM_UNKNOWN;
+			return `4G;${mcc};${mnc};${ci};${tac};${enb};${pci};${lat};${lon};${location};${earfcn}`;
+		}
+		case "NR": {
+			const nci = cell.nci ?? NTM_UNKNOWN;
+			const tac = cell.nrtac ?? NTM_UNKNOWN;
+			const pci = NTM_UNKNOWN;
+			const arfcn = NTM_UNKNOWN;
+			return `5G;${mcc};${mnc};${nci};${tac};;${pci};${lat};${lon};${location};${arfcn}`;
+		}
+		case "CDMA": {
+			const bid = cell.cid ?? NTM_UNKNOWN;
+			const nid = NTM_UNKNOWN;
+			const sid = NTM_UNKNOWN;
+			return `CD2;${mcc};${mnc};${bid};${nid};;${sid};${lat};${lon};${location};`;
+		}
 		default:
 			return null;
 	}
@@ -165,4 +220,52 @@ export function convertToCLF(cell: CellExportData, format: ClfFormat): string | 
 
 export function sortCLFLines(lines: string[]): string[] {
 	return lines.sort((a, b) => a.localeCompare(b));
+}
+
+export function toNetMonitor(cell: CellExportData): string | null {
+	const mcc = "260";
+	const mnc = cell.operator_mnc?.toString().slice(-2).padStart(2, "0") ?? "00";
+	const lat = cell.latitude ?? "";
+	const lon = cell.longitude ?? "";
+	const accuracy = 100;
+	const description = getDescription(cell).replace(/;/g, ",");
+
+	switch (cell.rat) {
+		case "GSM": {
+			const lac = cell.lac ?? 0;
+			const cid = cell.cid ?? 0;
+			const bsic = "";
+			const arfcn = "";
+			return `G;${mcc};${mnc};${lac};${cid};${bsic};${arfcn};${lat};${lon};${accuracy};${description}`;
+		}
+		case "UMTS": {
+			const lac = cell.lac ?? 0;
+			const cid = cell.cid_long ?? cell.cid ?? 0;
+			const psc = "";
+			const uarfcn = "";
+			return `W;${mcc};${mnc};${lac};${cid};${psc};${uarfcn};${lat};${lon};${accuracy};${description}`;
+		}
+		case "LTE": {
+			const tac = cell.tac ?? 0;
+			const ci = cell.ecid ?? 0;
+			const pci = "";
+			const earfcn = "";
+			return `L;${mcc};${mnc};${tac};${ci};${pci};${earfcn};${lat};${lon};${accuracy};${description}`;
+		}
+		case "NR": {
+			const tac = cell.nrtac ?? 0;
+			const nci = cell.nci ?? 0;
+			const pci = "";
+			const arfcn = "";
+			return `N;${mcc};${mnc};${tac};${nci};${pci};${arfcn};${lat};${lon};${accuracy};${description}`;
+		}
+		case "CDMA": {
+			const nid = 0;
+			const bid = cell.cid ?? 0;
+			const sid = 0;
+			return `C;${mcc};${mnc};${nid};${bid};${sid};;${lat};${lon};${accuracy};${description}`;
+		}
+		default:
+			return null;
+	}
 }

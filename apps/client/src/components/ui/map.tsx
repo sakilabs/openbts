@@ -68,7 +68,7 @@ function useResolvedTheme(themeProp?: "light" | "dark"): "light" | "dark" {
 	return themeProp ?? detectedTheme;
 }
 
-type MapStyle = "carto" | "osm" | "satellite";
+type MapStyle = "carto" | "osm" | "openfreemap" | "satellite";
 
 type MapContextValue = {
 	map: MapLibreGL.Map | null;
@@ -87,12 +87,35 @@ function useMap() {
 	return context;
 }
 
+type MapStyleOption = string | MapLibreGL.StyleSpecification;
+
 const defaultStyles = {
 	dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 	light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
 
-const mapStyleOptions: Record<MapStyle, { dark: string; light: string; label: string; thumbnail: string }> = {
+const osmRasterStyle: MapLibreGL.StyleSpecification = {
+	version: 8,
+	sources: {
+		"osm-raster-tiles": {
+			type: "raster",
+			tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+			tileSize: 256,
+			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+		},
+	},
+	layers: [
+		{
+			id: "osm-raster-layer",
+			type: "raster",
+			source: "osm-raster-tiles",
+			minzoom: 0,
+			maxzoom: 19,
+		},
+	],
+};
+
+const mapStyleOptions: Record<MapStyle, { dark: MapStyleOption; light: MapStyleOption; label: string; thumbnail: string }> = {
 	carto: {
 		dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 		light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -100,10 +123,16 @@ const mapStyleOptions: Record<MapStyle, { dark: string; light: string; label: st
 		thumbnail: "https://a.basemaps.cartocdn.com/dark_all/13/4400/2686.png",
 	},
 	osm: {
-		dark: "https://tiles.openfreemap.org/styles/bright",
-		light: "https://tiles.openfreemap.org/styles/bright",
+		dark: osmRasterStyle,
+		light: osmRasterStyle,
 		label: "OpenStreetMap",
 		thumbnail: "https://tile.openstreetmap.org/13/4400/2686.png",
+	},
+	openfreemap: {
+		dark: "https://tiles.openfreemap.org/styles/bright",
+		light: "https://tiles.openfreemap.org/styles/bright",
+		label: "OpenFreeMap",
+		thumbnail: "https://a.basemaps.cartocdn.com/light_all/13/4400/2686.png",
 	},
 	satellite: {
 		dark: "https://raw.githubusercontent.com/go2garret/maps/main/src/assets/json/arcgis_hybrid.json",
@@ -112,8 +141,6 @@ const mapStyleOptions: Record<MapStyle, { dark: string; light: string; label: st
 		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
 	},
 };
-
-type MapStyleOption = string | MapLibreGL.StyleSpecification;
 
 type Theme = "light" | "dark";
 

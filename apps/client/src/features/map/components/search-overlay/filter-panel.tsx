@@ -21,6 +21,7 @@ type FilterPanelProps = {
 	onToggleOperator: (mnc: number) => void;
 	onToggleBand: (value: number) => void;
 	onToggleRat: (rat: string) => void;
+	onToggleRecentOnly: () => void;
 	onSelectAllRats: () => void;
 	onClearAllRats: () => void;
 	onSelectAllBands: () => void;
@@ -37,6 +38,7 @@ export function FilterPanel({
 	onToggleOperator,
 	onToggleBand,
 	onToggleRat,
+	onToggleRecentOnly,
 	onSelectAllRats,
 	onClearAllRats,
 	onSelectAllBands,
@@ -93,6 +95,12 @@ export function FilterPanel({
 							</button>
 						))}
 					</div>
+				</div>
+
+				<div>
+					<Checkbox checked={filters.recentOnly} onChange={onToggleRecentOnly}>
+						<span className="flex-1 text-left">{t("filters.newOnly")}</span>
+					</Checkbox>
 				</div>
 
 				<div>

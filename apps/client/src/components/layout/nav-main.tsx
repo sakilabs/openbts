@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { useLocation } from "react-router";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -16,27 +18,61 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Link } from "react-router";
+import { cn } from "@/lib/utils";
 
-export function NavMain({
-	items,
-}: {
-	items: {
+const STORAGE_KEY = "nav-collapsed-state";
+
+type NavItem = {
+	title: string;
+	key: string;
+	url: string;
+	icon: IconSvgElement;
+	items?: {
 		title: string;
 		url: string;
-		icon: IconSvgElement;
-		isActive?: boolean;
-		items?: {
-			title: string;
-			url: string;
-		}[];
 	}[];
-}) {
+};
+
+export function NavMain({ items, groupLabel }: { items: NavItem[]; groupLabel: string }) {
+	const location = useLocation();
+
+	const getInitialState = useCallback(() => {
+		if (typeof window === "undefined") {
+			return items.reduce<Record<string, boolean>>((acc, item) => {
+				acc[item.key] = item.items?.some((sub) => sub.url === location.pathname) ?? false;
+				return acc;
+			}, {});
+		}
+		try {
+			const stored = localStorage.getItem(STORAGE_KEY);
+			if (stored) {
+				return JSON.parse(stored) as Record<string, boolean>;
+			}
+		} catch {}
+		return items.reduce<Record<string, boolean>>((acc, item) => {
+			acc[item.key] = item.items?.some((sub) => sub.url === location.pathname) ?? false;
+			return acc;
+		}, {});
+	}, [items, location.pathname]);
+
+	const [openState, setOpenState] = useState<Record<string, boolean>>(getInitialState);
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(openState));
+		} catch {}
+	}, [openState]);
+
+	const handleOpenChange = (key: string, open: boolean) => {
+		setOpenState((prev) => ({ ...prev, [key]: open }));
+	};
+
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>Platform</SidebarGroupLabel>
+			<SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => (
-					<Collapsible key={item.title} defaultOpen={item.isActive}>
+					<Collapsible key={item.key} open={openState[item.key] ?? false} onOpenChange={(open) => handleOpenChange(item.key, open)}>
 						<SidebarMenuItem>
 							<SidebarMenuButton render={<Link to={{ pathname: item.url }} />} tooltip={item.title}>
 								<HugeiconsIcon icon={item.icon} />
@@ -44,15 +80,17 @@ export function NavMain({
 							</SidebarMenuButton>
 							{item.items?.length ? (
 								<>
-									<CollapsibleTrigger render={<SidebarMenuAction className="data-[state=open]:rotate-90" />}>
+									<CollapsibleTrigger
+										render={<SidebarMenuAction className={cn("transition-transform duration-200", openState[item.key] && "rotate-90")} />}
+									>
 										<HugeiconsIcon icon={ArrowRight01Icon} />
 										<span className="sr-only">Toggle</span>
 									</CollapsibleTrigger>
 									<CollapsibleContent>
 										<SidebarMenuSub>
 											{item.items?.map((subItem) => (
-												<SidebarMenuSubItem key={subItem.title}>
-													<SidebarMenuSubButton render={<Link to={{ pathname: subItem.url }} />}>
+												<SidebarMenuSubItem key={subItem.url}>
+													<SidebarMenuSubButton render={<Link to={{ pathname: subItem.url }} />} isActive={location.pathname === subItem.url}>
 														<span>{subItem.title}</span>
 													</SidebarMenuSubButton>
 												</SidebarMenuSubItem>

@@ -8,9 +8,10 @@ type UseMapPopupArgs = {
 	map: maplibregl.Map | null;
 	onOpenStationDetails: (id: number, source: StationSource) => void;
 	onOpenUkeStationDetails: (station: UkeStation) => void;
+	onClose?: () => void;
 };
 
-export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails }: UseMapPopupArgs) {
+export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails, onClose }: UseMapPopupArgs) {
 	const popupRef = useRef<MapLibreGL.Popup | null>(null);
 	const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
@@ -57,7 +58,7 @@ export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails
 			popupRootRef.current = createRoot(container);
 			renderPopup(location, stations, ukeStations, source);
 
-			popupRef.current = new MapLibreGL.Popup({
+			const popup = new MapLibreGL.Popup({
 				closeButton: true,
 				closeOnClick: true,
 				maxWidth: "none",
@@ -66,8 +67,12 @@ export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails
 				.setLngLat(coordinates)
 				.setDOMContent(container)
 				.addTo(map);
+
+			if (onClose) popup.once("close", onClose);
+
+			popupRef.current = popup;
 		},
-		[map, renderPopup],
+		[map, renderPopup, onClose],
 	);
 
 	const updatePopupStations = useCallback(

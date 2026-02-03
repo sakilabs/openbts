@@ -1,0 +1,98 @@
+{
+	"page": {
+		"title": "Submit Station",
+		"description": "Submit a new BTS station or add cells to an existing one. Your submission will be reviewed by moderators."
+	},
+	"stationSelector": {
+		"title": "Select Station",
+		"existingStation": "Existing Station",
+		"newStation": "New Station",
+		"searchPlaceholder": "Search by station ID or address...",
+		"noResults": "No stations found",
+		"noAddress": "No address",
+		"region": "Region",
+		"gps": "GPS",
+		"noRegion": "No region",
+		"noGps": "No GPS",
+		"newStationHint": "Fill in the station details and location below.",
+		"cellsCount_one": "{{count}} cell",
+		"cellsCount_other": "{{count}} cells"
+	},
+	"newStation": {
+		"title": "Station Details",
+		"stationId": "Station ID",
+		"stationIdPlaceholder": "e.g. WAR001",
+		"stationIdHint": "Unique identifier for the station (usually operator prefix + number)",
+		"operator": "Operator",
+		"selectOperator": "Select operator",
+		"notes": "Notes",
+		"notesPlaceholder": "Additional information about the station..."
+	},
+	"locationPicker": {
+		"title": "Location",
+		"fetchAddress": "Fetch Address",
+		"latitude": "Latitude",
+		"longitude": "Longitude",
+		"region": "Region (Voivodeship)",
+		"selectRegion": "Select region",
+		"city": "City",
+		"cityPlaceholder": "e.g. Warsaw",
+		"address": "Address",
+		"addressPlaceholder": "e.g. ul. Marszałkowska 1"
+	},
+	"ratSelector": {
+		"title": "Radio Technologies",
+		"description": "Select the radio access technologies (RAT) available at this station.",
+		"noSelection": "Select at least one technology to add cells."
+	},
+	"cellDetails": {
+		"cells": "Cells",
+		"cellsCount_one": "{{count}} cell",
+		"cellsCount_other": "{{count}} cells",
+		"addCell": "Add Cell",
+		"noCells": "No cells added. Click \"Add Cell\" to add a new cell.",
+		"band": "Band",
+		"duplex": "Duplex",
+		"selectBand": "Select",
+		"actions": "Actions",
+		"notes": "Notes",
+		"notesPlaceholder": "e.g. picocell",
+		"diffAdded": "New",
+		"diffModified": "Modified"
+	},
+	"form": {
+		"submit": "Submit",
+		"submitting": "Submitting...",
+		"submitted": "Submitted!",
+		"submitSuccess": "Your submission has been received and will be reviewed.",
+		"updateStation": "Updating station {{id}}",
+		"createStation": "Creating new station {{id}}",
+		"selectStationFirst": "Select or create a station first",
+		"fillStationDetails": "Fill in the station details",
+		"cellsCount_one": "{{count}} cell",
+		"cellsCount_other": "{{count}} cells"
+	},
+	"common": {
+		"clear": "Clear",
+		"loading": "Loading..."
+	},
+	"validation": {
+		"selectStation": "Please select a station",
+		"stationIdRequired": "Station ID is required",
+		"stationIdTooShort": "Station ID must be at least 2 characters",
+		"operatorRequired": "Please select an operator",
+		"latitudeRequired": "Latitude is required",
+		"latitudeInvalid": "Latitude must be between -90 and 90",
+		"longitudeRequired": "Longitude is required",
+		"longitudeInvalid": "Longitude must be between -180 and 180",
+		"regionRequired": "Please select a region",
+		"bandRequired": "Band is required",
+		"lacRequired": "LAC is required",
+		"cidRequired": "CID is required",
+		"rncRequired": "RNC is required",
+		"enbidRequired": "eNBID is required",
+		"clidRequired": "CLID is required",
+		"nciRequired": "NCI is required",
+		"mustBePositive": "Value cannot be negative"
+	}
+}

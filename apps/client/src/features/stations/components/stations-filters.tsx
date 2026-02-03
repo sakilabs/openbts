@@ -21,6 +21,7 @@ import { AutocompleteDropdown } from "@/features/map/components/search-overlay/a
 import { FILTER_KEYWORDS } from "@/features/map/constants";
 import { parseFilters } from "@/features/map/filters";
 import type { Operator, Region, StationFilters } from "@/types/station";
+import i18n from "@/i18n/config";
 
 const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
 
@@ -335,7 +336,7 @@ export function StationsFilters({
 
 				<div className="text-xs text-muted-foreground pt-2 border-t">
 					{totalStations !== undefined
-						? t("filters.showingStationsOfTotal", { count: stationCount, total: totalStations.toLocaleString() })
+						? t("filters.showingStationsOfTotal", { count: stationCount, total: totalStations.toLocaleString(i18n.language) })
 						: t("filters.showingStations", { count: stationCount })}
 				</div>
 			</div>

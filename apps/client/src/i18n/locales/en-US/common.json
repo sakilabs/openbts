@@ -1,4 +1,11 @@
 {
+	"and": "and",
+	"theme": {
+		"title": "Theme",
+		"light": "Light",
+		"dark": "Dark",
+		"system": "System"
+	},
 	"actions": {
 		"save": "Save",
 		"cancel": "Cancel",

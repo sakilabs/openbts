@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, type SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ImageAdd01Icon, Cancel01Icon, Loading03Icon, SentIcon } from "@hugeicons/core-free-icons";
+import { ImageAdd01Icon, Cancel01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { API_BASE } from "@/lib/api";
@@ -84,7 +85,7 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
 		});
 	}, []);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = (e: SubmitEvent) => {
 		e.preventDefault();
 		if (!content.trim() && images.length === 0) return;
 		mutation.mutate();
@@ -137,12 +138,8 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
 				</div>
 
 				<Button type="submit" size="sm" disabled={isDisabled}>
-					{mutation.isPending ? (
-						<HugeiconsIcon icon={Loading03Icon} className="size-4 animate-spin" />
-					) : (
-						<HugeiconsIcon icon={SentIcon} className="size-4" />
-					)}
 					<span>{mutation.isPending ? t("comments.posting") : t("comments.postComment")}</span>
+					{mutation.isPending ? <Spinner data-icon="inline-end" /> : <HugeiconsIcon icon={SentIcon} className="size-4" data-icon="inline-end" />}
 				</Button>
 			</div>
 

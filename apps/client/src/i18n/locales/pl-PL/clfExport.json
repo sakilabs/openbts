@@ -1,0 +1,27 @@
+{
+	"page": {
+		"title": "Eksport CLF",
+		"description": "Eksportuj dane komórek do formatu CLF (Cell List File). Pliki te można wykorzystać w aplikacjach do monitorowania sieci komórkowych, aby zidentyfikować stacje bazowe obsługujące telefon."
+	},
+	"info": {
+		"appsTitle": "Popularne aplikacje monitorujące korzystające z plików CLF:",
+		"iosNote": "Dla iOS/iPadOS/watchOS nie ma takiej aplikacji, ponieważ Apple nie pozwala na monitorowanie takich rzeczy z poziomu aplikacji."
+	},
+	"form": {
+		"operators": "Operatorzy",
+		"selectOperators": "Wybierz operatorów...",
+		"noOperatorsFound": "Nie znaleziono operatorów",
+		"operatorsHint": "Wybierz jednego lub więcej operatorów. Jeśli nie wybrano żadnego, wyeksportowani zostaną wszyscy operatorzy.",
+		"regions": "Region",
+		"standard": "Standard",
+		"standardHint": "Opcjonalnie, domyślnie eksportowane są wszystkie standardy.",
+		"bands": "Pasmo",
+		"bandsHint": "Opcjonalnie, domyślnie eksportowane są wszystkie pasma.",
+		"outputFormat": "Format wyjściowy",
+		"formatInfo": "Szczegółowe informacje dotyczące formatów:",
+		"export": "Eksportuj",
+		"exporting": "Eksportowanie..."
+	},
+	"exportSuccess": "Plik CLF wyeksportowany pomyślnie!",
+	"exportError": "Nie udało się wyeksportować pliku CLF. Spróbuj ponownie."
+}

@@ -63,6 +63,7 @@ export const proposedGSMCells = SubmissionsSchema.table("proposed_gsm_cells", {
 		.references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	lac: integer("lac").notNull(),
 	cid: integer("cid").notNull(),
+	e_gsm: boolean("e_gsm").default(false),
 });
 
 export const proposedUMTSCells = SubmissionsSchema.table("proposed_umts_cells", {
@@ -96,6 +97,7 @@ export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {
 	gnbid: integer("gnbid"),
 	clid: integer("clid"),
 	nci: integer("nci").unique(),
+	supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 });
 
 export const proposedStations = SubmissionsSchema.table(
