@@ -79,7 +79,6 @@ export function StationsLayer() {
 		map,
 		onOpenStationDetails: useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []),
 		onOpenUkeStationDetails: useCallback((station: UkeStation) => setSelectedUkeStation(station), []),
-		onClose: useCallback(() => setActiveMarker(null), []),
 	});
 
 	const {
@@ -145,7 +144,6 @@ export function StationsLayer() {
 				const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === locationId);
 				const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
 				showPopup(coordinates, { id: locationId, city, address, latitude: lat, longitude: lng }, null, ukeStations, source as StationSource);
-				setActiveMarker({ latitude: lat, longitude: lng });
 				return;
 			}
 
@@ -228,7 +226,6 @@ export function StationsLayer() {
 					longitude: lng,
 				};
 				showPopup([lng, lat], location, null, ukeStations, filters.source);
-				setActiveMarker({ latitude: lat, longitude: lng });
 				return;
 			}
 
@@ -237,7 +234,6 @@ export function StationsLayer() {
 			if (locationData) {
 				const location = toLocationInfo(locationData);
 				showPopup([lng, lat], location, locationData.stations as StationWithoutCells[], null, filters.source);
-				setActiveMarker({ latitude: lat, longitude: lng });
 				await fetchAndUpdatePopup(locationData.id, location, filters.source);
 			}
 		},
