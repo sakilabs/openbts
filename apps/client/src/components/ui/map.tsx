@@ -68,7 +68,7 @@ function useResolvedTheme(themeProp?: "light" | "dark"): "light" | "dark" {
 	return themeProp ?? detectedTheme;
 }
 
-type MapStyle = "carto" | "osm" | "openfreemap" | "satellite";
+type MapStyle = "carto" | "osm" | "openfreemap" | "satellite" | "opentopomap";
 
 type MapContextValue = {
 	map: MapLibreGL.Map | null;
@@ -101,6 +101,7 @@ const osmRasterStyle: MapLibreGL.StyleSpecification = {
 			type: "raster",
 			tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
 			tileSize: 256,
+			maxzoom: 18,
 			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		},
 	},
@@ -110,12 +111,70 @@ const osmRasterStyle: MapLibreGL.StyleSpecification = {
 			type: "raster",
 			source: "osm-raster-tiles",
 			minzoom: 0,
-			maxzoom: 19,
 		},
 	],
 };
 
-const mapStyleOptions: Record<MapStyle, { dark: MapStyleOption; light: MapStyleOption; label: string; thumbnail: string }> = {
+const opentopomapRasterStyle: MapLibreGL.StyleSpecification = {
+	version: 8,
+	sources: {
+		"opentopomap-raster-tiles": {
+			type: "raster",
+			tiles: [
+				"https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
+				"https://b.tile.opentopomap.org/{z}/{x}/{y}.png",
+				"https://c.tile.opentopomap.org/{z}/{x}/{y}.png",
+			],
+			tileSize: 256,
+			maxzoom: 17,
+			attribution:
+				'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+		},
+	},
+	layers: [
+		{
+			id: "opentopomap-raster-layer",
+			type: "raster",
+			source: "opentopomap-raster-tiles",
+			minzoom: 0,
+		},
+	],
+};
+
+const googleSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
+	version: 8,
+	sources: {
+		"google-satellite-tiles": {
+			type: "raster",
+			tiles: [
+				"https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+				"https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+				"https://mt2.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+				"https://mt3.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+			],
+			tileSize: 256,
+			maxzoom: 18,
+		},
+	},
+	layers: [
+		{
+			id: "google-satellite-layer",
+			type: "raster",
+			source: "google-satellite-tiles",
+			minzoom: 0,
+		},
+	],
+};
+
+const mapStyleOptions: Record<
+	MapStyle,
+	{
+		dark: MapStyleOption;
+		light: MapStyleOption;
+		label: string;
+		thumbnail: string;
+	}
+> = {
 	carto: {
 		dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 		light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -135,10 +194,16 @@ const mapStyleOptions: Record<MapStyle, { dark: MapStyleOption; light: MapStyleO
 		thumbnail: "https://a.basemaps.cartocdn.com/light_all/13/4400/2686.png",
 	},
 	satellite: {
-		dark: "https://raw.githubusercontent.com/go2garret/maps/main/src/assets/json/arcgis_hybrid.json",
-		light: "https://raw.githubusercontent.com/go2garret/maps/main/src/assets/json/arcgis_hybrid.json",
-		label: "Esri Satellite",
-		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
+		dark: googleSatelliteRasterStyle,
+		light: googleSatelliteRasterStyle,
+		label: "Google Satellite",
+		thumbnail: "https://mt0.google.com/vt/lyrs=s&x=4400&y=2686&z=13",
+	},
+	opentopomap: {
+		dark: opentopomapRasterStyle,
+		light: opentopomapRasterStyle,
+		label: "OpenTopoMap",
+		thumbnail: "https://a.tile.opentopomap.org/13/4400/2686.png",
 	},
 };
 
@@ -234,6 +299,22 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
 				if (projection) {
 					map.setProjection(projection);
 				}
+
+				const currentStyle = currentStyleRef.current;
+				const isRasterOnlyStyle =
+					currentStyle === osmRasterStyle || currentStyle === opentopomapRasterStyle || currentStyle === googleSatelliteRasterStyle;
+
+				if (isRasterOnlyStyle && typeof currentStyle !== "string" && currentStyle?.sources) {
+					let maxSourceZoom = 21;
+					Object.values(currentStyle.sources).forEach((source) => {
+						if (source.type === "raster" && "maxzoom" in source && typeof source.maxzoom === "number") {
+							maxSourceZoom = Math.min(maxSourceZoom, source.maxzoom);
+						}
+					});
+					map.setMaxZoom(maxSourceZoom);
+				} else {
+					map.setMaxZoom(21);
+				}
 			}, 100);
 		};
 		const loadHandler = () => setIsLoaded(true);
@@ -265,7 +346,13 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
 		currentStyleRef.current = newStyle;
 		setIsStyleLoaded(false);
 
-		mapInstance.setStyle(newStyle, { diff: true });
+		const isRasterStyle = newStyle === osmRasterStyle || newStyle === opentopomapRasterStyle || newStyle === googleSatelliteRasterStyle;
+
+		try {
+			mapInstance.setStyle(newStyle, { diff: !isRasterStyle });
+		} catch {
+			mapInstance.setStyle(newStyle, { diff: false });
+		}
 	}, [mapInstance, resolvedTheme, mapStyles, clearStyleTimeout]);
 
 	const contextValue = useMemo(

@@ -26,14 +26,14 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
 export async function fetchLocations(bounds: string, filters: StationFilters): Promise<LocationsResponse> {
 	if (filters.source === "uke") {
 		const params = buildFilterParams(filters);
-		params.set("limit", "500");
+		params.set("limit", "750");
 		params.set("bounds", bounds);
 		const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
 		return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
 	}
 
 	const params = buildFilterParams(filters);
-	params.set("limit", "500");
+	params.set("limit", "1000");
 	params.set("bounds", bounds);
 
 	const result = await fetchJson<LocationsResponse>(`${API_BASE}/locations?${decodeURIComponent(params.toString())}`);

@@ -45,30 +45,18 @@ export function MapLoadingSkeleton() {
 			</div>
 
 			<div className="absolute bottom-4 left-4 z-10">
-				<div className="bg-background/80 backdrop-blur-sm border rounded-xl shadow-lg overflow-hidden">
-					<div className="md:hidden px-3 py-2 border-b bg-muted/30 flex items-center gap-3">
-						<div className="size-1.5 rounded-full bg-muted animate-pulse" />
-						<div className="flex flex-col gap-1">
-							<div className="flex items-center gap-1.5">
-								<div className="w-10 h-4 rounded bg-muted animate-pulse" />
-								<div className="w-14 h-2 rounded bg-muted animate-pulse" />
+				<div className="bg-background/95 backdrop-blur-md border rounded-lg shadow-lg overflow-hidden">
+					<div className="px-2 py-1.5 bg-muted/30 flex items-center gap-2">
+						<div className="size-1.5 rounded-full bg-muted animate-pulse shrink-0" />
+						<div className="flex flex-col gap-0.5">
+							<div className="flex items-center gap-1">
+								<div className="h-3 w-12 bg-muted/70 rounded-sm animate-pulse" />
+								<div className="h-2 w-16 bg-muted/60 rounded-sm animate-pulse" />
 							</div>
-							<div className="flex items-center gap-1.5">
-								<div className="w-6 h-2 rounded bg-muted animate-pulse" />
-								<div className="w-8 h-2 rounded bg-muted animate-pulse" />
+							<div className="flex items-center gap-1">
+								<div className="h-2.5 w-6 bg-muted/70 rounded-sm animate-pulse" />
+								<div className="h-2.5 w-10 bg-muted/60 rounded-sm animate-pulse" />
 							</div>
-						</div>
-					</div>
-
-					<div className="p-3">
-						<div className="w-20 h-3 rounded bg-muted animate-pulse mb-2" />
-						<div className="space-y-1.5">
-							{[1, 2, 3, 4].map((i) => (
-								<div key={i} className="flex items-center gap-2.5 px-1 py-0.5">
-									<div className="size-2.5 rounded-full bg-muted animate-pulse" />
-									<div className="w-14 h-3 rounded bg-muted animate-pulse" />
-								</div>
-							))}
 						</div>
 					</div>
 				</div>
@@ -91,9 +79,7 @@ export function MapLoadingSkeleton() {
 						<HugeiconsIcon icon={Loading03Icon} className="size-8 text-primary animate-spin" />
 					</div>
 				</div>
-				<div className="bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border">
-					<p className="text-sm font-medium text-muted-foreground">{t("loading.loadingMap")}</p>
-				</div>
+				<p className="text-sm font-medium text-muted-foreground">{t("loading.loadingMap")}</p>
 			</div>
 
 			<div className="absolute inset-0 overflow-hidden pointer-events-none">

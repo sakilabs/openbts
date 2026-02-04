@@ -1,5 +1,6 @@
 import {
 	type AnyPgColumn,
+	bigint,
 	boolean,
 	check,
 	doublePrecision,
@@ -328,8 +329,11 @@ export const nrCells = pgTable(
 			.notNull(),
 		nrtac: integer("nrtac"),
 		gnbid: integer("gnbid"),
+		gnbid_length: integer("gnbid_length").default(24),
 		clid: integer("clid"),
-		nci: integer("nci").unique(),
+		nci: bigint("nci", { mode: "bigint" })
+			.generatedAlwaysAs((): SQL => sql`(${nrCells.gnbid}::bigint * power(2, 36 - ${nrCells.gnbid_length})::bigint) + ${nrCells.clid}::bigint`)
+			.unique(),
 		supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

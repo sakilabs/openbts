@@ -2,9 +2,8 @@ import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { reactRouter } from "@react-router/dev/vite";
-import babel from "vite-plugin-babel";
 
-const ReactCompilerConfig = {};
+// const ReactCompilerConfig = {};
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,9 +19,17 @@ export default defineConfig({
 		// 	},
 		// }),
 	],
+	optimizeDeps: {
+		include: ["react", "react-dom", "react-i18next", "maplibre-gl", "@hugeicons/react"],
+	},
 	resolve: {
 		alias: {
 			"@": resolve(__dirname, "./src"),
+		},
+	},
+	server: {
+		warmup: {
+			clientFiles: ["./src/components/**/*.tsx", "./src/features/**/*.tsx"],
 		},
 	},
 	build: {

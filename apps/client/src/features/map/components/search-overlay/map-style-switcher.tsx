@@ -19,8 +19,12 @@ const MAP_STYLE_OPTIONS: Record<MapStyle, { label: string; thumbnail: string }> 
 		thumbnail: "https://a.basemaps.cartocdn.com/light_all/13/4400/2686.png",
 	},
 	satellite: {
-		label: "Esri Satellite",
-		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
+		label: "Google Satellite",
+		thumbnail: "https://mt1.google.com/vt/lyrs=s&x=4400&y=2686&z=13",
+	},
+	opentopomap: {
+		label: "OpenTopoMap",
+		thumbnail: "https://a.tile.opentopomap.org/13/4400/2686.png",
 	},
 };
 

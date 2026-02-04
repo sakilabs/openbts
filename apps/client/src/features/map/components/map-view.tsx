@@ -8,7 +8,7 @@ const POLAND_BOUNDS: [[number, number], [number, number]] = [
 
 export default function MapView() {
 	return (
-		<LibreMap center={[19.1451, 51.9194]} zoom={7} maxBounds={POLAND_BOUNDS} minZoom={5} maxZoom={18}>
+		<LibreMap center={[19.1451, 51.9194]} zoom={7} maxBounds={POLAND_BOUNDS} minZoom={5}>
 			<StationsLayer />
 			<MapControls showLocate showCompass />
 		</LibreMap>
