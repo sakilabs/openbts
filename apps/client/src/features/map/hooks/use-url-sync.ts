@@ -9,16 +9,25 @@ type UseUrlSyncArgs = {
 	onInitialize: (data: { filters: StationFilters; center?: [number, number]; zoom?: number }) => void;
 };
 
-function parseUrlFilters(): {
+function parseOsmHash(): {
 	filters: Partial<StationFilters>;
 	center?: [number, number];
 	zoom?: number;
 } {
-	const params = new URLSearchParams(window.location.search);
+	const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+	if (!hash.startsWith("map=")) {
+		return { filters: {} };
+	}
 
-	const lat = Number.parseFloat(params.get("lat") || "");
-	const lng = Number.parseFloat(params.get("lng") || "");
-	const z = Number.parseFloat(params.get("zoom") || "");
+	const [mapPart, queryPart = ""] = hash.split("?");
+	const mapValue = mapPart.replace("map=", "");
+	const [zStr, latStr, lngStr] = mapValue.split("/");
+
+	const z = Number.parseFloat(zStr || "");
+	const lat = Number.parseFloat(latStr || "");
+	const lng = Number.parseFloat(lngStr || "");
+
+	const params = new URLSearchParams(queryPart);
 
 	const operators =
 		params
@@ -43,7 +52,7 @@ function parseUrlFilters(): {
 	};
 }
 
-function buildUrlParams(filters: StationFilters, map: maplibregl.Map): string {
+function buildOsmHash(filters: StationFilters, map: maplibregl.Map, zoomOverride?: number): string {
 	const params = new URLSearchParams();
 
 	if (filters.operators.length > 0) params.set("operators", filters.operators.join(","));
@@ -53,11 +62,12 @@ function buildUrlParams(filters: StationFilters, map: maplibregl.Map): string {
 	if (filters.recentOnly) params.set("new", "true");
 
 	const center = map.getCenter();
-	params.set("lat", center.lat.toFixed(6));
-	params.set("lng", center.lng.toFixed(6));
-	params.set("zoom", map.getZoom().toFixed(2));
+	const zoom = zoomOverride ?? map.getZoom();
 
-	return decodeURIComponent(params.toString());
+	const mapPart = `map=${zoom.toFixed(2)}/${center.lat.toFixed(6)}/${center.lng.toFixed(6)}`;
+	const query = params.toString();
+
+	return `#${mapPart}${query ? `?${query}` : ""}`;
 }
 
 export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUrlSyncArgs) {
@@ -66,7 +76,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 	useEffect(() => {
 		if (!isLoaded || !map || isInitialized.current) return;
 
-		const { filters: urlFilters, center, zoom: urlZoom } = parseUrlFilters();
+		const { filters: urlFilters, center, zoom: urlZoom } = parseOsmHash();
 
 		if (center) map.setCenter(center);
 		if (urlZoom !== undefined) map.setZoom(urlZoom);
@@ -89,7 +99,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 	useEffect(() => {
 		if (!isLoaded || !map || !isInitialized.current) return;
 
-		const newUrl = `${window.location.pathname}?${buildUrlParams(filters, map)}`;
+		const newUrl = `${window.location.pathname}${buildOsmHash(filters, map, zoom)}`;
 		window.history.replaceState(null, "", newUrl);
 	}, [filters, isLoaded, map, zoom]);
 }

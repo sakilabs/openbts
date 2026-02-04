@@ -32,6 +32,15 @@ function getAutocompleteMatches(input: string, keywords: FilterKeyword[]): Filte
 	return keywords.filter((kw) => kw.key.toLowerCase().startsWith(lastWord.toLowerCase()));
 }
 
+function getOsmHashQueryParam(key: string): string | null {
+	const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+	if (!hash.startsWith("map=")) return null;
+
+	const [, queryPart = ""] = hash.split("?");
+	const params = new URLSearchParams(queryPart);
+	return params.get(key);
+}
+
 export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateArgs) {
 	const [inputValue, setInputValue] = useState("");
 	const [parsedFilters, setParsedFilters] = useState<ParsedFilter[]>([]);
@@ -52,6 +61,16 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 		const timer = setTimeout(() => setDebouncedQuery(query), 500);
 		return () => clearTimeout(timer);
 	}, [query]);
+
+	useEffect(() => {
+		const q = getOsmHashQueryParam("q");
+		if (!q) return;
+
+		const { filters, remainingText } = parseFilters(q);
+		setParsedFilters(filters);
+		setInputValue(remainingText);
+		setActiveOverlay(computeOverlay(remainingText, getAutocompleteMatches(remainingText, filterKeywords).length > 0));
+	}, [filterKeywords, parseFilters]);
 
 	function handleContainerBlur(e: React.FocusEvent) {
 		const relatedTarget = e.relatedTarget as Node | null;
@@ -104,17 +123,12 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 
 	function handleInputFocus() {
 		setIsFocused(true);
-		if (inputValue === "" && parsedFilters.length === 0) {
-			setActiveOverlay("autocomplete");
-		} else if (query.trim() !== "") {
-			setActiveOverlay("results");
-		}
+		if (inputValue === "" && parsedFilters.length === 0) setActiveOverlay("autocomplete");
+		else if (query.trim() !== "") setActiveOverlay("results");
 	}
 
 	function handleInputClick() {
-		if (query.trim() !== "" && activeOverlay !== "autocomplete") {
-			setActiveOverlay("results");
-		}
+		if (query.trim() !== "" && activeOverlay !== "autocomplete") setActiveOverlay("results");
 	}
 
 	function closeOverlay() {
