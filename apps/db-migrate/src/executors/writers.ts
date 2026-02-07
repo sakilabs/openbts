@@ -13,6 +13,7 @@ import {
 	umtsCells,
 	type ratEnum,
 	type DuplexType,
+	type BandVariant,
 } from "@openbts/drizzle";
 import { sql, db } from "@openbts/drizzle/db";
 import type { Database } from "@openbts/drizzle/db";
@@ -26,6 +27,7 @@ export interface BandIdKey {
 	rat: (typeof ratEnum.enumValues)[number];
 	value: number;
 	duplex: (typeof DuplexType.enumValues)[number] | null;
+	variant?: (typeof BandVariant.enumValues)[number];
 }
 export interface BandIdMap extends Map<string, number> {}
 export interface CellIdMap extends Map<number, number> {}
@@ -230,6 +232,7 @@ export async function writeBands(keys: PreparedBandKey[], options: WriteOptions 
 						value: band.value,
 						duplex: band.duplex,
 						name: `${band.rat.toUpperCase()} ${band.value}${band.duplex ? ` (${band.duplex})` : ""}`,
+						variant: "commercial" as const,
 					})),
 				)
 				.onConflictDoNothing();

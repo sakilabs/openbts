@@ -1,12 +1,18 @@
 import type { ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, Link as RouterLink } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider, useTranslation } from "react-i18next";
+import { AuthUIProvider } from "@daveyplate/better-auth-ui";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
-
+import { Toaster } from "@/components/ui/sonner";
+import { authClient } from "@/lib/auth-client";
 import i18n from "@/i18n/config";
 import "./index.css";
+
+function AuthLink({ href, ...props }: { href: string; className?: string; children: ReactNode }) {
+	return <RouterLink to={href} {...props} />;
+}
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -40,7 +46,10 @@ export function Layout({ children }: { children: ReactNode }) {
 				<body>
 					<QueryClientProvider client={queryClient}>
 						<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-							<ErrorBoundary>{children}</ErrorBoundary>
+							<AuthUIProvider authClient={authClient} Link={AuthLink} onSessionChange={() => queryClient.invalidateQueries()}>
+								<ErrorBoundary>{children}</ErrorBoundary>
+								<Toaster />
+							</AuthUIProvider>
 						</ThemeProvider>
 					</QueryClientProvider>
 					<ScrollRestoration />

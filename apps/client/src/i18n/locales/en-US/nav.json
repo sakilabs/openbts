@@ -4,13 +4,16 @@
 	},
 	"sections": {
 		"stations": "Stations",
-		"contribute": "Contribute"
+		"contribute": "Contribute",
+		"settings": "Settings"
 	},
 	"items": {
 		"mapView": "Map View",
 		"database": "Database",
 		"clfExport": "CLF Export",
-		"submitStation": "Submit Station"
+		"submitStation": "Submit Station",
+		"preferences": "Preferences",
+		"accountSettings": "Account Settings"
 	},
 	"secondary": {
 		"settings": "Settings",

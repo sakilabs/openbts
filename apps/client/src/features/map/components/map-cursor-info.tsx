@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { useMap } from "@/components/ui/map";
 import { calculateDistance, calculateBearing, calculateTA } from "../utils";
 import { Separator } from "@/components/ui/separator";
+import { formatCoordinates } from "@/lib/gps-utils";
+import { usePreferences } from "@/hooks/use-preferences";
 
 type MapCursorInfoProps = {
 	activeMarker?: { latitude: number; longitude: number } | null;
@@ -13,6 +15,7 @@ type MapCursorInfoProps = {
 
 export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
 	const { map } = useMap();
+	const { preferences } = usePreferences();
 	const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(null);
 
 	useEffect(() => {
@@ -108,7 +111,7 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
 					<div className="flex items-baseline gap-1.5">
 						<span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider leading-none">GPS</span>
 						<span className="text-xs font-mono font-bold tabular-nums text-foreground leading-none">
-							{cursor ? `${cursor.lat.toFixed(5)}, ${cursor.lng.toFixed(5)}` : "0.00000, 0.00000"}
+							{cursor ? formatCoordinates(cursor.lat, cursor.lng, preferences.gpsFormat) : "0.00000, 0.00000"}
 						</span>
 					</div>
 				</div>
@@ -118,7 +121,7 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
 						<div className="flex items-center gap-1.5">
 							<span className="text-[8px] uppercase font-bold text-muted-foreground leading-none">REF</span>
 							<span className="text-xs font-mono font-bold tabular-nums text-foreground leading-none">
-								{activeMarker?.latitude.toFixed(5)}, {activeMarker?.longitude.toFixed(5)}
+								{activeMarker ? formatCoordinates(activeMarker.latitude, activeMarker.longitude, preferences.gpsFormat) : null}
 							</span>
 						</div>
 

@@ -118,7 +118,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
 								)}
 								{rat === "NR" && (
 									<>
-										<td className="px-4 py-2 font-mono">{cell.details?.tac ?? cell.details?.nrtac ?? "-"}</td>
+										<td className="px-4 py-2 font-mono">{cell.details?.nrtac ?? "-"}</td>
 										<td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
 										<td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
 									</>

@@ -1,5 +1,8 @@
+CREATE SCHEMA "auth";
+--> statement-breakpoint
 CREATE SCHEMA "submissions";
 --> statement-breakpoint
+CREATE TYPE "public"."band_variant" AS ENUM('commercial', 'railway');--> statement-breakpoint
 CREATE TYPE "public"."duplex" AS ENUM('FDD', 'TDD');--> statement-breakpoint
 CREATE TYPE "public"."station_status" AS ENUM('published', 'inactive', 'pending');--> statement-breakpoint
 CREATE TYPE "public"."uke_permission_type" AS ENUM('zmP', 'P');--> statement-breakpoint
@@ -14,7 +17,8 @@ CREATE TABLE "bands" (
 	"rat" "rat" NOT NULL,
 	"name" varchar(15) NOT NULL,
 	"duplex" "duplex",
-	CONSTRAINT "bands_rat_value_unique" UNIQUE NULLS NOT DISTINCT("rat","value","duplex"),
+	"variant" "band_variant" DEFAULT 'commercial' NOT NULL,
+	CONSTRAINT "bands_rat_value_unique" UNIQUE NULLS NOT DISTINCT("rat","value","duplex","variant"),
 	CONSTRAINT "bands_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
@@ -83,8 +87,10 @@ CREATE TABLE "nr_cells" (
 	"cell_id" integer PRIMARY KEY NOT NULL,
 	"nrtac" integer,
 	"gnbid" integer,
+	"gnbid_length" integer DEFAULT 24,
 	"clid" integer,
-	"nci" integer,
+	"nci" bigint GENERATED ALWAYS AS (("nr_cells"."gnbid"::bigint * power(2, 36 - "nr_cells"."gnbid_length")::bigint) + "nr_cells"."clid"::bigint) STORED,
+	"pci" integer,
 	"supports_nr_redcap" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -250,40 +256,45 @@ CREATE TABLE "umts_cells" (
 	CONSTRAINT "umts_cells_rnc_cid_unique" UNIQUE("rnc","cid")
 );
 --> statement-breakpoint
-CREATE TABLE "accounts" (
+CREATE TABLE "auth"."accounts" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"user_id" uuid NOT NULL,
-	"provider_type" text NOT NULL,
+	"account_id" varchar(255) NOT NULL,
 	"provider_id" text NOT NULL,
-	"provider_account_id" text NOT NULL,
 	"refresh_token" text,
 	"access_token" text,
+	"accessTokenExpiresAt" timestamp with time zone,
+	"refreshTokenExpiresAt" timestamp with time zone,
 	"expiresAt" timestamp with time zone,
 	"id_token" text,
 	"scope" text,
+	"password" varchar(255),
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "api_keys" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "api_keys_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"user_id" uuid NOT NULL,
-	"name" text NOT NULL,
+CREATE TABLE "auth"."apiKeys" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"name" text,
+	"start" text,
+	"prefix" text,
 	"key" text NOT NULL,
-	"enabled" boolean DEFAULT true NOT NULL,
-	"expiresAt" timestamp with time zone,
-	"metadata" text,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"permissions" text,
-	"remaining" integer,
-	"refill_amount" integer,
+	"user_id" uuid NOT NULL,
 	"refill_interval" integer,
-	"lastRefillAt" timestamp with time zone,
-	"rate_limit_enabled" boolean DEFAULT false,
-	"rate_limit_time_window" integer,
-	"rate_limit_max" integer,
-	CONSTRAINT "api_keys_key_unique" UNIQUE("key")
+	"refill_amount" integer,
+	"last_refill_at" timestamp,
+	"enabled" boolean DEFAULT true,
+	"rate_limit_enabled" boolean DEFAULT true,
+	"rate_limit_time_window" integer DEFAULT 86400000,
+	"rate_limit_max" integer DEFAULT 10,
+	"request_count" integer DEFAULT 0,
+	"remaining" integer,
+	"last_request" timestamp,
+	"expires_at" timestamp,
+	"created_at" timestamp NOT NULL,
+	"updated_at" timestamp NOT NULL,
+	"permissions" text,
+	"metadata" text DEFAULT '{"tier":"basic"}'
 );
 --> statement-breakpoint
 CREATE TABLE "attachments" (
@@ -341,30 +352,32 @@ CREATE TABLE "user_lists" (
 	CONSTRAINT "user_lists_stations_is_array" CHECK (jsonb_typeof("user_lists"."stations") = 'array')
 );
 --> statement-breakpoint
-CREATE TABLE "users" (
+CREATE TABLE "auth"."users" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
-	"username" varchar(100),
+	"username" varchar(25),
+	"displayUsername" varchar(25),
 	"email" varchar(100) NOT NULL,
-	"password" varchar(255),
 	"image" text,
-	"name" text,
+	"name" text NOT NULL,
 	"role" text DEFAULT 'user' NOT NULL,
-	"last_login" timestamp with time zone,
-	"emailVerified" timestamp with time zone,
+	"emailVerified" boolean DEFAULT false NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"isAnonymous" boolean DEFAULT false,
+	"banned" boolean DEFAULT false,
+	"banReason" text,
+	"banExpires" timestamp with time zone,
 	CONSTRAINT "users_username_unique" UNIQUE("username"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-CREATE TABLE "verification_tokens" (
+CREATE TABLE "auth"."verification_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"identifier" text NOT NULL,
-	"token" text NOT NULL,
-	"expires" timestamp with time zone NOT NULL,
+	"value" text NOT NULL,
+	"expiresAt" timestamp with time zone NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "verification_tokens_token_unique" UNIQUE("token")
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "verification_tokens_value_unique" UNIQUE("value")
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_cells" (
@@ -384,7 +397,8 @@ CREATE TABLE "submissions"."proposed_cells" (
 CREATE TABLE "submissions"."proposed_gsm_cells" (
 	"proposed_cell_id" integer PRIMARY KEY NOT NULL,
 	"lac" integer NOT NULL,
-	"cid" integer NOT NULL
+	"cid" integer NOT NULL,
+	"e_gsm" boolean DEFAULT false
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_lte_cells" (
@@ -413,6 +427,7 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 	"gnbid" integer,
 	"clid" integer,
 	"nci" integer,
+	"supports_nr_redcap" boolean DEFAULT false,
 	CONSTRAINT "proposed_nr_cells_nci_unique" UNIQUE("nci")
 );
 --> statement-breakpoint
@@ -475,13 +490,13 @@ ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_tx_antenna_type_id_r
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_rx_antenna_type_id_radiolines_antenna_types_id_fk" FOREIGN KEY ("rx_antenna_type_id") REFERENCES "public"."radiolines_antenna_types"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_operator_id_uke_operators_id_fk" FOREIGN KEY ("operator_id") REFERENCES "public"."uke_operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fk" FOREIGN KEY ("invoked_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."apiKeys" ADD CONSTRAINT "apiKeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fk" FOREIGN KEY ("invoked_by") REFERENCES "auth"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user_lists" ADD CONSTRAINT "user_lists_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user_lists" ADD CONSTRAINT "user_lists_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_submission_id_submissions_id_fk" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_target_cell_id_cells_id_fk" FOREIGN KEY ("target_cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
@@ -497,8 +512,8 @@ ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_
 ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_operator_id_operators_id_fk" FOREIGN KEY ("operator_id") REFERENCES "public"."operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_umts_cells" ADD CONSTRAINT "proposed_umts_cells_proposed_cell_id_proposed_cells_id_fk" FOREIGN KEY ("proposed_cell_id") REFERENCES "submissions"."proposed_cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_submitter_id_users_id_fk" FOREIGN KEY ("submitter_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_reviewer_id_users_id_fk" FOREIGN KEY ("reviewer_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_submitter_id_users_id_fk" FOREIGN KEY ("submitter_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_reviewer_id_users_id_fk" FOREIGN KEY ("reviewer_id") REFERENCES "auth"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 CREATE INDEX "bands_value_idx" ON "bands" USING btree ("value");--> statement-breakpoint
 CREATE INDEX "cells_station_band_rat_idx" ON "cells" USING btree ("station_id","band_id","rat");--> statement-breakpoint
 CREATE INDEX "cells_station_rat_idx" ON "cells" USING btree ("station_id","rat");--> statement-breakpoint
@@ -538,9 +553,9 @@ CREATE INDEX "uke_radiolines_rx_point_gist" ON "uke_radiolines" USING gist ((ST_
 CREATE INDEX "umts_cells_cid_idx" ON "umts_cells" USING btree ("cid");--> statement-breakpoint
 CREATE INDEX "umts_cells_cid_trgm_idx" ON "umts_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "umts_cells_cid_long_trgm_idx" ON "umts_cells" USING gin (("cid_long"::text) gin_trgm_ops);--> statement-breakpoint
-CREATE INDEX "accounts_user_id_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "accounts_provider_account_id_idx" ON "accounts" USING btree ("provider_account_id");--> statement-breakpoint
-CREATE INDEX "api_keys_user_id_idx" ON "api_keys" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "accounts_user_id_idx" ON "auth"."accounts" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "apikeys_key_idx" ON "auth"."apiKeys" USING btree ("key");--> statement-breakpoint
+CREATE INDEX "apikeys_userId_idx" ON "auth"."apiKeys" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "attachment_author_id_idx" ON "attachments" USING btree ("author_id");--> statement-breakpoint
 CREATE INDEX "attachments_created_at_idx" ON "attachments" USING btree ("createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_record_id_idx" ON "audit_logs" USING btree ("record_id");--> statement-breakpoint
@@ -554,8 +569,8 @@ CREATE INDEX "station_comments_station_created_idx" ON "station_comments" USING 
 CREATE INDEX "user_lists_id_idx" ON "user_lists" USING btree ("id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" USING btree ("created_by");--> statement-breakpoint
 CREATE INDEX "user_lists_stations_gin" ON "user_lists" USING gin ("stations");--> statement-breakpoint
-CREATE INDEX "users_id_idx" ON "users" USING btree ("id");--> statement-breakpoint
-CREATE INDEX "users_email_idx" ON "users" USING btree ("email");--> statement-breakpoint
+CREATE INDEX "users_id_idx" ON "auth"."users" USING btree ("id");--> statement-breakpoint
+CREATE INDEX "users_email_idx" ON "auth"."users" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "proposed_cells_submission_id_idx" ON "submissions"."proposed_cells" USING btree ("submission_id");--> statement-breakpoint
 CREATE INDEX "station_location_id_idx" ON "submissions"."proposed_stations" USING btree ("location_id");--> statement-breakpoint
 CREATE INDEX "submission_station_id_idx" ON "submissions"."submissions" USING btree ("station_id");--> statement-breakpoint

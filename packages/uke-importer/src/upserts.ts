@@ -1,5 +1,5 @@
 import { inArray } from "drizzle-orm";
-import { bands, regions, ukeLocations, operators, ukeOperators, type ratEnum } from "@openbts/drizzle";
+import { bands, regions, ukeLocations, operators, ukeOperators, type ratEnum, type BandVariant } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
@@ -9,6 +9,7 @@ const UKE_OPERATOR_NAME_MAP: Record<string, string> = {
 	"orange polska": "Orange",
 	"t-mobile polska": "T-Mobile",
 	polkomtel: "Plus",
+	"pkp polskie linie kolejowe": "PKP PLK",
 };
 
 export async function upsertRegions(items: Array<{ name: string; code: string }>): Promise<Map<string, number>> {
@@ -44,12 +45,14 @@ export async function upsertRegions(items: Array<{ name: string; code: string }>
 	return new Map<string, number>();
 }
 
-export async function upsertBands(keys: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number }>): Promise<Map<string, number>> {
-	const unique: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number }> = [];
+export async function upsertBands(
+	keys: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] }>,
+): Promise<Map<string, number>> {
+	const unique: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] }> = [];
 	const seen = new Set<string>();
 	for (const k of keys) {
 		if (k.rat === "NR" && k.value === 3600) k.value = 3500;
-		const id = `${k.rat}:${k.value}`;
+		const id = `${k.rat}:${k.value}:${k.variant}`;
 		if (seen.has(id)) continue;
 		seen.add(id);
 		unique.push(k);
@@ -63,8 +66,8 @@ export async function upsertBands(keys: Array<{ rat: (typeof ratEnum.enumValues)
 			),
 		});
 
-		const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.duplex}`));
-		const toInsert = unique.filter((k) => !existingKeys.has(`${k.rat}:${k.value}:null`));
+		const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.duplex}:${b.variant}`));
+		const toInsert = unique.filter((k) => !existingKeys.has(`${k.rat}:${k.value}:null:${k.variant}`));
 
 		if (toInsert.length) {
 			await db.insert(bands).values(
@@ -72,7 +75,8 @@ export async function upsertBands(keys: Array<{ rat: (typeof ratEnum.enumValues)
 					rat: band.rat,
 					value: band.value,
 					duplex: null,
-					name: `${band.rat} ${band.value}`,
+					name: band.variant === "railway" ? `GSM-R ${band.value}` : `${band.rat} ${band.value}`,
+					variant: band.variant,
 				})),
 			);
 		}
@@ -85,7 +89,7 @@ export async function upsertBands(keys: Array<{ rat: (typeof ratEnum.enumValues)
 		});
 
 		const map = new Map<string, number>();
-		for (const r of allRows) map.set(`${r.rat}:${r.value}`, r.id);
+		for (const r of allRows) map.set(`${r.rat}:${r.value}:${r.variant}`, r.id);
 		return map;
 	}
 

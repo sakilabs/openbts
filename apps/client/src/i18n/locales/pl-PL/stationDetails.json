@@ -4,7 +4,7 @@
 		"btsStation": "Stacja BTS",
 		"confirmed": "Potwierdzona",
 		"loadError": "Nie udało się załadować szczegółów stacji",
-		"hardwareLease": "Dzierżawa sprzętu od {{operator}}"
+		"hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)"
 	},
 	"tabs": {
 		"specs": "Specyfikacja",
@@ -23,7 +23,8 @@
 		"internalNotes": "Notatki wewnętrzne",
 		"created": "Utworzono:",
 		"updated": "Zaktualizowano:",
-		"networkIdTooltip": "Numer pochodzi z wewnętrznej bazy danych NetWorkS"
+		"networkName": "Nazwa N!:",
+		"mnoName": "MNO:"
 	},
 	"cells": {
 		"cell_one": "{{count}} komórka",

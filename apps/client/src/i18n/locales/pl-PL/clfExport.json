@@ -12,7 +12,7 @@
 		"selectOperators": "Wybierz operatorów...",
 		"noOperatorsFound": "Nie znaleziono operatorów",
 		"operatorsHint": "Wybierz jednego lub więcej operatorów. Jeśli nie wybrano żadnego, wyeksportowani zostaną wszyscy operatorzy.",
-		"regions": "Region",
+		"regions": "Województwa",
 		"standard": "Standard",
 		"standardHint": "Opcjonalnie, domyślnie eksportowane są wszystkie standardy.",
 		"bands": "Pasmo",

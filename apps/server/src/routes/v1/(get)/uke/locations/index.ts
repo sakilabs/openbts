@@ -32,7 +32,7 @@ const schemaRoute = {
 		page: z.coerce.number().min(1).default(1),
 		rat: z
 			.string()
-			.regex(/^(?:cdma|umts|gsm|lte|5g|iot)(?:,(?:cdma|umts|gsm|lte|5g|iot))*$/i)
+			.regex(/^(?:cdma|umts|gsm|gsm-r|lte|5g|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|5g|iot))*$/i)
 			.optional()
 			.transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
 		operators: z
@@ -116,8 +116,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const requestedRats = rat ?? [];
 	type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA" | "IOT";
 	const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" } as const;
-	const mappedRats: RatType[] = requestedRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
-	const hasPermitFilters = operatorIds.length || bandIds.length || mappedRats.length;
+	const wantsGsmR = requestedRats.includes("gsm-r");
+	const standardRats = requestedRats.filter((r) => r !== "gsm-r");
+	const mappedRats: RatType[] = standardRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
+	const hasPermitFilters = operatorIds.length || bandIds.length || mappedRats.length || wantsGsmR;
 
 	const locationConditions: SQL<unknown>[] = [];
 
@@ -148,15 +150,40 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			);
 		}
 
-		if (mappedRats.length) {
+		if (mappedRats.length || wantsGsmR) {
+			const ratConditions: SQL<unknown>[] = [];
+
+			if (mappedRats.length) {
+				const wantsRegularGsm = mappedRats.includes("GSM");
+				const nonGsmRats = mappedRats.filter((r) => r !== "GSM");
+
+				if (nonGsmRats.length) {
+					ratConditions.push(
+						sql`(${bands}.rat IN (${sql.join(
+							nonGsmRats.map((r) => sql`${r}`),
+							sql`,`,
+						)}))`
+					);
+				}
+
+				if (wantsRegularGsm) {
+					ratConditions.push(
+						sql`(${bands}.rat = 'GSM' AND ${bands}.variant = 'commercial')`
+					);
+				}
+			}
+
+			if (wantsGsmR) {
+				ratConditions.push(
+					sql`(${bands}.rat = 'GSM' AND ${bands}.variant = 'railway')`
+				);
+			}
+
 			permitConditions.push(
 				sql`EXISTS (
 					SELECT 1 FROM ${bands}
 					WHERE ${bands}.id = ps.band_id
-					AND ${bands}.rat IN (${sql.join(
-						mappedRats.map((r) => sql`${r}`),
-						sql`,`,
-					)})
+					AND (${sql.join(ratConditions, sql` OR `)})
 				)`,
 			);
 		}

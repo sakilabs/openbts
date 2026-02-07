@@ -13,6 +13,7 @@ export const RAT_OPTIONS = [
 ] as const;
 export const UKE_RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
+	{ value: "gsm-r", label: "GSM-R", gen: "2G" },
 	{ value: "cdma", label: "CDMA", gen: "3G" },
 	{ value: "umts", label: "UMTS", gen: "3G" },
 	{ value: "lte", label: "LTE", gen: "4G" },
@@ -56,6 +57,11 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
 	{ key: "nr_clid:", description: "5G Cell Local ID", availableOn: ["map", "stations"] },
 	{ key: "nrtac:", description: "5G Tracking Area Code", availableOn: ["map", "stations"] },
 	{ key: "supports_nr_redcap:", description: "Supports NR RedCap (true, false)", availableOn: ["map", "stations"] },
+
+	// NetWorkS filters
+	{ key: "networks_id:", description: "Search by NetWorkS! ID", availableOn: ["map", "stations"] },
+	{ key: "networks_name:", description: "Search by NetWorkS! name", availableOn: ["map", "stations"] },
+	{ key: "mno_name:", description: "Search by MNO name", availableOn: ["map", "stations"] },
 ];
 
 export const FILTER_REGEX = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|([^\s]+))(?=\s|$)/gi;

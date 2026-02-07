@@ -92,7 +92,6 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
 							nrtac: d.nrtac ?? null,
 							gnbid: d.gnbid ?? null,
 							clid: d.clid,
-							nci: d.nci ?? null,
 							supports_nr_redcap: d.supports_nr_redcap ?? null,
 						} as z.infer<typeof nrCellsSchema>;
 					}

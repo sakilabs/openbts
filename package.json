@@ -21,6 +21,7 @@
 			"@biomejs/biome",
 			"@parcel/watcher",
 			"argon2",
+			"core-js",
 			"esbuild",
 			"msw",
 			"sharp",

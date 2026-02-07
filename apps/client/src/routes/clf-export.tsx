@@ -172,7 +172,6 @@ export default function ClfExportPage() {
 					}}
 					className="space-y-6"
 				>
-					{/* Operators */}
 					<div className="space-y-2">
 						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("form.operators")}</Label>
 						<form.Field name="operators">
@@ -183,7 +182,7 @@ export default function ClfExportPage() {
 									onValueChange={(values) => field.handleChange(values.map((v) => v.mnc))}
 									items={operators}
 								>
-									<ComboboxChips ref={operatorChipsRef} className="min-h-10 max-h-24 overflow-y-auto text-sm">
+									<ComboboxChips ref={operatorChipsRef} className="min-h-10 max-h-24 overflow-y-auto text-base md:text-sm">
 										{field.state.value.map((mnc) => {
 											const operator = operators.find((op) => op.mnc === mnc);
 											return operator ? (
@@ -193,7 +192,10 @@ export default function ClfExportPage() {
 												</ComboboxChip>
 											) : null;
 										})}
-										<ComboboxChipsInput placeholder={field.state.value.length === 0 ? t("form.selectOperators") : ""} />
+										<ComboboxChipsInput
+											className="text-base md:text-sm"
+											placeholder={field.state.value.length === 0 ? t("form.selectOperators") : ""}
+										/>
 									</ComboboxChips>
 									<ComboboxContent anchor={operatorChipsRef}>
 										<ComboboxList>

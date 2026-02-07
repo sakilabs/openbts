@@ -19,6 +19,7 @@ import { type SQL, sql } from "drizzle-orm";
 export const UKEPermissionType = pgEnum("uke_permission_type", ["zmP", "P"]);
 export const DuplexType = pgEnum("duplex", ["FDD", "TDD"]);
 export const ratEnum = pgEnum("rat", ["GSM", "CDMA", "UMTS", "LTE", "NR", "IOT"]);
+export const BandVariant = pgEnum("band_variant", ["commercial", "railway"]);
 export const StationStatus = pgEnum("station_status", ["published", "inactive", "pending"]);
 
 /**
@@ -334,6 +335,7 @@ export const nrCells = pgTable(
 		nci: bigint("nci", { mode: "bigint" })
 			.generatedAlwaysAs((): SQL => sql`(${nrCells.gnbid}::bigint * power(2, 36 - ${nrCells.gnbid_length})::bigint) + ${nrCells.clid}::bigint`)
 			.unique(),
+		pci: integer("pci"),
 		supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -360,9 +362,10 @@ export const bands = pgTable(
 		rat: ratEnum("rat").notNull(),
 		name: varchar("name", { length: 15 }).notNull(),
 		duplex: DuplexType("duplex"),
+		variant: BandVariant("variant").notNull().default("commercial"),
 	},
 	(t) => [
-		unique("bands_rat_value_unique").on(t.rat, t.value, t.duplex).nullsNotDistinct(),
+		unique("bands_rat_value_unique").on(t.rat, t.value, t.duplex, t.variant).nullsNotDistinct(),
 		unique("bands_name_unique").on(t.name),
 		index("bands_value_idx").on(t.value),
 	],

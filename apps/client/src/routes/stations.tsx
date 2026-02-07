@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FilterIcon } from "@hugeicons/core-free-icons";
@@ -19,6 +20,11 @@ export default function StationsListPage() {
 	const { t } = useTranslation("stations");
 	const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
 	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+	const [headerActionsEl, setHeaderActionsEl] = useState<HTMLElement | null>(null);
+
+	useEffect(() => {
+		setHeaderActionsEl(document.getElementById("header-actions"));
+	}, []);
 
 	const {
 		stations,
@@ -83,17 +89,6 @@ export default function StationsListPage() {
 				</Sheet>
 
 				<div className="flex-1 flex flex-col p-3 min-h-0 overflow-hidden">
-					<div className="md:hidden mb-3">
-						<Button variant="outline" size="sm" className="relative" onClick={() => setMobileFiltersOpen(true)}>
-							<HugeiconsIcon icon={FilterIcon} className="size-4 mr-2" />
-							{t("filters.title")}
-							{activeFilterCount > 0 && (
-								<span className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
-									{activeFilterCount}
-								</span>
-							)}
-						</Button>
-					</div>
 					<StationsDataTable
 						data={stations}
 						isLoading={isLoading}
@@ -106,6 +101,20 @@ export default function StationsListPage() {
 					/>
 				</div>
 			</div>
+
+			{headerActionsEl &&
+				createPortal(
+					<Button variant="outline" size="sm" className="relative md:hidden" onClick={() => setMobileFiltersOpen(true)}>
+						<HugeiconsIcon icon={FilterIcon} className="size-4 mr-2" />
+						{t("filters.title")}
+						{activeFilterCount > 0 && (
+							<span className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+								{activeFilterCount}
+							</span>
+						)}
+					</Button>,
+					headerActionsEl,
+				)}
 
 			<StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
 		</>

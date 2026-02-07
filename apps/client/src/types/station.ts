@@ -4,6 +4,7 @@ export type Band = {
 	rat: string;
 	name: string;
 	duplex: string | null;
+	variant: string | null;
 };
 
 export type Region = {
@@ -68,7 +69,9 @@ export type Cell = {
 export type NetWorkS = {
 	id: number;
 	station_id: number;
-	networks_id: number;
+	networks_id: string;
+	networks_name: string | null;
+	mno_name: string | null;
 	updatedAt: string;
 	createdAt: string;
 };

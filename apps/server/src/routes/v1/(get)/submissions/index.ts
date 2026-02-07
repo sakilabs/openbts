@@ -21,7 +21,7 @@ import type { RouteGenericInterface } from "fastify";
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
-const usersSchema = createSelectSchema(users).omit({ password: true });
+const usersSchema = createSelectSchema(users);
 const proposedCellsSchema = createSelectSchema(proposedCells);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });

@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { getOperatorColor } from "@/lib/operator-utils";
 import { getStationBands, getPermitBands } from "../utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePreferences } from "@/hooks/use-preferences";
+import { formatCoordinates } from "@/lib/gps-utils";
 import type { LocationInfo, StationWithoutCells, StationSource, UkeStation } from "@/types/station";
 
 type PopupContentProps = {
@@ -48,6 +50,7 @@ export const PopupContent = memo(function PopupContent({
 	onOpenUkeStationDetails,
 }: PopupContentProps) {
 	const { t } = useTranslation("map");
+	const { preferences } = usePreferences();
 
 	const isUkeSource = source === "uke";
 	const items = isUkeSource ? ukeStations : stations;
@@ -137,6 +140,9 @@ export const PopupContent = memo(function PopupContent({
 										{operatorName}
 									</span>
 									<span className="text-[10px] text-muted-foreground">{stationId}</span>
+									{station.networks?.networks_id && (
+										<span className="text-[10px] text-muted-foreground font-mono">N!{station.networks.networks_id}</span>
+									)}
 								</div>
 								{hasCells ? (
 									bands.length > 0 && (
@@ -161,7 +167,7 @@ export const PopupContent = memo(function PopupContent({
 			</div>
 
 			<div className="px-3 py-1.5 border-t border-border/50 text-[10px] text-muted-foreground font-mono">
-				GPS: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+				GPS: {formatCoordinates(location.latitude, location.longitude, preferences.gpsFormat)}
 			</div>
 		</div>
 	);

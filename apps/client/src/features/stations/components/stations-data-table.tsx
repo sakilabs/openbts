@@ -68,7 +68,7 @@ export function StationsDataTable({
 		isFetchingMore && hasMore && isOnLastLoadedPage && currentPageRows < pagination.pageSize ? pagination.pageSize - currentPageRows : 0;
 
 	return (
-		<div ref={containerRef} className="h-full overflow-auto">
+		<div ref={containerRef} className="h-full overflow-x-auto overflow-y-hidden">
 			<DataTable.Root table={table}>
 				<DataTable.Table>
 					<DataTable.Header />

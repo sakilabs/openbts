@@ -91,8 +91,6 @@ export class RateLimitService {
 		}
 
 		if (req.userSession) {
-			if (!req.userSession.user?.isAnonymous) return `${this.prefix}user:${req.userSession.user.id}${useRouteKey ? `:${route}` : ""}`;
-
 			const fingerprint = generateFingerprint(req);
 			if (!fingerprint) return null;
 			return `${this.prefix}guest:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
@@ -113,14 +111,13 @@ export class RateLimitService {
 			const result = req.apiToken;
 			if (!result) return null;
 
-			if (result.rateLimitTimeWindow && result.rateLimitMax) {
-				return {
-					window: result.rateLimitTimeWindow,
-					max: result.rateLimitMax,
-				};
+			if (result.metadata) {
+				const tier = result.metadata.tier as TokenTier;
+				const tierLimit = this.options.tiers[tier];
+				if (tierLimit) return tierLimit;
 			}
 
-			return null;
+			return this.defaultTiers.basic;
 		} catch (error) {
 			logger.error("ratelimit.service.getApiKeyRateLimit", { error });
 			return null;
@@ -175,11 +172,6 @@ export class RateLimitService {
 		}
 
 		if (req.userSession?.user) {
-			if (req.userSession.user.isAnonymous) {
-				const guestLimit = this.options.roles.guest;
-				return guestLimit ?? { max: this.options.max, window: this.options.window };
-			}
-
 			if (req.userSession.user.role) {
 				const role = req.userSession.user.role as UserRole;
 				const roleLimit = this.options.roles[role];

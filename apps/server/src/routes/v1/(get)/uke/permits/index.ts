@@ -25,7 +25,7 @@ const schemaRoute = {
 		page: z.coerce.number().min(1).default(1),
 		rat: z
 			.string()
-			.regex(/^(?:cdma|umts|gsm|lte|5g|iot)(?:,(?:cdma|umts|gsm|lte|5g|iot))*$/i)
+			.regex(/^(?:cdma|umts|gsm|gsm-r|lte|5g|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|5g|iot))*$/i)
 			.optional()
 			.transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
 		operators: z
@@ -154,18 +154,31 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		let data = ukePermitsRes;
 		if (rat) {
-			const ratMap: Record<string, "gsm" | "umts" | "lte" | "nr" | "cdma" | "iot"> = {
+			const ratMap: Record<string, string> = {
 				gsm: "gsm",
+				"gsm-r": "gsm-r",
 				umts: "umts",
 				lte: "lte",
 				"5g": "nr",
 				cdma: "cdma",
 				iot: "iot",
 			} as const;
-			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is "gsm" | "umts" | "lte" | "nr" | "cdma" | "iot" => t !== undefined);
-			data = data.filter((permit) =>
-				permit.band?.rat ? allowedRats.includes(permit.band.rat.toLowerCase() as (typeof allowedRats)[number]) : false,
-			);
+			const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is string => t !== undefined);
+			const wantsGsmR = allowedRats.includes("gsm-r");
+			const wantsGsm = allowedRats.includes("gsm");
+			const otherRats = allowedRats.filter((r) => r !== "gsm" && r !== "gsm-r");
+
+			data = data.filter((permit) => {
+				if (!permit.band?.rat) return false;
+				const bandRat = permit.band.rat.toLowerCase();
+				const isRailway = permit.band.variant === "railway";
+
+				if (bandRat === "gsm") {
+					if (isRailway) return wantsGsmR;
+					return wantsGsm;
+				}
+				return otherRats.includes(bandRat);
+			});
 		}
 
 		res.send({ data });

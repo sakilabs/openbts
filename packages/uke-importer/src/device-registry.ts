@@ -241,7 +241,7 @@ async function processOperatorFile(
 			continue;
 		}
 
-		const bandKey = `${bandInfo.rat}:${bandInfo.value}`;
+		const bandKey = `${bandInfo.rat}:${bandInfo.value}:commercial`;
 		fileBandKeys.add(bandKey);
 
 		const terytCode = findVoivodeshipByTeryt(lon, lat);
@@ -295,11 +295,11 @@ async function processOperatorFile(
 }
 
 async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Map<string, number>, fileBandKeys: Set<string>): Promise<number> {
-	const bandKeysArray: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number }> = [];
+	const bandKeysArray: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: "commercial" | "railway" }> = [];
 	for (const key of fileBandKeys) {
-		const [rat, valueStr] = key.split(":");
+		const [rat, valueStr, variant] = key.split(":");
 		const value = Number(valueStr);
-		if (rat && Number.isFinite(value)) bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value });
+		if (rat && Number.isFinite(value) && variant) bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value, variant: variant as "commercial" | "railway" });
 	}
 	const bandMap = await upsertBands(bandKeysArray);
 

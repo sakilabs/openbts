@@ -33,8 +33,8 @@ export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLoc
 
 function sortBands(bands: string[]): string[] {
 	return bands.sort((a, b) => {
-		const matchA = a.match(/^([A-Za-z]+)(\d+)$/);
-		const matchB = b.match(/^([A-Za-z]+)(\d+)$/);
+		const matchA = a.match(/^([A-Za-z]+(?:-[A-Za-z]+)?)(\d+)$/);
+		const matchB = b.match(/^([A-Za-z]+(?:-[A-Za-z]+)?)(\d+)$/);
 
 		if (!matchA || !matchB) return a.localeCompare(b);
 
@@ -56,7 +56,10 @@ export function getStationBands(cells: Cell[]): string[] {
 }
 
 export function getPermitBands(permits: UkePermit[]): string[] {
-	const bands = [...new Set(permits.filter((p) => p.band != null).map((p) => `${p.band?.rat}${p.band?.value}`))];
+	const bands = [...new Set(permits.filter((p) => p.band != null).map((p) => {
+		const rat = p.band?.rat === "GSM" && p.band?.variant === "railway" ? "GSM-R" : p.band?.rat;
+		return `${rat}${p.band?.value}`;
+	}))];
 	return sortBands(bands);
 }
 

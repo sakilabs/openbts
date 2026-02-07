@@ -8,34 +8,28 @@ import type { Route } from "../interfaces/routes.interface.js";
 import type { ApiToken } from "../interfaces/fastify.interface.js";
 
 export async function authHook(req: FastifyRequest, _: FastifyReply) {
-	const route = req.routeOptions as Route;
+	const route = req.routeOptions as unknown as Route;
 	const url = req.url;
 
 	const settings = getRuntimeSettings();
 	if (settings.disabledRoutes.some((p) => url?.startsWith(p))) throw new ErrorResponse("FORBIDDEN");
 	const isPublicByStatic = PUBLIC_ROUTES.some((p) => url?.startsWith(p));
 	const isPublicByRuntime = settings.allowedUnauthenticatedRoutes.some((p) => url?.startsWith(p));
-	const isPublic = isPublicByStatic || isPublicByRuntime;
-	if (isPublic && !settings.enforceAuthForAllRoutes) return;
+	if (isPublicByRuntime) return;
+	if (isPublicByStatic && !settings.enforceAuthForAllRoutes) return;
 
 	const { headers } = req;
 	const authHeader = headers.authorization;
 	if (!authHeader) {
 		const user = await getCurrentUser(req);
-		if (!user && !route?.config?.allowGuestAccess) throw new ErrorResponse("UNAUTHORIZED");
+		const allowGuest = route?.config?.allowGuestAccess && !settings.enforceAuthForAllRoutes;
+		if (!user && !allowGuest) throw new ErrorResponse("UNAUTHORIZED");
 
-		// const sessionData: Session = {
-		// 	...user,
-		// 	user: {
-		// 		...user.user,
-		// 		id: Number.parseInt(user.user.id, 10),
-		// 	},
-		// };
 		req.userSession = user;
 	}
 
 	if (authHeader) {
-		const apiKey = authHeader.split("")[1];
+		const apiKey = authHeader.split(" ")[1];
 		if (!apiKey) throw new ErrorResponse("UNAUTHORIZED");
 
 		let routePermissions: Record<string, string[]> | undefined;

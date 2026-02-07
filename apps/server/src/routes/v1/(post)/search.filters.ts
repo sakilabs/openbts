@@ -1,9 +1,9 @@
 import { sql, inArray, or, type SQL } from "drizzle-orm";
-import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations } from "@openbts/drizzle";
+import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations, networksIds } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 export type FilterValue = string | number | boolean;
-export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells" | "locations";
+export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells" | "locations" | "networksIds";
 export type FilterCondition = {
 	table: FilterTable;
 	buildCondition: (value: FilterValue) => SQL;
@@ -181,6 +181,20 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
 				)}))`,
 		),
 	},
+
+	// networksIds
+	networks_id: {
+		table: "networksIds",
+		buildCondition: buildLikeAny(networksIds.networks_id),
+	},
+	networks_name: {
+		table: "networksIds",
+		buildCondition: buildLikeAny(networksIds.networks_name),
+	},
+	mno_name: {
+		table: "networksIds",
+		buildCondition: buildLikeAny(networksIds.mno_name),
+	},
 };
 
 export type ParsedFilters = Record<string, FilterValue>;
@@ -193,6 +207,7 @@ export type GroupedFilters = {
 	lteCells: SQL[];
 	nrCells: SQL[];
 	locations: SQL[];
+	networksIds: SQL[];
 };
 
 const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(\d+(?:,\s*\d+)*)|(true|false)|([a-zA-Z][a-zA-Z0-9]*(?:,\s*[a-zA-Z][a-zA-Z0-9]*)*))/gi;
@@ -228,6 +243,7 @@ const createEmptyGroupedFilters = (): GroupedFilters => ({
 	lteCells: [],
 	nrCells: [],
 	locations: [],
+	networksIds: [],
 });
 
 export function parseFilterQuery(query: string): { filters: ParsedFilters; remainingQuery: string } {

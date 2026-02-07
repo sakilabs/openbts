@@ -13,14 +13,14 @@ export function Checkbox({ checked, onChange, children, className }: CheckboxPro
 		<button
 			type="button"
 			className={cn(
-				"flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-all cursor-pointer",
-				"hover:bg-accent",
-				checked && "bg-primary/10",
+				"flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-all cursor-pointer border border-transparent",
+				!checked && "hover:bg-muted dark:hover:bg-muted/50",
+				checked && "bg-primary/5 border-primary/30 dark:border-primary/20 dark:bg-primary/10",
 				className,
 			)}
 			onClick={() => onChange(!checked)}
 		>
-			<ShadcnCheckbox checked={checked} onCheckedChange={onChange} onClick={(e) => e.stopPropagation()} />
+			<ShadcnCheckbox checked={checked} onCheckedChange={onChange} onClick={(e) => e.stopPropagation()} className="size-3.5 [&>[data-slot=checkbox-indicator]>svg]:size-3" />
 			{children}
 		</button>
 	);

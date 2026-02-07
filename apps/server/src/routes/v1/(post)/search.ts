@@ -196,6 +196,21 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			);
 		}
 
+		if (grouped.networksIds.length > 0) {
+			const networkStationIds = await db
+				.selectDistinct({ stationId: networksIds.station_id })
+				.from(networksIds)
+				.where(combineConditions(grouped.networksIds));
+
+			if (networkStationIds.length === 0) return res.send({ data: [] });
+			stationConditions.push(
+				inArray(
+					stations.id,
+					networkStationIds.map((r) => r.stationId),
+				),
+			);
+		}
+
 		const filteredStations = await fetchStations(combineConditions(stationConditions), limit);
 		return res.send({ data: filteredStations.map(withCellDetails) });
 	}
@@ -222,6 +237,31 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	if (/^\d+$/.test(searchQuery) && !Number.isNaN(numericQuery) && stationMap.size < limit) {
 		const matchedIds = await searchNumericInRatTables(numericQuery, `%${searchQuery}%`);
 		const missingIds = matchedIds.filter((id) => !stationMap.has(id)).slice(0, limit - stationMap.size);
+
+		if (missingIds.length > 0) {
+			const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
+			for (const station of additionalStations) {
+				stationMap.set(station.id, withCellDetails(station));
+			}
+		}
+	}
+
+	if (stationMap.size < limit) {
+		const networkMatches = await db
+			.selectDistinct({ stationId: networksIds.station_id })
+			.from(networksIds)
+			.where(
+				or(
+					sql`${networksIds.networks_id} ILIKE ${`%${searchQuery}%`}`,
+					sql`${networksIds.networks_name} ILIKE ${`%${searchQuery}%`}`,
+					sql`${networksIds.mno_name} ILIKE ${`%${searchQuery}%`}`,
+				),
+			);
+
+		const missingIds = networkMatches
+			.map((r) => r.stationId)
+			.filter((id) => !stationMap.has(id))
+			.slice(0, limit - stationMap.size);
 
 		if (missingIds.length > 0) {
 			const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);

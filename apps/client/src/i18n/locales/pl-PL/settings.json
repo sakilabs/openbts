@@ -1,0 +1,26 @@
+{
+	"page": {
+		"title": "Ustawienia konta",
+		"description": "Zarządzaj swoim kontem i ustawieniami bezpieczeństwa."
+	},
+	"account": {
+		"title": "Konto"
+	},
+	"security": {
+		"title": "Bezpieczeństwo"
+	},
+	"preferences": {
+		"title": "Preferencje",
+		"description": "Te ustawienia są zapisywane lokalnie na tym urządzeniu.",
+		"gpsFormat": "Format współrzędnych GPS",
+		"gpsFormatHint": "Wybierz sposób wyświetlania współrzędnych GPS w aplikacji.",
+		"gpsDecimal": "Stopnie dziesiętne",
+		"gpsDms": "Stopnie, minuty, sekundy",
+		"navigationApps": "Aplikacje nawigacyjne",
+		"navigationAppsHint": "Wybierz, które przyciski nawigacji wyświetlać przy współrzędnych.",
+		"navGoogleMaps": "Mapy Google",
+		"navAppleMaps": "Apple Maps",
+		"navWaze": "Waze",
+		"openWith": "Otwórz w {{app}}"
+	}
+}

@@ -1,26 +1,28 @@
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgSchema, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
 import { stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
+export const AuthSchema = pgSchema("auth");
 
-export const users = pgTable(
+export const users = AuthSchema.table(
 	"users",
 	{
 		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
-		username: varchar("username", { length: 100 }).unique(),
+		username: varchar("username", { length: 25 }).unique(),
+		displayUsername: varchar("displayUsername", { length: 25 }),
 		email: varchar("email", { length: 100 }).notNull().unique(),
-		password: varchar("password", { length: 255 }),
 		image: text("image"),
-		name: text("name"),
+		name: text("name").notNull(),
 		role: text("role").notNull().default("user"),
-		last_login: timestamp({ withTimezone: true }),
-		emailVerified: timestamp({ withTimezone: true }),
+		emailVerified: boolean("emailVerified").default(false).notNull(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		isAnonymous: boolean("isAnonymous").default(false),
+		banned: boolean("banned").default(false),
+		banReason: text("banReason"),
+		banExpires: timestamp({ withTimezone: true }),
 	},
 	(table) => [index("users_id_idx").on(table.id), index("users_email_idx").on(table.email)],
 );
@@ -37,61 +39,68 @@ export const users = pgTable(
 // 	lastActiveAt: timestamp({ withTimezone: true }),
 // });
 
-export const accounts = pgTable(
+export const accounts = AuthSchema.table(
 	"accounts",
 	{
 		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
 		userId: uuid("user_id")
 			.references(() => users.id, { onDelete: "cascade" })
 			.notNull(),
-		providerType: text("provider_type").notNull(),
+		accountId: varchar("account_id", { length: 255 }).notNull(),
 		providerId: text("provider_id").notNull(),
-		providerAccountId: text("provider_account_id").notNull(),
 		refreshToken: text("refresh_token"),
 		accessToken: text("access_token"),
+		accessTokenExpiresAt: timestamp({ withTimezone: true }),
+		refreshTokenExpiresAt: timestamp({ withTimezone: true }),
 		expiresAt: timestamp({ withTimezone: true }),
 		idToken: text("id_token"),
 		scope: text("scope"),
+		password: varchar("password", { length: 255 }),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => {
-		return [index("accounts_user_id_idx").on(table.userId), index("accounts_provider_account_id_idx").on(table.providerAccountId)];
+		return [index("accounts_user_id_idx").on(table.userId)];
 	},
 );
 
-export const verificationTokens = pgTable("verification_tokens", {
+export const verificationTokens = AuthSchema.table("verification_tokens", {
 	id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
 	identifier: text("identifier").notNull(),
-	token: text("token").notNull().unique(),
-	expires: timestamp({ withTimezone: true }).notNull(),
+	value: text("value").notNull().unique(),
+	expiresAt: timestamp({ withTimezone: true }).notNull(),
 	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-export const apiKeys = pgTable(
-	"api_keys",
+export const apiKeys = AuthSchema.table(
+	"apiKeys",
 	{
-		id: integer("id").primaryKey().notNull().generatedAlwaysAsIdentity(),
-		user_id: uuid("user_id")
-			.references(() => users.id, { onDelete: "cascade" })
-			.notNull(),
-		name: text("name").notNull(),
-		key: text("key").notNull().unique(),
-		enabled: boolean("enabled").default(true).notNull(),
-		expiresAt: timestamp({ withTimezone: true }),
-		metadata: text("metadata"),
-		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-		permissions: text("permissions"),
-		remaining: integer("remaining"),
-		refillAmount: integer("refill_amount"),
+		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
+		name: text("name"),
+		start: text("start"),
+		prefix: text("prefix"),
+		key: text("key").notNull(),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
 		refillInterval: integer("refill_interval"),
-		lastRefillAt: timestamp({ withTimezone: true }),
-		rateLimitEnabled: boolean("rate_limit_enabled").default(false),
-		rateLimitTimeWindow: integer("rate_limit_time_window"),
-		rateLimitMax: integer("rate_limit_max"),
+		refillAmount: integer("refill_amount"),
+		lastRefillAt: timestamp("last_refill_at"),
+		enabled: boolean("enabled").default(true),
+		rateLimitEnabled: boolean("rate_limit_enabled").default(true),
+		rateLimitTimeWindow: integer("rate_limit_time_window").default(86400000),
+		rateLimitMax: integer("rate_limit_max").default(10),
+		requestCount: integer("request_count").default(0),
+		remaining: integer("remaining"),
+		lastRequest: timestamp("last_request"),
+		expiresAt: timestamp("expires_at"),
+		createdAt: timestamp("created_at").notNull(),
+		updatedAt: timestamp("updated_at").notNull(),
+		permissions: text("permissions"),
+		metadata: text("metadata").default('{"tier":"basic"}'),
 	},
-	(table) => [index("api_keys_user_id_idx").on(table.user_id)],
+	(table) => [index("apikeys_key_idx").on(table.key), index("apikeys_userId_idx").on(table.userId)],
 );
 
 /**

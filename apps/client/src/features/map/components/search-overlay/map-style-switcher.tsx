@@ -62,12 +62,15 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 
 	if (showPicker) {
 		return (
-			<div
-				onClick={handleStopPropagation}
-				onKeyDown={handleStopPropagation}
-				role="listbox"
-				className={cn("flex gap-1.5 p-1.5 rounded-lg bg-background border shadow-xl", isMobile && "absolute bottom-0 left-0")}
-			>
+		<div
+			onClick={handleStopPropagation}
+			onKeyDown={handleStopPropagation}
+			role="listbox"
+			className={cn(
+				"flex p-1.5 rounded-lg bg-background border shadow-xl",
+				isMobile ? "absolute bottom-0 left-0 flex-col-reverse gap-1" : "flex-row gap-1.5",
+			)}
+		>
 				{(Object.keys(MAP_STYLE_OPTIONS) as MapStyle[]).map((key) => {
 					const style = MAP_STYLE_OPTIONS[key];
 					const isSelected = mapStyle === key;
@@ -76,17 +79,23 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 							key={key}
 							type="button"
 							onClick={() => handleSelectStyle(key)}
-							className={cn("flex flex-col items-center group cursor-pointer", isMobile ? "gap-1" : "gap-0.5")}
+							className={cn(
+								"flex items-center group cursor-pointer",
+								isMobile ? "flex-row gap-2 px-1 py-0.5 rounded-md hover:bg-muted/50" : "flex-col gap-0.5",
+							)}
 						>
 							<div
 								className={cn(
-									"w-12 h-12 rounded-md overflow-hidden border-2 transition-colors",
+									"rounded-md overflow-hidden border-2 transition-colors shrink-0",
+									isMobile ? "w-8 h-8" : "w-12 h-12",
 									isSelected ? "border-blue-500" : "border-transparent group-hover:border-muted-foreground/50",
 								)}
 							>
 								<img src={style.thumbnail} alt={style.label} className="w-full h-full object-cover" />
 							</div>
-							<span className={cn("text-[10px] font-medium", isSelected ? "text-foreground" : "text-muted-foreground")}>{style.label}</span>
+							<span className={cn("font-medium", isMobile ? "text-xs" : "text-[10px]", isSelected ? "text-foreground" : "text-muted-foreground")}>
+								{style.label}
+							</span>
 						</button>
 					);
 				})}

@@ -2,9 +2,18 @@ import path from "node:path";
 import url from "node:url";
 import { inArray } from "drizzle-orm";
 
-import { ukePermits, stations, stationsPermits, type ratEnum } from "@openbts/drizzle";
+import { ukePermits, stations, stationsPermits, type ratEnum, type BandVariant } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
-import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName, createLogger } from "./utils.js";
+import {
+	chunk,
+	convertDMSToDD,
+	downloadFile,
+	ensureDownloadDir,
+	parseExcelDate,
+	readSheetAsJson,
+	stripCompanySuffixForName,
+	createLogger,
+} from "./utils.js";
 
 const logger = createLogger("stations");
 import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
@@ -14,8 +23,18 @@ import { db } from "@openbts/drizzle/db";
 
 import type { RawUkeData } from "./types.js";
 
-function parseBandFromLabel(label: string): { rat: (typeof ratEnum.enumValues)[number]; value: number } | null {
-	const firstToken = (label.trim().toLowerCase().split(/\s|-/)[0] ?? "").trim();
+function parseBandFromLabel(
+	label: string,
+): { rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] } | null {
+	const normalized = label.trim().toLowerCase();
+
+	const gsmrMatch = normalized.match(/^gsm-r\s*(\d{3,4})?/);
+	if (gsmrMatch) {
+		const value = gsmrMatch[1] ? Number(gsmrMatch[1]) : 900;
+		return { rat: "GSM", value, variant: "railway" };
+	}
+
+	const firstToken = (normalized.split(/\s|-/)[0] ?? "").trim();
 	if (!firstToken) return null;
 	const m = firstToken.match(/^(gsm|cdma|umts|lte|5g)(\d{3,4})$/i);
 	if (!m) return null;
@@ -34,7 +53,7 @@ function parseBandFromLabel(label: string): { rat: (typeof ratEnum.enumValues)[n
 						? ("LTE" as const)
 						: ("NR" as const);
 	const bandValue = rat === "NR" && value === 3600 ? 3500 : value;
-	return { rat, value: bandValue };
+	return { rat, value: bandValue, variant: "commercial" };
 }
 
 async function insertUkePermits(
@@ -42,7 +61,9 @@ async function insertUkePermits(
 	bandMap: Map<string, number>,
 	operatorIdByName: Map<string, number>,
 	locationIdByLonLat: Map<string, number>,
-	labelToBandKey: (label: string) => { rat: (typeof ratEnum.enumValues)[number]; value: number } | null,
+	labelToBandKey: (
+		label: string,
+	) => { rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] } | null,
 	fileLabel: string,
 ): Promise<void> {
 	const bandKey = labelToBandKey(fileLabel);
@@ -50,9 +71,9 @@ async function insertUkePermits(
 		logger.warn(`Warning: Could not parse band from file label: ${fileLabel}`);
 		return;
 	}
-	const bandId = bandMap.get(`${bandKey.rat}:${bandKey.value}`);
+	const bandId = bandMap.get(`${bandKey.rat}:${bandKey.value}:${bandKey.variant}`);
 	if (!bandId) {
-		logger.warn(`Warning: No band ID found for band ${bandKey.rat}${bandKey.value} in file: ${fileLabel}`);
+		logger.warn(`Warning: No band ID found for band ${bandKey.rat}${bandKey.value} (${bandKey.variant}) in file: ${fileLabel}`);
 		return;
 	}
 	const values = raws
@@ -110,7 +131,7 @@ export async function importStations(): Promise<boolean> {
 	logger.log("Starting stations import...");
 	logger.log("Scraping file links from:", STATIONS_URL);
 	const unfiltered = await scrapeXlsxLinks(STATIONS_URL);
-	const links = unfiltered.filter((l) => !l.text.toLowerCase().includes("gsm-r"));
+	const links = unfiltered;
 	logger.log(`Found ${links.length} files to process`);
 
 	if (await isDataUpToDate("stations", links)) {
@@ -119,12 +140,12 @@ export async function importStations(): Promise<boolean> {
 	}
 	ensureDownloadDir();
 	logger.log("Parsing band information from file labels...");
-	const bandKeys: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number }> = [];
+	const bandKeys: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] }> = [];
 	for (const l of links) {
 		const parsed = parseBandFromLabel(l.text || l.href);
 		if (parsed) bandKeys.push(parsed);
 	}
-	logger.log(`Found ${bandKeys.length} bands:`, bandKeys.map((b) => `${b.rat}${b.value}`).join(", "));
+	logger.log(`Found ${bandKeys.length} bands:`, bandKeys.map((b) => `${b.rat}${b.value}${b.variant === "railway" ? " (R)" : ""}`).join(", "));
 	const bandMap = await upsertBands(bandKeys);
 	logger.log("Upserting regions...");
 	const regionItems = Object.values(REGION_BY_TERYT_PREFIX);

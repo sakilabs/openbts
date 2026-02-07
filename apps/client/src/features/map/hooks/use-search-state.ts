@@ -88,13 +88,12 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 			const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
 			const { filters: detected, remainingText } = parseFilters(fullQuery);
 
-			if (detected.length > parsedFilters.length) {
-				setParsedFilters(detected);
-				setInputValue(remainingText);
-				const matches = getAutocompleteMatches(remainingText, filterKeywords);
-				setActiveOverlay(computeOverlay(remainingText, matches.length > 0));
-				return;
-			}
+		if (detected.length > parsedFilters.length) {
+			setParsedFilters(detected);
+			setInputValue(remainingText);
+			setActiveOverlay("results");
+			return;
+		}
 		}
 
 		const matches = getAutocompleteMatches(value, filterKeywords);

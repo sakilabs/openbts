@@ -1,0 +1,26 @@
+{
+	"page": {
+		"title": "Account Settings",
+		"description": "Manage your account and security settings."
+	},
+	"account": {
+		"title": "Account"
+	},
+	"security": {
+		"title": "Security"
+	},
+	"preferences": {
+		"title": "Preferences",
+		"description": "These settings are stored locally on this device.",
+		"gpsFormat": "GPS Coordinate Format",
+		"gpsFormatHint": "Choose how GPS coordinates are displayed throughout the app.",
+		"gpsDecimal": "Decimal Degrees",
+		"gpsDms": "Degrees, Minutes, Seconds",
+		"navigationApps": "Navigation Apps",
+		"navigationAppsHint": "Select which navigation app buttons appear next to coordinates.",
+		"navGoogleMaps": "Google Maps",
+		"navAppleMaps": "Apple Maps",
+		"navWaze": "Waze",
+		"openWith": "Open with {{app}}"
+	}
+}

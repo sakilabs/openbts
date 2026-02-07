@@ -21,7 +21,7 @@ import {
 	ukeLocations,
 	ukeOperators,
 } from "./bts.ts";
-import { apiKeys, attachments, stationComments, userLists, users } from "./auth.ts";
+import { accounts, apiKeys, attachments, stationComments, userLists, users } from "./auth.ts";
 import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedStations, proposedUMTSCells } from "./submissions.ts";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
@@ -139,19 +139,27 @@ export const userCommentsRelations = relations(stationComments, ({ one }) => ({
 	}),
 }));
 
-export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
-	user: one(users, {
-		fields: [apiKeys.user_id],
-		references: [users.id],
-	}),
-}));
-
 export const usersRelations = relations(users, ({ many }) => ({
+	accounts: many(accounts),
 	comments: many(stationComments),
 	lists: many(userLists),
 	apiKeys: many(apiKeys),
 	attachments: many(attachments, {
 		relationName: "author",
+	}),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+	users: one(users, {
+		fields: [accounts.userId],
+		references: [users.id],
+	}),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+	users: one(users, {
+		fields: [apiKeys.userId],
+		references: [users.id],
 	}),
 }));
 

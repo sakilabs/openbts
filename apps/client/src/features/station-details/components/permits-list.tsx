@@ -155,7 +155,23 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
 
 									return (
 										<tr key={permit.id} className="hover:bg-muted/20 transition-colors">
-											<td className="px-4 py-2.5 font-mono font-medium">{permit.band?.value ? `${permit.band.value} MHz` : "-"}</td>
+											<td className="px-4 py-2.5 font-mono font-medium">
+													<div className="flex items-center gap-1.5">
+														<span>{permit.band?.value ? `${permit.band.value} MHz` : "-"}</span>
+														{permit.band?.variant === "railway" && (
+															<Tooltip>
+																<TooltipTrigger>
+																	<span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
+																		R
+																	</span>
+																</TooltipTrigger>
+																<TooltipContent side="top">
+																	<p>GSM-R</p>
+																</TooltipContent>
+															</Tooltip>
+														)}
+													</div>
+												</td>
 											<td className="px-4 py-2.5">
 												<div className="flex items-center gap-2">
 													<span className="font-mono text-xs">{permit.decision_number}</span>

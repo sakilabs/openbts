@@ -213,6 +213,8 @@ export function StationsLayer() {
 
 			map.flyTo({ center: [lng, lat], zoom: 16, essential: true });
 
+			await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
+
 			if (filters.source === "uke") {
 				const ukeLocations = locations as unknown as UkeLocationWithPermits[];
 				const ukeLocation = ukeLocations.find((loc) => loc.latitude.toFixed(6) === lat.toFixed(6) && loc.longitude.toFixed(6) === lng.toFixed(6));
@@ -229,15 +231,16 @@ export function StationsLayer() {
 				return;
 			}
 
-			const locationData = locations.find((loc) => loc.latitude.toFixed(6) === lat.toFixed(6) && loc.longitude.toFixed(6) === lng.toFixed(6));
-
-			if (locationData) {
-				const location = toLocationInfo(locationData);
-				showPopup([lng, lat], location, locationData.stations as StationWithoutCells[], null, filters.source);
-				await fetchAndUpdatePopup(locationData.id, location, filters.source);
+			try {
+				const data = await fetchLocationWithStations(station.location_id, filters);
+				const location = toLocationInfo(data);
+				showPopup([lng, lat], location, data.stations as StationWithoutCells[], null, filters.source);
+			} catch (error) {
+				console.error("Failed to fetch station data:", error);
+				showApiError(error);
 			}
 		},
-		[map, filters, locations, showPopup, fetchAndUpdatePopup],
+		[map, filters, locations, showPopup],
 	);
 
 	const handleCloseStationDetails = useCallback(() => setSelectedStation(null), []);

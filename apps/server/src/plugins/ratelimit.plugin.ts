@@ -15,7 +15,7 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
 	const rateLimitService = new RateLimitService(redis);
 
 	fastify.decorate("rateLimitService", rateLimitService);
-	fastify.addHook("onRequest", async (req: FastifyRequest, res: FastifyReply) => {
+	fastify.addHook("preHandler", async (req: FastifyRequest, res: FastifyReply) => {
 		const result = await rateLimitService.processRequest(req);
 		if (!result) return;
 

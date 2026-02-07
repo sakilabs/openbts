@@ -1,9 +1,11 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, anonymous, apiKey, multiSession, username } from "better-auth/plugins";
+import { admin, apiKey, multiSession, username } from "better-auth/plugins";
+import { passkey } from "@better-auth/passkey";
 import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { hash, verify } from "@node-rs/argon2";
+import * as schema from "@openbts/drizzle";
 
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
@@ -28,26 +30,40 @@ export const auth = betterAuth({
 		database: {
 			generateId: false,
 		},
+		cookies: {
+			session_token: {
+				attributes: {
+					sameSite: "none",
+					secure: true,
+				},
+			},
+		},
 	},
 	basePath: "/api/v1/auth",
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		usePlural: true,
+		schema: {
+			...schema,
+			verification: schema.verificationTokens,
+			apikeys: schema.apiKeys,
+		},
 	}),
 	emailAndPassword: {
 		enabled: true,
 		password: {
 			hash: async (password) => {
 				const hashedPwd = await hash(password, ARGON2_OPTIONS);
-
 				return hashedPwd;
 			},
-			verify: async ({ hash, password }) => {
-				const isValid = await verify(password, hash);
+			verify: async (data: { password: string; hash: string }) => {
+				const { password, hash } = data;
+				const isValid = await verify(hash, password, ARGON2_OPTIONS);
 				return isValid;
 			},
 		},
 	},
+	experimental: { joins: true },
 	hooks: {
 		before: createAuthMiddleware(beforeAuthHook.bind(this)),
 	},
@@ -62,10 +78,8 @@ export const auth = betterAuth({
 				user: userRole,
 			},
 		}),
-		anonymous(),
 		apiKey({
 			apiKeyHeaders: ["authorization"],
-			defaultPrefix: "openbts_",
 			enableMetadata: true,
 			permissions: {
 				defaultPermissions: async (userId, ctx) => {
@@ -90,6 +104,7 @@ export const auth = betterAuth({
 			// 	return true;
 			// },
 		}),
+		passkey(),
 	],
 	telemetry: {
 		enabled: false,
@@ -117,6 +132,7 @@ export const auth = betterAuth({
 	deleteUser: {
 		enabled: true,
 	},
+	trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com"],
 	// disabledPaths: PUBLIC_ROUTES,
 });
 
@@ -139,40 +155,18 @@ async function beforeAuthHook(
 		}
 
 		const keys = await db.query.apiKeys.findMany({
-			where: (apiKeys, { eq }) => eq(apiKeys.user_id, session.user.id),
+			where: (apiKeys, { eq }) => eq(apiKeys.userId, session.user.id),
 		});
 
 		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
-			throw new APIError("TOO_MANY_REQUESTS", {
+			throw new APIError("FORBIDDEN", {
 				message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
 			});
 		}
-	}
 
-	const userEndpoints = [
-		"/update-user",
-		"/change-password",
-		"/set-password",
-		"/change-email",
-		"/link-social",
-		"/unlink-account",
-		"/send-verification-email",
-	];
-
-	if (userEndpoints.some((endpoint) => ctx.path.startsWith(endpoint))) {
-		const session = await getSessionFromCtx(ctx);
-
-		if (!session) {
-			throw new APIError("UNAUTHORIZED", {
-				message: "Unauthorized access to this endpoint.",
-			});
-		}
-
-		const isAnonymous = session.user.isAnonymous;
-
-		if (isAnonymous) {
-			throw new APIError("UNAUTHORIZED", {
-				message: "Anonymous users can't modify the profile in any way.",
+		if (ctx.body?.metadata) {
+			throw new APIError("BAD_REQUEST", {
+				message: "Metadata is not allowed when creating API keys.",
 			});
 		}
 	}

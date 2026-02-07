@@ -23,7 +23,8 @@
 		"internalNotes": "Internal Notes",
 		"created": "Created:",
 		"updated": "Updated:",
-		"networkIdTooltip": "Number comes from internal NetWorkS database"
+		"networkName": "N! Name:",
+		"mnoName": "MNO:"
 	},
 	"cells": {
 		"cell_one": "{{count}} cell",

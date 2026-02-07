@@ -13,7 +13,7 @@ export interface CellExportData {
 	clid?: number | null;
 	ecid?: number | null;
 	gnbid?: number | null;
-	nci?: number | null;
+	nci?: bigint | null;
 	rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR";
 	band_value?: number | null;
 	band_name: string;
@@ -107,7 +107,7 @@ export function toCLF40(cell: CellExportData): string | null {
 	return `${mccmnc};${cellId.toString().padStart(5, "0")};${lac.toString().padStart(5, "0")};${type};${lat};${lon};${posRat};${description};${sys};${label};${azi};${height};${hbw};${vbw};${tilt};${loc}`;
 }
 
-function getCellIdForExport(cell: CellExportData): number | null {
+function getCellIdForExport(cell: CellExportData): bigint | number | null {
 	switch (cell.rat) {
 		case "GSM":
 			return cell.cid;

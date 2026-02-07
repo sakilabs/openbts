@@ -9,8 +9,11 @@ import { isPermitExpired } from "@/lib/date-utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { CopyButton } from "./copy-button";
+import { NavigationLinks } from "./navigation-links";
 import type { UkeStation, UkePermit } from "@/types/station";
 import { RAT_ICONS } from "../utils";
+import { usePreferences } from "@/hooks/use-preferences";
+import { formatCoordinates } from "@/lib/gps-utils";
 
 type UkeStationDetailsDialogProps = {
 	station: UkeStation | null;
@@ -41,6 +44,7 @@ function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
 
 export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDialogProps) {
 	const { t, i18n } = useTranslation("stationDetails");
+	const { preferences } = usePreferences();
 
 	useEscapeKey(onClose, !!station);
 
@@ -108,9 +112,10 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 									<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
 									<span className="text-sm text-muted-foreground">{t("specs.coordinates")}</span>
 									<span className="font-mono text-sm font-medium">
-										{station.location.latitude.toFixed(5)}, {station.location.longitude.toFixed(5)}
+										{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 									</span>
 									<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
+									<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} />
 								</div>
 							)}
 
@@ -175,7 +180,23 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
 													return (
 														<tr key={permit.id} className="hover:bg-muted/20 transition-colors">
-															<td className="px-4 py-2.5 font-mono font-medium">{permit.band?.value ? `${permit.band.value} MHz` : "-"}</td>
+															<td className="px-4 py-2.5 font-mono font-medium">
+																<div className="flex items-center gap-1.5">
+																	<span>{permit.band?.value ? `${permit.band.value} MHz` : "-"}</span>
+																	{permit.band?.variant === "railway" && (
+																		<Tooltip>
+																			<TooltipTrigger>
+																				<span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
+																					R
+																				</span>
+																			</TooltipTrigger>
+																			<TooltipContent side="top">
+																				<p>GSM-R</p>
+																			</TooltipContent>
+																		</Tooltip>
+																	)}
+																</div>
+															</td>
 															<td className="px-4 py-2.5">
 																<div className="flex items-center gap-2">
 																	<span className="font-mono text-xs">{permit.decision_number}</span>

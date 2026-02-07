@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { count, desc, eq, max } from "drizzle-orm";
 import { z } from "zod/v4";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
@@ -6,12 +6,7 @@ import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
 import db from "../../../database/psql.js";
 import { ukeImportMetadata, stations, cells, ukePermits, ukeLocations, locations } from "@openbts/drizzle";
 
-type ImportTimestamp = {
-	import_type: string;
-	last_import_date: Date;
-};
-
-type Response = {
+interface Response {
 	lastUpdated: {
 		stations: string | null;
 		stations_permits: string | null;
@@ -24,7 +19,7 @@ type Response = {
 		uke_locations: number;
 		uke_permits: number;
 	};
-};
+}
 
 const schemaRoute = {
 	response: {
@@ -48,53 +43,53 @@ const schemaRoute = {
 };
 
 async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>) {
-	// Get the latest successful import for each type
-	const importTimestamps = await db
-		.selectDistinctOn([ukeImportMetadata.import_type], {
-			import_type: ukeImportMetadata.import_type,
-			last_import_date: ukeImportMetadata.last_import_date,
-		})
-		.from(ukeImportMetadata)
-		.where(sql`${ukeImportMetadata.status} = 'success'`)
-		.orderBy(ukeImportMetadata.import_type, sql`${ukeImportMetadata.last_import_date} DESC`);
+	const [importTimestamps, stationsLastUpdatedResult, ...countResults] = await Promise.all([
+		db
+			.select({
+				import_type: ukeImportMetadata.import_type,
+				last_import_date: ukeImportMetadata.last_import_date,
+			})
+			.from(ukeImportMetadata)
+			.where(eq(ukeImportMetadata.status, "success"))
+			.orderBy(desc(ukeImportMetadata.last_import_date)),
 
-	// Build the lastUpdated object
+		db.select({ value: max(stations.updatedAt) }).from(stations),
+
+		db.select({ value: count() }).from(locations),
+		db.select({ value: count() }).from(stations),
+		db.select({ value: count() }).from(cells),
+		db.select({ value: count() }).from(ukeLocations),
+		db.select({ value: count() }).from(ukePermits),
+	]);
+
 	const lastUpdated: Response["lastUpdated"] = {
-		stations: null,
+		stations: stationsLastUpdatedResult[0]?.value?.toISOString() ?? null,
 		stations_permits: null,
 		radiolines: null,
 	};
 
-	for (const row of importTimestamps as ImportTimestamp[]) {
-		if (row.import_type === "stations") {
-			lastUpdated.stations = row.last_import_date.toISOString();
-		} else if (row.import_type === "stations_permits") {
+	const seen = new Set<string>();
+	for (const row of importTimestamps) {
+		if (seen.has(row.import_type)) continue;
+		seen.add(row.import_type);
+
+		if (row.import_type === "stations_permits")
 			lastUpdated.stations_permits = row.last_import_date.toISOString();
-		} else if (row.import_type === "radiolines") {
+		else if (row.import_type === "radiolines")
 			lastUpdated.radiolines = row.last_import_date.toISOString();
-		}
 	}
 
-	// Get counts
-	const [countsResult] = await db
-		.select({
-			locations: sql<number>`(SELECT COUNT(*)::int FROM ${locations})`,
-			stations: sql<number>`(SELECT COUNT(*)::int FROM ${stations})`,
-			cells: sql<number>`(SELECT COUNT(*)::int FROM ${cells})`,
-			uke_locations: sql<number>`(SELECT COUNT(*)::int FROM ${ukeLocations})`,
-			uke_permits: sql<number>`(SELECT COUNT(*)::int FROM ${ukePermits})`,
-		})
-		.from(sql`(SELECT 1) AS dummy`);
+	const [locationsCount, stationsCount, cellsCount, ukeLocationsCount, ukePermitsCount] = countResults;
 
 	res.send({
 		data: {
 			lastUpdated,
 			counts: {
-				locations: countsResult?.locations ?? 0,
-				stations: countsResult?.stations ?? 0,
-				cells: countsResult?.cells ?? 0,
-				uke_locations: countsResult?.uke_locations ?? 0,
-				uke_permits: countsResult?.uke_permits ?? 0,
+				locations: locationsCount[0]?.value ?? 0,
+				stations: stationsCount[0]?.value ?? 0,
+				cells: cellsCount[0]?.value ?? 0,
+				uke_locations: ukeLocationsCount[0]?.value ?? 0,
+				uke_permits: ukePermitsCount[0]?.value ?? 0,
 			},
 		},
 	});

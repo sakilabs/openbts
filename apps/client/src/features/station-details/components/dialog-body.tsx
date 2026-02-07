@@ -21,9 +21,12 @@ import { NetWorkSIds } from "./networks-ids";
 import { PermitsList } from "./permits-list";
 import { CommentsList } from "./comments-list";
 import { CopyButton } from "./copy-button";
+import { NavigationLinks } from "./navigation-links";
 import { groupCellsByRat } from "../utils";
 import { TAB_OPTIONS, type TabId } from "../tabs";
 import { useSettings } from "@/hooks/use-settings";
+import { usePreferences } from "@/hooks/use-preferences";
+import { formatCoordinates } from "@/lib/gps-utils";
 
 type StationDetailsBodyProps = {
 	stationId: number;
@@ -39,6 +42,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 	const { t } = useTranslation("stationDetails");
 	const { i18n } = useTranslation();
 	const { data: settings } = useSettings();
+	const { preferences } = usePreferences();
 	const cellGroups = station ? groupCellsByRat(station.cells) : {};
 	const visibleTabs = useMemo(
 		() =>
@@ -133,17 +137,14 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 									<section>
 										<h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.basicInfo")}</h3>
 										<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl bg-muted/20">
-											<div className="flex items-start sm:items-center gap-2">
-												<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0 mt-0.5 sm:mt-0" />
-												<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-													<span className="text-sm text-muted-foreground whitespace-nowrap">{t("specs.coordinates")}</span>
-													<span className="text-sm font-mono font-medium">
-														{station?.location.latitude.toFixed(5)}, {station?.location.longitude.toFixed(5)}
-													</span>
-												</div>
-												<div className="ml-auto sm:ml-0">
-													<CopyButton text={`${station?.location.latitude}, ${station?.location.longitude}`} />
-												</div>
+											<div className="flex items-center gap-2">
+												<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
+												<span className="text-sm text-muted-foreground whitespace-nowrap">{t("specs.coordinates")}</span>
+												<span className="text-sm font-mono font-medium whitespace-nowrap">
+													{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
+												</span>
+												<CopyButton text={`${station?.location.latitude}, ${station?.location.longitude}`} />
+												<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} />
 											</div>
 											<div className="flex items-center gap-2">
 												<HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
@@ -163,6 +164,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 													<CopyButton text={station?.station_id || ""} />
 												</div>
 											</div>
+											{station?.networks && <NetWorkSIds networks={station.networks} />}
 										</div>
 									</section>
 
@@ -182,8 +184,6 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 										)}
 									</section>
 
-									{station?.networks && <NetWorkSIds networks={station.networks} />}
-
 									{station?.notes && (
 										<section>
 											<h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -195,13 +195,31 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 
 									<section className="pt-4 border-t">
 										<div className="flex items-center justify-between text-xs text-muted-foreground">
-											<span className="inline-flex items-center gap-1.5">
+											<span className="inline-flex items-center gap-2">
 												<HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-												{t("specs.created")} {station ? new Date(station.createdAt).toLocaleDateString(i18n.language) : "-"}
+												{t("specs.created")}{" "}
+												{station
+													? new Date(station.createdAt).toLocaleDateString(i18n.language, {
+															year: "numeric",
+															month: "long",
+															day: "numeric",
+															hour: "2-digit",
+															minute: "2-digit",
+														})
+													: "-"}
 											</span>
 											<span className="inline-flex items-center gap-1.5">
 												<HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-												{t("specs.updated")} {station ? new Date(station.updatedAt).toLocaleDateString(i18n.language) : "-"}
+												{t("specs.updated")}{" "}
+												{station
+													? new Date(station.updatedAt).toLocaleDateString(i18n.language, {
+															year: "numeric",
+															month: "long",
+															day: "numeric",
+															hour: "2-digit",
+															minute: "2-digit",
+														})
+													: "-"}
 											</span>
 										</div>
 									</section>

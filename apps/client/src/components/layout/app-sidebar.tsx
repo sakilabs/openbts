@@ -1,18 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import type * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AirportTowerIcon, AddCircleIcon } from "@hugeicons/core-free-icons";
+import { AirportTowerIcon, ArrowRight01Icon, Login01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
-
 import { NavMain } from "./nav-main";
-// import { NavProjects } from "./nav-projects";
-// import { NavSecondary } from "./nav-secondary";
-// import { NavUser } from "./nav-user";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import { AuthDialog } from "@/components/auth/auth-dialog";
+import { authClient } from "@/lib/auth-client";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuAction,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarMenuSub,
+	SidebarMenuSubButton,
+	SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
+import { Link, useLocation } from "react-router";
+import { cn } from "@/lib/utils";
+import { NavUser } from "./nav-user";
 
 const navMainConfig = [
 	{
@@ -37,6 +51,8 @@ const navMainConfig = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { t } = useTranslation("nav");
+	const [authDialogOpen, setAuthDialogOpen] = useState(false);
+	const { data: session } = authClient.useSession();
 
 	const navItems = navMainConfig.map((section) => ({
 		title: t(section.titleKey),
@@ -48,6 +64,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			url: item.url,
 		})),
 	}));
+
+	const location = useLocation();
+	const [settingsOpen, setSettingsOpen] = useState(location.pathname === "/account/settings" || location.pathname === "/preferences");
+
+	const settingsSubItems = [
+		{ title: t("items.preferences"), url: "/preferences" },
+		...(session?.user ? [{ title: t("items.accountSettings"), url: "/account/settings" }] : []),
+	];
 
 	return (
 		<Sidebar variant="inset" {...props}>
@@ -67,20 +91,55 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={navItems} groupLabel={t("groups.platform")} />
-				{/* <NavProjects projects={data.projects} /> */}
-				{/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>
+					<Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<Link to="/preferences" />} tooltip={t("sections.settings")}>
+								<HugeiconsIcon icon={Settings02Icon} />
+								<span>{t("sections.settings")}</span>
+							</SidebarMenuButton>
+							<CollapsibleTrigger render={<SidebarMenuAction className={cn("transition-transform duration-200", settingsOpen && "rotate-90")} />}>
+								<HugeiconsIcon icon={ArrowRight01Icon} />
+								<span className="sr-only">Toggle</span>
+							</CollapsibleTrigger>
+							<CollapsibleContent>
+								<SidebarMenuSub>
+									{settingsSubItems.map((item) => (
+										<SidebarMenuSubItem key={item.title}>
+											<SidebarMenuSubButton render={<Link to={item.url} />} isActive={location.pathname === item.url}>
+												<span>{item.title}</span>
+											</SidebarMenuSubButton>
+										</SidebarMenuSubItem>
+									))}
+								</SidebarMenuSub>
+							</CollapsibleContent>
+						</SidebarMenuItem>
+					</Collapsible>
 					<SidebarMenuItem>
 						<ThemeToggle />
 					</SidebarMenuItem>
 					<SidebarMenuItem>
 						<LanguageSwitcher />
 					</SidebarMenuItem>
+					{!session?.user && (
+						<SidebarMenuItem>
+							<SidebarMenuButton size="lg" onClick={() => setAuthDialogOpen(true)} className="cursor-pointer">
+								<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+									<HugeiconsIcon icon={Login01Icon} className="size-4" />
+								</div>
+								<div className="grid flex-1 text-left text-sm leading-tight">
+									<span className="truncate font-semibold">{t("auth.signIn", "Sign In")}</span>
+									<span className="truncate text-xs text-muted-foreground">{t("auth.signInHint", "Access your account")}</span>
+								</div>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					)}
+					{session?.user && <NavUser data={session} />}
 				</SidebarMenu>
-				{/* <NavUser user={user} /> */}
 			</SidebarFooter>
+			<AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
 		</Sidebar>
 	);
 }

@@ -112,9 +112,16 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 											<span className="text-sm font-bold truncate group-hover:text-primary transition-colors">
 												{station.location?.address || station.location?.city || t("results.btsStation")}
 											</span>
-											<span className="text-[10px] font-mono text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
-												{station.station_id}
-											</span>
+											<div className="flex items-center gap-1 shrink-0">
+												{station.networks?.networks_id && (
+													<span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+														N!{station.networks.networks_id}
+													</span>
+												)}
+												<span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+													{station.station_id}
+												</span>
+											</div>
 										</div>
 										<div className="flex items-center gap-1.5 mt-0.5">
 											<span className="text-[11px] font-medium text-foreground/70 italic">{station.operator?.name}</span>
