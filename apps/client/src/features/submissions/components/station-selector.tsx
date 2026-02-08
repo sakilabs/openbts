@@ -40,11 +40,14 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 		staleTime: 1000 * 30,
 	});
 
-	const handleStationSelect = useCallback((station: SearchStation) => {
-		onStationSelect(station);
-		setSearchQuery("");
-		setIsOpen(false);
-	}, [onStationSelect]);
+	const handleStationSelect = useCallback(
+		(station: SearchStation) => {
+			onStationSelect(station);
+			setSearchQuery("");
+			setIsOpen(false);
+		},
+		[onStationSelect],
+	);
 
 	const handleClearSelection = useCallback(() => {
 		onStationSelect(null);
@@ -61,7 +64,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 	}, []);
 
 	return (
-		<div className="border rounded-xl overflow-hidden bg-card">
+		<div className="border rounded-xl bg-card relative">
 			<div className="p-2 border-b bg-muted/30 flex items-center justify-between gap-4">
 				<div className="flex items-center gap-2 px-2">
 					<div className="p-1.5 rounded-md bg-primary/10 text-primary">
@@ -77,7 +80,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
 							mode === "existing"
 								? "bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-								: "text-muted-foreground hover:text-foreground hover:bg-background/50"
+								: "text-muted-foreground hover:text-foreground hover:bg-background/50",
 						)}
 					>
 						<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
@@ -90,7 +93,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
 							mode === "new"
 								? "bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-								: "text-muted-foreground hover:text-foreground hover:bg-background/50"
+								: "text-muted-foreground hover:text-foreground hover:bg-background/50",
 						)}
 					>
 						<HugeiconsIcon icon={Add01Icon} className="size-3.5" />
@@ -135,7 +138,9 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 											{selectedStation.cells?.length > 0 && (
 												<>
 													<span className="text-xs text-muted-foreground/50">•</span>
-													<span className="text-xs text-muted-foreground">{t("stationSelector.cellsCount", { count: selectedStation.cells.length })}</span>
+													<span className="text-xs text-muted-foreground">
+														{t("stationSelector.cellsCount", { count: selectedStation.cells.length })}
+													</span>
 												</>
 											)}
 										</div>
@@ -191,7 +196,9 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 																{station.cells?.length > 0 && (
 																	<>
 																		<span className="text-[11px] text-muted-foreground/50">•</span>
-																		<span className="text-[11px] text-muted-foreground">{t("stationSelector.cellsCount", { count: station.cells.length })}</span>
+																		<span className="text-[11px] text-muted-foreground">
+																			{t("stationSelector.cellsCount", { count: station.cells.length })}
+																		</span>
 																	</>
 																)}
 															</div>
@@ -207,9 +214,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 					</div>
 				)}
 
-				{mode === "new" && (
-					<p className="text-sm text-muted-foreground">{t("stationSelector.newStationHint")}</p>
-				)}
+				{mode === "new" && <p className="text-sm text-muted-foreground">{t("stationSelector.newStationHint")}</p>}
 			</div>
 		</div>
 	);

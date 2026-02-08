@@ -32,15 +32,4 @@ export default defineConfig({
 			clientFiles: ["./src/components/**/*.tsx", "./src/features/**/*.tsx"],
 		},
 	},
-	build: {
-		rollupOptions: {
-			output: {
-				// manualChunks: {
-				// 	react: ["react", "react-dom", "react-router"],
-				// 	tanstack: ["@tanstack/react-query", "@tanstack/react-table"],
-				// 	icons: ["lucide-react", "@hugeicons/core-free-icons", "@hugeicons/react"],
-				// },
-			},
-		},
-	},
 });
