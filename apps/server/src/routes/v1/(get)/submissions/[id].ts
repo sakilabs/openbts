@@ -14,6 +14,8 @@ import {
 	proposedUMTSCells,
 	proposedLTECells,
 	proposedNRCells,
+	proposedStations,
+	proposedLocations,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -36,15 +38,14 @@ const schemaRoute = {
 	}),
 	response: {
 		200: z.object({
-			data: submissionsSchema
-				.extend({
-					station: stationsSchema.nullable(),
-					submitter: submittersSchema,
-					reviewer: reviewersSchema.nullable(),
-				})
-				.extend({
-					cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
-				}),
+			data: submissionsSchema.extend({
+				station: stationsSchema.nullable(),
+				submitter: submittersSchema,
+				reviewer: reviewersSchema.nullable(),
+				proposedLocation: createSelectSchema(proposedLocations).nullable(),
+				proposedStation: createSelectSchema(proposedStations).nullable(),
+				cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
+			}),
 		}),
 	},
 };
@@ -76,6 +77,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 					displayUsername: true,
 				},
 			},
+			proposedLocation: true,
+			proposedStation: true,
 		},
 	});
 	if (!submission) throw new ErrorResponse("NOT_FOUND");

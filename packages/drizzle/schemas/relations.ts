@@ -295,8 +295,8 @@ export const submissionsRelations = relations(submissions, ({ one, many }) => ({
 		references: [users.id],
 		relationName: "reviewer",
 	}),
-	proposedStations: many(proposedStations),
-	proposedLocations: many(proposedLocations),
+	proposedStation: one(proposedStations),
+	proposedLocation: one(proposedLocations),
 	proposedCells: many(proposedCells),
 }));
 
