@@ -39,7 +39,13 @@
 		"city": "Miasto",
 		"cityPlaceholder": "np. Warszawa",
 		"address": "Adres",
-		"addressPlaceholder": "np. ul. Marszałkowska 1"
+		"addressPlaceholder": "np. ul. Marszałkowska 1",
+		"nearbyLocations": "Pobliskie istniejące lokalizacje",
+		"stationsCount_one": "{{count}} stacja",
+		"stationsCount_few": "{{count}} stacje",
+		"stationsCount_many": "{{count}} stacji",
+		"useThis": "Użyj",
+		"createNewLocation": "Utwórz nową lokalizację tutaj"
 	},
 	"ratSelector": {
 		"title": "Technologie radiowe",

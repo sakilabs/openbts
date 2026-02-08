@@ -49,10 +49,10 @@ export function validateForm(ctx: ValidationContext): FormErrors {
 	} else {
 		const stationErrors = validateStation(ctx.newStation);
 		if (Object.keys(stationErrors).length > 0) errors.station = stationErrors;
-
-		const locationErrors = validateLocation(ctx.location);
-		if (Object.keys(locationErrors).length > 0) errors.location = locationErrors;
 	}
+
+	const locationErrors = validateLocation(ctx.location);
+	if (Object.keys(locationErrors).length > 0) errors.location = locationErrors;
 
 	const cellErrors = validateCells(ctx.cells);
 	if (Object.keys(cellErrors).length > 0) errors.cells = cellErrors;

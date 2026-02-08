@@ -81,9 +81,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 	const settingsSubItems = [
 		{ title: t("items.preferences"), url: "/preferences" },
-		...(session?.user
-			? [{ title: t("items.accountSettings"), url: "/account/settings" }]
-			: []),
+		...(session?.user ? [{ title: t("items.accountSettings"), url: "/account/settings" }] : []),
 	];
 
 	return (
@@ -103,8 +101,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				<NavMain items={navItems} groupLabel={t("groups.platform")} />
-				{authNavItems.length > 0 && <NavMain items={authNavItems} groupLabel={t("groups.contribute")} />}
+				<NavMain items={navItems} />
+				{authNavItems.length > 0 && <NavMain items={authNavItems} />}
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>

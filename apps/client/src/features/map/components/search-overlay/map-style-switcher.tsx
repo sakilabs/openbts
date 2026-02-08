@@ -22,6 +22,10 @@ const MAP_STYLE_OPTIONS: Record<MapStyle, { label: string; thumbnail: string }> 
 		label: "Google Satellite",
 		thumbnail: "https://mt1.google.com/vt/lyrs=s&x=4400&y=2686&z=13",
 	},
+	esriSatellite: {
+		label: "Esri Satellite",
+		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
+	},
 	opentopomap: {
 		label: "OpenTopoMap",
 		thumbnail: "https://a.tile.opentopomap.org/13/4400/2686.png",
@@ -111,18 +115,20 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 				setShowPicker(true);
 			}}
 			className={cn(
-				"group flex items-center gap-2 p-1 pr-3 rounded-lg bg-background border transition-all text-left",
-				isMobile ? "shadow-lg" : "shadow-xl",
+				"group flex items-center gap-2 p-1 rounded-lg bg-background border transition-all text-left",
+				isMobile ? "shadow-lg" : "pr-3 shadow-xl",
 			)}
 			aria-label="Change map style"
 		>
 			<div className="w-8 h-8 rounded-md overflow-hidden border border-border/50 group-hover:border-border transition-colors">
 				<img src={MAP_STYLE_OPTIONS[mapStyle].thumbnail} alt={MAP_STYLE_OPTIONS[mapStyle].label} className="w-full h-full object-cover" />
 			</div>
-			<div className="flex flex-col">
-				<span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider leading-none mb-0.5">{t("overlay.mapStyle")}</span>
-				<span className="text-xs font-semibold text-foreground leading-none">{MAP_STYLE_OPTIONS[mapStyle].label}</span>
-			</div>
+			{!isMobile && (
+				<div className="flex flex-col">
+					<span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider leading-none mb-0.5">{t("overlay.mapStyle")}</span>
+					<span className="text-xs font-semibold text-foreground leading-none">{MAP_STYLE_OPTIONS[mapStyle].label}</span>
+				</div>
+			)}
 		</button>
 	);
 }

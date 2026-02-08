@@ -1,5 +1,7 @@
-import { memo } from "react";
+import { memo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor } from "@/lib/operator-utils";
 import { getStationBands, getPermitBands } from "../utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +40,51 @@ function TechBadgesSkeleton() {
 			<Skeleton className="h-4 w-8 rounded-md" />
 			<Skeleton className="h-4 w-10 rounded-md" />
 		</div>
+	);
+}
+
+function PopupShareButton({ location, source }: { location: LocationInfo; source: StationSource }) {
+	const [copied, setCopied] = useState(false);
+
+	const shareUrl = `${window.location.origin}/#map=16/${location.latitude}/${location.longitude}?source=${source}&location=${location.id}`;
+
+	const handleShare = useCallback(async () => {
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: `${location.city}${location.address ? ` - ${location.address}` : ""}`,
+					url: shareUrl,
+				});
+				return;
+			} catch (error) {
+				if ((error as Error).name === "AbortError") {
+					return;
+				}
+			}
+		}
+
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (error) {
+			console.error("Failed to copy:", error);
+		}
+	}, [location, shareUrl]);
+
+	return (
+		<button
+			type="button"
+			onClick={handleShare}
+			className="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
+			aria-label="Share location"
+		>
+			{copied ? (
+				<HugeiconsIcon icon={Tick02Icon} className="size-3 text-emerald-500" />
+			) : (
+				<HugeiconsIcon icon={Share08Icon} className="size-3 text-muted-foreground" />
+			)}
+		</button>
 	);
 }
 
@@ -166,8 +213,11 @@ export const PopupContent = memo(function PopupContent({
 				) : null}
 			</div>
 
-			<div className="px-3 py-1.5 border-t border-border/50 text-[10px] text-muted-foreground font-mono">
-				GPS: {formatCoordinates(location.latitude, location.longitude, preferences.gpsFormat)}
+			<div className="px-3 py-1.5 border-t border-border/50 flex items-center justify-between">
+				<span className="text-[10px] text-muted-foreground font-mono">
+					GPS: {formatCoordinates(location.latitude, location.longitude, preferences.gpsFormat)}
+				</span>
+				<PopupShareButton location={location} source={source} />
 			</div>
 		</div>
 	);

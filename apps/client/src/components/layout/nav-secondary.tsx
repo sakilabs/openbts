@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";

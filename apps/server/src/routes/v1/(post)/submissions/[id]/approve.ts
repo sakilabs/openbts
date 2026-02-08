@@ -100,6 +100,50 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 				}
 			}
 
+			if (submission.type === "update" && proposedLocation && stationId) {
+				const existingLocation = await tx.query.locations.findFirst({
+					where: (fields, { and, eq: feq }) =>
+						and(feq(fields.longitude, proposedLocation.longitude), feq(fields.latitude, proposedLocation.latitude)),
+				});
+
+				let locationId: number;
+
+				if (existingLocation) {
+					const metadataChanged =
+						existingLocation.region_id !== proposedLocation.region_id ||
+						existingLocation.city !== proposedLocation.city ||
+						existingLocation.address !== proposedLocation.address;
+
+					if (metadataChanged) {
+						await tx
+							.update(locations)
+							.set({
+								region_id: proposedLocation.region_id,
+								city: proposedLocation.city,
+								address: proposedLocation.address,
+								updatedAt: new Date(),
+							})
+							.where(eq(locations.id, existingLocation.id));
+					}
+					locationId = existingLocation.id;
+				} else {
+					const [newLocation] = await tx
+						.insert(locations)
+						.values({
+							region_id: proposedLocation.region_id,
+							city: proposedLocation.city,
+							address: proposedLocation.address,
+							longitude: proposedLocation.longitude,
+							latitude: proposedLocation.latitude,
+						})
+						.returning();
+					if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
+					locationId = newLocation.id;
+				}
+
+				await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
+			}
+
 			for (const proposed of proposedCellRows) {
 				switch (proposed.operation) {
 					case "add": {
@@ -141,16 +185,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 							case "NR": {
 								const d = proposed.nr;
 								if (d)
-									await tx
-										.insert(nrCells)
-										.values({
-											cell_id: newCell.id,
-											nrtac: d.nrtac,
-											gnbid: d.gnbid,
-											clid: d.clid,
-											pci: d.pci,
-											supports_nr_redcap: d.supports_nr_redcap,
-										});
+									await tx.insert(nrCells).values({
+										cell_id: newCell.id,
+										nrtac: d.nrtac,
+										gnbid: d.gnbid,
+										clid: d.clid,
+										pci: d.pci,
+										supports_nr_redcap: d.supports_nr_redcap,
+									});
 								break;
 							}
 						}

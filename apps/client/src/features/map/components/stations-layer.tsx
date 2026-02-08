@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMap } from "@/components/ui/map";
 import { MapSearchOverlay } from "./search-overlay";
@@ -22,6 +22,7 @@ import type {
 	Station,
 } from "@/types/station";
 import { fetchLocations, fetchLocationWithStations } from "../api";
+import { fetchStation } from "@/features/station-details/api";
 import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
 import { groupPermitsByStation } from "../utils";
 import { useUrlSync } from "../hooks/use-url-sync";
@@ -64,17 +65,9 @@ export function StationsLayer() {
 	const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
 	const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
 	const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
-
-	useUrlSync({
-		map,
-		isLoaded,
-		filters,
-		zoom,
-		onInitialize: useCallback(({ filters: urlFilters }) => setFilters(urlFilters), []),
-	});
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: This has to be "re-created" when filters change
-	const prefetchCache = useMemo<PrefetchCache>(() => new Map(), [filters]);
+	const pendingStationId = useRef<number | null>(null);
+	const pendingLocationId = useRef<number | null>(null);
+	const pendingUkeLocationId = useRef<number | null>(null);
 
 	const {
 		showPopup,
@@ -85,6 +78,69 @@ export function StationsLayer() {
 		onOpenStationDetails: useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []),
 		onOpenUkeStationDetails: useCallback((station: UkeStation) => setSelectedUkeStation(station), []),
 	});
+
+	const handleUrlInitialize = useCallback(
+		async ({ filters: urlFilters, stationId, locationId }: { filters: StationFilters; stationId?: number; locationId?: number }) => {
+			setFilters(urlFilters);
+
+			if (stationId && map) {
+				pendingStationId.current = stationId;
+				try {
+					const station = await fetchStation(stationId);
+					if (station.location?.latitude && station.location?.longitude) {
+						map.flyTo({
+							center: [station.location.longitude, station.location.latitude],
+							zoom: 16,
+							essential: true,
+						});
+						setSelectedStation({ id: stationId, source: "internal" });
+					}
+				} catch (error) {
+					console.error("Failed to fetch shared station:", error);
+					showApiError(error);
+				} finally {
+					pendingStationId.current = null;
+				}
+			} else if (locationId && map) {
+				if (urlFilters.source === "uke") {
+					pendingUkeLocationId.current = locationId;
+					return;
+				}
+
+				pendingLocationId.current = locationId;
+				try {
+					const locationData = await fetchLocationWithStations(locationId, urlFilters);
+					const location = toLocationInfo(locationData);
+
+					map.flyTo({
+						center: [location.longitude, location.latitude],
+						zoom: 16,
+						essential: true,
+					});
+
+					await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
+					showPopup([location.longitude, location.latitude], location, locationData.stations as StationWithoutCells[], null, urlFilters.source);
+				} catch (error) {
+					console.error("Failed to fetch shared location:", error);
+					showApiError(error);
+				} finally {
+					pendingLocationId.current = null;
+				}
+			}
+		},
+		[map, showPopup],
+	);
+
+	useUrlSync({
+		map,
+		isLoaded,
+		filters,
+		zoom,
+		onInitialize: handleUrlInitialize,
+	});
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: This has to be "re-created" when filters change
+	const prefetchCache = useMemo<PrefetchCache>(() => new Map(), [filters]);
 
 	const {
 		data: locationsResponse,
@@ -108,6 +164,42 @@ export function StationsLayer() {
 			? ukeLocationsToGeoJSON(locations as unknown as UkeLocationWithPermits[], filters.source)
 			: locationsToGeoJSON(locations, filters.source);
 	}, [locations, filters.source]);
+
+	useEffect(() => {
+		const locationId = pendingUkeLocationId.current;
+		if (!locationId || !map || filters.source !== "uke" || locations.length === 0) return;
+
+		const ukeLocations = locations as unknown as UkeLocationWithPermits[];
+		const ukeLocation = ukeLocations.find((loc) => loc.id === locationId);
+		if (!ukeLocation) return;
+
+		pendingUkeLocationId.current = null;
+
+		const location: LocationInfo = {
+			id: ukeLocation.id,
+			city: ukeLocation.city ?? undefined,
+			address: ukeLocation.address ?? undefined,
+			latitude: ukeLocation.latitude,
+			longitude: ukeLocation.longitude,
+		};
+
+		map.flyTo({
+			center: [location.longitude, location.latitude],
+			zoom: 16,
+			essential: true,
+		});
+
+		const handleMoveEnd = () => {
+			const ukeStations = groupPermitsByStation(ukeLocation.permits ?? [], ukeLocation);
+			showPopup([location.longitude, location.latitude], location, null, ukeStations, filters.source);
+		};
+
+		map.once("moveend", handleMoveEnd);
+
+		return () => {
+			map.off("moveend", handleMoveEnd);
+		};
+	}, [map, locations, filters.source, showPopup]);
 
 	const fetchAndUpdatePopup = useCallback(
 		async (locationId: number, _location: LocationInfo, source: StationSource) => {

@@ -4,13 +4,15 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, PencilEdit02Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
+import { Link } from "react-router";
 import { getOperatorColor } from "@/lib/operator-utils";
 import { getHardwareLeaseOperator } from "@/lib/station-utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { fetchStation } from "../api";
 import { StationDetailsBody } from "./dialog-body";
+import { ShareButton } from "./share-button";
 import type { TabId } from "../tabs";
 
 type StationDetailsDialogProps = {
@@ -88,6 +90,20 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 											)}
 										</div>
 										<div className="flex items-center gap-2 shrink-0">
+											<ShareButton
+												title={`${station.operator.name} - ${station.station_id}`}
+												text={`${station.operator.name} ${station.station_id} - ${station.location.city}`}
+												url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?station=${station.id}`}
+												size="md"
+											/>
+											<Link
+												to={`/submission?station=${station.id}`}
+												className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+												onClick={onClose}
+											>
+												<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+												<span className="hidden sm:inline">{t("dialog.edit")}</span>
+											</Link>
 											{station.is_confirmed && (
 												<span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-sm">
 													<HugeiconsIcon icon={Tick02Icon} className="size-3.5" />

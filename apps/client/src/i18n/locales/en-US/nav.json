@@ -1,8 +1,4 @@
 {
-	"groups": {
-		"platform": "Platform",
-		"contribute": "Contribute"
-	},
 	"sections": {
 		"stations": "Stations",
 		"contribute": "Contribute",

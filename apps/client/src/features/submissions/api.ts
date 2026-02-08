@@ -1,5 +1,5 @@
 import { fetchApiData, postApiData } from "@/lib/api";
-import type { Band, Operator, Region, Location, CellDetails } from "@/types/station";
+import type { Band, Operator, Region, Location, CellDetails, LocationWithStations, Station } from "@/types/station";
 import type { SubmissionFormData } from "./types";
 
 export const fetchOperators = () => fetchApiData<Operator[]>("operators");
@@ -67,6 +67,10 @@ export async function reverseGeocode(lat: number, lon: number): Promise<Nominati
 	}
 }
 
+export async function fetchLocationsInViewport(bounds: string): Promise<LocationWithStations[]> {
+	return fetchApiData<LocationWithStations[]>(`locations?bounds=${encodeURIComponent(bounds)}&limit=500`);
+}
+
 export type SubmissionResponse = {
 	id: number;
 	station_id: number | null;
@@ -76,6 +80,33 @@ export type SubmissionResponse = {
 	createdAt: string;
 	updatedAt: string;
 };
+
+export async function fetchStationForSubmission(id: number): Promise<SearchStation> {
+	const station = await fetchApiData<Station>(`stations/${id}`);
+	return {
+		id: station.id,
+		station_id: station.station_id,
+		location_id: station.location_id,
+		operator_id: station.operator_id,
+		notes: station.notes,
+		updatedAt: station.updatedAt,
+		createdAt: station.createdAt,
+		is_confirmed: station.is_confirmed,
+		cells: station.cells.map((cell) => ({
+			id: cell.id,
+			rat: cell.rat,
+			station_id: cell.station_id,
+			band_id: cell.band.id,
+			notes: cell.notes,
+			is_confirmed: cell.is_confirmed,
+			updatedAt: cell.updatedAt,
+			createdAt: cell.createdAt,
+			details: cell.details,
+		})),
+		location: station.location,
+		operator: station.operator,
+	};
+}
 
 export async function createSubmission(data: SubmissionFormData): Promise<SubmissionResponse> {
 	const payload: Record<string, unknown> = {

@@ -9,6 +9,7 @@ import { isPermitExpired } from "@/lib/date-utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { CopyButton } from "./copy-button";
+import { ShareButton } from "./share-button";
 import { NavigationLinks } from "./navigation-links";
 import type { UkeStation, UkePermit } from "@/types/station";
 import { RAT_ICONS } from "../utils";
@@ -95,9 +96,19 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 								)}
 							</div>
 						</div>
-						<button type="button" onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors shrink-0 -mt-1 -mr-2">
-							<HugeiconsIcon icon={Cancel01Icon} className="size-5" />
-						</button>
+						<div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
+							{station.location && (
+								<ShareButton
+									title={`${station.operator?.name ?? "UKE"} - ${station.station_id}`}
+									text={`${station.operator?.name ?? "UKE"} ${station.station_id} - ${station.location.city}`}
+									url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke`}
+									size="md"
+								/>
+							)}
+							<button type="button" onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
+								<HugeiconsIcon icon={Cancel01Icon} className="size-5" />
+							</button>
+						</div>
 					</div>
 				</div>
 
@@ -107,19 +118,19 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
 						<div className="rounded-xl border bg-muted/20 p-4">
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-							{station.location && (
-								<div className="flex items-center gap-2">
-									<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-									<span className="text-sm text-muted-foreground">{t("specs.coordinates")}</span>
-									<span className="font-mono text-sm font-medium">
-										{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
-									</span>
-									<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
-									{preferences.navLinksDisplay === "inline" && (
-										<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
-									)}
-								</div>
-							)}
+								{station.location && (
+									<div className="flex items-center gap-2">
+										<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
+										<span className="text-sm text-muted-foreground">{t("specs.coordinates")}</span>
+										<span className="font-mono text-sm font-medium">
+											{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
+										</span>
+										<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
+										{preferences.navLinksDisplay === "inline" && (
+											<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
+										)}
+									</div>
+								)}
 
 								{station.location?.region && (
 									<div className="flex items-center gap-2">
@@ -129,13 +140,13 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 									</div>
 								)}
 
-							{station.operator && (
-								<div className="flex items-center gap-2">
-									<HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
-									<span className="text-sm text-muted-foreground">{t("specs.operator")}</span>
-									<span className="text-sm font-medium">{station.operator.name}</span>
-								</div>
-							)}
+								{station.operator && (
+									<div className="flex items-center gap-2">
+										<HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
+										<span className="text-sm text-muted-foreground">{t("specs.operator")}</span>
+										<span className="text-sm font-medium">{station.operator.name}</span>
+									</div>
+								)}
 
 								<div className="flex items-center gap-2">
 									<HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />

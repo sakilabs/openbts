@@ -9,7 +9,6 @@ import {
 	PasskeysCard,
 	ProvidersCard,
 	SessionsCard,
-	TwoFactorCard,
 } from "@daveyplate/better-auth-ui";
 import { authClient } from "@/lib/auth-client";
 import { Navigate } from "react-router";

@@ -1,8 +1,4 @@
 {
-	"groups": {
-		"platform": "Główne",
-		"contribute": "Reszta"
-	},
 	"sections": {
 		"stations": "Stacje",
 		"contribute": "Zgłoszenia",

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, Outlet, useMatches } from "react-router";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/api";
@@ -32,6 +33,20 @@ export default function AppLayout() {
 	const pageTitle = handle?.titleKey ? t(handle.titleKey, { ns: handle.i18nNamespace }) : (handle?.title ?? "");
 	const breadcrumbs = handle?.breadcrumbs ?? [];
 
+	useEffect(() => {
+		const titleParts: string[] = [];
+
+		for (const segment of breadcrumbs) {
+			titleParts.push(t(segment.titleKey, { ns: segment.i18nNamespace }));
+		}
+
+		if (pageTitle) titleParts.push(pageTitle);
+
+		titleParts.push(APP_NAME);
+
+		document.title = titleParts.join(" · ");
+	}, [pageTitle, breadcrumbs, t]);
+
 	return (
 		<AuthGuard>
 			<SidebarProvider>
@@ -46,14 +61,12 @@ export default function AppLayout() {
 									<BreadcrumbItem className="hidden md:block">
 										<BreadcrumbLink render={<Link to="/" />}>{APP_NAME}</BreadcrumbLink>
 									</BreadcrumbItem>
-									{breadcrumbs.map((segment, i) => (
-										<span key={i} className="hidden md:contents">
+									{breadcrumbs.map((segment) => (
+										<span key={segment.titleKey} className="hidden md:contents">
 											<BreadcrumbSeparator />
 											<BreadcrumbItem>
 												{segment.path ? (
-													<BreadcrumbLink render={<Link to={segment.path} />}>
-														{t(segment.titleKey, { ns: segment.i18nNamespace })}
-													</BreadcrumbLink>
+													<BreadcrumbLink render={<Link to={segment.path} />}>{t(segment.titleKey, { ns: segment.i18nNamespace })}</BreadcrumbLink>
 												) : (
 													<BreadcrumbPage>{t(segment.titleKey, { ns: segment.i18nNamespace })}</BreadcrumbPage>
 												)}

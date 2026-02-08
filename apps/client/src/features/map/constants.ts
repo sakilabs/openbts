@@ -3,6 +3,15 @@ import type { FilterKeyword } from "./types";
 export const SOURCE_ID = "stations-source";
 export const POINT_LAYER_ID = "stations-layer";
 
+export const POLAND_CENTER: [number, number] = [19.9, 52.0];
+
+export const PICKER_SOURCE_ID = "picker-locations-source";
+export const PICKER_CIRCLE_LAYER_ID = "picker-locations-circle";
+export const PICKER_SYMBOL_LAYER_ID = "picker-locations-symbol";
+export const PICKER_LAYER_IDS = [PICKER_CIRCLE_LAYER_ID, PICKER_SYMBOL_LAYER_ID] as const;
+
+export const PICKER_NEARBY_RADIUS_METERS = 100;
+
 export const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"] as const;
 export const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },

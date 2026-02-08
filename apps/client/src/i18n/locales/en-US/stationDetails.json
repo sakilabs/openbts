@@ -4,7 +4,8 @@
 		"btsStation": "BTS Station",
 		"confirmed": "Confirmed",
 		"loadError": "Failed to load station details",
-		"hardwareLease": "Hardware lease from {{operator}}"
+		"hardwareLease": "Hardware lease from {{operator}}",
+		"edit": "Edit"
 	},
 	"tabs": {
 		"specs": "Specifications",
@@ -25,6 +26,10 @@
 		"updated": "Updated:",
 		"networkName": "N! Name:",
 		"mnoName": "MNO:"
+	},
+	"share": {
+		"share": "Share",
+		"copied": "Link copied!"
 	},
 	"cells": {
 		"cell_one": "{{count}} cell",

@@ -38,7 +38,12 @@
 		"city": "City",
 		"cityPlaceholder": "e.g. Warsaw",
 		"address": "Address",
-		"addressPlaceholder": "e.g. ul. Marszałkowska 1"
+		"addressPlaceholder": "e.g. ul. Marszałkowska 1",
+		"nearbyLocations": "Nearby existing locations",
+		"stationsCount_one": "{{count}} station",
+		"stationsCount_other": "{{count}} stations",
+		"useThis": "Use this",
+		"createNewLocation": "Create new location here"
 	},
 	"ratSelector": {
 		"title": "Radio Technologies",

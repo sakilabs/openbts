@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -13,7 +13,7 @@ import { LocationPicker } from "./location-picker";
 import { NewStationForm } from "./new-station-form";
 import { RatSelector } from "./rat-selector";
 import { CellDetailsForm } from "./cell-details-form";
-import { createSubmission, type SearchStation } from "../api";
+import { createSubmission, fetchStationForSubmission, type SearchStation } from "../api";
 import { showApiError } from "@/lib/api";
 import { generateCellId, computeCellPayloads, cellsToPayloads } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
@@ -30,7 +30,7 @@ type FormValues = {
 };
 
 const INITIAL_VALUES: FormValues = {
-	mode: "existing",
+	mode: "new",
 	selectedStation: null,
 	newStation: { station_id: "", operator_id: null, notes: "" },
 	location: { region_id: null, city: "", address: "", longitude: null, latitude: null },
@@ -51,9 +51,21 @@ function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
 	}));
 }
 
-export function SubmissionForm() {
+type SubmissionFormProps = {
+	preloadStationId?: number;
+};
+
+export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 	const { t } = useTranslation("submissions");
 	const [showErrors, setShowErrors] = useState(false);
+	const preloadedRef = useRef(false);
+
+	const { data: preloadedStation } = useQuery({
+		queryKey: ["station-for-submission", preloadStationId],
+		queryFn: () => fetchStationForSubmission(preloadStationId!),
+		enabled: !!preloadStationId,
+		staleTime: 1000 * 60 * 5,
+	});
 
 	const form = useForm({
 		defaultValues: INITIAL_VALUES,
@@ -74,11 +86,13 @@ export function SubmissionForm() {
 			const isNewStation = value.mode === "new";
 			const cells = isNewStation ? cellsToPayloads(value.cells) : computeCellPayloads(value.originalCells, value.cells);
 
+			const hasLocation = value.location.latitude !== null && value.location.longitude !== null;
+
 			await mutation.mutateAsync({
 				station_id: isNewStation ? null : (value.selectedStation?.id ?? null),
 				type: isNewStation ? "new" : "update",
 				station: isNewStation ? value.newStation : undefined,
-				location: isNewStation ? value.location : undefined,
+				location: hasLocation ? value.location : undefined,
 				cells,
 			});
 		},
@@ -96,9 +110,9 @@ export function SubmissionForm() {
 
 	const handleModeChange = (newMode: SubmissionMode) => {
 		form.setFieldValue("mode", newMode);
+		form.setFieldValue("location", INITIAL_VALUES.location);
 		if (newMode === "existing") {
 			form.setFieldValue("newStation", INITIAL_VALUES.newStation);
-			form.setFieldValue("location", INITIAL_VALUES.location);
 		} else {
 			form.setFieldValue("selectedStation", null);
 			form.setFieldValue("cells", []);
@@ -114,12 +128,47 @@ export function SubmissionForm() {
 			form.setFieldValue("cells", cells);
 			form.setFieldValue("originalCells", structuredClone(cells));
 			form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
+
+			if (station.location) {
+				form.setFieldValue("location", {
+					latitude: station.location.latitude,
+					longitude: station.location.longitude,
+					city: station.location.city ?? "",
+					address: station.location.address ?? "",
+					region_id: station.location.region?.id ?? null,
+				});
+			}
 		} else {
 			form.setFieldValue("cells", []);
 			form.setFieldValue("originalCells", []);
 			form.setFieldValue("selectedRats", []);
+			form.setFieldValue("location", INITIAL_VALUES.location);
 		}
 	};
+
+	useEffect(() => {
+		if (!preloadedStation || preloadedRef.current) return;
+		preloadedRef.current = true;
+
+		form.setFieldValue("mode", "existing");
+		form.setFieldValue("newStation", INITIAL_VALUES.newStation);
+		form.setFieldValue("selectedStation", preloadedStation);
+
+		const cells = stationCellsToForm(preloadedStation);
+		form.setFieldValue("cells", cells);
+		form.setFieldValue("originalCells", structuredClone(cells));
+		form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
+
+		if (preloadedStation.location) {
+			form.setFieldValue("location", {
+				latitude: preloadedStation.location.latitude,
+				longitude: preloadedStation.location.longitude,
+				city: preloadedStation.location.city ?? "",
+				address: preloadedStation.location.address ?? "",
+				region_id: preloadedStation.location.region?.id ?? null,
+			});
+		}
+	}, [preloadedStation, form]);
 
 	const handleRatsChange = (rats: RatType[]) => {
 		form.setFieldValue("selectedRats", rats);
@@ -153,18 +202,42 @@ export function SubmissionForm() {
 			<div className="w-full lg:flex-2 space-y-3">
 				<form.Subscribe selector={(s) => ({ mode: s.values.mode, selectedStation: s.values.selectedStation })}>
 					{({ mode, selectedStation }) => (
-						<StationSelector
-							mode={mode}
-							selectedStation={selectedStation}
-							onModeChange={handleModeChange}
-							onStationSelect={handleStationSelect}
-						/>
+						<StationSelector mode={mode} selectedStation={selectedStation} onModeChange={handleModeChange} onStationSelect={handleStationSelect} />
 					)}
+				</form.Subscribe>
+
+				<form.Subscribe selector={(s) => ({ mode: s.values.mode, selectedStation: s.values.selectedStation, location: s.values.location })}>
+					{({ mode, selectedStation, location }) => {
+						if (mode === "existing" && !selectedStation) return null;
+
+						const errors: FormErrors = showErrors
+							? validateForm({
+									mode,
+									selectedStation,
+									newStation: form.getFieldValue("newStation"),
+									location,
+									cells: [],
+								})
+							: {};
+
+						return (
+							<LocationPicker
+								location={location}
+								errors={errors.location}
+								onLocationChange={(patch) => {
+									const current = form.getFieldValue("location");
+									form.setFieldValue("location", { ...current, ...patch });
+								}}
+							/>
+						);
+					}}
 				</form.Subscribe>
 
 				<form.Subscribe selector={(s) => ({ mode: s.values.mode, newStation: s.values.newStation, location: s.values.location })}>
 					{({ mode, newStation, location }) => {
 						if (mode !== "new") return null;
+						const isLocationSet = location.latitude !== null && location.longitude !== null && location.region_id !== null;
+						if (!isLocationSet) return null;
 
 						const errors: FormErrors = showErrors
 							? validateForm({
@@ -176,31 +249,40 @@ export function SubmissionForm() {
 								})
 							: {};
 
-						return (
-							<>
-								<NewStationForm
-									station={newStation}
-									errors={errors.station}
-									onStationChange={(s) => form.setFieldValue("newStation", s)}
-								/>
-								<LocationPicker
-									location={location}
-									errors={errors.location}
-									onLocationChange={(patch) => {
-										const current = form.getFieldValue("location");
-										form.setFieldValue("location", { ...current, ...patch });
-									}}
-								/>
-							</>
-						);
+						return <NewStationForm station={newStation} errors={errors.station} onStationChange={(s) => form.setFieldValue("newStation", s)} />;
 					}}
 				</form.Subscribe>
 
-				<form.Subscribe selector={(s) => s.values.selectedRats}>
-					{(selectedRats) => <RatSelector selectedRats={selectedRats} onRatsChange={handleRatsChange} />}
+				<form.Subscribe
+					selector={(s) => ({
+						mode: s.values.mode,
+						selectedStation: s.values.selectedStation,
+						selectedRats: s.values.selectedRats,
+						location: s.values.location,
+					})}
+				>
+					{({ mode, selectedStation, selectedRats, location }) => {
+						if (mode === "new") {
+							const isLocationSet = location.latitude !== null && location.longitude !== null && location.region_id !== null;
+							if (!isLocationSet) return null;
+						} else if (!selectedStation) {
+							return null;
+						}
+
+						return <RatSelector selectedRats={selectedRats} onRatsChange={handleRatsChange} />;
+					}}
 				</form.Subscribe>
 
-				<form.Subscribe selector={(s) => ({ mode: s.values.mode, selectedStation: s.values.selectedStation, newStation: s.values.newStation, cellsCount: s.values.cells.length, canSubmit: s.canSubmit, isSubmitting: s.isSubmitting })}>
+				<form.Subscribe
+					selector={(s) => ({
+						mode: s.values.mode,
+						selectedStation: s.values.selectedStation,
+						newStation: s.values.newStation,
+						cellsCount: s.values.cells.length,
+						canSubmit: s.canSubmit,
+						isSubmitting: s.isSubmitting,
+					})}
+				>
 					{({ mode, selectedStation, newStation, cellsCount, canSubmit, isSubmitting }) => (
 						<SubmitSection
 							mode={mode}
@@ -226,9 +308,7 @@ export function SubmissionForm() {
 					})}
 				>
 					{({ selectedRats, cells, originalCells, mode }) => {
-						const cellErrors = showErrors
-							? validateCells(cells)
-							: undefined;
+						const cellErrors = showErrors ? validateCells(cells) : undefined;
 
 						return (
 							<CellsSection

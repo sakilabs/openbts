@@ -75,19 +75,6 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 				<div className="flex items-center p-1 bg-muted/50 rounded-lg border shadow-sm">
 					<button
 						type="button"
-						onClick={() => onModeChange("existing")}
-						className={cn(
-							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-							mode === "existing"
-								? "bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-								: "text-muted-foreground hover:text-foreground hover:bg-background/50",
-						)}
-					>
-						<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-						{t("stationSelector.existingStation")}
-					</button>
-					<button
-						type="button"
 						onClick={() => onModeChange("new")}
 						className={cn(
 							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
@@ -98,6 +85,19 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 					>
 						<HugeiconsIcon icon={Add01Icon} className="size-3.5" />
 						{t("stationSelector.newStation")}
+					</button>
+					<button
+						type="button"
+						onClick={() => onModeChange("existing")}
+						className={cn(
+							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+							mode === "existing"
+								? "bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+								: "text-muted-foreground hover:text-foreground hover:bg-background/50",
+						)}
+					>
+						<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+						{t("stationSelector.existingStation")}
 					</button>
 				</div>
 			</div>

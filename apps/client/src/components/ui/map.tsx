@@ -68,7 +68,7 @@ function useResolvedTheme(themeProp?: "light" | "dark"): "light" | "dark" {
 	return themeProp ?? detectedTheme;
 }
 
-type MapStyle = "carto" | "osm" | "openfreemap" | "satellite" | "opentopomap";
+type MapStyle = "carto" | "osm" | "openfreemap" | "satellite" | "esriSatellite" | "opentopomap";
 
 type MapContextValue = {
 	map: MapLibreGL.Map | null;
@@ -166,6 +166,28 @@ const googleSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
 	],
 };
 
+const esriSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
+	version: 8,
+	sources: {
+		"esri-satellite-tiles": {
+			type: "raster",
+			tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+			tileSize: 256,
+			maxzoom: 19,
+			attribution:
+				"Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+		},
+	},
+	layers: [
+		{
+			id: "esri-satellite-layer",
+			type: "raster",
+			source: "esri-satellite-tiles",
+			minzoom: 0,
+		},
+	],
+};
+
 const mapStyleOptions: Record<
 	MapStyle,
 	{
@@ -204,6 +226,12 @@ const mapStyleOptions: Record<
 		light: opentopomapRasterStyle,
 		label: "OpenTopoMap",
 		thumbnail: "https://a.tile.opentopomap.org/13/4400/2686.png",
+	},
+	esriSatellite: {
+		dark: esriSatelliteRasterStyle,
+		light: esriSatelliteRasterStyle,
+		label: "Esri Satellite",
+		thumbnail: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/13/2686/4400",
 	},
 };
 
@@ -302,7 +330,10 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
 
 				const currentStyle = currentStyleRef.current;
 				const isRasterOnlyStyle =
-					currentStyle === osmRasterStyle || currentStyle === opentopomapRasterStyle || currentStyle === googleSatelliteRasterStyle;
+					currentStyle === osmRasterStyle ||
+					currentStyle === opentopomapRasterStyle ||
+					currentStyle === googleSatelliteRasterStyle ||
+					currentStyle === esriSatelliteRasterStyle;
 
 				if (isRasterOnlyStyle && typeof currentStyle !== "string" && currentStyle?.sources) {
 					let maxSourceZoom = 21;
@@ -346,7 +377,11 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
 		currentStyleRef.current = newStyle;
 		setIsStyleLoaded(false);
 
-		const isRasterStyle = newStyle === osmRasterStyle || newStyle === opentopomapRasterStyle || newStyle === googleSatelliteRasterStyle;
+		const isRasterStyle =
+			newStyle === osmRasterStyle ||
+			newStyle === opentopomapRasterStyle ||
+			newStyle === googleSatelliteRasterStyle ||
+			newStyle === esriSatelliteRasterStyle;
 
 		try {
 			mapInstance.setStyle(newStyle, { diff: !isRasterStyle });

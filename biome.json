@@ -33,7 +33,8 @@
 				"noInferrableTypes": "error",
 				"noUselessElse": "error"
 			}
-		}
+		},
+		"includes": ["**"]
 	},
 	"formatter": {
 		"enabled": true,

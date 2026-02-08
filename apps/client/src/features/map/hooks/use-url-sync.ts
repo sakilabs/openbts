@@ -6,13 +6,15 @@ type UseUrlSyncArgs = {
 	isLoaded: boolean;
 	filters: StationFilters;
 	zoom: number;
-	onInitialize: (data: { filters: StationFilters; center?: [number, number]; zoom?: number }) => void;
+	onInitialize: (data: { filters: StationFilters; center?: [number, number]; zoom?: number; stationId?: number; locationId?: number }) => void;
 };
 
-function parseOsmHash(): {
+function parseUrlHash(): {
 	filters: Partial<StationFilters>;
 	center?: [number, number];
 	zoom?: number;
+	stationId?: number;
+	locationId?: number;
 } {
 	const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
 	if (!hash.startsWith("map=")) {
@@ -45,14 +47,22 @@ function parseOsmHash(): {
 	const source = (params.get("source") as StationSource) || "internal";
 	const recentOnly = params.get("new") === "true";
 
+	const stationIdStr = params.get("station");
+	const stationId = stationIdStr ? Number.parseInt(stationIdStr, 10) : undefined;
+
+	const locationIdStr = params.get("location");
+	const locationId = locationIdStr ? Number.parseInt(locationIdStr, 10) : undefined;
+
 	return {
 		filters: { operators, bands, rat, source, recentOnly },
 		center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
 		zoom: !Number.isNaN(z) ? z : undefined,
+		stationId: stationId && !Number.isNaN(stationId) ? stationId : undefined,
+		locationId: locationId && !Number.isNaN(locationId) ? locationId : undefined,
 	};
 }
 
-function buildOsmHash(filters: StationFilters, map: maplibregl.Map, zoomOverride?: number): string {
+function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride?: number): string {
 	const params = new URLSearchParams();
 
 	if (filters.operators.length > 0) params.set("operators", filters.operators.join(","));
@@ -76,10 +86,15 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 	useEffect(() => {
 		if (!isLoaded || !map || isInitialized.current) return;
 
-		const { filters: urlFilters, center, zoom: urlZoom } = parseOsmHash();
+		const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId } = parseUrlHash();
 
-		if (center) map.setCenter(center);
-		if (urlZoom !== undefined) map.setZoom(urlZoom);
+		if (center || urlZoom !== undefined) {
+			map.flyTo({
+				center: center ?? map.getCenter(),
+				zoom: urlZoom ?? map.getZoom(),
+				essential: true,
+			});
+		}
 
 		onInitialize({
 			filters: {
@@ -91,6 +106,8 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 			},
 			center,
 			zoom: urlZoom,
+			stationId,
+			locationId,
 		});
 
 		isInitialized.current = true;
@@ -99,7 +116,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 	useEffect(() => {
 		if (!isLoaded || !map || !isInitialized.current) return;
 
-		const newUrl = `${window.location.pathname}${buildOsmHash(filters, map, zoom)}`;
+		const newUrl = `${window.location.pathname}${buildUrlHash(filters, map, zoom)}`;
 		window.history.replaceState(null, "", newUrl);
 	}, [filters, isLoaded, map, zoom]);
 }

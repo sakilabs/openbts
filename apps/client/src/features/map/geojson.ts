@@ -1,11 +1,11 @@
 import type { StationSource, LocationWithStations, UkeLocationWithPermits } from "@/types/station";
 import { getOperatorColor } from "@/lib/operator-utils";
 
-const DEFAULT_COLOR = "#3b82f6";
+export const DEFAULT_COLOR = "#3b82f6";
 
 type OperatorMnc = number | null | undefined;
 
-function getOperatorData(mncs: OperatorMnc[]) {
+export function getOperatorData(mncs: OperatorMnc[]) {
 	const operators = [...new Set(mncs.filter((mnc): mnc is number => mnc != null))].sort((a, b) => a - b);
 	const isMultiOperator = operators.length > 1;
 
@@ -17,7 +17,7 @@ function getOperatorData(mncs: OperatorMnc[]) {
 	};
 }
 
-function createPointFeature(lng: number, lat: number, properties: GeoJSON.GeoJsonProperties): GeoJSON.Feature {
+export function createPointFeature(lng: number, lat: number, properties: GeoJSON.GeoJsonProperties): GeoJSON.Feature {
 	return {
 		type: "Feature",
 		geometry: { type: "Point", coordinates: [lng, lat] },

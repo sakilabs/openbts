@@ -4,7 +4,8 @@
 		"btsStation": "Stacja BTS",
 		"confirmed": "Potwierdzona",
 		"loadError": "Nie udało się załadować szczegółów stacji",
-		"hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)"
+		"hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
+		"edit": "Edytuj"
 	},
 	"tabs": {
 		"specs": "Specyfikacja",
@@ -25,6 +26,10 @@
 		"updated": "Zaktualizowano:",
 		"networkName": "Nazwa N!:",
 		"mnoName": "MNO:"
+	},
+	"share": {
+		"share": "Udostępnij",
+		"copied": "Skopiowano link!"
 	},
 	"cells": {
 		"cell_one": "{{count}} komórka",

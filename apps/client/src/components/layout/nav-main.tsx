@@ -8,7 +8,6 @@ import { useLocation } from "react-router";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
 	SidebarGroup,
-	SidebarGroupLabel,
 	SidebarMenu,
 	SidebarMenuAction,
 	SidebarMenuButton,
@@ -33,7 +32,7 @@ type NavItem = {
 	}[];
 };
 
-export function NavMain({ items, groupLabel }: { items: NavItem[]; groupLabel: string }) {
+export function NavMain({ items }: { items: NavItem[] }) {
 	const location = useLocation();
 
 	const getInitialState = useCallback(() => {
@@ -69,7 +68,6 @@ export function NavMain({ items, groupLabel }: { items: NavItem[]; groupLabel: s
 
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => (
 					<Collapsible key={item.key} open={openState[item.key] ?? false} onOpenChange={(open) => handleOpenChange(item.key, open)}>

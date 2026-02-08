@@ -32,7 +32,7 @@ function getAutocompleteMatches(input: string, keywords: FilterKeyword[]): Filte
 	return keywords.filter((kw) => kw.key.toLowerCase().startsWith(lastWord.toLowerCase()));
 }
 
-function getOsmHashQueryParam(key: string): string | null {
+function getUrlHashQueryParam(key: string): string | null {
 	const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
 	if (!hash.startsWith("map=")) return null;
 
@@ -63,7 +63,7 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 	}, [query]);
 
 	useEffect(() => {
-		const q = getOsmHashQueryParam("q");
+		const q = getUrlHashQueryParam("q");
 		if (!q) return;
 
 		const { filters, remainingText } = parseFilters(q);
@@ -88,12 +88,12 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 			const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
 			const { filters: detected, remainingText } = parseFilters(fullQuery);
 
-		if (detected.length > parsedFilters.length) {
-			setParsedFilters(detected);
-			setInputValue(remainingText);
-			setActiveOverlay("results");
-			return;
-		}
+			if (detected.length > parsedFilters.length) {
+				setParsedFilters(detected);
+				setInputValue(remainingText);
+				setActiveOverlay("results");
+				return;
+			}
 		}
 
 		const matches = getAutocompleteMatches(value, filterKeywords);

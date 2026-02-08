@@ -47,10 +47,7 @@ const singleSubmissionSchema = z
 
 type SingleSubmission = z.infer<typeof singleSubmissionSchema>;
 
-const requestSchema = z.union([
-	singleSubmissionSchema,
-	z.array(singleSubmissionSchema).min(1).max(10),
-]);
+const requestSchema = z.union([singleSubmissionSchema, z.array(singleSubmissionSchema).min(1).max(10)]);
 
 type ReqBody = { Body: z.infer<typeof requestSchema> };
 const schemaRoute = {
@@ -66,9 +63,12 @@ type ResponseData = z.infer<typeof submissionsSelectSchema>[];
 
 function mapCellOperation(op: string): "add" | "update" | "delete" {
 	switch (op) {
-		case "updated": return "update";
-		case "removed": return "delete";
-		default: return "add";
+		case "updated":
+			return "update";
+		case "removed":
+			return "delete";
+		default:
+			return "add";
 	}
 }
 
@@ -78,6 +78,8 @@ async function processSubmission(
 	userId: string,
 ): Promise<z.infer<typeof submissionsSelectSchema>> {
 	const { station_id, type, station: stationData, location: locationData, cells: proposedCellsInput } = input;
+
+	if (type === "update" && !station_id) throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update submissions" });
 
 	if (station_id) {
 		const stationId = Number(station_id);

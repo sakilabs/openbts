@@ -1,4 +1,5 @@
 import { Map as LibreMap, MapControls } from "@/components/ui/map";
+import { POLAND_CENTER } from "../constants";
 import { StationsLayer } from "./stations-layer";
 
 const POLAND_BOUNDS: [[number, number], [number, number]] = [
@@ -8,7 +9,7 @@ const POLAND_BOUNDS: [[number, number], [number, number]] = [
 
 export default function MapView() {
 	return (
-		<LibreMap center={[19.1451, 51.9194]} zoom={7} maxBounds={POLAND_BOUNDS} minZoom={5}>
+		<LibreMap center={POLAND_CENTER} zoom={7} maxBounds={POLAND_BOUNDS} minZoom={5}>
 			<StationsLayer />
 			<MapControls showLocate showCompass />
 		</LibreMap>
