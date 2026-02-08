@@ -1,7 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, apiKey, multiSession, username } from "better-auth/plugins";
+import { admin, apiKey, multiSession, twoFactor, username } from "better-auth/plugins";
 import { passkey } from "@better-auth/passkey";
 import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { hash, verify } from "@node-rs/argon2";
@@ -9,7 +9,7 @@ import * as schema from "@openbts/drizzle";
 
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
-import { API_KEYS_LIMIT, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
+import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
 import { accessControl, adminRole, modRole, userRole } from "./auth/permissions.js";
 
 import type { FastifyRequest } from "fastify";
@@ -25,6 +25,7 @@ export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown
 }
 
 export const auth = betterAuth({
+	appName: APP_NAME,
 	advanced: {
 		cookiePrefix: "openbts",
 		database: {
@@ -40,13 +41,23 @@ export const auth = betterAuth({
 		},
 	},
 	basePath: "/api/v1/auth",
+	socialProviders: {
+		google: {
+			clientId: process.env.GOOGLE_CLIENT_ID!,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+		},
+		github: {
+			clientId: process.env.GITHUB_CLIENT_ID!,
+			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+		},
+	},
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		usePlural: true,
 		schema: {
 			...schema,
-			verification: schema.verificationTokens,
-			apikeys: schema.apiKeys,
+			verifications: schema.verificationTokens,
+			apikeys: schema.apikeys,
 		},
 	}),
 	emailAndPassword: {
@@ -98,13 +109,16 @@ export const auth = betterAuth({
 		multiSession(),
 		username({
 			minUsernameLength: 3,
-			maxUsernameLength: 30,
+			maxUsernameLength: 25,
 			// usernameValidator: (username) => {
 			// 	if (["admin", "administrator", "mod", "moderator"].includes(username)) return false;
 			// 	return true;
 			// },
 		}),
 		passkey(),
+		twoFactor({
+			issuer: APP_NAME,
+		}),
 	],
 	telemetry: {
 		enabled: false,
@@ -154,14 +168,29 @@ async function beforeAuthHook(
 			});
 		}
 
-		const keys = await db.query.apiKeys.findMany({
-			where: (apiKeys, { eq }) => eq(apiKeys.userId, session.user.id),
+		const keys = await db.query.apikeys.findMany({
+			where: (apikeys, { eq }) => eq(apikeys.userId, session.user.id),
 		});
 
 		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
 			throw new APIError("FORBIDDEN", {
 				message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
 			});
+		}
+
+		if (session.user.role !== "admin") {
+			const cooldownKey = `auth:apikey-cooldown:${session.user.id}`;
+			const cooldown = await redis.get(cooldownKey);
+
+			if (cooldown) {
+				const ttl = await redis.ttl(cooldownKey);
+				const daysLeft = Math.ceil(ttl / 86400);
+				throw new APIError("TOO_MANY_REQUESTS", {
+					message: `You can only create one API key every 7 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
+				});
+			}
+
+			await redis.setEx(cooldownKey, API_KEY_COOLDOWN_SECONDS, "1");
 		}
 
 		if (ctx.body?.metadata) {

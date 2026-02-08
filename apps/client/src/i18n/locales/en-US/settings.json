@@ -1,13 +1,51 @@
 {
 	"page": {
 		"title": "Account Settings",
-		"description": "Manage your account and security settings."
+		"shortTitle": "Settings",
+		"description": "Manage your account, security, and track your contributions."
 	},
 	"account": {
-		"title": "Account"
+		"title": "Account",
+		"description": "Your profile and personal information."
 	},
 	"security": {
-		"title": "Security"
+		"title": "Security",
+		"description": "Password, passkeys, and authentication."
+	},
+	"apiKeys": {
+		"title": "API Keys",
+		"description": "Manage keys for programmatic access."
+	},
+	"sessions": {
+		"title": "Sessions",
+		"description": "Active sessions across your devices."
+	},
+	"dangerZone": {
+		"title": "Danger Zone",
+		"description": "Permanently delete your account and all associated data."
+	},
+	"submissions": {
+		"title": "My Submissions",
+		"description": "Stations and cells you've submitted for review.",
+		"empty": "No submissions yet",
+		"emptyHint": "Submit a station or cell update to see it here.",
+		"loadError": "Could not load submissions.",
+		"newSubmission": "New Submission",
+		"submitNew": "Submit New Station",
+		"submitNewDesc": "Found a new tower? Add it to the map.",
+		"modifyExisting": "Modify Existing",
+		"modifyExistingDesc": "Update details or cells for an existing station.",
+		"howToModify": "To modify a station, find it on the map or database, open details, and click 'Edit'.",
+		"type": {
+			"new": "New",
+			"update": "Update",
+			"delete": "Delete"
+		},
+		"status": {
+			"pending": "Pending",
+			"approved": "Approved",
+			"rejected": "Rejected"
+		}
 	},
 	"preferences": {
 		"title": "Preferences",
@@ -21,6 +59,12 @@
 		"navGoogleMaps": "Google Maps",
 		"navAppleMaps": "Apple Maps",
 		"navWaze": "Waze",
-		"openWith": "Open with {{app}}"
+		"openWith": "Open with {{app}}",
+		"navDisplayMode": "Navigation Button Style",
+		"navDisplayModeHint": "Choose how navigation app links are shown in station details.",
+		"navDisplayInline": "Inline dropdown",
+		"navDisplayInlineDesc": "Small icon next to GPS coordinates that opens a dropdown menu.",
+		"navDisplayButtons": "Separate buttons",
+		"navDisplayButtonsDesc": "Individual buttons displayed under the Information section."
 	}
 }

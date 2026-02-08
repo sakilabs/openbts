@@ -21,8 +21,17 @@ import {
 	ukeLocations,
 	ukeOperators,
 } from "./bts.ts";
-import { accounts, apiKeys, attachments, stationComments, userLists, users } from "./auth.ts";
-import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedStations, proposedUMTSCells } from "./submissions.ts";
+import { accounts, apikeys, attachments, passkeys, stationComments, twoFactors, userLists, users } from "./auth.ts";
+import {
+	submissions,
+	proposedCells,
+	proposedGSMCells,
+	proposedLTECells,
+	proposedLocations,
+	proposedNRCells,
+	proposedStations,
+	proposedUMTSCells,
+} from "./submissions.ts";
 
 export const operatorRelations = relations(operators, ({ one, many }) => ({
 	parent: one(operators, {
@@ -139,13 +148,22 @@ export const userCommentsRelations = relations(stationComments, ({ one }) => ({
 	}),
 }));
 
+// Start of Auth
 export const usersRelations = relations(users, ({ many }) => ({
 	accounts: many(accounts),
 	comments: many(stationComments),
 	lists: many(userLists),
-	apiKeys: many(apiKeys),
+	apiKeys: many(apikeys),
+	passkeys: many(passkeys),
+	twoFactors: many(twoFactors),
 	attachments: many(attachments, {
 		relationName: "author",
+	}),
+	submittedSubmissions: many(submissions, {
+		relationName: "submitter",
+	}),
+	reviewedSubmissions: many(submissions, {
+		relationName: "reviewer",
 	}),
 }));
 
@@ -156,13 +174,29 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 	}),
 }));
 
-export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+export const apiKeysRelations = relations(apikeys, ({ one }) => ({
 	users: one(users, {
-		fields: [apiKeys.userId],
+		fields: [apikeys.userId],
 		references: [users.id],
 	}),
 }));
 
+export const passkeysRelations = relations(passkeys, ({ one }) => ({
+	users: one(users, {
+		fields: [passkeys.userId],
+		references: [users.id],
+	}),
+}));
+
+export const twoFactorsRelations = relations(twoFactors, ({ one }) => ({
+	users: one(users, {
+		fields: [twoFactors.userId],
+		references: [users.id],
+	}),
+}));
+// End of Auth
+
+// Start of UKE Radio Lines
 export const manufacturerRelations = relations(radioLinesManufacturers, ({ many }) => ({
 	radioLinesAntennaTypes: many(radioLinesAntennaTypes),
 	radioLinestTansmitterTypes: many(radioLinesTransmitterTypes),
@@ -200,7 +234,9 @@ export const ukeRadioLineRelations = relations(ukeRadioLines, ({ one }) => ({
 		references: [ukeOperators.id],
 	}),
 }));
+// End of UKE Radio Lines
 
+// Start of UKE Permits
 export const permitsRelations = relations(ukePermits, ({ one }) => ({
 	band: one(bands, {
 		fields: [ukePermits.band_id],
@@ -234,6 +270,7 @@ export const stationsPermitsRelations = relations(stationsPermits, ({ one }) => 
 		references: [stations.id],
 	}),
 }));
+// End of UKE Permits
 
 export const networksIdsRelations = relations(networksIds, ({ one }) => ({
 	station: one(stations, {
@@ -242,7 +279,46 @@ export const networksIdsRelations = relations(networksIds, ({ one }) => ({
 	}),
 }));
 
+// Start of Submissions
+export const submissionsRelations = relations(submissions, ({ one, many }) => ({
+	station: one(stations, {
+		fields: [submissions.station_id],
+		references: [stations.id],
+	}),
+	submitter: one(users, {
+		fields: [submissions.submitter_id],
+		references: [users.id],
+		relationName: "submitter",
+	}),
+	reviewer: one(users, {
+		fields: [submissions.reviewer_id],
+		references: [users.id],
+		relationName: "reviewer",
+	}),
+	proposedStations: many(proposedStations),
+	proposedLocations: many(proposedLocations),
+	proposedCells: many(proposedCells),
+}));
+
+export const proposedStationsRelations = relations(proposedStations, ({ one }) => ({
+	submission: one(submissions, {
+		fields: [proposedStations.submission_id],
+		references: [submissions.id],
+	}),
+}));
+
+export const proposedLocationsRelations = relations(proposedLocations, ({ one }) => ({
+	submission: one(submissions, {
+		fields: [proposedLocations.submission_id],
+		references: [submissions.id],
+	}),
+}));
+
 export const proposedCellRelations = relations(proposedCells, ({ one }) => ({
+	submission: one(submissions, {
+		fields: [proposedCells.submission_id],
+		references: [submissions.id],
+	}),
 	station: one(proposedStations, {
 		fields: [proposedCells.station_id],
 		references: [proposedStations.id],
@@ -268,3 +344,4 @@ export const proposedCellRelations = relations(proposedCells, ({ one }) => ({
 		references: [proposedNRCells.proposed_cell_id],
 	}),
 }));
+// End of Submissions

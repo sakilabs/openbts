@@ -1,6 +1,7 @@
 {
 	"groups": {
-		"platform": "Platform"
+		"platform": "Platform",
+		"contribute": "Contribute"
 	},
 	"sections": {
 		"stations": "Stations",
@@ -13,7 +14,8 @@
 		"clfExport": "CLF Export",
 		"submitStation": "Submit Station",
 		"preferences": "Preferences",
-		"accountSettings": "Account Settings"
+		"accountSettings": "Account Settings",
+		"mySubmissions": "My Submissions"
 	},
 	"secondary": {
 		"settings": "Settings",

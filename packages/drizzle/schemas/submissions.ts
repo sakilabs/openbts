@@ -4,13 +4,13 @@ import { bands, cells, locations, operators, ratEnum, regions, stations, Station
 import { sql } from "drizzle-orm/sql";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
-export const SubmissionTypeEnum = pgEnum("submission_type", ["new", "update"]);
+export const SubmissionTypeEnum = pgEnum("submission_type", ["new", "update", "delete"]);
+export const CellOperationEnum = pgEnum("cell_operation", ["add", "update", "delete"]);
+export const StationOperationEnum = pgEnum("station_operation", ["add", "update", "delete"]);
 export const SubmissionsSchema = pgSchema("submissions");
 
 /**
  * Submissions table
- * @example
- * { id: 1, station_id: 1, submitter_id: 1, status: "pending", type: "new", data: { station: { operator_id: 1, rnc: 0, enbi: 0, is_cdma: false, notes: "Test station" }, cells: [{ band: { value: 1800, name: "GSM1800", ua_freq: 1710, duplex: "FDD" }, config: { lac: 123, cid: 456 } }] }, reviewer_id: null, review_notes: null, createdAt: new Date(), updatedAt: new Date(), reviewed_at: null }
  */
 export const submissions = SubmissionsSchema.table(
 	"submissions",
@@ -42,10 +42,11 @@ export const proposedCells = SubmissionsSchema.table(
 	{
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		submission_id: integer("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		operation: CellOperationEnum("operation").notNull().default("add"),
 		target_cell_id: integer("target_cell_id").references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		band_id: integer("band_id").references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" }),
-		rat: ratEnum("rat").notNull(),
+		rat: ratEnum("rat"),
 		notes: text("notes"),
 		is_confirmed: boolean("is_confirmed").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -85,6 +86,7 @@ export const proposedLTECells = SubmissionsSchema.table(
 		tac: integer("tac"),
 		enbid: integer("enbid").notNull(),
 		clid: integer("clid").notNull(),
+		supports_nb_iot: boolean("supports_nb_iot").default(false),
 	},
 	(t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`)],
 );
@@ -95,8 +97,9 @@ export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {
 		.references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	nrtac: integer("nrtac"),
 	gnbid: integer("gnbid"),
+	gnbid_length: integer("gnbid_length").default(24),
 	clid: integer("clid"),
-	nci: integer("nci").unique(),
+	pci: integer("pci"),
 	supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 });
 
@@ -105,8 +108,9 @@ export const proposedStations = SubmissionsSchema.table(
 	{
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 		submission_id: integer("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		operation: StationOperationEnum("operation").notNull().default("add"),
 		target_station_id: integer("target_station_id").references(() => stations.id, { onDelete: "set null", onUpdate: "cascade" }),
-		station_id: varchar("station_id", { length: 16 }).notNull(),
+		station_id: varchar("station_id", { length: 16 }),
 		location_id: integer("location_id").references(() => locations.id, { onDelete: "set null", onUpdate: "cascade" }),
 		operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		notes: text("notes"),

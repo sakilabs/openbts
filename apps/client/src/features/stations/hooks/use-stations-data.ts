@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { fetchApiData } from "@/lib/api";
+import { fetchApiData, fetchJson, API_BASE } from "@/lib/api";
 import { fetchOperators, fetchBands } from "@/features/map/search-api";
-import { fetchStats } from "@/features/map/stats-api";
 import { parseFilters } from "@/features/map/filters";
 import type { Station, Region, StationFilters } from "@/types/station";
 
@@ -45,7 +44,9 @@ type FetchStationsParams = {
 	regionNames: string[];
 };
 
-const fetchStationsList = async (params: FetchStationsParams) => {
+type StationsResponse = { data: Station[]; totalCount: number };
+
+const fetchStationsList = async (params: FetchStationsParams): Promise<StationsResponse> => {
 	const page = params.pageParam ?? 1;
 	const searchParams = new URLSearchParams();
 	searchParams.set("page", page.toString());
@@ -56,7 +57,7 @@ const fetchStationsList = async (params: FetchStationsParams) => {
 	if (params.filters.rat.length) searchParams.set("rat", params.filters.rat.join(","));
 	if (params.regionNames.length) searchParams.set("regions", params.regionNames.join(","));
 
-	return fetchApiData<Station[]>(`stations?${searchParams.toString()}`);
+	return fetchJson<StationsResponse>(`${API_BASE}/stations?${searchParams.toString()}`);
 };
 
 export function useStationsData() {
@@ -65,6 +66,7 @@ export function useStationsData() {
 		bands: [],
 		rat: [],
 		source: "internal",
+		recentOnly: false,
 	});
 	const [selectedRegions, setSelectedRegions] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -87,12 +89,6 @@ export function useStationsData() {
 		staleTime: 1000 * 60 * 30,
 	});
 
-	const { data: stats } = useQuery({
-		queryKey: ["stats"],
-		queryFn: fetchStats,
-		staleTime: 1000 * 60 * 5,
-	});
-
 	const selectedRegionNames = useMemo(() => {
 		return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
 	}, [selectedRegions, regions]);
@@ -108,7 +104,7 @@ export function useStationsData() {
 			}),
 		initialPageParam: 1,
 		getNextPageParam: (lastPage, allPages) => {
-			return lastPage.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
+			return lastPage.data.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
 		},
 		staleTime: 1000 * 60 * 5,
 		enabled: searchQuery.trim().length === 0,
@@ -131,8 +127,13 @@ export function useStationsData() {
 	});
 
 	const stations = useMemo(() => {
-		return searchQuery.trim().length > 0 ? searchResults : (data?.pages.flat() ?? []);
+		return searchQuery.trim().length > 0 ? searchResults : (data?.pages.flatMap((page) => page.data) ?? []);
 	}, [data, searchQuery, searchResults]);
+
+	const totalStationsFromApi = useMemo(() => {
+		if (!data?.pages.length) return undefined;
+		return data.pages[data.pages.length - 1]?.totalCount;
+	}, [data]);
 
 	const uniqueBandValues = useMemo(() => {
 		return [...new Set(bands.map((b) => b.value))].sort((a, b) => a - b);
@@ -145,7 +146,7 @@ export function useStationsData() {
 		operators,
 		regions,
 		uniqueBandValues,
-		totalStations: stats?.counts.stations,
+		totalStations: totalStationsFromApi,
 
 		filters,
 		setFilters,

@@ -2,10 +2,12 @@ import { useSyncExternalStore, useCallback } from "react";
 
 export type GpsFormat = "decimal" | "dms";
 export type NavigationApp = "google-maps" | "apple-maps" | "waze";
+export type NavLinksDisplay = "inline" | "buttons";
 
 export interface UserPreferences {
 	gpsFormat: GpsFormat;
 	navigationApps: NavigationApp[];
+	navLinksDisplay: NavLinksDisplay;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -13,6 +15,7 @@ const STORAGE_KEY = "user-preferences";
 const DEFAULT_PREFERENCES: UserPreferences = {
 	gpsFormat: "decimal",
 	navigationApps: ["google-maps"],
+	navLinksDisplay: "inline",
 };
 
 let listeners: Array<() => void> = [];

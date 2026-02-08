@@ -96,6 +96,7 @@
 		"enbidRequired": "eNBID jest wymagany",
 		"clidRequired": "CLID jest wymagany",
 		"nciRequired": "NCI jest wymagany",
+		"gnbidRequired": "gNBID jest wymagany",
 		"mustBePositive": "Wartość nie może być ujemna"
 	}
 }

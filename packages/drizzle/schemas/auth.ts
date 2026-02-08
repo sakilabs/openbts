@@ -12,7 +12,7 @@ export const users = AuthSchema.table(
 	{
 		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
 		username: varchar("username", { length: 25 }).unique(),
-		displayUsername: varchar("displayUsername", { length: 25 }),
+		displayUsername: varchar("displayUsername", { length: 32 }),
 		email: varchar("email", { length: 100 }).notNull().unique(),
 		image: text("image"),
 		name: text("name").notNull(),
@@ -23,6 +23,7 @@ export const users = AuthSchema.table(
 		banned: boolean("banned").default(false),
 		banReason: text("banReason"),
 		banExpires: timestamp({ withTimezone: true }),
+		twoFactorEnabled: boolean("two_factor_enabled").default(false),
 	},
 	(table) => [index("users_id_idx").on(table.id), index("users_email_idx").on(table.email)],
 );
@@ -73,8 +74,8 @@ export const verificationTokens = AuthSchema.table("verification_tokens", {
 	updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-export const apiKeys = AuthSchema.table(
-	"apiKeys",
+export const apikeys = AuthSchema.table(
+	"apikeys",
 	{
 		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
 		name: text("name"),
@@ -101,6 +102,39 @@ export const apiKeys = AuthSchema.table(
 		metadata: text("metadata").default('{"tier":"basic"}'),
 	},
 	(table) => [index("apikeys_key_idx").on(table.key), index("apikeys_userId_idx").on(table.userId)],
+);
+
+export const passkeys = pgTable(
+	"passkeys",
+	{
+		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
+		name: text("name"),
+		publicKey: text("public_key").notNull(),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		credentialID: text("credential_id").notNull(),
+		counter: integer("counter").notNull(),
+		deviceType: text("device_type").notNull(),
+		backedUp: boolean("backed_up").notNull(),
+		transports: text("transports"),
+		createdAt: timestamp("created_at"),
+		aaguid: text("aaguid"),
+	},
+	(table) => [index("passkeys_userId_idx").on(table.userId), index("passkeys_credentialID_idx").on(table.credentialID)],
+);
+
+export const twoFactors = pgTable(
+	"two_factors",
+	{
+		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
+		secret: text("secret").notNull(),
+		backupCodes: text("backup_codes").notNull(),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+	},
+	(table) => [index("twoFactors_secret_idx").on(table.secret), index("twoFactors_userId_idx").on(table.userId)],
 );
 
 /**

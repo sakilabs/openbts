@@ -1,12 +1,16 @@
 import { z } from "zod/v4";
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
+import { operators } from "@openbts/drizzle";
 import { convertToCLF, sortCLFLines, type ClfFormat, type CellExportData } from "../../../../utils/clf-export.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { FastifyReply } from "fastify";
 import type { Route } from "../../../../interfaces/routes.interface.js";
+
+const NETWORKS_MNC = 26034;
+const NETWORKS_CHILD_MNCS = [26002, 26003];
 
 const schemaRoute = {
 	querystring: z.object({
@@ -59,18 +63,30 @@ const schemaRoute = {
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
-	const { format, operators: operatorIds, regions: regionCodes, rat, bands: bandIds } = req.query;
+	const { format, operators: operatorMncs, regions: regionCodes, rat, bands: bandIds } = req.query;
+
+	let resolvedOperatorIds: number[] | undefined;
+	if (operatorMncs && operatorMncs.length > 0) {
+		const mncs = new Set(operatorMncs);
+		if (mncs.has(NETWORKS_MNC)) for (const child of NETWORKS_CHILD_MNCS) mncs.add(child);
+
+		const matched = await db.query.operators.findMany({
+			where: inArray(operators.mnc, [...mncs]),
+			columns: { id: true },
+		});
+		resolvedOperatorIds = matched.map((o) => o.id);
+	}
 
 	const rows = await db.query.cells.findMany({
 		where: (fields, { and, or, inArray }) => {
 			const conditions = [];
-			if (operatorIds && operatorIds.length > 0) {
+			if (resolvedOperatorIds && resolvedOperatorIds.length > 0) {
 				conditions.push(
 					sql`EXISTS (
 						SELECT 1 FROM stations s
 						WHERE s.id = ${fields.station_id}
 						AND s.operator_id = ANY(ARRAY[${sql.join(
-							operatorIds.map((id) => sql`${id}`),
+							resolvedOperatorIds.map((id) => sql`${id}`),
 							sql`,`,
 						)}]::int4[])
 					)`,

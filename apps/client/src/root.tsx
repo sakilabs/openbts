@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, Link as RouterLink } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, Link as RouterLink, useNavigate } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { AuthUIProvider } from "@daveyplate/better-auth-ui";
@@ -33,6 +33,28 @@ function LanguageAwareHtml({ children }: { children: ReactNode }) {
 	);
 }
 
+function AppProviders({ children }: { children: ReactNode }) {
+	const navigate = useNavigate();
+
+	return (
+		<AuthUIProvider
+			authClient={authClient}
+			navigate={navigate}
+			replace={(path) => navigate(path, { replace: true })}
+			Link={AuthLink}
+			onSessionChange={() => queryClient.invalidateQueries()}
+			social={{
+				providers: ["github", "google"],
+			}}
+			passkey
+			twoFactor={["totp"]}
+		>
+			<ErrorBoundary>{children}</ErrorBoundary>
+			<Toaster />
+		</AuthUIProvider>
+	);
+}
+
 export function Layout({ children }: { children: ReactNode }) {
 	return (
 		<I18nextProvider i18n={i18n}>
@@ -46,10 +68,7 @@ export function Layout({ children }: { children: ReactNode }) {
 				<body>
 					<QueryClientProvider client={queryClient}>
 						<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-							<AuthUIProvider authClient={authClient} Link={AuthLink} onSessionChange={() => queryClient.invalidateQueries()}>
-								<ErrorBoundary>{children}</ErrorBoundary>
-								<Toaster />
-							</AuthUIProvider>
+							<AppProviders>{children}</AppProviders>
 						</ThemeProvider>
 					</QueryClientProvider>
 					<ScrollRestoration />

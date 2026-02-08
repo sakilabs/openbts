@@ -9,8 +9,10 @@ CREATE TYPE "public"."uke_permission_type" AS ENUM('zmP', 'P');--> statement-bre
 CREATE TYPE "public"."rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> statement-breakpoint
 CREATE TYPE "public"."api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."cell_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
+CREATE TYPE "public"."station_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
 CREATE TYPE "public"."submission_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
-CREATE TYPE "public"."submission_type" AS ENUM('new', 'update');--> statement-breakpoint
+CREATE TYPE "public"."submission_type" AS ENUM('new', 'update', 'delete');--> statement-breakpoint
 CREATE TABLE "bands" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "bands_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"value" integer,
@@ -273,7 +275,7 @@ CREATE TABLE "auth"."accounts" (
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "auth"."apiKeys" (
+CREATE TABLE "auth"."apikeys" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"name" text,
 	"start" text,
@@ -326,6 +328,20 @@ CREATE TABLE "audit_logs" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "passkeys" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"name" text,
+	"public_key" text NOT NULL,
+	"user_id" uuid NOT NULL,
+	"credential_id" text NOT NULL,
+	"counter" integer NOT NULL,
+	"device_type" text NOT NULL,
+	"backed_up" boolean NOT NULL,
+	"transports" text,
+	"created_at" timestamp,
+	"aaguid" text
+);
+--> statement-breakpoint
 CREATE TABLE "station_comments" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "station_comments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"station_id" integer NOT NULL,
@@ -335,6 +351,13 @@ CREATE TABLE "station_comments" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "station_comments_content_len" CHECK (char_length("station_comments"."content") BETWEEN 1 AND 10000)
+);
+--> statement-breakpoint
+CREATE TABLE "two_factors" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"secret" text NOT NULL,
+	"backup_codes" text NOT NULL,
+	"user_id" uuid NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user_lists" (
@@ -355,7 +378,7 @@ CREATE TABLE "user_lists" (
 CREATE TABLE "auth"."users" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"username" varchar(25),
-	"displayUsername" varchar(25),
+	"displayUsername" varchar(32),
 	"email" varchar(100) NOT NULL,
 	"image" text,
 	"name" text NOT NULL,
@@ -366,6 +389,7 @@ CREATE TABLE "auth"."users" (
 	"banned" boolean DEFAULT false,
 	"banReason" text,
 	"banExpires" timestamp with time zone,
+	"two_factor_enabled" boolean DEFAULT false,
 	CONSTRAINT "users_username_unique" UNIQUE("username"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
@@ -383,10 +407,11 @@ CREATE TABLE "auth"."verification_tokens" (
 CREATE TABLE "submissions"."proposed_cells" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."proposed_cells_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"submission_id" integer,
+	"operation" "cell_operation" DEFAULT 'add' NOT NULL,
 	"target_cell_id" integer,
 	"station_id" integer,
 	"band_id" integer,
-	"rat" "rat" NOT NULL,
+	"rat" "rat",
 	"notes" text,
 	"is_confirmed" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -406,6 +431,7 @@ CREATE TABLE "submissions"."proposed_lte_cells" (
 	"tac" integer,
 	"enbid" integer NOT NULL,
 	"clid" integer NOT NULL,
+	"supports_nb_iot" boolean DEFAULT false,
 	CONSTRAINT "clid_check" CHECK ("submissions"."proposed_lte_cells"."clid" BETWEEN 0 AND 255)
 );
 --> statement-breakpoint
@@ -425,17 +451,18 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 	"proposed_cell_id" integer PRIMARY KEY NOT NULL,
 	"nrtac" integer,
 	"gnbid" integer,
+	"gnbid_length" integer DEFAULT 24,
 	"clid" integer,
-	"nci" integer,
-	"supports_nr_redcap" boolean DEFAULT false,
-	CONSTRAINT "proposed_nr_cells_nci_unique" UNIQUE("nci")
+	"pci" integer,
+	"supports_nr_redcap" boolean DEFAULT false
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_stations" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."proposed_stations_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"submission_id" integer,
+	"operation" "station_operation" DEFAULT 'add' NOT NULL,
 	"target_station_id" integer,
-	"station_id" varchar(16) NOT NULL,
+	"station_id" varchar(16),
 	"location_id" integer,
 	"operator_id" integer,
 	"notes" text,
@@ -491,11 +518,13 @@ ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_rx_antenna_type_id_r
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_operator_id_uke_operators_id_fk" FOREIGN KEY ("operator_id") REFERENCES "public"."uke_operators"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fk" FOREIGN KEY ("cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "auth"."apiKeys" ADD CONSTRAINT "apiKeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."apikeys" ADD CONSTRAINT "apikeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fk" FOREIGN KEY ("invoked_by") REFERENCES "auth"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "two_factors" ADD CONSTRAINT "two_factors_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_lists" ADD CONSTRAINT "user_lists_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_submission_id_submissions_id_fk" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_target_cell_id_cells_id_fk" FOREIGN KEY ("target_cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
@@ -554,8 +583,8 @@ CREATE INDEX "umts_cells_cid_idx" ON "umts_cells" USING btree ("cid");--> statem
 CREATE INDEX "umts_cells_cid_trgm_idx" ON "umts_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "umts_cells_cid_long_trgm_idx" ON "umts_cells" USING gin (("cid_long"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "accounts_user_id_idx" ON "auth"."accounts" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "apikeys_key_idx" ON "auth"."apiKeys" USING btree ("key");--> statement-breakpoint
-CREATE INDEX "apikeys_userId_idx" ON "auth"."apiKeys" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "apikeys_key_idx" ON "auth"."apikeys" USING btree ("key");--> statement-breakpoint
+CREATE INDEX "apikeys_userId_idx" ON "auth"."apikeys" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "attachment_author_id_idx" ON "attachments" USING btree ("author_id");--> statement-breakpoint
 CREATE INDEX "attachments_created_at_idx" ON "attachments" USING btree ("createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_record_id_idx" ON "audit_logs" USING btree ("record_id");--> statement-breakpoint
@@ -563,9 +592,13 @@ CREATE INDEX "audit_logs_invoked_by_idx" ON "audit_logs" USING btree ("invoked_b
 CREATE INDEX "audit_logs_table_name_idx" ON "audit_logs" USING btree ("table_name");--> statement-breakpoint
 CREATE INDEX "audit_logs_date_created_idx" ON "audit_logs" USING btree ("createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_action_idx" ON "audit_logs" USING btree ("action");--> statement-breakpoint
+CREATE INDEX "passkeys_userId_idx" ON "passkeys" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "passkeys_credentialID_idx" ON "passkeys" USING btree ("credential_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_id_idx" ON "station_comments" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "station_comments_user_id_idx" ON "station_comments" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_created_idx" ON "station_comments" USING btree ("station_id","createdAt");--> statement-breakpoint
+CREATE INDEX "twoFactors_secret_idx" ON "two_factors" USING btree ("secret");--> statement-breakpoint
+CREATE INDEX "twoFactors_userId_idx" ON "two_factors" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "user_lists_id_idx" ON "user_lists" USING btree ("id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" USING btree ("created_by");--> statement-breakpoint
 CREATE INDEX "user_lists_stations_gin" ON "user_lists" USING gin ("stations");--> statement-breakpoint

@@ -14,6 +14,7 @@ import type { RouteHandle } from "./_layout";
 export const handle: RouteHandle = {
 	titleKey: "items.database",
 	i18nNamespace: "nav",
+	breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
 };
 
 export default function StationsListPage() {

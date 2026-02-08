@@ -1,19 +1,21 @@
 {
 	"groups": {
-		"platform": "Platforma"
+		"platform": "Główne",
+		"contribute": "Reszta"
 	},
 	"sections": {
 		"stations": "Stacje",
-		"contribute": "Współtworzenie",
+		"contribute": "Dodawanie",
 		"settings": "Ustawienia"
 	},
 	"items": {
 		"mapView": "Widok mapy",
 		"database": "Baza danych",
 		"clfExport": "Eksport CLF",
-		"submitStation": "Dodaj stację",
+		"submitStation": "Nowe zgłoszenie",
 		"preferences": "Preferencje",
-		"accountSettings": "Ustawienia konta"
+		"accountSettings": "Ustawienia konta",
+		"mySubmissions": "Moje zgłoszenia"
 	},
 	"secondary": {
 		"settings": "Ustawienia",

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AirportTowerIcon, ArrowRight01Icon, Login01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { AddCircleIcon, AirportTowerIcon, ArrowRight01Icon, Login01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,6 +11,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { authClient } from "@/lib/auth-client";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { APP_NAME } from "@/lib/api";
 import {
 	Sidebar,
 	SidebarContent,
@@ -40,13 +41,16 @@ const navMainConfig = [
 			{ titleKey: "items.clfExport", url: "/clf-export" },
 		],
 	},
-	// {
-	// 	titleKey: "sections.contribute",
-	// 	key: "contribute",
-	// 	url: "#",
-	// 	icon: AddCircleIcon,
-	// 	items: [{ titleKey: "items.submitStation", url: "/submissions" }],
-	// },
+];
+
+const authNavConfig = [
+	{
+		titleKey: "sections.contribute",
+		key: "contribute",
+		url: "#",
+		icon: AddCircleIcon,
+		items: [{ titleKey: "items.submitStation", url: "/submission" }],
+	},
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -54,23 +58,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const [authDialogOpen, setAuthDialogOpen] = useState(false);
 	const { data: session } = authClient.useSession();
 
-	const navItems = navMainConfig.map((section) => ({
-		title: t(section.titleKey),
-		key: section.key,
-		url: section.url,
-		icon: section.icon,
-		items: section.items.map((item) => ({
-			title: t(item.titleKey),
-			url: item.url,
-		})),
-	}));
+	const mapConfig = (config: typeof navMainConfig) =>
+		config.map((section) => ({
+			title: t(section.titleKey),
+			key: section.key,
+			url: section.url,
+			icon: section.icon,
+			items: section.items.map((item) => ({
+				title: t(item.titleKey),
+				url: item.url,
+			})),
+		}));
+
+	const navItems = mapConfig(navMainConfig);
+	const authNavItems = session?.user ? mapConfig(authNavConfig) : [];
 
 	const location = useLocation();
-	const [settingsOpen, setSettingsOpen] = useState(location.pathname === "/account/settings" || location.pathname === "/preferences");
+	const [settingsOpen, setSettingsOpen] = useState(location.pathname.startsWith("/account/") || location.pathname === "/preferences");
 
 	const settingsSubItems = [
 		{ title: t("items.preferences"), url: "/preferences" },
-		...(session?.user ? [{ title: t("items.accountSettings"), url: "/account/settings" }] : []),
+		...(session?.user
+			? [
+					{ title: t("items.accountSettings"), url: "/account/settings" },
+					{ title: t("items.mySubmissions"), url: "/account/submissions" },
+				]
+			: []),
 	];
 
 	return (
@@ -83,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 								<HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">OpenBTS</span>
+								<span className="truncate font-medium">{APP_NAME}</span>
 							</div>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
@@ -91,6 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={navItems} groupLabel={t("groups.platform")} />
+				{authNavItems.length > 0 && <NavMain items={authNavItems} groupLabel={t("groups.contribute")} />}
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>

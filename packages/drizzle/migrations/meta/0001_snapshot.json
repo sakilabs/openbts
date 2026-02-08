@@ -1,5 +1,5 @@
 {
-  "id": "46eda10b-d1e8-4b4f-8253-68aa6d158832",
+  "id": "21beccc7-24f6-4df9-bd5c-8ba53ee5ba60",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -2756,8 +2756,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "auth.apiKeys": {
-      "name": "apiKeys",
+    "auth.apikeys": {
+      "name": "apikeys",
       "schema": "auth",
       "columns": {
         "id": {
@@ -2927,9 +2927,9 @@
         }
       },
       "foreignKeys": {
-        "apiKeys_user_id_users_id_fk": {
-          "name": "apiKeys_user_id_users_id_fk",
-          "tableFrom": "apiKeys",
+        "apikeys_user_id_users_id_fk": {
+          "name": "apikeys_user_id_users_id_fk",
+          "tableFrom": "apikeys",
           "tableTo": "users",
           "schemaTo": "auth",
           "columnsFrom": [
@@ -3274,6 +3274,132 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.passkeys": {
+      "name": "passkeys",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "public_key": {
+          "name": "public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "credential_id": {
+          "name": "credential_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "counter": {
+          "name": "counter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "device_type": {
+          "name": "device_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "backed_up": {
+          "name": "backed_up",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transports": {
+          "name": "transports",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aaguid": {
+          "name": "aaguid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "passkeys_userId_idx": {
+          "name": "passkeys_userId_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "passkeys_credentialID_idx": {
+          "name": "passkeys_credentialID_idx",
+          "columns": [
+            {
+              "expression": "credential_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "passkeys_user_id_users_id_fk": {
+          "name": "passkeys_user_id_users_id_fk",
+          "tableFrom": "passkeys",
+          "tableTo": "users",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.station_comments": {
       "name": "station_comments",
       "schema": "",
@@ -3425,6 +3551,90 @@
           "value": "char_length(\"station_comments\".\"content\") BETWEEN 1 AND 10000"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.two_factors": {
+      "name": "two_factors",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "secret": {
+          "name": "secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "backup_codes": {
+          "name": "backup_codes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "twoFactors_secret_idx": {
+          "name": "twoFactors_secret_idx",
+          "columns": [
+            {
+              "expression": "secret",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "twoFactors_userId_idx": {
+          "name": "twoFactors_userId_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "two_factors_user_id_users_id_fk": {
+          "name": "two_factors_user_id_users_id_fk",
+          "tableFrom": "two_factors",
+          "tableTo": "users",
+          "schemaTo": "auth",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.user_lists": {
@@ -3609,7 +3819,7 @@
         },
         "displayUsername": {
           "name": "displayUsername",
-          "type": "varchar(25)",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false
         },
@@ -3677,6 +3887,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "two_factor_enabled": {
+          "name": "two_factor_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -3820,6 +4037,14 @@
           "primaryKey": false,
           "notNull": false
         },
+        "operation": {
+          "name": "operation",
+          "type": "cell_operation",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'add'"
+        },
         "target_cell_id": {
           "name": "target_cell_id",
           "type": "integer",
@@ -3843,7 +4068,7 @@
           "type": "rat",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "notes": {
           "name": "notes",
@@ -4042,6 +4267,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "supports_nb_iot": {
+          "name": "supports_nb_iot",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -4202,14 +4434,21 @@
           "primaryKey": false,
           "notNull": false
         },
+        "gnbid_length": {
+          "name": "gnbid_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 24
+        },
         "clid": {
           "name": "clid",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "nci": {
-          "name": "nci",
+        "pci": {
+          "name": "pci",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -4240,15 +4479,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "proposed_nr_cells_nci_unique": {
-          "name": "proposed_nr_cells_nci_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "nci"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4280,6 +4511,14 @@
           "primaryKey": false,
           "notNull": false
         },
+        "operation": {
+          "name": "operation",
+          "type": "station_operation",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'add'"
+        },
         "target_station_id": {
           "name": "target_station_id",
           "type": "integer",
@@ -4290,7 +4529,7 @@
           "name": "station_id",
           "type": "varchar(16)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "location_id": {
           "name": "location_id",
@@ -4758,6 +4997,24 @@
         "admin"
       ]
     },
+    "public.cell_operation": {
+      "name": "cell_operation",
+      "schema": "public",
+      "values": [
+        "add",
+        "update",
+        "delete"
+      ]
+    },
+    "public.station_operation": {
+      "name": "station_operation",
+      "schema": "public",
+      "values": [
+        "add",
+        "update",
+        "delete"
+      ]
+    },
     "public.submission_status": {
       "name": "submission_status",
       "schema": "public",
@@ -4772,7 +5029,8 @@
       "schema": "public",
       "values": [
         "new",
-        "update"
+        "update",
+        "delete"
       ]
     }
   },

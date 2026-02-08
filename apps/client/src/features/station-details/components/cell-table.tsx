@@ -134,12 +134,12 @@ export function CellTable({ rat, cells }: CellTableProps) {
 				<div className="px-4 py-2 border-t bg-muted/30 flex flex-wrap gap-1.5">
 					{cells.some((c) => c.details?.supports_nb_iot) && (
 						<span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">
-							<HugeiconsIcon icon={WifiConnected01Icon} className="size-3" /> {t("cells.nbIot")}
+							<HugeiconsIcon icon={WifiConnected01Icon} className="size-3" /> NB-IoT
 						</span>
 					)}
 					{cells.some((c) => c.details?.supports_nr_redcap) && (
 						<span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded text-xs font-medium">
-							<HugeiconsIcon icon={BatteryLowIcon} className="size-3" /> {t("cells.redCap")}
+							<HugeiconsIcon icon={BatteryLowIcon} className="size-3" /> RedCap
 						</span>
 					)}
 				</div>

@@ -6,7 +6,8 @@ export default [
 		route("stations", "routes/stations.tsx"),
 		route("clf-export", "routes/clf-export.tsx"),
 		route("account/settings", "routes/account/settings.tsx"),
+		route("account/submissions", "routes/account/submissions.tsx"),
 		route("preferences", "routes/preferences.tsx"),
-		// route("submissions", "routes/submissions.tsx"),
+		route("submission", "routes/submission.tsx"),
 	]),
 ] satisfies RouteConfig;

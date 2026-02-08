@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 
 export const API_BASE = import.meta.env.VITE_API_URL || "https://openbts.sakilabs.com/api/v1";
+export const APP_NAME = import.meta.env.VITE_APP_NAME || "OpenBTS";
 
 type ApiError = { code: string; message: string };
 
@@ -25,15 +26,11 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 	const response = await fetch(url, fetchOptions);
 
 	if (!response.ok) {
-		if (allowedErrors?.includes(response.status)) {
-			return null as T;
-		}
+		if (allowedErrors?.includes(response.status)) return null as T;
 
 		try {
 			const errorData = await response.json();
-			if (errorData.errors?.length) {
-				throw new ApiResponseError(response.status, errorData.errors);
-			}
+			if (errorData.errors?.length) throw new ApiResponseError(response.status, errorData.errors);
 		} catch (e) {
 			if (e instanceof ApiResponseError) throw e;
 		}

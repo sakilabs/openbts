@@ -19,6 +19,7 @@ export type LTECellDetails = {
 	tac?: number;
 	enbid: number;
 	clid: number;
+	supports_nb_iot?: boolean;
 };
 
 export type NRCellDetails = {
@@ -26,6 +27,8 @@ export type NRCellDetails = {
 	gnbid?: number;
 	clid?: number;
 	nci?: number;
+	pci?: number;
+	supports_nr_redcap?: boolean;
 };
 
 export type CellFormDetails = GSMCellDetails | UMTSCellDetails | LTECellDetails | NRCellDetails;
@@ -59,17 +62,17 @@ export type CellOperation = "added" | "updated" | "removed";
 export type CellPayload = {
 	operation: CellOperation;
 	target_cell_id?: number;
-	band_id: number | null;
-	rat: RatType;
-	notes: string | null;
-	details: Partial<CellFormDetails>;
+	band_id?: number | null;
+	rat?: RatType;
+	notes?: string | null;
+	details?: Partial<CellFormDetails>;
 };
 
 export type SubmissionFormData = {
 	station_id: number | null;
-	type: "new" | "update";
-	proposedStation?: ProposedStationForm;
-	proposedLocation?: ProposedLocationForm;
+	type: "new" | "update" | "delete";
+	station?: ProposedStationForm;
+	location?: ProposedLocationForm;
 	cells: CellPayload[];
 };
 

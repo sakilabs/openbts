@@ -83,8 +83,8 @@ export async function createSubmission(data: SubmissionFormData): Promise<Submis
 	};
 
 	if (data.station_id) payload.station_id = data.station_id;
-	if (data.proposedStation) payload.proposedStation = data.proposedStation;
-	if (data.proposedLocation) payload.proposedLocation = data.proposedLocation;
+	if (data.station) payload.station = data.station;
+	if (data.location) payload.location = data.location;
 	if (data.cells.length > 0) {
 		payload.cells = data.cells.map((cell) => ({
 			operation: cell.operation,

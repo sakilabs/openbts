@@ -144,7 +144,9 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 													{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 												</span>
 												<CopyButton text={`${station?.location.latitude}, ${station?.location.longitude}`} />
-												<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} />
+												{preferences.navLinksDisplay === "inline" && (
+													<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
+												)}
 											</div>
 											<div className="flex items-center gap-2">
 												<HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
@@ -165,6 +167,11 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 												</div>
 											</div>
 											{station?.networks && <NetWorkSIds networks={station.networks} />}
+											{preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
+												<div className="sm:col-span-2 pt-3 border-t border-border/50">
+													<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="buttons" />
+												</div>
+											)}
 										</div>
 									</section>
 

@@ -53,7 +53,17 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
 								</div>
 							</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-							<DropdownMenuItem onSelect={() => authClient.signOut()}>
+							<DropdownMenuItem
+								onClick={async () => {
+									await authClient.signOut({
+										fetchOptions: {
+											onSuccess: () => {
+												window.location.href = "/";
+											},
+										},
+									});
+								}}
+							>
 								<HugeiconsIcon icon={Logout02Icon} className="size-4" />
 								Log out
 							</DropdownMenuItem>

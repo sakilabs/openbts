@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import debug from "debug";
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { dlogger } from "./config.js";
@@ -23,6 +25,7 @@ export default class App {
 		this.fastify = Fastify({
 			logger: false,
 			trustProxy: true,
+			genReqId: () => randomUUID(),
 			// ajv: {
 			// 	customOptions: {
 			// 		allErrors: true,
@@ -73,8 +76,9 @@ export default class App {
 			const statusCode = error.statusCode || 500;
 			const message = error.message || "An internal server error occurred.";
 			const code = error.code || "INTERNAL_SERVER_ERROR";
-			if (error.statusCode !== 401) {
-				logger.error("INTERNAL_SERVER_ERROR", {
+
+			if (statusCode !== 404) {
+				logger.error(error.code, {
 					...serializeError(error),
 					statusCode,
 					code,
@@ -114,7 +118,25 @@ export default class App {
 
 	private initMiddlewares(): void {
 		this.dlogger("Registering middlewares");
-		this.fastify.register(import("@fastify/cors")).register(import("@fastify/multipart"));
+		this.fastify
+			.register(cors, {
+				origin: (origin, cb) => {
+					if (typeof origin === "undefined") {
+						cb(null, true);
+						return;
+					}
+
+					const hostname = new URL(origin).hostname;
+					if (hostname === "localhost" || hostname === "openbts.sakilabs.com") {
+						cb(null, true);
+						return;
+					}
+
+					cb(new Error("CORS origin not allowed"), false);
+				},
+				credentials: true,
+			})
+			.register(import("@fastify/multipart"));
 	}
 
 	private initControllers(): void {

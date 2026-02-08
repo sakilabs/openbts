@@ -206,7 +206,7 @@ export async function importStations(): Promise<boolean> {
 export async function associateStationsWithPermits(): Promise<boolean> {
 	logger.log("Associating stations with permits...");
 	const permits = await db.query.ukePermits.findMany({
-		columns: { id: true, station_id: true },
+		columns: { id: true, station_id: true, operator_id: true },
 	});
 	logger.log(`Found ${permits.length} permits`);
 	if (!permits.length) {
@@ -219,7 +219,7 @@ export async function associateStationsWithPermits(): Promise<boolean> {
 	logger.log(`Looking for ${permitStationIds.length} unique station IDs`);
 	const matchingStations = await db.query.stations.findMany({
 		where: inArray(stations.station_id, permitStationIds),
-		columns: { id: true, station_id: true },
+		columns: { id: true, station_id: true, operator_id: true },
 	});
 	logger.log(`Found ${matchingStations.length} matching stations`);
 	if (!matchingStations.length) {
@@ -228,16 +228,20 @@ export async function associateStationsWithPermits(): Promise<boolean> {
 		return false;
 	}
 
-	const stationIdMap = new Map<string, number>();
+	const stationsByKey = new Map<string, number>();
 	for (const s of matchingStations) {
-		stationIdMap.set(s.station_id, s.id);
+		if (s.operator_id !== null) stationsByKey.set(`${s.station_id}:${s.operator_id}`, s.id);
 	}
 
 	const associations: Array<{ permit_id: number; station_id: number }> = [];
+	let skippedOperatorMismatch = 0;
 	for (const permit of permits) {
-		const internalStationId = stationIdMap.get(permit.station_id);
-		if (internalStationId != null) associations.push({ permit_id: permit.id, station_id: internalStationId });
+		const key = `${permit.station_id}:${permit.operator_id}`;
+		const internalStationId = stationsByKey.get(key);
+		if (internalStationId !== undefined) associations.push({ permit_id: permit.id, station_id: internalStationId });
+		else skippedOperatorMismatch++;
 	}
+	if (skippedOperatorMismatch > 0) logger.warn(`Skipped ${skippedOperatorMismatch} permits (no station with matching station_id + operator)`);
 	logger.log(`Creating ${associations.length} associations`);
 	if (!associations.length) {
 		logger.log("No associations to create");

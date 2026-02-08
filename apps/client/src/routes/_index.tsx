@@ -7,6 +7,7 @@ const MapView = lazy(() => import("@/features/map/components/map-view"));
 export const handle: RouteHandle = {
 	titleKey: "items.mapView",
 	i18nNamespace: "nav",
+	breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
 };
 
 export default function Page() {

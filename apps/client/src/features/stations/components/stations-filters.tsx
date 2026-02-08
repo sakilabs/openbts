@@ -122,7 +122,7 @@ export function StationsFilters({
 	};
 
 	const handleClearFilters = () => {
-		onFiltersChange({ operators: [], bands: [], rat: [], source: "internal" });
+		onFiltersChange({ operators: [], bands: [], rat: [], source: "internal", recentOnly: false });
 		onRegionsChange([]);
 	};
 

@@ -28,16 +28,19 @@ const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_c
 const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true });
 const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true });
 const proposedCellInsert = createInsertSchema(proposedCells)
-	.omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true })
-	.extend({ details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]) })
+	.omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
+	.extend({
+		operation: z.enum(["added", "updated", "removed"]).optional(),
+		details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
+	})
 	.strict();
 
 const singleSubmissionSchema = z
 	.object({
 		station_id: submissionsInsertBase.shape.station_id.optional(),
 		type: submissionsInsertBase.shape.type.optional(),
-		proposedStation: proposedStationInsert.optional(),
-		proposedLocation: proposedLocationInsert.optional(),
+		station: proposedStationInsert.optional(),
+		location: proposedLocationInsert.optional(),
 		cells: z.array(proposedCellInsert).optional(),
 	})
 	.strict();
@@ -61,12 +64,20 @@ const schemaRoute = {
 
 type ResponseData = z.infer<typeof submissionsSelectSchema>[];
 
+function mapCellOperation(op: string): "add" | "update" | "delete" {
+	switch (op) {
+		case "updated": return "update";
+		case "removed": return "delete";
+		default: return "add";
+	}
+}
+
 async function processSubmission(
 	tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
 	input: SingleSubmission,
 	userId: string,
 ): Promise<z.infer<typeof submissionsSelectSchema>> {
-	const { station_id, type, proposedStation, proposedLocation, cells: proposedCellsInput } = input;
+	const { station_id, type, station: stationData, location: locationData, cells: proposedCellsInput } = input;
 
 	if (station_id) {
 		const stationId = Number(station_id);
@@ -81,8 +92,8 @@ async function processSubmission(
 		.returning();
 	if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
 
-	if (proposedStation) await tx.insert(proposedStations).values({ ...proposedStation, submission_id: submission.id });
-	if (proposedLocation) await tx.insert(proposedLocations).values({ ...proposedLocation, submission_id: submission.id });
+	if (stationData) await tx.insert(proposedStations).values({ ...stationData, submission_id: submission.id });
+	if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
 	if (proposedCellsInput && proposedCellsInput.length > 0) {
 		for (const cell of proposedCellsInput) {
@@ -92,39 +103,42 @@ async function processSubmission(
 					submission_id: submission.id,
 					target_cell_id: cell.target_cell_id ?? null,
 					station_id: cell.station_id ?? station_id ?? null,
-					band_id: cell.band_id,
-					rat: cell.rat,
+					band_id: cell.band_id ?? null,
+					rat: cell.rat ?? null,
 					notes: cell.notes ?? null,
 					is_confirmed: false,
+					operation: mapCellOperation(cell.operation ?? "added"),
 				})
 				.returning();
 			if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
 
-			switch (cell.rat) {
-				case "GSM":
-					{
-						const details = cell.details as z.infer<typeof gsmInsertSchema>;
-						await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
-					}
-					break;
-				case "UMTS":
-					{
-						const details = cell.details as z.infer<typeof umtsInsertSchema>;
-						await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
-					}
-					break;
-				case "LTE":
-					{
-						const details = cell.details as z.infer<typeof lteInsertSchema>;
-						await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
-					}
-					break;
-				case "NR":
-					{
-						const details = cell.details as z.infer<typeof nrInsertSchema>;
-						await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
-					}
-					break;
+			if (cell.operation !== "removed") {
+				switch (cell.rat) {
+					case "GSM":
+						{
+							const details = cell.details as z.infer<typeof gsmInsertSchema>;
+							await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
+						}
+						break;
+					case "UMTS":
+						{
+							const details = cell.details as z.infer<typeof umtsInsertSchema>;
+							await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
+						}
+						break;
+					case "LTE":
+						{
+							const details = cell.details as z.infer<typeof lteInsertSchema>;
+							await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
+						}
+						break;
+					case "NR":
+						{
+							const details = cell.details as z.infer<typeof nrInsertSchema>;
+							await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
+						}
+						break;
+				}
 			}
 		}
 	}

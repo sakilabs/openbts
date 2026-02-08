@@ -69,6 +69,7 @@ const INITIAL_VALUES: FormValues = {
 export const handle: RouteHandle = {
 	titleKey: "items.clfExport",
 	i18nNamespace: "nav",
+	breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
 };
 
 export default function ClfExportPage() {

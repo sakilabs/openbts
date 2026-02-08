@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { usePreferences, type GpsFormat, type NavigationApp } from "@/hooks/use-preferences";
+import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay } from "@/hooks/use-preferences";
 import { toggleValue } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { RouteHandle } from "./_layout";
@@ -13,6 +13,7 @@ import type { RouteHandle } from "./_layout";
 export const handle: RouteHandle = {
 	titleKey: "preferences.title",
 	i18nNamespace: "settings",
+	breadcrumbs: [{ titleKey: "secondary.settings", i18nNamespace: "nav" }],
 };
 
 const GPS_FORMAT_OPTIONS: { value: GpsFormat; labelKey: string; example: string }[] = [
@@ -24,6 +25,11 @@ const NAVIGATION_APP_OPTIONS: { value: NavigationApp; labelKey: string; icon: ty
 	{ value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
 	{ value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
 	{ value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
+];
+
+const NAV_DISPLAY_OPTIONS: { value: NavLinksDisplay; labelKey: string; descKey: string }[] = [
+	{ value: "inline", labelKey: "preferences.navDisplayInline", descKey: "preferences.navDisplayInlineDesc" },
+	{ value: "buttons", labelKey: "preferences.navDisplayButtons", descKey: "preferences.navDisplayButtonsDesc" },
 ];
 
 export default function PreferencesPage() {
@@ -95,6 +101,35 @@ export default function PreferencesPage() {
 								</label>
 							))}
 						</div>
+					</div>
+
+					<Separator />
+
+					<div className="space-y-3">
+						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.navDisplayMode")}</Label>
+						<p className="text-xs text-muted-foreground">{t("preferences.navDisplayModeHint")}</p>
+						<RadioGroup
+							value={preferences.navLinksDisplay}
+							onValueChange={(value) => updatePreferences({ navLinksDisplay: value as NavLinksDisplay })}
+							className="flex flex-col gap-1"
+						>
+							{NAV_DISPLAY_OPTIONS.map((option) => (
+								<label
+									key={option.value}
+									htmlFor={`nav-display-${option.value}`}
+									className={cn(
+										"flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+										preferences.navLinksDisplay === option.value ? "bg-primary/10" : "hover:bg-muted",
+									)}
+								>
+									<RadioGroupItem id={`nav-display-${option.value}`} value={option.value} />
+									<div className="flex flex-col gap-0.5">
+										<span className="text-sm font-medium">{t(option.labelKey)}</span>
+										<span className="text-xs text-muted-foreground">{t(option.descKey)}</span>
+									</div>
+								</label>
+							))}
+						</RadioGroup>
 					</div>
 				</section>
 			</div>

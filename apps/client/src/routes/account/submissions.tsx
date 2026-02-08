@@ -1,0 +1,41 @@
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
+import { RequireAuth } from "@/components/auth/require-auth";
+import { MySubmissions } from "@/features/account/components/my-submissions";
+
+import type { RouteHandle } from "../_layout";
+
+export const handle: RouteHandle = {
+	titleKey: "submissions.title",
+	i18nNamespace: "settings",
+	breadcrumbs: [
+		{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" },
+	],
+};
+
+export default function MySubmissionsPage() {
+	const { t } = useTranslation("settings");
+
+	return (
+		<RequireAuth>
+			<div className="flex-1 overflow-y-auto">
+				<div className="p-6 space-y-6">
+					<div className="flex items-start justify-between gap-4">
+						<div className="space-y-1">
+							<h1 className="text-xl font-bold tracking-tight">{t("submissions.title")}</h1>
+							<p className="text-muted-foreground text-sm">{t("submissions.description")}</p>
+						</div>
+						<Button size="sm" render={<Link to="/submission" />}>
+							<HugeiconsIcon icon={Add01Icon} className="size-4" />
+							{t("submissions.submitNew")}
+						</Button>
+					</div>
+					<MySubmissions />
+				</div>
+			</div>
+		</RequireAuth>
+	);
+}

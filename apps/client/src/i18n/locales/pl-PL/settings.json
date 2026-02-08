@@ -1,13 +1,51 @@
 {
 	"page": {
 		"title": "Ustawienia konta",
-		"description": "Zarządzaj swoim kontem i ustawieniami bezpieczeństwa."
+		"shortTitle": "Ustawienia",
+		"description": "Zarządzaj kontem, bezpieczeństwem i śledź swoje zgłoszenia."
 	},
 	"account": {
-		"title": "Konto"
+		"title": "Konto",
+		"description": "Twój profil i dane osobowe."
 	},
 	"security": {
-		"title": "Bezpieczeństwo"
+		"title": "Bezpieczeństwo",
+		"description": "Hasło, klucze dostępu i uwierzytelnianie."
+	},
+	"apiKeys": {
+		"title": "Klucze API",
+		"description": "Zarządzaj kluczami do dostępu programistycznego."
+	},
+	"sessions": {
+		"title": "Sesje",
+		"description": "Aktywne sesje na Twoich urządzeniach."
+	},
+	"dangerZone": {
+		"title": "Strefa zagrożenia",
+		"description": "Trwałe usunięcie konta i wszystkich powiązanych danych."
+	},
+	"submissions": {
+		"title": "Moje zgłoszenia",
+		"description": "Stacje i komórki, które zgłosiłeś do weryfikacji.",
+		"empty": "Brak zgłoszeń",
+		"emptyHint": "Zgłoś stację lub aktualizację komórek, aby zobaczyć je tutaj.",
+		"loadError": "Nie udało się załadować zgłoszeń.",
+		"newSubmission": "Nowe zgłoszenie",
+		"submitNew": "Zgłoś nową stację",
+		"submitNewDesc": "Znalazłeś nową stację? Dodaj ją do mapy.",
+		"modifyExisting": "Modyfikuj istniejącą",
+		"modifyExistingDesc": "Zaktualizuj szczegóły lub komórki istniejącej stacji.",
+		"howToModify": "Aby zmodyfikować stację, znajdź ją na mapie lub w bazie, otwórz szczegóły i kliknij 'Edytuj'.",
+		"type": {
+			"new": "Nowe",
+			"update": "Aktualizacja",
+			"delete": "Usunięcie"
+		},
+		"status": {
+			"pending": "Oczekujące",
+			"approved": "Zatwierdzone",
+			"rejected": "Odrzucone"
+		}
 	},
 	"preferences": {
 		"title": "Preferencje",
@@ -21,6 +59,12 @@
 		"navGoogleMaps": "Mapy Google",
 		"navAppleMaps": "Apple Maps",
 		"navWaze": "Waze",
-		"openWith": "Otwórz w {{app}}"
+		"openWith": "Otwórz w {{app}}",
+		"navDisplayMode": "Styl przycisków nawigacji",
+		"navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji.",
+		"navDisplayInline": "Rozwijane menu",
+		"navDisplayInlineDesc": "Mała ikona obok współrzędnych GPS otwierająca menu rozwijane.",
+		"navDisplayButtons": "Osobne przyciski",
+		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje."
 	}
 }
