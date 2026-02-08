@@ -115,7 +115,9 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 										{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 									</span>
 									<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
-									<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} />
+									{preferences.navLinksDisplay === "inline" && (
+										<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
+									)}
 								</div>
 							)}
 
@@ -141,6 +143,12 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 									<span className="font-mono text-sm font-medium">{station.station_id}</span>
 									<CopyButton text={station.station_id} />
 								</div>
+
+								{station.location && preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
+									<div className="sm:col-span-2 pt-3 border-t border-border/50">
+										<NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="buttons" />
+									</div>
+								)}
 							</div>
 						</div>
 					</div>
