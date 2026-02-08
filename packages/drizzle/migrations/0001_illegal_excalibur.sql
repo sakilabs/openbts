@@ -328,7 +328,7 @@ CREATE TABLE "audit_logs" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "passkeys" (
+CREATE TABLE "auth"."passkeys" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"name" text,
 	"public_key" text NOT NULL,
@@ -353,7 +353,7 @@ CREATE TABLE "station_comments" (
 	CONSTRAINT "station_comments_content_len" CHECK (char_length("station_comments"."content") BETWEEN 1 AND 10000)
 );
 --> statement-breakpoint
-CREATE TABLE "two_factors" (
+CREATE TABLE "auth"."two_factors" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"secret" text NOT NULL,
 	"backup_codes" text NOT NULL,
@@ -521,10 +521,10 @@ ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FORE
 ALTER TABLE "auth"."apikeys" ADD CONSTRAINT "apikeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fk" FOREIGN KEY ("invoked_by") REFERENCES "auth"."users"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_station_id_stations_id_fk" FOREIGN KEY ("station_id") REFERENCES "public"."stations"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "two_factors" ADD CONSTRAINT "two_factors_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "auth"."two_factors" ADD CONSTRAINT "two_factors_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_lists" ADD CONSTRAINT "user_lists_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_submission_id_submissions_id_fk" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_target_cell_id_cells_id_fk" FOREIGN KEY ("target_cell_id") REFERENCES "public"."cells"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
@@ -595,13 +595,13 @@ CREATE INDEX "audit_logs_invoked_by_idx" ON "audit_logs" USING btree ("invoked_b
 CREATE INDEX "audit_logs_table_name_idx" ON "audit_logs" USING btree ("table_name");--> statement-breakpoint
 CREATE INDEX "audit_logs_date_created_idx" ON "audit_logs" USING btree ("createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_action_idx" ON "audit_logs" USING btree ("action");--> statement-breakpoint
-CREATE INDEX "passkeys_userId_idx" ON "passkeys" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "passkeys_credentialID_idx" ON "passkeys" USING btree ("credential_id");--> statement-breakpoint
+CREATE INDEX "passkeys_userId_idx" ON "auth"."passkeys" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "passkeys_credentialID_idx" ON "auth"."passkeys" USING btree ("credential_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_id_idx" ON "station_comments" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "station_comments_user_id_idx" ON "station_comments" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_created_idx" ON "station_comments" USING btree ("station_id","createdAt");--> statement-breakpoint
-CREATE INDEX "twoFactors_secret_idx" ON "two_factors" USING btree ("secret");--> statement-breakpoint
-CREATE INDEX "twoFactors_userId_idx" ON "two_factors" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "twoFactors_secret_idx" ON "auth"."two_factors" USING btree ("secret");--> statement-breakpoint
+CREATE INDEX "twoFactors_userId_idx" ON "auth"."two_factors" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "user_lists_id_idx" ON "user_lists" USING btree ("id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" USING btree ("created_by");--> statement-breakpoint
 CREATE INDEX "user_lists_stations_gin" ON "user_lists" USING gin ("stations");--> statement-breakpoint

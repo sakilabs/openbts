@@ -104,7 +104,7 @@ export const apikeys = AuthSchema.table(
 	(table) => [index("apikeys_key_idx").on(table.key), index("apikeys_userId_idx").on(table.userId)],
 );
 
-export const passkeys = pgTable(
+export const passkeys = AuthSchema.table(
 	"passkeys",
 	{
 		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
@@ -124,7 +124,7 @@ export const passkeys = pgTable(
 	(table) => [index("passkeys_userId_idx").on(table.userId), index("passkeys_credentialID_idx").on(table.credentialID)],
 );
 
-export const twoFactors = pgTable(
+export const twoFactors = AuthSchema.table(
 	"two_factors",
 	{
 		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),

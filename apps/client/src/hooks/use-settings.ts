@@ -6,6 +6,7 @@ export interface RuntimeSettings {
 	allowedUnauthenticatedRoutes: string[];
 	disabledRoutes: string[];
 	enableStationComments: boolean;
+	submissionsEnabled: boolean;
 }
 
 const fetchSettings = () =>

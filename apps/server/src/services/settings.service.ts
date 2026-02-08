@@ -7,6 +7,7 @@ export interface RuntimeSettings {
 	allowedUnauthenticatedRoutes: NonEmptyString[];
 	disabledRoutes: NonEmptyString[];
 	enableStationComments: boolean;
+	submissionsEnabled: boolean;
 }
 
 const SETTINGS_KEY = "runtime:settings";
@@ -17,6 +18,7 @@ const defaultSettings: RuntimeSettings = {
 	allowedUnauthenticatedRoutes: ["/api/v1/auth"] as NonEmptyString[],
 	disabledRoutes: [],
 	enableStationComments: false,
+	submissionsEnabled: true,
 };
 
 let inMemorySettings: RuntimeSettings = { ...defaultSettings };
@@ -35,7 +37,8 @@ function isSettings(obj: unknown): obj is RuntimeSettings {
 		candidate.allowedUnauthenticatedRoutes.every(isNonEmptyString) &&
 		Array.isArray(candidate.disabledRoutes) &&
 		candidate.disabledRoutes.every(isNonEmptyString) &&
-		typeof candidate.enableStationComments === "boolean"
+		typeof candidate.enableStationComments === "boolean" &&
+		typeof candidate.submissionsEnabled === "boolean"
 	);
 }
 
@@ -43,6 +46,7 @@ function deepMergeSettings(base: RuntimeSettings, patch: Partial<RuntimeSettings
 	const next: RuntimeSettings = { ...base };
 	if (typeof patch.enforceAuthForAllRoutes === "boolean") next.enforceAuthForAllRoutes = patch.enforceAuthForAllRoutes;
 	if (typeof patch.enableStationComments === "boolean") next.enableStationComments = patch.enableStationComments;
+	if (typeof patch.submissionsEnabled === "boolean") next.submissionsEnabled = patch.submissionsEnabled;
 	if (Array.isArray(patch.allowedUnauthenticatedRoutes))
 		next.allowedUnauthenticatedRoutes = patch.allowedUnauthenticatedRoutes.filter(isNonEmptyString) as NonEmptyString[];
 	if (Array.isArray(patch.disabledRoutes)) next.disabledRoutes = patch.disabledRoutes.filter(isNonEmptyString) as NonEmptyString[];

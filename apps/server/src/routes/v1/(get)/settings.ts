@@ -14,6 +14,7 @@ const schemaRoute = {
 				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
 				disabledRoutes: z.array(z.string().min(1)),
 				enableStationComments: z.boolean(),
+				submissionsEnabled: z.boolean(),
 			}),
 		}),
 	},

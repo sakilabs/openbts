@@ -28,6 +28,7 @@ import {
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
+import { useSettings } from "@/hooks/use-settings";
 
 const navMainConfig = [
 	{
@@ -60,6 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { t } = useTranslation("nav");
 	const [authDialogOpen, setAuthDialogOpen] = useState(false);
 	const { data: session } = authClient.useSession();
+	const { data: settings } = useSettings();
 
 	const mapConfig = (config: typeof navMainConfig) =>
 		config.map((section) => ({
@@ -74,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 		}));
 
 	const navItems = mapConfig(navMainConfig);
-	const authNavItems = session?.user ? mapConfig(authNavConfig) : [];
+	const authNavItems = session?.user && settings?.submissionsEnabled ? mapConfig(authNavConfig) : [];
 
 	const location = useLocation();
 	const [settingsOpen, setSettingsOpen] = useState(location.pathname.startsWith("/account/") || location.pathname === "/preferences");

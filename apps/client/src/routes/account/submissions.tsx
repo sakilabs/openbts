@@ -1,23 +1,25 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { MySubmissions } from "@/features/account/components/my-submissions";
+import { useSettings } from "@/hooks/use-settings";
 
 import type { RouteHandle } from "../_layout";
 
 export const handle: RouteHandle = {
 	titleKey: "submissions.title",
 	i18nNamespace: "settings",
-	breadcrumbs: [
-		{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" },
-	],
+	breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" }],
 };
 
 export default function MySubmissionsPage() {
 	const { t } = useTranslation("settings");
+	const { data: settings, isLoading } = useSettings();
+
+	if (!isLoading && !settings?.submissionsEnabled) return <Navigate to="/" replace />;
 
 	return (
 		<RequireAuth>

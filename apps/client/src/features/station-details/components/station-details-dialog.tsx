@@ -10,6 +10,7 @@ import { getOperatorColor } from "@/lib/operator-utils";
 import { getHardwareLeaseOperator } from "@/lib/station-utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import { useSettings } from "@/hooks/use-settings";
 import { fetchStation } from "../api";
 import { StationDetailsBody } from "./dialog-body";
 import { ShareButton } from "./share-button";
@@ -28,6 +29,7 @@ function getDefaultTab(source: "internal" | "uke"): TabId {
 export function StationDetailsDialog({ stationId, source, onClose }: StationDetailsDialogProps) {
 	const { t } = useTranslation("stationDetails");
 	const [activeTab, setActiveTab] = useState<TabId>(() => getDefaultTab(source));
+	const { data: settings } = useSettings();
 
 	const {
 		data: station,
@@ -96,14 +98,16 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 												url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?station=${station.id}`}
 												size="md"
 											/>
-											<Link
-												to={`/submission?station=${station.id}`}
-												className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
-												onClick={onClose}
-											>
-												<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-												<span className="hidden sm:inline">{t("dialog.edit")}</span>
-											</Link>
+											{settings?.submissionsEnabled && (
+												<Link
+													to={`/submission?station=${station.id}`}
+													className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+													onClick={onClose}
+												>
+													<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+													<span className="hidden sm:inline">{t("dialog.edit")}</span>
+												</Link>
+											)}
 											{station.is_confirmed && (
 												<span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-sm">
 													<HugeiconsIcon icon={Tick02Icon} className="size-3.5" />

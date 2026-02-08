@@ -1,5 +1,5 @@
 {
-  "id": "0a4c8730-b838-4c5a-8be7-f67e1fa3ac85",
+  "id": "b8206842-c834-424e-85a1-688376a606be",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -3319,9 +3319,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.passkeys": {
+    "auth.passkeys": {
       "name": "passkeys",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",
@@ -3598,9 +3598,9 @@
       },
       "isRLSEnabled": false
     },
-    "public.two_factors": {
+    "auth.two_factors": {
       "name": "two_factors",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",

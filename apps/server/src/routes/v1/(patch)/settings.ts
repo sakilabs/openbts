@@ -14,6 +14,8 @@ const schemaRoute = {
 			enforceAuthForAllRoutes: z.boolean().optional(),
 			allowedUnauthenticatedRoutes: z.array(z.string().min(1)).optional(),
 			disabledRoutes: z.array(z.string().min(1)).optional(),
+			enableStationComments: z.boolean().optional(),
+			submissionsEnabled: z.boolean().optional(),
 		})
 		.strict(),
 	response: {
@@ -22,6 +24,8 @@ const schemaRoute = {
 				enforceAuthForAllRoutes: z.boolean(),
 				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
 				disabledRoutes: z.array(z.string().min(1)),
+				enableStationComments: z.boolean(),
+				submissionsEnabled: z.boolean(),
 			}),
 		}),
 	},
