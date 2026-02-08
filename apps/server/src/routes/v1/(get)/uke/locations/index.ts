@@ -1,4 +1,4 @@
-import { sql, count, type SQL, inArray, and } from "drizzle-orm";
+import { sql, count, type SQL, type Column, inArray, and } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -121,20 +121,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const mappedRats: RatType[] = standardRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
 	const hasPermitFilters = operatorIds.length || bandIds.length || mappedRats.length || wantsGsmR;
 
-	const locationConditions: SQL<unknown>[] = [];
-
-	if (envelope) locationConditions.push(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
-	if (regionIds.length) locationConditions.push(inArray(ukeLocations.region_id, regionIds));
-	if (recentOnly) {
-		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-		locationConditions.push(sql`(${ukeLocations.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${ukeLocations.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
-	}
-	if (hasPermitFilters) {
-		const permitConditions: SQL<unknown>[] = [sql`ps.location_id = ${ukeLocations.id}`];
+	const buildPermitConditions = (operatorCol: SQL | Column, bandCol: SQL | Column): SQL<unknown>[] => {
+		const conditions: SQL<unknown>[] = [];
 
 		if (operatorIds.length) {
-			permitConditions.push(
-				sql`ps.operator_id IN (${sql.join(
+			conditions.push(
+				sql`${operatorCol} IN (${sql.join(
 					operatorIds.map((id) => sql`${id}`),
 					sql`,`,
 				)})`,
@@ -142,8 +134,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		}
 
 		if (bandIds.length) {
-			permitConditions.push(
-				sql`ps.band_id IN (${sql.join(
+			conditions.push(
+				sql`${bandCol} IN (${sql.join(
 					bandIds.map((id) => sql`${id}`),
 					sql`,`,
 				)})`,
@@ -162,31 +154,43 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						sql`(${bands}.rat IN (${sql.join(
 							nonGsmRats.map((r) => sql`${r}`),
 							sql`,`,
-						)}))`
+						)}))`,
 					);
 				}
 
 				if (wantsRegularGsm) {
-					ratConditions.push(
-						sql`(${bands}.rat = 'GSM' AND ${bands}.variant = 'commercial')`
-					);
+					ratConditions.push(sql`(${bands}.rat = 'GSM' AND ${bands}.variant = 'commercial')`);
 				}
 			}
 
 			if (wantsGsmR) {
-				ratConditions.push(
-					sql`(${bands}.rat = 'GSM' AND ${bands}.variant = 'railway')`
-				);
+				ratConditions.push(sql`(${bands}.rat = 'GSM' AND ${bands}.variant = 'railway')`);
 			}
 
-			permitConditions.push(
+			conditions.push(
 				sql`EXISTS (
 					SELECT 1 FROM ${bands}
-					WHERE ${bands}.id = ps.band_id
+					WHERE ${bands}.id = ${bandCol}
 					AND (${sql.join(ratConditions, sql` OR `)})
 				)`,
 			);
 		}
+
+		return conditions;
+	};
+
+	const locationConditions: SQL<unknown>[] = [];
+
+	if (envelope) locationConditions.push(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
+	if (regionIds.length) locationConditions.push(inArray(ukeLocations.region_id, regionIds));
+	if (recentOnly) {
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+		locationConditions.push(
+			sql`(${ukeLocations.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${ukeLocations.updatedAt} >= ${thirtyDaysAgo.toISOString()})`,
+		);
+	}
+	if (hasPermitFilters) {
+		const permitConditions = [sql`ps.location_id = ${ukeLocations.id}`, ...buildPermitConditions(sql`ps.operator_id`, sql`ps.band_id`)];
 
 		locationConditions.push(
 			sql`EXISTS (
@@ -221,6 +225,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						band: true,
 						operator: true,
 					},
+					...(hasPermitFilters
+						? {
+								where: (fields, { and: drizzleAnd }) => {
+									const conditions = buildPermitConditions(fields.operator_id, fields.band_id);
+									return conditions.length ? drizzleAnd(...conditions) : undefined;
+								},
+							}
+						: {}),
 				},
 			},
 			columns: {
