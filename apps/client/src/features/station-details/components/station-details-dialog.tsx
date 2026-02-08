@@ -74,7 +74,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 									<div className="h-4 w-32 bg-muted rounded animate-pulse" />
 								</div>
 							) : station ? (
-								<div className="flex flex-col gap-1.5">
+								<div className="flex flex-col gap-1">
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
 											<h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
@@ -117,8 +117,8 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 										</div>
 									</div>
 									<div className="flex flex-col gap-0.5">
-										<p className="text-sm font-medium text-foreground/90 truncate">{station.location.address || t("dialog.btsStation")}</p>
-										<p className="text-xs text-muted-foreground font-medium opacity-80">{station.location.city}</p>
+										<p className="text-sm font-medium text-foreground/90 truncate">{station.location.city}</p>
+										<p className="text-xs text-muted-foreground font-medium opacity-80">{station.location.address || t("dialog.btsStation")}</p>
 									</div>
 								</div>
 							) : null}
