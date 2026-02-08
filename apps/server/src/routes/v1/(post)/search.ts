@@ -1,4 +1,4 @@
-import { eq, or, and, sql, inArray, type SQL } from "drizzle-orm";
+import { eq, or, and, sql, inArray, ne, type SQL } from "drizzle-orm";
 import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, networksIds, regions } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -152,7 +152,12 @@ const searchNumericInRatTables = async (numericQuery: number, likeQuery: string)
 	return [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches].map((r) => r.stationId);
 };
 
-const fetchStations = (where?: SQL, limit?: number) => db.query.stations.findMany({ where, ...stationQueryConfig, ...(limit && { limit }) });
+const fetchStations = (where?: SQL, limit?: number) =>
+	db.query.stations.findMany({
+		where: where ? and(ne(stations.status, "inactive"), where) : ne(stations.status, "inactive"),
+		...stationQueryConfig,
+		...(limit && { limit }),
+	});
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
 	const { query } = req.body;
@@ -223,7 +228,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	if (exactMatch.length > 0) return res.send({ data: exactMatch.map(withCellDetails) });
 
 	const fuzzyStations = await db.query.stations.findMany({
-		where: sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE ${`%${searchQuery}%`}`,
+		where: and(
+			ne(stations.status, "inactive"),
+			sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE ${`%${searchQuery}%`}`,
+		),
 		...stationQueryConfig,
 		orderBy: sql`similarity(${stations.station_id}, ${searchQuery}) DESC`,
 		limit,

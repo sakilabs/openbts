@@ -6,9 +6,7 @@
 		"noResults": "Brak wyników",
 		"noResultsHint": "Spróbuj innych słów kluczowych lub filtrów",
 		"found": "Znaleziono: {{count}}",
-		"showingTop": "Pokazano {{shown}} z {{total}} stacji",
-		"open": "Otwórz wyszukiwanie",
-		"close": "Zamknij wyszukiwanie"
+		"showingTop": "Pokazano {{shown}} z {{total}} stacji"
 	},
 	"filters": {
 		"button": "Filtry",
@@ -75,9 +73,7 @@
 		"ukeStations": "Stacje UKE",
 		"ukePermits": "Pozwolenia UKE",
 		"never": "Nigdy",
-		"locations": "Liczba lokalizacji",
 		"stations": "Liczba stacji",
-		"cells": "Liczba komórek",
 		"permits": "Liczba pozwoleń"
 	},
 	"loading": {

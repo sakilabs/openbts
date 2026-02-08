@@ -489,6 +489,7 @@ CREATE TABLE "submissions"."submissions" (
 	"type" "submission_type" DEFAULT 'new' NOT NULL,
 	"reviewer_id" uuid,
 	"review_notes" text,
+	"submitter_note" text,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"reviewed_at" timestamp with time zone

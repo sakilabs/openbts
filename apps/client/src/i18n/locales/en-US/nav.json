@@ -19,7 +19,6 @@
 		"about": "About"
 	},
 	"user": {
-		"profile": "Profile",
 		"logout": "Log out",
 		"login": "Log in"
 	}

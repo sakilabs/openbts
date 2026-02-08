@@ -228,7 +228,8 @@ export function StationsFilters({
 								<HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
 								<span>
 									{t("filters.otherOperators", { count: otherOperators.length })}
-									{hasSelectedOther && ` (${otherOperators.filter((op) => filters.operators.includes(op.mnc)).length} ${t("filters.selected")})`}
+									{hasSelectedOther &&
+										` (${t("filters.selected", { count: otherOperators.filter((op) => filters.operators.includes(op.mnc)).length })})`}
 								</span>
 							</button>
 

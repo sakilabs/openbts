@@ -15,9 +15,16 @@
 		"noRegion": "Brak województwa",
 		"noGps": "Brak GPS",
 		"newStationHint": "Wypełnij poniżej dane stacji i lokalizacji.",
+		"deleteStation": "Usuń stację",
+		"deleteStationHint": "Wyszukaj stację, którą chcesz oznaczyć do usunięcia.",
 		"cellsCount_one": "{{count}} komórka",
 		"cellsCount_few": "{{count}} komórki",
 		"cellsCount_many": "{{count}} komórek"
+	},
+	"actionSelector": {
+		"title": "Akcja",
+		"update": "Aktualizuj stację",
+		"delete": "Oznacz do usunięcia"
 	},
 	"newStation": {
 		"title": "Dane stacji",
@@ -66,7 +73,8 @@
 		"notes": "Notatki",
 		"notesPlaceholder": "np. pikokomórka",
 		"diffAdded": "Nowa",
-		"diffModified": "Zmieniona"
+		"diffModified": "Zmieniona",
+		"diffDeleted": "Usunięta"
 	},
 	"form": {
 		"submit": "Wyślij",
@@ -77,9 +85,17 @@
 		"createStation": "Tworzenie nowej stacji {{id}}",
 		"selectStationFirst": "Najpierw wybierz lub utwórz stację",
 		"fillStationDetails": "Wypełnij dane stacji",
+		"deleteStationText": "Zgłoszenie usunięcia stacji {{id}}",
+		"submitterNotePlaceholder": "Dodaj notatkę wyjaśniającą zmiany (opcjonalnie)...",
 		"cellsCount_one": "{{count}} komórka",
 		"cellsCount_few": "{{count}} komórki",
 		"cellsCount_many": "{{count}} komórek"
+	},
+	"deleteStation": {
+		"title": "Usunięcie stacji",
+		"warning": "Stacja zostanie oznaczona do usunięcia. Moderator zweryfikuje Twoje zgłoszenie.",
+		"reason": "Powód usunięcia",
+		"reasonPlaceholder": "Dlaczego ta stacja powinna zostać usunięta?"
 	},
 	"common": {
 		"clear": "Wyczyść",

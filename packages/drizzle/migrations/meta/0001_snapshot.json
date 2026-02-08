@@ -1,5 +1,5 @@
 {
-  "id": "480f8cc3-ee6a-40c1-baae-a13b58efc279",
+  "id": "94995064-6596-4f54-bd48-8d52710b6b06",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -4816,6 +4816,12 @@
         },
         "review_notes": {
           "name": "review_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submitter_note": {
+          "name": "submitter_note",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -6,9 +6,7 @@
 		"noResults": "No results found",
 		"noResultsHint": "Try different keywords or filters",
 		"found": "{{count}} found",
-		"showingTop": "Showing top {{shown}} of {{total}} stations",
-		"open": "Open search",
-		"close": "Close search"
+		"showingTop": "Showing top {{shown}} of {{total}} stations"
 	},
 	"filters": {
 		"button": "Filters",
@@ -70,9 +68,7 @@
 		"ukeStations": "UKE stations",
 		"ukePermits": "UKE permits",
 		"never": "Never",
-		"locations": "Locations amount",
 		"stations": "Stations amount",
-		"cells": "Cells amount",
 		"permits": "Permits amount"
 	},
 	"loading": {

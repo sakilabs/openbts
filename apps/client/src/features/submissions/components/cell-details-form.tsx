@@ -74,7 +74,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
 	const originalsMap = useMemo(() => buildOriginalCellsMap(originalCells), [originalCells]);
 
 	const diffCounts = useMemo(() => {
-		if (isNewStation) return { added: cells.length, modified: 0 };
+		if (isNewStation) return { added: cells.length, modified: 0, deleted: 0 };
 		let added = 0;
 		let modified = 0;
 		for (const cell of cells) {
@@ -82,8 +82,10 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
 			if (status === "added") added++;
 			else if (status === "modified") modified++;
 		}
-		return { added, modified };
-	}, [cells, originalsMap, isNewStation]);
+		const currentExistingIds = new Set(cells.filter((c) => c.existingCellId !== undefined).map((c) => c.existingCellId));
+		const deleted = originalCells.filter((c) => c.rat === rat && c.existingCellId !== undefined && !currentExistingIds.has(c.existingCellId)).length;
+		return { added, modified, deleted };
+	}, [cells, originalsMap, isNewStation, originalCells, rat]);
 
 	const getDuplexOptionsForValue = useCallback(
 		(value: number): (string | null)[] => {
@@ -191,6 +193,12 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
 						<span className="text-xs text-amber-600 flex items-center gap-1">
 							<span className="size-1.5 rounded-full bg-amber-500" />
 							{diffCounts.modified} {t("cellDetails.diffModified")}
+						</span>
+					)}
+					{diffCounts.deleted > 0 && (
+						<span className="text-xs text-red-600 flex items-center gap-1">
+							<span className="size-1.5 rounded-full bg-red-500" />
+							{diffCounts.deleted} {t("cellDetails.diffDeleted")}
 						</span>
 					)}
 				</div>
@@ -335,17 +343,15 @@ const CellRow = memo(function CellRow({
 				/>
 			</td>
 			<td className="px-4 py-2">
-				{!cell.is_confirmed && (
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						onClick={() => onRemove(cell.id)}
-						className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-					>
-						<HugeiconsIcon icon={Delete02Icon} className="size-4" />
-					</Button>
-				)}
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					onClick={() => onRemove(cell.id)}
+					className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+				>
+					<HugeiconsIcon icon={Delete02Icon} className="size-4" />
+				</Button>
 			</td>
 		</tr>
 	);

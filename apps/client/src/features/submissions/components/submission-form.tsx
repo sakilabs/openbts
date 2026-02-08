@@ -4,10 +4,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { SentIcon, Tick02Icon, PencilEdit02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import { StationSelector } from "./station-selector";
 import { LocationPicker } from "./location-picker";
 import { NewStationForm } from "./new-station-form";
@@ -15,28 +16,33 @@ import { RatSelector } from "./rat-selector";
 import { CellDetailsForm } from "./cell-details-form";
 import { createSubmission, fetchStationForSubmission, type SearchStation } from "../api";
 import { showApiError } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { generateCellId, computeCellPayloads, cellsToPayloads } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
-import type { SubmissionMode, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
+import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
 
 type FormValues = {
 	mode: SubmissionMode;
+	action: StationAction;
 	selectedStation: SearchStation | null;
 	newStation: ProposedStationForm;
 	location: ProposedLocationForm;
 	selectedRats: RatType[];
 	cells: ProposedCellForm[];
 	originalCells: ProposedCellForm[];
+	submitterNote: string;
 };
 
 const INITIAL_VALUES: FormValues = {
 	mode: "new",
+	action: "update",
 	selectedStation: null,
 	newStation: { station_id: "", operator_id: null, notes: "" },
 	location: { region_id: null, city: "", address: "", longitude: null, latitude: null },
 	selectedRats: [],
 	cells: [],
 	originalCells: [],
+	submitterNote: "",
 };
 
 function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
@@ -70,12 +76,14 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 	const form = useForm({
 		defaultValues: INITIAL_VALUES,
 		onSubmit: async ({ value }) => {
+			const activeCells = value.cells.filter((c) => value.selectedRats.includes(c.rat));
+
 			const errors = validateForm({
 				mode: value.mode,
 				selectedStation: value.selectedStation,
 				newStation: value.newStation,
 				location: value.location,
-				cells: value.cells,
+				cells: activeCells,
 			});
 
 			if (hasErrors(errors)) {
@@ -84,16 +92,20 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 			}
 
 			const isNewStation = value.mode === "new";
-			const cells = isNewStation ? cellsToPayloads(value.cells) : computeCellPayloads(value.originalCells, value.cells);
+			const isDeleteMode = value.action === "delete";
+			const cells = isNewStation ? cellsToPayloads(activeCells) : computeCellPayloads(value.originalCells, activeCells);
 
 			const hasLocation = value.location.latitude !== null && value.location.longitude !== null;
 
+			const submissionType = isDeleteMode ? "delete" : isNewStation ? "new" : "update";
+
 			await mutation.mutateAsync({
 				station_id: isNewStation ? null : (value.selectedStation?.id ?? null),
-				type: isNewStation ? "new" : "update",
+				type: submissionType,
+				submitter_note: value.submitterNote || undefined,
 				station: isNewStation ? value.newStation : undefined,
-				location: hasLocation ? value.location : undefined,
-				cells,
+				location: hasLocation && !isDeleteMode ? value.location : undefined,
+				cells: isDeleteMode ? [] : cells,
 			});
 		},
 	});
@@ -110,9 +122,15 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 
 	const handleModeChange = (newMode: SubmissionMode) => {
 		form.setFieldValue("mode", newMode);
+		form.setFieldValue("action", "update");
 		form.setFieldValue("location", INITIAL_VALUES.location);
+		form.setFieldValue("submitterNote", "");
 		if (newMode === "existing") {
 			form.setFieldValue("newStation", INITIAL_VALUES.newStation);
+			form.setFieldValue("selectedStation", null);
+			form.setFieldValue("cells", []);
+			form.setFieldValue("originalCells", []);
+			form.setFieldValue("selectedRats", []);
 		} else {
 			form.setFieldValue("selectedStation", null);
 			form.setFieldValue("cells", []);
@@ -121,8 +139,16 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 		}
 	};
 
+	const handleActionChange = (action: StationAction) => {
+		form.setFieldValue("action", action);
+		if (action === "delete") {
+			form.setFieldValue("submitterNote", "");
+		}
+	};
+
 	const handleStationSelect = (station: SearchStation | null) => {
 		form.setFieldValue("selectedStation", station);
+		form.setFieldValue("action", "update");
 		if (station) {
 			const cells = stationCellsToForm(station);
 			form.setFieldValue("cells", cells);
@@ -172,10 +198,6 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 
 	const handleRatsChange = (rats: RatType[]) => {
 		form.setFieldValue("selectedRats", rats);
-		form.setFieldValue(
-			"cells",
-			form.getFieldValue("cells").filter((c) => rats.includes(c.rat)),
-		);
 	};
 
 	const handleCellsChange = (rat: RatType, updatedCells: ProposedCellForm[]) => {
@@ -206,8 +228,16 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 					)}
 				</form.Subscribe>
 
-				<form.Subscribe selector={(s) => ({ mode: s.values.mode, selectedStation: s.values.selectedStation, location: s.values.location })}>
-					{({ mode, selectedStation, location }) => {
+				<form.Subscribe selector={(s) => ({ mode: s.values.mode, action: s.values.action, selectedStation: s.values.selectedStation })}>
+					{({ mode, action, selectedStation }) => {
+						if (mode !== "existing" || !selectedStation) return null;
+						return <ActionSelector action={action} onActionChange={handleActionChange} />;
+					}}
+				</form.Subscribe>
+
+				<form.Subscribe selector={(s) => ({ mode: s.values.mode, action: s.values.action, selectedStation: s.values.selectedStation, location: s.values.location })}>
+					{({ mode, action, selectedStation, location }) => {
+						if (mode === "existing" && action === "delete") return null;
 						if (mode === "existing" && !selectedStation) return null;
 
 						const errors: FormErrors = showErrors
@@ -256,12 +286,14 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 				<form.Subscribe
 					selector={(s) => ({
 						mode: s.values.mode,
+						action: s.values.action,
 						selectedStation: s.values.selectedStation,
 						selectedRats: s.values.selectedRats,
 						location: s.values.location,
 					})}
 				>
-					{({ mode, selectedStation, selectedRats, location }) => {
+					{({ mode, action, selectedStation, selectedRats, location }) => {
+						if (mode === "existing" && action === "delete") return null;
 						if (mode === "new") {
 							const isLocationSet = location.latitude !== null && location.longitude !== null && location.region_id !== null;
 							if (!isLocationSet) return null;
@@ -276,19 +308,24 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 				<form.Subscribe
 					selector={(s) => ({
 						mode: s.values.mode,
+						action: s.values.action,
 						selectedStation: s.values.selectedStation,
 						newStation: s.values.newStation,
-						cellsCount: s.values.cells.length,
+						cellsCount: s.values.cells.filter((c) => s.values.selectedRats.includes(c.rat)).length,
+						submitterNote: s.values.submitterNote,
 						canSubmit: s.canSubmit,
 						isSubmitting: s.isSubmitting,
 					})}
 				>
-					{({ mode, selectedStation, newStation, cellsCount, canSubmit, isSubmitting }) => (
+					{({ mode, action, selectedStation, newStation, cellsCount, submitterNote, canSubmit, isSubmitting }) => (
 						<SubmitSection
 							mode={mode}
+							action={action}
 							selectedStation={selectedStation}
 							newStation={newStation}
 							cellsCount={cellsCount}
+							submitterNote={submitterNote}
+							onSubmitterNoteChange={(note) => form.setFieldValue("submitterNote", note)}
 							canSubmit={canSubmit}
 							isSubmitting={isSubmitting}
 							isPending={mutation.isPending}
@@ -305,9 +342,18 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 						cells: s.values.cells,
 						originalCells: s.values.originalCells,
 						mode: s.values.mode,
+						action: s.values.action,
 					})}
 				>
-					{({ selectedRats, cells, originalCells, mode }) => {
+					{({ selectedRats, cells, originalCells, mode, action }) => {
+						if (mode === "existing" && action === "delete") {
+							return (
+								<div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
+									{t("deleteStation.warning")}
+								</div>
+							);
+						}
+
 						const cellErrors = showErrors ? validateCells(cells) : undefined;
 
 						return (
@@ -329,26 +375,48 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 
 type SubmitSectionProps = {
 	mode: SubmissionMode;
+	action: StationAction;
 	selectedStation: SearchStation | null;
 	newStation: ProposedStationForm;
 	cellsCount: number;
+	submitterNote: string;
+	onSubmitterNoteChange: (note: string) => void;
 	canSubmit: boolean;
 	isSubmitting: boolean;
 	isPending: boolean;
 	isSuccess: boolean;
 };
 
-function SubmitSection({ mode, selectedStation, newStation, cellsCount, canSubmit, isSubmitting, isPending, isSuccess }: SubmitSectionProps) {
+function SubmitSection({
+	mode,
+	action,
+	selectedStation,
+	newStation,
+	cellsCount,
+	submitterNote,
+	onSubmitterNoteChange,
+	canSubmit,
+	isSubmitting,
+	isPending,
+	isSuccess,
+}: SubmitSectionProps) {
 	const { t } = useTranslation("submissions");
 
-	const statusText =
-		mode === "existing"
+	const isDeleteAction = action === "delete";
+
+	const statusText = isDeleteAction
+		? selectedStation
+			? t("form.deleteStationText", { id: selectedStation.station_id })
+			: t("form.selectStationFirst")
+		: mode === "existing"
 			? selectedStation
 				? t("form.updateStation", { id: selectedStation.station_id })
 				: t("form.selectStationFirst")
 			: newStation.station_id
 				? t("form.createStation", { id: newStation.station_id })
 				: t("form.fillStationDetails");
+
+	const notePlaceholder = isDeleteAction ? t("deleteStation.reasonPlaceholder") : t("form.submitterNotePlaceholder");
 
 	const buttonIcon = isSuccess ? Tick02Icon : SentIcon;
 
@@ -360,8 +428,16 @@ function SubmitSection({ mode, selectedStation, newStation, cellsCount, canSubmi
 			<div className="px-4 py-3 bg-muted/30 space-y-3">
 				<div className="text-xs text-muted-foreground">
 					{statusText}
-					{cellsCount > 0 && <span className="ml-1">· {t("form.cellsCount", { count: cellsCount })}</span>}
+					{!isDeleteAction && cellsCount > 0 && <span className="ml-1">· {t("form.cellsCount", { count: cellsCount })}</span>}
 				</div>
+				{isDeleteAction && <div className="text-xs text-amber-600 dark:text-amber-500">{t("deleteStation.warning")}</div>}
+				<Textarea
+					placeholder={notePlaceholder}
+					value={submitterNote}
+					onChange={(e) => onSubmitterNoteChange(e.target.value)}
+					className="min-h-[60px] text-sm resize-none"
+					rows={2}
+				/>
 				<Button type="submit" disabled={!canSubmit || isSubmitting || isPending} size="sm" className="w-full h-8">
 					{buttonText}
 					{isLoading ? <Spinner data-icon="inline-end" /> : <HugeiconsIcon icon={buttonIcon} className="size-3.5" data-icon="inline-end" />}
@@ -414,6 +490,56 @@ function CellsSection({ selectedRats, cells, originalCells, isNewStation, cellEr
 					onCellsChange={onCellsChange}
 				/>
 			))}
+		</div>
+	);
+}
+
+type ActionSelectorProps = {
+	action: StationAction;
+	onActionChange: (action: StationAction) => void;
+};
+
+function ActionSelector({ action, onActionChange }: ActionSelectorProps) {
+	const { t } = useTranslation("submissions");
+
+	return (
+		<div className={cn("border-2 rounded-xl bg-card overflow-hidden transition-colors", action === "delete" ? "border-destructive/50" : "border-primary/50")}>
+			<div className="px-4 py-3 bg-muted/30 flex items-center justify-between gap-4">
+				<div className="flex items-center gap-2">
+					<div className={cn("p-1.5 rounded-md", action === "delete" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+						<HugeiconsIcon icon={action === "delete" ? Delete02Icon : PencilEdit02Icon} className="size-4" />
+					</div>
+					<span className="font-semibold text-sm">{t("actionSelector.title")}</span>
+				</div>
+				<div className="flex items-center p-1 bg-muted/50 rounded-lg border shadow-sm">
+					<button
+						type="button"
+						onClick={() => onActionChange("update")}
+						className={cn(
+							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+							action === "update"
+								? "bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+								: "text-muted-foreground hover:text-foreground hover:bg-background/50",
+						)}
+					>
+						<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+						{t("actionSelector.update")}
+					</button>
+					<button
+						type="button"
+						onClick={() => onActionChange("delete")}
+						className={cn(
+							"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+							action === "delete"
+								? "bg-destructive/10 text-destructive shadow-sm ring-1 ring-destructive/20"
+								: "text-muted-foreground hover:text-destructive hover:bg-destructive/5",
+						)}
+					>
+						<HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+						{t("actionSelector.delete")}
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }

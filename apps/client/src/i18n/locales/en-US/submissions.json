@@ -15,8 +15,15 @@
 		"noRegion": "No region",
 		"noGps": "No GPS",
 		"newStationHint": "Fill in the station details and location below.",
+		"deleteStation": "Delete Station",
+		"deleteStationHint": "Search for the station you want to mark for deletion.",
 		"cellsCount_one": "{{count}} cell",
 		"cellsCount_other": "{{count}} cells"
+	},
+	"actionSelector": {
+		"title": "Action",
+		"update": "Update Station",
+		"delete": "Mark for Deletion"
 	},
 	"newStation": {
 		"title": "Station Details",
@@ -63,7 +70,8 @@
 		"notes": "Notes",
 		"notesPlaceholder": "e.g. picocell",
 		"diffAdded": "New",
-		"diffModified": "Modified"
+		"diffModified": "Modified",
+		"diffDeleted": "Deleted"
 	},
 	"form": {
 		"submit": "Submit",
@@ -74,8 +82,16 @@
 		"createStation": "Creating new station {{id}}",
 		"selectStationFirst": "Select or create a station first",
 		"fillStationDetails": "Fill in the station details",
+		"deleteStationText": "Requesting deletion of station {{id}}",
+		"submitterNotePlaceholder": "Add a note explaining your changes (optional)...",
 		"cellsCount_one": "{{count}} cell",
 		"cellsCount_other": "{{count}} cells"
+	},
+	"deleteStation": {
+		"title": "Delete Station",
+		"warning": "This will mark the station for deletion. A moderator will review your request.",
+		"reason": "Reason for deletion",
+		"reasonPlaceholder": "Why should this station be removed?"
 	},
 	"common": {
 		"clear": "Clear",

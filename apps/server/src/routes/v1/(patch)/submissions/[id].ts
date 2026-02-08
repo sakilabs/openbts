@@ -41,6 +41,7 @@ const locationInputSchema = createInsertSchema(proposedLocations).omit({ created
 
 const requestSchema = z.object({
 	review_notes: z.string().optional(),
+	submitter_note: z.string().optional(),
 	station: stationInputSchema.optional(),
 	location: locationInputSchema.optional(),
 	cells: z.array(cellInputSchema).optional(),
@@ -92,6 +93,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		const result = await db.transaction(async (tx) => {
 			const updateFields: Record<string, unknown> = { updatedAt: new Date() };
 			if (req.body.review_notes !== undefined) updateFields.review_notes = req.body.review_notes;
+			if (req.body.submitter_note !== undefined) updateFields.submitter_note = req.body.submitter_note;
 
 			await tx.update(submissions).set(updateFields).where(eq(submissions.id, id));
 

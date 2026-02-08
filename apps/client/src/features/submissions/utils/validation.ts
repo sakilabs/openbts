@@ -7,6 +7,7 @@ import type {
 	UMTSCellDetails,
 	LTECellDetails,
 	NRCellDetails,
+	SubmissionMode,
 } from "../types";
 import type { SearchStation } from "../api";
 
@@ -34,7 +35,7 @@ export type FormErrors = {
 };
 
 type ValidationContext = {
-	mode: "existing" | "new";
+	mode: SubmissionMode;
 	selectedStation: SearchStation | null;
 	newStation: ProposedStationForm;
 	location: ProposedLocationForm;

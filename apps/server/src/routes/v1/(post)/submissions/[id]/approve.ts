@@ -146,6 +146,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 				await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
 			}
 
+			if (submission.type === "delete") {
+				if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete without a station" });
+				await tx.update(stations).set({ status: "inactive", updatedAt: new Date() }).where(eq(stations.id, stationId));
+			}
+
 			for (const proposed of proposedCellRows) {
 				switch (proposed.operation) {
 					case "add": {

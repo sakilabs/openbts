@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
+import { useTranslation } from "react-i18next";
 
 export function NavUser({ data: session }: { data: ReturnType<typeof authClient.useSession>["data"] }) {
 	const { isMobile } = useSidebar();
+	const { t } = useTranslation("nav");
 
 	if (!session || !session.user) return null;
 
@@ -65,7 +67,7 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
 								}}
 							>
 								<HugeiconsIcon icon={Logout02Icon} className="size-4" />
-								Log out
+								{t("user.logout")}
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 					</DropdownMenuContent>

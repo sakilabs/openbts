@@ -16,7 +16,8 @@
 		"noBandsFound": "No bands found",
 		"showingStations": "Showing {{count}} stations",
 		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
-		"otherOperators": "Other operators"
+		"otherOperators": "Other operators",
+		"selected": "selected"
 	},
 	"table": {
 		"stationId": "Station ID",
@@ -24,15 +25,9 @@
 		"technologies": "Technologies",
 		"bands": "Bands",
 		"location": "Location",
-		"region": "Województwo",
+		"region": "Region",
 		"updatedAt": "Updated",
 		"noStationsFound": "No stations found",
 		"tryAdjustingFilters": "Try adjusting your filters"
-	},
-	"technologies": {
-		"2G": "2G",
-		"3G": "3G",
-		"4G": "4G",
-		"5G": "5G"
 	}
 }

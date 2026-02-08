@@ -40,6 +40,7 @@ const singleSubmissionSchema = z
 	.object({
 		station_id: submissionsInsertBase.shape.station_id.optional(),
 		type: submissionsInsertBase.shape.type.optional(),
+		submitter_note: z.string().optional(),
 		station: proposedStationInsert.optional(),
 		location: proposedLocationInsert.optional(),
 		cells: z.array(proposedCellInsert).optional(),
@@ -78,9 +79,9 @@ async function processSubmission(
 	input: SingleSubmission,
 	userId: string,
 ): Promise<z.infer<typeof submissionsSelectSchema>> {
-	const { station_id, type, station: stationData, location: locationData, cells: proposedCellsInput } = input;
+	const { station_id, type, submitter_note, station: stationData, location: locationData, cells: proposedCellsInput } = input;
 
-	if (type === "update" && !station_id) throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update submissions" });
+	if ((type === "update" || type === "delete") && !station_id) throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update and delete submissions" });
 
 	if (station_id) {
 		const stationId = Number(station_id);
@@ -91,7 +92,7 @@ async function processSubmission(
 
 	const [submission] = await tx
 		.insert(submissions)
-		.values({ submitter_id: userId, station_id: station_id ?? null, type })
+		.values({ submitter_id: userId, station_id: station_id ?? null, type, submitter_note: submitter_note ?? null })
 		.returning();
 	if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
 

@@ -71,11 +71,14 @@ export type CellPayload = {
 export type SubmissionFormData = {
 	station_id: number | null;
 	type: "new" | "update" | "delete";
+	submitter_note?: string;
 	station?: ProposedStationForm;
 	location?: ProposedLocationForm;
 	cells: CellPayload[];
 };
 
 export type SubmissionMode = "existing" | "new";
+
+export type StationAction = "update" | "delete";
 
 export type { Band, Operator, Region };

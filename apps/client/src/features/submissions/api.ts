@@ -76,7 +76,7 @@ export type SubmissionResponse = {
 	station_id: number | null;
 	submitter_id: string;
 	status: "pending" | "approved" | "rejected";
-	type: "new" | "update";
+	type: "new" | "update" | "delete";
 	createdAt: string;
 	updatedAt: string;
 };
@@ -114,6 +114,7 @@ export async function createSubmission(data: SubmissionFormData): Promise<Submis
 	};
 
 	if (data.station_id) payload.station_id = data.station_id;
+	if (data.submitter_note) payload.submitter_note = data.submitter_note;
 	if (data.station) payload.station = data.station;
 	if (data.location) payload.location = data.location;
 	if (data.cells.length > 0) {

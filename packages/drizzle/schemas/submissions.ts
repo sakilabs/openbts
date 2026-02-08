@@ -24,6 +24,7 @@ export const submissions = SubmissionsSchema.table(
 		type: SubmissionTypeEnum("type").notNull().default("new"),
 		reviewer_id: uuid("reviewer_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		review_notes: text("review_notes"),
+		submitter_note: text("submitter_note"),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		reviewed_at: timestamp({ withTimezone: true }),
