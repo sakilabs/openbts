@@ -21,7 +21,7 @@ import type { RouteGenericInterface } from "fastify";
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
-const usersSchema = createSelectSchema(users);
+const usersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, displayUsername: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
@@ -54,8 +54,22 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Submissi
 	const rows = await db.query.submissions.findMany({
 		with: {
 			station: true,
-			submitter: true,
-			reviewer: true,
+			submitter: {
+				columns: {
+					id: true,
+					name: true,
+					image: true,
+					displayUsername: true,
+				},
+			},
+			reviewer: {
+				columns: {
+					id: true,
+					name: true,
+					image: true,
+					displayUsername: true,
+				},
+			},
 		},
 	});
 
