@@ -36,13 +36,13 @@ export default function AppLayout() {
 	useEffect(() => {
 		const titleParts: string[] = [];
 
+		titleParts.push(APP_NAME);
+
 		for (const segment of breadcrumbs) {
 			titleParts.push(t(segment.titleKey, { ns: segment.i18nNamespace }));
 		}
 
 		if (pageTitle) titleParts.push(pageTitle);
-
-		titleParts.push(APP_NAME);
 
 		document.title = titleParts.join(" · ");
 	}, [pageTitle, breadcrumbs, t]);
