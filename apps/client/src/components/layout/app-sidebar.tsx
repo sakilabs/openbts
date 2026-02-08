@@ -49,7 +49,10 @@ const authNavConfig = [
 		key: "contribute",
 		url: "#",
 		icon: AddCircleIcon,
-		items: [{ titleKey: "items.submitStation", url: "/submission" }],
+		items: [
+			{ titleKey: "items.submitStation", url: "/submission" },
+			{ titleKey: "items.mySubmissions", url: "/account/submissions" },
+		],
 	},
 ];
 
@@ -79,10 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const settingsSubItems = [
 		{ title: t("items.preferences"), url: "/preferences" },
 		...(session?.user
-			? [
-					{ title: t("items.accountSettings"), url: "/account/settings" },
-					{ title: t("items.mySubmissions"), url: "/account/submissions" },
-				]
+			? [{ title: t("items.accountSettings"), url: "/account/settings" }]
 			: []),
 	];
 

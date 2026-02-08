@@ -12,6 +12,7 @@ export function useMapBounds({ map, isLoaded, debounceMs = 300 }: UseMapBoundsAr
 	const [isMoving, setIsMoving] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const debounceMsRef = useRef(debounceMs);
+	const isFirstUpdateRef = useRef(true);
 	debounceMsRef.current = debounceMs;
 
 	useEffect(() => {
@@ -19,6 +20,14 @@ export function useMapBounds({ map, isLoaded, debounceMs = 300 }: UseMapBoundsAr
 
 		const updateBounds = () => {
 			setZoom(map.getZoom());
+
+			if (isFirstUpdateRef.current) {
+				isFirstUpdateRef.current = false;
+				const mapBounds = map.getBounds();
+				setBounds(`${mapBounds.getSouth()},${mapBounds.getWest()},${mapBounds.getNorth()},${mapBounds.getEast()}`);
+				return;
+			}
+
 			if (debounceRef.current) clearTimeout(debounceRef.current);
 			debounceRef.current = setTimeout(() => {
 				const mapBounds = map.getBounds();

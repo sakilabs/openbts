@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMap } from "@/components/ui/map";
 import { MapSearchOverlay } from "./search-overlay";
-import { StationDetailsDialog } from "@/features/station-details/components/station-details-dialog";
-import { UkePermitDetailsDialog } from "@/features/station-details/components/uke-permit-details-dialog";
+
+const StationDetailsDialog = lazy(() =>
+	import("@/features/station-details/components/station-details-dialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
+const UkePermitDetailsDialog = lazy(() =>
+	import("@/features/station-details/components/uke-permit-details-dialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
+);
 import type {
 	StationFilters,
 	StationSource,
@@ -262,13 +267,17 @@ export function StationsLayer() {
 				onLocationSelect={handleLocationSelect}
 				onStationSelect={handleStationSelect}
 			/>
-			<StationDetailsDialog
-				key={selectedStation?.id}
-				stationId={selectedStation?.id ?? null}
-				source={selectedStation?.source ?? "internal"}
-				onClose={handleCloseStationDetails}
-			/>
-			<UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} />
+			<Suspense fallback={null}>
+				{selectedStation && (
+					<StationDetailsDialog
+						key={selectedStation.id}
+						stationId={selectedStation.id}
+						source={selectedStation.source}
+						onClose={handleCloseStationDetails}
+					/>
+				)}
+				{selectedUkeStation && <UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} />}
+			</Suspense>
 		</>
 	);
 }
