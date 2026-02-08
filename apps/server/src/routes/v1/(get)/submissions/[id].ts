@@ -22,7 +22,7 @@ import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.in
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const submittersSchema = createSelectSchema(users);
-const reviewersSchema = createSelectSchema(users);
+const reviewersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, displayUsername: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
@@ -37,9 +37,9 @@ const schemaRoute = {
 		200: z.object({
 			data: submissionsSchema
 				.extend({
-					station: stationsSchema,
+					station: stationsSchema.nullable(),
 					submitter: submittersSchema,
-					reviewer: reviewersSchema.optional(),
+					reviewer: reviewersSchema.nullable(),
 				})
 				.extend({
 					cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
@@ -48,9 +48,9 @@ const schemaRoute = {
 	},
 };
 type Submission = z.infer<typeof submissionsSchema> & {
-	station: z.infer<typeof stationsSchema>;
+	station: z.infer<typeof stationsSchema> | null;
 	submitter: z.infer<typeof submittersSchema>;
-	reviewer?: z.infer<typeof reviewersSchema>;
+	reviewer: z.infer<typeof reviewersSchema> | null;
 	cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
 };
 
@@ -60,12 +60,20 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read"] })) || false;
 
-	const withTables = { station: true, submitter: true, reviewer: false };
-	if (hasAdminPermission) withTables.reviewer = true;
-
 	const submission = await db.query.submissions.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),
-		with: withTables,
+		with: {
+			station: true,
+			submitter: true,
+			reviewer: {
+				columns: {
+					id: true,
+					name: true,
+					image: true,
+					displayUsername: true,
+				}
+			},
+		},
 	});
 	if (!submission) throw new ErrorResponse("NOT_FOUND");
 	if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");

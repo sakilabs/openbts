@@ -34,9 +34,9 @@ const schemaRoute = {
 		200: z.object({
 			data: z.array(
 				submissionsSchema.extend({
-					station: stationsSchema,
+					station: stationsSchema.nullable(),
 					submitter: usersSchema,
-					reviewer: usersSchema.optional(),
+					reviewer: usersSchema.nullable(),
 					cells: z.array(proposedCellWithDetails),
 				}),
 			),
@@ -44,9 +44,9 @@ const schemaRoute = {
 	},
 };
 type Submission = z.infer<typeof submissionsSchema> & {
-	station: z.infer<typeof stationsSchema>;
+	station: z.infer<typeof stationsSchema> | null;
 	submitter: z.infer<typeof usersSchema>;
-	reviewer?: z.infer<typeof usersSchema>;
+	reviewer: z.infer<typeof usersSchema> | null;
 	cells: z.infer<typeof proposedCellWithDetails>[];
 };
 
