@@ -81,6 +81,7 @@ i18n.use(initReactI18next).init({
 		bindI18n: "languageChanged loaded",
 		bindI18nStore: "added removed",
 	},
+	showSupportNotice: false,
 });
 
 export default i18n;

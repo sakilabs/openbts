@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import {
 	stations,
@@ -56,6 +57,7 @@ type Submission = z.infer<typeof submissionsSchema> & {
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Submission>>) {
+	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");

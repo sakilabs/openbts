@@ -3,6 +3,8 @@ import { inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import {
 	stations,
 	submissions,
@@ -51,6 +53,7 @@ type Submission = z.infer<typeof submissionsSchema> & {
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Submission[]>>) {
+	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 	const rows = await db.query.submissions.findMany({
 		with: {
 			station: true,

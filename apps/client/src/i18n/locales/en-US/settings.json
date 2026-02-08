@@ -25,13 +25,13 @@
 		"description": "Permanently delete your account and all associated data."
 	},
 	"submissions": {
-		"title": "My Submissions",
+		"title": "My submissions",
 		"description": "Stations and cells you've submitted for review.",
 		"empty": "No submissions yet",
 		"emptyHint": "Submit a station or cell update to see it here.",
 		"loadError": "Could not load submissions.",
-		"newSubmission": "New Submission",
-		"submitNew": "Submit New Station",
+		"newSubmission": "New submission",
+		"submitNew": "Submit new submission",
 		"submitNewDesc": "Found a new tower? Add it to the map.",
 		"modifyExisting": "Modify Existing",
 		"modifyExistingDesc": "Update details or cells for an existing station.",

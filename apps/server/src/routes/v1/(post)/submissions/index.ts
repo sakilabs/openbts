@@ -13,6 +13,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -149,6 +150,7 @@ async function processSubmission(
 }
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
+	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 	const userSession = req.userSession;
 	if (!userSession?.user?.id) throw new ErrorResponse("UNAUTHORIZED");
 	const userId = userSession.user.id;

@@ -13,6 +13,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -27,6 +28,7 @@ const schemaRoute = {
 
 type ReqParams = { Params: { id: string } };
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyResponse>) {
+	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");

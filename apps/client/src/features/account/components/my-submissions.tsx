@@ -1,12 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, Tick02Icon, Cancel01Icon, Clock01Icon, InformationCircleIcon } from "@hugeicons/core-free-icons";
+import { SentIcon, Tick02Icon, Cancel01Icon, Clock01Icon, InformationCircleIcon, Message01Icon } from "@hugeicons/core-free-icons";
 import { fetchApiData } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 type SubmissionRow = {
@@ -28,18 +26,24 @@ const fetchSubmissions = () => fetchApiData<SubmissionRow[]>("submissions");
 const STATUS_CONFIG = {
 	pending: {
 		icon: Clock01Icon,
-		variant: "outline" as const,
-		className: "text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700",
+		label: "pending",
+		borderClass: "border-l-amber-500",
+		bgClass: "bg-amber-500/5",
+		iconClass: "text-amber-500",
 	},
 	approved: {
 		icon: Tick02Icon,
-		variant: "outline" as const,
-		className: "text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700",
+		label: "approved",
+		borderClass: "border-l-emerald-500",
+		bgClass: "bg-emerald-500/5",
+		iconClass: "text-emerald-500",
 	},
 	rejected: {
 		icon: Cancel01Icon,
-		variant: "outline" as const,
-		className: "text-red-600 dark:text-red-400 border-red-300 dark:border-red-700",
+		label: "rejected",
+		borderClass: "border-l-red-500",
+		bgClass: "bg-red-500/5",
+		iconClass: "text-red-500",
 	},
 } as const;
 
@@ -102,43 +106,53 @@ export function MySubmissions() {
 			{submissions.map((submission) => {
 				const statusCfg = STATUS_CONFIG[submission.status];
 				const typeCls = TYPE_CONFIG[submission.type];
+				const hasNotes = !!submission.review_notes;
 
 				return (
 					<div
 						key={submission.id}
-						className="group flex items-center gap-3 px-4 py-3 rounded-xl border bg-card transition-colors hover:bg-muted/30"
-					>
-						<span className={cn("text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md", typeCls)}>
-							{t(`submissions.type.${submission.type}`)}
-						</span>
-
-						<span className="text-sm font-mono font-medium text-foreground min-w-[5rem]">
-							{submission.station?.station_id ?? `#${submission.id}`}
-						</span>
-
-						<Badge variant={statusCfg.variant} className={cn("gap-1", statusCfg.className)}>
-							<HugeiconsIcon icon={statusCfg.icon} className="size-3" />
-							{t(`submissions.status.${submission.status}`)}
-						</Badge>
-
-						{submission.review_notes && (
-							<Tooltip>
-								<TooltipTrigger className="text-muted-foreground hover:text-foreground transition-colors cursor-default">
-									<HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
-								</TooltipTrigger>
-								<TooltipContent side="top" className="max-w-xs text-xs">
-									{submission.review_notes}
-								</TooltipContent>
-							</Tooltip>
+						className={cn(
+							"group rounded-xl border border-l-4 bg-card transition-colors overflow-hidden",
+							statusCfg.borderClass,
+							hasNotes && statusCfg.bgClass
 						)}
+					>
+						<div className="flex items-center gap-3 px-4 py-3">
+							<HugeiconsIcon icon={statusCfg.icon} className={cn("size-4 shrink-0", statusCfg.iconClass)} />
 
-						<span className="ml-auto text-xs text-muted-foreground tabular-nums">
-							{new Date(submission.createdAt).toLocaleDateString(i18n.language, {
-								year: "numeric",
-								month: "short",
-								day: "numeric",
-							})}
-						</span>
+							<span className={cn("text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md", typeCls)}>
+								{t(`submissions.type.${submission.type}`)}
+							</span>
+
+							<span className="text-xs font-mono text-muted-foreground">#{submission.id}</span>
+
+							{submission.station?.station_id && (
+								<span className="text-sm font-mono font-medium text-foreground">
+									{submission.station.station_id}
+								</span>
+							)}
+
+							<span className="text-xs text-muted-foreground capitalize hidden sm:inline">
+								{t(`submissions.status.${submission.status}`)}
+							</span>
+
+							<span className="ml-auto text-xs text-muted-foreground tabular-nums">
+								{new Date(submission.createdAt).toLocaleDateString(i18n.language, {
+									year: "numeric",
+									month: "short",
+									day: "numeric",
+								})}
+							</span>
+						</div>
+
+						{hasNotes && (
+							<div className="px-4 pb-3 pt-0">
+								<div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+									<HugeiconsIcon icon={Message01Icon} className="size-4 shrink-0 mt-0.5 opacity-60" />
+									<p className="text-xs leading-relaxed">{submission.review_notes}</p>
+								</div>
+							</div>
+						)}
 					</div>
 				);
 			})}

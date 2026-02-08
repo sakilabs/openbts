@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { fetchBands } from "../api";
 import { generateCellId, getCellDiffStatus, buildOriginalCellsMap, type CellDiffStatus } from "../utils/cells";
 import type { RatType, ProposedCellForm, GSMCellDetails, UMTSCellDetails, LTECellDetails, NRCellDetails } from "../types";
@@ -277,15 +278,15 @@ const CellRow = memo(function CellRow({
 	const duplexOptions = localState.bandValue ? getDuplexOptionsForValue(localState.bandValue) : [];
 	const hasDuplexChoice = duplexOptions.length > 1 || (duplexOptions.length === 1 && duplexOptions[0] !== null);
 
-	const rowClassName = {
-		added: "border-b last:border-0 hover:bg-muted/20 border-l-2 border-l-green-500",
-		modified: "border-b last:border-0 hover:bg-muted/20 border-l-2 border-l-amber-500",
-		unchanged: "border-b last:border-0 hover:bg-muted/20",
+	const firstCellBorderClass = {
+		added: "border-l-2 border-l-green-500",
+		modified: "border-l-2 border-l-amber-500",
+		unchanged: "",
 	}[diffStatus];
 
 	return (
-		<tr className={rowClassName}>
-			<td className="px-4 py-2">
+		<tr className="border-b last:border-0 hover:bg-muted/20">
+			<td className={cn("px-4 py-2", firstCellBorderClass)}>
 				<Select
 					value={localState.bandValue?.toString() ?? ""}
 					onValueChange={(value) => onBandValueChange(cell.id, value ? Number.parseInt(value, 10) : null)}

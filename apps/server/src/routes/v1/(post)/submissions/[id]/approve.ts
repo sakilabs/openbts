@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
+import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 
@@ -35,6 +36,7 @@ type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof submissionsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
+	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
