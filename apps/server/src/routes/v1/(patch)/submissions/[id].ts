@@ -34,13 +34,9 @@ const cellInputSchema = createInsertSchema(proposedCells)
 		details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
 	});
 
-const stationInputSchema = createInsertSchema(proposedStations)
-	.omit({ createdAt: true, updatedAt: true, submission_id: true })
-	.partial();
+const stationInputSchema = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
 
-const locationInputSchema = createInsertSchema(proposedLocations)
-	.omit({ createdAt: true, updatedAt: true, submission_id: true })
-	.partial();
+const locationInputSchema = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
 
 const requestSchema = z.object({
 	review_notes: z.string().optional(),
@@ -61,7 +57,7 @@ const responseSchema = submissionsSelectSchema.extend({
 
 const schemaRoute = {
 	params: z.object({
-		id: z.coerce.number<number>(),
+		id: z.coerce.string<string>(),
 	}),
 	body: requestSchema,
 	response: {
@@ -71,7 +67,7 @@ const schemaRoute = {
 	},
 };
 
-type ReqParams = { Params: { id: number } };
+type ReqParams = { Params: { id: string } };
 type ReqBody = { Body: z.infer<typeof requestSchema> };
 type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof responseSchema>;

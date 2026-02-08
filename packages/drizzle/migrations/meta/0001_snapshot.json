@@ -1,5 +1,5 @@
 {
-  "id": "b8206842-c834-424e-85a1-688376a606be",
+  "id": "480f8cc3-ee6a-40c1-baae-a13b58efc279",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -4078,7 +4078,7 @@
         },
         "submission_id": {
           "name": "submission_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -4372,7 +4372,7 @@
         },
         "submission_id": {
           "name": "submission_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -4552,7 +4552,7 @@
         },
         "submission_id": {
           "name": "submission_id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -4775,20 +4775,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": true,
           "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "submissions_id_seq",
-            "schema": "submissions",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
+          "default": "uuidv7()"
         },
         "station_id": {
           "name": "station_id",

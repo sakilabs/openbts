@@ -406,7 +406,7 @@ CREATE TABLE "auth"."verification_tokens" (
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_cells" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."proposed_cells_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"submission_id" integer,
+	"submission_id" uuid,
 	"operation" "cell_operation" DEFAULT 'add' NOT NULL,
 	"target_cell_id" integer,
 	"station_id" integer,
@@ -437,7 +437,7 @@ CREATE TABLE "submissions"."proposed_lte_cells" (
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_locations" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."proposed_locations_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"submission_id" integer,
+	"submission_id" uuid,
 	"region_id" integer NOT NULL,
 	"city" varchar(100),
 	"address" text,
@@ -459,7 +459,7 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_stations" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."proposed_stations_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"submission_id" integer,
+	"submission_id" uuid,
 	"operation" "station_operation" DEFAULT 'add' NOT NULL,
 	"target_station_id" integer,
 	"station_id" varchar(16),
@@ -482,7 +482,7 @@ CREATE TABLE "submissions"."proposed_umts_cells" (
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."submissions" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."submissions_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"station_id" integer,
 	"submitter_id" uuid NOT NULL,
 	"status" "submission_status" DEFAULT 'pending' NOT NULL,

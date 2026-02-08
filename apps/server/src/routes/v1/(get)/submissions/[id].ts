@@ -17,7 +17,7 @@ import {
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
@@ -31,7 +31,7 @@ const nrSchema = createSelectSchema(proposedNRCells).omit({ proposed_cell_id: tr
 const proposedDetailsSchema = z.union([gsmSchema, umtsSchema, lteSchema, nrSchema]).nullable();
 const schemaRoute = {
 	params: z.object({
-		id: z.coerce.number<number>(),
+		id: z.coerce.string<string>(),
 	}),
 	response: {
 		200: z.object({
@@ -47,6 +47,7 @@ const schemaRoute = {
 		}),
 	},
 };
+type ReqParams = { Params: { id: string } };
 type Submission = z.infer<typeof submissionsSchema> & {
 	station: z.infer<typeof stationsSchema> | null;
 	submitter: z.infer<typeof submittersSchema>;
@@ -54,7 +55,7 @@ type Submission = z.infer<typeof submissionsSchema> & {
 	cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
 };
 
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Submission>>) {
+async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Submission>>) {
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
@@ -71,7 +72,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 					name: true,
 					image: true,
 					displayUsername: true,
-				}
+				},
 			},
 		},
 	});
@@ -96,7 +97,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	return res.send({ data: { ...submission, cells } });
 }
 
-const getSubmission: Route<IdParams, Submission> = {
+const getSubmission: Route<ReqParams, Submission> = {
 	url: "/submissions/:id",
 	method: "GET",
 	config: { permissions: ["read:submissions"] },

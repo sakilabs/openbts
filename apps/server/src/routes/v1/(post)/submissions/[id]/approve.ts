@@ -15,7 +15,7 @@ const submissionsSelectSchema = createSelectSchema(submissions);
 
 const schemaRoute = {
 	params: z.object({
-		id: z.coerce.number<number>(),
+		id: z.coerce.string<string>(),
 	}),
 	body: z
 		.object({
@@ -29,7 +29,7 @@ const schemaRoute = {
 	},
 };
 
-type ReqParams = { Params: { id: number } };
+type ReqParams = { Params: { id: string } };
 type ReqBody = { Body: { review_notes?: string } | undefined };
 type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof submissionsSelectSchema>;

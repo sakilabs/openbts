@@ -17,15 +17,16 @@ import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, Route, EmptyResponse } from "../../../../interfaces/routes.interface.js";
+import type { Route, EmptyResponse } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
 	params: z.object({
-		id: z.coerce.number<number>(),
+		id: z.coerce.string<string>(),
 	}),
 };
 
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyResponse>) {
+type ReqParams = { Params: { id: string } };
+async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyResponse>) {
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
@@ -76,7 +77,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 	return res.status(204).send();
 }
 
-const deleteSubmission: Route<IdParams, void> = {
+const deleteSubmission: Route<ReqParams, void> = {
 	url: "/submissions/:id",
 	method: "DELETE",
 	schema: schemaRoute,

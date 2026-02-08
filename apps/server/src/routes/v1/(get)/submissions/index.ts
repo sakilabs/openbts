@@ -59,11 +59,11 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Submissi
 		},
 	});
 
-	const submissionIds = rows.map((s) => s.id).filter((n): n is number => n !== null && n !== undefined);
-	const cellsBySubmission = new Map<number, z.infer<typeof proposedCellWithDetails>[]>();
+	const submissionIds = rows.map((s) => s.id).filter((n): n is string => n !== null && n !== undefined);
+	const cellsBySubmission = new Map<string, z.infer<typeof proposedCellWithDetails>[]>();
 	if (submissionIds.length > 0) {
 		const rawCells = await db.query.proposedCells.findMany({
-			where: inArray(proposedCells.submission_id, submissionIds as number[]),
+			where: inArray(proposedCells.submission_id, submissionIds as string[]),
 			with: {
 				gsm: true,
 				umts: true,
@@ -74,7 +74,7 @@ async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Submissi
 
 		for (const { gsm, umts, lte, nr, ...base } of rawCells) {
 			const pc = { ...base, details: gsm ?? umts ?? lte ?? nr ?? null } as z.infer<typeof proposedCellWithDetails>;
-			const key = base.submission_id as number;
+			const key = base.submission_id as string;
 			const arr = cellsBySubmission.get(key) ?? [];
 			arr.push(pc);
 			cellsBySubmission.set(key, arr);

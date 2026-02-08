@@ -15,7 +15,7 @@ export const SubmissionsSchema = pgSchema("submissions");
 export const submissions = SubmissionsSchema.table(
 	"submissions",
 	{
-		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+		id: uuid("id").primaryKey().default(sql`uuidv7()`).notNull(),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		submitter_id: uuid("submitter_id")
 			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" })
@@ -41,7 +41,7 @@ export const proposedCells = SubmissionsSchema.table(
 	"proposed_cells",
 	{
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-		submission_id: integer("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		submission_id: uuid("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		operation: CellOperationEnum("operation").notNull().default("add"),
 		target_cell_id: integer("target_cell_id").references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
@@ -107,7 +107,7 @@ export const proposedStations = SubmissionsSchema.table(
 	"proposed_stations",
 	{
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-		submission_id: integer("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		submission_id: uuid("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		operation: StationOperationEnum("operation").notNull().default("add"),
 		target_station_id: integer("target_station_id").references(() => stations.id, { onDelete: "set null", onUpdate: "cascade" }),
 		station_id: varchar("station_id", { length: 16 }),
@@ -127,7 +127,7 @@ export const proposedStations = SubmissionsSchema.table(
 
 export const proposedLocations = SubmissionsSchema.table("proposed_locations", {
 	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-	submission_id: integer("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+	submission_id: uuid("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	region_id: integer("region_id")
 		.references(() => regions.id, { onDelete: "cascade", onUpdate: "cascade" })
 		.notNull(),
