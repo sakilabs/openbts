@@ -1,8 +1,5 @@
-import { lazy, Suspense } from "react";
-import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton";
+import MapView from "@/features/map/components/map-view";
 import type { RouteHandle } from "./_layout";
-
-const MapView = lazy(() => import("@/features/map/components/map-view"));
 
 export const handle: RouteHandle = {
 	titleKey: "items.mapView",
@@ -13,9 +10,7 @@ export const handle: RouteHandle = {
 export default function Page() {
 	return (
 		<div className="flex-1">
-			<Suspense fallback={<MapLoadingSkeleton />}>
-				<MapView />
-			</Suspense>
+			<MapView />
 		</div>
 	);
 }
