@@ -115,7 +115,13 @@ export const auth = betterAuth({
 			// 	return true;
 			// },
 		}),
-		passkey(),
+		passkey({
+			rpID: process.env.NODE_ENV === "production" ? "openbts.sakilabs.com" : "localhost",
+			rpName: APP_NAME,
+			advanced: {
+				webAuthnChallengeCookie: "webauthn_challenge",
+			},
+		}),
 		twoFactor({
 			issuer: APP_NAME,
 		}),
