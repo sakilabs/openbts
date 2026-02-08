@@ -3,7 +3,7 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchApiData, fetchJson, API_BASE } from "@/lib/api";
 import { fetchOperators, fetchBands } from "@/features/map/search-api";
 import { parseFilters } from "@/features/map/filters";
-import type { Station, Region, StationFilters } from "@/types/station";
+import type { Station, Region, StationFilters, StationSortBy, StationSortDirection } from "@/types/station";
 
 const FETCH_LIMIT = 120;
 
@@ -42,6 +42,8 @@ type FetchStationsParams = {
 	limit: number;
 	filters: StationFilters;
 	regionNames: string[];
+	sort: StationSortDirection;
+	sortBy: StationSortBy | undefined;
 };
 
 type StationsResponse = { data: Station[]; totalCount: number };
@@ -56,6 +58,8 @@ const fetchStationsList = async (params: FetchStationsParams): Promise<StationsR
 	if (params.filters.bands.length) searchParams.set("bands", params.filters.bands.join(","));
 	if (params.filters.rat.length) searchParams.set("rat", params.filters.rat.join(","));
 	if (params.regionNames.length) searchParams.set("regions", params.regionNames.join(","));
+	searchParams.set("sort", params.sort);
+	if (params.sortBy) searchParams.set("sortBy", params.sortBy);
 
 	return fetchJson<StationsResponse>(`${API_BASE}/stations?${searchParams.toString()}`);
 };
@@ -70,6 +74,8 @@ export function useStationsData() {
 	});
 	const [selectedRegions, setSelectedRegions] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [sort, setSort] = useState<StationSortDirection>("desc");
+	const [sortBy, setSortBy] = useState<StationSortBy>();
 
 	const { data: operators = [] } = useQuery({
 		queryKey: ["operators"],
@@ -94,13 +100,15 @@ export function useStationsData() {
 	}, [selectedRegions, regions]);
 
 	const { data, fetchNextPage, hasNextPage, isLoading, isFetching } = useInfiniteQuery({
-		queryKey: ["stations-list", FETCH_LIMIT, filters.operators, filters.bands, filters.rat, selectedRegionNames],
+		queryKey: ["stations-list", FETCH_LIMIT, filters.operators, filters.bands, filters.rat, selectedRegionNames, sort, sortBy],
 		queryFn: ({ pageParam }) =>
 			fetchStationsList({
 				pageParam,
 				limit: FETCH_LIMIT,
 				filters,
 				regionNames: selectedRegionNames,
+				sort,
+				sortBy,
 			}),
 		initialPageParam: 1,
 		getNextPageParam: (lastPage, allPages) => {
@@ -153,6 +161,11 @@ export function useStationsData() {
 		selectedRegions,
 		setSelectedRegions,
 		activeFilterCount,
+
+		sort,
+		setSort,
+		sortBy,
+		setSortBy,
 
 		searchQuery,
 		setSearchQuery,

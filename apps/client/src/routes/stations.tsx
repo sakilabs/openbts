@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -9,6 +9,7 @@ import { StationsFilters } from "@/features/stations/components/stations-filters
 import { StationsDataTable } from "@/features/stations/components/stations-data-table";
 import { StationDetailsDialog } from "@/features/station-details/components/station-details-dialog";
 import { useStationsData } from "@/features/stations/hooks/use-stations-data";
+import type { StationSortBy } from "@/types/station";
 import type { RouteHandle } from "./_layout";
 
 export const handle: RouteHandle = {
@@ -38,6 +39,10 @@ export default function StationsListPage() {
 		selectedRegions,
 		setSelectedRegions,
 		activeFilterCount,
+		sort,
+		setSort,
+		sortBy,
+		setSortBy,
 		searchQuery,
 		setSearchQuery,
 		isLoading,
@@ -45,6 +50,18 @@ export default function StationsListPage() {
 		hasMore,
 		loadMore,
 	} = useStationsData();
+
+	const handleSort = useCallback(
+		(column: StationSortBy) => {
+			if (sortBy === column) {
+				setSort((prev) => (prev === "desc" ? "asc" : "desc"));
+			} else {
+				setSortBy(column);
+				setSort("desc");
+			}
+		},
+		[sortBy, setSort, setSortBy],
+	);
 
 	return (
 		<>
@@ -99,6 +116,9 @@ export default function StationsListPage() {
 						hasMore={hasMore}
 						totalItems={totalStations ?? stations.length}
 						isSearchActive={!!searchQuery}
+						sort={sort}
+						sortBy={sortBy}
+						onSort={handleSort}
 					/>
 				</div>
 			</div>

@@ -5,7 +5,7 @@ import { useTablePagination } from "@/hooks/use-table-page-size";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { createStationsColumns } from "./stations-columns";
-import type { Station } from "@/types/station";
+import type { Station, StationSortBy, StationSortDirection } from "@/types/station";
 
 interface StationsDataTableProps {
 	data: Station[];
@@ -16,6 +16,9 @@ interface StationsDataTableProps {
 	hasMore?: boolean;
 	totalItems?: number;
 	isSearchActive?: boolean;
+	sort: StationSortDirection;
+	sortBy: StationSortBy | undefined;
+	onSort: (column: StationSortBy) => void;
 }
 
 export function StationsDataTable({
@@ -27,6 +30,9 @@ export function StationsDataTable({
 	hasMore,
 	totalItems,
 	isSearchActive = false,
+	sort,
+	sortBy,
+	onSort,
 }: StationsDataTableProps) {
 	const { t, i18n } = useTranslation("stations");
 	const { t: tCommon } = useTranslation("common");
@@ -38,8 +44,8 @@ export function StationsDataTable({
 	});
 
 	const columns = useMemo(
-		() => createStationsColumns({ t, tCommon, locale: i18n.language, isSearchActive }),
-		[t, tCommon, i18n.language, isSearchActive],
+		() => createStationsColumns({ t, tCommon, locale: i18n.language, isSearchActive, sort, sortBy, onSort }),
+		[t, tCommon, i18n.language, isSearchActive, sort, sortBy, onSort],
 	);
 
 	const table = useReactTable({

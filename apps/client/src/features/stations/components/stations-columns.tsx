@@ -2,10 +2,10 @@ import { memo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SignalFull02Icon, Wifi01Icon, SmartPhone01Icon, FlashIcon, MapPinIcon } from "@hugeicons/core-free-icons";
+import { SignalFull02Icon, Wifi01Icon, SmartPhone01Icon, FlashIcon, MapPinIcon, Sorting05Icon } from "@hugeicons/core-free-icons";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Station } from "@/types/station";
+import type { Station, StationSortBy, StationSortDirection } from "@/types/station";
 import { getOperatorColor } from "@/lib/operator-utils";
 import { formatRelativeTime, formatFullDate } from "@/lib/format";
 import { RAT_ORDER } from "@/features/map/constants";
@@ -33,18 +33,55 @@ const BandBadge = memo(({ band }: { band: string }) => (
 	</Badge>
 ));
 
+interface SortableHeaderProps {
+	label: string;
+	column: StationSortBy;
+	sort: StationSortDirection;
+	sortBy: StationSortBy | undefined;
+	onSort: (column: StationSortBy) => void;
+}
+
+function SortableHeader({ label, column, sort, sortBy, onSort }: SortableHeaderProps) {
+	const isActive = sortBy === column;
+	return (
+		<button
+			type="button"
+			className="inline-flex items-center gap-1 hover:text-foreground -ml-1 px-1 py-0.5 rounded transition-colors"
+			onClick={() => onSort(column)}
+		>
+			{label}
+			<HugeiconsIcon
+				icon={Sorting05Icon}
+				className={`size-3.5 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground/40"}`}
+				style={isActive && sort === "asc" ? { transform: "scaleY(-1)" } : undefined}
+			/>
+		</button>
+	);
+}
+
 type CreateColumnsOptions = {
 	t: TFunction;
 	tCommon: TFunction;
 	locale: string;
 	isSearchActive?: boolean;
+	sort: StationSortDirection;
+	sortBy: StationSortBy | undefined;
+	onSort: (column: StationSortBy) => void;
 };
 
-export function createStationsColumns({ t, tCommon, locale, isSearchActive = false }: CreateColumnsOptions): ColumnDef<Station>[] {
+export function createStationsColumns({
+	t,
+	tCommon,
+	locale,
+	isSearchActive = false,
+	sort,
+	sortBy,
+	onSort,
+}: CreateColumnsOptions): ColumnDef<Station>[] {
 	const columns: ColumnDef<Station>[] = [
 		{
 			accessorKey: "station_id",
-			header: t("table.stationId"),
+			header: () => <SortableHeader label={t("table.stationId")} column="station_id" sort={sort} sortBy={sortBy} onSort={onSort} />,
 			size: 80,
 			cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">{getValue<string>()}</span>,
 		},
@@ -150,7 +187,7 @@ export function createStationsColumns({ t, tCommon, locale, isSearchActive = fal
 		},
 		{
 			accessorKey: "updatedAt",
-			header: t("table.updatedAt"),
+			header: () => <SortableHeader label={t("table.updatedAt")} column="updatedAt" sort={sort} sortBy={sortBy} onSort={onSort} />,
 			size: 140,
 			cell: ({ getValue }) => {
 				const date = getValue<string>();

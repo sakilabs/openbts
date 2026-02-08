@@ -93,6 +93,9 @@ export type Station = {
 
 export type StationSource = "internal" | "uke";
 
+export type StationSortBy = "station_id" | "updatedAt" | "createdAt";
+export type StationSortDirection = "asc" | "desc";
+
 export type StationFilters = {
 	operators: number[];
 	bands: number[];

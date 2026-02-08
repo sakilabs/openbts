@@ -562,6 +562,9 @@ CREATE INDEX "station_location_id_idx" ON "stations" USING btree ("location_id")
 CREATE INDEX "stations_operator_id_idx" ON "stations" USING btree ("operator_id");--> statement-breakpoint
 CREATE INDEX "stations_operator_location_id_idx" ON "stations" USING btree ("operator_id","location_id","id");--> statement-breakpoint
 CREATE INDEX "stations_station_id_trgm_idx" ON "stations" USING gin (("station_id") gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "stations_station_id_idx" ON "stations" USING btree ("station_id");--> statement-breakpoint
+CREATE INDEX "stations_updated_at_idx" ON "stations" USING btree ("updatedAt");--> statement-breakpoint
+CREATE INDEX "stations_created_at_idx" ON "stations" USING btree ("createdAt");--> statement-breakpoint
 CREATE INDEX "stations_permits_station_id_idx" ON "stations_permits" USING btree ("station_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_region_id_idx" ON "uke_locations" USING btree ("region_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_point_gist" ON "uke_locations" USING gist ("point");--> statement-breakpoint
