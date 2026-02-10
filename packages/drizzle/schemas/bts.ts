@@ -265,7 +265,7 @@ export const gsmCells = pgTable(
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
-		unique("gsm_cells_lac_cid_unique").on(t.lac, t.cid),
+		unique("gsm_cells_lac_cid_unique").on(t.cell_id, t.lac, t.cid),
 		index("gsm_cells_cid_idx").on(t.cid),
 		index("gsm_cells_cid_trgm_idx").using("gin", sql`(${t.cid}::text) gin_trgm_ops`),
 	],
@@ -284,13 +284,12 @@ export const umtsCells = pgTable(
 		cid: integer("cid").notNull(),
 		cid_long: integer("cid_long")
 			.notNull()
-			.generatedAlwaysAs((): SQL => sql`(${umtsCells.rnc} * 65536) + ${umtsCells.cid}`)
-			.unique(),
+			.generatedAlwaysAs((): SQL => sql`(${umtsCells.rnc} * 65536) + ${umtsCells.cid}`),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
-		unique("umts_cells_rnc_cid_unique").on(t.rnc, t.cid),
+		unique("umts_cells_rnc_cid_unique").on(t.cell_id, t.rnc, t.cid),
 		index("umts_cells_cid_idx").on(t.cid),
 		index("umts_cells_cid_trgm_idx").using("gin", sql`(${t.cid}::text) gin_trgm_ops`),
 		index("umts_cells_cid_long_trgm_idx").using("gin", sql`(${t.cid_long}::text) gin_trgm_ops`),
@@ -309,15 +308,14 @@ export const lteCells = pgTable(
 		clid: integer("clid").notNull(),
 		ecid: integer("ecid")
 			.notNull()
-			.generatedAlwaysAs((): SQL => sql`(${lteCells.enbid} * 256) + ${lteCells.clid}`)
-			.unique(),
+			.generatedAlwaysAs((): SQL => sql`(${lteCells.enbid} * 256) + ${lteCells.clid}`),
 		supports_nb_iot: boolean("supports_nb_iot").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
 	(t) => [
 		check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`),
-		unique("lte_cells_enbid_clid_unique").on(t.enbid, t.clid),
+		unique("lte_cells_enbid_clid_unique").on(t.cell_id, t.enbid, t.clid),
 		index("lte_cells_nb_iot_true_idx").on(t.enbid, t.clid).where(sql`${t.supports_nb_iot} = true`),
 		index("lte_cells_enbid_trgm_idx").using("gin", sql`(${t.enbid}::text) gin_trgm_ops`),
 		index("lte_cells_ecid_trgm_idx").using("gin", sql`(${t.ecid}::text) gin_trgm_ops`),
@@ -335,9 +333,9 @@ export const nrCells = pgTable(
 		gnbid: integer("gnbid"),
 		gnbid_length: integer("gnbid_length").default(24),
 		clid: integer("clid"),
-		nci: bigint("nci", { mode: "bigint" })
-			.generatedAlwaysAs((): SQL => sql`(${nrCells.gnbid}::bigint * power(2, 36 - ${nrCells.gnbid_length})::bigint) + ${nrCells.clid}::bigint`)
-			.unique(),
+		nci: bigint("nci", { mode: "bigint" }).generatedAlwaysAs(
+			(): SQL => sql`(${nrCells.gnbid}::bigint * power(2, 36 - ${nrCells.gnbid_length})::bigint) + ${nrCells.clid}::bigint`,
+		),
 		pci: integer("pci"),
 		supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -345,9 +343,7 @@ export const nrCells = pgTable(
 	},
 	(t) => [
 		// unique("nr_cells_gnbid_clid_unique").on(t.gnbid, t.clid).nullsNotDistinct(),
-		index("nr_cells_redcap_true_idx")
-			.on(t.gnbid, t.clid)
-			.where(sql`${t.supports_nr_redcap} = true`),
+		index("nr_cells_redcap_true_idx").on(t.gnbid, t.clid).where(sql`${t.supports_nr_redcap} = true`),
 		index("nr_cells_gnbid_trgm_idx").using("gin", sql`(${t.gnbid}::text) gin_trgm_ops`),
 		index("nr_cells_nci_trgm_idx").using("gin", sql`(${t.nci}::text) gin_trgm_ops`),
 	],

@@ -1,6 +1,7 @@
 import path from "node:path";
 import dotenv from "dotenv";
 
+import { logger } from "./logger.js";
 import { runMigrate } from "./migrate.js";
 
 dotenv.config();
@@ -11,5 +12,5 @@ const batchArg = process.argv.find((a) => a.startsWith("--batch=") || a.startsWi
 const batchSize = batchArg ? Number((batchArg.split("=")[1] || "").trim()) : undefined;
 
 runMigrate({ directory: dir, batchSize }).catch((e) => {
-	console.error(e);
+	logger.error(e);
 });

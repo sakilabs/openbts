@@ -57,7 +57,7 @@ export interface LegacyCellRow {
 	cid: number | null;
 	cid_long: number | null;
 	azimuth: number | null;
-	is_confirmed: number;
+	is_confirmed: string;
 	notes: string;
 	date_added: string;
 	date_updated: string;

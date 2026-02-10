@@ -1,5 +1,19 @@
-import type { LegacyBaseStationRow, LegacyCellRow, LegacyLocationRow, LegacyNetworkRow, LegacyRegionRow } from "../legacyTypes.js";
+import type { LegacyBaseStationRow, LegacyCellRow, LegacyLocationRow } from "../legacyTypes.js";
+import { logger } from "../logger.js";
 import { mapDuplex, mapStandardToRat, stripNotes, toInt, type Rat } from "../utils.js";
+
+function safeDate(value: string | null | undefined, context: { type: string; id: number; field: string }): Date | null {
+	if (!value || value === "0000-00-00 00:00:00" || value.trim() === "") {
+		logger.warn(`[WARN] Invalid date in ${context.type} id=${context.id} field="${context.field}": "${value}". Setting it to now()`);
+		return new Date();
+	}
+	const d = new Date(value);
+	if (Number.isNaN(d.getTime())) {
+		logger.warn(`[WARN] Invalid date in ${context.type} id=${context.id} field="${context.field}": "${value}". Setting it to now()`);
+		return new Date();
+	}
+	return d;
+}
 
 export interface PreparedRegion {
 	name: string;
@@ -77,45 +91,55 @@ export type PreparedCell =
 	| (PreparedCellBase & { rat: "LTE"; lte: PreparedLTEDetails })
 	| (PreparedCellBase & { rat: "NR"; nr: PreparedNRDetails });
 
-export function prepareRegions(rows: LegacyRegionRow[]): PreparedRegion[] {
-	return rows.map((r) => ({ name: r.name.trim(), code: r.code.trim() }));
-}
+const LEGACY_REGION_NAMES: Record<number, string> = {
+	1: "Dolnośląskie",
+	2: "Kujawsko-pomorskie",
+	3: "Lubelskie",
+	4: "Lubuskie",
+	5: "Łódzkie",
+	6: "Małopolskie",
+	7: "Mazowieckie",
+	8: "Opolskie",
+	9: "Podkarpackie",
+	10: "Podlaskie",
+	11: "Pomorskie",
+	12: "Śląskie",
+	13: "Świętokrzyskie",
+	14: "Warmińsko-mazurskie",
+	15: "Wielkopolskie",
+	16: "Zachodniopomorskie",
+};
 
-export function prepareOperators(rows: LegacyNetworkRow[]): PreparedOperator[] {
+export function prepareLocations(rows: LegacyLocationRow[]): PreparedLocation[] {
 	return rows
-		.map((n) => ({
-			name: n.name.trim(),
-			full_name: n.operator_name.trim(),
-			mnc: Number(String(n.code).trim()),
-		}))
-		.filter((r) => Number.isFinite(r.mnc));
-}
-
-export function prepareLocations(rows: LegacyLocationRow[], regions: LegacyRegionRow[]): PreparedLocation[] {
-	const regionById = new Map<number, LegacyRegionRow>();
-	for (const reg of regions) regionById.set(reg.id, reg);
-	return rows
-		.filter((loc) => !(loc.address === "" && loc.town === "" && loc.latitude === "0.000000" && loc.longitude === "0.000000"))
+		.filter((loc) => {
+			if (loc.address === "" && loc.town === "" && loc.latitude === "0.000000" && loc.longitude === "0.000000") {
+				logger.warn(`[WARN] Skipping location id=${loc.id}: empty address/town and zero coordinates`);
+				return false;
+			}
+			return true;
+		})
 		.map((loc) => ({
 			original_id: loc.id,
-			region_name: regionById.get(loc.region_id)?.name ?? "",
+			region_name: LEGACY_REGION_NAMES[loc.region_id] ?? "",
 			city: loc.town?.trim() || null,
 			address: loc.address?.trim() || null,
 			longitude: toInt(loc.longitude) ?? 0,
 			latitude: toInt(loc.latitude) ?? 0,
-			date_added: new Date(loc.date_added),
-			date_updated: new Date(loc.date_updated),
+			date_added: safeDate(loc.date_added, { type: "location", id: loc.id, field: "date_added" }),
+			date_updated: safeDate(loc.date_updated, { type: "location", id: loc.id, field: "date_updated" }),
 		}));
 }
 
-export function prepareStations(rows: LegacyBaseStationRow[], operators: PreparedOperator[]): PreparedStation[] {
-	const mncToOperatorName = new Map<number, string>();
-	for (const operator of operators) {
-		mncToOperatorName.set(operator.mnc, operator.name);
-	}
-
+export function prepareStations(rows: LegacyBaseStationRow[], mncToOperatorName: Map<number, string>): PreparedStation[] {
 	return rows
-		.filter((station) => !(station.station_id === ""))
+		.filter((station) => {
+			if (station.station_id === "") {
+				logger.warn(`[WARN] Skipping station id=${station.id}: empty station_id`);
+				return false;
+			}
+			return true;
+		})
 		.map((station) => {
 			const operator_mnc = Number(String(station.network_id).trim());
 			let stationId = station.station_id;
@@ -142,8 +166,8 @@ export function prepareStations(rows: LegacyBaseStationRow[], operators: Prepare
 				notes: station.notes ? stripNotes(station.notes.trim(), [/\bnetworks?\b/gi]) : null,
 				status: normalizeStatus(station.station_status),
 				is_confirmed: station.edit_status.toLowerCase() === "published",
-				date_added: new Date(station.date_added),
-				date_updated: new Date(station.date_updated),
+				date_added: safeDate(station.date_added, { type: "station", id: station.id, field: "date_added" }),
+				date_updated: safeDate(station.date_updated, { type: "station", id: station.id, field: "date_updated" }),
 			};
 		});
 }
@@ -152,9 +176,16 @@ export function prepareBands(cells: LegacyCellRow[]): PreparedBandKey[] {
 	const keys: PreparedBandKey[] = [];
 	for (const cell of cells) {
 		const rat = mapStandardToRat(cell.standard || "");
-		if (!rat) continue;
-		const value = toInt(cell.band) ?? 0;
-		if (!value) continue;
+		if (!rat) {
+			logger.warn(`[WARN] Skipping band for cell id=${cell.id}: unknown standard "${cell.standard}"`);
+			continue;
+		}
+		const rawBand = toInt(cell.band);
+		const value = rawBand ?? (cell.band === "?" ? 0 : null);
+		if (value === null) {
+			logger.warn(`[WARN] Skipping band for cell id=${cell.id}: null/zero band value "${cell.band}"`);
+			continue;
+		}
 		const duplex = mapDuplex(cell.duplex);
 		keys.push({ rat, value, duplex });
 	}
@@ -173,35 +204,52 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 	const out: PreparedCell[] = [];
 	for (const cell of rows) {
 		const rat = mapStandardToRat(cell.standard || "");
-		if (!rat) continue;
+		if (!rat) {
+			logger.warn(`[WARN] Skipping cell id=${cell.id}: unknown standard "${cell.standard}"`);
+			continue;
+		}
 		const station = basestationsById.get(cell.base_station_id);
-		if (!station) continue;
+		if (!station) {
+			logger.warn(`[WARN] Skipping cell id=${cell.id}: no base station found for base_station_id=${cell.base_station_id}`);
+			continue;
+		}
+		const rawCellBand = toInt(cell.band);
+		const bandValue = rawCellBand ?? (cell.band === "?" ? 0 : null);
+		if (bandValue === null) {
+			logger.warn(`[WARN] Skipping cell id=${cell.id}: null/zero band value "${cell.band}"`);
+			continue;
+		}
 		const band_key: PreparedBandKey = {
 			rat,
-			value: toInt(cell.band) ?? 0,
+			value: bandValue,
 			duplex: mapDuplex(cell.duplex),
 		};
-		if (!band_key.value) continue;
 		const base: PreparedCellBase = {
 			original_id: cell.id,
 			station_original_id: cell.base_station_id,
 			band_key,
 			rat,
 			notes: cell.notes ? stripNotes(cell.notes?.trim(), [/\bnetworks?\b/gi, /\[E-GSM\]/gi]) : null,
-			is_confirmed: cell.is_confirmed === 1,
-			date_added: new Date(cell.date_added),
-			date_updated: new Date(cell.date_updated),
+			is_confirmed: cell.is_confirmed === "1",
+			date_added: safeDate(cell.date_added, { type: "cell", id: cell.id, field: "date_added" }),
+			date_updated: safeDate(cell.date_updated, { type: "cell", id: cell.id, field: "date_updated" }),
 		};
 
 		switch (rat) {
 			case "GSM":
-				out.push({ ...base, rat, gsm: { lac: toInt(cell.lac), cid: toInt(cell.cid), e_gsm: cell.notes?.includes("[E-GSM]") ?? false } });
+				{
+					const lac = toInt(cell.lac);
+					const cid = toInt(cell.cid);
+					if (lac === null || cid === null) logger.warn(`[WARN] Skipping GSM cell id=${cell.id}: invalid lac="${cell.lac}" or cid="${cell.cid}"`);
+					const isEgsm = cell.standard?.toUpperCase() === "E-GSM" || (cell.notes?.includes("[E-GSM]") ?? false);
+					out.push({ ...base, rat, gsm: { lac, cid, e_gsm: isEgsm } });
+				}
 				break;
 			case "UMTS":
 				{
 					const rnc = toInt(station.rnc) ?? 0;
 					const cid = toInt(cell.cid) ?? 0;
-					if (!rnc || !cid) continue;
+					if (rnc === null || cid === null) logger.warn(`[WARN] Skipping UMTS cell id=${cell.id}: rnc=${rnc}, cid=${cid} (both required)`);
 					out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid, carrier: toInt(cell.ua_freq) } });
 				}
 				break;
@@ -212,7 +260,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 					let clid = toInt(cell.cid) ?? 0;
 					if (clid < 0) clid = 0;
 					if (clid > 255) clid = clid % 256;
-					if (!enbid || !clid) continue;
+					if (enbid === null || clid === null) logger.warn(`[WARN] Skipping LTE cell id=${cell.id}: enbid=${enbid}, clid=${clid} (both required)`);
 					out.push({ ...base, rat, lte: { tac, enbid, clid, supports_nb_iot: false } });
 				}
 				break;
@@ -220,6 +268,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
 				{
 					const gnbid = toInt(station.enbi) ?? null;
 					const clid = toInt(cell.cid) ?? null;
+					if (gnbid === null || clid === null) logger.warn(`[WARN] Skipping NR cell id=${cell.id}: gnbid=${gnbid}, clid=${clid} (both required)`);
 					out.push({ ...base, rat, nr: { nrtac: null, gnbid, clid, supports_nr_redcap: false } });
 				}
 				break;

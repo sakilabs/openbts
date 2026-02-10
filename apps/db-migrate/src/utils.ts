@@ -35,6 +35,7 @@ export type Rat = "GSM" | "CDMA" | "UMTS" | "LTE" | "NR" | "IOT";
 export function mapStandardToRat(std: string): Rat | null {
 	switch (std.toUpperCase()) {
 		case "GSM":
+		case "E-GSM":
 			return "GSM";
 		case "UMTS":
 			return "UMTS";
