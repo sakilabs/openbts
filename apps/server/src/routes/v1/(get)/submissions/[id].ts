@@ -62,7 +62,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 	const { id } = req.params;
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
-	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read"] })) || false;
+	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read_all"] })) || false;
 
 	const submission = await db.query.submissions.findFirst({
 		where: (fields, { eq }) => eq(fields.id, id),

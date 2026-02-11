@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import {
 	stations,
@@ -77,9 +78,19 @@ type ResponseBody = { data: ResponseData[]; totalCount: number };
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
 	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 
+	const session = req.userSession;
+	const apiToken = req.apiToken;
+	if (!session?.user && !apiToken) throw new ErrorResponse("UNAUTHORIZED");
+
+	const userId = session?.user?.id ?? apiToken?.userId;
+	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
+
+	const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read_all"] })) || false;
+
 	const { limit, offset, status, type } = req.query;
 
 	const whereConditions = [];
+	if (!hasAdminPermission) whereConditions.push(eq(submissions.submitter_id, userId));
 	if (status) whereConditions.push(eq(submissions.status, status));
 	if (type) whereConditions.push(eq(submissions.type, type));
 

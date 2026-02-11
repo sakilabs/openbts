@@ -8,7 +8,7 @@ const statement = {
 	operators: ["read", "create", "update", "delete"],
 	locations: ["read", "create", "update", "delete"],
 	bands: ["read", "create", "update", "delete"],
-	submissions: ["read", "create", "update", "delete"],
+	submissions: ["read", "read_all", "create", "update", "delete"],
 	settings: ["read", "update"],
 } as const;
 
@@ -33,6 +33,6 @@ export const adminRole = accessControl.newRole({
 	operators: ["read", "create", "update", "delete"],
 	locations: ["read", "create", "update", "delete"],
 	bands: ["read", "create", "update", "delete"],
-	submissions: ["read", "create", "update", "delete"],
+	submissions: ["read", "read_all", "create", "update", "delete"],
 	settings: ["read", "update"],
 });

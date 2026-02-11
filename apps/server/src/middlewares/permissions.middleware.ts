@@ -11,7 +11,7 @@ const permissionSchema = {
 	operators: ["read", "create", "update", "delete"],
 	regions: ["read", "create", "update", "delete"],
 	locations: ["read", "create", "update", "delete"],
-	submissions: ["read", "create", "update", "delete"],
+	submissions: ["read", "read_all", "create", "update", "delete"],
 	comments: ["read", "create", "delete"],
 	bands: ["read", "create", "update", "delete"],
 	users: ["create", "list", "set-role", "ban", "impersonate", "delete", "set-password"],
