@@ -14,6 +14,7 @@ import {
 	proposedUMTSCells,
 	proposedLTECells,
 	proposedNRCells,
+	proposedStations,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -24,6 +25,7 @@ const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const usersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, displayUsername: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
+const proposedStationSchema = createSelectSchema(proposedStations);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
 const lteSchema = createSelectSchema(proposedLTECells).omit({ proposed_cell_id: true });
@@ -46,6 +48,7 @@ const schemaRoute = {
 					submitter: usersSchema,
 					reviewer: usersSchema.nullable(),
 					cells: z.array(proposedCellWithDetails),
+					proposedStation: proposedStationSchema.nullable(),
 				}),
 			),
 			totalCount: z.number(),
@@ -58,6 +61,7 @@ type Submission = z.infer<typeof submissionsSchema> & {
 	submitter: z.infer<typeof usersSchema>;
 	reviewer: z.infer<typeof usersSchema> | null;
 	cells: z.infer<typeof proposedCellWithDetails>[];
+	proposedStation: z.infer<typeof proposedStationSchema> | null;
 };
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
@@ -66,6 +70,7 @@ type ResponseData = z.infer<typeof submissionsSchema> & {
 	submitter: z.infer<typeof usersSchema>;
 	reviewer: z.infer<typeof usersSchema> | null;
 	cells: z.infer<typeof proposedCellWithDetails>[];
+	proposedStation: z.infer<typeof proposedStationSchema> | null;
 };
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 
@@ -105,6 +110,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					displayUsername: true,
 				},
 			},
+			proposedStation: true,
 		},
 	});
 

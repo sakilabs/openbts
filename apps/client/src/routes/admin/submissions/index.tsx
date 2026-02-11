@@ -104,13 +104,12 @@ export default function AdminSubmissionsListPage() {
 			}),
 			columnHelper.accessor("station", {
 				header: t("submissions.table.station", "Station"),
-				cell: ({ getValue }) => {
+				cell: ({ getValue, row }) => {
 					const station = getValue();
-					return station ? (
-						<div className="font-mono font-medium">{station.station_id}</div>
-					) : (
-						<span className="text-muted-foreground italic text-xs">{t("submissions.table.newStation", "New Station")}</span>
-					);
+					const proposedStation = row.original.proposedStation;
+					if (station) return <div className="font-mono font-medium">{station.station_id}</div>;
+					if (proposedStation?.station_id) return <div className="font-mono font-medium">{proposedStation.station_id}</div>;
+					return <span className="text-muted-foreground italic text-xs">{t("submissions.table.newStation", "New Station")}</span>;
 				},
 			}),
 			columnHelper.accessor("submitter", {

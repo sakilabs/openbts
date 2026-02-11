@@ -55,6 +55,7 @@ export type SubmissionRow = {
 	updatedAt: string;
 	reviewed_at: string | null;
 	station?: { station_id: string } | null;
+	proposedStation?: ProposedStation | null;
 };
 
 export type SubmissionDetail = {
@@ -92,6 +93,7 @@ export type SubmissionListItem = {
 	station: { id: number; station_id: string } | null;
 	submitter: SubmissionUser;
 	reviewer: SubmissionUser | null;
+	proposedStation: ProposedStation | null;
 	cells: ProposedCellWithDetails[];
 };
 

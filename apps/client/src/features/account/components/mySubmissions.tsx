@@ -96,9 +96,11 @@ export function MySubmissions() {
 
 							<span className="text-xs font-mono text-muted-foreground">#{submission.id}</span>
 
-							{submission.station?.station_id && (
+							{submission.station?.station_id ? (
 								<span className="text-sm font-mono font-medium text-foreground">{submission.station.station_id}</span>
-							)}
+							) : submission.proposedStation?.station_id ? (
+								<span className="text-sm font-mono font-medium text-foreground">{submission.proposedStation.station_id}</span>
+							) : null}
 
 							<div className="ml-auto flex items-center gap-3">
 								<div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", statusCfg.bgClass)}>
