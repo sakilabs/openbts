@@ -22,22 +22,30 @@ const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
 const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
-const gsmUpdateSchema = createUpdateSchema(gsmCells).omit({
-	createdAt: true,
-	updatedAt: true,
-});
-const umtsUpdateSchema = createUpdateSchema(umtsCells).omit({
-	createdAt: true,
-	updatedAt: true,
-});
-const lteUpdateSchema = createUpdateSchema(lteCells).omit({
-	createdAt: true,
-	updatedAt: true,
-});
-const nrUpdateSchema = createUpdateSchema(nrCells).omit({
-	createdAt: true,
-	updatedAt: true,
-});
+const gsmUpdateSchema = createUpdateSchema(gsmCells)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
+const umtsUpdateSchema = createUpdateSchema(umtsCells)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
+const lteUpdateSchema = createUpdateSchema(lteCells)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
+const nrUpdateSchema = createUpdateSchema(nrCells)
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+	})
+	.strict();
 const requestSchema = cellsUpdateSchema.extend({
 	details: z.union([gsmUpdateSchema, umtsUpdateSchema, lteUpdateSchema, nrUpdateSchema]).optional(),
 });

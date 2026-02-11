@@ -24,10 +24,10 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 const submissionsSelectSchema = createSelectSchema(submissions);
 const proposedCellsSelectSchema = createSelectSchema(proposedCells);
 
-const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true });
-const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
-const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true });
-const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true });
+const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true }).strict();
+const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true }).strict();
+const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true }).strict();
+const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true }).strict();
 
 const cellInputSchema = createInsertSchema(proposedCells)
 	.omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true })

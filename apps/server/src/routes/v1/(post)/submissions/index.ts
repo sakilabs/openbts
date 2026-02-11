@@ -24,10 +24,10 @@ const submissionsSelectSchema = createSelectSchema(submissions);
 const submissionsInsertBase = createInsertSchema(submissions).omit({ createdAt: true, updatedAt: true, submitter_id: true });
 const proposedStationInsert = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
-const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true });
-const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
-const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true });
-const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true });
+const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true }).strict();
+const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true }).strict();
+const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true }).strict();
+const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true }).strict();
 const proposedCellInsert = createInsertSchema(proposedCells)
 	.omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
 	.extend({
@@ -81,7 +81,8 @@ async function processSubmission(
 ): Promise<z.infer<typeof submissionsSelectSchema>> {
 	const { station_id, type, submitter_note, station: stationData, location: locationData, cells: proposedCellsInput } = input;
 
-	if ((type === "update" || type === "delete") && !station_id) throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update and delete submissions" });
+	if ((type === "update" || type === "delete") && !station_id)
+		throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update and delete submissions" });
 
 	if (station_id) {
 		const stationId = Number(station_id);
@@ -101,48 +102,56 @@ async function processSubmission(
 
 	if (proposedCellsInput && proposedCellsInput.length > 0) {
 		for (const cell of proposedCellsInput) {
-			const [base] = await tx
-				.insert(proposedCells)
-				.values({
-					submission_id: submission.id,
-					target_cell_id: cell.target_cell_id ?? null,
-					station_id: cell.station_id ?? station_id ?? null,
-					band_id: cell.band_id ?? null,
-					rat: cell.rat ?? null,
-					notes: cell.notes ?? null,
-					is_confirmed: false,
-					operation: mapCellOperation(cell.operation ?? "added"),
-				})
-				.returning();
-			if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
+			try {
+				const [base] = await tx
+					.insert(proposedCells)
+					.values({
+						submission_id: submission.id,
+						target_cell_id: cell.target_cell_id ?? null,
+						station_id: cell.station_id ?? station_id ?? null,
+						band_id: cell.band_id ?? null,
+						rat: cell.rat ?? null,
+						notes: cell.notes ?? null,
+						is_confirmed: false,
+						operation: mapCellOperation(cell.operation ?? "added"),
+					})
+					.returning();
+				if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
 
-			if (cell.operation !== "removed") {
-				switch (cell.rat) {
-					case "GSM":
-						{
-							const details = cell.details as z.infer<typeof gsmInsertSchema>;
-							await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
-						}
-						break;
-					case "UMTS":
-						{
-							const details = cell.details as z.infer<typeof umtsInsertSchema>;
-							await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
-						}
-						break;
-					case "LTE":
-						{
-							const details = cell.details as z.infer<typeof lteInsertSchema>;
-							await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
-						}
-						break;
-					case "NR":
-						{
-							const details = cell.details as z.infer<typeof nrInsertSchema>;
-							await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
-						}
-						break;
+				if (cell.operation !== "removed") {
+					switch (cell.rat) {
+						case "GSM":
+							{
+								const details = cell.details as z.infer<typeof gsmInsertSchema>;
+								await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
+							}
+							break;
+						case "UMTS":
+							{
+								const details = cell.details as z.infer<typeof umtsInsertSchema>;
+								await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
+							}
+							break;
+						case "LTE":
+							{
+								const details = cell.details as z.infer<typeof lteInsertSchema>;
+								await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
+							}
+							break;
+						case "NR":
+							{
+								const details = cell.details as z.infer<typeof nrInsertSchema>;
+								await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
+							}
+							break;
+					}
 				}
+			} catch (error) {
+				if (error instanceof ErrorResponse) throw error;
+				throw new ErrorResponse("FAILED_TO_CREATE", {
+					message: `Failed to create proposed ${cell.rat ?? "unknown"} cell: ${error instanceof Error ? error.message : "Unknown error"}`,
+					cause: error,
+				});
 			}
 		}
 	}
@@ -172,7 +181,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 		return res.send({ data: results });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: error instanceof Error ? error.message : "Unknown error", cause: error });
 	}
 }
 

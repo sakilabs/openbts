@@ -17,10 +17,10 @@ const cellsUpdateSchema = createUpdateSchema(cells)
 	})
 	.strict();
 const cellsSelectSchema = createSelectSchema(cells);
-const gsmCellsSelectSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
-const umtsCellsSelectSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
-const lteCellsSelectSchema = createSelectSchema(lteCells).omit({ cell_id: true });
-const nrCellsSelectSchema = createSelectSchema(nrCells).omit({ cell_id: true });
+const gsmCellsSelectSchema = createSelectSchema(gsmCells).omit({ cell_id: true }).strict();
+const umtsCellsSelectSchema = createSelectSchema(umtsCells).omit({ cell_id: true }).strict();
+const lteCellsSelectSchema = createSelectSchema(lteCells).omit({ cell_id: true }).strict();
+const nrCellsSelectSchema = createSelectSchema(nrCells).omit({ cell_id: true }).strict();
 const cellDetailsSchema = z.union([gsmCellsSelectSchema, umtsCellsSelectSchema, lteCellsSelectSchema, nrCellsSelectSchema]).nullable();
 const gsmCellsUpdateSchema = createUpdateSchema(gsmCells).strict();
 const umtsCellsUpdateSchema = createUpdateSchema(umtsCells).strict();
