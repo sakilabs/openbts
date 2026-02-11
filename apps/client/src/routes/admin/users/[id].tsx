@@ -30,7 +30,7 @@ import type { RouteHandle } from "@/routes/_layout";
 import type { AdminUser, Session } from "@/features/admin/users/types";
 
 export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.users",
+	titleKey: "breadcrumbs.userDetail",
 	i18nNamespace: "admin",
 	breadcrumbs: [
 		{ titleKey: "breadcrumbs.admin", path: "/admin/users", i18nNamespace: "admin" },

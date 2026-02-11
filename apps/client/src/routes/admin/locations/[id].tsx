@@ -126,12 +126,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 	return (
 		<div className="flex-1 flex flex-col overflow-hidden">
 			<div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 py-2 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm">
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => navigate("/admin/locations")}
-					className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2"
-				>
+				<Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2">
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
 					<span className="font-medium">{t("locationDetail.back")}</span>
 				</Button>

@@ -60,7 +60,7 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() => navigate("/admin/stations")}
+					onClick={() => navigate(-1)}
 					className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2 hover:bg-muted/50 transition-colors"
 				>
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
