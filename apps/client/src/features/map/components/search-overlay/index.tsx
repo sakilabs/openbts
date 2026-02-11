@@ -51,6 +51,8 @@ export function MapSearchOverlay({
 
 	const mapFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map")), []);
 
+	const [mobileExpanded, setMobileExpanded] = useState(false);
+
 	const {
 		query,
 		inputValue,
@@ -179,16 +181,29 @@ export function MapSearchOverlay({
 			<div className={cn("absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-105 z-10", showFilters && "z-20")}>
 				<search
 					ref={containerRef}
-					onBlur={handleContainerBlur}
+					onBlur={(e) => {
+						handleContainerBlur(e);
+						if (!containerRef.current?.contains(e.relatedTarget as Node)) setMobileExpanded(false);
+					}}
 					className={cn(
 						"bg-background/95 backdrop-blur-md border rounded-2xl shadow-xl transition-all duration-200",
 						isFocused && "ring-2 ring-primary/20 border-primary/30",
+						!mobileExpanded && !isFocused && "md:w-auto w-fit ml-auto",
 					)}
 				>
 					<div className="flex items-center gap-2 px-3 py-2">
-						<HugeiconsIcon icon={Search01Icon} className="size-5 text-muted-foreground shrink-0" />
+						<button
+							type="button"
+							className="md:pointer-events-none shrink-0"
+							onClick={() => {
+								setMobileExpanded(true);
+								requestAnimationFrame(() => inputRef.current?.focus());
+							}}
+						>
+							<HugeiconsIcon icon={Search01Icon} className="size-5 text-muted-foreground" />
+						</button>
 
-						<div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide">
+						<div className={cn("flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide", !mobileExpanded && !isFocused && "hidden md:flex")}>
 							{parsedFilters.map((filter, index) => (
 								<div
 									key={`${filter.key}-${index}`}
@@ -220,7 +235,11 @@ export function MapSearchOverlay({
 						{isSearching && query.trim() !== "" && <Spinner className="size-4 text-primary shrink-0" />}
 
 						{(query || parsedFilters.length > 0) && !isSearching && (
-							<button onClick={clearSearch} className="p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0" type="button">
+							<button
+								onClick={clearSearch}
+								className={cn("p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0", !mobileExpanded && !isFocused && "hidden md:block")}
+								type="button"
+							>
 								<HugeiconsIcon icon={Cancel01Icon} className="size-4 text-muted-foreground" />
 							</button>
 						)}
