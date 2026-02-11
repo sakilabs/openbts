@@ -115,10 +115,10 @@
 		"regionRequired": "Wybierz województwo",
 		"bandRequired": "Pasmo jest wymagane",
 		"lacRequired": "LAC jest wymagany",
-		"cidRequired": "CID jest wymagany",
 		"rncRequired": "RNC jest wymagany",
 		"enbidRequired": "eNBID jest wymagany",
 		"clidRequired": "CLID jest wymagany",
+		"clidRangeInvalid": "CLID musi być między 0 a 255",
 		"nciRequired": "NCI jest wymagany",
 		"gnbidRequired": "gNBID jest wymagany",
 		"mustBePositive": "Wartość nie może być ujemna"

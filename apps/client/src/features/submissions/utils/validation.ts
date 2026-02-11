@@ -130,8 +130,8 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
 		case "UMTS": {
 			const d = details as Partial<UMTSCellDetails>;
 			optionalNonNegative("lac", d.lac);
-			requireNonNegative("rnc", d.rnc);
 			requireNonNegative("cid", d.cid);
+			requireNonNegative("rnc", d.rnc);
 			optionalNonNegative("carrier", d.carrier);
 			break;
 		}
@@ -140,13 +140,14 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
 			optionalNonNegative("tac", d.tac);
 			requireNonNegative("enbid", d.enbid);
 			requireNonNegative("clid", d.clid);
+			if (d.clid !== undefined && d.clid > 255) errors["clid"] = "validation.clidRangeInvalid";
 			break;
 		}
 		case "NR": {
 			const d = details as Partial<NRCellDetails>;
 			optionalNonNegative("nrtac", d.nrtac);
 			requireNonNegative("gnbid", d.gnbid);
-			requireNonNegative("clid", d.clid);
+			optionalNonNegative("clid", d.clid);
 			optionalNonNegative("pci", d.pci);
 			break;
 		}

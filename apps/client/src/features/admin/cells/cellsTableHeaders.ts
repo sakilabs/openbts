@@ -10,7 +10,7 @@ export function getTableHeaders(rat: string, t: TFunction, options?: { showConfi
 			return headers;
 		}
 		case "UMTS": {
-			const headers = [t("cells.band"), t("cells.duplex"), "LAC", "RNC", "CID", "LongCID", t("cellFields.carrier"), t("cells.notes")];
+			const headers = [t("cells.band"), t("cells.duplex"), "LAC", "RNC", "CID", "LongCID", t("cells.carrier"), t("cells.notes")];
 			if (showConfirmed) headers.push(t("cells.confirmed"));
 			headers.push("");
 			return headers;
