@@ -71,7 +71,7 @@ export function CellsEditor<T extends CellDraftBase>({
 	sectionClassName,
 	readOnly,
 }: CellsEditorProps<T>) {
-	const { t } = useTranslation(["admin", "submission"]);
+	const { t } = useTranslation(["admin", "submissions"]);
 
 	return (
 		<>
@@ -156,7 +156,7 @@ export function CellsEditor<T extends CellDraftBase>({
 									{cellsForRat.length === 0 ? (
 										<div className="px-3 py-4 text-center text-sm text-muted-foreground">{t("cells.noCells")}</div>
 									) : (
-										<div className="overflow-x-auto">
+										<div className="overflow-x-auto custom-scrollbar">
 											<table className="w-full text-sm">
 												<thead>
 													<tr className="border-b bg-muted/30">

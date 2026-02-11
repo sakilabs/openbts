@@ -41,6 +41,7 @@
 		"band": "Pasmo",
 		"duplex": "Duplex",
 		"notes": "Notatki",
+		"carrier": "Nośnia",
 		"diffAdded": "nowe",
 		"diffModified": "zmienione",
 		"diffDeleted": "usunięte"

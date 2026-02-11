@@ -34,6 +34,7 @@
 		"band": "Band",
 		"duplex": "Duplex",
 		"notes": "Notes",
+		"carrier": "Carrier",
 		"diffAdded": "new",
 		"diffModified": "modified",
 		"diffDeleted": "deleted"
