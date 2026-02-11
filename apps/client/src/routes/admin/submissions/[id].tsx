@@ -1,0 +1,484 @@
+import { useState, useMemo, useCallback } from "react";
+import { useParams, useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { fetchApiData } from "@/lib/api";
+import type { ProposedLocationForm } from "@/features/submissions/types";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Band, Cell, Station } from "@/types/station";
+import type { RouteHandle } from "@/routes/_layout";
+import { RAT_ORDER } from "@/features/admin/cells/rat";
+import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
+import { CellsEditor } from "@/features/admin/cells/cellsEditor";
+import { operatorsQueryOptions, bandsQueryOptions } from "@/features/admin/queries";
+import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
+import type { SubmissionDetail } from "@/features/admin/submissions/types";
+import { SubmissionDetailHeader } from "@/features/admin/submissions/components/submissionDetailHeader";
+import { SubmitterCard } from "@/features/admin/submissions/components/submitterCard";
+import { SubmissionStationForm } from "@/features/admin/submissions/components/submissionStationForm";
+import { AdminReviewCard } from "@/features/admin/submissions/components/adminReviewCard";
+import { useSaveSubmissionMutation, useApproveSubmissionMutation, useRejectSubmissionMutation } from "@/features/admin/submissions/mutations";
+
+type LocalCell = CellDraftBase & {
+	_serverId?: number;
+	operation: "add" | "update" | "delete" | "unchanged";
+	target_cell_id: number | null;
+};
+
+export const handle: RouteHandle = {
+	titleKey: "submissionDetail.title",
+	i18nNamespace: "admin",
+	breadcrumbs: [
+		{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
+		{ titleKey: "breadcrumbs.submissions", path: "/admin/submissions", i18nNamespace: "admin" },
+	],
+	allowedRoles: ["admin", "editor"],
+};
+
+function getOperationBorderClass(operation: string): string | undefined {
+	if (operation === "add") return "border-l-2 border-l-green-500";
+	if (operation === "update") return "border-l-2 border-l-amber-500";
+	if (operation === "delete") return "border-l-2 border-l-red-500";
+	if (operation === "unchanged") return "border-l-2 border-l-transparent";
+	return undefined;
+}
+
+function computeInitialCells(submission: SubmissionDetail, currentStation: Station | null): LocalCell[] {
+	const proposedTargetIds = new Set(
+		submission.cells
+			.filter((c) => (c.operation === "update" || c.operation === "delete") && c.target_cell_id !== null)
+			.map((c) => c.target_cell_id as number),
+	);
+
+	const unchangedCells: LocalCell[] = (currentStation?.cells ?? [])
+		.filter((c) => !proposedTargetIds.has(c.id))
+		.map((c) => ({
+			_localId: crypto.randomUUID(),
+			operation: "unchanged" as const,
+			target_cell_id: c.id,
+			rat: c.rat,
+			band_id: c.band.id,
+			is_confirmed: c.is_confirmed,
+			notes: c.notes ?? "",
+			details: (c.details as Record<string, unknown>) ?? {},
+		}));
+
+	const proposedCells: LocalCell[] = submission.cells.map((cell) => {
+		if (cell.operation === "delete" && cell.target_cell_id && currentStation?.cells) {
+			const target = currentStation.cells.find((c) => c.id === cell.target_cell_id);
+			if (target) {
+				return {
+					_localId: crypto.randomUUID(),
+					_serverId: cell.id,
+					operation: cell.operation,
+					target_cell_id: cell.target_cell_id,
+					rat: target.rat,
+					band_id: target.band.id,
+					is_confirmed: target.is_confirmed,
+					notes: target.notes ?? "",
+					details: (target.details as Record<string, unknown>) ?? {},
+				};
+			}
+		}
+		return {
+			_localId: crypto.randomUUID(),
+			_serverId: cell.id,
+			operation: cell.operation,
+			target_cell_id: cell.target_cell_id,
+			rat: cell.rat ?? "",
+			band_id: cell.band_id ?? 0,
+			is_confirmed: cell.is_confirmed,
+			notes: cell.notes ?? "",
+			details: { ...(cell.details ?? {}) },
+		};
+	});
+
+	return [...unchangedCells, ...proposedCells];
+}
+
+export default function SubmissionDetailPage() {
+	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
+	const { t } = useTranslation("admin");
+
+	const { data: submission, isLoading } = useQuery({
+		queryKey: ["admin", "submission", id],
+		queryFn: () => fetchApiData<SubmissionDetail>(`submissions/${id}`),
+		enabled: !!id,
+	});
+
+	const { data: currentStation } = useQuery({
+		queryKey: ["station", submission?.station?.id],
+		queryFn: () => fetchApiData<Station>(`stations/${submission?.station?.id}`),
+		enabled: !!submission?.station?.id && (submission?.type === "update" || submission?.type === "delete"),
+		staleTime: 1000 * 60 * 30,
+	});
+
+	const needsCurrentStation = submission && (submission.type === "update" || submission.type === "delete") && submission.station?.id;
+	const isReady = submission && (!needsCurrentStation || currentStation);
+
+	if (isLoading || (submission && !isReady)) {
+		return (
+			<div className="flex-1 flex flex-col overflow-hidden">
+				<div className="shrink-0 border-b bg-background px-4 py-2 flex items-center justify-between gap-4">
+					<Skeleton className="h-7 w-24 rounded-md" />
+					<Skeleton className="h-5 w-48 rounded-md" />
+					<Skeleton className="h-7 w-40 rounded-md" />
+				</div>
+				<div className="flex-1 overflow-y-auto p-3">
+					<div className="flex flex-col lg:flex-row gap-3">
+						<div className="w-full lg:flex-2">
+							<Skeleton className="h-52 w-full rounded-xl" />
+						</div>
+						<div className="w-full lg:flex-3 space-y-2">
+							<Skeleton className="h-40 w-full rounded-xl" />
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (!submission) {
+		return (
+			<div className="flex-1 flex items-center justify-center">
+				<div className="text-center space-y-4">
+					<p className="text-muted-foreground">{t("notFound.message")}</p>
+					<Button variant="outline" onClick={() => navigate("/admin/submissions")}>
+						{t("submissionDetail.backToSubmissions")}
+					</Button>
+				</div>
+			</div>
+		);
+	}
+
+	return <SubmissionDetailForm key={submission.id} submission={submission} currentStation={currentStation ?? null} />;
+}
+
+function SubmissionDetailForm({ submission, currentStation }: { submission: SubmissionDetail; currentStation: Station | null }) {
+	const navigate = useNavigate();
+	const { t } = useTranslation("admin");
+
+	const [reviewNotes, setReviewNotes] = useState(submission.review_notes ?? "");
+
+	const saveMutation = useSaveSubmissionMutation();
+	const approveMutation = useApproveSubmissionMutation();
+	const rejectMutation = useRejectSubmissionMutation();
+
+	const [stationForm, setStationForm] = useState<{
+		station_id: string;
+		operator_id: number | null;
+		notes: string;
+	}>(() => ({
+		station_id: submission.proposedStation?.station_id ?? submission.station?.station_id ?? "",
+		operator_id: submission.proposedStation?.operator_id ?? submission.station?.operator_id ?? null,
+		notes: submission.proposedStation?.notes ?? submission.station?.notes ?? "",
+	}));
+
+	const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => ({
+		region_id: submission.proposedLocation?.region_id ?? null,
+		city: submission.proposedLocation?.city ?? "",
+		address: submission.proposedLocation?.address ?? "",
+		longitude: submission.proposedLocation?.longitude ?? null,
+		latitude: submission.proposedLocation?.latitude ?? null,
+	}));
+
+	const { data: operators = [] } = useQuery(operatorsQueryOptions());
+	const { data: allBands = [] } = useQuery(bandsQueryOptions());
+
+	const isReadOnly = submission.status !== "pending";
+	const isDeleteSubmission = submission.type === "delete";
+	const isRejected = submission.status === "rejected";
+	const isFormDisabled = isReadOnly || isDeleteSubmission;
+
+	const initialCells = useMemo(() => computeInitialCells(submission, currentStation), [submission, currentStation]);
+
+	const createNewSubmissionCell = useCallback(
+		(rat: string, defaultBand: Band): LocalCell => ({
+			_localId: crypto.randomUUID(),
+			operation: "add",
+			target_cell_id: null,
+			rat,
+			band_id: defaultBand.id,
+			is_confirmed: false,
+			notes: "",
+			details: {},
+		}),
+		[],
+	);
+
+	const {
+		cells: localCells,
+		cellsByRat,
+		enabledRats,
+		toggleRat: handleToggleRat,
+		changeCell: handleCellChange,
+		addCell: handleAddCell,
+		deleteCell: handleDeleteCell,
+	} = useCellDrafts<LocalCell>({
+		initialCells,
+		allBands,
+		createNewCell: createNewSubmissionCell,
+		disabled: isFormDisabled,
+	});
+
+	const visibleRats = useMemo(() => (isRejected ? [] : RAT_ORDER.filter((r) => enabledRats.includes(r))), [enabledRats, isRejected]);
+
+	const isProcessing = saveMutation.isPending || approveMutation.isPending || rejectMutation.isPending;
+
+	const handleSave = () => {
+		saveMutation.mutate(
+			{
+				submissionId: submission.id,
+				reviewNotes,
+				stationForm,
+				locationForm,
+				localCells,
+			},
+			{
+				onSuccess: () => toast.success(t("submissionToast.saved")),
+				onError: () => toast.error(t("submissionToast.saveFailed")),
+			},
+		);
+	};
+
+	const handleApprove = () => {
+		approveMutation.mutate(
+			{ submissionId: submission.id, reviewNotes },
+			{
+				onSuccess: () => {
+					toast.success(t("submissionToast.approved"));
+					navigate("/admin/submissions");
+				},
+				onError: () => toast.error(t("submissionToast.approveFailed")),
+			},
+		);
+	};
+
+	const handleReject = () => {
+		rejectMutation.mutate(
+			{ submissionId: submission.id, reviewNotes },
+			{
+				onSuccess: () => {
+					toast.success(t("submissionToast.rejected"));
+					navigate("/admin/submissions");
+				},
+				onError: () => toast.error(t("submissionToast.rejectFailed")),
+			},
+		);
+	};
+
+	const selectedOperator = useMemo(() => operators.find((o) => o.id === stationForm.operator_id), [operators, stationForm.operator_id]);
+
+	const currentOperator = useMemo(
+		() => (submission.station ? operators.find((o) => o.id === submission.station?.operator_id) : null),
+		[operators, submission],
+	);
+
+	const stationDiffs = useMemo(() => {
+		if (submission.type !== "update" || !submission.station || !submission.proposedStation) return null;
+		const cur = submission.station;
+		const proposed = submission.proposedStation;
+		return {
+			station_id: proposed.station_id !== null && proposed.station_id !== cur.station_id,
+			operator_id: proposed.operator_id !== null && proposed.operator_id !== cur.operator_id,
+			notes: (proposed.notes ?? null) !== (cur.notes ?? null),
+		};
+	}, [submission]);
+
+	const locationDiffs = useMemo(() => {
+		if (submission.type !== "update" || !currentStation?.location || !submission.proposedLocation) return null;
+		const cur = currentStation.location;
+		const proposed = submission.proposedLocation;
+		return {
+			coords: proposed.latitude !== cur.latitude || proposed.longitude !== cur.longitude,
+			city: (proposed.city ?? "") !== (cur.city ?? ""),
+			address: (proposed.address ?? "") !== (cur.address ?? ""),
+		};
+	}, [submission, currentStation]);
+
+	const currentCellsMap = useMemo(() => {
+		if (!currentStation?.cells) return new Map<number, Cell>();
+		return new Map(currentStation.cells.map((c) => [c.id, c]));
+	}, [currentStation]);
+
+	const getSubmissionDiffBadges = useCallback(
+		(_rat: string, cellsForRat: LocalCell[]) => ({
+			added: cellsForRat.filter((c) => c.operation === "add").length,
+			modified: cellsForRat.filter((c) => c.operation === "update").length,
+			deleted: cellsForRat.filter((c) => c.operation === "delete").length,
+		}),
+		[],
+	);
+
+	const getSubmissionCellProps = useCallback(
+		(cell: LocalCell) => ({
+			disabled: isFormDisabled || cell.operation === "delete" || cell.operation === "unchanged",
+			leftBorderClass: getOperationBorderClass(cell.operation),
+			showDelete: !isFormDisabled && cell.operation !== "unchanged" && cell.operation !== "delete",
+			rowClassName: cell.operation === "unchanged" ? "opacity-40" : undefined,
+		}),
+		[isFormDisabled],
+	);
+
+	const renderSubmissionAfterRow = useCallback(
+		(cell: LocalCell) => {
+			const targetCell = cell.operation === "update" && cell.target_cell_id ? currentCellsMap.get(cell.target_cell_id) : null;
+			if (!targetCell || cell.operation !== "update") return null;
+
+			const d = (targetCell.details ?? {}) as Record<string, unknown>;
+			const renderOldValue = (value: unknown) => {
+				if (value === undefined || value === null) return <span className="text-muted-foreground/40">-</span>;
+				if (typeof value === "boolean")
+					return <Checkbox checked={value} disabled className="size-3 rounded-[3px] **:data-[slot=checkbox-indicator]:*:size-2.5" />;
+				return String(value);
+			};
+
+			const renderDetailCells = () => {
+				switch (targetCell.rat) {
+					case "GSM":
+						return (
+							<>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.lac)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.cid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.e_gsm)}</td>
+							</>
+						);
+					case "UMTS": {
+						const longCid = d.rnc != null && d.cid != null ? (d.rnc as number) * 65536 + (d.cid as number) : null;
+						return (
+							<>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.lac)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.rnc)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.cid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(longCid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.carrier)}</td>
+							</>
+						);
+					}
+					case "LTE": {
+						const eCid = d.enbid != null && d.clid != null ? (d.enbid as number) * 256 + (d.clid as number) : null;
+						return (
+							<>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.tac)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.enbid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.clid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(eCid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.supports_nb_iot)}</td>
+							</>
+						);
+					}
+					case "NR": {
+						const nci = d.gnbid != null && d.clid != null ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
+						return (
+							<>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.nrtac)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.gnbid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.clid)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(nci)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.pci)}</td>
+								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.supports_nr_redcap)}</td>
+							</>
+						);
+					}
+					default:
+						return null;
+				}
+			};
+
+			return (
+				<tr className="bg-amber-50/40 dark:bg-amber-950/15 border-b last:border-0">
+					<td className="px-3 py-1 border-l-2 border-l-amber-400/60">
+						<span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+							{t("diff.was")}
+						</span>
+						<span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value} MHz</span>
+					</td>
+					<td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>
+					{renderDetailCells()}
+					<td className="px-3 py-1 font-mono text-xs text-muted-foreground truncate max-w-28">{targetCell.notes || "-"}</td>
+					{/* confirmed + actions columns */}
+					<td className="px-3 py-1" />
+					<td className="px-3 py-1" />
+				</tr>
+			);
+		},
+		[currentCellsMap, t],
+	);
+
+	return (
+		<div className="flex-1 flex flex-col overflow-hidden">
+			<SubmissionDetailHeader
+				submission={submission}
+				isReadOnly={isReadOnly}
+				isProcessing={isProcessing}
+				onApprove={handleApprove}
+				onReject={handleReject}
+				onSave={handleSave}
+			/>
+
+			<div className="flex-1 overflow-y-auto">
+				{isDeleteSubmission && (
+					<div className="mx-3 mt-3 rounded-xl border-2 border-red-500/30 bg-red-50 dark:bg-red-950/30 px-4 py-3 flex items-start gap-3">
+						<div className="shrink-0 size-10 rounded-full bg-red-500/15 flex items-center justify-center">
+							<HugeiconsIcon icon={Delete02Icon} className="size-5 text-red-600 dark:text-red-400" />
+						</div>
+						<div className="space-y-1">
+							<p className="text-sm font-semibold text-red-700 dark:text-red-300">{t("submissions.type.delete")}</p>
+							<p className="text-sm text-red-600/80 dark:text-red-400/80">
+								{t("submissionDetail.deletionBanner", { stationId: submission.station?.station_id ?? submission.station_id })}
+							</p>
+						</div>
+					</div>
+				)}
+				<div className="flex flex-col lg:flex-row gap-3 p-3">
+					<div className="w-full lg:flex-2 space-y-2">
+						<SubmitterCard submission={submission} />
+
+						<SubmissionStationForm
+							submission={submission}
+							stationForm={stationForm}
+							onStationFormChange={(patch) => setStationForm((prev) => ({ ...prev, ...patch }))}
+							locationForm={locationForm}
+							onLocationFormChange={(patch) => setLocationForm((prev) => ({ ...prev, ...patch }))}
+							operators={operators}
+							selectedOperator={selectedOperator}
+							currentOperator={currentOperator}
+							currentStation={currentStation ?? null}
+							stationDiffs={stationDiffs}
+							locationDiffs={locationDiffs}
+							isFormDisabled={isFormDisabled}
+							isDeleteSubmission={isDeleteSubmission}
+						/>
+					</div>
+
+					<div className="w-full lg:flex-3 min-w-0 space-y-2">
+						<CellsEditor
+							cellsByRat={cellsByRat}
+							enabledRats={enabledRats}
+							visibleRats={visibleRats}
+							bands={allBands}
+							onToggleRat={handleToggleRat}
+							onCellChange={handleCellChange}
+							onAddCell={handleAddCell}
+							onDeleteCell={handleDeleteCell}
+							ratPillsDisabled={isRejected}
+							showAddButton={!isFormDisabled}
+							getDiffBadges={getSubmissionDiffBadges}
+							getCellProps={getSubmissionCellProps}
+							renderAfterRow={renderSubmissionAfterRow}
+							readOnly={isFormDisabled}
+						/>
+
+						<AdminReviewCard reviewNotes={reviewNotes} onReviewNotesChange={setReviewNotes} isReadOnly={isReadOnly} />
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}

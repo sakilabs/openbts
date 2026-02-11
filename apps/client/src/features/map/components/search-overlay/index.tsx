@@ -4,20 +4,21 @@ import { useState, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon, Loading03Icon } from "@hugeicons/core-free-icons";
+import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon } from "@hugeicons/core-free-icons";
 import { cn, toggleValue } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Station, StationFilters } from "@/types/station";
-import { fetchBands, fetchOperators, searchLocations, searchStations } from "../../search-api";
-import { AutocompleteDropdown } from "./autocomplete-dropdown";
-import { FilterPanel } from "./filter-panel";
-import { SearchResults } from "./search-results";
-import { MapStyleSwitcher } from "./map-style-switcher";
-import { MapCursorInfo } from "../map-cursor-info";
+import { fetchBands, fetchOperators, searchLocations, searchStations } from "../../searchApi";
+import { AutocompleteDropdown } from "./autocompleteDropdown";
+import { FilterPanel } from "./filterPanel";
+import { SearchResults } from "./searchResults";
+import { MapStyleSwitcher } from "./mapStyleSwitcher";
+import { MapCursorInfo } from "../mapCursorInfo";
 import { FILTER_KEYWORDS, RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
 import { parseFilters } from "../../filters";
-import { useSearchState } from "../../hooks/use-search-state";
+import { useSearchState } from "../../hooks/useSearchState";
 import i18n from "@/i18n/config";
+import { Spinner } from "@/components/ui/spinner";
 
 type MapSearchOverlayProps = {
 	locationCount: number;
@@ -216,7 +217,7 @@ export function MapSearchOverlay({
 							/>
 						</div>
 
-						{isSearching && query.trim() !== "" && <HugeiconsIcon icon={Loading03Icon} className="size-4 text-primary animate-spin shrink-0" />}
+						{isSearching && query.trim() !== "" && <Spinner className="size-4 text-primary shrink-0" />}
 
 						{(query || parsedFilters.length > 0) && !isSearching && (
 							<button onClick={clearSearch} className="p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0" type="button">
@@ -298,7 +299,7 @@ export function MapSearchOverlay({
 								disabled={!hasMoreLocations}
 							>
 								{isLoading || isFetching ? (
-									<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
+									<Spinner className="size-3 text-primary" />
 								) : hasMoreLocations ? (
 									<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
 								) : (
@@ -346,7 +347,7 @@ export function MapSearchOverlay({
 							disabled={!hasMoreLocations}
 						>
 							{isLoading || isFetching ? (
-								<HugeiconsIcon icon={Loading03Icon} className="size-3 animate-spin text-primary" />
+								<Spinner className="size-3 text-primary" />
 							) : hasMoreLocations ? (
 								<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
 							) : (

@@ -38,7 +38,7 @@ export const operators = pgTable(
 		parent_id: integer("parent_id").references((): AnyPgColumn => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
 		mnc: integer("mnc").unique(),
 	},
-	(table) => [index("operator_parent_id_idx").on(table.parent_id)],
+	(t) => [index("operator_parent_id_idx").on(t.parent_id)],
 );
 
 /**
@@ -79,6 +79,9 @@ export const locations = pgTable(
 		check("locations_longitude_range", sql`${t.longitude} BETWEEN -180 AND 180`),
 		index("locations_region_id_idx").on(t.region_id),
 		index("locations_point_gist").using("gist", t.point),
+		index("locations_idx").on(t.id),
+		index("locations_created_at_idx").on(t.createdAt),
+		index("locations_updated_at_idx").on(t.updatedAt),
 		unique("locations_lonlat_unique").on(t.longitude, t.latitude),
 	],
 );
@@ -132,16 +135,16 @@ export const stations = pgTable(
 		is_confirmed: boolean("is_confirmed").default(false),
 		status: StationStatus("status").notNull().default("pending"),
 	},
-	(table) => [
-		index("station_location_id_idx").on(table.location_id),
-		index("stations_operator_id_idx").on(table.operator_id),
-		index("stations_operator_location_id_idx").on(table.operator_id, table.location_id, table.id),
-		index("stations_station_id_trgm_idx").using("gin", sql`(${table.station_id}) gin_trgm_ops`),
-		index("stations_station_id_idx").on(table.station_id),
-		index("stations_updated_at_idx").on(table.updatedAt),
-		index("stations_created_at_idx").on(table.createdAt),
-		unique("stations_station_id_operator_unique").on(table.station_id, table.operator_id),
-		check("stations_station_id_16_length", sql`${table.station_id} ~ '(^.{1,16}$)'`),
+	(t) => [
+		index("station_location_id_idx").on(t.location_id),
+		index("stations_operator_id_idx").on(t.operator_id),
+		index("stations_operator_location_id_idx").on(t.operator_id, t.location_id, t.id),
+		index("stations_station_id_trgm_idx").using("gin", sql`(${t.station_id}) gin_trgm_ops`),
+		index("stations_station_id_idx").on(t.station_id),
+		index("stations_updated_at_idx").on(t.updatedAt),
+		index("stations_created_at_idx").on(t.createdAt),
+		unique("stations_station_id_operator_unique").on(t.station_id, t.operator_id),
+		check("stations_station_id_16_length", sql`${t.station_id} ~ '(^.{1,16}$)'`),
 	],
 );
 
@@ -157,10 +160,7 @@ export const stationsPermits = pgTable(
 		permit_id: integer("permit_id").references(() => ukePermits.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	},
-	(table) => [
-		index("stations_permits_station_id_idx").on(table.station_id),
-		unique("stations_permits_pair_unique").on(table.station_id, table.permit_id),
-	],
+	(t) => [index("stations_permits_station_id_idx").on(t.station_id), unique("stations_permits_pair_unique").on(t.station_id, t.permit_id)],
 );
 
 export const networksIds = pgTable(
@@ -205,25 +205,17 @@ export const ukePermits = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [
-		unique("uke_permits_unique_permit").on(
-			table.station_id,
-			table.operator_id,
-			table.location_id,
-			table.band_id,
-			table.decision_number,
-			table.decision_type,
-			table.expiry_date,
-		),
-		index("uke_permits_station_id_idx").on(table.station_id),
-		index("uke_permits_location_id_idx").on(table.location_id),
-		index("uke_permits_operator_id_idx").on(table.operator_id),
-		index("uke_permits_band_id_idx").on(table.band_id),
-		index("uke_permits_decision_type_idx").on(table.decision_type),
-		index("uke_permits_decision_number_trgm_idx").using("gin", sql`(${table.decision_number}) gin_trgm_ops`),
-		index("uke_permits_station_id_trgm_idx").using("gin", sql`(${table.station_id}) gin_trgm_ops`),
-		index("uke_permits_operator_band_idx").on(table.operator_id, table.band_id),
-		index("uke_permits_operator_location_idx").on(table.operator_id, table.location_id),
+	(t) => [
+		unique("uke_permits_unique_permit").on(t.station_id, t.operator_id, t.location_id, t.band_id, t.decision_number, t.decision_type, t.expiry_date),
+		index("uke_permits_station_id_idx").on(t.station_id),
+		index("uke_permits_location_id_idx").on(t.location_id),
+		index("uke_permits_operator_id_idx").on(t.operator_id),
+		index("uke_permits_band_id_idx").on(t.band_id),
+		index("uke_permits_decision_type_idx").on(t.decision_type),
+		index("uke_permits_decision_number_trgm_idx").using("gin", sql`(${t.decision_number}) gin_trgm_ops`),
+		index("uke_permits_station_id_trgm_idx").using("gin", sql`(${t.station_id}) gin_trgm_ops`),
+		index("uke_permits_operator_band_idx").on(t.operator_id, t.band_id),
+		index("uke_permits_operator_location_idx").on(t.operator_id, t.location_id),
 	],
 );
 
@@ -459,12 +451,12 @@ export const ukeRadioLines = pgTable(
 		updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 		createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 	},
-	(table) => [
-		index("uke_radiolines_operator_id_idx").on(table.operator_id),
-		index("uke_radiolines_permit_number_idx").on(table.permit_number),
-		index("uke_radiolines_permit_number_trgm_idx").using("gin", sql`(${table.permit_number}) gin_trgm_ops`),
-		index("uke_radiolines_tx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${table.tx_longitude}, ${table.tx_latitude}), 4326))`),
-		index("uke_radiolines_rx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${table.rx_longitude}, ${table.rx_latitude}), 4326))`),
+	(t) => [
+		index("uke_radiolines_operator_id_idx").on(t.operator_id),
+		index("uke_radiolines_permit_number_idx").on(t.permit_number),
+		index("uke_radiolines_permit_number_trgm_idx").using("gin", sql`(${t.permit_number}) gin_trgm_ops`),
+		index("uke_radiolines_tx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${t.tx_longitude}, ${t.tx_latitude}), 4326))`),
+		index("uke_radiolines_rx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${t.rx_longitude}, ${t.rx_latitude}), 4326))`),
 	],
 );
 

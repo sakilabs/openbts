@@ -30,3 +30,12 @@ export function formatFullDate(dateString: string, locale: string): string {
 		minute: "2-digit",
 	});
 }
+
+export function formatShortDate(dateString: string | null, locale: string): string {
+	if (!dateString) return "-";
+	return new Date(dateString).toLocaleDateString(locale, {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
+}

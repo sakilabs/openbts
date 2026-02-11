@@ -23,22 +23,13 @@ import {
 	ComboboxList,
 } from "@/components/ui/combobox";
 
-import { fetchOperators, fetchBands } from "@/features/map/search-api";
-import { fetchApiData, API_BASE } from "@/lib/api";
+import { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
+import { API_BASE } from "@/lib/api";
 import { cn, toggleValue } from "@/lib/utils";
-import { getOperatorColor } from "@/lib/operator-utils";
-import type { Operator, Region } from "@/types/station";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import { EXTENDED_RAT_OPTIONS } from "@/features/shared/rat";
+import type { Operator } from "@/types/station";
 import type { RouteHandle } from "./_layout";
-
-const fetchRegions = () => fetchApiData<Region[]>("regions");
-
-const RAT_OPTIONS = [
-	{ value: "GSM", label: "GSM", gen: "2G" },
-	{ value: "UMTS", label: "UMTS", gen: "3G" },
-	{ value: "LTE", label: "LTE", gen: "4G" },
-	{ value: "NR", label: "NR", gen: "5G" },
-	{ value: "IOT", label: "IoT", gen: "NB" },
-] as const;
 
 const FORMAT_OPTIONS = [
 	{ value: "2.0", label: "CLF v2.0" },
@@ -253,7 +244,7 @@ export default function ClfExportPage() {
 						<form.Field name="rat">
 							{(field) => (
 								<div className="flex flex-wrap gap-x-4 gap-y-1">
-									{RAT_OPTIONS.map((rat) => (
+									{EXTENDED_RAT_OPTIONS.map((rat) => (
 										<label
 											htmlFor={`rat-${rat.value}`}
 											key={rat.value}

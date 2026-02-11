@@ -3,9 +3,9 @@ import { Link, Navigate } from "react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
-import { RequireAuth } from "@/components/auth/require-auth";
-import { MySubmissions } from "@/features/account/components/my-submissions";
-import { useSettings } from "@/hooks/use-settings";
+import { RequireAuth } from "@/components/auth/requireAuth";
+import { MySubmissions } from "@/features/account/components/mySubmissions";
+import { useSettings } from "@/hooks/useSettings";
 
 import type { RouteHandle } from "../_layout";
 

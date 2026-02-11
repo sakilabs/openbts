@@ -1,7 +1,7 @@
 import { useSearchParams, Navigate } from "react-router";
-import { SubmissionForm } from "@/features/submissions/components/submission-form";
-import { RequireAuth } from "@/components/auth/require-auth";
-import { useSettings } from "@/hooks/use-settings";
+import { SubmissionForm } from "@/features/submissions/components/submissionForm";
+import { RequireAuth } from "@/components/auth/requireAuth";
+import { useSettings } from "@/hooks/useSettings";
 import type { RouteHandle } from "./_layout";
 
 export const handle: RouteHandle = {

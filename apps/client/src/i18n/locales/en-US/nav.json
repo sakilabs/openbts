@@ -2,7 +2,8 @@
 	"sections": {
 		"stations": "Stations",
 		"contribute": "Contribute",
-		"settings": "Settings"
+		"settings": "Settings",
+		"admin": "Admin"
 	},
 	"items": {
 		"mapView": "Map View",
@@ -11,7 +12,12 @@
 		"submitStation": "Submit Station",
 		"preferences": "Preferences",
 		"accountSettings": "Account Settings",
-		"mySubmissions": "My Submissions"
+		"mySubmissions": "My Submissions",
+		"users": "Users",
+		"stations": "Stations",
+		"submissions": "Submissions",
+		"locations": "Locations",
+		"settings": "Settings"
 	},
 	"secondary": {
 		"settings": "Settings",

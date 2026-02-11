@@ -35,17 +35,7 @@
 		"submitNewDesc": "Found a new tower? Add it to the map.",
 		"modifyExisting": "Modify Existing",
 		"modifyExistingDesc": "Update details or cells for an existing station.",
-		"howToModify": "To modify a station, find it on the map or database, open details, and click 'Edit'.",
-		"type": {
-			"new": "New",
-			"update": "Update",
-			"delete": "Delete"
-		},
-		"status": {
-			"pending": "Pending",
-			"approved": "Approved",
-			"rejected": "Rejected"
-		}
+		"howToModify": "To modify a station, find it on the map or database, open details, and click 'Edit'."
 	},
 	"preferences": {
 		"title": "Preferences",

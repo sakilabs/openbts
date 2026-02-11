@@ -10,7 +10,7 @@ import {
 	ProvidersCard,
 	SessionsCard,
 } from "@daveyplate/better-auth-ui";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/authClient";
 import { Navigate } from "react-router";
 
 import type { RouteHandle } from "../_layout";

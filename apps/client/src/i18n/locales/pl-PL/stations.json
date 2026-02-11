@@ -16,20 +16,25 @@
 		"noBandsFound": "Nie znaleziono pasm",
 		"showingStations": "Wyświetlanie {{count}} stacji",
 		"showingStationsOfTotal": "Wyświetlanie {{count}} z {{total}} stacji",
-		"otherOperators": "Inni operatorzy",
+		"otherOperators_one": "{{count}} inny operator",
+		"otherOperators_few": "{{count}} innych operatorów",
+		"otherOperators_many": "{{count}} innych operatorów",
 		"selected_one": "{{count}} wybrany",
 		"selected_few": "{{count}} wybrane",
 		"selected_many": "{{count}} wybranych"
 	},
 	"table": {
-		"stationId": "ID stacji",
+		"stationId": "ID",
 		"operator": "Operator",
 		"technologies": "Technologie",
 		"bands": "Pasma",
 		"location": "Lokalizacja",
 		"region": "Województwo",
-		"updatedAt": "Aktualizacja",
+		"updatedAt": "Zaktualizowano",
 		"noStationsFound": "Nie znaleziono stacji",
 		"tryAdjustingFilters": "Spróbuj zmienić filtry"
+	},
+	"actions": {
+		"newStation": "Nowa stacja"
 	}
 }

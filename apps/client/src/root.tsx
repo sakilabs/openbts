@@ -6,7 +6,7 @@ import { AuthUIProvider } from "@daveyplate/better-auth-ui";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/authClient";
 import i18n from "@/i18n/config";
 import "./index.css";
 

@@ -8,6 +8,7 @@
 	},
 	"actions": {
 		"save": "Save",
+		"saveChanges": "Save changes",
 		"cancel": "Cancel",
 		"delete": "Delete",
 		"edit": "Edit",
@@ -23,7 +24,48 @@
 		"previous": "Previous",
 		"loading": "Loading...",
 		"copy": "Copy",
-		"copied": "Copied!"
+		"copied": "Copied!",
+		"submit": "Submit",
+		"submitting": "Submitting...",
+		"submitted": "Submitted!",
+		"saving": "Saving...",
+		"saved": "Saved",
+		"confirm": "Confirm",
+		"revert": "Revert",
+		"share": "Share",
+		"view": "View"
+	},
+	"labels": {
+		"stationId": "Station ID",
+		"operator": "Operator",
+		"region": "Region",
+		"latitude": "Latitude",
+		"longitude": "Longitude",
+		"coordinates": "Coordinates",
+		"notes": "Notes",
+		"address": "Address",
+		"city": "City",
+		"status": "Status",
+		"type": "Type",
+		"created": "Created",
+		"updated": "Updated",
+		"date": "Date",
+		"band": "Band"
+	},
+	"status": {
+		"all": "All",
+		"pending": "Pending",
+		"approved": "Approved",
+		"rejected": "Rejected",
+		"active": "Active",
+		"inactive": "Inactive",
+		"expired": "Expired"
+	},
+	"submissionType": {
+		"all": "All",
+		"new": "New",
+		"update": "Update",
+		"delete": "Delete"
 	},
 	"pagination": {
 		"page": "Page",

@@ -1,0 +1,253 @@
+{
+	"header": {
+		"back": "Wróć",
+		"revert": "Cofnij",
+		"clear": "Wyczyść",
+		"saveChanges": "Zapisz zmiany",
+		"createStation": "Utwórz stację",
+		"newStation": "Nowa stacja",
+		"saving": "Zapisywanie...",
+		"deleteStation": "Usuń stację",
+		"confirmDelete": "Usunąć tę stację?",
+		"confirmDeleteDesc": "Ta operacja jest nieodwracalna. Stacja i wszystkie jej komórki zostaną trwale usunięte.",
+		"cancel": "Anuluj",
+		"delete": "Usuń"
+	},
+	"breadcrumbs": {
+		"admin": "Admin",
+		"stations": "Stacje",
+		"editStation": "Edytuj stację",
+		"submissions": "Zgłoszenia",
+		"users": "Użytkownicy",
+		"locations": "Lokalizacje",
+		"editLocation": "Edytuj lokalizację",
+		"settings": "Ustawienia"
+	},
+	"stationInfo": {
+		"title": "Informacje o stacji",
+		"stationId": "ID stacji",
+		"operator": "Operator",
+		"selectOperator": "Wybierz operatora",
+		"notes": "Notatki",
+		"confirmed": "Potwierdzona"
+	},
+	"cells": {
+		"addCell": "Dodaj komórkę",
+		"noCells": "Brak komórek. Kliknij \"Dodaj komórkę\", aby utworzyć.",
+		"noRats": "Nie znaleziono komórek dla tej stacji. Przełącz RAT powyżej, aby dodać komórki.",
+		"cellsCount_one": "{{count}} komórka",
+		"cellsCount_other": "{{count}} komórek",
+		"confirmed": "Potwierdzona",
+		"band": "Pasmo",
+		"duplex": "Duplex",
+		"notes": "Notatki",
+		"diffAdded": "nowe",
+		"diffModified": "zmienione",
+		"diffDeleted": "usunięte"
+	},
+	"cellFields": {
+		"carrier": "Nośnia"
+	},
+	"toast": {
+		"stationUpdated": "Stacja zaktualizowana",
+		"stationFailed": "Nie udało się zaktualizować stacji",
+		"cellsSaved": "Zmiany zapisane pomyślnie",
+		"cellsFailed": "Nie udało się zapisać zmian",
+		"noBands": "Brak dostępnych pasm dla {{rat}}",
+		"stationCreated": "Stacja utworzona pomyślnie",
+		"createFailed": "Nie udało się utworzyć stacji",
+		"stationIdRequired": "ID stacji jest wymagane",
+		"operatorRequired": "Operator jest wymagany",
+		"locationRequired": "Współrzędne lokalizacji i region są wymagane",
+		"stationDeleted": "Stacja usunięta pomyślnie",
+		"deleteFailed": "Nie udało się usunąć stacji"
+	},
+	"notFound": {
+		"message": "Nie znaleziono stacji",
+		"backToStations": "Wróć do stacji"
+	},
+	"users": {
+		"searchPlaceholder": "Szukaj po email...",
+		"table": {
+			"name": "Nazwa",
+			"email": "Email",
+			"role": "Rola",
+			"status": "Status",
+			"created": "Utworzono"
+		}
+	},
+	"submissions": {
+		"title": "Zgłoszenia",
+		"description": "Przeglądaj zgłoszenia użytkowników",
+		"subtitle": "Zarządzaj zgłoszeniami aktualizacji stacji",
+		"empty": "Brak zgłoszeń",
+		"emptyFiltered": "Brak zgłoszeń pasujących do filtrów",
+		"filters": {
+			"all": "Wszystkie",
+			"type": "Typ",
+			"status": "Status"
+		},
+		"type": {
+			"all": "Wszystkie",
+			"new": "Nowa",
+			"update": "Aktualizacja",
+			"delete": "Usunięcie"
+		},
+		"status": {
+			"all": "Wszystkie",
+			"pending": "Oczekujące",
+			"approved": "Zatwierdzone",
+			"rejected": "Odrzucone"
+		},
+		"table": {
+			"id": "ID",
+			"type": "Typ",
+			"status": "Status",
+			"station": "Stacja",
+			"submitter": "Zgłaszający",
+			"submitted": "Zgłoszono",
+			"reviewed": "Rozpatrzono",
+			"cells": "Komórki"
+		}
+	},
+	"submissionDetail": {
+		"title": "Przegląd zgłoszenia",
+		"backToSubmissions": "Wróć do zgłoszeń",
+		"submitter": "Zgłaszający",
+		"submitterNote": "Notatka zgłaszającego",
+		"reviewNotes": "Notatki recenzenta",
+		"reviewNotesPlaceholder": "Dodaj notatkę recenzenta...",
+		"approve": "Zatwierdź",
+		"reject": "Odrzuć",
+		"saveChanges": "Zapisz zmiany",
+		"submittedAt": "Zgłoszono",
+		"reviewedAt": "Rozpatrzono",
+		"reviewer": "Recenzent",
+		"proposedStation": "Proponowana stacja",
+		"proposedLocation": "Proponowana lokalizacja",
+		"proposedCells": "Proponowane komórki",
+		"operation": {
+			"add": "Dodanie",
+			"update": "Aktualizacja",
+			"delete": "Usunięcie"
+		},
+		"readOnly": "To zgłoszenie zostało już rozpatrzone i nie może być edytowane.",
+		"notFound": "Nie znaleziono zgłoszenia",
+		"stationId": "ID stacji",
+		"operator": "Operator",
+		"selectOperator": "Wybierz operatora",
+		"notes": "Notatki",
+		"noSubmitterNote": "Brak notatki zgłaszającego",
+		"noReviewNotes": "Brak notatek recenzenta",
+		"linkedStation": "Powiązana stacja",
+		"confirmApprove": "Zatwierdzić zgłoszenie?",
+		"confirmApproveDesc": "Wszystkie proponowane zmiany zostaną zastosowane.",
+		"confirmReject": "Odrzucić zgłoszenie?",
+		"confirmRejectDesc": "Wszystkie proponowane zmiany zostaną odrzucone.",
+		"cancel": "Anuluj",
+		"viewCurrent": "Aktualna stacja",
+		"adminReview": "Recenzja administratora",
+		"deletionBanner": "To zgłoszenie dotyczy usunięcia stacji {{stationId}}. Status stacji zostanie zmieniony na 'inactive'.",
+		"submitterNoteLabel": "Notatka zgłaszającego"
+	},
+	"submissionToast": {
+		"approved": "Zgłoszenie zatwierdzone pomyślnie",
+		"rejected": "Zgłoszenie odrzucone",
+		"updated": "Zgłoszenie zaktualizowane",
+		"saved": "Zmiany zapisane",
+		"approveFailed": "Nie udało się zatwierdzić zgłoszenia",
+		"rejectFailed": "Nie udało się odrzucić zgłoszenia",
+		"updateFailed": "Nie udało się zaktualizować zgłoszenia",
+		"saveFailed": "Nie udało się zapisać zmian"
+	},
+	"locations": {
+		"title": "Lokalizacje",
+		"description": "Zarządzaj lokalizacjami stacji",
+		"filters": {
+			"title": "Filtry",
+			"network": "Operator",
+			"region": "Województwo",
+			"search": "Wyszukiwanie",
+			"otherOperators_one": "{{count}} inny operator",
+			"otherOperators_few": "{{count}} innych operatorów",
+			"otherOperators_many": "{{count}} innych operatorów",
+			"selected_one": "{{count}} wybrany",
+			"selected_few": "{{count}} wybranych",
+			"selected_many": "{{count}} wybranych"
+		},
+		"table": {
+			"id": "ID",
+			"city": "Miasto",
+			"address": "Adres",
+			"region": "Region",
+			"coordinates": "Współrzędne",
+			"stations": "Stacje",
+			"updatedAt": "Zaktualizowano"
+		},
+		"searchPlaceholder": "Szukaj po mieście lub adresie...",
+		"regionPlaceholder": "Wybierz województwa...",
+		"noLocationsFound": "Nie znaleziono lokalizacji",
+		"tryAdjustingFilters": "Spróbuj zmienić wyszukiwanie lub filtry",
+		"showingLocationsOfTotal": "Wyświetlanie {{count}} z {{total}} lokalizacji",
+		"showingLocations": "Wyświetlanie {{count}} lokalizacji"
+	},
+	"locationDetail": {
+		"title": "Szczegóły lokalizacji",
+		"locationInfo": "Informacje o lokalizacji",
+		"stationsAtLocation": "Stacje w tej lokalizacji",
+		"stationsCount_one": "{{count}} stacja",
+		"stationsCount_other": "{{count}} stacji",
+		"noStations": "Brak stacji w tej lokalizacji",
+		"viewStation": "Zobacz stację",
+		"saveChanges": "Zapisz zmiany",
+		"saving": "Zapisywanie...",
+		"revert": "Cofnij",
+		"back": "Wróć",
+		"saved": "Lokalizacja zaktualizowana pomyślnie",
+		"saveFailed": "Nie udało się zaktualizować lokalizacji",
+		"notFound": "Nie znaleziono lokalizacji",
+		"backToLocations": "Wróć do lokalizacji"
+	},
+	"diff": {
+		"current": "Aktualnie:",
+		"was": "Było:",
+		"locationChanged": "Lokalizacja została zmieniona",
+		"coordinates": "Współrzędne:",
+		"city": "Miasto:",
+		"address": "Adres:"
+	},
+	"settings": {
+		"title": "Ustawienia systemowe",
+		"subtitle": "Zarządzaj konfiguracją systemu",
+		"loading": "Ładowanie ustawień...",
+		"errorTitle": "Nie udało się załadować ustawień",
+		"errorDescription": "Wystąpił problem podczas ładowania ustawień systemowych.",
+		"saved": "Zapisano pomyślnie",
+		"authentication": "Uwierzytelnianie",
+		"authenticationDesc": "Kontroluj dostęp i wymagania uwierzytelniania",
+		"enforceAuth": "Wymuś uwierzytelnianie dla wszystkich tras",
+		"enforceAuthDesc": "Wymagaj uwierzytelniania dla wszystkich punktów końcowych API",
+		"allowedRoutes": "Dozwolone endpointy API bez uwierzytelniania",
+		"allowedRoutesDesc": "Endpointy API, które omijają uwierzytelnianie (naciśnij Enter, aby dodać)",
+		"disabledRoutes": "Wyłączone endpointy API",
+		"disabledRoutesDesc": "Endpointy API, które są całkowicie wyłączone (naciśnij Enter, aby dodać)",
+		"comments": "Komentarze do stacji",
+		"commentsDesc": "Pozwól użytkownikom komentować stacje",
+		"enableComments": "Włącz komentarze",
+		"commentsEnabled": "Użytkownicy mogą komentować stacje",
+		"commentsDisabled": "Komentarze są wyłączone",
+		"submissions": "Zgłoszenia",
+		"submissionsDesc": "Pozwól użytkownikom zgłaszać nowe stacje",
+		"enableSubmissions": "Włącz zgłoszenia",
+		"submissionsEnabled": "Użytkownicy mogą zgłaszać stacje",
+		"submissionsDisabled": "Zgłoszenia są wyłączone",
+		"autoSave": "Zmiany są zapisywane na serwerze natychmiast"
+	},
+	"stationComments": {
+		"title": "Komentarze",
+		"noComments": "Brak komentarzy do tej stacji",
+		"deleteConfirm": "Czy na pewno chcesz usunąć ten komentarz?",
+		"deleted": "Komentarz usunięty",
+		"deleteFailed": "Nie udało się usunąć komentarza"
+	}
+}

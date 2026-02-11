@@ -11,18 +11,15 @@
 	"filters": {
 		"button": "Filters",
 		"title": "Filter stations",
-		"clearAll": "Clear all",
 		"dataSource": "Data Source",
 		"internalDb": "Internal DB",
 		"ukePermits": "UKE Permits",
 		"newOnly": "Show latest (last 30 days)",
-		"operator": "Operator",
 		"otherOperators_one": "{{count}} other operator",
 		"otherOperators_other": "{{count}} other operators",
 		"selected": "selected",
 		"standard": "standard",
 		"band": "Band (MHz)",
-		"all": "All",
 		"none": "None",
 		"filtersActive_one": "{{count}} filter active",
 		"filtersActive_other": "{{count}} filters active",
@@ -50,13 +47,11 @@
 		"loading": "Loading stations...",
 		"noStations": "No stations found",
 		"noPermits": "No permits found",
-		"expired": "Expired",
 		"permit": "permit",
 		"permits": "permits"
 	},
 	"overlay": {
 		"locations": "locations",
-		"operators": "Operators",
 		"zoom": "Zoom",
 		"mapStyle": "Map Style",
 		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all."

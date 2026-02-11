@@ -3,7 +3,7 @@ import { Link, Outlet, useMatches } from "react-router";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/api";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { AuthGuard } from "@/components/auth/auth-guard";
+import { AuthGuard } from "@/components/auth/authGuard";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -21,6 +21,8 @@ export interface RouteHandle {
 	breadcrumbs?: BreadcrumbSegment[];
 	headerContent?: React.ReactNode;
 	mainClassName?: string;
+	/** Roles allowed to access this route (used by admin layout guard). */
+	allowedRoles?: string[];
 }
 
 export default function AppLayout() {

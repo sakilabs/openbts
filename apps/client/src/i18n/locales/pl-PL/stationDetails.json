@@ -39,8 +39,9 @@
 		"duplex": "Duplex",
 		"notes": "Notatki",
 		"cellNotConfirmed": "Komórka niepotwierdzona",
-		"carrier": "Nośna",
-		"noCells": "Brak danych zawierających komórki dla tej stacji"
+		"carrier": "Nośnia",
+		"noCells": "Brak danych zawierających komórki dla tej stacji",
+		"unknownBand": "Niewiadome"
 	},
 	"network": {
 		"title": "Identyfikatory NetWorkS!"
@@ -52,7 +53,7 @@
 		"noPermits": "Brak pozwoleń UKE powiązanych z tą stacją",
 		"inactive": "Nieaktywne",
 		"expires": "Wygasa:",
-		"expired": "Wygasłe",
+		"expired": "Wygasło",
 		"decisionNumber": "Numer decyzji",
 		"stationId": "ID stacji",
 		"operator": "Operator",

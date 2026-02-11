@@ -1,12 +1,8 @@
 import { fetchApiData, postApiData } from "@/lib/api";
-import type { Band, Operator, Region, Location, CellDetails, LocationWithStations, Station } from "@/types/station";
-import type { SubmissionFormData } from "./types";
+import type { Location, CellDetails, LocationWithStations, Station, Region, Operator } from "@/types/station";
+import type { SubmissionFormData, CellFormDetails, RatType } from "./types";
 
-export const fetchOperators = () => fetchApiData<Operator[]>("operators");
-
-export const fetchBands = () => fetchApiData<Band[]>("bands");
-
-export const fetchRegions = () => fetchApiData<Region[]>("regions");
+export { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
 
 export type SearchCell = {
 	id: number;
@@ -108,6 +104,25 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
 	};
 }
 
+const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
+	GSM: ["lac", "cid", "is_egsm"],
+	UMTS: ["lac", "carrier", "rnc", "cid"],
+	LTE: ["tac", "enbid", "clid", "supports_nb_iot"],
+	NR: ["nrtac", "gnbid", "gnbid_length", "clid", "pci", "supports_nr_redcap"],
+};
+
+function pickCellDetails(rat: RatType | undefined, details: Partial<CellFormDetails> | undefined): Partial<CellFormDetails> | undefined {
+	if (!details) return undefined;
+	const allowedKeys = rat ? ALLOWED_DETAIL_KEYS[rat] : undefined;
+	if (!allowedKeys) return details;
+
+	const picked: Record<string, unknown> = {};
+	for (const key of allowedKeys) {
+		if (key in details) picked[key] = (details as Record<string, unknown>)[key];
+	}
+	return picked as Partial<CellFormDetails>;
+}
+
 export async function createSubmission(data: SubmissionFormData): Promise<SubmissionResponse> {
 	const payload: Record<string, unknown> = {
 		type: data.type,
@@ -124,7 +139,7 @@ export async function createSubmission(data: SubmissionFormData): Promise<Submis
 			band_id: cell.band_id,
 			rat: cell.rat,
 			notes: cell.notes,
-			details: cell.details,
+			details: pickCellDetails(cell.rat, cell.details),
 		}));
 	}
 

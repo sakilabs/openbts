@@ -1,5 +1,5 @@
 import type { StationSource, LocationWithStations, UkeLocationWithPermits } from "@/types/station";
-import { getOperatorColor } from "@/lib/operator-utils";
+import { getOperatorColor } from "@/lib/operatorUtils";
 
 export const DEFAULT_COLOR = "#3b82f6";
 

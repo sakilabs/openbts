@@ -9,7 +9,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
 	SidebarGroup,
 	SidebarMenu,
-	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
@@ -72,17 +71,15 @@ export function NavMain({ items }: { items: NavItem[] }) {
 				{items.map((item) => (
 					<Collapsible key={item.key} open={openState[item.key] ?? false} onOpenChange={(open) => handleOpenChange(item.key, open)}>
 						<SidebarMenuItem>
-							<SidebarMenuButton render={<Link to={{ pathname: item.url }} />} tooltip={item.title}>
-								<HugeiconsIcon icon={item.icon} />
-								<span>{item.title}</span>
-							</SidebarMenuButton>
 							{item.items?.length ? (
 								<>
-									<CollapsibleTrigger
-										render={<SidebarMenuAction className={cn("transition-transform duration-200", openState[item.key] && "rotate-90")} />}
-									>
-										<HugeiconsIcon icon={ArrowRight01Icon} />
-										<span className="sr-only">Toggle</span>
+									<CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
+										<HugeiconsIcon icon={item.icon} />
+										<span>{item.title}</span>
+										<HugeiconsIcon
+											icon={ArrowRight01Icon}
+											className={cn("ml-auto size-4 transition-transform duration-200", openState[item.key] && "rotate-90")}
+										/>
 									</CollapsibleTrigger>
 									<CollapsibleContent>
 										<SidebarMenuSub>
@@ -96,7 +93,12 @@ export function NavMain({ items }: { items: NavItem[] }) {
 										</SidebarMenuSub>
 									</CollapsibleContent>
 								</>
-							) : null}
+							) : (
+								<SidebarMenuButton render={<Link to={{ pathname: item.url }} />} tooltip={item.title}>
+									<HugeiconsIcon icon={item.icon} />
+									<span>{item.title}</span>
+								</SidebarMenuButton>
+							)}
 						</SidebarMenuItem>
 					</Collapsible>
 				))}

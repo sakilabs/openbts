@@ -1,5 +1,5 @@
 {
-  "id": "94995064-6596-4f54-bd48-8d52710b6b06",
+  "id": "88d71126-bf7c-4e9f-a0ab-5673c100b05f",
   "prevId": "06758155-5e24-4584-9b2e-f81ca4e5a89b",
   "version": "7",
   "dialect": "postgresql",
@@ -351,6 +351,7 @@
           "name": "gsm_cells_lac_cid_unique",
           "nullsNotDistinct": false,
           "columns": [
+            "cell_id",
             "lac",
             "cid"
           ]
@@ -465,6 +466,51 @@
           "isUnique": false,
           "concurrently": false,
           "method": "gist",
+          "with": {}
+        },
+        "locations_idx": {
+          "name": "locations_idx",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "locations_created_at_idx": {
+          "name": "locations_created_at_idx",
+          "columns": [
+            {
+              "expression": "createdAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "locations_updated_at_idx": {
+          "name": "locations_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updatedAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
           "with": {}
         }
       },
@@ -638,17 +684,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "lte_cells_ecid_unique": {
-          "name": "lte_cells_ecid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "ecid"
-          ]
-        },
         "lte_cells_enbid_clid_unique": {
           "name": "lte_cells_enbid_clid_unique",
           "nullsNotDistinct": false,
           "columns": [
+            "cell_id",
             "enbid",
             "clid"
           ]
@@ -913,15 +953,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "nr_cells_nci_unique": {
-          "name": "nr_cells_nci_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "nci"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2650,17 +2682,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "umts_cells_cid_long_unique": {
-          "name": "umts_cells_cid_long_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "cid_long"
-          ]
-        },
         "umts_cells_rnc_cid_unique": {
           "name": "umts_cells_rnc_cid_unique",
           "nullsNotDistinct": false,
           "columns": [
+            "cell_id",
             "rnc",
             "cid"
           ]

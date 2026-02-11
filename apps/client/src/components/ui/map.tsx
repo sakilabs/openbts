@@ -18,10 +18,11 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, MinusSignIcon, PlusSignIcon, Location01Icon, MaximizeIcon, Loading03Icon, CompassIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, MinusSignIcon, PlusSignIcon, Location01Icon, MaximizeIcon, CompassIcon } from "@hugeicons/core-free-icons";
 
 import { cn } from "@/lib/utils";
-import { useClickOutside } from "@/hooks/use-click-outside";
+import { useClickOutside } from "@/hooks/useClickOutside";
+import { Spinner } from "./spinner";
 
 // Check document class for theme (works with next-themes, etc.)
 function getDocumentTheme(): Theme | null {
@@ -860,11 +861,7 @@ function MapControls({
 			{showLocate && (
 				<ControlGroup>
 					<ControlButton onClick={handleLocate} label="Find my location" disabled={waitingForLocation}>
-						{waitingForLocation ? (
-							<HugeiconsIcon icon={Loading03Icon} className="size-4 animate-spin" />
-						) : (
-							<HugeiconsIcon icon={Location01Icon} className="size-4" />
-						)}
+						{waitingForLocation ? <Spinner className="size-4" /> : <HugeiconsIcon icon={Location01Icon} className="size-4" />}
 					</ControlButton>
 				</ControlGroup>
 			)}

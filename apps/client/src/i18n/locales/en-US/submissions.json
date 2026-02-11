@@ -55,7 +55,8 @@
 	"ratSelector": {
 		"title": "Radio Technologies",
 		"description": "Select the radio access technologies (RAT) available at this station.",
-		"noSelection": "Select at least one technology to add cells."
+		"noSelection": "Select at least one technology to add cells.",
+		"iotHint": "IoT cells can be marked in LTE & NR tables as NB-IoT & RedCap respectively."
 	},
 	"cellDetails": {
 		"cells": "Cells",
@@ -74,9 +75,6 @@
 		"diffDeleted": "Deleted"
 	},
 	"form": {
-		"submit": "Submit",
-		"submitting": "Submitting...",
-		"submitted": "Submitted!",
 		"submitSuccess": "Your submission has been received and will be reviewed.",
 		"updateStation": "Updating station {{id}}",
 		"createStation": "Creating new station {{id}}",
@@ -93,10 +91,7 @@
 		"reason": "Reason for deletion",
 		"reasonPlaceholder": "Why should this station be removed?"
 	},
-	"common": {
-		"clear": "Clear",
-		"loading": "Loading..."
-	},
+	"reviewerResponse": "Admin response",
 	"validation": {
 		"selectStation": "Please select a station",
 		"stationIdRequired": "Station ID is required",

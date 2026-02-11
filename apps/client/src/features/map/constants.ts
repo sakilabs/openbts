@@ -1,4 +1,7 @@
 import type { FilterKeyword } from "./types";
+import { RAT_ORDER } from "@/features/shared/rat";
+
+export { RAT_ORDER };
 
 export const SOURCE_ID = "stations-source";
 export const POINT_LAYER_ID = "stations-layer";
@@ -12,7 +15,6 @@ export const PICKER_LAYER_IDS = [PICKER_CIRCLE_LAYER_ID, PICKER_SYMBOL_LAYER_ID]
 
 export const PICKER_NEARBY_RADIUS_METERS = 100;
 
-export const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"] as const;
 export const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
 	{ value: "umts", label: "UMTS", gen: "3G" },

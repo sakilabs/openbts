@@ -1,11 +1,9 @@
 {
 	"dialog": {
-		"closeLabel": "Close dialog",
 		"btsStation": "BTS Station",
 		"confirmed": "Confirmed",
 		"loadError": "Failed to load station details",
-		"hardwareLease": "Hardware lease from {{operator}}",
-		"edit": "Edit"
+		"hardwareLease": "Hardware lease from {{operator}}"
 	},
 	"tabs": {
 		"specs": "Specifications",
@@ -14,32 +12,19 @@
 	},
 	"specs": {
 		"basicInfo": "Basic Information",
-		"coordinates": "GPS:",
-		"region": "Region:",
-		"operator": "Operator:",
-		"stationId": "Station ID:",
-		"copy": "Copy",
-		"copied": "Copied!",
 		"cellDetails": "Cell details",
 		"internalNotes": "Internal Notes",
-		"created": "Created:",
-		"updated": "Updated:",
 		"networkName": "N! Name:",
 		"mnoName": "MNO:"
-	},
-	"share": {
-		"share": "Share",
-		"copied": "Link copied!"
 	},
 	"cells": {
 		"cell_one": "{{count}} cell",
 		"cell_other": "{{count}} cells",
-		"band": "Band",
 		"duplex": "Duplex",
-		"notes": "Notes",
 		"cellNotConfirmed": "Cell not confirmed",
 		"carrier": "Carrier",
-		"noCells": "No cells data in our database for this station"
+		"noCells": "No cells data in our database for this station",
+		"unknownBand": "Unknown"
 	},
 	"network": {
 		"title": "NetWorkS! Identifiers"
@@ -51,7 +36,6 @@
 		"noPermits": "No UKE permits linked to this station",
 		"inactive": "Inactive",
 		"expires": "Expires:",
-		"expired": "Expired",
 		"decisionNumber": "Decision Number",
 		"stationId": "Station ID",
 		"operator": "Operator",

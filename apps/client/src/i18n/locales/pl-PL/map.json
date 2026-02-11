@@ -23,7 +23,6 @@
 		"selected": "wybranych",
 		"standard": "Standard",
 		"band": "Pasmo (MHz)",
-		"all": "Wszystkie",
 		"none": "Żadne",
 		"filtersActive_one": "{{count}} aktywny filtr",
 		"filtersActive_few": "{{count}} aktywne filtry",
@@ -55,13 +54,12 @@
 		"loading": "Ładowanie stacji...",
 		"noStations": "Brak stacji",
 		"noPermits": "Brak pozwoleń",
-		"expired": "Wygasłe",
+		"expired": "Wygasło",
 		"permit": "pozwolenie",
 		"permits": "pozwoleń"
 	},
 	"overlay": {
 		"locations": "lokalizacji",
-		"operators": "Legenda",
 		"zoom": "Zoom",
 		"mapStyle": "Styl mapy",
 		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie."

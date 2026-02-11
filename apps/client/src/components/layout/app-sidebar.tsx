@@ -3,13 +3,13 @@
 import { useState } from "react";
 import type * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AddCircleIcon, AirportTowerIcon, ArrowRight01Icon, Login01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { AddCircleIcon, AirportTowerIcon, ArrowRight01Icon, Login01Icon, Settings02Icon, SecurityLockIcon } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { AuthDialog } from "@/components/auth/auth-dialog";
-import { authClient } from "@/lib/auth-client";
+import { AuthDialog } from "@/components/auth/authDialog";
+import { authClient } from "@/lib/authClient";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { APP_NAME } from "@/lib/api";
 import {
@@ -18,7 +18,6 @@ import {
 	SidebarFooter,
 	SidebarHeader,
 	SidebarMenu,
-	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
@@ -28,7 +27,7 @@ import {
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettings } from "@/hooks/useSettings";
 
 const navMainConfig = [
 	{
@@ -57,6 +56,22 @@ const authNavConfig = [
 	},
 ];
 
+const adminNavConfig = [
+	{
+		titleKey: "sections.admin",
+		key: "admin",
+		url: "#",
+		icon: SecurityLockIcon,
+		items: [
+			{ titleKey: "items.users", url: "/admin/users" },
+			{ titleKey: "items.stations", url: "/admin/stations" },
+			{ titleKey: "items.locations", url: "/admin/locations" },
+			{ titleKey: "items.submissions", url: "/admin/submissions" },
+			{ titleKey: "items.settings", url: "/admin/settings" },
+		],
+	},
+];
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { t } = useTranslation("nav");
 	const [authDialogOpen, setAuthDialogOpen] = useState(false);
@@ -77,6 +92,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 	const navItems = mapConfig(navMainConfig);
 	const authNavItems = session?.user && settings?.submissionsEnabled ? mapConfig(authNavConfig) : [];
+	const userRole = session?.user?.role as string | undefined;
+	const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
+	const adminNavItems = isAdmin ? mapConfig(adminNavConfig) : [];
 
 	const location = useLocation();
 	const [settingsOpen, setSettingsOpen] = useState(location.pathname.startsWith("/account/") || location.pathname === "/preferences");
@@ -105,18 +123,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			<SidebarContent>
 				<NavMain items={navItems} />
 				{authNavItems.length > 0 && <NavMain items={authNavItems} />}
+				{adminNavItems.length > 0 && <NavMain items={adminNavItems} />}
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>
 					<Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
 						<SidebarMenuItem>
-							<SidebarMenuButton render={<Link to="/preferences" />} tooltip={t("sections.settings")}>
+							<CollapsibleTrigger render={<SidebarMenuButton tooltip={t("sections.settings")} />}>
 								<HugeiconsIcon icon={Settings02Icon} />
 								<span>{t("sections.settings")}</span>
-							</SidebarMenuButton>
-							<CollapsibleTrigger render={<SidebarMenuAction className={cn("transition-transform duration-200", settingsOpen && "rotate-90")} />}>
-								<HugeiconsIcon icon={ArrowRight01Icon} />
-								<span className="sr-only">Toggle</span>
+								<HugeiconsIcon
+									icon={ArrowRight01Icon}
+									className={cn("ml-auto size-4 transition-transform duration-200", settingsOpen && "rotate-90")}
+								/>
 							</CollapsibleTrigger>
 							<CollapsibleContent>
 								<SidebarMenuSub>

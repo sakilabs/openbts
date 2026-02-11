@@ -2,7 +2,8 @@
 	"sections": {
 		"stations": "Stacje",
 		"contribute": "Zgłoszenia",
-		"settings": "Ustawienia"
+		"settings": "Ustawienia",
+		"admin": "Admin"
 	},
 	"items": {
 		"mapView": "Widok mapy",
@@ -11,7 +12,12 @@
 		"submitStation": "Nowe zgłoszenie",
 		"preferences": "Preferencje",
 		"accountSettings": "Ustawienia konta",
-		"mySubmissions": "Moje zgłoszenia"
+		"mySubmissions": "Moje zgłoszenia",
+		"users": "Użytkownicy",
+		"stations": "Stacje",
+		"submissions": "Zgłoszenia",
+		"locations": "Lokalizacje",
+		"settings": "Ustawienia"
 	},
 	"secondary": {
 		"settings": "Ustawienia",

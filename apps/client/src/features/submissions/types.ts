@@ -1,6 +1,7 @@
 import type { Band, Operator, Region } from "@/types/station";
+import type { RatType } from "@/features/shared/rat";
 
-export type RatType = "GSM" | "UMTS" | "LTE" | "NR";
+export type { RatType };
 
 export type GSMCellDetails = {
 	lac: number;

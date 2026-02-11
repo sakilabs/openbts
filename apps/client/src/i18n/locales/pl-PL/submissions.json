@@ -57,7 +57,8 @@
 	"ratSelector": {
 		"title": "Technologie radiowe",
 		"description": "Wybierz technologie radiowe (RAT) dostępne na tej stacji.",
-		"noSelection": "Wybierz co najmniej jedną technologię, aby dodać komórki."
+		"noSelection": "Wybierz co najmniej jedną technologię, aby dodać komórki.",
+		"iotHint": "Komórki IoT można oznaczyć w tabelach LTE i NR odpowiednio jako NB-IoT i RedCap."
 	},
 	"cellDetails": {
 		"cells": "Komórki",
@@ -97,6 +98,7 @@
 		"reason": "Powód usunięcia",
 		"reasonPlaceholder": "Dlaczego ta stacja powinna zostać usunięta?"
 	},
+	"reviewerResponse": "Odpowiedź administratora",
 	"common": {
 		"clear": "Wyczyść",
 		"loading": "Ładowanie..."

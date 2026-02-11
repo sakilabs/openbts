@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay } from "@/hooks/use-preferences";
+import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay } from "@/hooks/usePreferences";
 import { toggleValue } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { RouteHandle } from "./_layout";

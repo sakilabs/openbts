@@ -23,7 +23,49 @@
 		"previous": "Poprzedni",
 		"loading": "Ładowanie...",
 		"copy": "Kopiuj",
-		"copied": "Skopiowano!"
+		"copied": "Skopiowano!",
+		"saveChanges": "Zapisz zmiany",
+		"submit": "Wyślij",
+		"submitting": "Wysyłanie...",
+		"submitted": "Wysłano!",
+		"saving": "Zapisywanie...",
+		"saved": "Zapisano",
+		"confirm": "Zatwierdź",
+		"revert": "Cofnij",
+		"share": "Udostępnij",
+		"view": "Zobacz"
+	},
+	"labels": {
+		"stationId": "ID Stacji",
+		"operator": "Operator",
+		"region": "Region",
+		"latitude": "Szerokość geograficzna",
+		"longitude": "Długość geograficzna",
+		"coordinates": "Współrzędne",
+		"notes": "Notatki",
+		"address": "Adres",
+		"city": "Miasto",
+		"status": "Status",
+		"type": "Typ",
+		"created": "Utworzono",
+		"updated": "Zaktualizowano",
+		"date": "Data",
+		"band": "Pasmo"
+	},
+	"status": {
+		"all": "Wszystkie",
+		"pending": "Oczekujące",
+		"approved": "Zatwierdzone",
+		"rejected": "Odrzucone",
+		"active": "Aktywne",
+		"inactive": "Nieaktywne",
+		"expired": "Wygasło"
+	},
+	"submissionType": {
+		"all": "Wszystkie",
+		"new": "Nowe",
+		"update": "Aktualizacja",
+		"delete": "Usunięcie"
 	},
 	"pagination": {
 		"page": "Strona",

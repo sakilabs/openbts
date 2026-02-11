@@ -1,4 +1,4 @@
-import MapView from "@/features/map/components/map-view";
+import MapView from "@/features/map/components/mapView";
 import type { RouteHandle } from "./_layout";
 
 export const handle: RouteHandle = {

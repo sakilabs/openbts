@@ -14,7 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/authClient";
 import { useTranslation } from "react-i18next";
 
 export function NavUser({ data: session }: { data: ReturnType<typeof authClient.useSession>["data"] }) {

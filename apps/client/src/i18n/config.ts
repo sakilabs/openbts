@@ -10,6 +10,7 @@ import enUSSubmissions from "./locales/en-US/submissions.json";
 import enUSClfExport from "./locales/en-US/clfExport.json";
 import enUSAuth from "./locales/en-US/auth.json";
 import enUSSettings from "./locales/en-US/settings.json";
+import enUSAdmin from "./locales/en-US/admin.json";
 
 import plPLCommon from "./locales/pl-PL/common.json";
 import plPLStations from "./locales/pl-PL/stations.json";
@@ -20,6 +21,7 @@ import plPLSubmissions from "./locales/pl-PL/submissions.json";
 import plPLClfExport from "./locales/pl-PL/clfExport.json";
 import plPLAuth from "./locales/pl-PL/auth.json";
 import plPLSettings from "./locales/pl-PL/settings.json";
+import plPLAdmin from "./locales/pl-PL/admin.json";
 
 export const defaultNS = "common";
 export const resources = {
@@ -33,6 +35,7 @@ export const resources = {
 		clfExport: enUSClfExport,
 		auth: enUSAuth,
 		settings: enUSSettings,
+		admin: enUSAdmin,
 	},
 	"pl-PL": {
 		common: plPLCommon,
@@ -44,6 +47,7 @@ export const resources = {
 		clfExport: plPLClfExport,
 		auth: plPLAuth,
 		settings: plPLSettings,
+		admin: plPLAdmin,
 	},
 } as const;
 
@@ -72,7 +76,7 @@ i18n.use(initReactI18next).init({
 	lng: getDefaultLanguage(),
 	fallbackLng: "en-US",
 	defaultNS,
-	ns: ["common", "stations", "nav", "map", "stationDetails", "submissions", "clfExport", "auth", "settings"],
+	ns: ["common", "stations", "nav", "map", "stationDetails", "submissions", "clfExport", "auth", "settings", "admin"],
 	interpolation: {
 		escapeValue: false,
 	},

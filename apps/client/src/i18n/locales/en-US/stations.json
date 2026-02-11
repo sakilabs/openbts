@@ -16,7 +16,8 @@
 		"noBandsFound": "No bands found",
 		"showingStations": "Showing {{count}} stations",
 		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
-		"otherOperators": "Other operators",
+		"otherOperators_one": "{{count}} other operator",
+		"otherOperators_other": "{{count}} other operators",
 		"selected": "selected"
 	},
 	"table": {
@@ -29,5 +30,8 @@
 		"updatedAt": "Updated",
 		"noStationsFound": "No stations found",
 		"tryAdjustingFilters": "Try adjusting your filters"
+	},
+	"actions": {
+		"newStation": "New Station"
 	}
 }
