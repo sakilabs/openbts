@@ -29,7 +29,7 @@ const schemaRoute = {
 	}),
 	body: z
 		.object({
-			review_notes: z.string().optional(),
+			review_notes: z.string().nullable().optional(),
 		})
 		.optional(),
 	response: {

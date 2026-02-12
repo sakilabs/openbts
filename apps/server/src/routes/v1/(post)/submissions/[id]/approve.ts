@@ -20,7 +20,7 @@ const schemaRoute = {
 	}),
 	body: z
 		.object({
-			review_notes: z.string().optional(),
+			review_notes: z.string().nullable().optional(),
 		})
 		.optional(),
 	response: {
@@ -71,18 +71,43 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 				let locationId: number | null = null;
 
 				if (proposedLocation) {
-					const [newLocation] = await tx
-						.insert(locations)
-						.values({
-							region_id: proposedLocation.region_id,
-							city: proposedLocation.city,
-							address: proposedLocation.address,
-							longitude: proposedLocation.longitude,
-							latitude: proposedLocation.latitude,
-						})
-						.returning();
-					if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
-					locationId = newLocation.id;
+					const existingLocation = await tx.query.locations.findFirst({
+						where: (fields, { and, eq: feq }) =>
+							and(feq(fields.longitude, proposedLocation.longitude), feq(fields.latitude, proposedLocation.latitude)),
+					});
+
+					if (existingLocation) {
+						const metadataChanged =
+							existingLocation.region_id !== proposedLocation.region_id ||
+							existingLocation.city !== proposedLocation.city ||
+							existingLocation.address !== proposedLocation.address;
+
+						if (metadataChanged) {
+							await tx
+								.update(locations)
+								.set({
+									region_id: proposedLocation.region_id,
+									city: proposedLocation.city,
+									address: proposedLocation.address,
+									updatedAt: new Date(),
+								})
+								.where(eq(locations.id, existingLocation.id));
+						}
+						locationId = existingLocation.id;
+					} else {
+						const [newLocation] = await tx
+							.insert(locations)
+							.values({
+								region_id: proposedLocation.region_id,
+								city: proposedLocation.city,
+								address: proposedLocation.address,
+								longitude: proposedLocation.longitude,
+								latitude: proposedLocation.latitude,
+							})
+							.returning();
+						if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
+						locationId = newLocation.id;
+					}
 				}
 
 				if (proposedStation) {
@@ -302,7 +327,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		return res.send({ data: result });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+		throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: error ? String(error) : "An unknown error occurred" });
 	}
 }
 

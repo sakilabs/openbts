@@ -38,6 +38,7 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 		throw new Error(`Request failed: ${response.status}`);
 	}
 
+	if (response.status === 204) return undefined as T;
 	return response.json();
 }
 
