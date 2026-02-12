@@ -73,10 +73,8 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
 		if (seen.has(row.import_type)) continue;
 		seen.add(row.import_type);
 
-		if (row.import_type === "stations_permits")
-			lastUpdated.stations_permits = row.last_import_date.toISOString();
-		else if (row.import_type === "radiolines")
-			lastUpdated.radiolines = row.last_import_date.toISOString();
+		if (row.import_type === "permits") lastUpdated.stations_permits = row.last_import_date.toISOString();
+		else if (row.import_type === "radiolines") lastUpdated.radiolines = row.last_import_date.toISOString();
 	}
 
 	const [locationsCount, stationsCount, cellsCount, ukeLocationsCount, ukePermitsCount] = countResults;
