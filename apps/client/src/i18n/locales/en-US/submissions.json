@@ -1,11 +1,11 @@
 {
 	"userPage": {
 		"title": "My Submissions",
-		"description": "Stations and cells you have submitted for verification."
+		"description": "Stations and cells you have submitted for verification"
 	},
 	"detail": {
 		"title": "Submission Review",
-		"readOnly": "This submission is read-only. It cannot be edited.",
+		"readOnly": "This submission is read-only. It cannot be edited",
 		"submitter": "Submitter",
 		"createdAt": "Submission Date",
 		"noSubmitterNote": "No note from submitter",
@@ -32,11 +32,11 @@
 	},
 	"rejectApproveCard": {
 		"confirmReject": "Are you sure you want to reject this submission?",
-		"confirmRejectDesc": "This action is irreversible. The station submitted in this submission will not be added to the database.",
+		"confirmRejectDesc": "This action is irreversible. The station submitted in this submission will not be added to the database",
 		"confirmApprove": "Are you sure you want to approve this submission?",
-		"confirmApproveDesc": "This action is irreversible. The station submitted in this submission will be added to the database, and the submission will be marked as approved."
+		"confirmApproveDesc": "This action is irreversible. The station submitted in this submission will be added to the database, and the submission will be marked as approved"
 	},
-	"deletionBanner": "This submission concerns the deletion of {{stationId}}. Upon approval of this request, the station will be assigned the 'inactive' status.",
+	"deletionBanner": "This submission concerns the deletion of {{stationId}}. Upon approval of this request, the station will be assigned the 'inactive' status",
 	"adminTitle": "Submission Management",
 	"adminDescription": "Manage submissions regarding base stations.",
 	"submitNew": "Create New Submission",
@@ -47,7 +47,7 @@
 	"submissionSelector": {
 		"title": "Select Station",
 		"existingStation": "Existing Station",
-		"newStationHint": "Fill in station and location details below."
+		"newStationHint": "Fill in station and location details below"
 	},
 	"actionSelector": {
 		"title": "Select Action",
@@ -56,13 +56,13 @@
 	},
 	"ratSelector": {
 		"title": "Radio Technologies",
-		"description": "Select radio technologies (RAT) available at this station.",
+		"description": "Select radio technologies (RAT) available at this station",
 		"noSelection": "Select at least one technology to add cells.",
-		"iotHint": "IoT cells can be marked in LTE and NR tables as NB-IoT and RedCap respectively."
+		"iotHint": "IoT cells can be marked in LTE and NR tables as NB-IoT and RedCap respectively"
 	},
 	"deleteStation": {
 		"title": "Delete Station",
-		"warning": "The station will be marked for deletion. A moderator will verify your submission.",
+		"warning": "The station will be marked for deletion. A moderator will verify your submission",
 		"reason": "Reason for deletion",
 		"reasonPlaceholder": "Why should this station be deleted?"
 	},
@@ -104,8 +104,8 @@
 		"deleteFailed": "Failed to delete comment"
 	},
 	"diff": {
-		"current": "Current:",
-		"was": "Was:",
+		"current": "Current",
+		"was": "Was",
 		"locationChanged": "Location has been changed"
 	},
 	"toast": {

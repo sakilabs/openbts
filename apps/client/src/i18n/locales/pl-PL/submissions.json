@@ -1,11 +1,11 @@
 {
 	"userPage": {
 		"title": "Moje zgłoszenia",
-		"description": "Stacje i komórki, które zgłosiłeś do weryfikacji."
+		"description": "Stacje i komórki, które zgłosiłeś do weryfikacji"
 	},
 	"detail": {
 		"title": "Rozpatrywanie zgłoszenia",
-		"readOnly": "To zgłoszenie jest tylko do odczytu. Nie można go edytować.",
+		"readOnly": "To zgłoszenie jest tylko do odczytu. Nie można go edytować",
 		"submitter": "Zgłaszający",
 		"createdAt": "Data zgłoszenia",
 		"noSubmitterNote": "Brak notatki od zgłaszającego",
@@ -32,13 +32,13 @@
 	},
 	"rejectApproveCard": {
 		"confirmReject": "Czy na pewno chcesz odrzucić to zgłoszenie?",
-		"confirmRejectDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu nie zostanie dodana do bazy danych.",
+		"confirmRejectDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu nie zostanie dodana do bazy danych",
 		"confirmApprove": "Czy na pewno chcesz zatwierdzić to zgłoszenie?",
-		"confirmApproveDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu zostanie dodana do bazy danych, a zgłoszenie zostanie oznaczone jako zatwierdzone."
+		"confirmApproveDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu zostanie dodana do bazy danych, a zgłoszenie zostanie oznaczone jako zatwierdzone"
 	},
-	"deletionBanner": "To zgłoszenie dotyczy usunięcia {{stationId}}. Po zatwierdzeniu tej prośby, stacji zostanie przypisany status 'inactive'.",
+	"deletionBanner": "To zgłoszenie dotyczy usunięcia {{stationId}}. Po zatwierdzeniu tej prośby, stacji zostanie przypisany status 'inactive'",
 	"adminTitle": "Zarządzanie zgłoszeniami",
-	"adminDescription": "Zarządzaj zgłoszeniami dotyczącymi stacji bazowych.",
+	"adminDescription": "Zarządzaj zgłoszeniami dotyczącymi stacji bazowych",
 	"submitNew": "Utwórz nowe zgłoszenie",
 	"stationInfo": {
 		"title": "Informacje o stacji",
@@ -47,7 +47,7 @@
 	"submissionSelector": {
 		"title": "Wybierz stację",
 		"existingStation": "Istniejąca stacja",
-		"newStationHint": "Wypełnij poniżej dane stacji i lokalizacji."
+		"newStationHint": "Wypełnij poniżej dane stacji i lokalizacji"
 	},
 	"actionSelector": {
 		"title": "Wybierz akcję",
@@ -58,11 +58,11 @@
 		"title": "Technologie radiowe",
 		"description": "Wybierz technologie radiowe (RAT) dostępne na tej stacji.",
 		"noSelection": "Wybierz co najmniej jedną technologię, aby dodać komórki.",
-		"iotHint": "Komórki IoT można oznaczyć w tabelach LTE i NR odpowiednio jako NB-IoT i RedCap."
+		"iotHint": "Komórki IoT można oznaczyć w tabelach LTE i NR odpowiednio jako NB-IoT i RedCap"
 	},
 	"deleteStation": {
 		"title": "Usunięcie stacji",
-		"warning": "Stacja zostanie oznaczona do usunięcia. Moderator zweryfikuje Twoje zgłoszenie.",
+		"warning": "Stacja zostanie oznaczona do usunięcia. Moderator zweryfikuje Twoje zgłoszenie",
 		"reason": "Powód usunięcia",
 		"reasonPlaceholder": "Dlaczego ta stacja powinna zostać usunięta?"
 	},
@@ -104,8 +104,8 @@
 		"deleteFailed": "Nie udało się usunąć komentarza"
 	},
 	"diff": {
-		"current": "Aktualnie:",
-		"was": "Było:",
+		"current": "Aktualnie",
+		"was": "Było",
 		"locationChanged": "Lokalizacja została zmieniona"
 	},
 	"toast": {

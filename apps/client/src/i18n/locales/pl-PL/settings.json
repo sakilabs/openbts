@@ -1,47 +1,47 @@
 {
 	"preferences": {
 		"title": "Preferencje",
-		"description": "Te ustawienia są zapisywane lokalnie na tym urządzeniu.",
+		"description": "Te ustawienia są zapisywane lokalnie na tym urządzeniu",
 		"gpsFormat": "Format współrzędnych GPS",
-		"gpsFormatHint": "Wybierz sposób wyświetlania współrzędnych GPS w aplikacji.",
+		"gpsFormatHint": "Wybierz sposób wyświetlania współrzędnych GPS w aplikacji",
 		"gpsDecimal": "Stopnie dziesiętne",
 		"gpsDms": "Stopnie, minuty, sekundy",
 		"navigationApps": "Aplikacje nawigacyjne",
-		"navigationAppsHint": "Wybierz, które przyciski nawigacji wyświetlać przy współrzędnych.",
+		"navigationAppsHint": "Wybierz, które przyciski nawigacji wyświetlać przy współrzędnych",
 		"navGoogleMaps": "Mapy Google",
 		"navAppleMaps": "Apple Maps",
 		"navWaze": "Waze",
 		"openWith": "Otwórz w {{app}}",
 		"navDisplayMode": "Styl przycisków nawigacji",
-		"navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji.",
+		"navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji",
 		"navDisplayInline": "Rozwijane menu",
-		"navDisplayInlineDesc": "Mała ikona obok współrzędnych GPS otwierająca menu rozwijane.",
+		"navDisplayInlineDesc": "Mała ikona obok współrzędnych GPS otwierająca menu rozwijane",
 		"navDisplayButtons": "Osobne przyciski",
-		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje."
+		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje"
 	},
 	"page": {
 		"title": "Ustawienia konta",
 		"shortTitle": "Ustawienia",
-		"description": "Zarządzaj kontem, bezpieczeństwem i śledź swoje zgłoszenia."
+		"description": "Zarządzaj kontem i bezpieczeństwem"
 	},
 	"account": {
 		"title": "Konto",
-		"description": "Twój profil i dane osobowe."
+		"description": "Twój profil i dane osobowe"
 	},
 	"security": {
 		"title": "Bezpieczeństwo",
-		"description": "Hasło, klucze dostępu i uwierzytelnianie."
+		"description": "Hasło, klucze dostępu i uwierzytelnianie"
 	},
 	"apiKeys": {
 		"title": "Klucze API",
-		"description": "Zarządzaj kluczami do dostępu programistycznego."
+		"description": "Zarządzaj kluczami do dostępu programistycznego"
 	},
 	"sessions": {
 		"title": "Sesje",
-		"description": "Aktywne sesje na Twoich urządzeniach."
+		"description": "Aktywne sesje na Twoich urządzeniach"
 	},
 	"dangerZone": {
 		"title": "Strefa zagrożenia",
-		"description": "Trwałe usunięcie konta i wszystkich powiązanych danych."
+		"description": "Trwałe usunięcie konta i wszystkich powiązanych danych"
 	}
 }

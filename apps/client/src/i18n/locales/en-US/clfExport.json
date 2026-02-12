@@ -1,21 +1,21 @@
 {
 	"page": {
 		"title": "CLF Export",
-		"description": "Export cell data to CLF (Cell List File) format. These files can be used in cellular network monitoring applications to identify base stations serving the phone."
+		"description": "Export cell data to CLF (Cell List File) format. These files can be used in cellular network monitoring applications to identify base stations serving the phone"
 	},
 	"info": {
 		"appsTitle": "Popular monitoring applications using CLF files:",
-		"iosNote": "There is no such application for iOS/iPadOS/watchOS because Apple does not allow monitoring such things from the application level."
+		"iosNote": "There is no such application for iOS/iPadOS/watchOS because Apple does not allow monitoring such things from the application level"
 	},
 	"form": {
-		"operatorsHint": "Select one or more operators. If none selected, all operators will be exported.",
-		"standardHint": "Optional, all standards are exported by default.",
-		"bandsHint": "Optional, all bands are exported by default.",
+		"operatorsHint": "Select one or more operators. If none selected, all operators will be exported",
+		"standardHint": "Optional, all standards are exported by default",
+		"bandsHint": "Optional, all bands are exported by default",
 		"outputFormat": "Output Format",
 		"formatInfo": "Detailed information about formats:",
 		"export": "Export",
 		"exporting": "Exporting..."
 	},
 	"exportSuccess": "CLF file exported successfully!",
-	"exportError": "Failed to export CLF file. Please try again."
+	"exportError": "Failed to export CLF file. Please try again"
 }

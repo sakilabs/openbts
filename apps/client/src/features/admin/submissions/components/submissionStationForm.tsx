@@ -113,31 +113,14 @@ export function SubmissionStationForm({
 			</div>
 
 			{(!isDeleteSubmission || (locationForm.latitude !== null && locationForm.longitude !== null)) && (
-				<>
-					<div className={cn(isFormDisabled && "pointer-events-none opacity-60")}>
-						<LocationPicker
-							location={locationForm}
-							onLocationChange={(patch) => !isFormDisabled && onLocationFormChange(patch)}
-						/>
-					</div>
-					{locationDiffs && (locationDiffs.coords || locationDiffs.city || locationDiffs.address) && (
-						<div className="border rounded-lg px-3 py-2 bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 space-y-0.5">
-							<p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 mb-1">{t("diff.locationChanged")}</p>
-							{locationDiffs.coords && currentStation?.location && (
-								<ChangeBadge
-									label={t("common:labels.coordinates")}
-									current={`${currentStation.location.latitude.toFixed(6)}, ${currentStation.location.longitude.toFixed(6)}`}
-								/>
-							)}
-							{locationDiffs.city && currentStation?.location && (
-								<ChangeBadge label={t("common:labels.city")} current={currentStation.location.city || "—"} />
-							)}
-							{locationDiffs.address && currentStation?.location && (
-								<ChangeBadge label={t("common:labels.address")} current={currentStation.location.address || "—"} />
-							)}
-						</div>
-					)}
-				</>
+				<div className={cn(isFormDisabled && "pointer-events-none opacity-60")}>
+					<LocationPicker
+						location={locationForm}
+						onLocationChange={(patch) => !isFormDisabled && onLocationFormChange(patch)}
+						locationDiffs={locationDiffs}
+						currentLocation={currentStation?.location ?? null}
+					/>
+				</div>
 			)}
 		</>
 	);

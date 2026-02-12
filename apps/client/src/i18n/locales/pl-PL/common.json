@@ -148,7 +148,7 @@
 	},
 	"error": {
 		"title": "Coś poszło nie tak",
-		"description": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie lub odśwież stronę.",
+		"description": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie lub odśwież stronę",
 		"tryAgain": "Spróbuj ponownie",
 		"reload": "Odśwież stronę",
 		"toast": "Wystąpił błąd podczas przetwarzania twojej akcji. Spróbuj ponownie później (zobacz konsolę po więcej szczegółów)"

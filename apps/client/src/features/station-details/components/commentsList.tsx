@@ -70,7 +70,7 @@ export function CommentsList({ stationId }: CommentsListProps) {
 
 							<div className="flex-1 space-y-1.5">
 								<div className="flex items-center justify-between gap-4">
-									<span className="text-sm font-bold">{comment.author?.name || t("comments.anonymousUser")}</span>
+									<span className="text-sm font-bold">{comment.author?.name}</span>
 									<span className="text-[10px] text-muted-foreground flex items-center gap-1">
 										<HugeiconsIcon icon={Calendar03Icon} className="size-3" />
 										{new Date(comment.createdAt).toLocaleDateString(i18n.language)}

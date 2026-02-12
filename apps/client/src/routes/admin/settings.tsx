@@ -80,7 +80,7 @@ function TagInput({
 	return (
 		<div
 			className={cn(
-				"flex flex-wrap gap-1.5 p-2 rounded-md border bg-background min-h-[38px]",
+				"flex flex-wrap gap-1.5 p-2 rounded-md border bg-background min-h-9.5",
 				!disabled && "border-input hover:border-muted-foreground/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20",
 				disabled && "opacity-60",
 			)}
@@ -109,7 +109,7 @@ function TagInput({
 				onKeyDown={handleKeyDown}
 				placeholder={tags.length === 0 ? placeholder : ""}
 				disabled={disabled}
-				className="flex-1 min-w-[100px] border-0 p-0 h-auto text-xs focus-visible:ring-0 bg-transparent placeholder:text-muted-foreground/70"
+				className="flex-1 min-w-25 border-0 p-0 h-auto text-xs focus-visible:ring-0 bg-transparent placeholder:text-muted-foreground/70"
 			/>
 		</div>
 	);

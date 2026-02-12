@@ -2,7 +2,7 @@
 	"header": {
 		"deleteStation": "Usuń stację",
 		"confirmDelete": "Czy na pewno chcesz usunąć stację?",
-		"confirmDeleteDesc": "Po usunięciu, stacja zostanie oznaczona jako 'inactive' i nie będzie już widoczna na mapie ani w wynikach wyszukiwania.",
+		"confirmDeleteDesc": "Po usunięciu, stacja zostanie oznaczona jako 'inactive' i nie będzie już widoczna na mapie ani w wynikach wyszukiwania",
 		"createStation": "Utwórz stację"
 	},
 	"actions": {
@@ -15,12 +15,18 @@
 		"notesPlaceholder": "np. pikokomórka",
 		"addCell": "Dodaj komórkę",
 		"noRats": "Nie znaleziono komórek dla tej stacji. Dodaj RATy, aby dodać komórki",
-		"noStationCells": "Nie znaleziono komórek dla tej stacji.",
-		"noCells": "Brak komórek. Kliknij \"Dodaj komórkę\", aby utworzyć.",
-		"diffAdded": "nowe",
-		"diffModified": "zmienione",
-		"diffDeleted": "usunięte",
-		"cellNotConfirmed": "Ta komórka jest nie potwierdzona",
+		"noStationCells": "Nie znaleziono komórek dla tej stacji",
+		"noCells": "Brak komórek. Kliknij \"Dodaj komórkę\", aby utworzyć",
+		"diffAdded_one": "nowa",
+		"diffAdded_few": "nowe",
+		"diffAdded_many": "nowych",
+		"diffModified_one": "zmieniona",
+		"diffModified_few": "zmienione",
+		"diffModified_many": "zmienionych",
+		"diffDeleted_one": "usunięta",
+		"diffDeleted_few": "usunięte",
+		"diffDeleted_many": "usuniętych",
+		"cellNotConfirmed": "Ta komórka nie jest potwierdzona",
 		"carrier": "Nośnia",
 		"unknownBand": "Nieznane pasmo"
 	},

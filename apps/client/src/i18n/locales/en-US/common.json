@@ -148,7 +148,7 @@
 	},
 	"error": {
 		"title": "Something went wrong",
-		"description": "An unexpected error occurred. Please try again or refresh the page.",
+		"description": "An unexpected error occurred. Please try again or refresh the page",
 		"tryAgain": "Try again",
 		"reload": "Reload page",
 		"toast": "An error occurred while processing your action. Please try again later (check console for details)"

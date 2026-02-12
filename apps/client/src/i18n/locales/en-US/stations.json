@@ -2,7 +2,7 @@
 	"header": {
 		"deleteStation": "Delete Station",
 		"confirmDelete": "Are you sure you want to delete the station?",
-		"confirmDeleteDesc": "After deletion, the station will be marked as 'inactive' and will no longer be visible on the map or in search results.",
+		"confirmDeleteDesc": "After deletion, the station will be marked as 'inactive' and will no longer be visible on the map or in search results",
 		"createStation": "Create Station"
 	},
 	"actions": {
@@ -15,8 +15,8 @@
 		"notesPlaceholder": "e.g. picocell",
 		"addCell": "Add Cell",
 		"noRats": "No cells found for this station. Add RATs to add cells",
-		"noStationCells": "No cells found for this station.",
-		"noCells": "No cells. Click \"Add Cell\" to create.",
+		"noStationCells": "No cells found for this station",
+		"noCells": "No cells. Click \"Add Cell\" to create",
 		"diffAdded": "new",
 		"diffModified": "modified",
 		"diffDeleted": "deleted",

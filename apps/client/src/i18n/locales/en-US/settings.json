@@ -1,47 +1,47 @@
 {
 	"preferences": {
 		"title": "Preferences",
-		"description": "These settings are saved locally on this device.",
+		"description": "These settings are saved locally on this device",
 		"gpsFormat": "GPS Coordinates Format",
-		"gpsFormatHint": "Choose how GPS coordinates are displayed in the application.",
+		"gpsFormatHint": "Choose how GPS coordinates are displayed in the application",
 		"gpsDecimal": "Decimal Degrees",
 		"gpsDms": "Degrees, Minutes, Seconds",
 		"navigationApps": "Navigation Apps",
-		"navigationAppsHint": "Choose which navigation buttons to display next to coordinates.",
+		"navigationAppsHint": "Choose which navigation buttons to display next to coordinates",
 		"navGoogleMaps": "Google Maps",
 		"navAppleMaps": "Apple Maps",
 		"navWaze": "Waze",
 		"openWith": "Open with {{app}}",
 		"navDisplayMode": "Navigation Buttons Style",
-		"navDisplayModeHint": "Choose how navigation links are displayed in station details.",
+		"navDisplayModeHint": "Choose how navigation links are displayed in station details",
 		"navDisplayInline": "Dropdown Menu",
-		"navDisplayInlineDesc": "Small icon next to GPS coordinates opening a dropdown menu.",
+		"navDisplayInlineDesc": "Small icon next to GPS coordinates opening a dropdown menu",
 		"navDisplayButtons": "Separate Buttons",
-		"navDisplayButtonsDesc": "Buttons displayed below the Info section."
+		"navDisplayButtonsDesc": "Buttons displayed below the Info section"
 	},
 	"page": {
 		"title": "Account Settings",
 		"shortTitle": "Settings",
-		"description": "Manage your account, security, and track your submissions."
+		"description": "Manage your account and security"
 	},
 	"account": {
 		"title": "Account",
-		"description": "Your profile and personal information."
+		"description": "Your profile and personal information"
 	},
 	"security": {
 		"title": "Security",
-		"description": "Password, passkeys, and authentication."
+		"description": "Password, passkeys, and authentication"
 	},
 	"apiKeys": {
 		"title": "API Keys",
-		"description": "Manage keys for programmatic access."
+		"description": "Manage keys for programmatic access"
 	},
 	"sessions": {
 		"title": "Sessions",
-		"description": "Active sessions on your devices."
+		"description": "Active sessions on your devices"
 	},
 	"dangerZone": {
 		"title": "Danger Zone",
-		"description": "Permanently delete your account and all associated data."
+		"description": "Permanently delete your account and all associated data"
 	}
 }

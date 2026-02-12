@@ -26,7 +26,9 @@ import { reverseGeocode, fetchLocationsInViewport, type NominatimResult } from "
 import { regionsQueryOptions } from "@/features/shared/queries";
 import type { LocationWithStations, Region } from "@/types/station";
 import type { ProposedLocationForm } from "../types";
+import { ChangeBadge } from "@/features/admin/submissions/components/common";
 import type { LocationErrors } from "../utils/validation";
+import type { Location } from "@/types/station";
 
 function roundCoord(value: number): number {
 	return Math.round(value * 1000000) / 1000000;
@@ -90,9 +92,11 @@ type LocationPickerProps = {
 	location: ProposedLocationForm;
 	errors?: LocationErrors;
 	onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
+	locationDiffs?: { coords: boolean; city: boolean; address: boolean } | null;
+	currentLocation?: Location | null;
 };
 
-export function LocationPicker({ location, errors, onLocationChange }: LocationPickerProps) {
+export function LocationPicker({ location, errors, onLocationChange, locationDiffs, currentLocation }: LocationPickerProps) {
 	const { t } = useTranslation(["submissions", "common"]);
 	const [isFetchingAddress, setIsFetchingAddress] = useState(false);
 
@@ -191,6 +195,9 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 							className={`h-8 font-mono text-sm ${errors?.latitude ? "border-destructive" : ""}`}
 						/>
 						{errors?.latitude && <p className="text-xs text-destructive">{t(errors.latitude)}</p>}
+						{locationDiffs?.coords && currentLocation && (
+							<ChangeBadge label={t("diff.current")} current={currentLocation.latitude.toFixed(6)} />
+						)}
 					</div>
 					<div className="space-y-1.5">
 						<Label htmlFor="longitude" className="text-xs">
@@ -206,6 +213,9 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 							className={`h-8 font-mono text-sm ${errors?.longitude ? "border-destructive" : ""}`}
 						/>
 						{errors?.longitude && <p className="text-xs text-destructive">{t(errors.longitude)}</p>}
+						{locationDiffs?.coords && currentLocation && (
+							<ChangeBadge label={t("diff.current")} current={currentLocation.longitude.toFixed(6)} />
+						)}
 					</div>
 				</div>
 
@@ -245,6 +255,9 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 							onChange={(e) => onLocationChange({ city: e.target.value })}
 							className="h-8 text-sm"
 						/>
+						{locationDiffs?.city && currentLocation && (
+							<ChangeBadge label={t("diff.current")} current={currentLocation.city || "—"} />
+						)}
 					</div>
 					<div className="space-y-1.5">
 						<Label htmlFor="address" className="text-xs">
@@ -257,6 +270,9 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 							onChange={(e) => onLocationChange({ address: e.target.value })}
 							className="h-8 text-sm"
 						/>
+						{locationDiffs?.address && currentLocation && (
+							<ChangeBadge label={t("diff.current")} current={currentLocation.address || "—"} />
+						)}
 					</div>
 				</div>
 			</div>
