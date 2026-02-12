@@ -1,58 +1,58 @@
 {
-	"page": {
-		"title": "Zgłoś stację",
-		"description": "Zgłoś nową stację BTS lub dodaj komórki do istniejącej. Twoje zgłoszenie zostanie zweryfikowane przez moderatorów."
+	"userPage": {
+		"title": "Moje zgłoszenia",
+		"description": "Stacje i komórki, które zgłosiłeś do weryfikacji."
 	},
-	"stationSelector": {
-		"title": "Wybierz stację",
-		"existingStation": "Istniejąca stacja",
-		"newStation": "Nowa stacja",
-		"searchPlaceholder": "Szukaj po ID stacji lub adresie...",
-		"noResults": "Nie znaleziono stacji",
-		"noAddress": "Brak adresu",
-		"region": "Województwo",
-		"gps": "GPS",
-		"noRegion": "Brak województwa",
-		"noGps": "Brak GPS",
-		"newStationHint": "Wypełnij poniżej dane stacji i lokalizacji.",
-		"deleteStation": "Usuń stację",
-		"deleteStationHint": "Wyszukaj stację, którą chcesz oznaczyć do usunięcia.",
-		"cellsCount_one": "{{count}} komórka",
-		"cellsCount_few": "{{count}} komórki",
-		"cellsCount_many": "{{count}} komórek"
-	},
-	"actionSelector": {
-		"title": "Akcja",
-		"update": "Aktualizuj stację",
-		"delete": "Oznacz do usunięcia"
-	},
-	"newStation": {
-		"title": "Dane stacji",
-		"stationId": "ID stacji",
-		"stationIdPlaceholder": "np. WAR001",
-		"stationIdHint": "Unikalny identyfikator stacji (zwykle prefix operatora + numer)",
-		"operator": "Operator",
-		"selectOperator": "Wybierz operatora",
-		"notes": "Notatki",
-		"notesPlaceholder": "Dodatkowe informacje o stacji..."
+	"detail": {
+		"title": "Rozpatrywanie zgłoszenia",
+		"readOnly": "To zgłoszenie jest tylko do odczytu. Nie można go edytować.",
+		"submitter": "Zgłaszający",
+		"createdAt": "Data zgłoszenia",
+		"noSubmitterNote": "Brak notatki od zgłaszającego",
+		"submitterNotes": "Notka zgłaszającego",
+		"reviewer": "Sprawdzający",
+		"noReviewerResponse": "Brak odpowiedzi od sprawdzającego",
+		"reviewNotes": "Notka sprawdzającego",
+		"reviewNotesPlaceholder": "Dodaj notatkę dla zgłaszającego (opcjonalnie)...",
+		"reviewedAt": "Data rozpatrzenia",
+		"reviewerResponse": "Odpowiedź sprawdzającego"
 	},
 	"locationPicker": {
 		"title": "Lokalizacja",
 		"fetchAddress": "Pobierz adres",
-		"latitude": "Szerokość geograficzna",
-		"longitude": "Długość geograficzna",
-		"region": "Województwo",
-		"selectRegion": "Wybierz województwo",
-		"city": "Miasto",
-		"cityPlaceholder": "np. Warszawa",
-		"address": "Adres",
-		"addressPlaceholder": "np. ul. Marszałkowska 1",
-		"nearbyLocations": "Pobliskie istniejące lokalizacje",
-		"stationsCount_one": "{{count}} stacja",
-		"stationsCount_few": "{{count}} stacje",
-		"stationsCount_many": "{{count}} stacji",
-		"useThis": "Użyj",
-		"createNewLocation": "Utwórz nową lokalizację tutaj"
+		"regionPlaceholder": "Wybierz województwo",
+		"cityPlaceholder": "Wpisz miasto...",
+		"addressPlaceholder": "Wpisz adres...",
+		"nearbyLocations": "Pobliskie stacje",
+		"createNewLocation": "Utwórz tutaj nową lokalizację"
+	},
+	"header": {
+		"reject": "Odrzuć zgłoszenie",
+		"approve": "Zatwierdź zgłoszenie"
+	},
+	"rejectApproveCard": {
+		"confirmReject": "Czy na pewno chcesz odrzucić to zgłoszenie?",
+		"confirmRejectDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu nie zostanie dodana do bazy danych.",
+		"confirmApprove": "Czy na pewno chcesz zatwierdzić to zgłoszenie?",
+		"confirmApproveDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu zostanie dodana do bazy danych, a zgłoszenie zostanie oznaczone jako zatwierdzone."
+	},
+	"deletionBanner": "To zgłoszenie dotyczy usunięcia {{stationId}}. Po zatwierdzeniu tej prośby, stacji zostanie przypisany status 'inactive'.",
+	"adminTitle": "Zarządzanie zgłoszeniami",
+	"adminDescription": "Zarządzaj zgłoszeniami dotyczącymi stacji bazowych.",
+	"submitNew": "Utwórz nowe zgłoszenie",
+	"stationInfo": {
+		"title": "Informacje o stacji",
+		"stationIdHint": "Unikalny identyfikator stacji, np. E12345"
+	},
+	"submissionSelector": {
+		"title": "Wybierz stację",
+		"existingStation": "Istniejąca stacja",
+		"newStationHint": "Wypełnij poniżej dane stacji i lokalizacji."
+	},
+	"actionSelector": {
+		"title": "Wybierz akcję",
+		"update": "Aktualizacja stacji",
+		"delete": "Usunięcie stacji"
 	},
 	"ratSelector": {
 		"title": "Technologie radiowe",
@@ -60,48 +60,11 @@
 		"noSelection": "Wybierz co najmniej jedną technologię, aby dodać komórki.",
 		"iotHint": "Komórki IoT można oznaczyć w tabelach LTE i NR odpowiednio jako NB-IoT i RedCap."
 	},
-	"cellDetails": {
-		"cells": "Komórki",
-		"cellsCount_one": "{{count}} komórka",
-		"cellsCount_few": "{{count}} komórki",
-		"cellsCount_many": "{{count}} komórek",
-		"addCell": "Dodaj komórkę",
-		"noCells": "Brak komórek. Kliknij 'Dodaj komórkę', aby dodać nową.",
-		"band": "Pasmo",
-		"duplex": "Duplex",
-		"selectBand": "Wybierz",
-		"actions": "Akcje",
-		"notes": "Notatki",
-		"notesPlaceholder": "np. pikokomórka",
-		"diffAdded": "Nowa",
-		"diffModified": "Zmieniona",
-		"diffDeleted": "Usunięta"
-	},
-	"form": {
-		"submit": "Wyślij",
-		"submitting": "Wysyłanie...",
-		"submitted": "Wysłano!",
-		"submitSuccess": "Twoje zgłoszenie zostało przyjęte i będzie zweryfikowane.",
-		"updateStation": "Aktualizacja stacji {{id}}",
-		"createStation": "Tworzenie nowej stacji {{id}}",
-		"selectStationFirst": "Najpierw wybierz lub utwórz stację",
-		"fillStationDetails": "Wypełnij dane stacji",
-		"deleteStationText": "Zgłoszenie usunięcia stacji {{id}}",
-		"submitterNotePlaceholder": "Dodaj notatkę wyjaśniającą zmiany (opcjonalnie)...",
-		"cellsCount_one": "{{count}} komórka",
-		"cellsCount_few": "{{count}} komórki",
-		"cellsCount_many": "{{count}} komórek"
-	},
 	"deleteStation": {
 		"title": "Usunięcie stacji",
 		"warning": "Stacja zostanie oznaczona do usunięcia. Moderator zweryfikuje Twoje zgłoszenie.",
 		"reason": "Powód usunięcia",
 		"reasonPlaceholder": "Dlaczego ta stacja powinna zostać usunięta?"
-	},
-	"reviewerResponse": "Odpowiedź administratora",
-	"common": {
-		"clear": "Wyczyść",
-		"loading": "Ładowanie..."
 	},
 	"validation": {
 		"selectStation": "Wybierz stację",
@@ -122,5 +85,33 @@
 		"nciRequired": "NCI jest wymagany",
 		"gnbidRequired": "gNBID jest wymagany",
 		"mustBePositive": "Wartość nie może być ujemna"
+	},
+	"form": {
+		"summary": "Pozostaw po sobie notatkę jeżeli jest taka potrzeba",
+		"summaryPlaceholder": "Dodaj notatkę wyjaśniającą zmiany (opcjonalnie)..."
+	},
+	"table": {
+		"cells": "Ilość komórek",
+		"empty": "Brak zgłoszeń do wyświetlenia",
+		"emptyHint": "Brak zgłoszeń pasujących do wybranych filtrów",
+		"emptyHintUser": "Nie złożyłeś jeszcze żadnych zgłoszeń. Zacznij od utworzenia nowego zgłoszenia"
+	},
+	"stationComments": {
+		"title": "Komentarze",
+		"noComments": "Brak komentarzy do tej stacji",
+		"deleteConfirm": "Czy na pewno chcesz usunąć ten komentarz?",
+		"deleted": "Komentarz usunięty",
+		"deleteFailed": "Nie udało się usunąć komentarza"
+	},
+	"diff": {
+		"current": "Aktualnie:",
+		"was": "Było:",
+		"locationChanged": "Lokalizacja została zmieniona"
+	},
+	"toast": {
+		"submitted": "Zgłoszenie zostało wysłane",
+		"saved": "Zgłoszenie zostało zapisane",
+		"approved": "Zgłoszenie zostało zatwierdzone",
+		"rejected": "Zgłoszenie zostało odrzucone"
 	}
 }

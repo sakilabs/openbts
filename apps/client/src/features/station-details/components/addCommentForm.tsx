@@ -138,13 +138,13 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
 				</div>
 
 				<Button type="submit" size="sm" disabled={isDisabled}>
-					<span>{mutation.isPending ? t("comments.posting") : t("comments.postComment")}</span>
+					<span>{mutation.isPending ? t("common:actions.submitting") : t("comments.postComment")}</span>
 					{mutation.isPending ? <Spinner data-icon="inline-end" /> : <HugeiconsIcon icon={SentIcon} className="size-4" data-icon="inline-end" />}
 				</Button>
 			</div>
 
 			{mutation.isError && (
-				<p className="text-sm text-destructive">{mutation.error instanceof Error ? mutation.error.message : t("comments.postError")}</p>
+				<p className="text-sm text-destructive">{mutation.error instanceof Error ? mutation.error.message : t("common:actions.error")}</p>
 			)}
 		</form>
 	);

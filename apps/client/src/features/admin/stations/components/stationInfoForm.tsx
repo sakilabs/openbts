@@ -40,7 +40,7 @@ export function StationInfoForm({
 	operators,
 	selectedOperator,
 }: StationInfoFormProps) {
-	const { t } = useTranslation("admin");
+	const { t } = useTranslation(["submissions", "common"]);
 
 	return (
 		<div className="space-y-3">
@@ -52,11 +52,11 @@ export function StationInfoForm({
 				<div className="px-4 py-3 space-y-4">
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div className="space-y-2">
-							<Label>{t("stationInfo.stationId")}</Label>
+							<Label>{t("common:labels.stationId")}</Label>
 							<Input value={stationId} onChange={(e) => onStationIdChange(e.target.value)} maxLength={16} />
 						</div>
 						<div className="space-y-2">
-							<Label>{t("stationInfo.operator")}</Label>
+							<Label>{t("common:labels.operator")}</Label>
 							<Select
 								value={operatorId !== null ? operatorId.toString() : ""}
 								onValueChange={(v) => onOperatorIdChange(v ? Number.parseInt(v, 10) : null)}
@@ -69,7 +69,7 @@ export function StationInfoForm({
 												{selectedOperator.name}
 											</div>
 										) : (
-											t("stationInfo.selectOperator")
+											t("common:placeholder.selectOperator")
 										)}
 									</SelectValue>
 								</SelectTrigger>
@@ -87,12 +87,12 @@ export function StationInfoForm({
 						</div>
 					</div>
 					<div className="space-y-2">
-						<Label>{t("stationInfo.notes")}</Label>
+						<Label>{t("common:labels.notes")}</Label>
 						<Textarea value={notes} onChange={(e) => onNotesChange(e.target.value)} rows={3} />
 					</div>
 					<div className="flex items-center gap-2">
 						<Checkbox checked={isConfirmed} onCheckedChange={(checked) => onIsConfirmedChange(checked === true)} />
-						<Label>{t("stationInfo.confirmed")}</Label>
+						<Label>{t("common:labels.confirmed")}</Label>
 					</div>
 				</div>
 			</div>

@@ -31,17 +31,22 @@
 		"saving": "Zapisywanie...",
 		"saved": "Zapisano",
 		"confirm": "Zatwierdź",
-		"revert": "Cofnij",
+		"revert": "Cofnij zmiany",
 		"share": "Udostępnij",
 		"view": "Zobacz"
 	},
 	"labels": {
+		"id": "ID",
 		"stationId": "ID Stacji",
 		"operator": "Operator",
-		"region": "Region",
+		"region": "Województwo",
+		"filters": "Filtry",
 		"latitude": "Szerokość geograficzna",
 		"longitude": "Długość geograficzna",
 		"coordinates": "Współrzędne",
+		"location": "Lokalizacja",
+		"standards": "Standardy",
+		"standard": "Standard",
 		"notes": "Notatki",
 		"address": "Adres",
 		"city": "Miasto",
@@ -49,8 +54,49 @@
 		"type": "Typ",
 		"created": "Utworzono",
 		"updated": "Zaktualizowano",
+		"station": "Stacja",
+		"stations": "Stacje",
 		"date": "Data",
-		"band": "Pasmo"
+		"band": "Pasmo",
+		"bands": "Pasma",
+		"otherOperators_one": "{{count}} inny operator",
+		"otherOperators_few": "{{count}} innych operatorów",
+		"otherOperators_many": "{{count}} innych operatorów",
+		"selected_one": "{{count}} wybrany",
+		"selected_few": "{{count}} wybranych",
+		"selected_many": "{{count}} wybranych",
+		"search": "Wyszukiwanie",
+		"none": "Żadne",
+		"confirmed": "Potwierdzona",
+		"cells": "komórki",
+		"newStation": "Nowa stacja",
+		"submitted": "Zgłoszone",
+		"reviewed": "Przejrzane",
+		"bands_one": "{{count}} pasmo",
+		"bands_few": "{{count}} pasma",
+		"bands_many": "{{count}} pasm",
+		"standard_one": "{{count}} standard",
+		"standard_few": "{{count}} standardy",
+		"standard_many": "{{count}} standardów",
+		"operators_one": "{{count}} operator",
+		"operators_few": "{{count}} operatorów",
+		"operators_many": "{{count}} operatorów",
+		"filtersActive_one": "{{count}} aktywny filtr",
+		"filtersActive_few": "{{count}} aktywne filtry",
+		"filtersActive_many": "{{count}} aktywnych filtrów"
+	},
+	"placeholder": {
+		"search": "Szukaj...",
+		"notes": "Dodatkowe informacje (opcjonalnie)...",
+		"selectRegions": "Wybierz województwa...",
+		"selectBand": "Wybierz pasmo...",
+		"selectBands": "Wybierz pasma...",
+		"selectOperator": "Wybierz operatora...",
+		"selectOperators": "Wybierz operatorów...",
+		"noOperatorsFound": "Nie znaleziono operatorów",
+		"noBandsFound": "Nie znaleziono pasm",
+		"noRegionsFound": "Nie znaleziono województw",
+		"errorFetching": "Błąd podczas pobierania danych"
 	},
 	"status": {
 		"all": "Wszystkie",
@@ -59,7 +105,8 @@
 		"rejected": "Odrzucone",
 		"active": "Aktywne",
 		"inactive": "Nieaktywne",
-		"expired": "Wygasło"
+		"expired": "Wygasło",
+		"never": "Nigdy"
 	},
 	"submissionType": {
 		"all": "Wszystkie",
@@ -103,6 +150,12 @@
 		"title": "Coś poszło nie tak",
 		"description": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie lub odśwież stronę.",
 		"tryAgain": "Spróbuj ponownie",
-		"reload": "Odśwież stronę"
+		"reload": "Odśwież stronę",
+		"toast": "Wystąpił błąd podczas przetwarzania twojej akcji. Spróbuj ponownie później (zobacz konsolę po więcej szczegółów)"
+	},
+	"notFound": {
+		"gps": "Brak współrzędnych GPS",
+		"region": "Brak województwa",
+		"address": "Brak adresu"
 	}
 }

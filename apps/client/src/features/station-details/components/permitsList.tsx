@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { DocumentCodeIcon, Calendar03Icon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { DocumentCodeIcon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -111,7 +111,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
 				<div className="size-10 rounded-full bg-destructive/5 flex items-center justify-center text-destructive/50 mb-3">
 					<HugeiconsIcon icon={AlertCircleIcon} className="size-5" />
 				</div>
-				<p className="text-sm">{t("permits.loadError")}</p>
+				<p className="text-sm">{t("common:placeholder.errorFetching")}</p>
 			</div>
 		);
 	}
@@ -148,7 +148,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n }: CollapsiblePermitG
 				<HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-muted-foreground" />
 				<span className="font-bold text-sm">{rat}</span>
 				<span className="text-xs text-muted-foreground">({t("permits.permitsCount", { count: ratPermits.length })})</span>
-				<HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5 ml-auto text-muted-foreground transition-transform [[data-open]_&]:rotate-180" />
+				<HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5 ml-auto text-muted-foreground transition-transform in-data-open:rotate-180" />
 			</CollapsibleTrigger>
 
 			<CollapsibleContent>
@@ -174,7 +174,11 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n }: CollapsiblePermitG
 										<td className="px-4 py-2.5 font-mono font-medium">
 											<div className="flex items-center gap-1.5">
 												<span>
-													{permit.band?.value ? (Number(permit.band.value) === 0 ? t("cells.unknownBand") : `${permit.band.value} MHz`) : "-"}
+													{permit.band?.value
+														? Number(permit.band.value) === 0
+															? t("stations:cells.unknownBand")
+															: `${permit.band.value} MHz`
+														: "-"}
 												</span>
 												{permit.band?.variant === "railway" && (
 													<Tooltip>
@@ -206,10 +210,9 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n }: CollapsiblePermitG
 										<td className="px-4 py-2.5">
 											{isExpired ? (
 												<div className="flex items-center gap-2">
-													<HugeiconsIcon icon={Calendar03Icon} className="size-3.5 text-destructive" />
 													<span className="text-destructive font-medium">{expiryDate.toLocaleDateString(i18n.language)}</span>
 													<span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
-														{t("permits.expired")}
+														{t("common:status.expired")}
 													</span>
 												</div>
 											) : (

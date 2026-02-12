@@ -59,7 +59,7 @@ export function ResponsiveFilters({
 			<Sheet open={isOpen} onOpenChange={onOpenChange}>
 				<SheetContent side="left" className="w-72 p-0">
 					<SheetHeader className="border-b px-4 py-3">
-						<SheetTitle>{t("filters.title")}</SheetTitle>
+						<SheetTitle>{t("common:labels.filters")}</SheetTitle>
 					</SheetHeader>
 					<div className="flex-1 overflow-y-auto">
 						<StationsFilters {...filterProps} isSheet />

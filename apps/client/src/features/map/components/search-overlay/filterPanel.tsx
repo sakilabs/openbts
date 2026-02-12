@@ -47,7 +47,7 @@ export function FilterPanel({
 	onClearAllBands,
 	onClearFilters,
 }: FilterPanelProps) {
-	const { t, i18n } = useTranslation(["map", "common"]);
+	const { t, i18n } = useTranslation(["main", "common"]);
 	const [showOtherOperators, setShowOtherOperators] = useState(false);
 
 	const { data: stats } = useQuery({
@@ -62,14 +62,14 @@ export function FilterPanel({
 
 	const dataSources = [
 		{ id: "internal", label: t("filters.internalDb"), icon: Database02Icon },
-		{ id: "uke", label: t("filters.ukePermits"), icon: File02Icon },
+		{ id: "uke", label: t("stationDetails:tabs.permits"), icon: File02Icon },
 	];
 
 	return (
 		<div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 relative z-15 max-h-[calc(100vh-8rem)] flex flex-col">
 			<div className="px-4 py-2.5 border-b bg-muted/30 flex items-center gap-2 shrink-0">
 				<HugeiconsIcon icon={FilterIcon} className="size-4" />
-				<h3 className="font-medium text-sm">{t("filters.title")}</h3>
+				<h3 className="font-medium text-sm">{t("common:labels.filters")}</h3>
 				{activeFilterCount > 0 && (
 					<button
 						type="button"
@@ -135,8 +135,9 @@ export function FilterPanel({
 							>
 								<HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
 								<span>
-									{t("filters.otherOperators", { count: otherOperators.length })}
-									{hasSelectedOther && ` (${otherOperators.filter((op) => filters.operators.includes(op.mnc)).length} ${t("filters.selected")})`}
+									{t("common:labels.otherOperators", { count: otherOperators.length })}
+									{hasSelectedOther &&
+										` (${t("common:labels.selected", { count: otherOperators.filter((op) => filters.operators.includes(op.mnc)).length })})`}
 								</span>
 							</button>
 
@@ -156,7 +157,7 @@ export function FilterPanel({
 
 				<div>
 					<div className="flex items-center justify-between mb-1.5">
-						<h4 className="ttext-xs font-medium uppercase tracking-wider text-muted-foreground">{t("filters.standard")}</h4>
+						<h4 className="ttext-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.standard")}</h4>
 						<div className="flex gap-1">
 							<button type="button" onClick={onSelectAllRats} className="text-xs text-primary underline-offset-4 hover:underline">
 								{t("common:status.all")}
@@ -167,7 +168,7 @@ export function FilterPanel({
 								onClick={onClearAllRats}
 								className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
 							>
-								{t("filters.none")}
+								{t("common:labels.none")}
 							</button>
 						</div>
 					</div>
@@ -193,7 +194,7 @@ export function FilterPanel({
 
 				<div>
 					<div className="flex items-center justify-between mb-1.5">
-						<h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("filters.band")}</h4>
+						<h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.band")} (MHz)</h4>
 						<div className="flex gap-1">
 							<button type="button" onClick={onSelectAllBands} className="text-xs text-primary underline-offset-4 hover:underline">
 								{t("common:status.all")}
@@ -204,7 +205,7 @@ export function FilterPanel({
 								onClick={onClearAllBands}
 								className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
 							>
-								{t("filters.none")}
+								{t("common:labels.none")}
 							</button>
 						</div>
 					</div>
@@ -231,10 +232,10 @@ export function FilterPanel({
 			{activeFilterCount > 0 && (
 				<div className="px-4 py-2.5 border-t bg-muted/50 shrink-0">
 					<p className="text-xs text-muted-foreground">
-						<span className="font-medium text-foreground">{t("filters.filtersActive", { count: activeFilterCount })}</span>
-						{filters.operators.length > 0 && <> · {t("filters.operators", { count: filters.operators.length })}</>}
-						{filters.rat.length > 0 && <> · {t("filters.techs", { count: filters.rat.length })}</>}
-						{filters.bands.length > 0 && <> · {t("filters.bands", { count: filters.bands.length })}</>}
+						<span className="font-medium text-foreground">{t("common:labels.filtersActive", { count: activeFilterCount })}</span>
+						{filters.operators.length > 0 && <> · {t("common:labels.operators", { count: filters.operators.length })}</>}
+						{filters.rat.length > 0 && <> · {t("common:labels.standard", { count: filters.rat.length })}</>}
+						{filters.bands.length > 0 && <> · {t("common:labels.bands", { count: filters.bands.length })}</>}
 					</p>
 				</div>
 			)}
@@ -257,11 +258,11 @@ export function FilterPanel({
 											hour: "2-digit",
 											minute: "2-digit",
 										})
-									: t("stats.never")}
+									: t("common:status.never")}
 							</span>
 						</div>
 						<div className="flex justify-between">
-							<span className="text-muted-foreground">{t("stats.ukePermits")}:</span>
+							<span className="text-muted-foreground">{t("stationDetails:tabs.permits")}:</span>
 							<span className="font-medium tabular-nums">
 								{stats.lastUpdated.stations_permits
 									? new Date(stats.lastUpdated.stations_permits).toLocaleDateString(i18n.language, {
@@ -271,7 +272,7 @@ export function FilterPanel({
 											hour: "2-digit",
 											minute: "2-digit",
 										})
-									: t("stats.never")}
+									: t("common:status.never")}
 							</span>
 						</div>
 						<div className="flex justify-between">

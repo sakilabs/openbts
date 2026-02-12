@@ -29,6 +29,7 @@ type LocationsFiltersProps = {
 	searchQuery: string;
 	onFiltersChange: (filters: LocationFilters) => void;
 	onRegionsChange: (regionIds: number[]) => void;
+	onClearAllFilters: () => void;
 	onSearchQueryChange: (query: string) => void;
 	locationCount: number;
 	totalLocations?: number;
@@ -43,6 +44,7 @@ export function LocationsFilters({
 	searchQuery: parentSearchQuery,
 	onFiltersChange,
 	onRegionsChange,
+	onClearAllFilters,
 	onSearchQueryChange,
 	locationCount,
 	totalLocations,
@@ -80,8 +82,7 @@ export function LocationsFilters({
 	};
 
 	const handleClearFilters = () => {
-		onFiltersChange({ operators: [] });
-		onRegionsChange([]);
+		onClearAllFilters();
 	};
 
 	const regionChipsRef = useRef<HTMLDivElement>(null);
@@ -89,7 +90,7 @@ export function LocationsFilters({
 	return (
 		<aside className={cn("shrink-0 overflow-y-auto h-full", isSheet ? "w-full" : "w-72 border-r bg-muted/20")}>
 			<div className="p-3 space-y-4">
-				<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("locations.filters.search")}</span>
+				<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("common:labels.search")}</span>
 				<div className="relative">
 					<div className="rounded-lg border bg-background">
 						<div className="flex items-center gap-1 px-3 py-2">
@@ -98,7 +99,7 @@ export function LocationsFilters({
 								type="text"
 								value={localSearch}
 								onChange={(e) => setLocalSearch(e.target.value)}
-								placeholder={t("locations.searchPlaceholder")}
+								placeholder={t("common:placeholder.search")}
 								className="flex-1 min-w-16 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
 							/>
 							{localSearch && (
@@ -114,7 +115,7 @@ export function LocationsFilters({
 
 				{!isSheet && (
 					<div className="flex items-center justify-between">
-						<h2 className="font-semibold text-sm">{t("locations.filters.title")}</h2>
+						<h2 className="font-semibold text-sm">{t("common:labels.filters")}</h2>
 						{activeFilterCount > 0 && (
 							<button type="button" onClick={handleClearFilters} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
 								{t("common:actions.clearAll")}
@@ -155,9 +156,9 @@ export function LocationsFilters({
 							>
 								<HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
 								<span>
-									{t("locations.filters.otherOperators", { count: otherOperators.length })}
+									{t("common:labels.otherOperators", { count: otherOperators.length })}
 									{hasSelectedOther &&
-										` (${t("locations.filters.selected", { count: otherOperators.filter((op) => filters.operators.includes(op.mnc)).length })})`}
+										` (${t("common:labels.selected", { count: otherOperators.filter((op) => filters.operators.includes(op.mnc)).length })})`}
 								</span>
 							</button>
 
@@ -200,7 +201,7 @@ export function LocationsFilters({
 								const region = regions.find((r) => r.id === regionId);
 								return region ? <ComboboxChip key={regionId}>{region.name}</ComboboxChip> : null;
 							})}
-							<ComboboxChipsInput placeholder={selectedRegions.length === 0 ? t("locations.regionPlaceholder") : ""} />
+							<ComboboxChipsInput placeholder={selectedRegions.length === 0 ? t("common:placeholder.selectRegions") : ""} />
 						</ComboboxChips>
 						<ComboboxContent anchor={regionChipsRef}>
 							<ComboboxList>
@@ -217,7 +218,7 @@ export function LocationsFilters({
 
 				<div className="text-xs text-muted-foreground pt-2 border-t">
 					{totalLocations !== undefined
-						? t("locations.showingLocationsOfTotal", { count: locationCount, total: totalLocations.toLocaleString(i18n.language) })
+						? t("main:filters.showingLocationsOfTotal", { count: locationCount, total: totalLocations.toLocaleString(i18n.language) })
 						: t("locations.showingLocations", { count: locationCount })}
 				</div>
 			</div>

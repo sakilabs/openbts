@@ -112,11 +112,13 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 	const mutation = useMutation({
 		mutationFn: createSubmission,
 		onSuccess: () => {
-			toast.success(t("form.submitSuccess"));
+			toast.success(t("toast.submitted"));
 			form.reset();
 			setShowErrors(false);
 		},
-		onError: showApiError,
+		onError: () => {
+			toast.error(t("common:error.toast"));
+		},
 	});
 
 	const handleModeChange = (newMode: SubmissionMode) => {
@@ -405,19 +407,7 @@ function SubmitSection({
 
 	const isDeleteAction = action === "delete";
 
-	const statusText = isDeleteAction
-		? selectedStation
-			? t("form.deleteStationText", { id: selectedStation.station_id })
-			: t("form.selectStationFirst")
-		: mode === "existing"
-			? selectedStation
-				? t("form.updateStation", { id: selectedStation.station_id })
-				: t("form.selectStationFirst")
-			: newStation.station_id
-				? t("form.createStation", { id: newStation.station_id })
-				: t("form.fillStationDetails");
-
-	const notePlaceholder = isDeleteAction ? t("deleteStation.reasonPlaceholder") : t("form.submitterNotePlaceholder");
+	const notePlaceholder = isDeleteAction ? t("deleteStation.reasonPlaceholder") : t("form.summaryPlaceholder");
 
 	const buttonIcon = isSuccess ? Tick02Icon : SentIcon;
 
@@ -427,10 +417,7 @@ function SubmitSection({
 	return (
 		<div className="border rounded-xl overflow-hidden">
 			<div className="px-4 py-3 bg-muted/30 space-y-3">
-				<div className="text-xs text-muted-foreground">
-					{statusText}
-					{!isDeleteAction && cellsCount > 0 && <span className="ml-1">· {t("form.cellsCount", { count: cellsCount })}</span>}
-				</div>
+				{!isDeleteAction && <div className="text-xs text-muted-foreground">{t("form.summary")}</div>}
 				{isDeleteAction && <div className="text-xs text-amber-600 dark:text-amber-500">{t("deleteStation.warning")}</div>}
 				{(mode === "new" || selectedStation) && (
 					<Textarea

@@ -65,7 +65,6 @@ export const handle: RouteHandle = {
 
 export default function ClfExportPage() {
 	const { t } = useTranslation("clfExport");
-	const { t: tCommon } = useTranslation("common");
 
 	const { data: operators = [] } = useQuery({
 		queryKey: ["operators"],
@@ -165,7 +164,7 @@ export default function ClfExportPage() {
 					className="space-y-6"
 				>
 					<div className="space-y-2">
-						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("form.operators")}</Label>
+						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("common:labels.operator")}</Label>
 						<form.Field name="operators">
 							{(field) => (
 								<Combobox
@@ -186,12 +185,12 @@ export default function ClfExportPage() {
 										})}
 										<ComboboxChipsInput
 											className="text-base md:text-sm"
-											placeholder={field.state.value.length === 0 ? t("form.selectOperators") : ""}
+											placeholder={field.state.value.length === 0 ? t("common:placeholder.selectOperators") : ""}
 										/>
 									</ComboboxChips>
 									<ComboboxContent anchor={operatorChipsRef}>
 										<ComboboxList>
-											<ComboboxEmpty>{t("form.noOperatorsFound")}</ComboboxEmpty>
+											<ComboboxEmpty>{t("common:placeholder.noOperatorsFound")}</ComboboxEmpty>
 											{operators.map((operator) => (
 												<ComboboxItem key={operator.mnc} value={operator}>
 													<div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
@@ -210,7 +209,7 @@ export default function ClfExportPage() {
 					<Separator />
 
 					<div className="space-y-2">
-						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("form.regions")}</Label>
+						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("common:labels.region")}</Label>
 						<form.Field name="regions">
 							{(field) => (
 								<div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -239,7 +238,7 @@ export default function ClfExportPage() {
 					<Separator />
 
 					<div className="space-y-2">
-						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("form.standard")}</Label>
+						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("common:labels.standard")}</Label>
 						<p className="text-xs text-muted-foreground">{t("form.standardHint")}</p>
 						<form.Field name="rat">
 							{(field) => (
@@ -270,7 +269,7 @@ export default function ClfExportPage() {
 					<Separator />
 
 					<div className="space-y-2">
-						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("form.bands")}</Label>
+						<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("common:labels.band")} (MHz)</Label>
 						<p className="text-xs text-muted-foreground">{t("form.bandsHint")}</p>
 						<form.Field name="bands">
 							{(field) => (
@@ -341,7 +340,7 @@ export default function ClfExportPage() {
 						<a href="https://netmonster.app/#docs-user-about-ntm" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
 							NetMonster
 						</a>{" "}
-						{tCommon("and")}{" "}
+						{t("common:and")}{" "}
 						<a
 							href="https://netmonitor.ing/docs/cell-database-default/"
 							target="_blank"

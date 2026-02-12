@@ -7,7 +7,7 @@ type AutocompleteDropdownProps = {
 };
 
 export function AutocompleteDropdown({ options, onSelect }: AutocompleteDropdownProps) {
-	const { t } = useTranslation("map");
+	const { t } = useTranslation("main");
 
 	if (options.length === 0) return null;
 

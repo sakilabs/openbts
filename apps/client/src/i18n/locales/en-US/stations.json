@@ -1,37 +1,41 @@
 {
-	"title": "Stations List",
-	"breadcrumb": "Stations List",
-	"filters": {
-		"title": "Filters",
-		"search": "Search",
-		"searchPlaceholder": "Search stations...",
-		"searchResults": "{{count}} search results",
-		"network": "Operator",
-		"region": "Region",
-		"selectRegions": "Select regions...",
-		"standard": "Standard",
-		"band": "Band (MHz)",
-		"selectBands": "Select bands...",
-		"noRegionsFound": "No regions found",
-		"noBandsFound": "No bands found",
-		"showingStations": "Showing {{count}} stations",
-		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
-		"otherOperators_one": "{{count}} other operator",
-		"otherOperators_other": "{{count}} other operators",
-		"selected": "selected"
-	},
-	"table": {
-		"stationId": "Station ID",
-		"operator": "Operator",
-		"technologies": "Technologies",
-		"bands": "Bands",
-		"location": "Location",
-		"region": "Region",
-		"updatedAt": "Updated",
-		"noStationsFound": "No stations found",
-		"tryAdjustingFilters": "Try adjusting your filters"
+	"header": {
+		"deleteStation": "Delete Station",
+		"confirmDelete": "Are you sure you want to delete the station?",
+		"confirmDeleteDesc": "After deletion, the station will be marked as 'inactive' and will no longer be visible on the map or in search results.",
+		"createStation": "Create Station"
 	},
 	"actions": {
-		"newStation": "New Station"
+		"newStation": "Create New Station"
+	},
+	"cells": {
+		"cellsCount_one": "{{count}} cell",
+		"cellsCount_few": "{{count}} cells",
+		"cellsCount_many": "{{count}} cells",
+		"notesPlaceholder": "e.g. picocell",
+		"addCell": "Add Cell",
+		"noRats": "No cells found for this station. Add RATs to add cells",
+		"noStationCells": "No cells found for this station.",
+		"noCells": "No cells. Click \"Add Cell\" to create.",
+		"diffAdded": "new",
+		"diffModified": "modified",
+		"diffDeleted": "deleted",
+		"cellNotConfirmed": "This cell is not confirmed",
+		"carrier": "Carrier",
+		"unknownBand": "Unknown Band"
+	},
+	"stationsAtLocation": "Stations at this location",
+	"stationsCount_one": "{{count}} station",
+	"stationsCount_few": "{{count}} stations",
+	"stationsCount_many": "{{count}} stations",
+	"toast": {
+		"locationSaved": "Location has been saved",
+		"deleted": "Station has been deleted",
+		"created": "Station has been created",
+		"stationIdRquired": "Station ID is required",
+		"operatorRequired": "Operator is required",
+		"locationRequired": "Location is required",
+		"cellsSaved": "Cells have been saved",
+		"noBands": "No available bands for {{rat}}"
 	}
 }

@@ -30,7 +30,7 @@ type SubmissionDetailHeaderProps = {
 
 export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, onApprove, onReject, onSave }: SubmissionDetailHeaderProps) {
 	const navigate = useNavigate();
-	const { t } = useTranslation(["admin", "common"]);
+	const { t } = useTranslation(["submissions", "common"]);
 
 	return (
 		<div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm transition-all">
@@ -68,7 +68,7 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
 
 			<div className="flex items-center gap-2">
 				{isReadOnly ? (
-					<div className="text-sm font-medium text-muted-foreground px-4">{t("submissionDetail.readOnly")}</div>
+					<div className="text-sm font-medium text-muted-foreground px-4">{t("detail.readOnly")}</div>
 				) : (
 					<>
 						<AlertDialog>
@@ -82,17 +82,17 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
 									/>
 								}
 							>
-								{t("submissionDetail.reject")}
+								{t("header.reject")}
 							</AlertDialogTrigger>
 							<AlertDialogContent>
 								<AlertDialogHeader>
-									<AlertDialogTitle>{t("submissionDetail.confirmReject")}</AlertDialogTitle>
-									<AlertDialogDescription>{t("submissionDetail.confirmRejectDesc")}</AlertDialogDescription>
+									<AlertDialogTitle>{t("rejectApproveCard.confirmReject")}</AlertDialogTitle>
+									<AlertDialogDescription>{t("rejectApproveCard.confirmRejectDesc")}</AlertDialogDescription>
 								</AlertDialogHeader>
 								<AlertDialogFooter>
 									<AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
 									<AlertDialogAction variant="destructive" onClick={onReject} disabled={isProcessing}>
-										{t("submissionDetail.reject")}
+										{t("header.reject")}
 									</AlertDialogAction>
 								</AlertDialogFooter>
 							</AlertDialogContent>
@@ -103,17 +103,17 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
 									<Button variant="default" size="sm" disabled={isProcessing} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm" />
 								}
 							>
-								{t("submissionDetail.approve")}
+								{t("header.approve")}
 							</AlertDialogTrigger>
 							<AlertDialogContent>
 								<AlertDialogHeader>
-									<AlertDialogTitle>{t("submissionDetail.confirmApprove")}</AlertDialogTitle>
-									<AlertDialogDescription>{t("submissionDetail.confirmApproveDesc")}</AlertDialogDescription>
+									<AlertDialogTitle>{t("rejectApproveCard.confirmApprove")}</AlertDialogTitle>
+									<AlertDialogDescription>{t("rejectApproveCard.confirmApproveDesc")}</AlertDialogDescription>
 								</AlertDialogHeader>
 								<AlertDialogFooter>
 									<AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
-									<AlertDialogAction className="bg-emerald-600 hover:bg-emerald-700" onClick={onApprove} disabled={isProcessing}>
-										{t("submissionDetail.approve")}
+									<AlertDialogAction className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={onApprove} disabled={isProcessing}>
+										{t("header.approve")}
 									</AlertDialogAction>
 								</AlertDialogFooter>
 							</AlertDialogContent>

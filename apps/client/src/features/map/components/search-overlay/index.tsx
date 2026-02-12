@@ -45,7 +45,7 @@ export function MapSearchOverlay({
 	onLocationSelect,
 	onStationSelect,
 }: MapSearchOverlayProps) {
-	const { t } = useTranslation("map");
+	const { t } = useTranslation("main");
 	const [showFilters, setShowFilters] = useState(false);
 	const filterPanelRef = useRef<HTMLFieldSetElement>(null);
 
@@ -227,7 +227,7 @@ export function MapSearchOverlay({
 								onKeyDown={handleKeyDown}
 								onFocus={handleInputFocus}
 								onClick={handleInputClick}
-								placeholder={parsedFilters.length > 0 ? t("search.placeholderAddMore") : t("search.placeholder")}
+								placeholder={parsedFilters.length > 0 ? t("search.placeholderAddMore") : t("common:placeholder.search")}
 								className="flex-1 min-w-25 bg-transparent text-base md:text-sm outline-none placeholder:text-muted-foreground/60"
 							/>
 						</div>
@@ -258,7 +258,7 @@ export function MapSearchOverlay({
 							)}
 						>
 							<HugeiconsIcon icon={SlidersHorizontalIcon} className="size-4" />
-							<span className="hidden sm:inline">{t("filters.button")}</span>
+							<span className="hidden sm:inline">{t("common:labels.filters")}</span>
 							{activeFilterCount > 0 && (
 								<span
 									className={cn(
@@ -337,7 +337,7 @@ export function MapSearchOverlay({
 						</Tooltip>
 						<div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
 							<span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
-								{filters.source === "uke" ? t("filters.ukePermits") : t("filters.internalDb")}
+								{filters.source === "uke" ? t("stationDetails:tabs.permits") : t("filters.internalDb")}
 							</span>
 							<div className="w-px h-2 bg-border/60" />
 							<span className="text-[8px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">

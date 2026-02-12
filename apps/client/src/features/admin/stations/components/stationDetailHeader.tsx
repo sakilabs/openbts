@@ -31,7 +31,7 @@ type StationDetailHeaderProps = {
 };
 
 export function StationDetailHeader({ station, stationId, isCreateMode, selectedOperator, isSaving, onSave, onRevert }: StationDetailHeaderProps) {
-	const { t } = useTranslation(["admin", "common"]);
+	const { t } = useTranslation(["stations", "common"]);
 	const navigate = useNavigate();
 	const deleteMutation = useDeleteStationMutation();
 
@@ -39,11 +39,11 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 		if (!station) return;
 		deleteMutation.mutate(station.id, {
 			onSuccess: () => {
-				toast.success(t("toast.stationDeleted"));
+				toast.success(t("toast.deleted"));
 				navigate("/admin/stations");
 			},
 			onError: () => {
-				toast.error(t("toast.deleteFailed"));
+				toast.error(t("common:error.toast"));
 			},
 		});
 	};
@@ -64,7 +64,7 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 					className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2 hover:bg-muted/50 transition-colors"
 				>
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-					<span className="font-medium">{t("header.back")}</span>
+					<span className="font-medium">{t("common:actions.back")}</span>
 				</Button>
 			</div>
 
@@ -76,7 +76,7 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 						</div>
 					)}
 					<span className="font-bold text-sm text-foreground tracking-tight truncate min-w-0">
-						{isCreateMode ? t("header.newStation") : station?.operator.name}
+						{isCreateMode ? t("common:labels.newStation") : station?.operator.name}
 					</span>
 					<div className="w-px h-3.5 bg-border/60 shrink-0" />
 					<span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20 shadow-sm shrink-0">
@@ -99,9 +99,9 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 								<AlertDialogDescription>{t("header.confirmDeleteDesc")}</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter>
-								<AlertDialogCancel>{t("header.cancel")}</AlertDialogCancel>
+								<AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
 								<AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
-									{deleteMutation.isPending ? <Spinner /> : t("header.delete")}
+									{deleteMutation.isPending ? <Spinner /> : t("header.deleteStation")}
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>

@@ -112,7 +112,7 @@ export const CellEditRow = memo(function CellEditRow({
 			<td className="px-3 py-1">
 				<Input
 					type="text"
-					placeholder={t("submissions:cellDetails.notesPlaceholder", "Notes")}
+					placeholder={t("stations:cells.notesPlaceholder")}
 					value={localCell.notes}
 					onChange={(e) => onChange(localCell._localId, { notes: e.target.value })}
 					className="h-7 w-28 text-sm"

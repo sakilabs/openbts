@@ -4,26 +4,26 @@ export function getTableHeaders(rat: string, t: TFunction, options?: { showConfi
 	const showConfirmed = options?.showConfirmed ?? true;
 	switch (rat) {
 		case "GSM": {
-			const headers = [t("cells.band"), t("cells.duplex"), "LAC", "CID", "E-GSM", t("cells.notes")];
-			if (showConfirmed) headers.push(t("cells.confirmed"));
+			const headers = [t("common:labels.band"), "Duplex", "LAC", "CID", "E-GSM", t("common:labels.notes")];
+			if (showConfirmed) headers.push(t("common:labels.confirmed"));
 			headers.push("");
 			return headers;
 		}
 		case "UMTS": {
-			const headers = [t("cells.band"), t("cells.duplex"), "LAC", "RNC", "CID", "LongCID", t("cells.carrier"), t("cells.notes")];
-			if (showConfirmed) headers.push(t("cells.confirmed"));
+			const headers = [t("common:labels.band"), "Duplex", "LAC", "RNC", "CID", "LongCID", t("stations:cells.carrier"), t("common:labels.notes")];
+			if (showConfirmed) headers.push(t("common:labels.confirmed"));
 			headers.push("");
 			return headers;
 		}
 		case "LTE": {
-			const headers = [t("cells.band"), t("cells.duplex"), "TAC", "eNBID", "CLID", "E-CID", "NB-IoT", t("cells.notes")];
-			if (showConfirmed) headers.push(t("cells.confirmed"));
+			const headers = [t("common:labels.band"), "Duplex", "TAC", "eNBID", "CLID", "E-CID", "NB-IoT", t("common:labels.notes")];
+			if (showConfirmed) headers.push(t("common:labels.confirmed"));
 			headers.push("");
 			return headers;
 		}
 		case "NR": {
-			const headers = [t("cells.band"), t("cells.duplex"), "TAC", "gNBID", "CLID", "NCI", "PCI", "RedCap", t("cells.notes")];
-			if (showConfirmed) headers.push(t("cells.confirmed"));
+			const headers = [t("common:labels.band"), "Duplex", "TAC", "gNBID", "CLID", "NCI", "PCI", "RedCap", t("common:labels.notes")];
+			if (showConfirmed) headers.push(t("common:labels.confirmed"));
 			headers.push("");
 			return headers;
 		}

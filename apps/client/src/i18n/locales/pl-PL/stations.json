@@ -1,40 +1,41 @@
 {
-	"title": "Lista stacji",
-	"breadcrumb": "Lista stacji",
-	"filters": {
-		"title": "Filtry",
-		"search": "Wyszukiwanie",
-		"searchPlaceholder": "Szukaj stacji...",
-		"searchResults": "{{count}} wyników wyszukiwania",
-		"network": "Operator",
-		"region": "Województwo",
-		"selectRegions": "Wybierz województwa...",
-		"standard": "Standard",
-		"band": "Pasmo (MHz)",
-		"selectBands": "Wybierz pasma...",
-		"noRegionsFound": "Nie znaleziono województw",
-		"noBandsFound": "Nie znaleziono pasm",
-		"showingStations": "Wyświetlanie {{count}} stacji",
-		"showingStationsOfTotal": "Wyświetlanie {{count}} z {{total}} stacji",
-		"otherOperators_one": "{{count}} inny operator",
-		"otherOperators_few": "{{count}} innych operatorów",
-		"otherOperators_many": "{{count}} innych operatorów",
-		"selected_one": "{{count}} wybrany",
-		"selected_few": "{{count}} wybrane",
-		"selected_many": "{{count}} wybranych"
-	},
-	"table": {
-		"stationId": "ID",
-		"operator": "Operator",
-		"technologies": "Technologie",
-		"bands": "Pasma",
-		"location": "Lokalizacja",
-		"region": "Województwo",
-		"updatedAt": "Zaktualizowano",
-		"noStationsFound": "Nie znaleziono stacji",
-		"tryAdjustingFilters": "Spróbuj zmienić filtry"
+	"header": {
+		"deleteStation": "Usuń stację",
+		"confirmDelete": "Czy na pewno chcesz usunąć stację?",
+		"confirmDeleteDesc": "Po usunięciu, stacja zostanie oznaczona jako 'inactive' i nie będzie już widoczna na mapie ani w wynikach wyszukiwania.",
+		"createStation": "Utwórz stację"
 	},
 	"actions": {
-		"newStation": "Nowa stacja"
+		"newStation": "Utwórz nową stację"
+	},
+	"cells": {
+		"cellsCount_one": "{{count}} komórka",
+		"cellsCount_few": "{{count}} komórki",
+		"cellsCount_many": "{{count}} komórek",
+		"notesPlaceholder": "np. pikokomórka",
+		"addCell": "Dodaj komórkę",
+		"noRats": "Nie znaleziono komórek dla tej stacji. Dodaj RATy, aby dodać komórki",
+		"noStationCells": "Nie znaleziono komórek dla tej stacji.",
+		"noCells": "Brak komórek. Kliknij \"Dodaj komórkę\", aby utworzyć.",
+		"diffAdded": "nowe",
+		"diffModified": "zmienione",
+		"diffDeleted": "usunięte",
+		"cellNotConfirmed": "Ta komórka jest nie potwierdzona",
+		"carrier": "Nośnia",
+		"unknownBand": "Nieznane pasmo"
+	},
+	"stationsAtLocation": "Stacje w tej lokalizacji",
+	"stationsCount_one": "{{count}} stacja",
+	"stationsCount_few": "{{count}} stacje",
+	"stationsCount_many": "{{count}} stacji",
+	"toast": {
+		"locationSaved": "Lokalizacja została zapisana",
+		"deleted": "Stacja została usunięta",
+		"created": "Stacja została utworzona",
+		"stationIdRquired": "Identyfikator stacji jest wymagany",
+		"operatorRequired": "Operator jest wymagany",
+		"locationRequired": "Lokalizacja jest wymagana",
+		"cellsSaved": "Komórki zostały zapisane",
+		"noBands": "Brak dostępnych pasm dla {{rat}}"
 	}
 }

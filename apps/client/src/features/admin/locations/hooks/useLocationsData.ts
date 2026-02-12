@@ -1,110 +1,109 @@
-import { useMemo, useCallback } from "react";
-import { useSearchParams } from "react-router";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
 import { fetchLocationsList } from "../api";
 import type { LocationSortBy, LocationSortDirection } from "@/types/station";
 
 const FETCH_LIMIT = 100;
-
-const parseNumberArrayParam = (value: string | null): number[] => {
-	if (!value) return [];
-	return value
-		.split(",")
-		.map(Number)
-		.filter((n) => !Number.isNaN(n));
-};
+const STORAGE_KEY = "admin:locations:filters";
 
 export type LocationFilters = {
 	operators: number[];
 };
 
+type StoredState = {
+	operators: number[];
+	regions: number[];
+	sort: LocationSortDirection;
+	sortBy: LocationSortBy;
+};
+
+function loadFromStorage(): StoredState {
+	try {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (!raw) return { operators: [], regions: [], sort: "desc", sortBy: "updatedAt" };
+		const parsed = JSON.parse(raw);
+		return {
+			operators: Array.isArray(parsed.operators) ? parsed.operators : [],
+			regions: Array.isArray(parsed.regions) ? parsed.regions : [],
+			sort: parsed.sort === "asc" || parsed.sort === "desc" ? parsed.sort : "desc",
+			sortBy: parsed.sortBy ?? "updatedAt",
+		};
+	} catch {
+		return { operators: [], regions: [], sort: "desc", sortBy: "updatedAt" };
+	}
+}
+
+function persist(state: StoredState) {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	} catch {}
+}
+
 export function useLocationsData() {
-	const [searchParams, setSearchParams] = useSearchParams();
+	const stored = useMemo(() => loadFromStorage(), []);
 
-	const selectedRegions = useMemo(() => parseNumberArrayParam(searchParams.get("regions")), [searchParams]);
-	const searchQuery = searchParams.get("q") ?? "";
+	const [filters, setFiltersRaw] = useState<LocationFilters>({ operators: stored.operators });
+	const [selectedRegions, setSelectedRegionsRaw] = useState<number[]>(stored.regions);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [sort, setSortRaw] = useState<LocationSortDirection>(stored.sort);
+	const [sortBy, setSortByRaw] = useState<LocationSortBy>(stored.sortBy);
 
-	const filters = useMemo<LocationFilters>(
-		() => ({
-			operators: parseNumberArrayParam(searchParams.get("mnc")),
-		}),
-		[searchParams],
-	);
+	const stateRef = useRef<StoredState>({ operators: stored.operators, regions: stored.regions, sort: stored.sort, sortBy: stored.sortBy });
 
-	const sort = useMemo<LocationSortDirection>(() => (searchParams.get("order") as LocationSortDirection) ?? "desc", [searchParams]);
-
-	const sortBy = useMemo<LocationSortBy | undefined>(() => (searchParams.get("sort") as LocationSortBy | undefined) ?? "updatedAt", [searchParams]);
+	const save = useCallback((patch: Partial<StoredState>) => {
+		Object.assign(stateRef.current, patch);
+		persist(stateRef.current);
+	}, []);
 
 	const setFilters = useCallback(
 		(newFilters: LocationFilters | ((prev: LocationFilters) => LocationFilters)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current: LocationFilters = {
-					operators: parseNumberArrayParam(next.get("mnc")),
-				};
-				const resolved = typeof newFilters === "function" ? newFilters(current) : newFilters;
-
-				if (resolved.operators.length) next.set("mnc", resolved.operators.join(","));
-				else next.delete("mnc");
-
-				return next;
+			setFiltersRaw((prev) => {
+				const resolved = typeof newFilters === "function" ? newFilters(prev) : newFilters;
+				save({ operators: resolved.operators });
+				return resolved;
 			});
 		},
-		[setSearchParams],
+		[save],
 	);
 
 	const setSelectedRegions = useCallback(
 		(value: number[] | ((prev: number[]) => number[])) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = parseNumberArrayParam(next.get("regions"));
-				const resolved = typeof value === "function" ? value(current) : value;
-				if (resolved.length) next.set("regions", resolved.join(","));
-				else next.delete("regions");
-				return next;
+			setSelectedRegionsRaw((prev) => {
+				const resolved = typeof value === "function" ? value(prev) : value;
+				save({ regions: resolved });
+				return resolved;
 			});
 		},
-		[setSearchParams],
+		[save],
 	);
 
-	const setSearchQuery = useCallback(
-		(value: string) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				if (value) next.set("q", value);
-				else next.delete("q");
-				return next;
-			});
-		},
-		[setSearchParams],
-	);
+	const clearAllFilters = useCallback(() => {
+		setFiltersRaw({ operators: [] });
+		setSelectedRegionsRaw([]);
+		save({ operators: [], regions: [] });
+	}, [save]);
 
 	const setSort = useCallback(
 		(value: LocationSortDirection | ((prev: LocationSortDirection) => LocationSortDirection)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = (next.get("order") as LocationSortDirection) ?? "desc";
-				const resolved = typeof value === "function" ? value(current) : value;
-				next.set("order", resolved);
-				return next;
+			setSortRaw((prev) => {
+				const resolved = typeof value === "function" ? value(prev) : value;
+				save({ sort: resolved });
+				return resolved;
 			});
 		},
-		[setSearchParams],
+		[save],
 	);
 
 	const setSortBy = useCallback(
 		(value: LocationSortBy | undefined | ((prev: LocationSortBy | undefined) => LocationSortBy | undefined)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = (next.get("sort") as LocationSortBy | undefined) ?? undefined;
-				const resolved = typeof value === "function" ? value(current) : value;
-				if (resolved) next.set("sort", resolved);
-				else next.delete("sort");
-				return next;
+			setSortByRaw((prev) => {
+				const resolved = (typeof value === "function" ? value(prev) : value) ?? "updatedAt";
+				save({ sortBy: resolved });
+				return resolved;
 			});
 		},
-		[setSearchParams],
+		[save],
 	);
 
 	const { data: operators = [] } = useQuery(operatorsQueryOptions());
@@ -160,6 +159,7 @@ export function useLocationsData() {
 		setFilters,
 		selectedRegions,
 		setSelectedRegions,
+		clearAllFilters,
 		activeFilterCount,
 		searchQuery,
 		setSearchQuery,

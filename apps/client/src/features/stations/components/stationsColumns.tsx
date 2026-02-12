@@ -61,7 +61,6 @@ function SortableHeader({ label, column, sort, sortBy, onSort }: SortableHeaderP
 
 type CreateColumnsOptions = {
 	t: TFunction;
-	tCommon: TFunction;
 	locale: string;
 	isSearchActive?: boolean;
 	sort: StationSortDirection;
@@ -69,25 +68,17 @@ type CreateColumnsOptions = {
 	onSort: (column: StationSortBy) => void;
 };
 
-export function createStationsColumns({
-	t,
-	tCommon,
-	locale,
-	isSearchActive = false,
-	sort,
-	sortBy,
-	onSort,
-}: CreateColumnsOptions): ColumnDef<Station>[] {
+export function createStationsColumns({ t, locale, isSearchActive = false, sort, sortBy, onSort }: CreateColumnsOptions): ColumnDef<Station>[] {
 	const columns: ColumnDef<Station>[] = [
 		{
 			accessorKey: "station_id",
-			header: () => <SortableHeader label={t("table.stationId")} column="station_id" sort={sort} sortBy={sortBy} onSort={onSort} />,
+			header: () => <SortableHeader label={t("labels.stationId")} column="station_id" sort={sort} sortBy={sortBy} onSort={onSort} />,
 			size: 80,
 			cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">#{getValue<string>()}</span>,
 		},
 		{
 			accessorKey: "operator",
-			header: t("table.operator"),
+			header: t("labels.operator"),
 			size: 160,
 			cell: ({ row: { original: s } }) => {
 				if (!s.operator) return <span className="text-muted-foreground">-</span>;
@@ -105,8 +96,8 @@ export function createStationsColumns({
 			},
 		},
 		{
-			id: "technologies",
-			header: t("table.technologies"),
+			id: "standards",
+			header: t("labels.standard"),
 			size: 140,
 			accessorFn: (station) => {
 				if (!station.cells || !Array.isArray(station.cells)) return [];
@@ -126,7 +117,7 @@ export function createStationsColumns({
 			: ([
 					{
 						id: "bands" as const,
-						header: t("table.bands"),
+						header: t("labels.band"),
 						size: 160,
 						accessorFn: (station: Station) => {
 							if (!station.cells || !Array.isArray(station.cells)) return [];
@@ -158,7 +149,7 @@ export function createStationsColumns({
 				] as ColumnDef<Station>[])),
 		{
 			id: "location",
-			header: t("table.location"),
+			header: t("labels.location"),
 			size: 280,
 			accessorFn: (s) => s.location,
 			cell: ({ getValue }) => {
@@ -177,7 +168,7 @@ export function createStationsColumns({
 		},
 		{
 			id: "region",
-			header: t("table.region"),
+			header: t("labels.region"),
 			size: 100,
 			accessorFn: (s) => s.location?.region?.name,
 			cell: ({ getValue }) => {
@@ -187,13 +178,13 @@ export function createStationsColumns({
 		},
 		{
 			accessorKey: "updatedAt",
-			header: () => <SortableHeader label={t("table.updatedAt")} column="updatedAt" sort={sort} sortBy={sortBy} onSort={onSort} />,
+			header: () => <SortableHeader label={t("labels.updated")} column="updatedAt" sort={sort} sortBy={sortBy} onSort={onSort} />,
 			size: 140,
 			cell: ({ getValue }) => {
 				const date = getValue<string>();
 				return (
 					<Tooltip>
-						<TooltipTrigger className="text-muted-foreground cursor-default">{formatRelativeTime(date, tCommon)}</TooltipTrigger>
+						<TooltipTrigger className="text-muted-foreground cursor-default">{formatRelativeTime(date, t)}</TooltipTrigger>
 						<TooltipContent>
 							<p>{formatFullDate(date, locale)}</p>
 						</TooltipContent>

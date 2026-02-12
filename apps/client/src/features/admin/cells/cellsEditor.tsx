@@ -71,7 +71,7 @@ export function CellsEditor<T extends CellDraftBase>({
 	sectionClassName,
 	readOnly,
 }: CellsEditorProps<T>) {
-	const { t } = useTranslation(["admin", "submissions"]);
+	const { t } = useTranslation(["stations"]);
 
 	return (
 		<>
@@ -101,7 +101,7 @@ export function CellsEditor<T extends CellDraftBase>({
 
 			{visibleRats.length === 0 ? (
 				<div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
-					{readOnly ? t("submissionDetail.readOnly") : t("cells.noRats")}
+					{readOnly ? t("submissions:detail.readOnly") : t("stations:cells.noRats")}
 				</div>
 			) : (
 				visibleRats.map((rat) => {
@@ -121,7 +121,7 @@ export function CellsEditor<T extends CellDraftBase>({
 										/>
 										<HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
 										<span className="font-semibold text-sm">{rat}</span>
-										<span className="text-xs text-muted-foreground">({t("cells.cellsCount", { count: cellsForRat.length })})</span>
+										<span className="text-xs text-muted-foreground">({t("stations:cells.cellsCount", { count: cellsForRat.length })})</span>
 										{hasChanges && (
 											<span className="flex items-center gap-2 ml-1">
 												{(badges.added ?? 0) > 0 && (
@@ -148,13 +148,13 @@ export function CellsEditor<T extends CellDraftBase>({
 									{showAddButton && (
 										<Button type="button" variant="ghost" size="sm" onClick={() => onAddCell(rat)} className="h-7 text-xs">
 											<HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-											{t("cells.addCell")}
+											{t("stations:cells.addCell")}
 										</Button>
 									)}
 								</div>
 								<CollapsibleContent>
 									{cellsForRat.length === 0 ? (
-										<div className="px-3 py-4 text-center text-sm text-muted-foreground">{t("cells.noCells")}</div>
+										<div className="px-3 py-4 text-center text-sm text-muted-foreground">{t("stations:cells.noCells")}</div>
 									) : (
 										<div className="overflow-x-auto custom-scrollbar">
 											<table className="w-full text-sm">

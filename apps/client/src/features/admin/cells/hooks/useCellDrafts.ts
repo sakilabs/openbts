@@ -35,7 +35,7 @@ export function useCellDrafts<T extends CellDraftBase>({
 	onDelete,
 	disabled,
 }: UseCellDraftsOptions<T>): UseCellDraftsReturn<T> {
-	const { t } = useTranslation("admin");
+	const { t } = useTranslation("stations");
 
 	const [cells, setCells] = useState<T[]>(initialCells);
 	const [enabledRats, setEnabledRats] = useState<string[]>(

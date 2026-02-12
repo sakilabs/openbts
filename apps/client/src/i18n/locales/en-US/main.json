@@ -1,0 +1,48 @@
+{
+	"search": {
+		"placeholderAddMore": "Add more...",
+		"searching": "Searching results...",
+		"noResults": "No results",
+		"noResultsHint": "Try other keywords or filters",
+		"found": "Found: {{count}}",
+		"showingTop": "Showing {{shown}} of {{total}} stations"
+	},
+	"autocomplete": {
+		"availableFilters": "Available filters",
+		"tip": "Tip:",
+		"tipText": "Use comma-separated values for multiple items",
+		"example": "Example"
+	},
+	"searchResults": {
+		"locations": "Geographic Locations",
+		"stations": "Base Stations"
+	},
+	"popup": {
+		"loading": "Loading stations...",
+		"noStations": "No stations",
+		"noPermits": "No permits"
+	},
+	"overlay": {
+		"locations": "locations",
+		"zoom": "Zoom",
+		"mapStyle": "Map Style",
+		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all"
+	},
+	"stats": {
+		"dataInfo": "Data Information",
+		"lastUpdated": "Last Updated",
+		"internalData": "Internal Database",
+		"ukeStations": "UKE Stations",
+		"stations": "Number of stations",
+		"permits": "Number of permits"
+	},
+	"filters": {
+		"dataSource": "Data Source",
+		"internalDb": "Internal Database",
+		"newOnly": "Show new (last 30 days)",
+		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
+		"showingLocationsOfTotal": "Showing {{count}} of {{total}} locations",
+		"showingStations": "Showing {{count}} stations"
+	},
+	"unknownOperator": "Unknown Operator"
+}

@@ -136,12 +136,7 @@ export default function AdminUsersPage() {
 			<div className="flex items-center justify-between gap-3">
 				<div className="relative max-w-sm flex-1">
 					<HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-					<Input
-						placeholder={t("users.searchPlaceholder", "Search by email...")}
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						className="pl-8"
-					/>
+					<Input placeholder={t("common:placeholder.search")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
 				</div>
 			</div>
 

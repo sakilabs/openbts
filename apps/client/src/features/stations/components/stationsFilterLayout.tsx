@@ -101,7 +101,7 @@ export function StationsListLayout({ data, onRowClick, headerActions, children }
 					<div className="flex items-center gap-2">
 						<Button variant="outline" size="sm" className="relative md:hidden" onClick={() => setMobileFiltersOpen(true)}>
 							<HugeiconsIcon icon={FilterIcon} className="size-4 mr-2" />
-							{t("filters.title")}
+							{t("common:labels.filters")}
 							{activeFilterCount > 0 && (
 								<span className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
 									{activeFilterCount}

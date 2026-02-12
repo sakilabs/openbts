@@ -1,8 +1,28 @@
 {
+	"preferences": {
+		"title": "Preferences",
+		"description": "These settings are saved locally on this device.",
+		"gpsFormat": "GPS Coordinates Format",
+		"gpsFormatHint": "Choose how GPS coordinates are displayed in the application.",
+		"gpsDecimal": "Decimal Degrees",
+		"gpsDms": "Degrees, Minutes, Seconds",
+		"navigationApps": "Navigation Apps",
+		"navigationAppsHint": "Choose which navigation buttons to display next to coordinates.",
+		"navGoogleMaps": "Google Maps",
+		"navAppleMaps": "Apple Maps",
+		"navWaze": "Waze",
+		"openWith": "Open with {{app}}",
+		"navDisplayMode": "Navigation Buttons Style",
+		"navDisplayModeHint": "Choose how navigation links are displayed in station details.",
+		"navDisplayInline": "Dropdown Menu",
+		"navDisplayInlineDesc": "Small icon next to GPS coordinates opening a dropdown menu.",
+		"navDisplayButtons": "Separate Buttons",
+		"navDisplayButtonsDesc": "Buttons displayed below the Info section."
+	},
 	"page": {
 		"title": "Account Settings",
 		"shortTitle": "Settings",
-		"description": "Manage your account, security, and track your contributions."
+		"description": "Manage your account, security, and track your submissions."
 	},
 	"account": {
 		"title": "Account",
@@ -18,43 +38,10 @@
 	},
 	"sessions": {
 		"title": "Sessions",
-		"description": "Active sessions across your devices."
+		"description": "Active sessions on your devices."
 	},
 	"dangerZone": {
 		"title": "Danger Zone",
 		"description": "Permanently delete your account and all associated data."
-	},
-	"submissions": {
-		"title": "My submissions",
-		"description": "Stations and cells you've submitted for review.",
-		"empty": "No submissions yet",
-		"emptyHint": "Submit a station or cell update to see it here.",
-		"loadError": "Could not load submissions.",
-		"newSubmission": "New submission",
-		"submitNew": "Submit new submission",
-		"submitNewDesc": "Found a new tower? Add it to the map.",
-		"modifyExisting": "Modify Existing",
-		"modifyExistingDesc": "Update details or cells for an existing station.",
-		"howToModify": "To modify a station, find it on the map or database, open details, and click 'Edit'."
-	},
-	"preferences": {
-		"title": "Preferences",
-		"description": "These settings are stored locally on this device.",
-		"gpsFormat": "GPS Coordinate Format",
-		"gpsFormatHint": "Choose how GPS coordinates are displayed throughout the app.",
-		"gpsDecimal": "Decimal Degrees",
-		"gpsDms": "Degrees, Minutes, Seconds",
-		"navigationApps": "Navigation Apps",
-		"navigationAppsHint": "Select which navigation app buttons appear next to coordinates.",
-		"navGoogleMaps": "Google Maps",
-		"navAppleMaps": "Apple Maps",
-		"navWaze": "Waze",
-		"openWith": "Open with {{app}}",
-		"navDisplayMode": "Navigation Button Style",
-		"navDisplayModeHint": "Choose how navigation app links are shown in station details.",
-		"navDisplayInline": "Inline dropdown",
-		"navDisplayInlineDesc": "Small icon next to GPS coordinates that opens a dropdown menu.",
-		"navDisplayButtons": "Separate buttons",
-		"navDisplayButtonsDesc": "Individual buttons displayed under the Information section."
 	}
 }

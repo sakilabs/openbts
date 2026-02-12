@@ -83,8 +83,8 @@ export function LocationsDataTable({
 						<tbody>
 							<DataTable.Empty columns={columnCount}>
 								<div className="flex flex-col items-center gap-2 text-muted-foreground">
-									<span>{t("locations.noLocationsFound")}</span>
-									<span className="text-sm">{t("locations.tryAdjustingFilters")}</span>
+									<span>{t("main:search.noResults")}</span>
+									<span className="text-sm">{t("main:search.noResultsHint")}</span>
 								</div>
 							</DataTable.Empty>
 						</tbody>

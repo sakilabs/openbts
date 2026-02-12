@@ -13,7 +13,7 @@ import type { SubmissionRow } from "@/features/admin/submissions/types";
 const fetchSubmissions = () => fetchApiData<SubmissionRow[]>("submissions");
 
 export function MySubmissions() {
-	const { t } = useTranslation(["settings", "common"]);
+	const { t } = useTranslation(["submissions", "common"]);
 	const { i18n } = useTranslation();
 	const { data: session } = authClient.useSession();
 
@@ -52,7 +52,7 @@ export function MySubmissions() {
 				<div className="size-10 rounded-full bg-destructive/5 flex items-center justify-center text-destructive/50 mb-3">
 					<HugeiconsIcon icon={AlertCircleIcon} className="size-5" />
 				</div>
-				<p className="text-sm">{t("submissions.loadError")}</p>
+				<p className="text-sm">{t("common:placeholder.errorFetching")}</p>
 			</div>
 		);
 	}
@@ -61,8 +61,8 @@ export function MySubmissions() {
 		return (
 			<div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground border rounded-xl bg-muted/10">
 				<HugeiconsIcon icon={SentIcon} className="size-8 mb-2 opacity-20" />
-				<p className="text-sm font-medium">{t("submissions.empty")}</p>
-				<p className="text-xs mt-1">{t("submissions.emptyHint")}</p>
+				<p className="text-sm font-medium">{t("table.empty")}</p>
+				<p className="text-xs mt-1">{t("table.emptyHintUser")}</p>
 			</div>
 		);
 	}
@@ -77,11 +77,7 @@ export function MySubmissions() {
 				return (
 					<div
 						key={submission.id}
-						className={cn(
-							"group rounded-xl border border-l-4 bg-card transition-colors overflow-hidden",
-							statusCfg.borderClass,
-							hasNotes && statusCfg.bgClass,
-						)}
+						className={cn("group rounded-xl border border-l-4 bg-card transition-colors overflow-hidden", statusCfg.borderClass)}
 					>
 						<div className="flex items-center gap-3 px-4 py-3">
 							<span
@@ -116,9 +112,7 @@ export function MySubmissions() {
 						{hasNotes && (
 							<div className="px-4 pb-3 pt-0">
 								<div className="border-l-4 border-primary/40 bg-primary/5 rounded-r-lg p-2 space-y-1">
-									<p className="text-[11px] font-semibold text-primary/70 uppercase tracking-wider">
-										{t("submissions.reviewerResponse", "Admin response")}
-									</p>
+									<p className="text-[11px] font-semibold text-primary/70 uppercase tracking-wider">{t("detail.reviewerResponse")}</p>
 									<p className="text-sm leading-relaxed text-foreground">{submission.review_notes}</p>
 								</div>
 							</div>

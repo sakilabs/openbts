@@ -1,7 +1,7 @@
 {
 	"sections": {
 		"stations": "Stations",
-		"contribute": "Contribute",
+		"contribute": "Submissions",
 		"settings": "Settings",
 		"admin": "Admin"
 	},
@@ -9,7 +9,7 @@
 		"mapView": "Map View",
 		"database": "Database",
 		"clfExport": "CLF Export",
-		"submitStation": "Submit Station",
+		"submitStation": "New Submission",
 		"preferences": "Preferences",
 		"accountSettings": "Account Settings",
 		"mySubmissions": "My Submissions",
@@ -25,7 +25,11 @@
 		"about": "About"
 	},
 	"user": {
-		"logout": "Log out",
-		"login": "Log in"
+		"logout": "Logout",
+		"login": "Login"
+	},
+	"auth": {
+		"signIn": "Sign In",
+		"signInHint": "Access your account"
 	}
 }

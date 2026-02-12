@@ -37,7 +37,7 @@ type MapStyleSwitcherProps = {
 };
 
 export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps) {
-	const { t } = useTranslation("map");
+	const { t } = useTranslation("main");
 	const { mapStyle, setMapStyle } = useMap();
 	const [showPicker, setShowPicker] = useState(false);
 
@@ -66,15 +66,15 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 
 	if (showPicker) {
 		return (
-		<div
-			onClick={handleStopPropagation}
-			onKeyDown={handleStopPropagation}
-			role="listbox"
-			className={cn(
-				"flex p-1.5 rounded-lg bg-background border shadow-xl",
-				isMobile ? "absolute bottom-0 left-0 flex-col-reverse gap-1" : "flex-row gap-1.5",
-			)}
-		>
+			<div
+				onClick={handleStopPropagation}
+				onKeyDown={handleStopPropagation}
+				role="listbox"
+				className={cn(
+					"flex p-1.5 rounded-lg bg-background border shadow-xl",
+					isMobile ? "absolute bottom-0 left-0 flex-col-reverse gap-1" : "flex-row gap-1.5",
+				)}
+			>
 				{(Object.keys(MAP_STYLE_OPTIONS) as MapStyle[]).map((key) => {
 					const style = MAP_STYLE_OPTIONS[key];
 					const isSelected = mapStyle === key;

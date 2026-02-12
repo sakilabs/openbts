@@ -65,7 +65,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 					<div className="p-1.5 rounded-md bg-primary/10 text-primary">
 						<HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
 					</div>
-					<span className="font-semibold text-sm tracking-tight">{t("stationSelector.title")}</span>
+					<span className="font-semibold text-sm tracking-tight">{t("submissionSelector.title")}</span>
 				</div>
 				<div className="flex items-center p-1 bg-muted/50 rounded-lg border shadow-sm">
 					<button
@@ -79,7 +79,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 						)}
 					>
 						<HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-						{t("stationSelector.newStation")}
+						{t("common:labels.newStation")}
 					</button>
 					<button
 						type="button"
@@ -92,7 +92,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 						)}
 					>
 						<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-						{t("stationSelector.existingStation")}
+						{t("submissionSelector.existingStation")}
 					</button>
 				</div>
 			</div>
@@ -110,23 +110,23 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 									<div className="min-w-0 space-y-1">
 										<div className="flex items-center gap-2">
 											<span className="text-sm font-medium truncate">
-												{selectedStation.location?.address || selectedStation.location?.city || t("stationSelector.noAddress")}
+												{selectedStation.location?.address || selectedStation.location?.city || t("common:notFound.address")}
 											</span>
 											<span className="text-[10px] font-mono text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
 												{selectedStation.station_id}
 											</span>
 										</div>
 										<div className="text-xs text-muted-foreground">
-											<span className="font-medium text-foreground/80">{t("stationSelector.region")}</span>
+											<span className="font-medium text-foreground/80">{t("common:labels.region")}</span>
 											<span className="mx-1">•</span>
-											{selectedStation.location?.region?.name ?? t("stationSelector.noRegion")}
+											{selectedStation.location?.region?.name ?? t("common:notFound.region")}
 										</div>
 										<div className="text-xs text-muted-foreground font-mono">
-											<span className="font-sans font-medium text-foreground/80">{t("stationSelector.gps")}</span>
+											<span className="font-sans font-medium text-foreground/80">{t("common:labels.coordinates")}</span>
 											<span className="mx-1 font-sans">•</span>
 											{selectedStation.location
 												? formatCoordinates(selectedStation.location.latitude, selectedStation.location.longitude, preferences.gpsFormat)
-												: t("stationSelector.noGps")}
+												: t("common:notFound.gps")}
 										</div>
 										<div className="flex items-center gap-1.5">
 											<span className="text-xs text-muted-foreground">{selectedStation.operator?.name}</span>
@@ -134,7 +134,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 												<>
 													<span className="text-xs text-muted-foreground/50">•</span>
 													<span className="text-xs text-muted-foreground">
-														{t("stationSelector.cellsCount", { count: selectedStation.cells.length })}
+														{t("stations:cells.cellsCount", { count: selectedStation.cells.length })}
 													</span>
 												</>
 											)}
@@ -149,7 +149,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 							<div className="relative">
 								<HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
 								<Input
-									placeholder={t("stationSelector.searchPlaceholder")}
+									placeholder={t("common:placeholder.search")}
 									value={searchQuery}
 									onChange={handleSearchChange}
 									onFocus={handleSearchFocus}
@@ -161,7 +161,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 										{isLoading ? (
 											<div className="p-3 text-center text-sm text-muted-foreground">{t("common:actions.loading")}</div>
 										) : searchResults.length === 0 ? (
-											<div className="p-3 text-center text-sm text-muted-foreground">{t("stationSelector.noResults")}</div>
+											<div className="p-3 text-center text-sm text-muted-foreground">{t("main:search.noResults")}</div>
 										) : (
 											<div className="p-1 space-y-0.5">
 												{searchResults.map((station) => (
@@ -178,7 +178,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 														<div className="flex-1 min-w-0">
 															<div className="flex items-center justify-between gap-2">
 																<span className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-																	{station.location?.address || station.location?.city || t("stationSelector.noAddress")}
+																	{station.location?.address || station.location?.city || t("common:notFound.address")}
 																</span>
 																<span className="text-[10px] font-mono text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
 																	{station.station_id}
@@ -192,7 +192,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 																	<>
 																		<span className="text-[11px] text-muted-foreground/50">•</span>
 																		<span className="text-[11px] text-muted-foreground">
-																			{t("stationSelector.cellsCount", { count: station.cells.length })}
+																			{t("stations:cells.cellsCount", { count: station.cells.length })}
 																		</span>
 																	</>
 																)}
@@ -209,7 +209,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 					</div>
 				)}
 
-				{mode === "new" && <p className="text-sm text-muted-foreground">{t("stationSelector.newStationHint")}</p>}
+				{mode === "new" && <p className="text-sm text-muted-foreground">{t("submissionSelector.newStationHint")}</p>}
 			</div>
 		</div>
 	);

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -31,8 +31,8 @@ type LocalCell = CellDraftBase & {
 };
 
 export const handle: RouteHandle = {
-	titleKey: "submissionDetail.title",
-	i18nNamespace: "admin",
+	titleKey: "detail.title",
+	i18nNamespace: "submissions",
 	breadcrumbs: [
 		{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
 		{ titleKey: "breadcrumbs.submissions", path: "/admin/submissions", i18nNamespace: "admin" },
@@ -104,7 +104,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
 export default function SubmissionDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { t } = useTranslation("admin");
+	const { t } = useTranslation("submissions");
 
 	const { data: submission, isLoading } = useQuery({
 		queryKey: ["admin", "submission", id],
@@ -148,9 +148,9 @@ export default function SubmissionDetailPage() {
 		return (
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
-					<p className="text-muted-foreground">{t("notFound.message")}</p>
+					<p className="text-muted-foreground">{t("common:error.description")}</p>
 					<Button variant="outline" onClick={() => navigate("/admin/submissions")}>
-						{t("submissionDetail.backToSubmissions")}
+						{t("common:actions.back")}
 					</Button>
 				</div>
 			</div>
@@ -162,7 +162,7 @@ export default function SubmissionDetailPage() {
 
 function SubmissionDetailForm({ submission, currentStation }: { submission: SubmissionDetail; currentStation: Station | null }) {
 	const navigate = useNavigate();
-	const { t } = useTranslation("admin");
+	const { t } = useTranslation(["submissions", "common"]);
 
 	const [reviewNotes, setReviewNotes] = useState(submission.review_notes ?? "");
 
@@ -195,6 +195,18 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 	const isDeleteSubmission = submission.type === "delete";
 	const isRejected = submission.status === "rejected";
 	const isFormDisabled = isReadOnly || isDeleteSubmission;
+
+	useEffect(() => {
+		if (isReadOnly && currentStation?.location) {
+			setLocationForm({
+				region_id: currentStation.location.region.id,
+				city: currentStation.location.city ?? "",
+				address: currentStation.location.address ?? "",
+				longitude: currentStation.location.longitude,
+				latitude: currentStation.location.latitude,
+			});
+		}
+	}, [isReadOnly, currentStation]);
 
 	const initialCells = useMemo(() => computeInitialCells(submission, currentStation), [submission, currentStation]);
 
@@ -241,8 +253,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 				localCells,
 			},
 			{
-				onSuccess: () => toast.success(t("submissionToast.saved")),
-				onError: () => toast.error(t("submissionToast.saveFailed")),
+				onSuccess: () => toast.success(t("toast.saved")),
+				onError: () => toast.error(t("common:error.toast")),
 			},
 		);
 	};
@@ -252,10 +264,10 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 			{ submissionId: submission.id, reviewNotes },
 			{
 				onSuccess: () => {
-					toast.success(t("submissionToast.approved"));
+					toast.success(t("toast.approved"));
 					navigate("/admin/submissions");
 				},
-				onError: () => toast.error(t("submissionToast.approveFailed")),
+				onError: () => toast.error(t("common:error.toast")),
 			},
 		);
 	};
@@ -265,10 +277,10 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 			{ submissionId: submission.id, reviewNotes },
 			{
 				onSuccess: () => {
-					toast.success(t("submissionToast.rejected"));
+					toast.success(t("toast.rejected"));
 					navigate("/admin/submissions");
 				},
-				onError: () => toast.error(t("submissionToast.rejectFailed")),
+				onError: () => toast.error(t("common:error.toast")),
 			},
 		);
 	};
@@ -402,7 +414,6 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 					<td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>
 					{renderDetailCells()}
 					<td className="px-3 py-1 font-mono text-xs text-muted-foreground truncate max-w-28">{targetCell.notes || "-"}</td>
-					{/* confirmed + actions columns */}
 					<td className="px-3 py-1" />
 					<td className="px-3 py-1" />
 				</tr>
@@ -429,9 +440,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 							<HugeiconsIcon icon={Delete02Icon} className="size-5 text-red-600 dark:text-red-400" />
 						</div>
 						<div className="space-y-1">
-							<p className="text-sm font-semibold text-red-700 dark:text-red-300">{t("submissions.type.delete")}</p>
+							<p className="text-sm font-semibold text-red-700 dark:text-red-300">{t("common:submissionType.delete")}</p>
 							<p className="text-sm text-red-600/80 dark:text-red-400/80">
-								{t("submissionDetail.deletionBanner", { stationId: submission.station?.station_id ?? submission.station_id })}
+								{t("deletionBanner", { stationId: submission.station?.station_id ?? submission.station_id })}
 							</p>
 						</div>
 					</div>
@@ -439,6 +450,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 				<div className="flex flex-col lg:flex-row gap-3 p-3">
 					<div className="w-full lg:flex-2 space-y-2">
 						<SubmitterCard submission={submission} />
+						<AdminReviewCard submission={submission} reviewNotes={reviewNotes} onReviewNotesChange={setReviewNotes} isReadOnly={isReadOnly} />
 
 						<SubmissionStationForm
 							submission={submission}
@@ -474,8 +486,6 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 							renderAfterRow={renderSubmissionAfterRow}
 							readOnly={isFormDisabled}
 						/>
-
-						<AdminReviewCard reviewNotes={reviewNotes} onReviewNotesChange={setReviewNotes} isReadOnly={isReadOnly} />
 					</div>
 				</div>
 			</div>

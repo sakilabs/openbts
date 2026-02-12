@@ -1,0 +1,48 @@
+{
+	"search": {
+		"placeholderAddMore": "Dodaj więcej...",
+		"searching": "Wyszukiwanie wyników...",
+		"noResults": "Brak wyników",
+		"noResultsHint": "Spróbuj innych słów kluczowych lub filtrów",
+		"found": "Znaleziono: {{count}}",
+		"showingTop": "Pokazano {{shown}} z {{total}} stacji"
+	},
+	"autocomplete": {
+		"availableFilters": "Dostępne filtry",
+		"tip": "Wskazówka:",
+		"tipText": "Użyj wartości oddzielonych przecinkami dla wielu elementów",
+		"example": "Przykład"
+	},
+	"searchResults": {
+		"locations": "Lokalizacje geograficzne",
+		"stations": "Stacje bazowe"
+	},
+	"popup": {
+		"loading": "Ładowanie stacji...",
+		"noStations": "Brak stacji",
+		"noPermits": "Brak pozwoleń"
+	},
+	"overlay": {
+		"locations": "lokalizacji",
+		"zoom": "Zoom",
+		"mapStyle": "Styl mapy",
+		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie"
+	},
+	"stats": {
+		"dataInfo": "Informacje o danych",
+		"lastUpdated": "Ostatnia aktualizacja",
+		"internalData": "Wewnętrzna baza",
+		"ukeStations": "Stacje UKE",
+		"stations": "Liczba stacji",
+		"permits": "Liczba pozwoleń"
+	},
+	"filters": {
+		"dataSource": "Źródło danych",
+		"internalDb": "Wewnętrzna baza",
+		"newOnly": "Pokaż nowe (ostatnie 30 dni)",
+		"showingStationsOfTotal": "Pokazano {{count}} z {{total}} stacji",
+		"showingLocationsOfTotal": "Pokazano {{count}} z {{total}} lokalizacji",
+		"showingStations": "Pokazano {{count}} stacji"
+	},
+	"unknownOperator": "Nieznany operator"
+}

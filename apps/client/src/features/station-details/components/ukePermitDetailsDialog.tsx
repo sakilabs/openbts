@@ -92,7 +92,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 							<div className="flex flex-col gap-1.5">
 								<div className="flex items-center gap-2 min-w-0">
 									<h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
-										{station.operator?.name ?? t("permits.unknownOperator")}
+										{station.operator?.name ?? t("main:unknownOperator")}
 									</h2>
 									<span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
 								</div>
@@ -132,7 +132,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 								{station.location && (
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-										<span className="text-sm text-muted-foreground">{t("common:labels.coordinates")}</span>
+										<span className="text-sm text-muted-foreground">{t("common:labels.coordinates")}:</span>
 										<span className="font-mono text-sm font-medium">
 											{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 										</span>
@@ -146,7 +146,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 								{station.location?.region && (
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
-										<span className="text-sm text-muted-foreground">{t("common:labels.region")}</span>
+										<span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
 										<span className="text-sm font-medium">{station.location.region.name}</span>
 									</div>
 								)}
@@ -154,14 +154,14 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 								{station.operator && (
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
-										<span className="text-sm text-muted-foreground">{t("common:labels.operator")}</span>
+										<span className="text-sm text-muted-foreground">{t("common:labels.operator")}:</span>
 										<span className="text-sm font-medium">{station.operator.name}</span>
 									</div>
 								)}
 
 								<div className="flex items-center gap-2">
 									<HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
-									<span className="text-sm text-muted-foreground">{t("common:labels.stationId")}</span>
+									<span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
 									<span className="font-mono text-sm font-medium">{station.station_id}</span>
 									<CopyButton text={station.station_id} />
 								</div>
@@ -176,7 +176,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 					</div>
 
 					<div className="px-6 pb-5">
-						<h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t("permits.title")}</h3>
+						<h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t("tabs.permits")}</h3>
 
 						<div className="space-y-4">
 							{Array.from(permitsByRat.entries()).map(([rat, permits]) => (
@@ -220,7 +220,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 																		<span>
 																			{permit.band?.value
 																				? Number(permit.band.value) === 0
-																					? t("cells.unknownBand")
+																					? t("stations:cells.unknownBand")
 																					: `${permit.band.value} MHz`
 																				: "-"}
 																		</span>

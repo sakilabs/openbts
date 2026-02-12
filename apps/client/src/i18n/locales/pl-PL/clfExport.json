@@ -8,14 +8,8 @@
 		"iosNote": "Dla iOS/iPadOS/watchOS nie ma takiej aplikacji, ponieważ Apple nie pozwala na monitorowanie takich rzeczy z poziomu aplikacji."
 	},
 	"form": {
-		"operators": "Operatorzy",
-		"selectOperators": "Wybierz operatorów...",
-		"noOperatorsFound": "Nie znaleziono operatorów",
 		"operatorsHint": "Wybierz jednego lub więcej operatorów. Jeśli nie wybrano żadnego, wyeksportowani zostaną wszyscy operatorzy.",
-		"regions": "Województwa",
-		"standard": "Standard",
 		"standardHint": "Opcjonalnie, domyślnie eksportowane są wszystkie standardy.",
-		"bands": "Pasmo",
 		"bandsHint": "Opcjonalnie, domyślnie eksportowane są wszystkie pasma.",
 		"outputFormat": "Format wyjściowy",
 		"formatInfo": "Szczegółowe informacje dotyczące formatów:",

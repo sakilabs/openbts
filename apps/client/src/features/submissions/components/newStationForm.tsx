@@ -27,18 +27,18 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
 		<div className="border rounded-xl overflow-hidden">
 			<div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
 				<HugeiconsIcon icon={Building02Icon} className="size-4 text-primary" />
-				<span className="font-semibold text-sm">{t("newStation.title")}</span>
+				<span className="font-semibold text-sm">{t("stationInfo.title")}</span>
 			</div>
 
 			<div className="p-4 space-y-4">
 				<div className="grid grid-cols-2 gap-3">
 					<div className="space-y-1.5">
 						<Label htmlFor="station_id" className="text-xs">
-							{t("newStation.stationId")}
+							{t("common:labels.stationId")}
 						</Label>
 						<Input
 							id="station_id"
-							placeholder={t("newStation.stationIdPlaceholder")}
+							placeholder="WWW12345"
 							value={station.station_id}
 							maxLength={16}
 							onChange={(e) => onStationChange({ ...station, station_id: e.target.value })}
@@ -47,13 +47,13 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
 						{errors?.station_id ? (
 							<p className="text-xs text-destructive">{t(errors.station_id)}</p>
 						) : (
-							<p className="text-xs text-muted-foreground">{t("newStation.stationIdHint")}</p>
+							<p className="text-xs text-muted-foreground">{t("stationInfo.stationIdHint")}</p>
 						)}
 					</div>
 
 					<div className="space-y-1.5">
 						<Label htmlFor="operator" className="text-xs">
-							{t("newStation.operator")}
+							{t("common:labels.operator")}
 						</Label>
 						<Select
 							value={station.operator_id?.toString() ?? ""}
@@ -77,7 +77,7 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
 											{operators.find((o) => o.id === station.operator_id)?.name}
 										</div>
 									) : (
-										t("newStation.selectOperator")
+										t("common:placeholder.selectOperator")
 									)}
 								</SelectValue>
 							</SelectTrigger>
@@ -98,11 +98,11 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
 
 				<div className="space-y-1.5">
 					<Label htmlFor="notes" className="text-xs">
-						{t("newStation.notes")}
+						{t("common:labels.notes")}
 					</Label>
 					<Textarea
 						id="notes"
-						placeholder={t("newStation.notesPlaceholder")}
+						placeholder={t("common:placeholder.notes")}
 						value={station.notes ?? ""}
 						rows={2}
 						onChange={(e) => onStationChange({ ...station, notes: e.target.value })}

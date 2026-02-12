@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -65,9 +65,9 @@ export default function AdminLocationDetailPage() {
 		return (
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
-					<p className="text-muted-foreground">{t("locationDetail.notFound")}</p>
+					<p className="text-muted-foreground">{t("common:error.description")}</p>
 					<Button variant="outline" onClick={() => navigate("/admin/locations")}>
-						{t("locationDetail.backToLocations")}
+						{t("common:actions.back")}
 					</Button>
 				</div>
 			</div>
@@ -79,7 +79,7 @@ export default function AdminLocationDetailPage() {
 
 function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typeof fetchLocationDetail> extends Promise<infer T> ? T : never> }) {
 	const navigate = useNavigate();
-	const { t } = useTranslation("admin");
+	const { t } = useTranslation("stations");
 
 	const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => ({
 		region_id: location.region?.id ?? null,
@@ -105,8 +105,8 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 				latitude: locationForm.latitude,
 			},
 			{
-				onSuccess: () => toast.success(t("locationDetail.saved")),
-				onError: () => toast.error(t("locationDetail.saveFailed")),
+				onSuccess: () => toast.success(t("toast.locationSaved")),
+				onError: () => toast.error(t("common:error.toast")),
 			},
 		);
 	};
@@ -123,12 +123,36 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 
 	const stations = location.stations ?? [];
 
+	const operatorColors = useMemo(() => {
+		const seen = new Set<number>();
+		const colors: string[] = [];
+		for (const s of stations) {
+			if (s.operator && !seen.has(s.operator.mnc)) {
+				seen.add(s.operator.mnc);
+				colors.push(getOperatorColor(s.operator.mnc));
+			}
+		}
+		return colors;
+	}, [stations]);
+
+	const headerTopStyle = useMemo(() => {
+		if (operatorColors.length === 0) return undefined;
+		if (operatorColors.length === 1) return { backgroundColor: operatorColors[0] };
+		const stops = operatorColors.map((color, i) => {
+			const start = (i / operatorColors.length) * 100;
+			const end = ((i + 1) / operatorColors.length) * 100;
+			return `${color} ${start}%, ${color} ${end}%`;
+		});
+		return { background: `linear-gradient(to right, ${stops.join(", ")})` };
+	}, [operatorColors]);
+
 	return (
 		<div className="flex-1 flex flex-col overflow-hidden">
+			{headerTopStyle && <div className="shrink-0 h-0.75" style={headerTopStyle} />}
 			<div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 py-2 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm">
 				<Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2">
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-					<span className="font-medium">{t("locationDetail.back")}</span>
+					<span className="font-medium">{t("common:actions.back")}</span>
 				</Button>
 
 				<div className="flex items-center gap-2.5 px-3 py-1.5 bg-secondary/30 rounded-full border border-border/40 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -142,10 +166,10 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 
 				<div className="flex items-center gap-2">
 					<Button variant="ghost" size="sm" onClick={handleRevert} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-						{t("locationDetail.revert")}
+						{t("common:actions.revert")}
 					</Button>
 					<Button size="sm" onClick={handleSave} disabled={patchMutation.isPending} className="shadow-sm font-medium px-4 min-w-25">
-						{patchMutation.isPending ? <Spinner /> : t("locationDetail.saveChanges")}
+						{patchMutation.isPending ? <Spinner /> : t("common:actions.saveChanges")}
 					</Button>
 				</div>
 			</div>
@@ -161,15 +185,15 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 							<div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
 								<div className="flex items-center gap-2">
 									<HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-primary" />
-									<span className="font-semibold text-sm">{t("locationDetail.stationsAtLocation")}</span>
+									<span className="font-semibold text-sm">{t("stations:stationsAtLocation")}</span>
 								</div>
 								<Badge variant="secondary" className="text-xs">
-									{t("locationDetail.stationsCount", { count: stations.length })}
+									{t("stations:stationsCount", { count: stations.length })}
 								</Badge>
 							</div>
 
 							{stations.length === 0 ? (
-								<div className="px-4 py-8 text-center text-sm text-muted-foreground">{t("locationDetail.noStations")}</div>
+								<div className="px-4 py-8 text-center text-sm text-muted-foreground">{t("main:popup.noStations")}</div>
 							) : (
 								<div className="divide-y">
 									{stations.map((station) => (

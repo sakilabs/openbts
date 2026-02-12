@@ -129,36 +129,36 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
 						<HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5 text-muted-foreground group-data-panel-open:rotate-0 -rotate-90" />
 						<HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
 						<span className="font-semibold text-sm">{rat}</span>
-						<span className="text-xs text-muted-foreground">({t("cellDetails.cellsCount", { count: cells.length })})</span>
+						<span className="text-xs text-muted-foreground">({t("stations:cells.cellsCount", { count: cells.length })})</span>
 						{diffCounts.added > 0 && (
 							<span className="text-xs text-green-600 flex items-center gap-1">
 								<span className="size-1.5 rounded-full bg-green-500" />
-								{diffCounts.added} {t("cellDetails.diffAdded")}
+								{diffCounts.added} {t("stations:cells.diffAdded")}
 							</span>
 						)}
 						{diffCounts.modified > 0 && (
 							<span className="text-xs text-amber-600 flex items-center gap-1">
 								<span className="size-1.5 rounded-full bg-amber-500" />
-								{diffCounts.modified} {t("cellDetails.diffModified")}
+								{diffCounts.modified} {t("stations:cells.diffModified")}
 							</span>
 						)}
 						{diffCounts.deleted > 0 && (
 							<span className="text-xs text-red-600 flex items-center gap-1">
 								<span className="size-1.5 rounded-full bg-red-500" />
-								{diffCounts.deleted} {t("cellDetails.diffDeleted")}
+								{diffCounts.deleted} {t("stations:cells.diffDeleted")}
 							</span>
 						)}
 					</CollapsibleTrigger>
 					<Button type="button" variant="ghost" size="sm" onClick={handleAddCell} className="h-7 text-xs">
 						<HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-						{t("cellDetails.addCell")}
+						{t("stations:cells.addCell")}
 					</Button>
 				</div>
 				<CollapsibleContent>
 					{cells.length === 0 ? (
-						<div className="px-4 py-6 text-center text-sm text-muted-foreground">{t("cellDetails.noCells")}</div>
+						<div className="px-4 py-6 text-center text-sm text-muted-foreground">{t("stations:cells.noCells")}</div>
 					) : (
-						<div className="overflow-x-auto">
+						<div className="overflow-x-auto custom-scrollbar">
 							<table className="w-full text-sm">
 								<thead>
 									<tr className="border-b bg-muted/30">
@@ -242,7 +242,7 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
 			<td className={cn("px-3 py-1", firstCellBorderClass)}>
 				<Select value={bandValue?.toString() ?? ""} onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}>
 					<SelectTrigger className={`h-7 w-24 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
-						<SelectValue>{bandValue ? `${bandValue} MHz` : t("cellDetails.selectBand")}</SelectValue>
+						<SelectValue>{bandValue ? `${bandValue} MHz` : t("common:placeholder.selectBand")}</SelectValue>
 					</SelectTrigger>
 					<SelectContent>
 						{uniqueBandValues.map((value) => (
@@ -283,7 +283,7 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
 			<td className="px-3 py-1">
 				<Input
 					type="text"
-					placeholder={t("cellDetails.notesPlaceholder")}
+					placeholder={t("stations:cells.notesPlaceholder")}
 					value={cell.notes ?? ""}
 					onChange={(e) => onNotesChange(cell.id, e.target.value)}
 					className="h-7 w-28 text-sm"

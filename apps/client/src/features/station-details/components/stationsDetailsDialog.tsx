@@ -111,7 +111,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 											{station.is_confirmed && (
 												<span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-sm">
 													<HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
-													<span className="hidden sm:inline">{t("dialog.confirmed")}</span>
+													<span className="hidden sm:inline">{t("common:labels.confirmed")}</span>
 												</span>
 											)}
 										</div>

@@ -96,7 +96,7 @@ export const PopupContent = memo(function PopupContent({
 	onOpenStationDetails,
 	onOpenUkeStationDetails,
 }: PopupContentProps) {
-	const { t } = useTranslation(["map", "common"]);
+	const { t } = useTranslation(["main", "common"]);
 	const { preferences } = usePreferences();
 
 	const isUkeSource = source === "uke";
@@ -122,7 +122,7 @@ export const PopupContent = memo(function PopupContent({
 				) : isUkeSource && ukeStations ? (
 					ukeStations.map((station) => {
 						const mnc = station.operator?.mnc;
-						const operatorName = station.operator?.name || t("popup.unknownOperator");
+						const operatorName = station.operator?.name || t("unknownOperator");
 						const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
 						const bands = getPermitBands(station.permits);
 						const hasExpired = station.permits.some((p) => {
@@ -154,7 +154,7 @@ export const PopupContent = memo(function PopupContent({
 										</span>
 									))}
 									<span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
-										{station.permits.length} {station.permits.length === 1 ? t("popup.permit") : t("popup.permits")}
+										{station.permits.length} {station.permits.length === 1 ? t("stationDetails:permits.permit") : t("stationDetails:permits.permits")}
 									</span>
 									{hasExpired && (
 										<span className="px-1 py-px rounded-md bg-destructive/10 text-[8px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
@@ -168,7 +168,7 @@ export const PopupContent = memo(function PopupContent({
 				) : stations ? (
 					stations.map((station) => {
 						const mnc = station.operator?.mnc;
-						const operatorName = station.operator?.name || t("popup.unknownOperator");
+						const operatorName = station.operator?.name || t("unknownOperator");
 						const stationId = station.station_id;
 						const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
 						const hasCells = station.cells !== undefined;

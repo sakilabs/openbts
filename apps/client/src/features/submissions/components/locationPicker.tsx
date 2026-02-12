@@ -93,7 +93,7 @@ type LocationPickerProps = {
 };
 
 export function LocationPicker({ location, errors, onLocationChange }: LocationPickerProps) {
-	const { t } = useTranslation("submissions");
+	const { t } = useTranslation(["submissions", "common"]);
 	const [isFetchingAddress, setIsFetchingAddress] = useState(false);
 
 	const { data: regions = [] } = useQuery(regionsQueryOptions());
@@ -179,7 +179,7 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 				<div className="grid grid-cols-2 gap-3">
 					<div className="space-y-1.5">
 						<Label htmlFor="latitude" className="text-xs">
-							{t("locationPicker.latitude")}
+							{t("common:labels.latitude")}
 						</Label>
 						<Input
 							id="latitude"
@@ -194,7 +194,7 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 					</div>
 					<div className="space-y-1.5">
 						<Label htmlFor="longitude" className="text-xs">
-							{t("locationPicker.longitude")}
+							{t("common:labels.longitude")}
 						</Label>
 						<Input
 							id="longitude"
@@ -211,7 +211,7 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 
 				<div className="space-y-1.5">
 					<Label htmlFor="region" className="text-xs">
-						{t("locationPicker.region")}
+						{t("common:labels.region")}
 					</Label>
 					<Select
 						value={location.region_id?.toString() ?? ""}
@@ -219,7 +219,7 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 					>
 						<SelectTrigger className={`h-8 text-sm ${errors?.region_id ? "border-destructive" : ""}`}>
 							<SelectValue>
-								{location.region_id ? regions.find((r) => r.id === location.region_id)?.name : t("locationPicker.selectRegion")}
+								{location.region_id ? regions.find((r) => r.id === location.region_id)?.name : t("locationPicker.regionPlaceholder")}
 							</SelectValue>
 						</SelectTrigger>
 						<SelectContent>
@@ -236,7 +236,7 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 				<div className="grid grid-cols-2 gap-3">
 					<div className="space-y-1.5">
 						<Label htmlFor="city" className="text-xs">
-							{t("locationPicker.city")}
+							{t("common:labels.city")}
 						</Label>
 						<Input
 							id="city"
@@ -248,7 +248,7 @@ export function LocationPicker({ location, errors, onLocationChange }: LocationP
 					</div>
 					<div className="space-y-1.5">
 						<Label htmlFor="address" className="text-xs">
-							{t("locationPicker.address")}
+							{t("common:labels.address")}
 						</Label>
 						<Input
 							id="address"
@@ -497,7 +497,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect }
 										<div className="min-w-0 flex-1">
 											<div className="text-xs font-medium truncate">{loc.address || loc.city || `#${loc.id}`}</div>
 											<div className="text-[10px] text-muted-foreground leading-tight">
-												{t("locationPicker.stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)}m
+												{t("stations:stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)}m
 											</div>
 										</div>
 									</button>

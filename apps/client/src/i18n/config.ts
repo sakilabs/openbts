@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 import enUSCommon from "./locales/en-US/common.json";
 import enUSStations from "./locales/en-US/stations.json";
 import enUSNav from "./locales/en-US/nav.json";
-import enUSMap from "./locales/en-US/map.json";
+import enUSMain from "./locales/en-US/main.json";
 import enUSStationDetails from "./locales/en-US/stationDetails.json";
 import enUSSubmissions from "./locales/en-US/submissions.json";
 import enUSClfExport from "./locales/en-US/clfExport.json";
@@ -15,7 +15,7 @@ import enUSAdmin from "./locales/en-US/admin.json";
 import plPLCommon from "./locales/pl-PL/common.json";
 import plPLStations from "./locales/pl-PL/stations.json";
 import plPLNav from "./locales/pl-PL/nav.json";
-import plPLMap from "./locales/pl-PL/map.json";
+import plPLMain from "./locales/pl-PL/main.json";
 import plPLStationDetails from "./locales/pl-PL/stationDetails.json";
 import plPLSubmissions from "./locales/pl-PL/submissions.json";
 import plPLClfExport from "./locales/pl-PL/clfExport.json";
@@ -29,7 +29,7 @@ export const resources = {
 		common: enUSCommon,
 		stations: enUSStations,
 		nav: enUSNav,
-		map: enUSMap,
+		main: enUSMain,
 		stationDetails: enUSStationDetails,
 		submissions: enUSSubmissions,
 		clfExport: enUSClfExport,
@@ -41,7 +41,7 @@ export const resources = {
 		common: plPLCommon,
 		stations: plPLStations,
 		nav: plPLNav,
-		map: plPLMap,
+		main: plPLMain,
 		stationDetails: plPLStationDetails,
 		submissions: plPLSubmissions,
 		clfExport: plPLClfExport,

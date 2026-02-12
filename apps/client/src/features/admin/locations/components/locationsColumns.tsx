@@ -46,13 +46,13 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
 	return [
 		{
 			accessorKey: "id",
-			header: () => <SortableHeader label={t("locations.table.id")} column="id" sort={sort} sortBy={sortBy} onSort={onSort} />,
+			header: () => <SortableHeader label={t("common:labels.id")} column="id" sort={sort} sortBy={sortBy} onSort={onSort} />,
 			size: 70,
 			cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">#{getValue<number>()}</span>,
 		},
 		{
 			accessorKey: "city",
-			header: t("locations.table.city"),
+			header: t("common:labels.city"),
 			size: 180,
 			cell: ({ getValue }) => {
 				const city = getValue<string>();
@@ -68,7 +68,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
 		},
 		{
 			accessorKey: "address",
-			header: t("locations.table.address"),
+			header: t("common:labels.address"),
 			size: 240,
 			cell: ({ getValue }) => {
 				const address = getValue<string>();
@@ -81,7 +81,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
 		},
 		{
 			id: "region",
-			header: t("locations.table.region"),
+			header: t("common:labels.region"),
 			size: 120,
 			accessorFn: (row) => row.region?.name,
 			cell: ({ getValue }) => {
@@ -91,7 +91,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
 		},
 		{
 			id: "coordinates",
-			header: t("locations.table.coordinates"),
+			header: t("common:labels.coordinates"),
 			size: 180,
 			cell: ({ row }) => {
 				const loc = row.original;
@@ -104,7 +104,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
 		},
 		{
 			id: "stations",
-			header: t("locations.table.stations"),
+			header: t("common:labels.stations"),
 			size: 140,
 			accessorFn: (row) => row.stations?.length ?? 0,
 			cell: ({ row }) => {
@@ -137,7 +137,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
 		},
 		{
 			accessorKey: "updatedAt",
-			header: () => <SortableHeader label={t("locations.table.updatedAt")} column="updatedAt" sort={sort} sortBy={sortBy} onSort={onSort} />,
+			header: () => <SortableHeader label={t("common:labels.updated")} column="updatedAt" sort={sort} sortBy={sortBy} onSort={onSort} />,
 			size: 130,
 			cell: ({ getValue }) => {
 				const date = getValue<string>();

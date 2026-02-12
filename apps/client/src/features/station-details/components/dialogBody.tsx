@@ -107,7 +107,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 					<div className="size-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-4">
 						<HugeiconsIcon icon={InformationCircleIcon} className="size-6" />
 					</div>
-					<p className="text-muted-foreground max-w-xs">{error instanceof Error ? error.message : t("dialog.loadError")}</p>
+					<p className="text-muted-foreground max-w-xs">{error instanceof Error ? error.message : t("common:placeholder.errorFetching")}</p>
 				</div>
 			) : station ? (
 				<div className="p-6 space-y-8">
@@ -139,7 +139,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 										<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl bg-muted/20">
 											<div className="flex items-center gap-2">
 												<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-												<span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}</span>
+												<span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}:</span>
 												<span className="text-sm font-mono font-medium whitespace-nowrap">
 													{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 												</span>
@@ -150,17 +150,17 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 											</div>
 											<div className="flex items-center gap-2">
 												<HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
-												<span className="text-sm text-muted-foreground">{t("common:labels.region")}</span>
+												<span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
 												<span className="text-sm font-medium">{station?.location.region?.name || "-"}</span>
 											</div>
 											<div className="flex items-center gap-2">
 												<HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
-												<span className="text-sm text-muted-foreground">{t("common:labels.operator")}</span>
+												<span className="text-sm text-muted-foreground">{t("common:labels.operator")}:</span>
 												<span className="text-sm font-medium">{station?.operator.name}</span>
 											</div>
 											<div className="flex items-center gap-2">
 												<HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
-												<span className="text-sm text-muted-foreground">{t("common:labels.stationId")}</span>
+												<span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
 												<span className="text-sm font-mono font-medium">{station?.station_id}</span>
 												<div className="ml-auto sm:ml-0">
 													<CopyButton text={station?.station_id || ""} />
@@ -180,7 +180,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 										{Object.keys(cellGroups).length === 0 ? (
 											<div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
 												<HugeiconsIcon icon={SignalFull02Icon} className="size-8 mb-2 opacity-20" />
-												<p className="text-sm">{t("cells.noCells")}</p>
+												<p className="text-sm">{t("stations:cells.noStationCells")}</p>
 											</div>
 										) : (
 											<div className="space-y-4">
@@ -204,7 +204,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 										<div className="flex items-center justify-between text-xs text-muted-foreground">
 											<span className="inline-flex items-center gap-2">
 												<HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-												{t("common:labels.created")}{" "}
+												{t("common:labels.created")}:{" "}
 												{station
 													? new Date(station.createdAt).toLocaleDateString(i18n.language, {
 															year: "numeric",
@@ -217,7 +217,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 											</span>
 											<span className="inline-flex items-center gap-1.5">
 												<HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-												{t("common:labels.updated")}{" "}
+												{t("common:labels.updated")}:{" "}
 												{station
 													? new Date(station.updatedAt).toLocaleDateString(i18n.language, {
 															year: "numeric",
@@ -237,7 +237,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 								<div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
 									<section>
 										<h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-											<HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("permits.title")}
+											<HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("tabs.permits")}
 										</h3>
 										<PermitsList stationId={stationId} />
 									</section>
@@ -259,7 +259,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 						<div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
 							<section>
 								<h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-									<HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("permits.title")}
+									<HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("tabs.permits")}
 								</h3>
 								<PermitsList stationId={stationId} isUkeSource />
 							</section>

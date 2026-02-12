@@ -1,68 +1,41 @@
 {
-	"header": {
-		"createStation": "Create Station",
-		"newStation": "New Station",
-		"deleteStation": "Delete Station",
-		"confirmDelete": "Delete this station?",
-		"confirmDeleteDesc": "This action cannot be undone. This will permanently delete the station and all its cells."
-	},
 	"breadcrumbs": {
 		"admin": "Admin",
 		"stations": "Stations",
 		"editStation": "Edit Station",
 		"submissions": "Submissions",
 		"users": "Users",
-		"userDetail": "User Details",
+		"userDetail": "User Detail",
 		"locations": "Locations",
 		"editLocation": "Edit Location",
 		"settings": "Settings"
 	},
-	"stationInfo": {
-		"title": "Station Information",
-		"stationId": "Station ID",
-		"operator": "Operator",
-		"selectOperator": "Select operator",
-		"notes": "Notes",
-		"confirmed": "Confirmed"
-	},
-	"cells": {
-		"addCell": "Add Cell",
-		"noCells": "No cells yet. Click \"Add Cell\" to create one.",
-		"noRats": "No cells found for this station. Toggle a RAT above to add cells.",
-		"cellsCount_one": "{{count}} cell",
-		"cellsCount_other": "{{count}} cells",
-		"confirmed": "Confirmed",
-		"band": "Band",
-		"duplex": "Duplex",
-		"notes": "Notes",
-		"carrier": "Carrier",
-		"diffAdded": "new",
-		"diffModified": "modified",
-		"diffDeleted": "deleted"
-	},
-	"cellFields": {
-		"carrier": "Carrier"
-	},
-	"toast": {
-		"stationUpdated": "Station updated",
-		"stationFailed": "Failed to update station",
-		"cellsSaved": "Changes saved successfully",
-		"cellsFailed": "Failed to save changes",
-		"noBands": "No bands available for {{rat}}",
-		"stationCreated": "Station created successfully",
-		"createFailed": "Failed to create station",
-		"stationIdRequired": "Station ID is required",
-		"operatorRequired": "Operator is required",
-		"locationRequired": "Location coordinates and region are required",
-		"stationDeleted": "Station deleted successfully",
-		"deleteFailed": "Failed to delete station"
-	},
-	"notFound": {
-		"message": "Station not found",
-		"backToStations": "Back to Stations"
+	"settings": {
+		"title": "System Settings",
+		"subtitle": "Manage system configuration",
+		"loading": "Loading settings...",
+		"errorTitle": "Failed to load settings",
+		"errorDescription": "There was a problem loading system settings.",
+		"authentication": "Authentication",
+		"authenticationDesc": "Control access and authentication requirements",
+		"enforceAuth": "Enforce authentication for all routes",
+		"enforceAuthDesc": "Require authentication for all API endpoints",
+		"allowedRoutes": "Allowed API endpoints without authentication",
+		"allowedRoutesDesc": "API endpoints that bypass authentication (press Enter to add)",
+		"disabledRoutes": "Disabled API endpoints",
+		"disabledRoutesDesc": "API endpoints that are completely disabled (press Enter to add)",
+		"comments": "Station Comments",
+		"commentsDesc": "Allow users to comment on stations",
+		"enableComments": "Enable comments",
+		"commentsEnabled": "Users can comment on stations",
+		"commentsDisabled": "Comments are disabled",
+		"submissions": "Submissions",
+		"submissionsDesc": "Allow users to submit new stations",
+		"enableSubmissions": "Enable submissions",
+		"submissionsEnabled": "Users can submit stations",
+		"submissionsDisabled": "Submissions are disabled"
 	},
 	"users": {
-		"searchPlaceholder": "Search by email...",
 		"table": {
 			"name": "Name",
 			"email": "Email",
@@ -71,167 +44,7 @@
 			"created": "Created"
 		}
 	},
-	"submissions": {
-		"title": "Submissions",
-		"description": "Review user-submitted station changes",
-		"subtitle": "Manage station update submissions",
-		"empty": "No submissions found",
-		"emptyFiltered": "No submissions match current filters",
-		"filters": {
-			"title": "Filters",
-			"all": "All",
-			"network": "Operator",
-			"region": "Region",
-			"search": "Search",
-			"otherOperators_one": "{{count}} other operator",
-			"otherOperators_other": "{{count}} other operators",
-			"selected": "{{count}} selected"
-		},
-		"table": {
-			"id": "ID",
-			"type": "Type",
-			"status": "Status",
-			"station": "Station",
-			"submitter": "Submitter",
-			"submitted": "Submitted",
-			"reviewed": "Reviewed",
-			"cells": "Cells"
-		}
-	},
-	"submissionDetail": {
-		"title": "Review Submission",
-		"backToSubmissions": "Back to Submissions",
-		"submitter": "Submitter",
-		"submitterNote": "Submitter Note",
-		"reviewNotes": "Review Notes",
-		"reviewNotesPlaceholder": "Add review notes...",
-		"approve": "Approve",
-		"reject": "Reject",
-		"saveChanges": "Save Changes",
-		"submittedAt": "Submitted",
-		"reviewedAt": "Reviewed",
-		"reviewer": "Reviewer",
-		"proposedStation": "Proposed Station",
-		"proposedLocation": "Proposed Location",
-		"proposedCells": "Proposed Cells",
-		"operation": {
-			"add": "Add",
-			"update": "Update",
-			"delete": "Delete"
-		},
-		"readOnly": "This submission has already been reviewed and cannot be edited.",
-		"notFound": "Submission not found",
-		"stationId": "Station ID",
-		"operator": "Operator",
-		"selectOperator": "Select operator",
-		"notes": "Notes",
-		"noSubmitterNote": "No submitter note provided",
-		"noReviewNotes": "No review notes",
-		"linkedStation": "Linked Station",
-		"confirmApprove": "Approve submission?",
-		"confirmApproveDesc": "This will apply all proposed changes to the station.",
-		"confirmReject": "Reject submission?",
-		"confirmRejectDesc": "This will discard all proposed changes.",
-		"cancel": "Cancel",
-		"viewCurrent": "Current station",
-		"adminReview": "Admin Review",
-		"deletionBanner": "This submission requests the deletion of station {{stationId}}. Station will be marked as 'inactive'.",
-		"submitterNoteLabel": "Submitter's note"
-	},
-	"submissionToast": {
-		"approved": "Submission approved successfully",
-		"rejected": "Submission rejected",
-		"updated": "Submission updated",
-		"saved": "Changes saved",
-		"approveFailed": "Failed to approve submission",
-		"rejectFailed": "Failed to reject submission",
-		"updateFailed": "Failed to update submission",
-		"saveFailed": "Failed to save changes"
-	},
 	"locations": {
-		"title": "Locations",
-		"description": "Manage station locations",
-		"filters": {
-			"title": "Filters",
-			"network": "Operator",
-			"region": "Region",
-			"search": "Search",
-			"otherOperators_one": "{{count}} other operator",
-			"otherOperators_other": "{{count}} other operators",
-			"selected": "{{count}} selected"
-		},
-		"table": {
-			"id": "ID",
-			"city": "City",
-			"address": "Address",
-			"region": "Region",
-			"coordinates": "Coordinates",
-			"stations": "Stations",
-			"updatedAt": "Updated"
-		},
-		"searchPlaceholder": "Search by city or address...",
-		"noLocationsFound": "No locations found",
-		"tryAdjustingFilters": "Try adjusting your search or filters",
-		"showingLocationsOfTotal": "Showing {{count}} of {{total}} locations",
-		"showingLocations": "Showing {{count}} locations"
-	},
-	"locationDetail": {
-		"title": "Location Details",
-		"locationInfo": "Location Information",
-		"stationsAtLocation": "Stations at this Location",
-		"stationsCount_one": "{{count}} station",
-		"stationsCount_other": "{{count}} stations",
-		"noStations": "No stations at this location",
-		"viewStation": "View Station",
-		"saveChanges": "Save Changes",
-		"saving": "Saving...",
-		"revert": "Revert",
-		"back": "Back",
-		"saved": "Location updated successfully",
-		"saveFailed": "Failed to update location",
-		"notFound": "Location not found",
-		"backToLocations": "Back to Locations"
-	},
-	"diff": {
-		"current": "Currently:",
-		"was": "Was:",
-		"locationChanged": "Location was changed",
-		"coordinates": "Coords:",
-		"city": "City:",
-		"address": "Address:"
-	},
-	"settings": {
-		"title": "System Settings",
-		"subtitle": "Manage runtime configuration",
-		"loading": "Loading settings...",
-		"errorTitle": "Failed to load settings",
-		"errorDescription": "There was a problem loading the system settings.",
-		"saved": "Saved successfully",
-		"authentication": "Authentication",
-		"authenticationDesc": "Control access and authentication requirements",
-		"enforceAuth": "Enforce Auth for All Routes",
-		"enforceAuthDesc": "Require authentication for all API endpoints",
-		"allowedRoutes": "Allowed Unauthenticated Routes",
-		"allowedRoutesDesc": "Routes that bypass authentication (press Enter to add)",
-		"disabledRoutes": "Disabled Routes",
-		"disabledRoutesDesc": "Routes that are completely disabled (press Enter to add)",
-		"comments": "Station Comments",
-		"commentsDesc": "Allow users to comment on stations",
-		"enableComments": "Enable Comments",
-		"commentsEnabled": "Users can comment on stations",
-		"commentsDisabled": "Comments are disabled",
-		"submissions": "Submissions",
-		"submissionsDesc": "Allow users to submit new stations",
-		"enableSubmissions": "Enable Submissions",
-		"submissionsEnabled": "Users can submit stations",
-		"submissionsDisabled": "Submissions are disabled",
-		"autoSave": "Changes are saved to the server immediately"
-	},
-	"stationComments": {
-		"title": "Comments",
-		"noComments": "No comments on this station",
-		"deleteConfirm": "Are you sure you want to delete this comment?",
-		"deleted": "Comment deleted",
-		"deleteFailed": "Failed to delete comment"
+		"title": "Locations"
 	}
 }

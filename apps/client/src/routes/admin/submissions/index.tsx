@@ -26,11 +26,27 @@ export const handle: RouteHandle = {
 const columnHelper = createColumnHelper<SubmissionListItem>();
 
 export default function AdminSubmissionsListPage() {
-	const { t, i18n } = useTranslation(["admin", "common"]);
+	const { t, i18n } = useTranslation(["submissions", "common"]);
 	const navigate = useNavigate();
 
-	const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
-	const [typeFilter, setTypeFilter] = useState<"all" | "new" | "update" | "delete">("all");
+	const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">(() => {
+		const saved = localStorage.getItem("admin:submissions:status");
+		return saved === "all" || saved === "pending" || saved === "approved" || saved === "rejected" ? saved : "pending";
+	});
+	const [typeFilter, setTypeFilter] = useState<"all" | "new" | "update" | "delete">(() => {
+		const saved = localStorage.getItem("admin:submissions:type");
+		return saved === "all" || saved === "new" || saved === "update" || saved === "delete" ? saved : "all";
+	});
+
+	const handleStatusFilter = useCallback((v: typeof statusFilter) => {
+		setStatusFilter(v);
+		localStorage.setItem("admin:submissions:status", v);
+	}, []);
+
+	const handleTypeFilter = useCallback((v: typeof typeFilter) => {
+		setTypeFilter(v);
+		localStorage.setItem("admin:submissions:type", v);
+	}, []);
 
 	const { containerRef, pagination, setPagination } = useTablePagination({
 		rowHeight: 48,
@@ -61,7 +77,7 @@ export default function AdminSubmissionsListPage() {
 	const columns = useMemo(
 		() => [
 			columnHelper.accessor("id", {
-				header: t("submissions.table.id", "ID"),
+				header: t("common:labels.id"),
 				size: 100,
 				cell: ({ getValue }) => {
 					const id = getValue();
@@ -70,7 +86,7 @@ export default function AdminSubmissionsListPage() {
 				},
 			}),
 			columnHelper.accessor("type", {
-				header: t("submissions.table.type", "Type"),
+				header: t("common:labels.type"),
 				size: 100,
 				cell: ({ getValue }) => {
 					const type = getValue();
@@ -89,7 +105,7 @@ export default function AdminSubmissionsListPage() {
 				},
 			}),
 			columnHelper.accessor("status", {
-				header: t("submissions.table.status", "Status"),
+				header: t("common:labels.status"),
 				size: 120,
 				cell: ({ getValue }) => {
 					const status = getValue();
@@ -103,17 +119,17 @@ export default function AdminSubmissionsListPage() {
 				},
 			}),
 			columnHelper.accessor("station", {
-				header: t("submissions.table.station", "Station"),
+				header: t("common:labels.station"),
 				cell: ({ getValue, row }) => {
 					const station = getValue();
 					const proposedStation = row.original.proposedStation;
 					if (station) return <div className="font-mono font-medium">{station.station_id}</div>;
 					if (proposedStation?.station_id) return <div className="font-mono font-medium">{proposedStation.station_id}</div>;
-					return <span className="text-muted-foreground italic text-xs">{t("submissions.table.newStation", "New Station")}</span>;
+					return <span className="text-muted-foreground italic text-xs">{t("common:labels.newStation")}</span>;
 				},
 			}),
 			columnHelper.accessor("submitter", {
-				header: t("submissions.table.submitter", "Submitter"),
+				header: t("detail.submitter"),
 				cell: ({ getValue }) => {
 					const submitter = getValue();
 					return (
@@ -128,17 +144,17 @@ export default function AdminSubmissionsListPage() {
 				},
 			}),
 			columnHelper.accessor("cells", {
-				header: t("submissions.table.cells", "Cells"),
+				header: t("table.cells"),
 				size: 80,
 				cell: ({ getValue }) => <span className="text-xs font-mono bg-muted px-2 py-1 rounded">{getValue().length}</span>,
 			}),
 			columnHelper.accessor("createdAt", {
-				header: t("submissions.table.submitted", "Submitted"),
+				header: t("common:labels.submitted"),
 				size: 140,
 				cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
 			}),
 			columnHelper.accessor("reviewed_at", {
-				header: t("submissions.table.reviewed", "Reviewed"),
+				header: t("common:labels.reviewed"),
 				size: 140,
 				cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
 			}),
@@ -162,8 +178,8 @@ export default function AdminSubmissionsListPage() {
 		<div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
 			<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
 				<div>
-					<h1 className="text-2xl font-bold tracking-tight">{t("submissions.title")}</h1>
-					<p className="text-muted-foreground text-sm">{t("submissions.subtitle", "Manage station update submissions")}</p>
+					<h1 className="text-2xl font-bold tracking-tight">{t("adminTitle")}</h1>
+					<p className="text-muted-foreground text-sm">{t("adminDescription")}</p>
 				</div>
 
 				<div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -172,7 +188,7 @@ export default function AdminSubmissionsListPage() {
 							<button
 								key={status}
 								type="button"
-								onClick={() => setStatusFilter(status)}
+								onClick={() => handleStatusFilter(status)}
 								className={cn(
 									"px-3 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
 									statusFilter === status
@@ -190,7 +206,7 @@ export default function AdminSubmissionsListPage() {
 							<button
 								key={type}
 								type="button"
-								onClick={() => setTypeFilter(type)}
+								onClick={() => handleTypeFilter(type)}
 								className={cn(
 									"px-3 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
 									typeFilter === type
@@ -219,7 +235,7 @@ export default function AdminSubmissionsListPage() {
 											<div className="size-10 rounded-full bg-destructive/5 flex items-center justify-center text-destructive/50 mb-3">
 												<HugeiconsIcon icon={AlertCircleIcon} className="size-5" />
 											</div>
-											<p>{t("submissions.error", "Failed to load submissions")}</p>
+											<p>{t("common:error.title")}</p>
 										</div>
 									</td>
 								</tr>
@@ -230,8 +246,8 @@ export default function AdminSubmissionsListPage() {
 									<td colSpan={columns.length} className="h-64 text-center">
 										<div className="flex flex-col items-center justify-center text-muted-foreground">
 											<HugeiconsIcon icon={FilterIcon} className="size-10 mb-2 opacity-20" />
-											<p className="font-medium">{t("submissions.emptyState.title", "No submissions found")}</p>
-											<p className="text-sm opacity-70">{t("submissions.emptyState.desc", "Try adjusting your filters")}</p>
+											<p className="font-medium">{t("table.empty")}</p>
+											<p className="text-sm opacity-70">{t("table.emptyHint")}</p>
 										</div>
 									</td>
 								</tr>

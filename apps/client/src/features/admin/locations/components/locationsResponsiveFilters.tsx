@@ -14,6 +14,7 @@ interface LocationsResponsiveFiltersProps {
 	searchQuery: string;
 	onFiltersChange: (filters: LocationFilters) => void;
 	onRegionsChange: (regionIds: number[]) => void;
+	onClearAllFilters: () => void;
 	onSearchQueryChange: (query: string) => void;
 	locationCount: number;
 	totalLocations?: number;
@@ -29,6 +30,7 @@ export function LocationsResponsiveFilters({
 	searchQuery,
 	onFiltersChange,
 	onRegionsChange,
+	onClearAllFilters,
 	onSearchQueryChange,
 	locationCount,
 	totalLocations,
@@ -43,6 +45,7 @@ export function LocationsResponsiveFilters({
 		searchQuery,
 		onFiltersChange,
 		onRegionsChange,
+		onClearAllFilters,
 		onSearchQueryChange,
 		locationCount,
 		totalLocations,

@@ -34,7 +34,7 @@ export function StationsDataTable({
 	sortBy,
 	onSort,
 }: StationsDataTableProps) {
-	const { t, i18n } = useTranslation("stations");
+	const { t, i18n } = useTranslation("main");
 	const { t: tCommon } = useTranslation("common");
 
 	const { containerRef, pagination, setPagination } = useTablePagination({
@@ -45,7 +45,7 @@ export function StationsDataTable({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Already changes on `i18n.language`
 	const columns = useMemo(
-		() => createStationsColumns({ t, tCommon, locale: i18n.language, isSearchActive, sort, sortBy, onSort }),
+		() => createStationsColumns({ t: tCommon, locale: i18n.language, isSearchActive, sort, sortBy, onSort }),
 		[i18n.language, isSearchActive, sort, sortBy, onSort],
 	);
 
@@ -85,8 +85,8 @@ export function StationsDataTable({
 						<tbody>
 							<DataTable.Empty columns={columnCount}>
 								<div className="flex flex-col items-center gap-2 text-muted-foreground">
-									<span>{t("table.noStationsFound")}</span>
-									<span className="text-sm">{t("table.tryAdjustingFilters")}</span>
+									<span>{t("search.noResults")}</span>
+									<span className="text-sm">{t("search.noResultsHint")}</span>
 								</div>
 							</DataTable.Empty>
 						</tbody>

@@ -24,15 +24,7 @@ export const handle: RouteHandle = {
 	breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
 };
 
-function Toggle({
-	checked,
-	onChange,
-	disabled = false,
-}: {
-	checked: boolean;
-	onChange: (checked: boolean) => void;
-	disabled?: boolean;
-}) {
+function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
 	return (
 		<button
 			type="button"
@@ -162,7 +154,11 @@ export default function AdminSettingsPage() {
 		submissionsEnabled: true,
 	});
 
-	const { data: settings, isLoading, error } = useQuery({
+	const {
+		data: settings,
+		isLoading,
+		error,
+	} = useQuery({
 		queryKey: ["admin-settings"],
 		queryFn: fetchSettings,
 	});
@@ -229,7 +225,7 @@ export default function AdminSettingsPage() {
 			<div className="flex-1 flex items-center justify-center min-h-[60vh]">
 				<div className="text-center">
 					<Spinner className="size-8 mx-auto mb-4" />
-					<p className="text-muted-foreground text-sm">{t("settings.loading", "Loading settings...")}</p>
+					<p className="text-muted-foreground text-sm">{t("common:actions.loading")}</p>
 				</div>
 			</div>
 		);
@@ -242,10 +238,10 @@ export default function AdminSettingsPage() {
 					<div className="size-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
 						<HugeiconsIcon icon={AlertCircleIcon} className="size-8 text-muted-foreground" />
 					</div>
-					<h3 className="text-lg font-semibold mb-2">{t("settings.errorTitle", "Failed to load settings")}</h3>
-					<p className="text-muted-foreground text-sm mb-4">{t("settings.errorDescription", "There was a problem loading the system settings.")}</p>
+					<h3 className="text-lg font-semibold mb-2">{t("common:error.title")}</h3>
+					<p className="text-muted-foreground text-sm mb-4">{t("common:error.description")}</p>
 					<Button onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-settings"] })} variant="outline">
-						{t("common.error.tryAgain", "Try again")}
+						{t("common:error.tryAgain")}
 					</Button>
 				</div>
 			</div>
@@ -256,14 +252,14 @@ export default function AdminSettingsPage() {
 		<div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
 			<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
 				<div>
-					<h1 className="text-2xl font-bold tracking-tight">{t("settings.title", "System Settings")}</h1>
-					<p className="text-muted-foreground text-sm">{t("settings.subtitle", "Manage runtime configuration")}</p>
+					<h1 className="text-2xl font-bold tracking-tight">{t("settings.title")}</h1>
+					<p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
 				</div>
 
 				{showSaveSuccess ? (
 					<div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600">
 						<HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" />
-						<span className="text-sm font-medium">{t("settings.saved", "Saved successfully")}</span>
+						<span className="text-sm font-medium">{t("common:actions.saved")}</span>
 					</div>
 				) : hasChanges ? (
 					<div className="flex items-center gap-3">
@@ -272,7 +268,7 @@ export default function AdminSettingsPage() {
 						</Button>
 						<Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
 							{mutation.isPending ? <Spinner className="size-4 mr-2" /> : <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 mr-2" />}
-							{t("common:actions.saveChanges", "Save Changes")}
+							{t("common:actions.saveChanges")}
 						</Button>
 					</div>
 				) : null}
@@ -282,31 +278,25 @@ export default function AdminSettingsPage() {
 				<div className="grid gap-4 pb-8 max-w-4xl">
 					<SettingsCard
 						icon={<HugeiconsIcon icon={ShieldUserIcon} className="size-4" />}
-						title={t("settings.authentication", "Authentication")}
-						description={t("settings.authenticationDesc", "Control access and authentication requirements")}
+						title={t("settings.authentication")}
+						description={t("settings.authenticationDesc")}
 					>
 						<div className="space-y-4">
 							<div className="flex items-center justify-between py-3 border-b">
 								<div>
-									<p className="text-sm font-medium">{t("settings.enforceAuth", "Enforce Auth for All Routes")}</p>
-									<p className="text-xs text-muted-foreground mt-0.5">
-										{t("settings.enforceAuthDesc", "Require authentication for all API endpoints")}
-									</p>
+									<p className="text-sm font-medium">{t("settings.enforceAuth")}</p>
+									<p className="text-xs text-muted-foreground mt-0.5">{t("settings.enforceAuthDesc")}</p>
 								</div>
 								<Toggle
 									checked={formData.enforceAuthForAllRoutes}
-									onChange={(checked) =>
-										setFormData((prev: RuntimeSettings) => ({ ...prev, enforceAuthForAllRoutes: checked }))
-									}
+									onChange={(checked) => setFormData((prev: RuntimeSettings) => ({ ...prev, enforceAuthForAllRoutes: checked }))}
 								/>
 							</div>
 
 							<div className="space-y-2">
 								<div>
-									<p className="text-sm font-medium">{t("settings.allowedRoutes", "Allowed Unauthenticated Routes")}</p>
-									<p className="text-xs text-muted-foreground mt-0.5">
-										{t("settings.allowedRoutesDesc", "Routes that bypass authentication (press Enter to add)")}
-									</p>
+									<p className="text-sm font-medium">{t("settings.allowedRoutes")}</p>
+									<p className="text-xs text-muted-foreground mt-0.5">{t("settings.allowedRoutesDesc")}</p>
 								</div>
 								<TagInput
 									tags={formData.allowedUnauthenticatedRoutes}
@@ -317,10 +307,8 @@ export default function AdminSettingsPage() {
 
 							<div className="space-y-2">
 								<div>
-									<p className="text-sm font-medium">{t("settings.disabledRoutes", "Disabled Routes")}</p>
-									<p className="text-xs text-muted-foreground mt-0.5">
-										{t("settings.disabledRoutesDesc", "Routes that are completely disabled (press Enter to add)")}
-									</p>
+									<p className="text-sm font-medium">{t("settings.disabledRoutes")}</p>
+									<p className="text-xs text-muted-foreground mt-0.5">{t("settings.disabledRoutesDesc")}</p>
 								</div>
 								<TagInput
 									tags={formData.disabledRoutes}
@@ -334,46 +322,38 @@ export default function AdminSettingsPage() {
 					<div className="grid md:grid-cols-2 gap-4">
 						<SettingsCard
 							icon={<HugeiconsIcon icon={Message01Icon} className="size-4" />}
-							title={t("settings.comments", "Station Comments")}
-							description={t("settings.commentsDesc", "Allow users to comment on stations")}
+							title={t("settings.comments")}
+							description={t("settings.commentsDesc")}
 						>
 							<div className="flex items-center justify-between pt-1">
 								<div>
-									<p className="text-sm font-medium">{t("settings.enableComments", "Enable Comments")}</p>
+									<p className="text-sm font-medium">{t("settings.enableComments")}</p>
 									<p className="text-xs text-muted-foreground mt-0.5">
-										{formData.enableStationComments
-											? t("settings.commentsEnabled", "Users can comment on stations")
-											: t("settings.commentsDisabled", "Comments are disabled")}
+										{formData.enableStationComments ? t("settings.commentsEnabled") : t("settings.commentsDisabled")}
 									</p>
 								</div>
 								<Toggle
 									checked={formData.enableStationComments}
-									onChange={(checked) =>
-										setFormData((prev: RuntimeSettings) => ({ ...prev, enableStationComments: checked }))
-									}
+									onChange={(checked) => setFormData((prev: RuntimeSettings) => ({ ...prev, enableStationComments: checked }))}
 								/>
 							</div>
 						</SettingsCard>
 
 						<SettingsCard
 							icon={<HugeiconsIcon icon={SentIcon} className="size-4" />}
-							title={t("settings.submissions", "Submissions")}
-							description={t("settings.submissionsDesc", "Allow users to submit new stations")}
+							title={t("settings.submissions")}
+							description={t("settings.submissionsDesc")}
 						>
 							<div className="flex items-center justify-between pt-1">
 								<div>
-									<p className="text-sm font-medium">{t("settings.enableSubmissions", "Enable Submissions")}</p>
+									<p className="text-sm font-medium">{t("settings.enableSubmissions")}</p>
 									<p className="text-xs text-muted-foreground mt-0.5">
-										{formData.submissionsEnabled
-											? t("settings.submissionsEnabled", "Users can submit stations")
-											: t("settings.submissionsDisabled", "Submissions are disabled")}
+										{formData.submissionsEnabled ? t("settings.submissionsEnabled") : t("settings.submissionsDisabled")}
 									</p>
 								</div>
 								<Toggle
 									checked={formData.submissionsEnabled}
-									onChange={(checked) =>
-										setFormData((prev: RuntimeSettings) => ({ ...prev, submissionsEnabled: checked }))
-									}
+									onChange={(checked) => setFormData((prev: RuntimeSettings) => ({ ...prev, submissionsEnabled: checked }))}
 								/>
 							</div>
 						</SettingsCard>

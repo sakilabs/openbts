@@ -17,7 +17,7 @@ type SearchResultsProps = {
 };
 
 export function SearchResults({ show, isLoading, osmResults, stationResults, onLocationSelect, onStationSelect, onClose }: SearchResultsProps) {
-	const { t } = useTranslation("map");
+	const { t } = useTranslation("main");
 
 	if (!show) return null;
 
@@ -47,7 +47,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 					<div className="border-b last:border-0">
 						<div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
 							<HugeiconsIcon icon={MapsIcon} className="size-3.5 text-primary" />
-							<span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("results.locations")}</span>
+							<span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.locations")}</span>
 							<span className="ml-auto text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50">
 								{t("search.found", { count: osmResults.length })}
 							</span>
@@ -70,7 +70,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 										</span>
 										{(result.addresstype === "city" || result.type === "city") && (
 											<span className="text-[8px] uppercase font-black px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-												{t("results.city")}
+												{t("common:labels.city")}
 											</span>
 										)}
 									</div>
@@ -85,7 +85,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 					<div>
 						<div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
 							<HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 text-primary" />
-							<span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("results.stations")}</span>
+							<span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.stations")}</span>
 							<span className="ml-auto text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50">
 								{t("search.found", { count: stationResults.length })}
 							</span>
@@ -111,7 +111,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
 									<div className="flex-1 min-w-0">
 										<div className="flex items-center justify-between gap-2">
 											<span className="text-sm font-bold truncate group-hover:text-primary transition-colors">
-												{station.location?.address || station.location?.city || t("results.btsStation")}
+												{station.location?.address || station.location?.city || t("stationDetails:dialog.btsStation")}
 											</span>
 											<div className="flex items-center gap-1 shrink-0">
 												{station.networks?.networks_id && (

@@ -38,6 +38,7 @@ export default function AdminLocationsPage() {
 		setFilters,
 		selectedRegions,
 		setSelectedRegions,
+		clearAllFilters,
 		activeFilterCount,
 		searchQuery,
 		setSearchQuery,
@@ -78,6 +79,7 @@ export default function AdminLocationsPage() {
 					searchQuery={searchQuery}
 					onFiltersChange={setFilters}
 					onRegionsChange={setSelectedRegions}
+					onClearAllFilters={clearAllFilters}
 					onSearchQueryChange={setSearchQuery}
 					locationCount={locations.length}
 					totalLocations={totalLocations}

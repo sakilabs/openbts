@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchApiData, fetchJson, API_BASE } from "@/lib/api";
@@ -76,115 +76,125 @@ const parseNumberArrayParam = (value: string | null): number[] => {
 		.filter((n) => !Number.isNaN(n));
 };
 
+type FullState = {
+	operators: number[];
+	bands: number[];
+	rat: string[];
+	recentOnly: boolean;
+	regions: number[];
+	q: string;
+	order: StationSortDirection;
+	sort: StationSortBy | undefined;
+};
+
+function stateToParams(state: FullState): URLSearchParams {
+	const next = new URLSearchParams();
+	if (state.operators.length) next.set("mnc", state.operators.join(","));
+	if (state.bands.length) next.set("band", state.bands.join(","));
+	if (state.rat.length) next.set("rat", state.rat.join(","));
+	if (state.recentOnly) next.set("recent", "1");
+	if (state.regions.length) next.set("regions", state.regions.join(","));
+	if (state.q) next.set("q", state.q);
+	if (state.order !== "desc") next.set("order", state.order);
+	if (state.sort && state.sort !== "updatedAt") next.set("sort", state.sort);
+	return next;
+}
+
+function paramsToState(searchParams: URLSearchParams): FullState {
+	return {
+		operators: parseNumberArrayParam(searchParams.get("mnc")),
+		bands: parseNumberArrayParam(searchParams.get("band")),
+		rat: parseArrayParam(searchParams.get("rat")),
+		recentOnly: searchParams.get("recent") === "1",
+		regions: parseNumberArrayParam(searchParams.get("regions")),
+		q: searchParams.get("q") ?? "",
+		order: (searchParams.get("order") as StationSortDirection) ?? "desc",
+		sort: (searchParams.get("sort") as StationSortBy | undefined) ?? "updatedAt",
+	};
+}
+
 export function useStationsData() {
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	const filters = useMemo<StationFilters>((): StationFilters => {
-		return {
-			operators: parseNumberArrayParam(searchParams.get("mnc")),
-			bands: parseNumberArrayParam(searchParams.get("band")),
-			rat: parseArrayParam(searchParams.get("rat")),
-			source: "internal",
-			recentOnly: searchParams.get("recent") === "1",
-		};
-	}, [searchParams]);
+	const state = useMemo(() => paramsToState(searchParams), [searchParams]);
+	const stateRef = useRef(state);
+	stateRef.current = state;
 
-	const selectedRegions = useMemo(() => parseNumberArrayParam(searchParams.get("regions")), [searchParams]);
-	const searchQuery = searchParams.get("q") ?? "";
-	const sort = (searchParams.get("order") as StationSortDirection) ?? "desc";
-	const sortBy = (searchParams.get("sort") as StationSortBy | undefined) ?? "updatedAt";
+	const commit = useCallback(
+		(patch: Partial<FullState>) => {
+			const merged = { ...stateRef.current, ...patch };
+			stateRef.current = merged;
+			setSearchParams(stateToParams(merged));
+		},
+		[setSearchParams],
+	);
+
+	const filters = useMemo<StationFilters>(
+		() => ({
+			operators: state.operators,
+			bands: state.bands,
+			rat: state.rat,
+			source: "internal",
+			recentOnly: state.recentOnly,
+		}),
+		[state.operators, state.bands, state.rat, state.recentOnly],
+	);
+
+	const selectedRegions = state.regions;
+	const searchQuery = state.q;
+	const sort = state.order;
+	const sortBy = state.sort;
 
 	const setFilters = useCallback(
 		(newFilters: StationFilters | ((prev: StationFilters) => StationFilters)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current: StationFilters = {
-					operators: parseNumberArrayParam(next.get("mnc")),
-					bands: parseNumberArrayParam(next.get("band")),
-					rat: parseArrayParam(next.get("rat")),
-					source: "internal",
-					recentOnly: next.get("recent") === "1",
-				};
-				const resolved = typeof newFilters === "function" ? newFilters(current) : newFilters;
-
-				if (resolved.operators.length) next.set("mnc", resolved.operators.join(","));
-				else next.delete("mnc");
-
-				if (resolved.bands.length) next.set("band", resolved.bands.join(","));
-				else next.delete("band");
-
-				if (resolved.rat.length) next.set("rat", resolved.rat.join(","));
-				else next.delete("rat");
-
-				if (resolved.recentOnly) next.set("recent", "1");
-				else next.delete("recent");
-
-				return next;
+			const current: StationFilters = {
+				operators: stateRef.current.operators,
+				bands: stateRef.current.bands,
+				rat: stateRef.current.rat,
+				source: "internal",
+				recentOnly: stateRef.current.recentOnly,
+			};
+			const resolved = typeof newFilters === "function" ? newFilters(current) : newFilters;
+			commit({
+				operators: resolved.operators,
+				bands: resolved.bands,
+				rat: resolved.rat,
+				recentOnly: resolved.recentOnly,
 			});
 		},
-		[setSearchParams],
+		[commit],
 	);
 
 	const setSelectedRegions = useCallback(
 		(value: number[] | ((prev: number[]) => number[])) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = parseNumberArrayParam(next.get("regions"));
-				const resolved = typeof value === "function" ? value(current) : value;
-
-				if (resolved.length) next.set("regions", resolved.join(","));
-				else next.delete("regions");
-
-				return next;
-			});
+			const resolved = typeof value === "function" ? value(stateRef.current.regions) : value;
+			commit({ regions: resolved });
 		},
-		[setSearchParams],
+		[commit],
 	);
 
 	const setSearchQuery = useCallback(
 		(value: string | ((prev: string) => string)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = next.get("q") ?? "";
-				const resolved = typeof value === "function" ? value(current) : value;
-
-				if (resolved) next.set("q", resolved);
-				else next.delete("q");
-
-				return next;
-			});
+			const resolved = typeof value === "function" ? value(stateRef.current.q) : value;
+			commit({ q: resolved });
 		},
-		[setSearchParams],
+		[commit],
 	);
 
 	const setSort = useCallback(
 		(value: StationSortDirection | ((prev: StationSortDirection) => StationSortDirection)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = (next.get("order") as StationSortDirection) ?? "desc";
-				const resolved = typeof value === "function" ? value(current) : value;
-
-				next.set("order", resolved);
-				return next;
-			});
+			const resolved = typeof value === "function" ? value(stateRef.current.order) : value;
+			commit({ order: resolved });
 		},
-		[setSearchParams],
+		[commit],
 	);
 
 	const setSortBy = useCallback(
 		(value: StationSortBy | undefined | ((prev: StationSortBy | undefined) => StationSortBy | undefined)) => {
-			setSearchParams((prev) => {
-				const next = new URLSearchParams(prev);
-				const current = (next.get("sort") as StationSortBy | undefined) ?? undefined;
-				const resolved = typeof value === "function" ? value(current) : value;
-
-				if (resolved) next.set("sort", resolved);
-				else next.delete("sort");
-
-				return next;
-			});
+			const resolved = typeof value === "function" ? value(stateRef.current.sort) : value;
+			commit({ sort: resolved });
 		},
-		[setSearchParams],
+		[commit],
 	);
 
 	const { data: operators = [] } = useQuery(operatorsQueryOptions());

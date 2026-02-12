@@ -110,9 +110,9 @@ export default function AdminStationDetailPage() {
 		return (
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
-					<p className="text-muted-foreground">{t("notFound.message")}</p>
+					<p className="text-muted-foreground">{t("common:error.description")}</p>
 					<Button variant="outline" onClick={() => navigate("/admin/stations")}>
-						{t("notFound.backToStations")}
+						{t("common:actions.back")}
 					</Button>
 				</div>
 			</div>
@@ -124,7 +124,7 @@ export default function AdminStationDetailPage() {
 
 function StationDetailForm({ station, isCreateMode }: { station: Station | undefined; isCreateMode: boolean }) {
 	const navigate = useNavigate();
-	const { t } = useTranslation("admin");
+	const { t } = useTranslation("stations");
 
 	const [stationId, setStationId] = useState(station?.station_id ?? "");
 	const [operatorId, setOperatorId] = useState<number | null>(station?.operator_id ?? null);
@@ -187,7 +187,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 	const handleSaveStation = () => {
 		if (isCreateMode) {
 			if (!stationId.trim()) {
-				toast.error(t("toast.stationIdRequired"));
+				toast.error(t("toast.stationIdRquired"));
 				return;
 			}
 			if (!operatorId) {
@@ -215,7 +215,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 			{
 				onSuccess: (result) => {
 					if (result.mode === "create") {
-						toast.success(t("toast.stationCreated"));
+						toast.success(t("toast.created"));
 						navigate(`/admin/stations/${result.station.id}`, { replace: true });
 					} else {
 						toast.success(t("toast.cellsSaved"));
@@ -223,7 +223,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 					}
 				},
 				onError: (_error) => {
-					toast.error(isCreateMode ? t("toast.createFailed") : t("toast.cellsFailed"));
+					toast.error(t("common:error.toast"));
 				},
 			},
 		);

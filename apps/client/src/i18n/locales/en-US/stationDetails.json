@@ -1,68 +1,43 @@
 {
-	"dialog": {
-		"btsStation": "BTS Station",
-		"confirmed": "Confirmed",
-		"loadError": "Failed to load station details",
-		"hardwareLease": "Hardware lease from {{operator}}"
-	},
 	"tabs": {
-		"specs": "Specifications",
-		"permits": "UKE Permits",
-		"comments": "Comments"
+		"specs": "Specification",
+		"permits": "UKE Permits"
 	},
 	"specs": {
 		"basicInfo": "Basic Information",
-		"cellDetails": "Cell details",
-		"internalNotes": "Internal Notes",
-		"networkName": "N! Name:",
-		"mnoName": "MNO:"
-	},
-	"cells": {
-		"cell_one": "{{count}} cell",
-		"cell_other": "{{count}} cells",
-		"duplex": "Duplex",
-		"cellNotConfirmed": "Cell not confirmed",
-		"carrier": "Carrier",
-		"noCells": "No cells data in our database for this station",
-		"unknownBand": "Unknown"
-	},
-	"network": {
-		"title": "NetWorkS! Identifiers"
+		"cellDetails": "Cell Details",
+		"networkName": "Network Name:",
+		"mnoName": "MNO:",
+		"internalNotes": "Internal Notes"
 	},
 	"permits": {
-		"title": "UKE Permits",
-		"loading": "Loading permits...",
-		"loadError": "Failed to load permits",
-		"noPermits": "No UKE permits linked to this station",
-		"inactive": "Inactive",
-		"expires": "Expires:",
+		"permitsCount_one": "{{count}} permit",
+		"permitsCount_few": "{{count}} permits",
+		"permitsCount_many": "{{count}} permits",
+		"permit": "permit",
+		"permits": "permits",
+		"neverExpires": "Indefinite",
 		"decisionNumber": "Decision Number",
-		"stationId": "Station ID",
-		"operator": "Operator",
-		"location": "Location",
 		"expiryDate": "Expiry Date",
-		"neverExpires": "Never expires",
-		"decisionTypeP": "Pozwolenie (Permit)",
-		"decisionTypeZmP": "Zmiana Pozwolenia (Permit Amendment)",
-		"sourceUke": "Data source: Urząd Komunikacji Elektronicznej (UKE)",
-		"unknownOperator": "Unknown Operator",
-		"permitsCount_one": "{{count}} Permit",
-		"permitsCount_other": "{{count}} Permits"
+		"sourceUke": "Source: Office of Electronic Communications (UKE)",
+		"noPermits": "No UKE permits for this station",
+		"decisionTypeP": "Permit",
+		"decisionTypeZmP": "Permit Change"
+	},
+	"dialog": {
+		"hardwareLease": "Hardware lease from {{operator}} (virtual station)",
+		"btsStation": "BTS Station"
 	},
 	"comments": {
 		"title": "Community Comments",
 		"loading": "Loading comments...",
 		"unavailable": "Comments are currently unavailable",
-		"noComments": "No comments yet",
+		"noComments": "No comments",
 		"noCommentsHint": "Be the first to share information about this station.",
 		"anonymousUser": "Anonymous User",
-		"file": "File"
-	},
-	"addComment": {
-		"placeholder": "Share information about this station...",
-		"addImages": "Add Images",
-		"posting": "Posting...",
-		"postComment": "Post Comment",
-		"postError": "Failed to post comment. Please try again."
+		"file": "File",
+		"placeholder": "Add a comment...",
+		"addImages": "Add images",
+		"postComment": "Post comment"
 	}
 }
