@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { getOperatorColor, resolveOperatorMnc } from "@/lib/operatorUtils";
+import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/lib/operatorUtils";
 import { isPermitExpired } from "@/lib/dateUtils";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
@@ -37,7 +37,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ radio
 					<div className="flex items-center gap-1.5">
 						<div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
 						<span className="font-medium text-xs" style={{ color }}>
-							{operatorName}
+							{normalizeOperatorName(operatorName)}
 						</span>
 						<span className="text-[10px] text-muted-foreground font-mono">#{radioLine.id}</span>
 					</div>

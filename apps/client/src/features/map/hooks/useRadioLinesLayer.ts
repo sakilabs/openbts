@@ -10,6 +10,7 @@ import {
 	POINT_LAYER_ID,
 } from "../constants";
 import type { RadioLine } from "@/types/station";
+import { normalizeOperatorName } from "@/lib/operatorUtils";
 
 type UseRadioLinesLayerArgs = {
 	map: maplibregl.Map | null;
@@ -147,7 +148,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 
 			const html = `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;">
 				<span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
-				<span style="font-size:12px;font-weight:500;white-space:nowrap;">${[freq, operator, distance].filter(Boolean).join(" · ")}</span>
+				<span style="font-size:12px;font-weight:500;white-space:nowrap;">${[freq, normalizeOperatorName(operator), distance].filter(Boolean).join(" · ")}</span>
 			</div>`;
 
 			if (!tooltipRef.current) {
