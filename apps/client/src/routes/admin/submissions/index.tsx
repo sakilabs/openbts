@@ -49,9 +49,9 @@ export default function AdminSubmissionsListPage() {
 	}, []);
 
 	const { containerRef, pagination, setPagination } = useTablePagination({
-		rowHeight: 48,
-		headerHeight: 36,
-		paginationHeight: 40,
+		rowHeight: 64,
+		headerHeight: 40,
+		paginationHeight: 45,
 	});
 
 	const { data, isLoading, isError } = useQuery({

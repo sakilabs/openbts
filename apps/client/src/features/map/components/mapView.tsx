@@ -83,7 +83,7 @@ function MapViewInner() {
 
 	const handleLocationSelect = useCallback(
 		(lat: number, lng: number) => {
-			map?.flyTo({ center: [lng, lat], zoom: 15, essential: true });
+			map?.flyTo({ center: [lng, lat], zoom: 15, essential: true, speed: 1.5 });
 		},
 		[map],
 	);
@@ -96,7 +96,7 @@ function MapViewInner() {
 			const lng = station.location?.longitude;
 			if (!lat || !lng) return;
 
-			map.flyTo({ center: [lng, lat], zoom: 16, essential: true });
+			map.flyTo({ center: [lng, lat], zoom: 16, essential: true, speed: 1.5 });
 
 			await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
 

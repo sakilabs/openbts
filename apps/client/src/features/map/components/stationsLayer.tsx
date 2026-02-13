@@ -118,15 +118,7 @@ export function StationsLayer({
 	const pendingUkeLocationId = useRef<number | null>(null);
 
 	const handleUrlInitialize = useCallback(
-		async ({
-			filters: urlFilters,
-			stationId,
-			locationId,
-		}: {
-			filters?: StationFilters;
-			stationId?: string;
-			locationId?: number;
-		}) => {
+		async ({ filters: urlFilters, stationId, locationId }: { filters?: StationFilters; stationId?: string; locationId?: number }) => {
 			if (urlFilters) {
 				onFiltersChange(urlFilters);
 			}
@@ -143,6 +135,7 @@ export function StationsLayer({
 								center: [ukeStation.location.longitude, ukeStation.location.latitude],
 								zoom: 16,
 								essential: true,
+								speed: 1.5,
 							});
 							onOpenUkeStationDetails(ukeStation);
 						}
@@ -153,6 +146,7 @@ export function StationsLayer({
 								center: [station.location.longitude, station.location.latitude],
 								zoom: 16,
 								essential: true,
+								speed: 1.5,
 							});
 							onOpenStationDetails(Number(stationId), "internal");
 						}
@@ -178,6 +172,7 @@ export function StationsLayer({
 						center: [location.longitude, location.latitude],
 						zoom: 16,
 						essential: true,
+						speed: 1.5,
 					});
 
 					await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
@@ -237,6 +232,7 @@ export function StationsLayer({
 			center: [location.longitude, location.latitude],
 			zoom: 16,
 			essential: true,
+			speed: 1.5,
 		});
 
 		const handleMoveEnd = () => {

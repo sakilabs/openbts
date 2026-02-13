@@ -6,13 +6,7 @@ type UseUrlSyncArgs = {
 	isLoaded: boolean;
 	filters: StationFilters;
 	zoom: number;
-	onInitialize: (data: {
-		filters?: StationFilters;
-		center?: [number, number];
-		zoom?: number;
-		stationId?: string;
-		locationId?: number;
-	}) => void;
+	onInitialize: (data: { filters?: StationFilters; center?: [number, number]; zoom?: number; stationId?: string; locationId?: number }) => void;
 };
 
 const FILTER_PARAM_KEYS = ["operators", "bands", "rat", "source", "new", "radiolines", "stations"];
@@ -106,6 +100,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 				center: center ?? map.getCenter(),
 				zoom: urlZoom ?? map.getZoom(),
 				essential: true,
+				speed: 1.5,
 			});
 		}
 

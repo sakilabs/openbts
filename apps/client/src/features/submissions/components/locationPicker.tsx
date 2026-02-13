@@ -441,6 +441,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect }
 			center: [location.longitude, location.latitude],
 			zoom: Math.max(map.getZoom(), 15),
 			duration: 1000,
+			speed: 1.5,
 		});
 	}, [map, location.latitude, location.longitude]);
 
