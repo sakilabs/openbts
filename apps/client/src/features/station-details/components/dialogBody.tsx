@@ -137,10 +137,10 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
 									<section>
 										<h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.basicInfo")}</h3>
 										<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl bg-muted/20">
-											<div className="flex items-center gap-2">
+											<div className="flex items-center gap-2 flex-wrap">
 												<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
 												<span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}:</span>
-												<span className="text-sm font-mono font-medium whitespace-nowrap">
+												<span className="text-sm font-mono font-medium break-all">
 													{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 												</span>
 												<CopyButton text={`${station?.location.latitude}, ${station?.location.longitude}`} />

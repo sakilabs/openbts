@@ -28,12 +28,16 @@
 		"mapStyle": "Map Style",
 		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all",
 		"radiolines": "radiolines",
+		"radiolinesCount_one": "radioline",
+		"radiolinesCount_few": "radiolines",
+		"radiolinesCount_many": "radiolines",
+		"radiolinesCount_other": "radiolines",
 		"zoomForRadiolines": "Zoom in to see radiolines"
 	},
 	"stats": {
 		"dataInfo": "Data Information",
 		"lastUpdated": "Last Updated",
-		"internalData": "Internal Database",
+		"internalData": "Internal DB",
 		"ukeStations": "UKE Stations",
 		"stations": "Number of stations",
 		"permits": "Number of permits"

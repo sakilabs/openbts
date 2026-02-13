@@ -7,6 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon } from "@hugeicons/core-free-icons";
 import { cn, toggleValue } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Station, StationFilters } from "@/types/station";
 import { fetchBands, fetchOperators, searchLocations, searchStations } from "../../searchApi";
 import { AutocompleteDropdown } from "./autocompleteDropdown";
@@ -17,6 +18,7 @@ import { MapCursorInfo } from "../mapCursorInfo";
 import { FILTER_KEYWORDS, RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
 import { parseFilters } from "../../filters";
 import { useSearchState } from "../../hooks/useSearchState";
+import { useIsMobile } from "@/hooks/useMobile";
 import i18n from "@/i18n/config";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -52,6 +54,7 @@ export function MapSearchOverlay({
 	const { t } = useTranslation("main");
 	const [showFilters, setShowFilters] = useState(false);
 	const filterPanelRef = useRef<HTMLFieldSetElement>(null);
+	const isMobile = useIsMobile();
 
 	const mapFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map")), []);
 
@@ -300,7 +303,7 @@ export function MapSearchOverlay({
 					)}
 				</search>
 
-				{showFilters && (
+				{showFilters && !isMobile && (
 					<fieldset ref={filterPanelRef} onBlur={handleFilterPanelBlur} tabIndex={-1}>
 						<FilterPanel
 							filters={filters}
@@ -321,6 +324,46 @@ export function MapSearchOverlay({
 					</fieldset>
 				)}
 			</div>
+
+			{isMobile && (
+				<Sheet open={showFilters} onOpenChange={setShowFilters}>
+					<SheetContent side="bottom" className="max-h-[85dvh] flex flex-col p-0 rounded-t-2xl" showCloseButton={false}>
+						<SheetHeader className="px-4 py-3 border-b bg-muted/30 shrink-0">
+							<div className="flex items-center justify-between">
+								<SheetTitle className="text-sm">{t("common:labels.filters")}</SheetTitle>
+								{activeFilterCount > 0 && (
+									<button
+										type="button"
+										onClick={handleClearFilters}
+										className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+									>
+										{t("common:actions.clearAll")}
+									</button>
+								)}
+							</div>
+						</SheetHeader>
+						<div className="flex-1 overflow-y-auto overscroll-contain">
+							<FilterPanel
+								filters={filters}
+								operators={operators}
+								uniqueBandValues={uniqueBandValues}
+								activeFilterCount={activeFilterCount}
+								onFiltersChange={onFiltersChange}
+								onToggleOperator={handleToggleOperator}
+								onToggleBand={handleToggleBand}
+								onToggleRat={handleToggleRat}
+								onToggleRecentOnly={handleToggleRecentOnly}
+								onSelectAllRats={handleSelectAllRats}
+								onClearAllRats={handleClearAllRats}
+								onSelectAllBands={handleSelectAllBands}
+								onClearAllBands={handleClearAllBands}
+								onClearFilters={handleClearFilters}
+								isSheet
+							/>
+						</div>
+					</SheetContent>
+				</Sheet>
+			)}
 
 			<div className="hidden md:flex absolute top-4 left-4 z-10 flex-col items-start gap-1.5">
 				<div className="flex items-center gap-1.5">
@@ -357,7 +400,9 @@ export function MapSearchOverlay({
 								)}
 								<div className="flex items-baseline gap-1">
 									<span className="text-sm font-bold tabular-nums leading-none tracking-tight">{radioLineCount.toLocaleString(i18n.language)}</span>
-									<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.radiolines")}</span>
+									<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+										{t("overlay.radiolinesCount", { count: radioLineCount })}
+									</span>
 								</div>
 							</div>
 						)}
@@ -410,7 +455,7 @@ export function MapSearchOverlay({
 											{isRadioLinesFetching ? <Spinner className="size-2.5 text-primary" /> : null}
 											<span className="text-xs font-bold leading-none">{radioLineCount.toLocaleString(i18n.language)}</span>
 											<span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
-												{t("overlay.radiolines")}
+												{t("overlay.radiolinesCount", { count: radioLineCount })}
 											</span>
 										</>
 									)}

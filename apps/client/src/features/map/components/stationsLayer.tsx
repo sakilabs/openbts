@@ -32,6 +32,33 @@ export const DEFAULT_FILTERS: StationFilters = {
 	showRadiolines: false,
 };
 
+const MAP_FILTERS_STORAGE_KEY = "map:filters";
+
+export function saveMapFilters(filters: StationFilters) {
+	try {
+		localStorage.setItem(MAP_FILTERS_STORAGE_KEY, JSON.stringify(filters));
+	} catch {}
+}
+
+export function loadMapFilters(): StationFilters | null {
+	try {
+		const raw = localStorage.getItem(MAP_FILTERS_STORAGE_KEY);
+		if (!raw) return null;
+		const parsed = JSON.parse(raw);
+		return {
+			operators: parsed.operators ?? [],
+			bands: parsed.bands ?? [],
+			rat: parsed.rat ?? [],
+			source: parsed.source ?? "internal",
+			recentOnly: parsed.recentOnly ?? false,
+			showStations: parsed.showStations ?? true,
+			showRadiolines: parsed.showRadiolines ?? false,
+		};
+	} catch {
+		return null;
+	}
+}
+
 type PrefetchCache = Map<
 	number,
 	{
@@ -95,22 +122,22 @@ export function StationsLayer({
 			filters: urlFilters,
 			stationId,
 			locationId,
-			ukeStationId,
 		}: {
-			filters: StationFilters;
-			stationId?: number;
+			filters?: StationFilters;
+			stationId?: string;
 			locationId?: number;
-			ukeStationId?: string;
 		}) => {
-			onFiltersChange(urlFilters);
+			if (urlFilters) {
+				onFiltersChange(urlFilters);
+			}
+			const activeFilters = urlFilters ?? filters;
 
-			if ((stationId && map) || (ukeStationId && map)) {
-				pendingStationId.current = stationId ?? ukeStationId;
+			if (stationId && map) {
+				pendingStationId.current = stationId;
 				try {
-					if (urlFilters.source === "uke" && ukeStationId) {
-						const permits = await fetchUkePermit(ukeStationId);
+					if (activeFilters.source === "uke") {
+						const permits = await fetchUkePermit(stationId);
 						const ukeStation = groupPermitsByStation(permits ?? [])[0];
-						console.log(ukeStation);
 						if (ukeStation.location?.latitude && ukeStation.location?.longitude) {
 							map.flyTo({
 								center: [ukeStation.location.longitude, ukeStation.location.latitude],
@@ -119,15 +146,15 @@ export function StationsLayer({
 							});
 							onOpenUkeStationDetails(ukeStation);
 						}
-					} else if (stationId) {
-						const station = await fetchStation(stationId);
+					} else {
+						const station = await fetchStation(Number(stationId));
 						if (station.location?.latitude && station.location?.longitude) {
 							map.flyTo({
 								center: [station.location.longitude, station.location.latitude],
 								zoom: 16,
 								essential: true,
 							});
-							onOpenStationDetails(stationId, "internal");
+							onOpenStationDetails(Number(stationId), "internal");
 						}
 					}
 				} catch (error) {
@@ -137,14 +164,14 @@ export function StationsLayer({
 					pendingStationId.current = null;
 				}
 			} else if (locationId && map) {
-				if (urlFilters.source === "uke") {
+				if (activeFilters.source === "uke") {
 					pendingUkeLocationId.current = locationId;
 					return;
 				}
 
 				pendingLocationId.current = locationId;
 				try {
-					const locationData = await fetchLocationWithStations(locationId, urlFilters);
+					const locationData = await fetchLocationWithStations(locationId, activeFilters);
 					const location = toLocationInfo(locationData);
 
 					map.flyTo({
@@ -154,7 +181,7 @@ export function StationsLayer({
 					});
 
 					await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
-					showPopup([location.longitude, location.latitude], location, locationData.stations as StationWithoutCells[], null, urlFilters.source);
+					showPopup([location.longitude, location.latitude], location, locationData.stations as StationWithoutCells[], null, activeFilters.source);
 				} catch (error) {
 					console.error("Failed to fetch shared location:", error);
 					showApiError(error);
@@ -163,7 +190,7 @@ export function StationsLayer({
 				}
 			}
 		},
-		[map, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails],
+		[map, filters, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails],
 	);
 
 	useUrlSync({

@@ -7,26 +7,26 @@ type UseUrlSyncArgs = {
 	filters: StationFilters;
 	zoom: number;
 	onInitialize: (data: {
-		filters: StationFilters;
+		filters?: StationFilters;
 		center?: [number, number];
 		zoom?: number;
-		stationId?: number;
+		stationId?: string;
 		locationId?: number;
-		ukeStationId?: string;
 	}) => void;
 };
 
+const FILTER_PARAM_KEYS = ["operators", "bands", "rat", "source", "new", "radiolines", "stations"];
+
 function parseUrlHash(): {
-	filters: Partial<StationFilters>;
+	filters: Partial<StationFilters> | null;
 	center?: [number, number];
 	zoom?: number;
-	stationId?: number;
+	stationId?: string;
 	locationId?: number;
-	ukeStationId?: string;
 } {
 	const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
 	if (!hash.startsWith("map=")) {
-		return { filters: {} };
+		return { filters: null };
 	}
 
 	const [mapPart, queryPart = ""] = hash.split("?");
@@ -38,6 +38,8 @@ function parseUrlHash(): {
 	const lng = Number.parseFloat(lngStr || "");
 
 	const params = new URLSearchParams(queryPart);
+
+	const hasFilterParams = FILTER_PARAM_KEYS.some((key) => params.has(key));
 
 	const operators =
 		params
@@ -57,21 +59,17 @@ function parseUrlHash(): {
 	const showRadiolines = params.get("radiolines") === "1";
 	const showStations = params.get("stations") !== "0";
 
-	const stationIdStr = params.get("station");
-	const stationId = stationIdStr ? Number.parseInt(stationIdStr, 10) : undefined;
+	const stationId = params.get("station") || undefined;
 
 	const locationIdStr = params.get("location");
 	const locationId = locationIdStr ? Number.parseInt(locationIdStr, 10) : undefined;
 
-	const ukeStationId = params.get("uke_station") || undefined;
-
 	return {
-		filters: { operators, bands, rat, source, recentOnly, showStations, showRadiolines },
+		filters: hasFilterParams ? { operators, bands, rat, source, recentOnly, showStations, showRadiolines } : null,
 		center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
 		zoom: !Number.isNaN(z) ? z : undefined,
-		stationId: stationId && !Number.isNaN(stationId) ? stationId : undefined,
+		stationId,
 		locationId: locationId && !Number.isNaN(locationId) ? locationId : undefined,
-		ukeStationId,
 	};
 }
 
@@ -101,7 +99,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 	useEffect(() => {
 		if (!isLoaded || !map || isInitialized.current) return;
 
-		const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId, ukeStationId } = parseUrlHash();
+		const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId } = parseUrlHash();
 
 		if (center || urlZoom !== undefined) {
 			map.flyTo({
@@ -112,20 +110,21 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 		}
 
 		onInitialize({
-			filters: {
-				operators: urlFilters.operators || [],
-				bands: urlFilters.bands || [],
-				rat: urlFilters.rat || [],
-				source: urlFilters.source || "internal",
-				recentOnly: urlFilters.recentOnly || false,
-				showStations: urlFilters.showStations ?? true,
-				showRadiolines: urlFilters.showRadiolines ?? false,
-			},
+			filters: urlFilters
+				? {
+						operators: urlFilters.operators || [],
+						bands: urlFilters.bands || [],
+						rat: urlFilters.rat || [],
+						source: urlFilters.source || "internal",
+						recentOnly: urlFilters.recentOnly || false,
+						showStations: urlFilters.showStations ?? true,
+						showRadiolines: urlFilters.showRadiolines ?? false,
+					}
+				: undefined,
 			center,
 			zoom: urlZoom,
 			stationId,
 			locationId,
-			ukeStationId,
 		});
 
 		isInitialized.current = true;

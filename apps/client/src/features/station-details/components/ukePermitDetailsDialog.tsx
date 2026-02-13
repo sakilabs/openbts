@@ -112,7 +112,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 								<ShareButton
 									title={`${station.operator?.name ?? "UKE"} - ${station.station_id}`}
 									text={`${station.operator?.name ?? "UKE"} ${station.station_id} - ${station.location.city}`}
-									url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke&uke_station=${station.station_id}`}
+									url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke&station=${station.station_id}`}
 									size="md"
 								/>
 							)}
@@ -130,10 +130,10 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 						<div className="rounded-xl border bg-muted/20 p-4">
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								{station.location && (
-									<div className="flex items-center gap-2">
+									<div className="flex items-center gap-2 flex-wrap">
 										<HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-										<span className="text-sm text-muted-foreground">{t("common:labels.coordinates")}:</span>
-										<span className="font-mono text-sm font-medium">
+										<span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}:</span>
+										<span className="font-mono text-sm font-medium break-all">
 											{formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
 										</span>
 										<CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />

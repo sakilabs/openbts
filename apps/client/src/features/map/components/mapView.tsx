@@ -1,8 +1,8 @@
-import { lazy, Suspense, useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
 import { POLAND_CENTER, RADIOLINES_MIN_ZOOM } from "../constants";
-import { StationsLayer, DEFAULT_FILTERS } from "./stationsLayer";
+import { StationsLayer, DEFAULT_FILTERS, loadMapFilters, saveMapFilters } from "./stationsLayer";
 import type { StationFilters, StationSource, Station, LocationInfo, StationWithoutCells, UkeStation, UkeLocationWithPermits } from "@/types/station";
 import { MapSearchOverlay } from "./search-overlay";
 import { useMapBounds } from "../hooks/useMapBounds";
@@ -32,8 +32,13 @@ function toLocationInfo(loc: { id: number; city?: string; address?: string; lati
 function MapViewInner() {
 	const { map, isLoaded } = useMap();
 	const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
-	const [filters, setFilters] = useState<StationFilters>(DEFAULT_FILTERS);
+	const [filters, setFilters] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
 	const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
+
+	useEffect(() => {
+		saveMapFilters(filters);
+	}, [filters]);
+
 	const [selectedStation, setSelectedStation] = useState<{ id: number; source: StationSource } | null>(null);
 	const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
 
