@@ -62,6 +62,7 @@
 		"otherOperators_one": "{{count}} other operator",
 		"otherOperators_few": "{{count}} other operators",
 		"otherOperators_many": "{{count}} other operators",
+		"otherOperators_other": "{{count}} other operators",
 		"selected_one": "{{count}} selected",
 		"selected_few": "{{count}} selected",
 		"selected_many": "{{count}} selected",
@@ -75,15 +76,19 @@
 		"bands_one": "{{count}} band",
 		"bands_few": "{{count}} bands",
 		"bands_many": "{{count}} bands",
+		"bands_other": "{{count}} bands",
 		"standard_one": "{{count}} standard",
 		"standard_few": "{{count}} standards",
 		"standard_many": "{{count}} standards",
+		"standard_other": "{{count}} standards",
 		"operators_one": "{{count}} operator",
 		"operators_few": "{{count}} operators",
 		"operators_many": "{{count}} operators",
+		"operators_other": "{{count}} operators",
 		"filtersActive_one": "{{count}} active filter",
 		"filtersActive_few": "{{count}} active filters",
-		"filtersActive_many": "{{count}} active filters"
+		"filtersActive_many": "{{count}} active filters",
+		"filtersActive_other": "{{count}} active filters"
 	},
 	"placeholder": {
 		"search": "Search...",

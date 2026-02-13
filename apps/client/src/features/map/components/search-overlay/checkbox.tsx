@@ -20,7 +20,7 @@ export function Checkbox({ checked, onChange, children, className }: CheckboxPro
 			)}
 			onClick={() => onChange(!checked)}
 		>
-			<ShadcnCheckbox checked={checked} onCheckedChange={onChange} onClick={(e) => e.stopPropagation()} className="size-3.5 [&>[data-slot=checkbox-indicator]>svg]:size-3" />
+			<ShadcnCheckbox checked={checked} tabIndex={-1} className="size-3.5 pointer-events-none [&>[data-slot=checkbox-indicator]>svg]:size-3" />
 			{children}
 		</button>
 	);

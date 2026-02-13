@@ -107,7 +107,7 @@ async function insertUkePermits(
 				band_id: bandId,
 			};
 		})
-		.filter((v): v is NonNullable<typeof v> => v != null);
+		.filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
 	for (const group of chunk(values, BATCH_SIZE)) {
 		if (group.length)
 			await db

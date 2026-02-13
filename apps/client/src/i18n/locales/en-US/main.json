@@ -26,7 +26,9 @@
 		"locations": "locations",
 		"zoom": "Zoom",
 		"mapStyle": "Map Style",
-		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all"
+		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all",
+		"radiolines": "radiolines",
+		"zoomForRadiolines": "Zoom in to see radiolines"
 	},
 	"stats": {
 		"dataInfo": "Data Information",
@@ -42,7 +44,33 @@
 		"newOnly": "Show new (last 30 days)",
 		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
 		"showingLocationsOfTotal": "Showing {{count}} of {{total}} locations",
-		"showingStations": "Showing {{count}} stations"
+		"showingStations": "Showing {{count}} stations",
+		"layers": "Layers",
+		"showStations": "Stations",
+		"showRadiolines": "Radiolines"
 	},
-	"unknownOperator": "Unknown Operator"
+	"unknownOperator": "Unknown Operator",
+	"radiolines": {
+		"title": "Radiolink #{{id}}",
+		"viewDetails": "View details",
+		"distance": "Distance",
+		"txSide": "Transmitting Side (TX)",
+		"rxSide": "Receiving Side (RX)",
+		"linkParams": "Link Parameters",
+		"frequency": "Frequency",
+		"channel": "Channel",
+		"channelWidth": "Channel Width",
+		"polarization": "Polarization",
+		"modulation": "Modulation",
+		"bandwidth": "Bandwidth",
+		"height": "Height",
+		"antennaGain": "Antenna Gain",
+		"antennaHeight": "Antenna Height",
+		"eirp": "EIRP",
+		"noiseFigure": "Noise Figure",
+		"antennaType": "Antenna Type",
+		"transmitterType": "Transmitter Type",
+		"receiverType": "Receiver Type",
+		"manufacturer": "Manufacturer"
+	}
 }

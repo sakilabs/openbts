@@ -299,7 +299,8 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 	for (const key of fileBandKeys) {
 		const [rat, valueStr, variant] = key.split(":");
 		const value = Number(valueStr);
-		if (rat && Number.isFinite(value) && variant) bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value, variant: variant as "commercial" | "railway" });
+		if (rat && Number.isFinite(value) && variant)
+			bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value, variant: variant as "commercial" | "railway" });
 	}
 	const bandMap = await upsertBands(bandKeysArray);
 
@@ -337,7 +338,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 				band_id: bandId,
 			};
 		})
-		.filter((v): v is NonNullable<typeof v> => v != null);
+		.filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
 
 	let insertedCount = 0;
 	for (const group of chunk(values, BATCH_SIZE)) {
@@ -378,7 +379,7 @@ export async function importPermitDevices(): Promise<boolean> {
 	ensureDownloadDir();
 
 	logger.log("Looking up operators...");
-	const operatorNamesNeeded = links.map((l) => PERMIT_FILE_OPERATOR_MAP[l.operatorKey]).filter((n): n is string => n != null);
+	const operatorNamesNeeded = links.map((l) => PERMIT_FILE_OPERATOR_MAP[l.operatorKey]).filter((n): n is string => n !== null && n !== undefined);
 
 	const operatorIds = new Map<string, number>();
 	if (operatorNamesNeeded.length > 0) {

@@ -1,16 +1,8 @@
 "use client";
 
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMap } from "@/components/ui/map";
-import { MapSearchOverlay } from "./search-overlay";
 
-const StationDetailsDialog = lazy(() =>
-	import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
-const UkePermitDetailsDialog = lazy(() =>
-	import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
-);
 import type {
 	StationFilters,
 	StationSource,
@@ -19,25 +11,25 @@ import type {
 	StationWithoutCells,
 	UkeStation,
 	UkeLocationWithPermits,
-	Station,
 } from "@/types/station";
-import { fetchLocations, fetchLocationWithStations } from "../api";
-import { fetchStation } from "@/features/station-details/api";
+import type { LocationsResponse } from "../api";
+import { fetchLocationWithStations } from "../api";
+import { fetchStation, fetchUkePermit } from "@/features/station-details/api";
 import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
 import { groupPermitsByStation } from "../utils";
 import { useUrlSync } from "../hooks/useURLSync";
-import { useMapPopup } from "../hooks/useMapPopup";
 import { useMapLayer } from "../hooks/useMapLayer";
-import { useMapBounds } from "../hooks/useMapBounds";
 import { showApiError } from "@/lib/api";
 import { POINT_LAYER_ID } from "../constants";
 
-const DEFAULT_FILTERS: StationFilters = {
+export const DEFAULT_FILTERS: StationFilters = {
 	operators: [],
 	bands: [],
 	rat: [],
 	source: "internal",
 	recentOnly: false,
+	showStations: true,
+	showRadiolines: false,
 };
 
 type PrefetchCache = Map<
@@ -58,42 +50,85 @@ function toLocationInfo(loc: LocationWithStations): LocationInfo {
 	};
 }
 
-export function StationsLayer() {
+type ShowPopupFn = (
+	coordinates: [number, number],
+	location: LocationInfo,
+	stations: StationWithoutCells[] | null,
+	ukeStations: UkeStation[] | null,
+	source: StationSource,
+) => void;
+
+type UpdatePopupStationsFn = (location: LocationInfo, stations: StationWithoutCells[], source: StationSource) => void;
+
+type StationsLayerProps = {
+	filters: StationFilters;
+	onFiltersChange: (filters: StationFilters) => void;
+	locationsResponse: LocationsResponse | undefined;
+	zoom: number;
+	onActiveMarkerChange: (marker: { latitude: number; longitude: number } | null) => void;
+	onOpenStationDetails: (id: number, source: StationSource) => void;
+	onOpenUkeStationDetails: (station: UkeStation) => void;
+	showPopup: ShowPopupFn;
+	updatePopupStations: UpdatePopupStationsFn;
+	cleanupPopup: () => void;
+};
+
+export function StationsLayer({
+	filters,
+	onFiltersChange,
+	locationsResponse,
+	zoom,
+	onActiveMarkerChange,
+	onOpenStationDetails,
+	onOpenUkeStationDetails,
+	showPopup,
+	updatePopupStations,
+	cleanupPopup,
+}: StationsLayerProps) {
 	const { map, isLoaded } = useMap();
-	const [filters, setFilters] = useState<StationFilters>(DEFAULT_FILTERS);
-	const [selectedStation, setSelectedStation] = useState<{ id: number; source: StationSource } | null>(null);
-	const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
-	const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
-	const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
-	const pendingStationId = useRef<number | null>(null);
+	const pendingStationId = useRef<number | string | undefined>(null);
 	const pendingLocationId = useRef<number | null>(null);
 	const pendingUkeLocationId = useRef<number | null>(null);
 
-	const {
-		showPopup,
-		updatePopupStations,
-		cleanup: cleanupPopup,
-	} = useMapPopup({
-		map,
-		onOpenStationDetails: useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []),
-		onOpenUkeStationDetails: useCallback((station: UkeStation) => setSelectedUkeStation(station), []),
-	});
-
 	const handleUrlInitialize = useCallback(
-		async ({ filters: urlFilters, stationId, locationId }: { filters: StationFilters; stationId?: number; locationId?: number }) => {
-			setFilters(urlFilters);
+		async ({
+			filters: urlFilters,
+			stationId,
+			locationId,
+			ukeStationId,
+		}: {
+			filters: StationFilters;
+			stationId?: number;
+			locationId?: number;
+			ukeStationId?: string;
+		}) => {
+			onFiltersChange(urlFilters);
 
-			if (stationId && map) {
-				pendingStationId.current = stationId;
+			if ((stationId && map) || (ukeStationId && map)) {
+				pendingStationId.current = stationId ?? ukeStationId;
 				try {
-					const station = await fetchStation(stationId);
-					if (station.location?.latitude && station.location?.longitude) {
-						map.flyTo({
-							center: [station.location.longitude, station.location.latitude],
-							zoom: 16,
-							essential: true,
-						});
-						setSelectedStation({ id: stationId, source: "internal" });
+					if (urlFilters.source === "uke" && ukeStationId) {
+						const permits = await fetchUkePermit(ukeStationId);
+						const ukeStation = groupPermitsByStation(permits ?? [])[0];
+						console.log(ukeStation);
+						if (ukeStation.location?.latitude && ukeStation.location?.longitude) {
+							map.flyTo({
+								center: [ukeStation.location.longitude, ukeStation.location.latitude],
+								zoom: 16,
+								essential: true,
+							});
+							onOpenUkeStationDetails(ukeStation);
+						}
+					} else if (stationId) {
+						const station = await fetchStation(stationId);
+						if (station.location?.latitude && station.location?.longitude) {
+							map.flyTo({
+								center: [station.location.longitude, station.location.latitude],
+								zoom: 16,
+								essential: true,
+							});
+							onOpenStationDetails(stationId, "internal");
+						}
 					}
 				} catch (error) {
 					console.error("Failed to fetch shared station:", error);
@@ -128,7 +163,7 @@ export function StationsLayer() {
 				}
 			}
 		},
-		[map, showPopup],
+		[map, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails],
 	);
 
 	useUrlSync({
@@ -142,28 +177,16 @@ export function StationsLayer() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: This has to be "re-created" when filters change
 	const prefetchCache = useMemo<PrefetchCache>(() => new Map(), [filters]);
 
-	const {
-		data: locationsResponse,
-		isLoading,
-		isFetching,
-	} = useQuery({
-		queryKey: ["locations", bounds, filters],
-		queryFn: () => fetchLocations(bounds, filters),
-		enabled: !!bounds && !isMoving,
-		staleTime: 1000 * 60 * 2,
-		placeholderData: (prev) => prev,
-	});
-
 	const locations = locationsResponse?.data ?? [];
-	const totalCount = locationsResponse?.totalCount ?? 0;
 
-	const locationCount = locations.length;
+	const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 	const geoJSON = useMemo(() => {
+		if (!filters.showStations) return EMPTY_GEOJSON;
 		return filters.source === "uke"
 			? ukeLocationsToGeoJSON(locations as unknown as UkeLocationWithPermits[], filters.source)
 			: locationsToGeoJSON(locations, filters.source);
-	}, [locations, filters.source]);
+	}, [locations, filters.source, filters.showStations]);
 
 	useEffect(() => {
 		const locationId = pendingUkeLocationId.current;
@@ -263,9 +286,9 @@ export function StationsLayer() {
 		async (data: { coordinates: [number, number]; locationId: number; city?: string; address?: string; source: string }) => {
 			const { coordinates } = data;
 			const [lng, lat] = coordinates;
-			setActiveMarker({ latitude: lat, longitude: lng });
+			onActiveMarkerChange({ latitude: lat, longitude: lng });
 		},
-		[],
+		[onActiveMarkerChange],
 	);
 
 	useMapLayer({
@@ -284,92 +307,16 @@ export function StationsLayer() {
 
 		const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
 			const features = map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER_ID, `${POINT_LAYER_ID}-symbol`] });
-			if (features.length === 0) setActiveMarker(null);
+			if (features.length === 0) onActiveMarkerChange(null);
 		};
 
 		map.on("contextmenu", handleContextMenu);
 		return () => {
 			map.off("contextmenu", handleContextMenu);
 		};
-	}, [map]);
-
-	const handleLocationSelect = useCallback(
-		(lat: number, lng: number) => {
-			map?.flyTo({ center: [lng, lat], zoom: 15, essential: true });
-		},
-		[map],
-	);
-
-	const handleStationSelect = useCallback(
-		async (station: Station) => {
-			if (!map) return;
-
-			const lat = station.location?.latitude;
-			const lng = station.location?.longitude;
-			if (!lat || !lng) return;
-
-			map.flyTo({ center: [lng, lat], zoom: 16, essential: true });
-
-			await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
-
-			if (filters.source === "uke") {
-				const ukeLocations = locations as unknown as UkeLocationWithPermits[];
-				const ukeLocation = ukeLocations.find((loc) => loc.latitude.toFixed(6) === lat.toFixed(6) && loc.longitude.toFixed(6) === lng.toFixed(6));
-				const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
-
-				const location: LocationInfo = {
-					id: ukeLocation?.id ?? station.id,
-					city: ukeLocation?.city ?? station.location?.city,
-					address: ukeLocation?.address ?? station.location?.address,
-					latitude: lat,
-					longitude: lng,
-				};
-				showPopup([lng, lat], location, null, ukeStations, filters.source);
-				return;
-			}
-
-			try {
-				const data = await fetchLocationWithStations(station.location_id, filters);
-				const location = toLocationInfo(data);
-				showPopup([lng, lat], location, data.stations as StationWithoutCells[], null, filters.source);
-			} catch (error) {
-				console.error("Failed to fetch station data:", error);
-				showApiError(error);
-			}
-		},
-		[map, filters, locations, showPopup],
-	);
-
-	const handleCloseStationDetails = useCallback(() => setSelectedStation(null), []);
-	const handleCloseUkeDetails = useCallback(() => setSelectedUkeStation(null), []);
+	}, [map, onActiveMarkerChange]);
 
 	if (!isLoaded) return null;
 
-	return (
-		<>
-			<MapSearchOverlay
-				locationCount={locationCount}
-				totalCount={totalCount}
-				isLoading={isLoading}
-				isFetching={isFetching}
-				filters={filters}
-				zoom={zoom}
-				activeMarker={activeMarker}
-				onFiltersChange={setFilters}
-				onLocationSelect={handleLocationSelect}
-				onStationSelect={handleStationSelect}
-			/>
-			<Suspense fallback={null}>
-				{selectedStation && (
-					<StationDetailsDialog
-						key={selectedStation.id}
-						stationId={selectedStation.id}
-						source={selectedStation.source}
-						onClose={handleCloseStationDetails}
-					/>
-				)}
-				{selectedUkeStation && <UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} />}
-			</Suspense>
-		</>
-	);
+	return null;
 }

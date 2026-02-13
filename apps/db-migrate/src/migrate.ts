@@ -32,7 +32,7 @@ export async function migrateAll(options: MigratorOptions = {}): Promise<void> {
 	const operatorIds = new Map<number, number>();
 	const mncToOperatorName = new Map<number, string>();
 	for (const row of operatorRows) {
-		if (row.mnc != null) {
+		if (row.mnc) {
 			operatorIds.set(row.mnc, row.id);
 			mncToOperatorName.set(row.mnc, row.name);
 		}

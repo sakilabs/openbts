@@ -15,6 +15,14 @@ export const PICKER_LAYER_IDS = [PICKER_CIRCLE_LAYER_ID, PICKER_SYMBOL_LAYER_ID]
 
 export const PICKER_NEARBY_RADIUS_METERS = 100;
 
+export const RADIOLINES_SOURCE_ID = "radiolines-source";
+export const RADIOLINES_ENDPOINTS_SOURCE_ID = "radiolines-endpoints-source";
+export const RADIOLINES_LINE_LAYER_ID = "radiolines-layer";
+export const RADIOLINES_HITBOX_LAYER_ID = "radiolines-hitbox";
+export const RADIOLINES_ENDPOINT_LAYER_ID = "radiolines-endpoints";
+
+export const RADIOLINES_MIN_ZOOM = 8;
+
 export const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
 	{ value: "umts", label: "UMTS", gen: "3G" },

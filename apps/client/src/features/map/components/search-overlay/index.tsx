@@ -23,6 +23,8 @@ import { Spinner } from "@/components/ui/spinner";
 type MapSearchOverlayProps = {
 	locationCount: number;
 	totalCount: number;
+	radioLineCount?: number;
+	isRadioLinesFetching?: boolean;
 	isLoading: boolean;
 	isFetching?: boolean;
 	filters: StationFilters;
@@ -36,6 +38,8 @@ type MapSearchOverlayProps = {
 export function MapSearchOverlay({
 	locationCount,
 	totalCount,
+	radioLineCount = 0,
+	isRadioLinesFetching = false,
 	isLoading,
 	isFetching = false,
 	filters,
@@ -172,8 +176,17 @@ export function MapSearchOverlay({
 	const handleToggleRecentOnly = useCallback(() => onFiltersChange({ ...filters, recentOnly: !filters.recentOnly }), [filters, onFiltersChange]);
 
 	const handleClearFilters = useCallback(
-		() => onFiltersChange({ operators: [], bands: [], rat: [], source: filters.source, recentOnly: false }),
-		[filters.source, onFiltersChange],
+		() =>
+			onFiltersChange({
+				operators: [],
+				bands: [],
+				rat: [],
+				source: filters.source,
+				recentOnly: false,
+				showStations: filters.showStations,
+				showRadiolines: filters.showRadiolines,
+			}),
+		[filters.source, filters.showStations, filters.showRadiolines, onFiltersChange],
 	);
 
 	return (
@@ -335,6 +348,19 @@ export function MapSearchOverlay({
 								{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
 							</TooltipContent>
 						</Tooltip>
+						{(radioLineCount > 0 || isRadioLinesFetching) && (
+							<div className="px-2 py-1.5 flex items-center gap-2 border-r border-border/50">
+								{isRadioLinesFetching ? (
+									<Spinner className="size-3 text-primary" />
+								) : (
+									<div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
+								)}
+								<div className="flex items-baseline gap-1">
+									<span className="text-sm font-bold tabular-nums leading-none tracking-tight">{radioLineCount.toLocaleString(i18n.language)}</span>
+									<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.radiolines")}</span>
+								</div>
+							</div>
+						)}
 						<div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
 							<span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
 								{filters.source === "uke" ? t("stationDetails:tabs.permits") : t("filters.internalDb")}
@@ -378,6 +404,16 @@ export function MapSearchOverlay({
 										{locationCount.toLocaleString(i18n.language)}
 									</span>
 									<span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+									{(radioLineCount > 0 || isRadioLinesFetching) && (
+										<>
+											<span className="text-[8px] text-muted-foreground leading-none">·</span>
+											{isRadioLinesFetching ? <Spinner className="size-2.5 text-primary" /> : null}
+											<span className="text-xs font-bold leading-none">{radioLineCount.toLocaleString(i18n.language)}</span>
+											<span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+												{t("overlay.radiolines")}
+											</span>
+										</>
+									)}
 								</div>
 								<div className="flex items-center gap-1">
 									<span className="text-[7px] uppercase font-bold text-primary border-b border-primary/20 leading-none">

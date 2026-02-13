@@ -91,6 +91,52 @@ export type Station = {
 	networks?: NetWorkS;
 };
 
+export type RadioLineEquipmentType = {
+	id: number;
+	name: string;
+	manufacturer?: { id: number; name: string };
+};
+
+export type RadioLine = {
+	id: number;
+	tx: {
+		longitude: number;
+		latitude: number;
+		height: number;
+		eirp?: number;
+		antenna_attenuation?: number;
+		transmitter?: { type?: RadioLineEquipmentType };
+		antenna?: { type?: RadioLineEquipmentType; gain?: number; height?: number };
+	};
+	rx: {
+		longitude: number;
+		latitude: number;
+		height: number;
+		type?: RadioLineEquipmentType;
+		gain?: number;
+		height_antenna?: number;
+		noise_figure?: number;
+		atpc_attenuation?: number;
+	};
+	link: {
+		freq: number;
+		ch_num?: number;
+		plan_symbol?: string;
+		ch_width?: number;
+		polarization?: string;
+		modulation_type?: string;
+		bandwidth?: string;
+	};
+	operator?: UkeOperator;
+	permit: {
+		number?: string;
+		decision_type?: string;
+		expiry_date: string;
+	};
+	updatedAt: string;
+	createdAt: string;
+};
+
 export type StationSource = "internal" | "uke";
 
 export type StationSortBy = "station_id" | "updatedAt" | "createdAt";
@@ -105,6 +151,8 @@ export type StationFilters = {
 	rat: string[];
 	source: StationSource;
 	recentOnly: boolean;
+	showStations: boolean;
+	showRadiolines: boolean;
 };
 
 export type StationWithoutCells = Omit<Station, "location" | "cells"> & {

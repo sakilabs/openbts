@@ -112,7 +112,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 								<ShareButton
 									title={`${station.operator?.name ?? "UKE"} - ${station.station_id}`}
 									text={`${station.operator?.name ?? "UKE"} ${station.station_id} - ${station.location.city}`}
-									url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke`}
+									url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke&uke_station=${station.station_id}`}
 									size="md"
 								/>
 							)}

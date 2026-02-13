@@ -140,7 +140,7 @@ export function LocationPicker({ location, errors, onLocationChange, locationDif
 	const hasCoordinates = location.latitude !== null && location.longitude !== null;
 
 	const [initialView] = useState(() => {
-		const has = location.longitude != null && location.latitude != null;
+		const has = location.longitude !== null && location.longitude !== undefined && location.latitude !== null && location.latitude !== undefined;
 		return {
 			center: (has ? [location.longitude, location.latitude] : POLAND_CENTER) as [number, number],
 			zoom: has ? 15 : 6,
@@ -195,9 +195,7 @@ export function LocationPicker({ location, errors, onLocationChange, locationDif
 							className={`h-8 font-mono text-sm ${errors?.latitude ? "border-destructive" : ""}`}
 						/>
 						{errors?.latitude && <p className="text-xs text-destructive">{t(errors.latitude)}</p>}
-						{locationDiffs?.coords && currentLocation && (
-							<ChangeBadge label={t("diff.current")} current={currentLocation.latitude.toFixed(6)} />
-						)}
+						{locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.latitude.toFixed(6)} />}
 					</div>
 					<div className="space-y-1.5">
 						<Label htmlFor="longitude" className="text-xs">
@@ -213,9 +211,7 @@ export function LocationPicker({ location, errors, onLocationChange, locationDif
 							className={`h-8 font-mono text-sm ${errors?.longitude ? "border-destructive" : ""}`}
 						/>
 						{errors?.longitude && <p className="text-xs text-destructive">{t(errors.longitude)}</p>}
-						{locationDiffs?.coords && currentLocation && (
-							<ChangeBadge label={t("diff.current")} current={currentLocation.longitude.toFixed(6)} />
-						)}
+						{locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.longitude.toFixed(6)} />}
 					</div>
 				</div>
 
@@ -255,9 +251,7 @@ export function LocationPicker({ location, errors, onLocationChange, locationDif
 							onChange={(e) => onLocationChange({ city: e.target.value })}
 							className="h-8 text-sm"
 						/>
-						{locationDiffs?.city && currentLocation && (
-							<ChangeBadge label={t("diff.current")} current={currentLocation.city || "—"} />
-						)}
+						{locationDiffs?.city && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.city || "—"} />}
 					</div>
 					<div className="space-y-1.5">
 						<Label htmlFor="address" className="text-xs">
@@ -270,9 +264,7 @@ export function LocationPicker({ location, errors, onLocationChange, locationDif
 							onChange={(e) => onLocationChange({ address: e.target.value })}
 							className="h-8 text-sm"
 						/>
-						{locationDiffs?.address && currentLocation && (
-							<ChangeBadge label={t("diff.current")} current={currentLocation.address || "—"} />
-						)}
+						{locationDiffs?.address && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.address || "—"} />}
 					</div>
 				</div>
 			</div>

@@ -23,7 +23,7 @@ export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLoc
 				station_id: permit.station_id,
 				operator: permit.operator ?? null,
 				permits: [permit],
-				location,
+				location: !location ? (permit.location ?? null) : location,
 			});
 		}
 	}
@@ -56,11 +56,37 @@ export function getStationBands(cells: Cell[]): string[] {
 }
 
 export function getPermitBands(permits: UkePermit[]): string[] {
-	const bands = [...new Set(permits.filter((p) => p.band != null).map((p) => {
-		const rat = p.band?.rat === "GSM" && p.band?.variant === "railway" ? "GSM-R" : p.band?.rat;
-		return `${rat}${p.band?.value}`;
-	}))];
+	const bands = [
+		...new Set(
+			permits
+				.filter((p) => p.band !== null)
+				.map((p) => {
+					const rat = p.band?.rat === "GSM" && p.band?.variant === "railway" ? "GSM-R" : p.band?.rat;
+					return `${rat}${p.band?.value}`;
+				}),
+		),
+	];
 	return sortBands(bands);
+}
+
+export function formatBandwidth(bandwidth: string): string {
+	const num = Number(bandwidth);
+	if (Number.isNaN(num)) return bandwidth;
+	if (num >= 1000) return `${(num / 1000).toFixed(2)} Gb/s`;
+	return `${num} Mb/s`;
+}
+
+export function formatDistance(meters: number): string {
+	if (meters >= 1000) return `${(meters / 1000).toFixed(2)} km`;
+	return `${Math.round(meters)} m`;
+}
+
+export function formatFrequency(freqMhz: number): string {
+	if (freqMhz >= 1000) {
+		const ghz = freqMhz / 1000;
+		return `${Number.isInteger(ghz) ? ghz : ghz.toFixed(1)} GHz`;
+	}
+	return `${freqMhz} MHz`;
 }
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {

@@ -121,9 +121,7 @@ export async function getOperators(rawNames: string[]): Promise<Map<string, numb
 	const map = new Map<string, number>();
 	for (const p of prepared) {
 		const operatorId = operatorIdByName.get(p.mappedName);
-		if (operatorId != null) {
-			map.set(p.originalName, operatorId);
-		}
+		if (operatorId) map.set(p.originalName, operatorId);
 	}
 
 	return map;

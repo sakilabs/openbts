@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Database02Icon, ArrowDown01Icon, File02Icon, InformationCircleIcon, FilterIcon } from "@hugeicons/core-free-icons";
+import {
+	Database02Icon,
+	ArrowDown01Icon,
+	File02Icon,
+	InformationCircleIcon,
+	FilterIcon,
+	AirportTowerIcon,
+	Route02Icon,
+} from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -65,6 +73,16 @@ export function FilterPanel({
 		{ id: "uke", label: t("stationDetails:tabs.permits"), icon: File02Icon },
 	];
 
+	const handleToggleStations = useCallback(() => {
+		if (!filters.showRadiolines && filters.showStations) return;
+		onFiltersChange({ ...filters, showStations: !filters.showStations });
+	}, [filters, onFiltersChange]);
+
+	const handleToggleRadiolines = useCallback(() => {
+		if (!filters.showStations && filters.showRadiolines) return;
+		onFiltersChange({ ...filters, showRadiolines: !filters.showRadiolines });
+	}, [filters, onFiltersChange]);
+
 	return (
 		<div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 relative z-15 max-h-[calc(100vh-8rem)] flex flex-col">
 			<div className="px-4 py-2.5 border-b bg-muted/30 flex items-center gap-2 shrink-0">
@@ -82,6 +100,20 @@ export function FilterPanel({
 			</div>
 
 			<div className="p-4 space-y-2 overflow-y-auto overscroll-contain">
+				<div>
+					<h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">{t("filters.layers")}</h4>
+					<div className="grid grid-cols-2 gap-1">
+						<Checkbox checked={filters.showStations} onChange={handleToggleStations}>
+							<HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 shrink-0" />
+							<span className="flex-1 text-left">{t("filters.showStations")}</span>
+						</Checkbox>
+						<Checkbox checked={filters.showRadiolines} onChange={handleToggleRadiolines}>
+							<HugeiconsIcon icon={Route02Icon} className="size-3.5 shrink-0" />
+							<span className="flex-1 text-left">{t("filters.showRadiolines")}</span>
+						</Checkbox>
+					</div>
+				</div>
+
 				<div>
 					<h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">{t("filters.dataSource")}</h4>
 					<ButtonGroup className="w-full">

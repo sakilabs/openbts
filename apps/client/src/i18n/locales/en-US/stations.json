@@ -12,6 +12,7 @@
 		"cellsCount_one": "{{count}} cell",
 		"cellsCount_few": "{{count}} cells",
 		"cellsCount_many": "{{count}} cells",
+		"cellsCount_other": "{{count}} cells",
 		"notesPlaceholder": "e.g. picocell",
 		"addCell": "Add Cell",
 		"noRats": "No cells found for this station. Add RATs to add cells",

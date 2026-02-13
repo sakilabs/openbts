@@ -362,7 +362,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 							</>
 						);
 					case "UMTS": {
-						const longCid = d.rnc != null && d.cid != null ? (d.rnc as number) * 65536 + (d.cid as number) : null;
+						const longCid = d.rnc !== null && d.cid !== null ? (d.rnc as number) * 65536 + (d.cid as number) : null;
 						return (
 							<>
 								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.lac)}</td>
@@ -374,7 +374,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 						);
 					}
 					case "LTE": {
-						const eCid = d.enbid != null && d.clid != null ? (d.enbid as number) * 256 + (d.clid as number) : null;
+						const eCid = d.enbid !== null && d.clid !== null ? (d.enbid as number) * 256 + (d.clid as number) : null;
 						return (
 							<>
 								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.tac)}</td>
@@ -386,7 +386,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 						);
 					}
 					case "NR": {
-						const nci = d.gnbid != null && d.clid != null ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
+						const nci = d.gnbid !== null && d.clid !== null ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
 						return (
 							<>
 								<td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.nrtac)}</td>

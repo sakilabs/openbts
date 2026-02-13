@@ -93,7 +93,7 @@ function Body<T>({ onRowClick, rowClassName, skeletonRows, skeletonColumns }: Bo
 			{rows.map((row: Row<T>) => (
 				<TableRow key={row.id} row={row} onClick={onRowClick} className={rowClassName} />
 			))}
-			{skeletonRows != null && skeletonRows > 0 && skeletonColumns != null && <SkeletonRows rows={skeletonRows} columns={skeletonColumns} />}
+			{skeletonRows && skeletonRows > 0 && skeletonColumns && <SkeletonRows rows={skeletonRows} columns={skeletonColumns} />}
 		</tbody>
 	);
 }

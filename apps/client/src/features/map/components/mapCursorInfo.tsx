@@ -14,12 +14,12 @@ type MapCursorInfoProps = {
 };
 
 export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
-	const { map } = useMap();
+	const { map, isLoaded } = useMap();
 	const { preferences } = usePreferences();
 	const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(null);
 
 	useEffect(() => {
-		if (!map) return;
+		if (!map || !isLoaded) return;
 		if (!map.getSource("cursor-measure-line")) {
 			map.addSource("cursor-measure-line", {
 				type: "geojson",
@@ -50,7 +50,7 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
 			if (map.getLayer("cursor-measure-line")) map.removeLayer("cursor-measure-line");
 			if (map.getSource("cursor-measure-line")) map.removeSource("cursor-measure-line");
 		};
-	}, [map]);
+	}, [map, isLoaded]);
 
 	useEffect(() => {
 		if (!map) return;

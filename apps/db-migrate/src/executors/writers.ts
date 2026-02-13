@@ -351,7 +351,7 @@ export async function writeCellsAndDetails(
 
 	const gsmValues = withIds
 		.filter((val): val is { id: number; cell: Extract<PreparedCell, { rat: "GSM" }> } => val.cell.rat === "GSM" && !!val.id)
-		.filter((val) => val.cell.gsm.lac != null && val.cell.gsm.cid != null)
+		.filter((val) => val.cell.gsm.lac !== null && val.cell.gsm.lac !== undefined && val.cell.gsm.cid !== null && val.cell.gsm.cid !== undefined)
 		.map((val) => ({
 			cell_id: val.id,
 			lac: val.cell.gsm.lac as number,

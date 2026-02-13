@@ -19,7 +19,7 @@ export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown
 	const entries = Object.entries(headers);
 	const map = new Map();
 	for (const [headerKey, headerValue] of entries) {
-		if (headerValue != null) map.set(headerKey, headerValue);
+		if (headerValue) map.set(headerKey, headerValue);
 	}
 	return map;
 }

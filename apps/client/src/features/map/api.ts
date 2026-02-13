@@ -1,4 +1,4 @@
-import type { StationFilters, LocationWithStations, UkeLocationWithPermits } from "@/types/station";
+import type { StationFilters, LocationWithStations, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { API_BASE, fetchJson } from "@/lib/api";
 
 export type LocationsResponse = {
@@ -44,4 +44,19 @@ export async function fetchLocationWithStations(locationId: number, filters: Sta
 	const params = buildFilterParams(filters);
 	const result = await fetchJson<{ data: LocationWithStations }>(`${API_BASE}/locations/${locationId}?${decodeURIComponent(params.toString())}`);
 	return result.data;
+}
+
+export type RadioLinesResponse = {
+	data: RadioLine[];
+};
+
+export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorId?: number }): Promise<RadioLinesResponse> {
+	const params = new URLSearchParams();
+	params.set("bounds", bounds);
+	params.set("limit", "300");
+	if (options?.operatorId) params.set("operator", String(options.operatorId));
+
+	return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {
+		signal: options?.signal,
+	});
 }
