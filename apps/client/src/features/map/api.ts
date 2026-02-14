@@ -54,7 +54,7 @@ export type RadioLinesResponse = {
 export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorIds?: number[] }): Promise<RadioLinesResponse> {
 	const params = new URLSearchParams();
 	params.set("bounds", bounds);
-	params.set("limit", "300");
+	params.set("limit", "500");
 	if (options?.operatorIds?.length) params.set("operators", options.operatorIds.join(","));
 
 	return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {
