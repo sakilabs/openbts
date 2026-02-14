@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AddCircleIcon, AirportTowerIcon, ArrowRight01Icon, Login01Icon, Settings02Icon, SecurityLockIcon } from "@hugeicons/core-free-icons";
+import { AddCircleIcon, AirportTowerIcon, ArrowRight01Icon, GitBranchIcon, Login01Icon, Settings02Icon, SecurityLockIcon } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -170,6 +170,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						</SidebarMenuItem>
 					)}
 					{session?.user && <NavUser data={session} />}
+					{(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (
+						<div
+							className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-muted-foreground"
+							title={[import.meta.env.VITE_GIT_COMMIT, import.meta.env.VITE_APP_VERSION && `v${import.meta.env.VITE_APP_VERSION}`].filter(Boolean).join(" · ")}
+						>
+							<HugeiconsIcon icon={GitBranchIcon} className="size-3 shrink-0" />
+							<span className="truncate">
+								{import.meta.env.VITE_GIT_COMMIT && (
+									<span className="font-mono text-chart-1">{import.meta.env.VITE_GIT_COMMIT}</span>
+								)}
+								{import.meta.env.VITE_APP_VERSION && (
+									<span className="text-muted-foreground">
+										{import.meta.env.VITE_GIT_COMMIT ? " " : ""}(v{import.meta.env.VITE_APP_VERSION})
+									</span>
+								)}
+							</span>
+						</div>
+					)}
 				</SidebarMenu>
 			</SidebarFooter>
 			<AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
