@@ -1,5 +1,3 @@
-"use client";
-
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUpDownIcon, Logout02Icon } from "@hugeicons/core-free-icons";
 

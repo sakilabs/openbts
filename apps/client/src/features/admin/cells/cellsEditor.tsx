@@ -1,4 +1,4 @@
-import React, { type ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown01Icon, Add01Icon } from "@hugeicons/core-free-icons";
@@ -171,7 +171,7 @@ export function CellsEditor<T extends CellDraftBase>({
 													{cellsForRat.map((cell) => {
 														const cellProps = getCellProps?.(cell) ?? {};
 														return (
-															<React.Fragment key={cell._localId}>
+															<Fragment key={cell._localId}>
 																<CellEditRow
 																	localCell={cell}
 																	bands={bands}
@@ -183,7 +183,7 @@ export function CellsEditor<T extends CellDraftBase>({
 																	onDelete={onDeleteCell}
 																/>
 																{renderAfterRow?.(cell)}
-															</React.Fragment>
+															</Fragment>
 														);
 													})}
 												</tbody>

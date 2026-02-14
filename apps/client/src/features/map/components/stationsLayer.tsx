@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMap } from "@/components/ui/map";
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, Outlet, useMatches } from "react-router";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/api";
@@ -19,7 +19,7 @@ export interface RouteHandle {
 	i18nNamespace?: string;
 	title?: string;
 	breadcrumbs?: BreadcrumbSegment[];
-	headerContent?: React.ReactNode;
+	headerContent?: ReactNode;
 	mainClassName?: string;
 	/** Roles allowed to access this route (used by admin layout guard). */
 	allowedRoles?: string[];

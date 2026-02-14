@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, type SubmitEvent } from "react";
+import { useState, useRef, useCallback, type SubmitEvent, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -61,7 +61,7 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
 		},
 	});
 
-	const handleAddImages = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleAddImages = useCallback((e: ChangeEvent<HTMLInputElement>) => {
 		const files = Array.from(e.target.files || []);
 		const validFiles = files.filter((file) => file.type.startsWith("image/"));
 

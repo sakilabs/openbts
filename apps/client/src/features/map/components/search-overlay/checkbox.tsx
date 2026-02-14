@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
 import { Checkbox as ShadcnCheckbox } from "@/components/ui/checkbox";
+import type { ReactNode } from "react";
 
 type CheckboxProps = {
 	checked: boolean;
 	onChange: (checked: boolean) => void;
-	children?: React.ReactNode;
+	children?: ReactNode;
 	className?: string;
 };
 

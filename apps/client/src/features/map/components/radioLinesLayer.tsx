@@ -1,5 +1,3 @@
-"use client";
-
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";

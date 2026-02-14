@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -12,8 +12,8 @@ import type { Station, StationSortBy } from "@/types/station";
 interface StationsListLayoutProps {
 	data: ReturnType<typeof useStationsData>;
 	onRowClick: (station: Station) => void;
-	headerActions?: React.ReactNode;
-	children?: React.ReactNode;
+	headerActions?: ReactNode;
+	children?: ReactNode;
 }
 
 export function StationsListLayout({ data, onRowClick, headerActions, children }: StationsListLayoutProps) {

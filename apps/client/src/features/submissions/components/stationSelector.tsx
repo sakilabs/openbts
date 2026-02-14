@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ChangeEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -49,7 +49,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
 		setSearchQuery("");
 	}, [onStationSelect]);
 
-	const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
 		setSearchQuery(e.target.value);
 		setIsOpen(true);
 	}, []);

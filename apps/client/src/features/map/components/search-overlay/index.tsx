@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback, type FocusEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -130,7 +128,7 @@ export function MapSearchOverlay({
 		return values.sort((a, b) => a - b);
 	}, [bands]);
 
-	function handleFilterPanelBlur(e: React.FocusEvent) {
+	function handleFilterPanelBlur(e: FocusEvent) {
 		const relatedTarget = e.relatedTarget as Node | null;
 		const isInsidePanel = filterPanelRef.current?.contains(relatedTarget);
 		const isToggleButton = (relatedTarget as Element)?.closest("[data-filter-toggle]");
@@ -140,7 +138,7 @@ export function MapSearchOverlay({
 		}
 	}
 
-	function handleKeyDown(e: React.KeyboardEvent) {
+	function handleKeyDown(e: KeyboardEvent) {
 		if (e.key === "Escape") {
 			if (activeOverlay) {
 				closeOverlay();

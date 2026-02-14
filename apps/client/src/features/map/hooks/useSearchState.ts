@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FocusEvent } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import type { FilterKeyword, ParsedFilter } from "../types";
 
@@ -69,7 +69,7 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 		setActiveOverlay(computeOverlay(remainingText, getAutocompleteMatches(remainingText, filterKeywords).length > 0));
 	}, [filterKeywords, parseFilters]);
 
-	function handleContainerBlur(e: React.FocusEvent) {
+	function handleContainerBlur(e: FocusEvent) {
 		const relatedTarget = e.relatedTarget as Node | null;
 		if (!containerRef.current?.contains(relatedTarget)) {
 			setIsFocused(false);
@@ -77,7 +77,7 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
 		}
 	}
 
-	function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+	function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
 		const value = e.target.value;
 		setInputValue(value);
 

@@ -1,8 +1,8 @@
-import type * as React from "react";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Link } from "react-router";
+import type { ComponentPropsWithoutRef } from "react";
 
 export function NavSecondary({
 	items,
@@ -13,7 +13,7 @@ export function NavSecondary({
 		url: string;
 		icon: IconSvgElement;
 	}[];
-} & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
+} & ComponentPropsWithoutRef<typeof SidebarGroup>) {
 	return (
 		<SidebarGroup {...props}>
 			<SidebarGroupContent>

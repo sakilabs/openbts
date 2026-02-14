@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { RAT_ORDER } from "../rat";
@@ -16,10 +16,10 @@ type UseCellDraftsOptions<T extends CellDraftBase> = {
 
 type UseCellDraftsReturn<T extends CellDraftBase> = {
 	cells: T[];
-	setCells: React.Dispatch<React.SetStateAction<T[]>>;
+	setCells: Dispatch<SetStateAction<T[]>>;
 	cellsByRat: Record<string, T[]>;
 	enabledRats: string[];
-	setEnabledRats: React.Dispatch<React.SetStateAction<string[]>>;
+	setEnabledRats: Dispatch<SetStateAction<string[]>>;
 	visibleRats: string[];
 	toggleRat: (rat: string) => void;
 	changeCell: (localId: string, patch: Partial<CellDraftBase>) => void;

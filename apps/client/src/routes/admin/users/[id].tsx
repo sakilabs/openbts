@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useParams, useNavigate, Navigate } from "react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -61,7 +61,7 @@ function SectionHeader({ icon, title, description }: { icon: typeof UserIcon; ti
 	);
 }
 
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoRow({ label, children }: { label: string; children: ReactNode }) {
 	return (
 		<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-2">
 			<span className="text-sm font-medium text-muted-foreground w-32 shrink-0">{label}</span>

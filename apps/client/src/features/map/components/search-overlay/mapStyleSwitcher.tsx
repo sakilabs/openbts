@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type MouseEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useMap, type MapStyle } from "@/components/ui/map";
@@ -58,7 +56,7 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
 		[setMapStyle],
 	);
 
-	const handleStopPropagation = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
+	const handleStopPropagation = useCallback((e: MouseEvent | KeyboardEvent) => {
 		e.stopPropagation();
 	}, []);
 

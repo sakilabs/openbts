@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -61,7 +61,7 @@ function TagInput({
 }) {
 	const [input, setInput] = useState("");
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
+	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter" && input.trim()) {
 			e.preventDefault();
 			if (!tags.includes(input.trim())) {
@@ -115,17 +115,7 @@ function TagInput({
 	);
 }
 
-function SettingsCard({
-	icon,
-	title,
-	description,
-	children,
-}: {
-	icon: React.ReactNode;
-	title: string;
-	description: string;
-	children: React.ReactNode;
-}) {
+function SettingsCard({ icon, title, description, children }: { icon: ReactNode; title: string; description: string; children: ReactNode }) {
 	return (
 		<div className="rounded-lg border bg-card p-4">
 			<div className="flex items-start gap-3 mb-4">
