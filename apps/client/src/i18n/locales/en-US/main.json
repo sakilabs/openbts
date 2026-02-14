@@ -52,7 +52,8 @@
 		"showingStations": "Showing {{count}} stations",
 		"layers": "Layers",
 		"showStations": "Stations",
-		"showRadiolines": "Radiolines"
+		"showRadiolines": "Radiolines",
+		"radiolineOperator": "Radioline Operator"
 	},
 	"unknownOperator": "Unknown Operator",
 	"radiolines": {

@@ -9,7 +9,7 @@ type UseUrlSyncArgs = {
 	onInitialize: (data: { filters?: StationFilters; center?: [number, number]; zoom?: number; stationId?: string; locationId?: number }) => void;
 };
 
-const FILTER_PARAM_KEYS = ["operators", "bands", "rat", "source", "new", "radiolines", "stations"];
+const FILTER_PARAM_KEYS = ["operators", "bands", "rat", "source", "new", "radiolines", "stations", "rl_operators"];
 
 function parseUrlHash(): {
 	filters: Partial<StationFilters> | null;
@@ -52,6 +52,12 @@ function parseUrlHash(): {
 	const recentOnly = params.get("new") === "true";
 	const showRadiolines = params.get("radiolines") === "1";
 	const showStations = params.get("stations") !== "0";
+	const radiolineOperators =
+		params
+			.get("rl_operators")
+			?.split(",")
+			.map(Number)
+			.filter((n) => !Number.isNaN(n)) || [];
 
 	const stationId = params.get("station") || undefined;
 
@@ -59,7 +65,7 @@ function parseUrlHash(): {
 	const locationId = locationIdStr ? Number.parseInt(locationIdStr, 10) : undefined;
 
 	return {
-		filters: hasFilterParams ? { operators, bands, rat, source, recentOnly, showStations, showRadiolines } : null,
+		filters: hasFilterParams ? { operators, bands, rat, source, recentOnly, showStations, showRadiolines, radiolineOperators } : null,
 		center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
 		zoom: !Number.isNaN(z) ? z : undefined,
 		stationId,
@@ -77,6 +83,7 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
 	if (filters.recentOnly) params.set("new", "true");
 	if (filters.showRadiolines) params.set("radiolines", "1");
 	if (!filters.showStations) params.set("stations", "0");
+	if (filters.radiolineOperators.length > 0) params.set("rl_operators", filters.radiolineOperators.join(","));
 
 	const center = map.getCenter();
 	const zoom = zoomOverride ?? map.getZoom();
@@ -114,6 +121,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
 						recentOnly: urlFilters.recentOnly || false,
 						showStations: urlFilters.showStations ?? true,
 						showRadiolines: urlFilters.showRadiolines ?? false,
+						radiolineOperators: urlFilters.radiolineOperators || [],
 					}
 				: undefined,
 			center,

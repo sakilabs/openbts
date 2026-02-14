@@ -30,6 +30,7 @@ export const DEFAULT_FILTERS: StationFilters = {
 	recentOnly: false,
 	showStations: true,
 	showRadiolines: false,
+	radiolineOperators: [],
 };
 
 const MAP_FILTERS_STORAGE_KEY = "map:filters";
@@ -53,6 +54,7 @@ export function loadMapFilters(): StationFilters | null {
 			recentOnly: parsed.recentOnly ?? false,
 			showStations: parsed.showStations ?? true,
 			showRadiolines: parsed.showRadiolines ?? false,
+			radiolineOperators: parsed.radiolineOperators ?? [],
 		};
 	} catch {
 		return null;

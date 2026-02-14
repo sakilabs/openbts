@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
@@ -16,11 +16,21 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Checkbox } from "./checkbox";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
 import { fetchStats } from "../../statsApi";
-
-const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
+import { fetchUkeRadioLineOperators } from "@/features/shared/api";
+import type { UkeOperator } from "@/features/shared/api";
+import {
+	Combobox,
+	ComboboxChips,
+	ComboboxChip,
+	ComboboxChipsInput,
+	ComboboxContent,
+	ComboboxEmpty,
+	ComboboxItem,
+	ComboboxList,
+} from "@/components/ui/combobox";
 
 type FilterPanelProps = {
 	filters: StationFilters;
@@ -66,9 +76,18 @@ export function FilterPanel({
 		staleTime: 1000 * 60 * 5,
 	});
 
-	const topOperators = operators.filter((op) => TOP4_MNCS.includes(op.mnc));
-	const otherOperators = operators.filter((op) => !TOP4_MNCS.includes(op.mnc));
-	const hasSelectedOther = otherOperators.some((op) => filters.operators.includes(op.mnc));
+	const { data: radiolineOperatorsList = [] } = useQuery({
+		queryKey: ["uke", "radiolines", "operators"],
+		queryFn: fetchUkeRadioLineOperators,
+		staleTime: 1000 * 60 * 30,
+		enabled: filters.showRadiolines,
+	});
+
+	const radiolineOperatorsChipsRef = useRef<HTMLDivElement>(null);
+
+	const topOperators = useMemo(() => operators.filter((op) => TOP4_MNCS.includes(op.mnc)), [operators]);
+	const otherOperators = useMemo(() => operators.filter((op) => !TOP4_MNCS.includes(op.mnc)), [operators]);
+	const hasSelectedOther = useMemo(() => otherOperators.some((op) => filters.operators.includes(op.mnc)), [otherOperators, filters.operators]);
 
 	const dataSources = [
 		{ id: "internal", label: t("filters.internalDb"), icon: Database02Icon },
@@ -172,8 +191,64 @@ export function FilterPanel({
 						)}
 					</div>
 				)}
+				{filters.showRadiolines && radiolineOperatorsList?.length > 0 && (
+					<div className="space-y-2 mt-1 pt-1">
+						<h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("filters.radiolineOperator")}</h4>
+						<Combobox
+							multiple
+							value={
+								(filters.radiolineOperators ?? []).map((id) => radiolineOperatorsList.find((op) => op.id === id)).filter(Boolean) as UkeOperator[]
+							}
+							onValueChange={(values) => onFiltersChange({ ...filters, radiolineOperators: values.map((v) => v.id) })}
+							items={radiolineOperatorsList}
+							itemToStringLabel={(op) => op.name}
+							filter={(op, query, itemToString) => {
+								if (!query.trim()) return true;
+								const q = query.toLowerCase().trim();
+								const label = (itemToString?.(op) ?? op.name).toLowerCase();
+								const full = (op.full_name ?? "").toLowerCase();
+								return label.includes(q) || full.includes(q);
+							}}
+						>
+							<ComboboxChips
+								ref={radiolineOperatorsChipsRef}
+								className="min-h-8 max-h-24 overflow-y-auto overflow-x-hidden text-sm overscroll-contain custom-scrollbar"
+							>
+								{(filters.radiolineOperators ?? []).map((id) => {
+									const op = radiolineOperatorsList.find((o) => o.id === id);
+									if (!op) return null;
+									const maxLen = 12;
+									const label = op.name.length > maxLen ? `${op.name.slice(0, maxLen)} ....` : op.name;
+									return (
+										<ComboboxChip key={id} title={op.name}>
+											{label}
+										</ComboboxChip>
+									);
+								})}
+								<ComboboxChipsInput
+									className="text-sm"
+									placeholder={(filters.radiolineOperators ?? []).length === 0 ? t("filters.searchRadiolineOperators") : ""}
+								/>
+							</ComboboxChips>
+							<ComboboxContent anchor={radiolineOperatorsChipsRef}>
+								<ComboboxEmpty>{t("common:placeholder.noOperatorsFound")}</ComboboxEmpty>
+								<ComboboxList>
+									{(op: UkeOperator) => (
+										<ComboboxItem key={op.id} value={op}>
+											<span>{op.name}</span>
+											{op.full_name && op.full_name !== op.name && (
+												<span className="text-muted-foreground text-xs ml-auto truncate max-w-48" title={op.full_name}>
+													{op.full_name}
+												</span>
+											)}
+										</ComboboxItem>
+									)}
+								</ComboboxList>
+							</ComboboxContent>
+						</Combobox>
+					</div>
+				)}
 			</div>
-
 			<div>
 				<div className="flex items-center justify-between mb-1.5">
 					<h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.standard")}</h4>
@@ -252,6 +327,9 @@ export function FilterPanel({
 					<p className="text-xs text-muted-foreground">
 						<span className="font-medium text-foreground">{t("common:labels.filtersActive", { count: activeFilterCount })}</span>
 						{filters.operators.length > 0 && <> · {t("common:labels.operators", { count: filters.operators.length })}</>}
+						{filters.showRadiolines && (filters.radiolineOperators?.length ?? 0) > 0 && (
+							<> · {t("filters.radiolineOperators", { count: filters.radiolineOperators?.length ?? 0 })}</>
+						)}
 						{filters.rat.length > 0 && <> · {t("common:labels.standard", { count: filters.rat.length })}</>}
 						{filters.bands.length > 0 && <> · {t("common:labels.bands", { count: filters.bands.length })}</>}
 					</p>
@@ -307,9 +385,7 @@ export function FilterPanel({
 		</div>
 	);
 
-	if (isSheet) {
-		return filterSections;
-	}
+	if (isSheet) return filterSections;
 
 	return (
 		<div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 relative z-15 max-h-[calc(100vh-8rem)] flex flex-col">

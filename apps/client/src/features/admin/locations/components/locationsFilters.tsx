@@ -15,11 +15,9 @@ import {
 	ComboboxItem,
 	ComboboxList,
 } from "@/components/ui/combobox";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import type { Operator, Region } from "@/types/station";
 import type { LocationFilters } from "../hooks/useLocationsData";
-
-const TOP4_MNCS = [26001, 26002, 26003, 26006];
 
 type LocationsFiltersProps = {
 	filters: LocationFilters;

@@ -4,7 +4,7 @@ import { useState, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon } from "@hugeicons/core-free-icons";
+import { Search01Icon, Cancel01Icon, SlidersHorizontalIcon, FilterIcon } from "@hugeicons/core-free-icons";
 import { cn, toggleValue } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -114,7 +114,12 @@ export function MapSearchOverlay({
 	});
 
 	const isSearching = isOsmLoading || isStationSearchLoading;
-	const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length + (filters.recentOnly ? 1 : 0);
+	const activeFilterCount =
+		filters.operators.length +
+		filters.bands.length +
+		filters.rat.length +
+		(filters.recentOnly ? 1 : 0) +
+		(filters.showRadiolines ? (filters.radiolineOperators?.length ?? 0) : 0);
 	const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
 	const showResults = activeOverlay === "results" && (isSearching || osmResults.length > 0 || stationResults.length > 0);
 	const hasMoreLocations = totalCount > locationCount;
@@ -191,6 +196,7 @@ export function MapSearchOverlay({
 				recentOnly: false,
 				showStations: filters.showStations,
 				showRadiolines: filters.showRadiolines,
+				radiolineOperators: [],
 			}),
 		[filters.source, filters.showStations, filters.showRadiolines, onFiltersChange],
 	);
@@ -330,10 +336,13 @@ export function MapSearchOverlay({
 
 			{isMobile && (
 				<Sheet open={showFilters} onOpenChange={setShowFilters}>
-					<SheetContent side="bottom" className="max-h-[85dvh] flex flex-col p-0 rounded-t-2xl" showCloseButton={false}>
+					<SheetContent side="bottom" className="max-h-[85dvh] flex flex-col gap-0 p-0 rounded-t-2xl" showCloseButton={false}>
 						<SheetHeader className="px-4 py-3 border-b bg-muted/30 shrink-0">
 							<div className="flex items-center justify-between">
-								<SheetTitle className="text-sm">{t("common:labels.filters")}</SheetTitle>
+								<SheetTitle className="flex items-center gap-2 text-sm">
+									<HugeiconsIcon icon={FilterIcon} className="size-4 shrink-0" />
+									<span>{t("common:labels.filters")}</span>
+								</SheetTitle>
 								{activeFilterCount > 0 && (
 									<button
 										type="button"
@@ -417,7 +426,10 @@ export function MapSearchOverlay({
 									</div>
 								</TooltipTrigger>
 								<TooltipContent side="bottom">
-									{t("overlay.moreRadiolines", { total: radioLineTotalCount.toLocaleString(i18n.language), shown: radioLineCount.toLocaleString(i18n.language) })}
+									{t("overlay.moreRadiolines", {
+										total: radioLineTotalCount.toLocaleString(i18n.language),
+										shown: radioLineCount.toLocaleString(i18n.language),
+									})}
 								</TooltipContent>
 							</Tooltip>
 						)}
@@ -492,9 +504,16 @@ export function MapSearchOverlay({
 							</div>
 						</TooltipTrigger>
 						<TooltipContent side="top">
-							<p>{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}</p>
+							<p>
+								{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
+							</p>
 							{hasMoreRadioLines && (
-								<p>{t("overlay.moreRadiolines", { total: radioLineTotalCount.toLocaleString(i18n.language), shown: radioLineCount.toLocaleString(i18n.language) })}</p>
+								<p>
+									{t("overlay.moreRadiolines", {
+										total: radioLineTotalCount.toLocaleString(i18n.language),
+										shown: radioLineCount.toLocaleString(i18n.language),
+									})}
+								</p>
 							)}
 						</TooltipContent>
 					</Tooltip>

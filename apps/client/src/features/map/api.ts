@@ -51,11 +51,11 @@ export type RadioLinesResponse = {
 	totalCount: number;
 };
 
-export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorId?: number }): Promise<RadioLinesResponse> {
+export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorIds?: number[] }): Promise<RadioLinesResponse> {
 	const params = new URLSearchParams();
 	params.set("bounds", bounds);
 	params.set("limit", "300");
-	if (options?.operatorId) params.set("operator", String(options.operatorId));
+	if (options?.operatorIds?.length) params.set("operators", options.operatorIds.join(","));
 
 	return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {
 		signal: options?.signal,

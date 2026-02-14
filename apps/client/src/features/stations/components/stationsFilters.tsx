@@ -15,14 +15,12 @@ import {
 	ComboboxItem,
 	ComboboxList,
 } from "@/components/ui/combobox";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import { useSearchState } from "@/features/map/hooks/useSearchState";
 import { AutocompleteDropdown } from "@/features/map/components/search-overlay/autocompleteDropdown";
 import { FILTER_KEYWORDS } from "@/features/map/constants";
 import { parseFilters } from "@/features/map/filters";
 import type { Operator, Region, StationFilters } from "@/types/station";
-
-const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
 
 const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
@@ -68,7 +66,7 @@ export function StationsFilters({
 
 	const topOperators = useMemo(() => operators.filter((op) => TOP4_MNCS.includes(op.mnc)), [operators]);
 	const otherOperators = useMemo(() => operators.filter((op) => !TOP4_MNCS.includes(op.mnc)), [operators]);
-	const hasSelectedOther = otherOperators.some((op) => filters.operators.includes(op.mnc));
+	const hasSelectedOther = useMemo(() => otherOperators.some((op) => filters.operators.includes(op.mnc)), [otherOperators, filters.operators]);
 
 	const stationsFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("stations")), []);
 
@@ -120,7 +118,16 @@ export function StationsFilters({
 	};
 
 	const handleClearFilters = () => {
-		onFiltersChange({ operators: [], bands: [], rat: [], source: "internal", recentOnly: false });
+		onFiltersChange({
+			operators: [],
+			bands: [],
+			rat: [],
+			source: "internal",
+			recentOnly: false,
+			showRadiolines: false,
+			radiolineOperators: [],
+			showStations: true,
+		});
 		onRegionsChange([]);
 	};
 

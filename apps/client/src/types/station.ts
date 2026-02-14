@@ -153,6 +153,7 @@ export type StationFilters = {
 	recentOnly: boolean;
 	showStations: boolean;
 	showRadiolines: boolean;
+	radiolineOperators: number[];
 };
 
 export type StationWithoutCells = Omit<Station, "location" | "cells"> & {

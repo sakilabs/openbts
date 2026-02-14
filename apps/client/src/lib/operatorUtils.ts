@@ -46,3 +46,5 @@ export function normalizeOperatorName(name: string): string {
 		.map((part) => (/\s|-/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1)))
 		.join("");
 }
+
+export const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play

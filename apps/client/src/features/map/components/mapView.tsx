@@ -71,8 +71,8 @@ function MapViewInner() {
 	const totalCount = locationsResponse?.totalCount ?? 0;
 
 	const { data: radioLinesResponse, isFetching: isRadioLinesFetching } = useQuery({
-		queryKey: ["radiolines", bounds],
-		queryFn: ({ signal }) => fetchRadioLines(bounds, { signal }),
+		queryKey: ["radiolines", bounds, filters.radiolineOperators],
+		queryFn: ({ signal }) => fetchRadioLines(bounds, { signal, operatorIds: filters.radiolineOperators }),
 		enabled: filters.showRadiolines && !!bounds && !isMoving && zoom >= preferences.radiolinesMinZoom,
 		staleTime: 1000 * 60 * 5,
 		placeholderData: (prev) => prev,

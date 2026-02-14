@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, count, eq, sql, type SQL } from "drizzle-orm";
+import { and, count, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 
 import db from "../../../../../database/psql.js";
@@ -74,7 +74,18 @@ const schemaRoute = {
 			.transform((val): number[] | undefined => (val ? val.split(",").map(Number) : undefined)),
 		limit: z.coerce.number().min(1).optional().default(150),
 		page: z.coerce.number().min(1).default(1),
-		operator: z.string().optional(),
+		operators: z
+			.string()
+			.regex(/^\d+(,\d+)*$/)
+			.optional()
+			.transform((val): number[] | undefined =>
+				val
+					? val
+							.split(",")
+							.map(Number)
+							.filter((n) => !Number.isNaN(n))
+					: undefined,
+			),
 		permit_number: z.string().optional(),
 		decision_type: z.literal(["zmP", "P"]).optional(),
 	}),
@@ -92,7 +103,7 @@ type ReqQuery = {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-	const { limit = undefined, page = 1, bounds, operator, permit_number, decision_type } = req.query;
+	const { limit = undefined, page = 1, bounds, operators, permit_number, decision_type } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	try {
@@ -108,7 +119,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			const rxPoint = sql`ST_SetSRID(ST_MakePoint(${ukeRadioLines.rx_longitude}, ${ukeRadioLines.rx_latitude}), 4326)`;
 			conditions.push(sql`(ST_Intersects(${txPoint}, ${envelope}) OR ST_Intersects(${rxPoint}, ${envelope}))`);
 		}
-		if (operator) conditions.push(and(eq(ukeRadioLines.operator_id, Number.parseInt(operator, 10))));
 		if (permit_number) {
 			const like = `%${permit_number}%`;
 			conditions.push(
@@ -116,7 +126,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			);
 		}
 		if (decision_type) conditions.push(eq(ukeRadioLines.decision_type, decision_type));
-
+		if (operators) {
+			const res = await db.query.ukeOperators.findMany({
+				columns: { id: true },
+				where: (f, { inArray }) => inArray(f.id, operators),
+			});
+			const operatorIds = res.map((r) => r.id);
+			conditions.push(inArray(ukeRadioLines.operator_id, operatorIds));
+		}
 		const [countResult, radioLinesRes] = await Promise.all([
 			db
 				.select({ count: count() })
