@@ -1,4 +1,4 @@
-FROM postgres:18-trixie
+FROM postgres:18.2-trixie
 
 RUN apt update && \
     apt install -y postgis postgresql-18-postgis-3 && \

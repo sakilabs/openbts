@@ -19,7 +19,7 @@ services:
     ports:
       - "3030:3030"
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/openbts
+      - DATABASE_URL=postgres://user:password@pgbouncer:6432/openbts
       - REDIS_URL=redis://redis:6379
       - BETTER_AUTH_SECRET=your-generated-secret
       - GOOGLE_CLIENT_ID=your-google-client-id
@@ -28,10 +28,10 @@ services:
       - GITHUB_CLIENT_SECRET=your-github-client-secret
       - APP_NAME=OpenBTS
     depends_on:
-      - db
+      - postgres
       - redis
 
-  db:
+  postgres:
     build:
       context: .
       dockerfile: docker/postgres/Dockerfile
@@ -41,8 +41,25 @@ services:
       - POSTGRES_DB=openbts
     volumes:
       - postgres-volume:/var/lib/postgresql/18/docker
+
+  pgbouncer:
+    image: bitnamilegacy/pgbouncer:latest
+    depends_on:
+      - postgres
     ports:
-      - "5432:5432"
+      - "6432:6432"
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/bitnami/pgbouncer/conf/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/bitnami/pgbouncer/conf/userlist.txt:ro
+    environment:
+      PGBOUNCER_SKIP_CONFIG: "yes"
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: "5432"
+      POSTGRESQL_USERNAME: pg_user
+      POSTGRESQL_PASSWORD: pg_password
+      POSTGRESQL_DATABASE: openbts
+      PGBOUNCER_CONF_FILE: /opt/bitnami/pgbouncer/conf/pgbouncer.ini
+      PGBOUNCER_PORT: "6432"
 
   redis:
     image: redis:alpine
