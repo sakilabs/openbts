@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
-import { POLAND_CENTER, RADIOLINES_MIN_ZOOM } from "../constants";
+import { POLAND_CENTER } from "../constants";
 import { StationsLayer, DEFAULT_FILTERS, loadMapFilters, saveMapFilters } from "./stationsLayer";
 import type { StationFilters, StationSource, Station, LocationInfo, StationWithoutCells, UkeStation, UkeLocationWithPermits } from "@/types/station";
 import { MapSearchOverlay } from "./search-overlay";
@@ -10,6 +10,7 @@ import { fetchLocations, fetchLocationWithStations, fetchRadioLines } from "../a
 import { useMapPopup } from "../hooks/useMapPopup";
 import { groupPermitsByStation } from "../utils";
 import { showApiError } from "@/lib/api";
+import { usePreferences } from "@/hooks/usePreferences";
 
 const RadioLinesLayer = lazy(() => import("./radioLinesLayer"));
 
@@ -32,6 +33,7 @@ function toLocationInfo(loc: { id: number; city?: string; address?: string; lati
 function MapViewInner() {
 	const { map, isLoaded } = useMap();
 	const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
+	const { preferences } = usePreferences();
 	const [filters, setFilters] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
 	const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
 
@@ -68,18 +70,17 @@ function MapViewInner() {
 	const locationCount = locations.length;
 	const totalCount = locationsResponse?.totalCount ?? 0;
 
-	const operatorId = filters.operators.length === 1 ? filters.operators[0] : undefined;
-
 	const { data: radioLinesResponse, isFetching: isRadioLinesFetching } = useQuery({
-		queryKey: ["radiolines", bounds, operatorId],
-		queryFn: ({ signal }) => fetchRadioLines(bounds, { signal, operatorId }),
-		enabled: filters.showRadiolines && !!bounds && !isMoving && zoom >= RADIOLINES_MIN_ZOOM,
+		queryKey: ["radiolines", bounds],
+		queryFn: ({ signal }) => fetchRadioLines(bounds, { signal }),
+		enabled: filters.showRadiolines && !!bounds && !isMoving && zoom >= preferences.radiolinesMinZoom,
 		staleTime: 1000 * 60 * 5,
 		placeholderData: (prev) => prev,
 	});
 
 	const radioLines = radioLinesResponse?.data ?? [];
 	const radioLineCount = radioLines.length;
+	const radioLineTotalCount = radioLinesResponse?.totalCount ?? 0;
 
 	const handleLocationSelect = useCallback(
 		(lat: number, lng: number) => {
@@ -139,6 +140,7 @@ function MapViewInner() {
 				locationCount={locationCount}
 				totalCount={totalCount}
 				radioLineCount={filters.showRadiolines ? radioLineCount : 0}
+				radioLineTotalCount={filters.showRadiolines ? radioLineTotalCount : 0}
 				isRadioLinesFetching={filters.showRadiolines && isRadioLinesFetching}
 				isLoading={isLoading}
 				isFetching={isFetching}
@@ -166,7 +168,7 @@ function MapViewInner() {
 					<RadioLinesLayer radioLines={radioLines} />
 				</Suspense>
 			)}
-			<MapControls showLocate showCompass />
+			<MapControls showLocate showCompass showScale />
 			<Suspense fallback={null}>
 				{selectedStation && (
 					<StationDetailsDialog

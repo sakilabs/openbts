@@ -48,6 +48,7 @@ export async function fetchLocationWithStations(locationId: number, filters: Sta
 
 export type RadioLinesResponse = {
 	data: RadioLine[];
+	totalCount: number;
 };
 
 export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorId?: number }): Promise<RadioLinesResponse> {

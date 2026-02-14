@@ -6,7 +6,6 @@ import {
 	RADIOLINES_LINE_LAYER_ID,
 	RADIOLINES_HITBOX_LAYER_ID,
 	RADIOLINES_ENDPOINT_LAYER_ID,
-	RADIOLINES_MIN_ZOOM,
 	POINT_LAYER_ID,
 } from "../constants";
 import type { RadioLine } from "@/types/station";
@@ -18,50 +17,57 @@ type UseRadioLinesLayerArgs = {
 	linesGeoJSON: GeoJSON.FeatureCollection;
 	endpointsGeoJSON: GeoJSON.FeatureCollection;
 	radioLines: RadioLine[];
+	minZoom: number;
 	onFeatureClick: (radioLine: RadioLine, coordinates: [number, number]) => void;
 };
 
-const LINE_LAYER_CONFIG: maplibregl.LayerSpecification = {
-	id: RADIOLINES_LINE_LAYER_ID,
-	type: "line",
-	source: RADIOLINES_SOURCE_ID,
-	minzoom: RADIOLINES_MIN_ZOOM,
-	paint: {
-		"line-color": ["get", "color"],
-		"line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 3, 18, 5],
-		"line-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 13, 0.8],
-		"line-dasharray": ["case", ["get", "isExpired"], ["literal", [4, 3]], ["literal", [1, 0]]],
-	},
-};
+function createLineLayerConfig(minzoom: number): maplibregl.LayerSpecification {
+	return {
+		id: RADIOLINES_LINE_LAYER_ID,
+		type: "line",
+		source: RADIOLINES_SOURCE_ID,
+		minzoom,
+		paint: {
+			"line-color": ["get", "color"],
+			"line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 14, 3, 18, 5],
+			"line-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0.4, 13, 0.8],
+			"line-dasharray": ["case", ["get", "isExpired"], ["literal", [4, 3]], ["literal", [1, 0]]],
+		},
+	};
+}
 
-const HITBOX_LAYER_CONFIG: maplibregl.LayerSpecification = {
-	id: RADIOLINES_HITBOX_LAYER_ID,
-	type: "line",
-	source: RADIOLINES_SOURCE_ID,
-	minzoom: RADIOLINES_MIN_ZOOM,
-	paint: {
-		"line-width": 16,
-		"line-opacity": 0,
-	},
-};
+function createHitboxLayerConfig(minzoom: number): maplibregl.LayerSpecification {
+	return {
+		id: RADIOLINES_HITBOX_LAYER_ID,
+		type: "line",
+		source: RADIOLINES_SOURCE_ID,
+		minzoom,
+		paint: {
+			"line-width": 16,
+			"line-opacity": 0,
+		},
+	};
+}
 
-const ENDPOINT_LAYER_CONFIG: maplibregl.LayerSpecification = {
-	id: RADIOLINES_ENDPOINT_LAYER_ID,
-	type: "circle",
-	source: RADIOLINES_ENDPOINTS_SOURCE_ID,
-	minzoom: RADIOLINES_MIN_ZOOM,
-	paint: {
-		"circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3, 14, 4],
-		"circle-color": ["get", "color"],
-		"circle-stroke-width": 1,
-		"circle-stroke-color": "#fff",
-	},
-};
+function createEndpointLayerConfig(minzoom: number): maplibregl.LayerSpecification {
+	return {
+		id: RADIOLINES_ENDPOINT_LAYER_ID,
+		type: "circle",
+		source: RADIOLINES_ENDPOINTS_SOURCE_ID,
+		minzoom,
+		paint: {
+			"circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3, 14, 4],
+			"circle-color": ["get", "color"],
+			"circle-stroke-width": 1,
+			"circle-stroke-color": "#fff",
+		},
+	};
+}
 
 const HITBOX_LAYERS = [RADIOLINES_HITBOX_LAYER_ID, RADIOLINES_ENDPOINT_LAYER_ID] as const;
 const ALL_LAYERS = [RADIOLINES_LINE_LAYER_ID, RADIOLINES_HITBOX_LAYER_ID, RADIOLINES_ENDPOINT_LAYER_ID] as const;
 
-export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJSON, radioLines, onFeatureClick }: UseRadioLinesLayerArgs) {
+export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJSON, radioLines, minZoom, onFeatureClick }: UseRadioLinesLayerArgs) {
 	const callbackRefs = useRef({ onFeatureClick });
 	callbackRefs.current = { onFeatureClick };
 
@@ -88,9 +94,9 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 			if (!map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID))
 				map.addSource(RADIOLINES_ENDPOINTS_SOURCE_ID, { type: "geojson", data: endpointsRef.current });
 
-			if (!map.getLayer(RADIOLINES_LINE_LAYER_ID)) map.addLayer(LINE_LAYER_CONFIG, beforeLayer);
-			if (!map.getLayer(RADIOLINES_HITBOX_LAYER_ID)) map.addLayer(HITBOX_LAYER_CONFIG, beforeLayer);
-			if (!map.getLayer(RADIOLINES_ENDPOINT_LAYER_ID)) map.addLayer(ENDPOINT_LAYER_CONFIG, beforeLayer);
+			if (!map.getLayer(RADIOLINES_LINE_LAYER_ID)) map.addLayer(createLineLayerConfig(minZoom), beforeLayer);
+			if (!map.getLayer(RADIOLINES_HITBOX_LAYER_ID)) map.addLayer(createHitboxLayerConfig(minZoom), beforeLayer);
+			if (!map.getLayer(RADIOLINES_ENDPOINT_LAYER_ID)) map.addLayer(createEndpointLayerConfig(minZoom), beforeLayer);
 		};
 
 		const isNearStation = (point: maplibregl.Point) => {

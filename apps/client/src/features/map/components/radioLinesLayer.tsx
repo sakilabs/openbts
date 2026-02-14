@@ -8,6 +8,7 @@ import { useRadioLinesLayer } from "../hooks/useRadioLinesLayer";
 import { radioLinesToGeoJSON } from "../geojson";
 import { RadioLinePopupContent } from "./radioLinePopupContent";
 import type { RadioLine } from "@/types/station";
+import { usePreferences } from "@/hooks/usePreferences";
 
 const RadioLineDetailsDialog = lazy(() =>
 	import("@/features/station-details/components/radioLineDetailsDialog").then((m) => ({ default: m.RadioLineDetailsDialog })),
@@ -22,6 +23,7 @@ type RadioLinesLayerProps = {
 
 export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
 	const { map, isLoaded } = useMap();
+	const { preferences } = usePreferences();
 	const [selectedRadioLine, setSelectedRadioLine] = useState<RadioLine | null>(null);
 
 	const popupRef = useRef<MapLibreGL.Popup | null>(null);
@@ -82,6 +84,7 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
 		linesGeoJSON: lines,
 		endpointsGeoJSON: endpoints,
 		radioLines,
+		minZoom: preferences.radiolinesMinZoom,
 		onFeatureClick: handleFeatureClick,
 	});
 

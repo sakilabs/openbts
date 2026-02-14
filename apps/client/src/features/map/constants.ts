@@ -21,8 +21,6 @@ export const RADIOLINES_LINE_LAYER_ID = "radiolines-layer";
 export const RADIOLINES_HITBOX_LAYER_ID = "radiolines-hitbox";
 export const RADIOLINES_ENDPOINT_LAYER_ID = "radiolines-endpoints";
 
-export const RADIOLINES_MIN_ZOOM = 8;
-
 export const RAT_OPTIONS = [
 	{ value: "gsm", label: "GSM", gen: "2G" },
 	{ value: "umts", label: "UMTS", gen: "3G" },

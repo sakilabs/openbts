@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, eq, sql, type SQL } from "drizzle-orm";
+import { and, count, eq, sql, type SQL } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 
 import db from "../../../../../database/psql.js";
@@ -64,6 +64,7 @@ const radioLineResponseSchema = z.object({
 });
 
 type RadioLineResponse = z.infer<typeof radioLineResponseSchema>;
+type ResponseBody = { data: RadioLineResponse[]; totalCount: number };
 const schemaRoute = {
 	querystring: z.object({
 		bounds: z
@@ -80,6 +81,7 @@ const schemaRoute = {
 	response: {
 		200: z.object({
 			data: z.array(radioLineResponseSchema),
+			totalCount: z.number(),
 		}),
 	},
 };
@@ -89,7 +91,7 @@ type ReqQuery = {
 
 const SIMILARITY_THRESHOLD = 0.6;
 
-async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<RadioLineResponse[]>>) {
+async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
 	const { limit = undefined, page = 1, bounds, operator, permit_number, decision_type } = req.query;
 	const offset = limit ? (page - 1) * limit : undefined;
 
@@ -104,7 +106,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			const envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
 			const txPoint = sql`ST_SetSRID(ST_MakePoint(${ukeRadioLines.tx_longitude}, ${ukeRadioLines.tx_latitude}), 4326)`;
 			const rxPoint = sql`ST_SetSRID(ST_MakePoint(${ukeRadioLines.rx_longitude}, ${ukeRadioLines.rx_latitude}), 4326)`;
-			conditions.push(sql`ST_Intersects(${txPoint}, ${envelope}) AND ST_Intersects(${rxPoint}, ${envelope})`);
+			conditions.push(sql`(ST_Intersects(${txPoint}, ${envelope}) OR ST_Intersects(${rxPoint}, ${envelope}))`);
 		}
 		if (operator) conditions.push(and(eq(ukeRadioLines.operator_id, Number.parseInt(operator, 10))));
 		if (permit_number) {
@@ -115,17 +117,23 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		}
 		if (decision_type) conditions.push(eq(ukeRadioLines.decision_type, decision_type));
 
-		const radioLinesRes = await db.query.ukeRadioLines.findMany({
-			where: conditions.length > 0 ? and(...conditions) : undefined,
-			with: {
-				operator: true,
-				txTransmitterType: { with: { manufacturer: true } },
-				txAntennaType: { with: { manufacturer: true } },
-				rxAntennaType: { with: { manufacturer: true } },
-			},
-			limit: limit,
-			offset: offset,
-		});
+		const [countResult, radioLinesRes] = await Promise.all([
+			db
+				.select({ count: count() })
+				.from(ukeRadioLines)
+				.where(conditions.length > 0 ? and(...conditions) : undefined),
+			db.query.ukeRadioLines.findMany({
+				where: conditions.length > 0 ? and(...conditions) : undefined,
+				with: {
+					operator: true,
+					txTransmitterType: { with: { manufacturer: true } },
+					txAntennaType: { with: { manufacturer: true } },
+					rxAntennaType: { with: { manufacturer: true } },
+				},
+				limit: limit,
+				offset: offset,
+			}),
+		]);
 
 		const mapType = (t: { id: number; name: string; manufacturer: { id: number; name: string } | null } | null | undefined) =>
 			t
@@ -180,14 +188,16 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			createdAt: radioLine.createdAt,
 		}));
 
-		res.send({ data });
+		const totalCount = countResult[0]?.count ?? 0;
+
+		res.send({ data, totalCount });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
 	}
 }
 
-const getUkeRadioLines: Route<ReqQuery, RadioLineResponse[]> = {
+const getUkeRadioLines: Route<ReqQuery, ResponseBody> = {
 	url: "/uke/radiolines",
 	method: "GET",
 	schema: schemaRoute,

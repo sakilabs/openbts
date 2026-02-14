@@ -17,7 +17,9 @@
 		"navDisplayInline": "Rozwijane menu",
 		"navDisplayInlineDesc": "Mała ikona obok współrzędnych GPS otwierająca menu rozwijane",
 		"navDisplayButtons": "Osobne przyciski",
-		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje"
+		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje",
+		"radiolinesMinZoom": "Minimalny zoom radiolinii",
+		"radiolinesMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego radiolinie będą widoczne na mapie"
 	},
 	"page": {
 		"title": "Ustawienia konta",

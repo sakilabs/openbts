@@ -734,6 +734,8 @@ type MapControlsProps = {
 	showLocate?: boolean;
 	/** Show fullscreen toggle button (default: false) */
 	showFullscreen?: boolean;
+	/** Show scale bar (default: false) */
+	showScale?: boolean;
 	/** Additional CSS classes for the controls container */
 	className?: string;
 	/** Callback with user coordinates when located */
@@ -788,11 +790,42 @@ function MapControls({
 	showCompass = false,
 	showLocate = false,
 	showFullscreen = false,
+	showScale = false,
 	className,
 	onLocate,
 }: MapControlsProps) {
 	const { map } = useMap();
 	const [waitingForLocation, setWaitingForLocation] = useState(false);
+
+	const [scaleLabel, setScaleLabel] = useState("");
+	const [scaleWidth, setScaleWidth] = useState(0);
+
+	useEffect(() => {
+		if (!map || !showScale) return;
+
+		const updateScale = () => {
+			const maxWidth = 96;
+			const y = map.getContainer().clientHeight / 2;
+			const left = map.unproject([0, y]);
+			const right = map.unproject([maxWidth, y]);
+			const distance = left.distanceTo(right);
+
+			const steps = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
+			const roundedValue = [...steps].reverse().find((s) => s <= distance) ?? steps[0];
+			const ratio = roundedValue / distance;
+
+			const label = roundedValue >= 1000 ? `${roundedValue / 1000} km` : `${roundedValue} m`;
+
+			setScaleWidth(Math.round(maxWidth * ratio));
+			setScaleLabel(label);
+		};
+
+		map.on("move", updateScale);
+		updateScale();
+		return () => {
+			map.off("move", updateScale);
+		};
+	}, [map, showScale]);
 
 	const handleZoomIn = useCallback(() => {
 		map?.zoomTo(map.getZoom() + 1, { duration: 300 });
@@ -842,37 +875,47 @@ function MapControls({
 	}, [map]);
 
 	return (
-		<div className={cn("absolute z-10 flex flex-col gap-1.5", positionClasses[position], className)}>
-			{showZoom && (
-				<ControlGroup>
-					<ControlButton onClick={handleZoomIn} label="Zoom in">
-						<HugeiconsIcon icon={PlusSignIcon} className="size-4" />
-					</ControlButton>
-					<ControlButton onClick={handleZoomOut} label="Zoom out">
-						<HugeiconsIcon icon={MinusSignIcon} className="size-4" />
-					</ControlButton>
-				</ControlGroup>
+		<>
+			<div className={cn("absolute z-10 flex flex-col gap-1.5", positionClasses[position], className)}>
+				{showZoom && (
+					<ControlGroup>
+						<ControlButton onClick={handleZoomIn} label="Zoom in">
+							<HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+						</ControlButton>
+						<ControlButton onClick={handleZoomOut} label="Zoom out">
+							<HugeiconsIcon icon={MinusSignIcon} className="size-4" />
+						</ControlButton>
+					</ControlGroup>
+				)}
+				{showCompass && (
+					<ControlGroup>
+						<CompassButton onClick={handleResetBearing} />
+					</ControlGroup>
+				)}
+				{showLocate && (
+					<ControlGroup>
+						<ControlButton onClick={handleLocate} label="Find my location" disabled={waitingForLocation}>
+							{waitingForLocation ? <Spinner className="size-4" /> : <HugeiconsIcon icon={Location01Icon} className="size-4" />}
+						</ControlButton>
+					</ControlGroup>
+				)}
+				{showFullscreen && (
+					<ControlGroup>
+						<ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
+							<HugeiconsIcon icon={MaximizeIcon} className="size-4" />
+						</ControlButton>
+					</ControlGroup>
+				)}
+			</div>
+			{showScale && scaleLabel && (
+				<div className="hidden md:block absolute z-10 bottom-2 left-2">
+					<div className="w-29 flex flex-col items-start rounded-md border border-border bg-background shadow-sm px-2 py-1">
+						<span className="text-[10px] font-semibold text-foreground leading-tight">{scaleLabel}</span>
+						<div className="mt-0.5 border-b-2 border-l-2 border-r-2 border-foreground/60 rounded-b-sm" style={{ width: scaleWidth }} />
+					</div>
+				</div>
 			)}
-			{showCompass && (
-				<ControlGroup>
-					<CompassButton onClick={handleResetBearing} />
-				</ControlGroup>
-			)}
-			{showLocate && (
-				<ControlGroup>
-					<ControlButton onClick={handleLocate} label="Find my location" disabled={waitingForLocation}>
-						{waitingForLocation ? <Spinner className="size-4" /> : <HugeiconsIcon icon={Location01Icon} className="size-4" />}
-					</ControlButton>
-				</ControlGroup>
-			)}
-			{showFullscreen && (
-				<ControlGroup>
-					<ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
-						<HugeiconsIcon icon={MaximizeIcon} className="size-4" />
-					</ControlButton>
-				</ControlGroup>
-			)}
-		</div>
+		</>
 	);
 }
 

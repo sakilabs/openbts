@@ -26,6 +26,7 @@ type MapSearchOverlayProps = {
 	locationCount: number;
 	totalCount: number;
 	radioLineCount?: number;
+	radioLineTotalCount?: number;
 	isRadioLinesFetching?: boolean;
 	isLoading: boolean;
 	isFetching?: boolean;
@@ -41,6 +42,7 @@ export function MapSearchOverlay({
 	locationCount,
 	totalCount,
 	radioLineCount = 0,
+	radioLineTotalCount = 0,
 	isRadioLinesFetching = false,
 	isLoading,
 	isFetching = false,
@@ -116,6 +118,7 @@ export function MapSearchOverlay({
 	const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
 	const showResults = activeOverlay === "results" && (isSearching || osmResults.length > 0 || stationResults.length > 0);
 	const hasMoreLocations = totalCount > locationCount;
+	const hasMoreRadioLines = radioLineTotalCount > radioLineCount;
 
 	const uniqueBandValues = useMemo(() => {
 		const values = [...new Set(bands.map((b) => b.value))];
@@ -392,19 +395,31 @@ export function MapSearchOverlay({
 							</TooltipContent>
 						</Tooltip>
 						{(radioLineCount > 0 || isRadioLinesFetching) && (
-							<div className="px-2 py-1.5 flex items-center gap-2 border-r border-border/50">
-								{isRadioLinesFetching ? (
-									<Spinner className="size-3 text-primary" />
-								) : (
-									<div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
-								)}
-								<div className="flex items-baseline gap-1">
-									<span className="text-sm font-bold tabular-nums leading-none tracking-tight">{radioLineCount.toLocaleString(i18n.language)}</span>
-									<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
-										{t("overlay.radiolinesCount", { count: radioLineCount })}
-									</span>
-								</div>
-							</div>
+							<Tooltip>
+								<TooltipTrigger
+									className={cn("px-2 py-1.5 flex items-center gap-2 border-r border-border/50", hasMoreRadioLines && "cursor-help")}
+									disabled={!hasMoreRadioLines}
+								>
+									{isRadioLinesFetching ? (
+										<Spinner className="size-3 text-primary" />
+									) : hasMoreRadioLines ? (
+										<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+									) : (
+										<div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
+									)}
+									<div className="flex items-baseline gap-1">
+										<span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreRadioLines && "text-amber-500")}>
+											{radioLineCount.toLocaleString(i18n.language)}
+										</span>
+										<span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+											{t("overlay.radiolinesCount", { count: radioLineCount })}
+										</span>
+									</div>
+								</TooltipTrigger>
+								<TooltipContent side="bottom">
+									{t("overlay.moreRadiolines", { total: radioLineTotalCount.toLocaleString(i18n.language), shown: radioLineCount.toLocaleString(i18n.language) })}
+								</TooltipContent>
+							</Tooltip>
 						)}
 						<div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
 							<span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
@@ -452,8 +467,14 @@ export function MapSearchOverlay({
 									{(radioLineCount > 0 || isRadioLinesFetching) && (
 										<>
 											<span className="text-[8px] text-muted-foreground leading-none">·</span>
-											{isRadioLinesFetching ? <Spinner className="size-2.5 text-primary" /> : null}
-											<span className="text-xs font-bold leading-none">{radioLineCount.toLocaleString(i18n.language)}</span>
+											{isRadioLinesFetching ? (
+												<Spinner className="size-2.5 text-primary" />
+											) : hasMoreRadioLines ? (
+												<div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+											) : null}
+											<span className={cn("text-xs font-bold leading-none", hasMoreRadioLines && "text-amber-500")}>
+												{radioLineCount.toLocaleString(i18n.language)}
+											</span>
 											<span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
 												{t("overlay.radiolinesCount", { count: radioLineCount })}
 											</span>
@@ -471,7 +492,10 @@ export function MapSearchOverlay({
 							</div>
 						</TooltipTrigger>
 						<TooltipContent side="top">
-							{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
+							<p>{t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}</p>
+							{hasMoreRadioLines && (
+								<p>{t("overlay.moreRadiolines", { total: radioLineTotalCount.toLocaleString(i18n.language), shown: radioLineCount.toLocaleString(i18n.language) })}</p>
+							)}
 						</TooltipContent>
 					</Tooltip>
 				</div>
