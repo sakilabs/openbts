@@ -43,23 +43,14 @@ services:
       - postgres-volume:/var/lib/postgresql/18/docker
 
   pgbouncer:
-    image: bitnamilegacy/pgbouncer:latest
+    image: dhi.io/pgbouncer:1.25
     depends_on:
       - postgres
     ports:
       - "6432:6432"
     volumes:
-      - ./pgbouncer/pgbouncer.ini:/bitnami/pgbouncer/conf/pgbouncer.ini:ro
-      - ./pgbouncer/userlist.txt:/bitnami/pgbouncer/conf/userlist.txt:ro
-    environment:
-      PGBOUNCER_SKIP_CONFIG: "yes"
-      POSTGRESQL_HOST: postgres
-      POSTGRESQL_PORT: "5432"
-      POSTGRESQL_USERNAME: pg_user
-      POSTGRESQL_PASSWORD: pg_password
-      POSTGRESQL_DATABASE: openbts
-      PGBOUNCER_CONF_FILE: /opt/bitnami/pgbouncer/conf/pgbouncer.ini
-      PGBOUNCER_PORT: "6432"
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
 
   redis:
     image: redis:alpine
