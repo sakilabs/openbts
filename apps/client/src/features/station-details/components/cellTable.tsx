@@ -59,8 +59,10 @@ export function CellTable({ rat, cells }: CellTableProps) {
 								{rat === "NR" && (
 									<>
 										<th className="px-4 py-2 text-left font-medium text-muted-foreground">TAC</th>
+										<th className="px-4 py-2 text-left font-medium text-muted-foreground">CLID</th>
 										<th className="px-4 py-2 text-left font-medium text-muted-foreground">gNBID</th>
 										<th className="px-4 py-2 text-left font-medium text-muted-foreground">NCI</th>
+										<th className="px-4 py-2 text-left font-medium text-muted-foreground">PCI</th>
 									</>
 								)}
 								<th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("common:labels.notes")}</th>
@@ -125,8 +127,10 @@ export function CellTable({ rat, cells }: CellTableProps) {
 									{rat === "NR" && (
 										<>
 											<td className="px-4 py-2 font-mono">{cell.details?.nrtac ?? "-"}</td>
+											<td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
 											<td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
 											<td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
+											<td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
 										</>
 									)}
 									<td className="px-4 py-2 text-muted-foreground">{cell.notes || "-"}</td>

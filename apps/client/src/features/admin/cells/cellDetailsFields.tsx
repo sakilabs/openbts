@@ -48,8 +48,7 @@ export function CellDetailsFields({ rat, details, detailErrors, disabled, onDeta
 				</>
 			);
 		case "UMTS": {
-			const longCid =
-				d.rnc !== undefined && d.cid !== undefined ? (d.rnc as number) * 65536 + (d.cid as number) : null;
+			const longCid = d.rnc !== undefined && d.cid !== undefined ? (d.rnc as number) * 65536 + (d.cid as number) : null;
 			return (
 				<>
 					{renderInput("lac", "LAC")}
@@ -61,8 +60,7 @@ export function CellDetailsFields({ rat, details, detailErrors, disabled, onDeta
 			);
 		}
 		case "LTE": {
-			const eCid =
-				d.enbid !== undefined && d.clid !== undefined ? (d.enbid as number) * 256 + (d.clid as number) : null;
+			const eCid = d.enbid !== undefined && d.clid !== undefined ? (d.enbid as number) * 256 + (d.clid as number) : null;
 			return (
 				<>
 					{renderInput("tac", "TAC")}
@@ -80,13 +78,12 @@ export function CellDetailsFields({ rat, details, detailErrors, disabled, onDeta
 			);
 		}
 		case "NR": {
-			const nci =
-				d.gnbid !== undefined && d.clid !== undefined ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
+			const nci = d.gnbid !== undefined && d.clid !== undefined ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
 			return (
 				<>
 					{renderInput("nrtac", "TAC")}
-					{renderInput("gnbid", "gNBID")}
 					{renderInput("clid", "CLID")}
+					{renderInput("gnbid", "gNBID")}
 					{renderComputed(nci)}
 					{renderInput("pci", "PCI")}
 					<td className="px-2 py-1">

@@ -51,6 +51,7 @@ export type CellDetails = {
 	gnbid?: number;
 	nci?: number;
 	nrtac?: number;
+	pci?: number;
 	supports_nr_redcap?: boolean;
 } | null;
 
