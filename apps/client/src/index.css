@@ -133,6 +133,9 @@
 	}
 
 	/* MapLibre popup styling */
+	.maplibregl-popup {
+		z-index: 100 !important;
+	}
 	.maplibregl-popup-content {
 		background: var(--popover) !important;
 		color: var(--popover-foreground) !important;

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";
 import {
 	RADIOLINES_SOURCE_ID,
@@ -10,6 +11,7 @@ import {
 } from "../constants";
 import type { RadioLine } from "@/types/station";
 import { normalizeOperatorName } from "@/lib/operatorUtils";
+import { RadioLineTooltipContent } from "../components/radioLineTooltipContent";
 
 type UseRadioLinesLayerArgs = {
 	map: maplibregl.Map | null;
@@ -81,6 +83,8 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 	radioLinesRef.current = radioLines;
 
 	const tooltipRef = useRef<maplibregl.Popup | null>(null);
+	const tooltipContainerRef = useRef<HTMLDivElement | null>(null);
+	const tooltipRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
 	useEffect(() => {
 		if (!map || !isLoaded) return;
@@ -152,21 +156,22 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 			const distance = props.distanceFormatted || "";
 			if (!freq && !operator) return;
 
-			const html = `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;">
-				<span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
-				<span style="font-size:12px;font-weight:500;white-space:nowrap;">${[freq, normalizeOperatorName(operator), distance].filter(Boolean).join(" · ")}</span>
-			</div>`;
-
-			if (!tooltipRef.current) {
+			if (!tooltipRef?.current) {
+				const container = document.createElement("div");
+				tooltipContainerRef.current = container as HTMLDivElement;
+				tooltipRootRef.current = createRoot(container);
 				tooltipRef.current = new MapLibreGL.Popup({
 					closeButton: false,
 					closeOnClick: false,
 					className: "radioline-tooltip",
 					offset: 10,
-				});
+				}).setDOMContent(container);
 			}
 
-			tooltipRef.current.setLngLat(e.lngLat).setHTML(html).addTo(map);
+			tooltipRootRef.current?.render(
+				<RadioLineTooltipContent color={color} freqFormatted={freq} operatorName={normalizeOperatorName(operator)} distanceFormatted={distance} />,
+			);
+			tooltipRef.current.setLngLat(e.lngLat).addTo(map);
 		};
 
 		const handleMouseLeave = () => {
@@ -190,6 +195,9 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 
 			tooltipRef.current?.remove();
 			tooltipRef.current = null;
+			tooltipRootRef.current?.unmount();
+			tooltipRootRef.current = null;
+			tooltipContainerRef.current = null;
 
 			if (isMapValid) {
 				map.off("styledata", ensureLayersExist);
@@ -210,7 +218,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 				} catch {}
 			}
 		};
-	}, [map, isLoaded]);
+	}, [map, isLoaded, minZoom]);
 
 	useEffect(() => {
 		if (!map || !isLoaded) return;
