@@ -80,8 +80,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const session = req.userSession;
 	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
-	const hasPermission = await verifyPermissions(session.user.id, { submissions: ["update"] });
-	if (!hasPermission) throw new ErrorResponse("INSUFFICIENT_PERMISSIONS");
+	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["update"] })) || false;
 
 	const submission = await db.query.submissions.findFirst({
 		where: {
@@ -89,8 +88,15 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		},
 	});
 	if (!submission) throw new ErrorResponse("NOT_FOUND");
-	if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be modified" });
 
+	const isOwner = submission.submitter_id === session.user.id;
+
+	if (!hasAdminPermission && !isOwner) throw new ErrorResponse("FORBIDDEN");
+
+	if (!hasAdminPermission && submission.status !== "pending")
+		throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be modified" });
+
+	if (!hasAdminPermission && req.body.review_notes !== undefined) throw new ErrorResponse("FORBIDDEN", { message: "Cannot modify review notes" });
 	try {
 		const result = await db.transaction(async (tx) => {
 			const updateFields: Record<string, unknown> = { updatedAt: new Date() };
@@ -191,7 +197,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 const updateSubmission: Route<RequestData, ResponseData> = {
 	url: "/submissions/:id",
 	method: "PATCH",
-	config: { permissions: ["update:submissions"] },
+
 	schema: schemaRoute,
 	handler,
 };

@@ -13,6 +13,7 @@ export const handle: RouteHandle = {
 export default function SubmissionsPage() {
 	const [searchParams] = useSearchParams();
 	const stationId = searchParams.get("station");
+	const editId = searchParams.get("edit");
 	const { data: settings, isLoading } = useSettings();
 
 	if (!isLoading && !settings?.submissionsEnabled) return <Navigate to="/" replace />;
@@ -20,7 +21,7 @@ export default function SubmissionsPage() {
 	return (
 		<RequireAuth>
 			<main className="flex-1 overflow-y-auto p-4">
-				<SubmissionForm preloadStationId={stationId ? Number.parseInt(stationId, 10) : undefined} />
+				<SubmissionForm preloadStationId={stationId ? Number.parseInt(stationId, 10) : undefined} editSubmissionId={editId ?? undefined} />
 			</main>
 		</RequireAuth>
 	);

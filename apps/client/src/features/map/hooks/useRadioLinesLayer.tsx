@@ -12,6 +12,7 @@ import {
 import type { RadioLine } from "@/types/station";
 import { normalizeOperatorName } from "@/lib/operatorUtils";
 import { RadioLineTooltipContent } from "../components/radioLineTooltipContent";
+import { findColocatedRadioLines } from "../utils";
 
 type UseRadioLinesLayerArgs = {
 	map: maplibregl.Map | null;
@@ -20,7 +21,7 @@ type UseRadioLinesLayerArgs = {
 	endpointsGeoJSON: GeoJSON.FeatureCollection;
 	radioLines: RadioLine[];
 	minZoom: number;
-	onFeatureClick: (radioLine: RadioLine, coordinates: [number, number]) => void;
+	onFeatureClick: (radioLines: RadioLine[], coordinates: [number, number]) => void;
 };
 
 function createLineLayerConfig(minzoom: number): maplibregl.LayerSpecification {
@@ -124,10 +125,12 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 			const rl = radioLinesRef.current.find((r) => r.id === radioLineId);
 			if (!rl) return;
 
+			const colocated = findColocatedRadioLines(rl, radioLinesRef.current);
+
 			tooltipRef.current?.remove();
 			tooltipRef.current = null;
 
-			callbackRefs.current.onFeatureClick(rl, [e.lngLat.lng, e.lngLat.lat]);
+			callbackRefs.current.onFeatureClick(colocated, [e.lngLat.lng, e.lngLat.lat]);
 		};
 
 		const handleMouseEnter = (e: maplibregl.MapLayerMouseEvent) => {

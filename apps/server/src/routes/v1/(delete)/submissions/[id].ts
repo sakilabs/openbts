@@ -43,11 +43,14 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 		columns: {
 			id: true,
 			submitter_id: true,
+			status: true,
 		},
 	});
 
 	if (!submission) throw new ErrorResponse("NOT_FOUND");
 	if (!hasAdminPermission && submission.submitter_id !== userId) throw new ErrorResponse("FORBIDDEN");
+	if (!hasAdminPermission && submission.status !== "pending")
+		throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be deleted" });
 
 	try {
 		await db.transaction(async (tx) => {

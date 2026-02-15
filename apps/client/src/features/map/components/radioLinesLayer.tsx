@@ -48,7 +48,7 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
 	);
 
 	const handleFeatureClick = useCallback(
-		(radioLine: RadioLine, coordinates: [number, number]) => {
+		(radioLines: RadioLine[], coordinates: [number, number]) => {
 			if (!map) return;
 
 			cleanupPopup();
@@ -59,7 +59,7 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
 			const root = createRoot(container);
 			popupRootRef.current = root;
 
-			root.render(<RadioLinePopupContent radioLine={radioLine} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
+			root.render(<RadioLinePopupContent radioLines={radioLines} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
 
 			const popup = new MapLibreGL.Popup({
 				closeButton: true,

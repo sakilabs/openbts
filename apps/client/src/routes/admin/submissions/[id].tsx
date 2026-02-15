@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
@@ -163,8 +163,10 @@ export default function SubmissionDetailPage() {
 function SubmissionDetailForm({ submission, currentStation }: { submission: SubmissionDetail; currentStation: Station | null }) {
 	const navigate = useNavigate();
 	const { t } = useTranslation(["submissions", "common"]);
+	const queryClient = useQueryClient();
 
 	const [reviewNotes, setReviewNotes] = useState(submission.review_notes ?? "");
+	const initialUpdatedAt = useRef(submission.updatedAt);
 
 	const saveMutation = useSaveSubmissionMutation();
 	const approveMutation = useApproveSubmissionMutation();
@@ -243,6 +245,20 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
 	const isProcessing = saveMutation.isPending || approveMutation.isPending || rejectMutation.isPending;
 
+	const checkStaleness = useCallback(async (): Promise<boolean> => {
+		try {
+			const fresh = await fetchApiData<SubmissionDetail>(`submissions/${submission.id}`);
+			if (fresh.updatedAt !== initialUpdatedAt.current) {
+				toast.warning(t("detail.staleWarning"));
+				queryClient.invalidateQueries({ queryKey: ["admin", "submission", submission.id] });
+				return true;
+			}
+		} catch {
+			return false;
+		}
+		return false;
+	}, [submission.id, t, queryClient]);
+
 	const handleSave = () => {
 		saveMutation.mutate(
 			{
@@ -253,13 +269,18 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 				localCells,
 			},
 			{
-				onSuccess: () => toast.success(t("toast.saved")),
+				onSuccess: (response) => {
+					const updatedAt = (response as { data?: { updatedAt?: string } })?.data?.updatedAt;
+					if (updatedAt) initialUpdatedAt.current = updatedAt;
+					toast.success(t("toast.saved"));
+				},
 				onError: () => toast.error(t("common:error.toast")),
 			},
 		);
 	};
 
-	const handleApprove = () => {
+	const handleApprove = async () => {
+		if (await checkStaleness()) return;
 		approveMutation.mutate(
 			{ submissionId: submission.id, reviewNotes },
 			{
@@ -272,7 +293,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 		);
 	};
 
-	const handleReject = () => {
+	const handleReject = async () => {
+		if (await checkStaleness()) return;
 		rejectMutation.mutate(
 			{ submissionId: submission.id, reviewNotes },
 			{

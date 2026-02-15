@@ -379,6 +379,15 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 	const geoJSON = useMemo(() => locationsToPickerGeoJSON(viewportLocations), [viewportLocations]);
 	const ukeGeoJSON = useMemo(() => ukeLocationsToPickerGeoJSON(viewportUkeLocations), [viewportUkeLocations]);
 
+	const viewportLocationsRef = useRef(viewportLocations);
+	viewportLocationsRef.current = viewportLocations;
+	const viewportUkeLocationsRef = useRef(viewportUkeLocations);
+	viewportUkeLocationsRef.current = viewportUkeLocations;
+	const showUkeLocationsRef = useRef(showUkeLocations);
+	showUkeLocationsRef.current = showUkeLocations;
+	const callbackRefs = useRef({ onCoordinatesSet, onExistingLocationSelect });
+	callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
+
 	useEffect(() => {
 		if (!map || !isLoaded) return;
 
@@ -483,7 +492,6 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 						"circle-stroke-color": "#fff",
 					},
 				});
-				map.moveLayer(PICKER_CIRCLE_LAYER_ID);
 			}
 			if (!map.getLayer(PICKER_UKE_SYMBOL_LAYER_ID)) {
 				map.addLayer({
@@ -498,6 +506,8 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 					},
 				});
 			}
+			if (map.getLayer(PICKER_CIRCLE_LAYER_ID)) map.moveLayer(PICKER_CIRCLE_LAYER_ID);
+			if (map.getLayer(PICKER_SYMBOL_LAYER_ID)) map.moveLayer(PICKER_SYMBOL_LAYER_ID);
 		};
 
 		const handleMouseEnter = () => {
@@ -546,12 +556,25 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 		if (!map || !isLoaded) return;
 
 		const handleMapClick = (e: maplibregl.MapMouseEvent) => {
-			console.log(e);
-			if (showUkeLocations) {
+			const features = map.queryRenderedFeatures(e.point, { layers: [...PICKER_LAYER_IDS] });
+
+			if (features.length > 0) {
+				const locationId = features[0].properties?.locationId;
+				const loc = viewportLocationsRef.current.find((l) => l.id === locationId);
+				if (loc) {
+					lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
+					callbackRefs.current.onExistingLocationSelect(loc);
+					setNearbyPanel(null);
+					setUkeStationPanel(null);
+				}
+				return;
+			}
+
+			if (showUkeLocationsRef.current) {
 				const ukeFeatures = map.queryRenderedFeatures(e.point, { layers: [...PICKER_UKE_LAYER_IDS] });
 				if (ukeFeatures.length > 0) {
 					const locationId = ukeFeatures[0].properties?.locationId;
-					const ukeLoc = viewportUkeLocations.find((l) => l.id === locationId);
+					const ukeLoc = viewportUkeLocationsRef.current.find((l) => l.id === locationId);
 					if (ukeLoc) {
 						const stations = groupPermitsByStation(ukeLoc.permits ?? [], ukeLoc);
 						setUkeStationPanel({ location: ukeLoc, stations });
@@ -561,29 +584,15 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 				}
 			}
 
-			const features = map.queryRenderedFeatures(e.point, { layers: [...PICKER_LAYER_IDS] });
-
-			if (features.length > 0) {
-				const locationId = features[0].properties?.locationId;
-				const loc = viewportLocations.find((l) => l.id === locationId);
-				if (loc) {
-					lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
-					onExistingLocationSelect(loc);
-					setNearbyPanel(null);
-					setUkeStationPanel(null);
-				}
-				return;
-			}
-
 			const { lat, lng } = e.lngLat;
-			const nearby = computeNearby({ lat, lng }, viewportLocations);
+			const nearby = computeNearby({ lat, lng }, viewportLocationsRef.current);
 
 			if (nearby.length > 0) {
 				setNearbyPanel({ coords: { lat, lng }, locations: nearby });
 			} else {
 				setNearbyPanel(null);
 				lastInternalCoordsRef.current = { lat, lng };
-				onCoordinatesSet(lat, lng);
+				callbackRefs.current.onCoordinatesSet(lat, lng);
 			}
 			setUkeStationPanel(null);
 		};
@@ -592,7 +601,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 		return () => {
 			map.off("click", handleMapClick);
 		};
-	}, [map, isLoaded, viewportLocations, viewportUkeLocations, showUkeLocations, onCoordinatesSet, onExistingLocationSelect]);
+	}, [map, isLoaded]);
 
 	useEffect(() => {
 		if (!map || location.latitude === null || location.longitude === null) return;

@@ -33,7 +33,9 @@
 		"confirm": "Confirm",
 		"revert": "Revert Changes",
 		"share": "Share",
-		"view": "View"
+		"view": "View",
+		"update": "Update",
+		"updating": "Updating..."
 	},
 	"labels": {
 		"id": "ID",

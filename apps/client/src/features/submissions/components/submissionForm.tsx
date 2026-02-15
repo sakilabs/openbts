@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -14,7 +14,7 @@ import { LocationPicker } from "./locationPicker";
 import { NewStationForm } from "./newStationForm";
 import { RatSelector } from "./ratSelector";
 import { CellDetailsForm } from "./cellDetailsForm";
-import { createSubmission, fetchStationForSubmission, type SearchStation } from "../api";
+import { createSubmission, updateSubmission, fetchSubmissionForEdit, fetchStationForSubmission, type SearchStation } from "../api";
 import { cn } from "@/lib/utils";
 import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
@@ -59,16 +59,27 @@ function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
 
 type SubmissionFormProps = {
 	preloadStationId?: number;
+	editSubmissionId?: string;
 };
 
-export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
+export function SubmissionForm({ preloadStationId, editSubmissionId }: SubmissionFormProps) {
 	const { t } = useTranslation(["submissions", "common"]);
+	const queryClient = useQueryClient();
 	const [showErrors, setShowErrors] = useState(false);
 
 	const { data: preloadedStation } = useQuery({
 		queryKey: ["station-for-submission", preloadStationId],
 		queryFn: () => fetchStationForSubmission(preloadStationId ?? 0),
 		enabled: !!preloadStationId,
+		staleTime: 1000 * 60 * 5,
+	});
+
+	const isEditMode = !!editSubmissionId;
+
+	const { data: editSubmission } = useQuery({
+		queryKey: ["submission-edit", editSubmissionId],
+		queryFn: () => fetchSubmissionForEdit(editSubmissionId!),
+		enabled: isEditMode,
 		staleTime: 1000 * 60 * 5,
 	});
 
@@ -110,10 +121,16 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 	});
 
 	const mutation = useMutation({
-		mutationFn: createSubmission,
+		mutationFn: isEditMode
+			? (data: Parameters<typeof updateSubmission>[1]) => updateSubmission(editSubmissionId!, data)
+			: createSubmission,
 		onSuccess: () => {
-			toast.success(t("toast.submitted"));
-			form.reset();
+			toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
+			if (isEditMode) {
+				queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
+			} else {
+				form.reset();
+			}
 			setShowErrors(false);
 		},
 		onError: () => {
@@ -225,6 +242,61 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 		}
 	}, [preloadedStation, preloadStationId, form, loadStation]);
 
+	const lastAppliedEditKey = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (!editSubmission) return;
+		const editKey = `${editSubmission.id}:${editSubmission.updatedAt}`;
+		if (editKey === lastAppliedEditKey.current) return;
+		lastAppliedEditKey.current = editKey;
+
+		let ignore = false;
+
+		const isNew = editSubmission.type === "new";
+		form.setFieldValue("mode", isNew ? "new" : "existing");
+		form.setFieldValue("action", editSubmission.type === "delete" ? "delete" : "update");
+		form.setFieldValue("submitterNote", editSubmission.submitter_note ?? "");
+
+		if (!isNew && editSubmission.station) {
+			fetchStationForSubmission(editSubmission.station.id).then((station) => {
+				if (!ignore) loadStation(station);
+			});
+		} else if (isNew && editSubmission.proposedStation) {
+			form.setFieldValue("newStation", {
+				station_id: editSubmission.proposedStation.station_id ?? "",
+				operator_id: editSubmission.proposedStation.operator_id,
+				notes: editSubmission.proposedStation.notes ?? "",
+			});
+		}
+
+		if (editSubmission.proposedLocation) {
+			form.setFieldValue("location", {
+				region_id: editSubmission.proposedLocation.region_id,
+				city: editSubmission.proposedLocation.city ?? "",
+				address: editSubmission.proposedLocation.address ?? "",
+				longitude: editSubmission.proposedLocation.longitude,
+				latitude: editSubmission.proposedLocation.latitude,
+			});
+		}
+
+		const cells: ProposedCellForm[] = editSubmission.cells.map((cell) => ({
+			id: generateCellId(),
+			existingCellId: cell.target_cell_id ?? undefined,
+			rat: cell.rat as RatType,
+			band_id: cell.band_id,
+			notes: cell.notes ?? undefined,
+			is_confirmed: cell.is_confirmed,
+			details: cell.details ?? {},
+		}));
+		form.setFieldValue("cells", cells);
+		form.setFieldValue("originalCells", structuredClone(cells));
+		form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
+
+		return () => {
+			ignore = true;
+		};
+	}, [editSubmission, form, loadStation]);
+
 	const handleRatsChange = (rats: RatType[]) => {
 		form.setFieldValue("selectedRats", rats);
 	};
@@ -251,6 +323,14 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 			className="flex flex-col lg:flex-row gap-4 h-full"
 		>
 			<div className="w-full lg:flex-2 space-y-3">
+			{isEditMode && (
+				<div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 flex items-center gap-2.5">
+					<HugeiconsIcon icon={PencilEdit02Icon} className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+					<p className="text-sm text-muted-foreground">
+						{t("form.editingBanner")} <span className="font-mono font-semibold text-foreground">#{editSubmissionId}</span>
+					</p>
+				</div>
+			)}
 				<form.Subscribe selector={(s) => ({ mode: s.values.mode, selectedStation: s.values.selectedStation })}>
 					{({ mode, selectedStation }) => (
 						<StationSelector mode={mode} selectedStation={selectedStation} onModeChange={handleModeChange} onStationSelect={handleStationSelect} />
@@ -350,19 +430,20 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 					})}
 				>
 					{({ mode, action, selectedStation, newStation, cellsCount, submitterNote, canSubmit, isSubmitting }) => (
-						<SubmitSection
-							mode={mode}
-							action={action}
-							selectedStation={selectedStation}
-							newStation={newStation}
-							cellsCount={cellsCount}
-							submitterNote={submitterNote}
-							onSubmitterNoteChange={(note) => form.setFieldValue("submitterNote", note)}
-							canSubmit={canSubmit}
-							isSubmitting={isSubmitting}
-							isPending={mutation.isPending}
-							isSuccess={mutation.isSuccess}
-						/>
+					<SubmitSection
+						mode={mode}
+						action={action}
+						selectedStation={selectedStation}
+						newStation={newStation}
+						cellsCount={cellsCount}
+						submitterNote={submitterNote}
+						onSubmitterNoteChange={(note) => form.setFieldValue("submitterNote", note)}
+						canSubmit={canSubmit}
+						isSubmitting={isSubmitting}
+						isPending={mutation.isPending}
+						isSuccess={mutation.isSuccess}
+						isEditMode={isEditMode}
+					/>
 					)}
 				</form.Subscribe>
 			</div>
@@ -417,6 +498,7 @@ type SubmitSectionProps = {
 	isSubmitting: boolean;
 	isPending: boolean;
 	isSuccess: boolean;
+	isEditMode: boolean;
 };
 
 function SubmitSection({
@@ -429,6 +511,7 @@ function SubmitSection({
 	isSubmitting,
 	isPending,
 	isSuccess,
+	isEditMode,
 }: SubmitSectionProps) {
 	const { t } = useTranslation(["submissions", "common"]);
 
@@ -439,7 +522,13 @@ function SubmitSection({
 	const buttonIcon = isSuccess ? Tick02Icon : SentIcon;
 
 	const isLoading = isSubmitting || isPending;
-	const buttonText = isLoading ? t("common:actions.submitting") : isSuccess ? t("common:actions.submitted") : t("common:actions.submit");
+	const buttonText = isLoading
+		? t(isEditMode ? "common:actions.updating" : "common:actions.submitting")
+		: isSuccess
+			? t("common:actions.submitted")
+			: isEditMode
+				? t("common:actions.update")
+				: t("common:actions.submit");
 
 	return (
 		<div className="border rounded-xl overflow-hidden">

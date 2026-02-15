@@ -1,6 +1,7 @@
-import { fetchApiData, postApiData } from "@/lib/api";
+import { fetchApiData, postApiData, fetchJson, API_BASE } from "@/lib/api";
 import type { Location, CellDetails, LocationWithStations, Station, Region, Operator, UkeLocationWithPermits } from "@/types/station";
 import type { SubmissionFormData, CellFormDetails, RatType } from "./types";
+import type { SubmissionDetail } from "@/features/admin/submissions/types";
 
 export { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
 
@@ -148,4 +149,35 @@ export async function createSubmission(data: SubmissionFormData): Promise<Submis
 	}
 
 	return postApiData<SubmissionResponse>("submissions", payload);
+}
+
+export async function updateSubmission(id: string, data: SubmissionFormData): Promise<SubmissionResponse> {
+	const payload: Record<string, unknown> = { type: data.type };
+	if (data.station_id) payload.station_id = data.station_id;
+	if (data.submitter_note) payload.submitter_note = data.submitter_note;
+	if (data.station) payload.station = data.station;
+	if (data.location) payload.location = data.location;
+	if (data.cells.length > 0) {
+		payload.cells = data.cells.map((cell) => ({
+			operation: cell.operation,
+			target_cell_id: cell.target_cell_id,
+			band_id: cell.band_id,
+			rat: cell.rat,
+			notes: cell.notes,
+			details: pickCellDetails(cell.rat, cell.details),
+		}));
+	}
+	return fetchApiData<SubmissionResponse>(`submissions/${id}`, {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+}
+
+export async function deleteSubmission(id: string): Promise<void> {
+	await fetchJson(`${API_BASE}/submissions/${id}`, { method: "DELETE" });
+}
+
+export async function fetchSubmissionForEdit(id: string) {
+	return fetchApiData<SubmissionDetail>(`submissions/${id}`);
 }

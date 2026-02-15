@@ -29,9 +29,9 @@
 		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie",
 		"radiolines": "radiolinie",
 		"radiolinesCount_one": "radiolinia",
-		"radiolinesCount_few": "radiolinie",
-		"radiolinesCount_many": "radiolinii",
-		"radiolinesCount_other": "radiolinii",
+		"radiolinesCount_few": "linie radiowe",
+		"radiolinesCount_many": "linii radiowych",
+		"radiolinesCount_other": "linii radiowych",
 		"zoomForRadiolines": "Przybliż, aby zobaczyć radiolinie",
 		"moreRadiolines": "Pokazano {{shown}} z {{total}} radiolinii. Przybliż, aby zobaczyć wszystkie"
 	},

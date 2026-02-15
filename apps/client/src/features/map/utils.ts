@@ -1,4 +1,4 @@
-import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits } from "@/types/station";
+import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { RAT_ORDER } from "./constants";
 
 export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLocationWithPermits): UkeStation[] {
@@ -112,6 +112,22 @@ export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2:
 	const theta = Math.atan2(y, x);
 
 	return ((theta * 180) / Math.PI + 360) % 360;
+}
+
+export function findColocatedRadioLines(target: RadioLine, all: RadioLine[]): RadioLine[] {
+	const txLat = target.tx.latitude;
+	const txLng = target.tx.longitude;
+	const rxLat = target.rx.latitude;
+	const rxLng = target.rx.longitude;
+
+	const operatorId = target.operator?.id;
+
+	return all.filter((rl) => {
+		if (rl.operator?.id !== operatorId) return false;
+		const matchForward = rl.tx.latitude === txLat && rl.tx.longitude === txLng && rl.rx.latitude === rxLat && rl.rx.longitude === rxLng;
+		const matchReverse = rl.tx.latitude === rxLat && rl.tx.longitude === rxLng && rl.rx.latitude === txLat && rl.rx.longitude === txLng;
+		return matchForward || matchReverse;
+	});
 }
 
 export function calculateTA(distanceMeters: number) {
