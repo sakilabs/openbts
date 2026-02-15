@@ -127,19 +127,19 @@ export function CellsEditor<T extends CellDraftBase>({
 												{(badges.added ?? 0) > 0 && (
 													<span className="text-xs text-green-600 flex items-center gap-1">
 														<span className="size-1.5 rounded-full bg-green-500" />
-														{badges.added} {t("cells.diffAdded")}
+														{badges.added} {t("cells.diffAdded", { count: badges.added })}
 													</span>
 												)}
 												{(badges.modified ?? 0) > 0 && (
 													<span className="text-xs text-amber-600 flex items-center gap-1">
 														<span className="size-1.5 rounded-full bg-amber-500" />
-														{badges.modified} {t("cells.diffModified")}
+														{badges.modified} {t("cells.diffModified", { count: badges.modified })}
 													</span>
 												)}
 												{(badges.deleted ?? 0) > 0 && (
 													<span className="text-xs text-red-600 flex items-center gap-1">
 														<span className="size-1.5 rounded-full bg-red-500" />
-														{badges.deleted} {t("cells.diffDeleted")}
+														{badges.deleted} {t("cells.diffDeleted", { count: badges.deleted })}
 													</span>
 												)}
 											</span>

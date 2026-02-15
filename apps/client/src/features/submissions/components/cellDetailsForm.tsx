@@ -133,19 +133,19 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
 						{diffCounts.added > 0 && (
 							<span className="text-xs text-green-600 flex items-center gap-1">
 								<span className="size-1.5 rounded-full bg-green-500" />
-								{diffCounts.added} {t("stations:cells.diffAdded")}
+								{diffCounts.added} {t("stations:cells.diffAdded", { count: diffCounts.added })}
 							</span>
 						)}
 						{diffCounts.modified > 0 && (
 							<span className="text-xs text-amber-600 flex items-center gap-1">
 								<span className="size-1.5 rounded-full bg-amber-500" />
-								{diffCounts.modified} {t("stations:cells.diffModified")}
+								{diffCounts.modified} {t("stations:cells.diffModified", { count: diffCounts.modified })}
 							</span>
 						)}
 						{diffCounts.deleted > 0 && (
 							<span className="text-xs text-red-600 flex items-center gap-1">
 								<span className="size-1.5 rounded-full bg-red-500" />
-								{diffCounts.deleted} {t("stations:cells.diffDeleted")}
+								{diffCounts.deleted} {t("stations:cells.diffDeleted", { count: diffCounts.deleted })}
 							</span>
 						)}
 					</CollapsibleTrigger>

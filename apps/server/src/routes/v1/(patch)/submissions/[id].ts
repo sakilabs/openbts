@@ -197,7 +197,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 const updateSubmission: Route<RequestData, ResponseData> = {
 	url: "/submissions/:id",
 	method: "PATCH",
-
 	schema: schemaRoute,
 	handler,
 };
