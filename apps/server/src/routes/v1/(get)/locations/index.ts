@@ -311,7 +311,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		return res.send({ data: locationRows, totalCount });
 	} catch (error) {
-		console.log(error);
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR", { cause: error });
 	}

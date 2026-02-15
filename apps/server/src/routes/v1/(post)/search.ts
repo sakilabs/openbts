@@ -186,132 +186,128 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 	const { limit: requestedLimit } = req.query;
 	if (!query?.trim()) throw new ErrorResponse("INVALID_QUERY");
 
-	try {
-		const limit = Math.min(Math.max(requestedLimit ?? 100, 1), 100);
-		const { filters, remainingQuery } = parseFilterQuery(query);
+	const limit = Math.min(Math.max(requestedLimit ?? 100, 1), 100);
+	const { filters, remainingQuery } = parseFilterQuery(query);
 
-		if (hasFilters(filters)) {
-			const grouped = groupFiltersByTable(filters);
-			const stationConditions: SQL[] = [...grouped.stations];
+	if (hasFilters(filters)) {
+		const grouped = groupFiltersByTable(filters);
+		const stationConditions: SQL[] = [...grouped.stations];
 
-			const hasRatFilters = ratTables.some(({ key }) => grouped[key].length > 0);
-			const ratStationIds = await queryRatTableStationIds(grouped);
+		const hasRatFilters = ratTables.some(({ key }) => grouped[key].length > 0);
+		const ratStationIds = await queryRatTableStationIds(grouped);
 
-			if (hasRatFilters && ratStationIds.length === 0) return res.send({ data: [] });
-			if (ratStationIds.length > 0) stationConditions.push(inArray(stations.id, ratStationIds));
+		if (hasRatFilters && ratStationIds.length === 0) return res.send({ data: [] });
+		if (ratStationIds.length > 0) stationConditions.push(inArray(stations.id, ratStationIds));
 
-			if (grouped.cells.length > 0) {
-				const cellStationIds = await db.selectDistinct({ stationId: cells.station_id }).from(cells).where(combineConditions(grouped.cells));
+		if (grouped.cells.length > 0) {
+			const cellStationIds = await db.selectDistinct({ stationId: cells.station_id }).from(cells).where(combineConditions(grouped.cells));
 
-				if (cellStationIds.length === 0) return res.send({ data: [] });
-				stationConditions.push(
-					inArray(
-						stations.id,
-						cellStationIds.map((r) => r.stationId),
-					),
-				);
-			}
-
-			if (grouped.locations.length > 0) {
-				const locationIds = await db.selectDistinct({ id: locations.id }).from(locations).where(combineConditions(grouped.locations));
-
-				if (locationIds.length === 0) return res.send({ data: [] });
-				stationConditions.push(
-					inArray(
-						stations.location_id,
-						locationIds.map((r) => r.id),
-					),
-				);
-			}
-
-			if (grouped.networksIds.length > 0) {
-				const networkStationIds = await db
-					.selectDistinct({ stationId: networksIds.station_id })
-					.from(networksIds)
-					.where(combineConditions(grouped.networksIds));
-
-				if (networkStationIds.length === 0) return res.send({ data: [] });
-				stationConditions.push(
-					inArray(
-						stations.id,
-						networkStationIds.map((r) => r.stationId),
-					),
-				);
-			}
-
-			const filteredStations = await fetchStations(combineConditions(stationConditions), limit);
-			return res.send({ data: filteredStations.map(withCellDetails) });
+			if (cellStationIds.length === 0) return res.send({ data: [] });
+			stationConditions.push(
+				inArray(
+					stations.id,
+					cellStationIds.map((r) => r.stationId),
+				),
+			);
 		}
 
-		const searchQuery = remainingQuery || query;
-		const upperQuery = searchQuery.toUpperCase();
-		const stationMap = new Map<number, StationWithCells>();
+		if (grouped.locations.length > 0) {
+			const locationIds = await db.selectDistinct({ id: locations.id }).from(locations).where(combineConditions(grouped.locations));
 
-		const exactMatch = upperQuery.length > 3 ? await fetchStations(eq(stations.station_id, upperQuery)) : [];
-		if (exactMatch.length > 0) return res.send({ data: exactMatch.map(withCellDetails) });
-
-		const fuzzyIds = await db
-			.select({ id: stations.id })
-			.from(stations)
-			.where(and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE '%${searchQuery}%'`))
-			.orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
-			.limit(limit);
-
-		const fuzzyStations =
-			fuzzyIds.length > 0
-				? await db.query.stations.findMany({
-						where: {
-							id: { in: fuzzyIds.map((r) => r.id) },
-						},
-						...stationQueryConfig,
-					})
-				: [];
-		for (const station of fuzzyStations) {
-			stationMap.set(station.id, withCellDetails(station));
+			if (locationIds.length === 0) return res.send({ data: [] });
+			stationConditions.push(
+				inArray(
+					stations.location_id,
+					locationIds.map((r) => r.id),
+				),
+			);
 		}
 
-		const numericQuery = Number.parseInt(searchQuery, 10);
-		if (/^\d+$/.test(searchQuery) && !Number.isNaN(numericQuery) && stationMap.size < limit) {
-			const matchedIds = await searchNumericInRatTables(numericQuery, `%${searchQuery}%`);
-			const missingIds = matchedIds.filter((id) => !stationMap.has(id)).slice(0, limit - stationMap.size);
-
-			if (missingIds.length > 0) {
-				const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
-				for (const station of additionalStations) {
-					stationMap.set(station.id, withCellDetails(station));
-				}
-			}
-		}
-
-		if (stationMap.size < limit) {
-			const networkMatches = await db
+		if (grouped.networksIds.length > 0) {
+			const networkStationIds = await db
 				.selectDistinct({ stationId: networksIds.station_id })
 				.from(networksIds)
-				.where(
-					or(
-						sql`${networksIds.networks_id} ILIKE ${`%${searchQuery}%`}`,
-						sql`${networksIds.networks_name} ILIKE ${`%${searchQuery}%`}`,
-						sql`${networksIds.mno_name} ILIKE ${`%${searchQuery}%`}`,
-					),
-				);
+				.where(combineConditions(grouped.networksIds));
 
-			const missingIds = networkMatches
-				.map((r) => r.stationId)
-				.filter((id) => !stationMap.has(id))
-				.slice(0, limit - stationMap.size);
-
-			if (missingIds.length > 0) {
-				const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
-				for (const station of additionalStations) {
-					stationMap.set(station.id, withCellDetails(station));
-				}
-			}
+			if (networkStationIds.length === 0) return res.send({ data: [] });
+			stationConditions.push(
+				inArray(
+					stations.id,
+					networkStationIds.map((r) => r.stationId),
+				),
+			);
 		}
 
-		return res.send({ data: Array.from(stationMap.values()).slice(0, limit) });
-	} catch (error) {
-		console.error(error);
+		const filteredStations = await fetchStations(combineConditions(stationConditions), limit);
+		return res.send({ data: filteredStations.map(withCellDetails) });
 	}
+
+	const searchQuery = remainingQuery || query;
+	const upperQuery = searchQuery.toUpperCase();
+	const stationMap = new Map<number, StationWithCells>();
+
+	const exactMatch = upperQuery.length > 3 ? await fetchStations(eq(stations.station_id, upperQuery)) : [];
+	if (exactMatch.length > 0) return res.send({ data: exactMatch.map(withCellDetails) });
+
+	const fuzzyIds = await db
+		.select({ id: stations.id })
+		.from(stations)
+		.where(and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE '%${searchQuery}%'`))
+		.orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
+		.limit(limit);
+
+	const fuzzyStations =
+		fuzzyIds.length > 0
+			? await db.query.stations.findMany({
+					where: {
+						id: { in: fuzzyIds.map((r) => r.id) },
+					},
+					...stationQueryConfig,
+				})
+			: [];
+	for (const station of fuzzyStations) {
+		stationMap.set(station.id, withCellDetails(station));
+	}
+
+	const numericQuery = Number.parseInt(searchQuery, 10);
+	if (/^\d+$/.test(searchQuery) && !Number.isNaN(numericQuery) && stationMap.size < limit) {
+		const matchedIds = await searchNumericInRatTables(numericQuery, `%${searchQuery}%`);
+		const missingIds = matchedIds.filter((id) => !stationMap.has(id)).slice(0, limit - stationMap.size);
+
+		if (missingIds.length > 0) {
+			const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
+			for (const station of additionalStations) {
+				stationMap.set(station.id, withCellDetails(station));
+			}
+		}
+	}
+
+	if (stationMap.size < limit) {
+		const networkMatches = await db
+			.selectDistinct({ stationId: networksIds.station_id })
+			.from(networksIds)
+			.where(
+				or(
+					sql`${networksIds.networks_id} ILIKE ${`%${searchQuery}%`}`,
+					sql`${networksIds.networks_name} ILIKE ${`%${searchQuery}%`}`,
+					sql`${networksIds.mno_name} ILIKE ${`%${searchQuery}%`}`,
+				),
+			);
+
+		const missingIds = networkMatches
+			.map((r) => r.stationId)
+			.filter((id) => !stationMap.has(id))
+			.slice(0, limit - stationMap.size);
+
+		if (missingIds.length > 0) {
+			const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
+			for (const station of additionalStations) {
+				stationMap.set(station.id, withCellDetails(station));
+			}
+		}
+	}
+
+	return res.send({ data: Array.from(stationMap.values()).slice(0, limit) });
 }
 
 const searchRoute: Route<ReqBody, StationWithCells[]> = {

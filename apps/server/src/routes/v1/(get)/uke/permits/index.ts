@@ -145,7 +145,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						const like = `%${station_id}%`;
 						conditions.push(or(ilike(fields.station_id, like), sql`similarity(${fields.station_id}, ${station_id}) > ${SIMILARITY_THRESHOLD}`));
 					}
-					return conditions.length > 0 ? and(...conditions) ?? sql`true` : sql`true`;
+					return conditions.length > 0 ? (and(...conditions) ?? sql`true`) : sql`true`;
 				},
 			},
 			limit,
@@ -184,7 +184,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		res.send({ data });
 	} catch (error) {
 		if (error instanceof ErrorResponse) throw error;
-		req.log.error(error, "Failed to fetch UKE permits");
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR", {
 			message: error instanceof Error ? error.message : "Unknown error",
 		});

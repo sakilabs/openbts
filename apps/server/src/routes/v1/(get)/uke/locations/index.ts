@@ -186,9 +186,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
 		if (recentOnly) {
 			const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-			conditions.push(
-				sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`,
-			);
+			conditions.push(sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
 		}
 		if (hasPermitFilters) {
 			const permitConditions = [sql`ps.location_id = ${locFields.id}`, ...buildPermitConditions(sql`ps.operator_id`, sql`ps.band_id`)];
@@ -255,7 +253,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		return res.send({ data: locationRows, totalCount });
 	} catch (error) {
-		console.error(error);
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR", {
 			message: error instanceof Error ? error.message : "Unknown error",
