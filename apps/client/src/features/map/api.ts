@@ -42,7 +42,8 @@ export async function fetchLocations(bounds: string, filters: StationFilters): P
 
 export async function fetchLocationWithStations(locationId: number, filters: StationFilters): Promise<LocationWithStations> {
 	const params = buildFilterParams(filters);
-	const result = await fetchJson<{ data: LocationWithStations }>(`${API_BASE}/locations/${locationId}?${decodeURIComponent(params.toString())}`);
+	const filter = params.toString() === "" ? "" : `?${decodeURIComponent(params.toString())}`;
+	const result = await fetchJson<{ data: LocationWithStations }>(`${API_BASE}/locations/${locationId}${filter}`);
 	return result.data;
 }
 
