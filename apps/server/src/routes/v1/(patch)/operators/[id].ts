@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createUpdateSchema } from "drizzle-zod";
+import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -32,7 +32,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { operator_id } = req.params;
 
 	const operator = await db.query.operators.findFirst({
-		where: (fields, { eq }) => eq(fields.id, operator_id),
+		where: {
+			id: operator_id,
+		},
 	});
 	if (!operator) throw new ErrorResponse("NOT_FOUND");
 

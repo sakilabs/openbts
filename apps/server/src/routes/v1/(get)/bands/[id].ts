@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -27,7 +27,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	const { id } = req.params;
 
 	const band = await db.query.bands.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 	});
 	if (!band) throw new ErrorResponse("NOT_FOUND");
 

@@ -23,12 +23,16 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 	if (Number.isNaN(station_id) || Number.isNaN(cell_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, station_id),
+		where: {
+			id: station_id,
+		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	const cell = await db.query.cells.findFirst({
-		where: (fields, { and, eq }) => and(eq(fields.id, cell_id), eq(fields.station_id, station.id)),
+		where: {
+			AND: [{ id: { eq: cell_id } }, { station_id: { eq: station_id } }],
+		},
 	});
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
 

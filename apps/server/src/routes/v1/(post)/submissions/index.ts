@@ -8,7 +8,7 @@ import {
 	proposedStations,
 	proposedLocations,
 } from "@openbts/drizzle";
-import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -87,8 +87,23 @@ async function processSubmission(
 	if (station_id) {
 		const stationId = Number(station_id);
 		if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
-		const station = await tx.query.stations.findFirst({ where: (fields, { eq }) => eq(fields.id, stationId) });
+		const station = await tx.query.stations.findFirst({
+			where: {
+				id: stationId,
+			},
+		});
 		if (!station) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+	}
+
+	if (type === "new" && stationData?.station_id) {
+		const station = await tx.query.stations.findFirst({
+			where: {
+				station_id: stationData?.station_id,
+			},
+		});
+
+		if (station?.station_id === stationData.station_id && station?.operator_id === stationData.operator_id)
+			throw new ErrorResponse("BAD_REQUEST", { message: "A station with the provided station_id and operator already exists. Use `existing` mode" });
 	}
 
 	const [submission] = await tx

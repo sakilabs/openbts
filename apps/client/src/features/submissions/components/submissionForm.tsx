@@ -15,11 +15,11 @@ import { NewStationForm } from "./newStationForm";
 import { RatSelector } from "./ratSelector";
 import { CellDetailsForm } from "./cellDetailsForm";
 import { createSubmission, fetchStationForSubmission, type SearchStation } from "../api";
-import { showApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { generateCellId, computeCellPayloads, cellsToPayloads } from "../utils/cells";
+import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
 import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
+import type { UkeStation } from "@/types/station";
 
 type FormValues = {
 	mode: SubmissionMode;
@@ -181,6 +181,34 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 		loadStation(station);
 	};
 
+	const handleUkeStationSelect = useCallback(
+		(station: UkeStation) => {
+			form.setFieldValue("mode", "new");
+			form.setFieldValue("selectedStation", null);
+			form.setFieldValue("newStation", {
+				station_id: station.station_id,
+				operator_id: station.operator?.id ?? null,
+				notes: "",
+			});
+
+			if (station.location) {
+				form.setFieldValue("location", {
+					latitude: station.location.latitude,
+					longitude: station.location.longitude,
+					city: station.location.city ?? "",
+					address: station.location.address ?? "",
+					region_id: station.location.region?.id ?? null,
+				});
+			}
+
+			const cells = ukePermitsToCells(station.permits);
+			form.setFieldValue("cells", cells);
+			form.setFieldValue("originalCells", []);
+			form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
+		},
+		[form],
+	);
+
 	const lastAppliedStationId = useRef<number | null>(null);
 
 	useEffect(() => {
@@ -261,6 +289,7 @@ export function SubmissionForm({ preloadStationId }: SubmissionFormProps) {
 									const current = form.getFieldValue("location");
 									form.setFieldValue("location", { ...current, ...patch });
 								}}
+								onUkeStationSelect={mode === "new" ? handleUkeStationSelect : undefined}
 							/>
 						);
 					}}
@@ -394,8 +423,6 @@ function SubmitSection({
 	mode,
 	action,
 	selectedStation,
-	newStation,
-	cellsCount,
 	submitterNote,
 	onSubmitterNoteChange,
 	canSubmit,

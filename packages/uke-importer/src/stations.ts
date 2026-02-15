@@ -1,8 +1,7 @@
 import path from "node:path";
 import url from "node:url";
-import { inArray } from "drizzle-orm";
 
-import { ukePermits, stations, stationsPermits, type ratEnum, type BandVariant } from "@openbts/drizzle";
+import { ukePermits, stationsPermits, type ratEnum, type BandVariant } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import {
 	chunk,
@@ -218,7 +217,7 @@ export async function associateStationsWithPermits(): Promise<boolean> {
 	const permitStationIds = [...new Set(permits.map((p) => p.station_id))];
 	logger.log(`Looking for ${permitStationIds.length} unique station IDs`);
 	const matchingStations = await db.query.stations.findMany({
-		where: inArray(stations.station_id, permitStationIds),
+		where: { station_id: { in: permitStationIds } },
 		columns: { id: true, station_id: true, operator_id: true },
 	});
 	logger.log(`Found ${matchingStations.length} matching stations`);

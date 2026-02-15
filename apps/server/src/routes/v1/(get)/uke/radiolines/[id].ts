@@ -1,9 +1,9 @@
 import { z } from "zod/v4";
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { operators, ukeOperators } from "@openbts/drizzle";
+import { ukeOperators } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -74,8 +74,10 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	const { id } = req.params;
 
 	try {
-		const radioLine = await db.query.ukeRadioLines.findFirst({
-			where: (fields, { eq }) => eq(fields.id, id),
+		const radioLine = await db.query.ukeRadiolines.findFirst({
+			where: {
+				id: id,
+			},
 			with: {
 				operator: true,
 				txTransmitterType: {

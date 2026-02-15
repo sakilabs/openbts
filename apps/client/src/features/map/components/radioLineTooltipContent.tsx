@@ -1,3 +1,4 @@
+import { Separator } from "@/components/ui/separator";
 import { memo } from "react";
 
 export type RadioLineTooltipContentProps = {
@@ -13,17 +14,14 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
 	operatorName,
 	distanceFormatted,
 }: RadioLineTooltipContentProps) {
-	const parts = [freqFormatted, operatorName, distanceFormatted].filter(Boolean);
-	const text = parts.join(" · ");
-
 	return (
 		<div className="flex items-center gap-1.5 px-2 py-1">
-			<span
-				className="size-2 shrink-0 rounded-full"
-				style={{ backgroundColor: color }}
-				aria-hidden
-			/>
-			<span className="text-xs font-medium whitespace-nowrap">{text}</span>
+			<span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+			<span className="text-xs font-medium whitespace-nowrap">{freqFormatted}</span>
+			<Separator orientation="vertical" />
+			<span className="text-xs font-medium truncate">{operatorName}</span>
+			<Separator orientation="vertical" />
+			<span className="text-xs font-medium whitespace-nowrap">{distanceFormatted}</span>
 		</div>
 	);
 });

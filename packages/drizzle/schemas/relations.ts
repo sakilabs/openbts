@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm/relations";
+import { defineRelations } from "drizzle-orm";
 
 import {
 	bands,
@@ -9,9 +9,9 @@ import {
 	stations,
 	ukePermits,
 	radioLinesManufacturers,
-	radioLinesAntennaTypes,
-	radioLinesTransmitterTypes,
-	ukeRadioLines,
+	radiolinesAntennaTypes,
+	radiolinesTransmitterTypes,
+	ukeRadiolines,
 	stationsPermits,
 	gsmCells,
 	umtsCells,
@@ -20,6 +20,7 @@ import {
 	networksIds,
 	ukeLocations,
 	ukeOperators,
+	ukeImportMetadata,
 } from "./bts.ts";
 import { accounts, apikeys, attachments, passkeys, stationComments, twoFactors, userLists, users } from "./auth.ts";
 import {
@@ -33,315 +34,353 @@ import {
 	proposedUMTSCells,
 } from "./submissions.ts";
 
-export const operatorRelations = relations(operators, ({ one, many }) => ({
-	parent: one(operators, {
-		fields: [operators.parent_id],
-		references: [operators.id],
+export const relations = defineRelations(
+	{
+		bands,
+		cells,
+		locations,
+		operators,
+		regions,
+		stations,
+		ukePermits,
+		radioLinesManufacturers,
+		radiolinesAntennaTypes,
+		radiolinesTransmitterTypes,
+		ukeRadiolines,
+		stationsPermits,
+		gsmCells,
+		umtsCells,
+		lteCells,
+		nrCells,
+		networksIds,
+		ukeLocations,
+		ukeOperators,
+		accounts,
+		apikeys,
+		attachments,
+		passkeys,
+		stationComments,
+		twoFactors,
+		userLists,
+		users,
+		submissions,
+		proposedCells,
+		proposedGSMCells,
+		proposedLTECells,
+		proposedLocations,
+		proposedNRCells,
+		proposedStations,
+		proposedUMTSCells,
+		ukeImportMetadata,
+	},
+	(helpers) => ({
+		operators: {
+			parent: helpers.one.operators({
+				from: helpers.operators.parent_id,
+				to: helpers.operators.id,
+			}),
+			children: helpers.many.operators(),
+			stations: helpers.many.stations(),
+		},
+		regions: {
+			locations: helpers.many.locations(),
+			ukeLocations: helpers.many.ukeLocations(),
+		},
+		locations: {
+			region: helpers.one.regions({
+				from: helpers.locations.region_id,
+				to: helpers.regions.id,
+				optional: false,
+			}),
+			stations: helpers.many.stations(),
+		},
+		stations: {
+			location: helpers.one.locations({
+				from: helpers.stations.location_id,
+				to: helpers.locations.id,
+				optional: false,
+			}),
+			operator: helpers.one.operators({
+				from: helpers.stations.operator_id,
+				to: helpers.operators.id,
+				optional: false,
+			}),
+			cells: helpers.many.cells(),
+			networks: helpers.one.networksIds({
+				from: helpers.stations.id,
+				to: helpers.networksIds.station_id,
+			}),
+		},
+		cells: {
+			station: helpers.one.stations({
+				from: helpers.cells.station_id,
+				to: helpers.stations.id,
+				optional: false,
+			}),
+			band: helpers.one.bands({
+				from: helpers.cells.band_id,
+				to: helpers.bands.id,
+				optional: false,
+			}),
+			gsm: helpers.one.gsmCells({
+				from: helpers.cells.id,
+				to: helpers.gsmCells.cell_id,
+				optional: false,
+			}),
+			umts: helpers.one.umtsCells({
+				from: helpers.cells.id,
+				to: helpers.umtsCells.cell_id,
+				optional: false,
+			}),
+			lte: helpers.one.lteCells({
+				from: helpers.cells.id,
+				to: helpers.lteCells.cell_id,
+				optional: false,
+			}),
+			nr: helpers.one.nrCells({
+				from: helpers.cells.id,
+				to: helpers.nrCells.cell_id,
+				optional: false,
+			}),
+		},
+		bands: {
+			cells: helpers.many.cells(),
+		},
+		gsmCells: {
+			cell: helpers.one.cells({
+				from: helpers.gsmCells.cell_id,
+				to: helpers.cells.id,
+			}),
+		},
+		umtsCells: {
+			cell: helpers.one.cells({
+				from: helpers.umtsCells.cell_id,
+				to: helpers.cells.id,
+			}),
+		},
+		lteCells: {
+			cell: helpers.one.cells({
+				from: helpers.lteCells.cell_id,
+				to: helpers.cells.id,
+			}),
+		},
+		nrCells: {
+			cell: helpers.one.cells({
+				from: helpers.nrCells.cell_id,
+				to: helpers.cells.id,
+			}),
+		},
+		userLists: {
+			list: helpers.one.users({
+				from: helpers.userLists.created_by,
+				to: helpers.users.id,
+			}),
+		},
+		stationComments: {
+			author: helpers.one.users({
+				from: helpers.stationComments.user_id,
+				to: helpers.users.id,
+			}),
+			station: helpers.one.stations({
+				from: helpers.stationComments.station_id,
+				to: helpers.stations.id,
+			}),
+		},
+		users: {
+			accounts: helpers.many.accounts(),
+			comments: helpers.many.stationComments(),
+			lists: helpers.many.userLists(),
+			apiKeys: helpers.many.apikeys(),
+			passkeys: helpers.many.passkeys(),
+			twoFactors: helpers.many.twoFactors(),
+			attachments: helpers.many.attachments({
+				from: helpers.users.id,
+				to: helpers.attachments.author_id,
+				alias: "author",
+			}),
+			submittedSubmissions: helpers.many.submissions({
+				from: helpers.users.id,
+				to: helpers.submissions.submitter_id,
+				alias: "submitter",
+			}),
+			reviewedSubmissions: helpers.many.submissions({
+				from: helpers.users.id,
+				to: helpers.submissions.reviewer_id,
+				alias: "reviewer",
+			}),
+		},
+		accounts: {
+			users: helpers.one.users({
+				from: helpers.accounts.userId,
+				to: helpers.users.id,
+			}),
+		},
+		apikeys: {
+			users: helpers.one.users({
+				from: helpers.apikeys.userId,
+				to: helpers.users.id,
+			}),
+		},
+		passkeys: {
+			users: helpers.one.users({
+				from: helpers.passkeys.userId,
+				to: helpers.users.id,
+			}),
+		},
+		twoFactors: {
+			users: helpers.one.users({
+				from: helpers.twoFactors.userId,
+				to: helpers.users.id,
+			}),
+		},
+		radioLinesManufacturers: {
+			radiolinesAntennaTypes: helpers.many.radiolinesAntennaTypes(),
+			radioLinestTansmitterTypes: helpers.many.radiolinesTransmitterTypes(),
+		},
+		radiolinesAntennaTypes: {
+			manufacturer: helpers.one.radioLinesManufacturers({
+				from: helpers.radiolinesAntennaTypes.manufacturer_id,
+				to: helpers.radioLinesManufacturers.id,
+			}),
+		},
+		radiolinesTransmitterTypes: {
+			manufacturer: helpers.one.radioLinesManufacturers({
+				from: helpers.radiolinesTransmitterTypes.manufacturer_id,
+				to: helpers.radioLinesManufacturers.id,
+				optional: false,
+			}),
+		},
+		ukeRadiolines: {
+			txTransmitterType: helpers.one.radiolinesTransmitterTypes({
+				from: helpers.ukeRadiolines.tx_transmitter_type_id,
+				to: helpers.radiolinesTransmitterTypes.id,
+				optional: false,
+			}),
+			txAntennaType: helpers.one.radiolinesAntennaTypes({
+				from: helpers.ukeRadiolines.tx_antenna_type_id,
+				to: helpers.radiolinesAntennaTypes.id,
+				optional: false,
+			}),
+			rxAntennaType: helpers.one.radiolinesAntennaTypes({
+				from: helpers.ukeRadiolines.rx_antenna_type_id,
+				to: helpers.radiolinesAntennaTypes.id,
+				optional: false,
+			}),
+			operator: helpers.one.ukeOperators({
+				from: helpers.ukeRadiolines.operator_id,
+				to: helpers.ukeOperators.id,
+				optional: false,
+			}),
+		},
+		ukePermits: {
+			band: helpers.one.bands({
+				from: helpers.ukePermits.band_id,
+				to: helpers.bands.id,
+				optional: false,
+			}),
+			operator: helpers.one.operators({
+				from: helpers.ukePermits.operator_id,
+				to: helpers.operators.id,
+				optional: false,
+			}),
+			location: helpers.one.ukeLocations({
+				from: helpers.ukePermits.location_id,
+				to: helpers.ukeLocations.id,
+				optional: false,
+			}),
+		},
+		ukeLocations: {
+			region: helpers.one.regions({
+				from: helpers.ukeLocations.region_id,
+				to: helpers.regions.id,
+				optional: false,
+			}),
+			permits: helpers.many.ukePermits(),
+		},
+		stationsPermits: {
+			permit: helpers.one.ukePermits({
+				from: helpers.stationsPermits.permit_id,
+				to: helpers.ukePermits.id,
+				optional: false,
+			}),
+			station: helpers.one.stations({
+				from: helpers.stationsPermits.station_id,
+				to: helpers.stations.id,
+			}),
+		},
+		networksIds: {
+			station: helpers.one.stations({
+				from: helpers.networksIds.station_id,
+				to: helpers.stations.id,
+			}),
+		},
+		submissions: {
+			station: helpers.one.stations({
+				from: helpers.submissions.station_id,
+				to: helpers.stations.id,
+			}),
+			submitter: helpers.one.users({
+				from: helpers.submissions.submitter_id,
+				to: helpers.users.id,
+				optional: false,
+			}),
+			reviewer: helpers.one.users({
+				from: helpers.submissions.reviewer_id,
+				to: helpers.users.id,
+			}),
+			proposedStation: helpers.one.proposedStations({
+				from: helpers.submissions.id,
+				to: helpers.proposedStations.submission_id,
+			}),
+			proposedLocation: helpers.one.proposedLocations({
+				from: helpers.submissions.id,
+				to: helpers.proposedLocations.submission_id,
+			}),
+			proposedCells: helpers.many.proposedCells(),
+		},
+		proposedStations: {
+			submission: helpers.one.submissions({
+				from: helpers.proposedStations.submission_id,
+				to: helpers.submissions.id,
+			}),
+		},
+		proposedLocations: {
+			submission: helpers.one.submissions({
+				from: helpers.proposedLocations.submission_id,
+				to: helpers.submissions.id,
+			}),
+		},
+		proposedCells: {
+			submission: helpers.one.submissions({
+				from: helpers.proposedCells.submission_id,
+				to: helpers.submissions.id,
+				optional: false,
+			}),
+			station: helpers.one.proposedStations({
+				from: helpers.proposedCells.station_id,
+				to: helpers.proposedStations.id,
+			}),
+			band: helpers.one.bands({
+				from: helpers.proposedCells.band_id,
+				to: helpers.bands.id,
+				optional: false,
+			}),
+			gsm: helpers.one.proposedGSMCells({
+				from: helpers.proposedCells.id,
+				to: helpers.proposedGSMCells.proposed_cell_id,
+			}),
+			umts: helpers.one.proposedUMTSCells({
+				from: helpers.proposedCells.id,
+				to: helpers.proposedUMTSCells.proposed_cell_id,
+			}),
+			lte: helpers.one.proposedLTECells({
+				from: helpers.proposedCells.id,
+				to: helpers.proposedLTECells.proposed_cell_id,
+			}),
+			nr: helpers.one.proposedNRCells({
+				from: helpers.proposedCells.id,
+				to: helpers.proposedNRCells.proposed_cell_id,
+			}),
+		},
 	}),
-	children: many(operators),
-	stations: many(stations),
-}));
-
-export const regionRelations = relations(regions, ({ many }) => ({
-	locations: many(locations),
-	ukeLocations: many(ukeLocations),
-}));
-
-export const locationRelations = relations(locations, ({ one, many }) => ({
-	region: one(regions, {
-		fields: [locations.region_id],
-		references: [regions.id],
-	}),
-	stations: many(stations),
-}));
-
-export const stationRelations = relations(stations, ({ one, many }) => ({
-	location: one(locations, {
-		fields: [stations.location_id],
-		references: [locations.id],
-	}),
-	operator: one(operators, {
-		fields: [stations.operator_id],
-		references: [operators.id],
-	}),
-	cells: many(cells),
-	networks: one(networksIds, {
-		fields: [stations.id],
-		references: [networksIds.station_id],
-	}),
-}));
-
-export const cellRelations = relations(cells, ({ one }) => ({
-	station: one(stations, {
-		fields: [cells.station_id],
-		references: [stations.id],
-	}),
-	band: one(bands, {
-		fields: [cells.band_id],
-		references: [bands.id],
-	}),
-	gsm: one(gsmCells, {
-		fields: [cells.id],
-		references: [gsmCells.cell_id],
-	}),
-	umts: one(umtsCells, {
-		fields: [cells.id],
-		references: [umtsCells.cell_id],
-	}),
-	lte: one(lteCells, {
-		fields: [cells.id],
-		references: [lteCells.cell_id],
-	}),
-	nr: one(nrCells, {
-		fields: [cells.id],
-		references: [nrCells.cell_id],
-	}),
-}));
-
-export const bandRelations = relations(bands, ({ many }) => ({
-	cells: many(cells),
-}));
-
-export const gsmCellRelations = relations(gsmCells, ({ one }) => ({
-	cell: one(cells, {
-		fields: [gsmCells.cell_id],
-		references: [cells.id],
-	}),
-}));
-
-export const umtsCellRelations = relations(umtsCells, ({ one }) => ({
-	cell: one(cells, {
-		fields: [umtsCells.cell_id],
-		references: [cells.id],
-	}),
-}));
-
-export const lteCellRelations = relations(lteCells, ({ one }) => ({
-	cell: one(cells, {
-		fields: [lteCells.cell_id],
-		references: [cells.id],
-	}),
-}));
-
-export const nrCellRelations = relations(nrCells, ({ one }) => ({
-	cell: one(cells, {
-		fields: [nrCells.cell_id],
-		references: [cells.id],
-	}),
-}));
-
-export const userListRelations = relations(userLists, ({ one }) => ({
-	list: one(users, {
-		fields: [userLists.created_by],
-		references: [users.id],
-	}),
-}));
-
-export const userCommentsRelations = relations(stationComments, ({ one }) => ({
-	author: one(users, {
-		fields: [stationComments.user_id],
-		references: [users.id],
-	}),
-	station: one(stations, {
-		fields: [stationComments.station_id],
-		references: [stations.id],
-	}),
-}));
-
-// Start of Auth
-export const usersRelations = relations(users, ({ many }) => ({
-	accounts: many(accounts),
-	comments: many(stationComments),
-	lists: many(userLists),
-	apiKeys: many(apikeys),
-	passkeys: many(passkeys),
-	twoFactors: many(twoFactors),
-	attachments: many(attachments, {
-		relationName: "author",
-	}),
-	submittedSubmissions: many(submissions, {
-		relationName: "submitter",
-	}),
-	reviewedSubmissions: many(submissions, {
-		relationName: "reviewer",
-	}),
-}));
-
-export const accountsRelations = relations(accounts, ({ one }) => ({
-	users: one(users, {
-		fields: [accounts.userId],
-		references: [users.id],
-	}),
-}));
-
-export const apiKeysRelations = relations(apikeys, ({ one }) => ({
-	users: one(users, {
-		fields: [apikeys.userId],
-		references: [users.id],
-	}),
-}));
-
-export const passkeysRelations = relations(passkeys, ({ one }) => ({
-	users: one(users, {
-		fields: [passkeys.userId],
-		references: [users.id],
-	}),
-}));
-
-export const twoFactorsRelations = relations(twoFactors, ({ one }) => ({
-	users: one(users, {
-		fields: [twoFactors.userId],
-		references: [users.id],
-	}),
-}));
-// End of Auth
-
-// Start of UKE Radio Lines
-export const manufacturerRelations = relations(radioLinesManufacturers, ({ many }) => ({
-	radioLinesAntennaTypes: many(radioLinesAntennaTypes),
-	radioLinestTansmitterTypes: many(radioLinesTransmitterTypes),
-}));
-
-export const antennaTypeRelations = relations(radioLinesAntennaTypes, ({ one }) => ({
-	manufacturer: one(radioLinesManufacturers, {
-		fields: [radioLinesAntennaTypes.manufacturer_id],
-		references: [radioLinesManufacturers.id],
-	}),
-}));
-
-export const transmitterTypeRelations = relations(radioLinesTransmitterTypes, ({ one }) => ({
-	manufacturer: one(radioLinesManufacturers, {
-		fields: [radioLinesTransmitterTypes.manufacturer_id],
-		references: [radioLinesManufacturers.id],
-	}),
-}));
-
-export const ukeRadioLineRelations = relations(ukeRadioLines, ({ one }) => ({
-	txTransmitterType: one(radioLinesTransmitterTypes, {
-		fields: [ukeRadioLines.tx_transmitter_type_id],
-		references: [radioLinesTransmitterTypes.id],
-	}),
-	txAntennaType: one(radioLinesAntennaTypes, {
-		fields: [ukeRadioLines.tx_antenna_type_id],
-		references: [radioLinesAntennaTypes.id],
-	}),
-	rxAntennaType: one(radioLinesAntennaTypes, {
-		fields: [ukeRadioLines.rx_antenna_type_id],
-		references: [radioLinesAntennaTypes.id],
-	}),
-	operator: one(ukeOperators, {
-		fields: [ukeRadioLines.operator_id],
-		references: [ukeOperators.id],
-	}),
-}));
-// End of UKE Radio Lines
-
-// Start of UKE Permits
-export const permitsRelations = relations(ukePermits, ({ one }) => ({
-	band: one(bands, {
-		fields: [ukePermits.band_id],
-		references: [bands.id],
-	}),
-	operator: one(operators, {
-		fields: [ukePermits.operator_id],
-		references: [operators.id],
-	}),
-	location: one(ukeLocations, {
-		fields: [ukePermits.location_id],
-		references: [ukeLocations.id],
-	}),
-}));
-
-export const ukeLocationsRelations = relations(ukeLocations, ({ one, many }) => ({
-	region: one(regions, {
-		fields: [ukeLocations.region_id],
-		references: [regions.id],
-	}),
-	permits: many(ukePermits),
-}));
-
-export const stationsPermitsRelations = relations(stationsPermits, ({ one }) => ({
-	permit: one(ukePermits, {
-		fields: [stationsPermits.permit_id],
-		references: [ukePermits.id],
-	}),
-	station: one(stations, {
-		fields: [stationsPermits.station_id],
-		references: [stations.id],
-	}),
-}));
-// End of UKE Permits
-
-export const networksIdsRelations = relations(networksIds, ({ one }) => ({
-	station: one(stations, {
-		fields: [networksIds.station_id],
-		references: [stations.id],
-	}),
-}));
-
-// Start of Submissions
-export const submissionsRelations = relations(submissions, ({ one, many }) => ({
-	station: one(stations, {
-		fields: [submissions.station_id],
-		references: [stations.id],
-	}),
-	submitter: one(users, {
-		fields: [submissions.submitter_id],
-		references: [users.id],
-		relationName: "submitter",
-	}),
-	reviewer: one(users, {
-		fields: [submissions.reviewer_id],
-		references: [users.id],
-		relationName: "reviewer",
-	}),
-	proposedStation: one(proposedStations),
-	proposedLocation: one(proposedLocations),
-	proposedCells: many(proposedCells),
-}));
-
-export const proposedStationsRelations = relations(proposedStations, ({ one }) => ({
-	submission: one(submissions, {
-		fields: [proposedStations.submission_id],
-		references: [submissions.id],
-	}),
-}));
-
-export const proposedLocationsRelations = relations(proposedLocations, ({ one }) => ({
-	submission: one(submissions, {
-		fields: [proposedLocations.submission_id],
-		references: [submissions.id],
-	}),
-}));
-
-export const proposedCellRelations = relations(proposedCells, ({ one }) => ({
-	submission: one(submissions, {
-		fields: [proposedCells.submission_id],
-		references: [submissions.id],
-	}),
-	station: one(proposedStations, {
-		fields: [proposedCells.station_id],
-		references: [proposedStations.id],
-	}),
-	band: one(bands, {
-		fields: [proposedCells.band_id],
-		references: [bands.id],
-	}),
-	gsm: one(proposedGSMCells, {
-		fields: [proposedCells.id],
-		references: [proposedGSMCells.proposed_cell_id],
-	}),
-	umts: one(proposedUMTSCells, {
-		fields: [proposedCells.id],
-		references: [proposedUMTSCells.proposed_cell_id],
-	}),
-	lte: one(proposedLTECells, {
-		fields: [proposedCells.id],
-		references: [proposedLTECells.proposed_cell_id],
-	}),
-	nr: one(proposedNRCells, {
-		fields: [proposedCells.id],
-		references: [proposedNRCells.proposed_cell_id],
-	}),
-}));
-// End of Submissions
+);

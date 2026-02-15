@@ -20,14 +20,18 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 	if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, stationId),
+		where: {
+			id: stationId,
+		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		await db.transaction(async (tx) => {
 			const stationCells = await tx.query.cells.findMany({
-				where: (fields, { eq }) => eq(fields.station_id, stationId),
+				where: {
+					station_id: stationId,
+				},
 				columns: { id: true, rat: true },
 			});
 			const cellIds = stationCells.map((c) => c.id);

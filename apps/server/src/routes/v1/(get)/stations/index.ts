@@ -1,5 +1,5 @@
-import { createSelectSchema } from "drizzle-zod";
-import { sql, count, and as drizzleAnd } from "drizzle-orm";
+import { createSelectSchema } from "drizzle-orm/zod";
+import { sql, count, and } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -8,7 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { locations, stations, cells, bands, operators, regions, networksIds } from "@openbts/drizzle";
+import { locations, stations, cells, bands, operators, regions, networksIds, lteCells, nrCells } from "@openbts/drizzle";
 
 const stationsSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
@@ -25,7 +25,7 @@ const stationResponseSchema = stationsSchema.extend({
 	networks: networksSchema.optional(),
 });
 type Station = z.infer<typeof stationResponseSchema>;
-type CellWithBand = z.infer<typeof cellsSchema> & { band: z.infer<typeof bandsSchema> };
+type CellWithBand = z.infer<typeof cellsSchema> & { band: z.infer<typeof bandsSchema> | null };
 type StationRaw = z.infer<typeof stationsSchema> & { cells: CellWithBand[]; networks?: z.infer<typeof networksSchema> | null };
 const schemaRoute = {
 	querystring: z.object({
@@ -102,19 +102,25 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		bandValues?.length
 			? db.query.bands.findMany({
 					columns: { id: true },
-					where: (fields, { inArray }) => inArray(fields.value, bandValues),
+					where: {
+						value: { in: bandValues },
+					},
 				})
 			: [],
 		expandedOperatorMncs?.length
 			? db.query.operators.findMany({
 					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.mnc, expandedOperatorMncs),
+					where: {
+						mnc: { in: expandedOperatorMncs },
+					},
 				})
 			: [],
 		regions?.length
 			? db.query.regions.findMany({
 					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.name, regions),
+					where: {
+						name: { in: regions },
+					},
 				})
 			: [],
 	]);
@@ -131,22 +137,24 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
 	const iotRequested = requestedRats.includes("iot");
 
-	const buildStationConditions = (): ReturnType<typeof sql>[] => {
+	const buildStationConditions = (stationFields: typeof stations): ReturnType<typeof sql>[] => {
 		const conditions: ReturnType<typeof sql>[] = [];
 
 		if (operatorIds.length) {
 			conditions.push(
-				sql`${stations.operator_id} = ANY(ARRAY[${sql.join(
+				sql`${stationFields.operator_id} = ANY(ARRAY[${sql.join(
 					operatorIds.map((id) => sql`${id}`),
 					sql`,`,
 				)}]::int4[])`,
 			);
 		}
 		if (envelope)
-			conditions.push(sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND ST_Intersects(l.point, ${envelope}))`);
+			conditions.push(
+				sql`EXISTS (SELECT 1 FROM ${locations} WHERE ${locations.id} = ${stationFields.location_id} AND ST_Intersects(${locations.point}, ${envelope}))`,
+			);
 		if (regionIds.length) {
 			conditions.push(
-				sql`EXISTS (SELECT 1 FROM locations l WHERE l.id = ${stations.location_id} AND l.region_id = ANY(ARRAY[${sql.join(
+				sql`EXISTS (SELECT 1 FROM ${locations} WHERE ${locations.id} = ${stationFields.location_id} AND ${locations.region_id} = ANY(ARRAY[${sql.join(
 					regionIds.map((id) => sql`${id}`),
 					sql`,`,
 				)}]::int4[]))`,
@@ -154,29 +162,29 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		}
 		if (bandIds.length || nonIotRats.length || iotRequested) {
 			const bandCond = bandIds.length
-				? sql` AND c.band_id = ANY(ARRAY[${sql.join(
+				? sql` AND ${cells.band_id} = ANY(ARRAY[${sql.join(
 						bandIds.map((id) => sql`${id}`),
 						sql`,`,
 					)}]::int4[])`
 				: sql``;
 			const ratCond = nonIotRats.length
-				? sql` AND c.rat IN (${sql.join(
+				? sql` AND ${cells.rat} IN (${sql.join(
 						nonIotRats.map((r) => sql`${r}`),
 						sql`,`,
 					)})`
 				: sql``;
 			const iotCond = iotRequested
-				? sql` AND (
-						EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
-						OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
+				? sql`AND (
+						EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
+						OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
 					)`
 				: sql``;
 
 			conditions.push(sql`
 				EXISTS (
 					SELECT 1
-					FROM cells c
-					WHERE c.station_id = ${stations.id}
+					FROM ${cells}
+					WHERE ${cells.station_id} = ${stationFields.id}
 					${bandCond}
 					${ratCond}
 					${iotCond}
@@ -187,15 +195,13 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		return conditions;
 	};
 
-	const stationConditions = buildStationConditions();
-
 	try {
-		const whereClause = stationConditions.length ? drizzleAnd(...stationConditions) : undefined;
+		const countWhereClause = buildStationConditions(stations);
+		const countWhere = countWhereClause.length ? and(...countWhereClause) : undefined;
 
 		const [countResult, btsStations] = await Promise.all([
-			db.select({ count: count() }).from(stations).where(whereClause),
+			db.select({ count: count() }).from(stations).where(countWhere),
 			db.query.stations.findMany({
-				where: whereClause,
 				columns: {
 					status: false,
 				},
@@ -208,12 +214,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					operator: true,
 					networks: { columns: { station_id: false } },
 				},
+				where: {
+					RAW: (fields) => {
+						const conds = buildStationConditions(fields);
+						return and(...conds) ?? sql`true`;
+					},
+				},
 				limit,
 				offset,
-				orderBy: (fields, operators) => {
-					const field = fields[sortBy ?? "id"];
-					return [sort === "asc" ? operators.asc(field) : operators.desc(field)];
-				},
+				orderBy: { [sortBy ?? "id"]: sort ?? "desc" },
 			}),
 		]);
 

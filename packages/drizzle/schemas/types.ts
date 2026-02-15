@@ -1,8 +1,8 @@
-import type { ukePermits, ukeRadioLines } from "./bts.ts";
+import type { ukePermits, ukeRadiolines } from "./bts.ts";
 
 export type UkePermission = typeof ukePermits.$inferSelect;
 export type NewUkePermission = typeof ukePermits.$inferInsert;
-export type NewUkeRadioLine = typeof ukeRadioLines.$inferInsert;
+export type NewUkeRadioLine = typeof ukeRadiolines.$inferInsert;
 
 export interface FormattedRadioLine {
 	id: number;

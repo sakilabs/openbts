@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { pipeline } from "node:stream/promises";
 import { createWriteStream } from "node:fs";
 import path from "node:path";
@@ -26,7 +26,7 @@ async function ensureUploadDir() {
 const schemaRoute = {
 	params: z
 		.object({
-			station_id: z.string().regex(/^\d+$/),
+			station_id: z.coerce.number<number>(),
 		})
 		.strict(),
 	response: {
@@ -47,13 +47,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const isMultipart = (req.headers["content-type"] ?? "").includes("multipart/form-data");
 	const userId = req.userSession?.user.id;
 	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
-	if (Number.isNaN(Number(station_id))) throw new ErrorResponse("INVALID_QUERY");
 	if (!getRuntimeSettings().enableStationComments) throw new ErrorResponse("FORBIDDEN");
 	if (!isMultipart) throw new ErrorResponse("BAD_REQUEST");
 
 	try {
 		const station = await db.query.stations.findFirst({
-			where: (fields, { eq }) => eq(fields.id, Number(station_id)),
+			where: {
+				id: station_id,
+			},
 		});
 		if (!station) throw new ErrorResponse("NOT_FOUND");
 

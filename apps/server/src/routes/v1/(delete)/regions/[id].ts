@@ -19,7 +19,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 	const { id } = req.params;
 
 	const region = await db.query.regions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 	});
 	if (!region) throw new ErrorResponse("NOT_FOUND");
 

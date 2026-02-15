@@ -1,5 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
-import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -84,7 +84,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	if (!hasPermission) throw new ErrorResponse("INSUFFICIENT_PERMISSIONS");
 
 	const submission = await db.query.submissions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 	});
 	if (!submission) throw new ErrorResponse("NOT_FOUND");
 	if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be modified" });
@@ -109,7 +111,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 			if (req.body.cells) {
 				const existingCells = await tx.query.proposedCells.findMany({
-					where: (fields, { eq }) => eq(fields.submission_id, id),
+					where: {
+						submission_id: id,
+					},
 					columns: { id: true },
 				});
 				const existingIds = existingCells.map((c) => c.id);
@@ -156,12 +160,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 			}
 
 			const updated = await tx.query.submissions.findFirst({
-				where: (fields, { eq }) => eq(fields.id, id),
+				where: {
+					id: id,
+				},
 			});
 			if (!updated) throw new ErrorResponse("NOT_FOUND");
 
 			const rawCells = await tx.query.proposedCells.findMany({
-				where: (fields, { eq }) => eq(fields.submission_id, id),
+				where: {
+					submission_id: id,
+				},
 				with: { gsm: true, umts: true, lte: true, nr: true },
 			});
 

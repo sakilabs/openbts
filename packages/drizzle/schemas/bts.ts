@@ -377,7 +377,7 @@ export const radioLinesManufacturers = pgTable("radiolines_manufacturers", {
  * @example
  * { id: 1, name: "Antenna Type 1", manufacturer_id: 1 }
  */
-export const radioLinesAntennaTypes = pgTable("radiolines_antenna_types", {
+export const radiolinesAntennaTypes = pgTable("radiolines_antenna_types", {
 	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 	manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
@@ -388,7 +388,7 @@ export const radioLinesAntennaTypes = pgTable("radiolines_antenna_types", {
  * @example
  * { id: 1, name: "Transmitter Type 1", manufacturer_id: 1 }
  */
-export const radioLinesTransmitterTypes = pgTable("radiolines_transmitter_types", {
+export const radiolinesTransmitterTypes = pgTable("radiolines_transmitter_types", {
 	id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
 	manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
@@ -403,7 +403,7 @@ export const ukeOperators = pgTable("uke_operators", {
 /**
  * UKE radiolines table
  */
-export const ukeRadioLines = pgTable(
+export const ukeRadiolines = pgTable(
 	"uke_radiolines",
 	{
 		id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
@@ -431,14 +431,14 @@ export const ukeRadioLines = pgTable(
 		bandwidth: varchar("bandwidth", { length: 100 }),
 		tx_eirp: doublePrecision("tx_eirp"),
 		tx_antenna_attenuation: doublePrecision("tx_antenna_attenuation"),
-		tx_transmitter_type_id: integer("tx_transmitter_type_id").references(() => radioLinesTransmitterTypes.id, {
+		tx_transmitter_type_id: integer("tx_transmitter_type_id").references(() => radiolinesTransmitterTypes.id, {
 			onDelete: "set null",
 			onUpdate: "cascade",
 		}),
-		tx_antenna_type_id: integer("tx_antenna_type_id").references(() => radioLinesAntennaTypes.id, { onDelete: "set null", onUpdate: "cascade" }),
+		tx_antenna_type_id: integer("tx_antenna_type_id").references(() => radiolinesAntennaTypes.id, { onDelete: "set null", onUpdate: "cascade" }),
 		tx_antenna_gain: doublePrecision("tx_antenna_gain"),
 		tx_antenna_height: doublePrecision("tx_antenna_height"),
-		rx_antenna_type_id: integer("rx_antenna_type_id").references(() => radioLinesAntennaTypes.id, { onDelete: "set null", onUpdate: "cascade" }),
+		rx_antenna_type_id: integer("rx_antenna_type_id").references(() => radiolinesAntennaTypes.id, { onDelete: "set null", onUpdate: "cascade" }),
 		rx_antenna_gain: doublePrecision("rx_antenna_gain"),
 		rx_antenna_height: doublePrecision("rx_antenna_height"),
 		rx_noise_figure: doublePrecision("rx_noise_figure"),

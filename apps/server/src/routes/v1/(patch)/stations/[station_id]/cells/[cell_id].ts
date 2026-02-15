@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createUpdateSchema } from "drizzle-zod";
+import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
@@ -51,12 +51,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	if (Number.isNaN(station_id) || Number.isNaN(cell_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, station_id),
+		where: {
+			id: station_id,
+		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	const cell = await db.query.cells.findFirst({
-		where: (fields, { and, eq }) => and(eq(fields.id, cell_id), eq(fields.station_id, station.id)),
+		where: {
+			AND: [{ id: cell_id }, { station_id: station_id }],
+		},
 	});
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
@@ -121,7 +125,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		}
 
 		const full = await db.query.cells.findFirst({
-			where: (fields, { eq }) => eq(fields.id, cell_id),
+			where: {
+				id: cell_id,
+			},
 			with: { gsm: true, umts: true, lte: true, nr: true },
 		});
 		if (!full) throw new ErrorResponse("FAILED_TO_UPDATE");

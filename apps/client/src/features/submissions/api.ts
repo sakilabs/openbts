@@ -1,5 +1,5 @@
 import { fetchApiData, postApiData } from "@/lib/api";
-import type { Location, CellDetails, LocationWithStations, Station, Region, Operator } from "@/types/station";
+import type { Location, CellDetails, LocationWithStations, Station, Region, Operator, UkeLocationWithPermits } from "@/types/station";
 import type { SubmissionFormData, CellFormDetails, RatType } from "./types";
 
 export { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
@@ -65,6 +65,10 @@ export async function reverseGeocode(lat: number, lon: number): Promise<Nominati
 
 export async function fetchLocationsInViewport(bounds: string): Promise<LocationWithStations[]> {
 	return fetchApiData<LocationWithStations[]>(`locations?bounds=${encodeURIComponent(bounds)}&limit=500`);
+}
+
+export async function fetchUkeLocationsInViewport(bounds: string): Promise<UkeLocationWithPermits[]> {
+	return fetchApiData<UkeLocationWithPermits[]>(`uke/locations?bounds=${encodeURIComponent(bounds)}&limit=500`);
 }
 
 export type SubmissionResponse = {

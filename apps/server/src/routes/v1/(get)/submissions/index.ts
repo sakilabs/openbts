@@ -1,5 +1,5 @@
-import { createSelectSchema } from "drizzle-zod";
-import { inArray, count, desc, eq, and } from "drizzle-orm";
+import { createSelectSchema } from "drizzle-orm/zod";
+import { count, eq, and } from "drizzle-orm";
 import { z } from "zod";
 
 import db from "../../../../database/psql.js";
@@ -89,20 +89,31 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 	const { limit, offset, status, type } = req.query;
 
-	const whereConditions = [];
-	if (!hasAdminPermission) whereConditions.push(eq(submissions.submitter_id, userId));
-	if (status) whereConditions.push(eq(submissions.status, status));
-	if (type) whereConditions.push(eq(submissions.type, type));
+	const whereFilter: Record<string, unknown> = {};
+	const countConditions = [];
+	if (!hasAdminPermission) {
+		whereFilter.submitter_id = userId;
+		countConditions.push(eq(submissions.submitter_id, userId));
+	}
+	if (status) {
+		whereFilter.status = status;
+		countConditions.push(eq(submissions.status, status));
+	}
+	if (type) {
+		whereFilter.type = type;
+		countConditions.push(eq(submissions.type, type));
+	}
 
-	const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-
-	const [totalCount] = await db.select({ count: count() }).from(submissions).where(whereClause);
+	const [totalCount] = await db
+		.select({ count: count() })
+		.from(submissions)
+		.where(countConditions.length > 0 ? and(...countConditions) : undefined);
 
 	const rows = await db.query.submissions.findMany({
 		limit,
 		offset,
-		orderBy: [desc(submissions.createdAt)],
-		where: whereClause,
+		orderBy: { createdAt: "desc" },
+		where: Object.keys(whereFilter).length > 0 ? whereFilter : undefined,
 		with: {
 			station: true,
 			submitter: {
@@ -130,7 +141,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 	if (submissionIds.length > 0) {
 		const rawCells = await db.query.proposedCells.findMany({
-			where: inArray(proposedCells.submission_id, submissionIds as string[]),
+			where: { submission_id: { in: submissionIds } },
 			with: {
 				gsm: true,
 				umts: true,

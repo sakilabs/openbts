@@ -1,5 +1,5 @@
-import { eq, ilike, sql, type SQL } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-zod";
+import { and, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import { bands, operators, ukePermits, ukeLocations } from "@openbts/drizzle";
@@ -87,7 +87,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	if (bandValues) {
 		const validBands = await db.query.bands.findMany({
 			columns: { id: true },
-			where: (fields, { inArray }) => inArray(fields.value, bandValues),
+			where: { value: { in: bandValues } },
 		});
 
 		bandIds = validBands.map((band) => band.id);
@@ -95,8 +95,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	}
 
 	try {
-		const conditions: (SQL<unknown> | undefined)[] = [];
-
 		let envelope: ReturnType<typeof sql> | undefined;
 		if (bounds) {
 			const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
@@ -131,22 +129,24 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					},
 				},
 			},
-			where: (fields, { and, inArray, or }) => {
-				if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
-				if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
-				if (decisionType) conditions.push(eq(fields.decision_type, decisionType));
-				if (decision_number) {
-					const like = `%${decision_number}%`;
-					conditions.push(
-						or(ilike(fields.decision_number, like), sql`similarity(${fields.decision_number}, ${decision_number}) > ${SIMILARITY_THRESHOLD}`),
-					);
-				}
-				if (station_id) {
-					const like = `%${station_id}%`;
-					conditions.push(or(ilike(fields.station_id, like), sql`similarity(${fields.station_id}, ${station_id}) > ${SIMILARITY_THRESHOLD}`));
-				}
-
-				return conditions.length > 0 ? and(...conditions) : undefined;
+			where: {
+				RAW: (fields) => {
+					const conditions: (SQL<unknown> | undefined)[] = [];
+					if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
+					if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
+					if (decisionType) conditions.push(eq(fields.decision_type, decisionType));
+					if (decision_number) {
+						const like = `%${decision_number}%`;
+						conditions.push(
+							or(ilike(fields.decision_number, like), sql`similarity(${fields.decision_number}, ${decision_number}) > ${SIMILARITY_THRESHOLD}`),
+						);
+					}
+					if (station_id) {
+						const like = `%${station_id}%`;
+						conditions.push(or(ilike(fields.station_id, like), sql`similarity(${fields.station_id}, ${station_id}) > ${SIMILARITY_THRESHOLD}`));
+					}
+					return conditions.length > 0 ? and(...conditions) ?? sql`true` : sql`true`;
+				},
 			},
 			limit,
 			offset: offset,

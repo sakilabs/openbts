@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -65,7 +65,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read_all"] })) || false;
 
 	const submission = await db.query.submissions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 		with: {
 			station: true,
 			submitter: true,
@@ -85,7 +87,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 	if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");
 
 	const rawCells = await db.query.proposedCells.findMany({
-		where: (fields, { eq }) => eq(fields.submission_id, submission.id),
+		where: {
+			submission_id: id,
+		},
 		with: {
 			gsm: true,
 			umts: true,

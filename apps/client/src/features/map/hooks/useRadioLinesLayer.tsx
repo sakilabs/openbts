@@ -164,6 +164,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 					closeButton: false,
 					closeOnClick: false,
 					className: "radioline-tooltip",
+					maxWidth: "20rem",
 					offset: 10,
 				}).setDOMContent(container);
 			}

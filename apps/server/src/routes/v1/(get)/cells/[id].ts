@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -52,7 +52,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 	const { id } = req.params;
 
 	const cell = await db.query.cells.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 		with: {
 			station: true,
 			band: true,

@@ -1,6 +1,5 @@
-import { eq, inArray } from "drizzle-orm";
-import { cells, stations, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
-import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
@@ -61,7 +60,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	if (!cellsData || cellsData.length === 0) throw new ErrorResponse("INVALID_QUERY");
 
 	const station = await db.query.stations.findFirst({
-		where: eq(stations.id, station_id),
+		where: {
+			id: station_id,
+		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
@@ -101,7 +102,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 		const ids = created.map((cell) => cell.id);
 		const full = await db.query.cells.findMany({
-			where: inArray(cells.id, ids),
+			where: {
+				RAW: (fields, { inArray }) => inArray(fields.id, ids),
+			},
 			with: { gsm: true, umts: true, lte: true, nr: true },
 		});
 		const idToDetails = new Map<number, z.infer<typeof cellDetailsSchema>>();

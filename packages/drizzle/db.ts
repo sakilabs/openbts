@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-
+import { relations } from "./schemas/relations.ts";
 import * as schema from "./schemas/index.js";
 
 const connectionString = process.env.DATABASE_URL;
@@ -19,6 +19,7 @@ export const sql = postgres(connectionString, {
 export const db = drizzle({
 	client: sql,
 	schema,
+	relations,
 });
 
 export type Database = typeof db;

@@ -24,7 +24,9 @@
 		"cityPlaceholder": "Enter city...",
 		"addressPlaceholder": "Enter address...",
 		"nearbyLocations": "Nearby Stations",
-		"createNewLocation": "Create new location here"
+		"createNewLocation": "Create new location here",
+		"showUkeLocations": "Show UKE locations",
+		"selectStation": "Select a station to import"
 	},
 	"header": {
 		"reject": "Reject Submission",

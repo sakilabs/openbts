@@ -1,5 +1,5 @@
 import { bands, locations, operators, stations, cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
-import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -108,7 +108,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			}
 
 			const full = await tx.query.stations.findFirst({
-				where: (fields, { eq }) => eq(fields.id, newStation.id),
+				where: {
+					id: newStation.id,
+				},
 				with: {
 					cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
 					location: { columns: { point: false } },

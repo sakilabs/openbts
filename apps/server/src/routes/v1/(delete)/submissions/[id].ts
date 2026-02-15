@@ -37,7 +37,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["delete"] })) || false;
 
 	const submission = await db.query.submissions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 		columns: {
 			id: true,
 			submitter_id: true,
@@ -50,17 +52,19 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 	try {
 		await db.transaction(async (tx) => {
 			const cellsBase = await tx.query.proposedCells.findMany({
-				where: (fields, { eq }) => eq(fields.submission_id, id),
+				where: {
+					submission_id: id,
+				},
 				columns: { id: true },
 			});
-			const proposedCellIds = cellsBase.map((c) => c.id).filter((n): n is number => n !== null && n !== undefined);
+			const proposed_cell_ids = cellsBase.map((c) => c.id).filter((n): n is number => n !== null && n !== undefined);
 
-			if (proposedCellIds.length > 0) {
+			if (proposed_cell_ids.length > 0) {
 				await Promise.all([
-					tx.delete(proposedGSMCells).where(inArray(proposedGSMCells.proposed_cell_id, proposedCellIds)),
-					tx.delete(proposedUMTSCells).where(inArray(proposedUMTSCells.proposed_cell_id, proposedCellIds)),
-					tx.delete(proposedLTECells).where(inArray(proposedLTECells.proposed_cell_id, proposedCellIds)),
-					tx.delete(proposedNRCells).where(inArray(proposedNRCells.proposed_cell_id, proposedCellIds)),
+					tx.delete(proposedGSMCells).where(inArray(proposedGSMCells.proposed_cell_id, proposed_cell_ids)),
+					tx.delete(proposedUMTSCells).where(inArray(proposedUMTSCells.proposed_cell_id, proposed_cell_ids)),
+					tx.delete(proposedLTECells).where(inArray(proposedLTECells.proposed_cell_id, proposed_cell_ids)),
+					tx.delete(proposedNRCells).where(inArray(proposedNRCells.proposed_cell_id, proposed_cell_ids)),
 				]);
 			}
 

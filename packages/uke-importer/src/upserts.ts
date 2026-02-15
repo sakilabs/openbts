@@ -1,5 +1,4 @@
-import { inArray } from "drizzle-orm";
-import { bands, regions, ukeLocations, operators, ukeOperators, type ratEnum, type BandVariant } from "@openbts/drizzle";
+import { bands, regions, ukeLocations, ukeOperators, type ratEnum, type BandVariant } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
@@ -17,10 +16,7 @@ export async function upsertRegions(items: Array<{ name: string; code: string }>
 
 	if (unique.length) {
 		const existing = await db.query.regions.findMany({
-			where: inArray(
-				regions.name,
-				unique.map((r) => r.name),
-			),
+			where: { name: { in: unique.map((r) => r.name) } },
 		});
 
 		const existingNames = new Set(existing.map((r) => r.name));
@@ -31,10 +27,7 @@ export async function upsertRegions(items: Array<{ name: string; code: string }>
 		}
 
 		const allRows = await db.query.regions.findMany({
-			where: inArray(
-				regions.name,
-				unique.map((region) => region.name),
-			),
+			where: { name: { in: unique.map((region) => region.name) } },
 		});
 
 		const map = new Map<string, number>();
@@ -60,10 +53,7 @@ export async function upsertBands(
 
 	if (unique.length) {
 		const existing = await db.query.bands.findMany({
-			where: inArray(
-				bands.value,
-				unique.map((k) => k.value),
-			),
+			where: { value: { in: unique.map((k) => k.value) } },
 		});
 
 		const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.duplex}:${b.variant}`));
@@ -82,10 +72,7 @@ export async function upsertBands(
 		}
 
 		const allRows = await db.query.bands.findMany({
-			where: inArray(
-				bands.value,
-				unique.map((k) => k.value),
-			),
+			where: { value: { in: unique.map((k) => k.value) } },
 		});
 
 		const map = new Map<string, number>();
@@ -109,7 +96,7 @@ export async function getOperators(rawNames: string[]): Promise<Map<string, numb
 
 	const existingOperators = uniqueMappedNames.length
 		? await db.query.operators.findMany({
-				where: inArray(operators.name, uniqueMappedNames),
+				where: { name: { in: uniqueMappedNames } },
 			})
 		: [];
 
@@ -144,10 +131,7 @@ export async function upsertUkeOperators(rawNames: string[]): Promise<Map<string
 
 	if (values.length) {
 		const existing = await db.query.ukeOperators.findMany({
-			where: inArray(
-				ukeOperators.full_name,
-				values.map((v) => v.full_name),
-			),
+			where: { full_name: { in: values.map((v) => v.full_name) } },
 		});
 
 		const existingFullNames = new Set(existing.map((o) => o.full_name));
@@ -158,10 +142,7 @@ export async function upsertUkeOperators(rawNames: string[]): Promise<Map<string
 		}
 
 		const allRows = await db.query.ukeOperators.findMany({
-			where: inArray(
-				ukeOperators.name,
-				values.map((v) => v.name),
-			),
+			where: { name: { in: values.map((v) => v.name) } },
 		});
 
 		const map = new Map<string, number>();
@@ -188,17 +169,9 @@ export async function upsertUkeLocations(
 	if (uniq.length) {
 		const latLong = uniq.map((l) => ({ lat: l.lat, lon: l.lon }));
 		const existing = await db.query.ukeLocations.findMany({
-			where: (fields, { and }) =>
-				and(
-					inArray(
-						fields.longitude,
-						latLong.map((l) => l.lon),
-					),
-					inArray(
-						fields.latitude,
-						latLong.map((l) => l.lat),
-					),
-				),
+			where: {
+				AND: [{ longitude: { in: latLong.map((l) => l.lon) } }, { latitude: { in: latLong.map((l) => l.lat) } }],
+			},
 		});
 
 		const existingCoords = new Set(existing.map((l) => `${l.longitude}:${l.latitude}`));
@@ -219,17 +192,9 @@ export async function upsertUkeLocations(
 		}
 
 		const allRows = await db.query.ukeLocations.findMany({
-			where: (fields, { and }) =>
-				and(
-					inArray(
-						fields.longitude,
-						latLong.map((l) => l.lon),
-					),
-					inArray(
-						fields.latitude,
-						latLong.map((l) => l.lat),
-					),
-				),
+			where: {
+				AND: [{ longitude: { in: latLong.map((l) => l.lon) } }, { latitude: { in: latLong.map((l) => l.lat) } }],
+			},
 		});
 
 		const map = new Map<string, number>();

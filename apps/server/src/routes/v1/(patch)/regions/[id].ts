@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createUpdateSchema } from "drizzle-zod";
+import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -32,7 +32,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { region_id } = req.params;
 
 	const region = await db.query.regions.findFirst({
-		where: (fields, { eq }) => eq(fields.id, region_id),
+		where: {
+			id: region_id,
+		},
 	});
 	if (!region) throw new ErrorResponse("NOT_FOUND");
 

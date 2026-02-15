@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createUpdateSchema } from "drizzle-zod";
+import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -33,7 +33,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	if (Number.isNaN(location_id)) throw new ErrorResponse("INVALID_QUERY");
 
 	const location = await db.query.locations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, location_id),
+		where: {
+			id: location_id,
+		},
 	});
 	if (!location) throw new ErrorResponse("NOT_FOUND");
 

@@ -1,6 +1,6 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { admin, apiKey, multiSession, twoFactor, username } from "better-auth/plugins";
 import { passkey } from "@better-auth/passkey";
 import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
@@ -175,7 +175,7 @@ async function beforeAuthHook(
 		}
 
 		const keys = await db.query.apikeys.findMany({
-			where: (apikeys, { eq }) => eq(apikeys.userId, session.user.id),
+			where: { userId: session.user.id },
 		});
 
 		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {

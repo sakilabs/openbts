@@ -1,8 +1,8 @@
 import { z } from "zod/v4";
-import { inArray, sql } from "drizzle-orm";
+import { and, or, inArray, sql } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
-import { operators } from "@openbts/drizzle";
+import { type cells, locations, lteCells, nrCells, regions, stations } from "@openbts/drizzle";
 import { convertToCLF, sortCLFLines, type ClfFormat, type CellExportData } from "../../../../utils/clf-export.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -71,66 +71,73 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
 		if (mncs.has(NETWORKS_MNC)) for (const child of NETWORKS_CHILD_MNCS) mncs.add(child);
 
 		const matched = await db.query.operators.findMany({
-			where: inArray(operators.mnc, [...mncs]),
+			where: { mnc: { in: [...mncs] } },
 			columns: { id: true },
 		});
 		resolvedOperatorIds = matched.map((o) => o.id);
 	}
 
-	const rows = await db.query.cells.findMany({
-		where: (fields, { and, or, inArray }) => {
-			const conditions = [];
-			if (resolvedOperatorIds && resolvedOperatorIds.length > 0) {
-				conditions.push(
+	const buildCellConditions = (fields: typeof cells) => {
+		const conditions = [];
+		if (resolvedOperatorIds && resolvedOperatorIds.length > 0) {
+			conditions.push(
+				sql`EXISTS (
+					SELECT 1 FROM ${stations}
+					WHERE ${stations.id} = ${fields.station_id}
+					AND ${stations.operator_id} = ANY(ARRAY[${sql.join(
+						resolvedOperatorIds.map((id) => sql`${id}`),
+						sql`,`,
+					)}]::int4[])
+				)`,
+			);
+		}
+		if (regionCodes && regionCodes.length > 0) {
+			conditions.push(
+				sql`EXISTS (
+				SELECT 1 FROM ${stations}
+				JOIN ${locations} ON ${stations.location_id} = ${locations.id}
+				JOIN ${regions} ON ${locations.region_id} = ${regions.id}
+				WHERE ${stations.id} = ${fields.station_id}
+				AND ${regions.code} = ANY(ARRAY[${sql.join(
+					regionCodes.map((code) => sql`${code}`),
+					sql`,`,
+				)}]::text[])
+			)`,
+			);
+		}
+		if (rat && rat.length > 0) {
+			const ratConditions = [];
+			const standardRats = rat.filter((r) => r !== "IOT") as ("GSM" | "UMTS" | "LTE" | "NR")[];
+			if (standardRats.length > 0) ratConditions.push(inArray(fields.rat, standardRats));
+			if (rat.includes("IOT")) {
+				ratConditions.push(
 					sql`EXISTS (
-						SELECT 1 FROM stations s
-						WHERE s.id = ${fields.station_id}
-						AND s.operator_id = ANY(ARRAY[${sql.join(
-							resolvedOperatorIds.map((id) => sql`${id}`),
-							sql`,`,
-						)}]::int4[])
+						SELECT 1 FROM ${lteCells}
+						WHERE ${lteCells.cell_id} = ${fields.id}
+						AND ${lteCells.supports_nb_iot} = true
+					)`,
+					sql`EXISTS (
+						SELECT 1 FROM ${nrCells}
+						WHERE ${nrCells.cell_id} = ${fields.id}
+						AND ${nrCells.supports_nr_redcap} = true
 					)`,
 				);
 			}
-			if (regionCodes && regionCodes.length > 0) {
-				conditions.push(
-					sql`EXISTS (
-					SELECT 1 FROM stations s
-					JOIN locations l ON s.location_id = l.id
-					JOIN regions r ON l.region_id = r.id
-					WHERE s.id = ${fields.station_id}
-					AND r.code = ANY(ARRAY[${sql.join(
-						regionCodes.map((code) => sql`${code}`),
-						sql`,`,
-					)}]::text[])
-				)`,
-				);
+			if (ratConditions.length > 0) {
+				conditions.push(or(...ratConditions));
 			}
-			if (rat && rat.length > 0) {
-				const ratConditions = [];
-				const standardRats = rat.filter((r) => r !== "IOT") as ("GSM" | "UMTS" | "LTE" | "NR")[];
-				if (standardRats.length > 0) ratConditions.push(inArray(fields.rat, standardRats));
-				if (rat.includes("IOT")) {
-					ratConditions.push(
-						sql`EXISTS (
-							SELECT 1 FROM lte_cells lc
-							WHERE lc.cell_id = ${fields.id}
-							AND lc.supports_nb_iot = true
-						)`,
-						sql`EXISTS (
-							SELECT 1 FROM nr_cells nc
-							WHERE nc.cell_id = ${fields.id}
-							AND nc.supports_nr_redcap = true
-						)`,
-					);
-				}
-				if (ratConditions.length > 0) {
-					conditions.push(or(...ratConditions));
-				}
-			}
-			if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
+		}
+		if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
 
-			return conditions.length ? and(...conditions) : undefined;
+		return conditions;
+	};
+
+	const rows = await db.query.cells.findMany({
+		where: {
+			RAW: (fields) => {
+				const conds = buildCellConditions(fields);
+				return and(...conds) ?? sql`true`;
+			},
 		},
 		with: {
 			station: {

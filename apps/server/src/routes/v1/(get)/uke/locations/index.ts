@@ -1,5 +1,5 @@
 import { sql, count, type SQL, type Column, inArray, and } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import { bands, operators, ukePermits, ukeLocations, regions } from "@openbts/drizzle";
@@ -179,37 +179,41 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		return conditions;
 	};
 
-	const locationConditions: SQL<unknown>[] = [];
+	const buildLocationConditions = (locFields: typeof ukeLocations): SQL<unknown>[] => {
+		const conditions: SQL<unknown>[] = [];
 
-	if (envelope) locationConditions.push(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
-	if (regionIds.length) locationConditions.push(inArray(ukeLocations.region_id, regionIds));
-	if (recentOnly) {
-		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-		locationConditions.push(
-			sql`(${ukeLocations.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${ukeLocations.updatedAt} >= ${thirtyDaysAgo.toISOString()})`,
-		);
-	}
-	if (hasPermitFilters) {
-		const permitConditions = [sql`ps.location_id = ${ukeLocations.id}`, ...buildPermitConditions(sql`ps.operator_id`, sql`ps.band_id`)];
+		if (envelope) conditions.push(sql`ST_Intersects(${locFields.point}, ${envelope})`);
+		if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
+		if (recentOnly) {
+			const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+			conditions.push(
+				sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`,
+			);
+		}
+		if (hasPermitFilters) {
+			const permitConditions = [sql`ps.location_id = ${locFields.id}`, ...buildPermitConditions(sql`ps.operator_id`, sql`ps.band_id`)];
 
-		locationConditions.push(
-			sql`EXISTS (
-				SELECT 1 FROM uke_permits ps
-				WHERE ${and(...permitConditions)}
-			)`,
-		);
-	} else {
-		locationConditions.push(
-			sql`EXISTS (
-				SELECT 1 FROM uke_permits ps
-				WHERE ps.location_id = ${ukeLocations.id}
-			)`,
-		);
-	}
+			conditions.push(
+				sql`EXISTS (
+					SELECT 1 FROM uke_permits ps
+					WHERE ${and(...permitConditions)}
+				)`,
+			);
+		} else {
+			conditions.push(
+				sql`EXISTS (
+					SELECT 1 FROM uke_permits ps
+					WHERE ps.location_id = ${locFields.id}
+				)`,
+			);
+		}
+
+		return conditions;
+	};
 
 	try {
-		const whereClause = and(...locationConditions);
-		const countResult = await db.select({ count: count() }).from(ukeLocations).where(whereClause);
+		const countWhereClause = and(...buildLocationConditions(ukeLocations));
+		const countResult = await db.select({ count: count() }).from(ukeLocations).where(countWhereClause);
 		const totalCount = countResult[0]?.count ?? 0;
 
 		if (totalCount === 0) {
@@ -227,9 +231,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					},
 					...(hasPermitFilters
 						? {
-								where: (fields, { and: drizzleAnd }) => {
-									const conditions = buildPermitConditions(fields.operator_id, fields.band_id);
-									return conditions.length ? drizzleAnd(...conditions) : undefined;
+								where: {
+									RAW: (fields) => {
+										const conditions = buildPermitConditions(fields.operator_id, fields.band_id);
+										return and(...conditions) ?? sql`true`;
+									},
 								},
 							}
 						: {}),
@@ -239,10 +245,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				point: false,
 				region_id: false,
 			},
-			where: whereClause,
+			where: {
+				RAW: (fields) => and(...buildLocationConditions(fields)) ?? sql`true`,
+			},
 			limit,
 			offset,
-			orderBy: (fields, ops) => [ops.desc(fields.id)],
+			orderBy: { id: "desc" },
 		});
 
 		return res.send({ data: locationRows, totalCount });

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createUpdateSchema } from "drizzle-zod";
+import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -70,7 +70,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { cell_id } = req.params;
 
 	const cell = await db.query.cells.findFirst({
-		where: (fields, { eq }) => eq(fields.id, cell_id),
+		where: {
+			id: cell_id,
+		},
 	});
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
@@ -135,7 +137,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 		}
 
 		const full = await db.query.cells.findFirst({
-			where: (fields, { eq }) => eq(fields.id, cell_id),
+			where: {
+				id: cell_id,
+			},
 			with: { gsm: true, umts: true, lte: true, nr: true },
 		});
 		const details = full?.gsm ?? full?.umts ?? full?.lte ?? full?.nr ?? null;

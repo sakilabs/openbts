@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
@@ -83,13 +83,17 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 		bandValues?.length
 			? db.query.bands.findMany({
 					columns: { id: true },
-					where: (fields, { inArray }) => inArray(fields.value, bandValues),
+					where: {
+						RAW: (fields, { inArray }) => inArray(fields.value, bandValues),
+					},
 				})
 			: [],
 		expandedOperatorMncs?.length
 			? db.query.operators.findMany({
 					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.mnc, expandedOperatorMncs),
+					where: {
+						RAW: (fields, { inArray }) => inArray(fields.mnc, expandedOperatorMncs),
+					},
 				})
 			: [],
 	]);
@@ -156,7 +160,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 	};
 
 	const location = await db.query.locations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 		columns: {
 			point: false,
 			region_id: false,
@@ -165,7 +171,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 			region: true,
 			stations: {
 				columns: { status: false, location_id: false },
-				where: buildStationFilter(),
+				where: {
+					RAW: buildStationFilter(),
+				},
 				with: {
 					cells: {
 						columns: { band_id: false, station_id: false },

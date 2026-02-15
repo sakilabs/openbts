@@ -24,7 +24,9 @@
 		"cityPlaceholder": "Wpisz miasto...",
 		"addressPlaceholder": "Wpisz adres...",
 		"nearbyLocations": "Pobliskie stacje",
-		"createNewLocation": "Utwórz tutaj nową lokalizację"
+		"createNewLocation": "Utwórz tutaj nową lokalizację",
+		"showUkeLocations": "Pokaż lokalizacje UKE",
+		"selectStation": "Wybierz stację do importu"
 	},
 	"header": {
 		"reject": "Odrzuć zgłoszenie",

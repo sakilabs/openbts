@@ -1,3 +1,4 @@
+import { RAT_ORDER } from "@/features/shared/rat";
 import type { ProposedCellForm, CellPayload, CellFormDetails } from "../types";
 
 export function generateCellId(): string {
@@ -81,4 +82,27 @@ export function getCellDiffStatus(cell: ProposedCellForm, originalsMap: Map<numb
 	if (!original) return "added";
 
 	return isCellModified(cell, original) ? "modified" : "unchanged";
+}
+
+export function ukePermitsToCells(permits: { band_id: number; band?: { rat: string; id: number } | null }[]): ProposedCellForm[] {
+	const seen = new Set<string>();
+	const cells: ProposedCellForm[] = [];
+
+	for (const permit of permits) {
+		if (!permit.band || permit.band.rat === "IOT") continue;
+		const key = `${permit.band.rat}-${permit.band.id}`;
+		if (seen.has(key)) continue;
+		seen.add(key);
+
+		cells.push({
+			id: generateCellId(),
+			rat: permit.band.rat as ProposedCellForm["rat"],
+			band_id: permit.band.id,
+			details: {},
+		});
+	}
+
+	cells.sort((a, b) => RAT_ORDER.indexOf(a.rat) - RAT_ORDER.indexOf(b.rat));
+
+	return cells;
 }

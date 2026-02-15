@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
@@ -40,12 +40,16 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 
 	try {
 		const station = await db.query.stations.findFirst({
-			where: (fields, { eq }) => eq(fields.id, station_id),
+			where: {
+				RAW: (fields, { eq }) => eq(fields.id, station_id),
+			},
 		});
 		if (!station) throw new ErrorResponse("NOT_FOUND");
 
 		const permitLink = await db.query.stationsPermits.findFirst({
-			where: (fields, { and, eq }) => and(eq(fields.station_id, station_id), eq(fields.permit_id, permit_id)),
+			where: {
+				AND: [{ station_id: { eq: station_id } }, { permit_id: { eq: permit_id } }],
+			},
 			with: {
 				permit: {
 					with: {

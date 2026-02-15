@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
@@ -32,17 +32,21 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 	if (!getRuntimeSettings().enableStationComments) throw new ErrorResponse("FORBIDDEN");
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, station_id),
+		where: {
+			id: station_id,
+		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
 	try {
 		const comments = await db.query.stationComments.findMany({
-			where: (fields, { eq }) => eq(fields.station_id, station_id),
+			where: {
+				RAW: (fields, { eq }) => eq(fields.station_id, station_id),
+			},
 			with: {
 				author: true,
 			},
-			orderBy: (fields, { desc }) => [desc(fields.createdAt)],
+			orderBy: { createdAt: "desc" },
 		});
 
 		return res.send({ data: comments });

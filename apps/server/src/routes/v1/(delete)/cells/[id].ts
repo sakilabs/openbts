@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { cells } from "@openbts/drizzle";
+import { cells, gsmCells, lteCells, nrCells, umtsCells } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -19,17 +19,36 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 	const { id } = req.params;
 
 	const cell = await db.query.cells.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 	});
 	if (!cell) throw new ErrorResponse("NOT_FOUND");
 
 	try {
-		await db.delete(cells).where(eq(cells.id, id));
+		await db.transaction(async (tx) => {
+			switch (cell.rat) {
+				case "GSM":
+					await tx.delete(gsmCells).where(eq(gsmCells.cell_id, cell.id));
+					break;
+				case "UMTS":
+					await tx.delete(umtsCells).where(eq(umtsCells.cell_id, cell.id));
+					break;
+				case "LTE":
+					await tx.delete(lteCells).where(eq(lteCells.cell_id, cell.id));
+					break;
+				case "NR":
+					await tx.delete(nrCells).where(eq(nrCells.cell_id, cell.id));
+					break;
+			}
+
+			await tx.delete(cells).where(eq(cells.id, cell.id));
+		});
+
+		return res.status(204).send();
 	} catch {
 		throw new ErrorResponse("FAILED_TO_DELETE");
 	}
-
-	return res.status(204).send();
 }
 
 const deleteCell: Route<IdParams, void> = {

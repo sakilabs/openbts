@@ -3,7 +3,7 @@ import { sql, count, and } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
-import { locations, regions, stations, operators } from "@openbts/drizzle";
+import { locations, regions, stations, operators, cells, lteCells, nrCells } from "@openbts/drizzle";
 import { ErrorResponse } from "../../../../errors.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -100,19 +100,31 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		bandValues?.length
 			? db.query.bands.findMany({
 					columns: { id: true },
-					where: (fields, { inArray }) => inArray(fields.value, bandValues),
+					where: {
+						value: {
+							in: bandValues,
+						},
+					},
 				})
 			: [],
 		expandedOperatorMncs?.length
 			? db.query.operators.findMany({
 					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.mnc, expandedOperatorMncs),
+					where: {
+						mnc: {
+							in: expandedOperatorMncs,
+						},
+					},
 				})
 			: [],
 		regionNames?.length
 			? db.query.regions.findMany({
 					columns: { id: true },
-					where: (f, { inArray }) => inArray(f.name, regionNames),
+					where: {
+						name: {
+							in: regionNames,
+						},
+					},
 				})
 			: [],
 	]);
@@ -131,13 +143,13 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 	const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
-	const buildStationFilter = () => {
+	const buildStationFilter = (stationFields: typeof stations) => {
 		if (!hasStationFilters) return undefined;
 		const conditions: ReturnType<typeof sql>[] = [];
 
 		if (operatorIds.length) {
 			conditions.push(
-				sql`${stations.operator_id} = ANY(ARRAY[${sql.join(
+				sql`${stationFields.operator_id} = ANY(ARRAY[${sql.join(
 					operatorIds.map((id) => sql`${id}`),
 					sql`,`,
 				)}]::int4[])`,
@@ -149,7 +161,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 			if (bandIds.length) {
 				cellConditions.push(
-					sql`c.band_id = ANY(ARRAY[${sql.join(
+					sql`${cells.band_id} = ANY(ARRAY[${sql.join(
 						bandIds.map((id) => sql`${id}`),
 						sql`,`,
 					)}]::int4[])`,
@@ -158,7 +170,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 			if (nonIotRats.length) {
 				cellConditions.push(
-					sql`c.rat IN (${sql.join(
+					sql`${cells.rat} IN (${sql.join(
 						nonIotRats.map((r) => sql`${r}`),
 						sql`,`,
 					)})`,
@@ -167,16 +179,16 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 			if (iotRequested) {
 				cellConditions.push(sql`(
-					EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
-					OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
+					EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
+					OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
 				)`);
 			}
 
 			const cellWhere = cellConditions.length > 1 ? sql`(${sql.join(cellConditions, sql` AND `)})` : cellConditions[0];
 
 			conditions.push(sql`EXISTS (
-				SELECT 1 FROM cells c
-				WHERE c.station_id = ${stations.id}
+				SELECT 1 FROM ${cells}
+				WHERE ${cells.station_id} = ${stationFields.id}
 				AND ${cellWhere}
 			)`);
 		}
@@ -184,13 +196,13 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
 	};
 
-	const buildLocationConditions = () => {
+	const buildLocationConditions = (locFields: typeof locations) => {
 		const conditions: ReturnType<typeof sql>[] = [];
 
-		if (envelope) conditions.push(sql`ST_Intersects(${locations.point}, ${envelope})`);
+		if (envelope) conditions.push(sql`ST_Intersects(${locFields.point}, ${envelope})`);
 		if (regionIds.length) {
 			conditions.push(
-				sql`${locations.region_id} = ANY(ARRAY[${sql.join(
+				sql`${locFields.region_id} = ANY(ARRAY[${sql.join(
 					regionIds.map((id) => sql`${id}`),
 					sql`,`,
 				)}]::int4[])`,
@@ -198,31 +210,31 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		}
 		if (recentOnly) {
 			const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-			conditions.push(sql`(${locations.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locations.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
+			conditions.push(sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
 		}
 		if (hasStationFilters) {
 			const operatorCond = operatorIds.length
-				? sql` AND s.operator_id = ANY(ARRAY[${sql.join(
+				? sql` AND ${stations.operator_id} = ANY(ARRAY[${sql.join(
 						operatorIds.map((id) => sql`${id}`),
 						sql`,`,
 					)}]::int4[])`
 				: sql``;
 			const bandCond = bandIds.length
-				? sql` AND c.band_id = ANY(ARRAY[${sql.join(
+				? sql` AND ${cells.band_id} = ANY(ARRAY[${sql.join(
 						bandIds.map((id) => sql`${id}`),
 						sql`,`,
 					)}]::int4[])`
 				: sql``;
 			const ratCond = nonIotRats.length
-				? sql` AND c.rat IN (${sql.join(
+				? sql` AND ${cells.rat} IN (${sql.join(
 						nonIotRats.map((r) => sql`${r}`),
 						sql`,`,
 					)})`
 				: sql``;
 			const iotCond = iotRequested
 				? sql` AND (
-						EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
-						OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
+						EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
+						OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
 					)`
 				: sql``;
 
@@ -230,9 +242,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				conditions.push(sql`
 					EXISTS (
 						SELECT 1
-						FROM ${stations} s
-						JOIN cells c ON c.station_id = s.id
-						WHERE s.location_id = ${locations.id}
+						FROM ${stations}
+						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
+						WHERE ${stations.location_id} = ${locFields.id}
 						${operatorCond}
 						${bandCond}
 						${ratCond}
@@ -243,8 +255,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 				conditions.push(sql`
 					EXISTS (
 						SELECT 1
-						FROM ${stations} s
-						WHERE s.location_id = ${locations.id}
+						FROM ${stations}
+						WHERE ${stations.location_id} = ${locFields.id}
 						${operatorCond}
 					)
 				`);
@@ -253,8 +265,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			conditions.push(sql`
 				EXISTS (
 					SELECT 1
-					FROM ${stations} s
-					WHERE s.location_id = ${locations.id}
+					FROM ${stations}
+					WHERE ${stations.location_id} = ${locFields.id}
 				)
 			`);
 		}
@@ -262,19 +274,18 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		return conditions;
 	};
 
-	const locationConditions = buildLocationConditions();
-
 	try {
-		const whereClause = locationConditions.length ? and(...locationConditions) : undefined;
+		const countConditions = buildLocationConditions(locations);
+		const countWhereClause = countConditions.length ? and(...countConditions) : undefined;
 
 		const [countResult, locationRows] = await Promise.all([
-			db.select({ count: count() }).from(locations).where(whereClause),
+			db.select({ count: count() }).from(locations).where(countWhereClause),
 			db.query.locations.findMany({
 				with: {
 					region: true,
 					stations: {
 						columns: { status: false, location_id: false },
-						where: buildStationFilter(),
+						where: hasStationFilters ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
 						with: {
 							operator: true,
 						},
@@ -284,13 +295,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					point: false,
 					region_id: false,
 				},
-				where: whereClause,
+				where: {
+					RAW: (fields) => {
+						const conds = buildLocationConditions(fields);
+						return and(...conds) ?? sql`true`;
+					},
+				},
 				limit,
 				offset,
-				orderBy: (fields, operators) => {
-					const field = fields[sortBy ?? "id"];
-					return [sort === "asc" ? operators.asc(field) : operators.desc(field)];
-				},
+				orderBy: { [sortBy ?? "id"]: sort ?? "desc" },
 			}),
 		]);
 
@@ -298,6 +311,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
 		return res.send({ data: locationRows, totalCount });
 	} catch (error) {
+		console.log(error);
 		if (error instanceof ErrorResponse) throw error;
 		throw new ErrorResponse("INTERNAL_SERVER_ERROR", { cause: error });
 	}

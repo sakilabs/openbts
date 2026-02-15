@@ -1,4 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -60,7 +60,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 		},
 		limit,
 		offset,
-		orderBy: (fields, operators) => [operators.asc(fields.id)],
+		orderBy: { id: "asc" },
 	});
 
 	const data: ResponseData = rows.map((cell: CellWithRat) => {

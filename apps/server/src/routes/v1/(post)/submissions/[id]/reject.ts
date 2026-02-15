@@ -1,5 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
@@ -56,13 +56,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	try {
 		const result = await db.transaction(async (tx) => {
 			const submission = await tx.query.submissions.findFirst({
-				where: (fields, { eq }) => eq(fields.id, id),
+				where: {
+					id: id,
+				},
 			});
 			if (!submission) throw new ErrorResponse("NOT_FOUND");
 			if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be rejected" });
 
 			const proposedCellRows = await tx.query.proposedCells.findMany({
-				where: (fields, { eq }) => eq(fields.submission_id, id),
+				where: {
+					submission_id: id,
+				},
 				columns: { id: true },
 			});
 			const cellIds = proposedCellRows.map((c) => c.id);

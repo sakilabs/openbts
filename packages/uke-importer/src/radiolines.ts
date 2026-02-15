@@ -1,8 +1,7 @@
 import path from "node:path";
 import url from "node:url";
-import { inArray } from "drizzle-orm";
 
-import { radioLinesAntennaTypes, radioLinesManufacturers, radioLinesTransmitterTypes, ukeRadioLines } from "@openbts/drizzle";
+import { radiolinesAntennaTypes, radioLinesManufacturers, radiolinesTransmitterTypes, ukeRadiolines } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, RADIOLINES_URL } from "./config.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 import { scrapeXlsxLinks } from "./scrape.js";
@@ -63,9 +62,7 @@ export async function importRadiolines(): Promise<boolean> {
 				.onConflictDoNothing({ target: [radioLinesManufacturers.name] });
 		}
 	}
-	const manufRowsAll = manufArr.length
-		? await db.query.radioLinesManufacturers.findMany({ where: inArray(radioLinesManufacturers.name, manufArr) })
-		: [];
+	const manufRowsAll = manufArr.length ? await db.query.radioLinesManufacturers.findMany({ where: { name: { in: manufArr } } }) : [];
 	const manufIdByName = new Map<string, number>();
 	for (const m of manufRowsAll) manufIdByName.set(m.name, m.id);
 
@@ -78,17 +75,14 @@ export async function importRadiolines(): Promise<boolean> {
 	if (antTypes.length) {
 		for (const group of chunk(antTypes, BATCH_SIZE)) {
 			await db
-				.insert(radioLinesAntennaTypes)
+				.insert(radiolinesAntennaTypes)
 				.values(group.map((a) => ({ name: a.name, manufacturer_id: a.manufacturer_id })))
-				.onConflictDoNothing({ target: [radioLinesAntennaTypes.name] });
+				.onConflictDoNothing({ target: [radiolinesAntennaTypes.name] });
 		}
 	}
 	const antRowsAll = antTypes.length
-		? await db.query.radioLinesAntennaTypes.findMany({
-				where: inArray(
-					radioLinesAntennaTypes.name,
-					antTypes.map((a) => a.name),
-				),
+		? await db.query.radiolinesAntennaTypes.findMany({
+				where: { name: { in: antTypes.map((a) => a.name) } },
 			})
 		: [];
 	const antIdByName = new Map<string, number>();
@@ -103,17 +97,14 @@ export async function importRadiolines(): Promise<boolean> {
 	if (txTypes.length) {
 		for (const group of chunk(txTypes, BATCH_SIZE)) {
 			await db
-				.insert(radioLinesTransmitterTypes)
+				.insert(radiolinesTransmitterTypes)
 				.values(group.map((t) => ({ name: t.name, manufacturer_id: t.manufacturer_id })))
-				.onConflictDoNothing({ target: [radioLinesTransmitterTypes.name] });
+				.onConflictDoNothing({ target: [radiolinesTransmitterTypes.name] });
 		}
 	}
 	const txRowsAll = txTypes.length
-		? await db.query.radioLinesTransmitterTypes.findMany({
-				where: inArray(
-					radioLinesTransmitterTypes.name,
-					txTypes.map((t) => t.name),
-				),
+		? await db.query.radiolinesTransmitterTypes.findMany({
+				where: { name: { in: txTypes.map((t) => t.name) } },
 			})
 		: [];
 	const txIdByName = new Map<string, number>();
@@ -182,7 +173,7 @@ export async function importRadiolines(): Promise<boolean> {
 
 	console.log(`[radiolines] Inserting ${values.length} radiolines...`);
 	for (const group of chunk(values, BATCH_SIZE)) {
-		if (group.length) await db.insert(ukeRadioLines).values(group);
+		if (group.length) await db.insert(ukeRadiolines).values(group);
 	}
 
 	await recordImportMetadata("radiolines", links, "success");

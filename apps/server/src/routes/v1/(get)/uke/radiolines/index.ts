@@ -1,10 +1,10 @@
 import { z } from "zod/v4";
 import { and, count, eq, inArray, sql, type SQL } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { ukeOperators, ukeRadioLines } from "@openbts/drizzle";
+import { ukeOperators, ukeRadiolines } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -107,40 +107,49 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	const offset = limit ? (page - 1) * limit : undefined;
 
 	try {
-		const conditions: (SQL<unknown> | undefined)[] = [];
-
-		if (bounds) {
-			const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
-			const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
-			const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
-
-			const envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
-			const txPoint = sql`ST_SetSRID(ST_MakePoint(${ukeRadioLines.tx_longitude}, ${ukeRadioLines.tx_latitude}), 4326)`;
-			const rxPoint = sql`ST_SetSRID(ST_MakePoint(${ukeRadioLines.rx_longitude}, ${ukeRadioLines.rx_latitude}), 4326)`;
-			conditions.push(sql`(ST_Intersects(${txPoint}, ${envelope}) OR ST_Intersects(${rxPoint}, ${envelope}))`);
-		}
-		if (permit_number) {
-			const like = `%${permit_number}%`;
-			conditions.push(
-				sql`(${ukeRadioLines.permit_number} ILIKE ${like} OR similarity(${ukeRadioLines.permit_number}, ${permit_number}) > ${SIMILARITY_THRESHOLD})`,
-			);
-		}
-		if (decision_type) conditions.push(eq(ukeRadioLines.decision_type, decision_type));
+		let operatorIds: number[] | undefined;
 		if (operators) {
 			const res = await db.query.ukeOperators.findMany({
 				columns: { id: true },
-				where: (f, { inArray }) => inArray(f.id, operators),
+				where: { id: { in: operators } },
 			});
-			const operatorIds = res.map((r) => r.id);
-			conditions.push(inArray(ukeRadioLines.operator_id, operatorIds));
+			operatorIds = res.map((r) => r.id);
 		}
+
+		function buildConditions(f: typeof ukeRadiolines) {
+			const conditions: (SQL<unknown> | undefined)[] = [];
+
+			if (bounds) {
+				const [la1, lo1, la2, lo2] = bounds as [number, number, number, number];
+				const [west, south] = [Math.min(lo1, lo2), Math.min(la1, la2)];
+				const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
+
+				const envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
+				const txPoint = sql`ST_SetSRID(ST_MakePoint(${f.tx_longitude}, ${f.tx_latitude}), 4326)`;
+				const rxPoint = sql`ST_SetSRID(ST_MakePoint(${f.rx_longitude}, ${f.rx_latitude}), 4326)`;
+				conditions.push(sql`(ST_Intersects(${txPoint}, ${envelope}) OR ST_Intersects(${rxPoint}, ${envelope}))`);
+			}
+			if (permit_number) {
+				const like = `%${permit_number}%`;
+				conditions.push(
+					sql`(${f.permit_number} ILIKE ${like} OR similarity(${f.permit_number}, ${permit_number}) > ${SIMILARITY_THRESHOLD})`,
+				);
+			}
+			if (decision_type) conditions.push(eq(f.decision_type, decision_type));
+			if (operatorIds) conditions.push(inArray(f.operator_id, operatorIds));
+
+			return conditions;
+		}
+
 		const [countResult, radioLinesRes] = await Promise.all([
 			db
 				.select({ count: count() })
-				.from(ukeRadioLines)
-				.where(conditions.length > 0 ? and(...conditions) : undefined),
-			db.query.ukeRadioLines.findMany({
-				where: conditions.length > 0 ? and(...conditions) : undefined,
+				.from(ukeRadiolines)
+				.where(and(...buildConditions(ukeRadiolines)) ?? undefined),
+			db.query.ukeRadiolines.findMany({
+				where: {
+					RAW: (fields) => and(...buildConditions(fields)) ?? sql`true`,
+				},
 				with: {
 					operator: true,
 					txTransmitterType: { with: { manufacturer: true } },
@@ -214,7 +223,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 	}
 }
 
-const getUkeRadioLines: Route<ReqQuery, ResponseBody> = {
+const getukeRadiolines: Route<ReqQuery, ResponseBody> = {
 	url: "/uke/radiolines",
 	method: "GET",
 	schema: schemaRoute,
@@ -222,4 +231,4 @@ const getUkeRadioLines: Route<ReqQuery, ResponseBody> = {
 	handler,
 };
 
-export default getUkeRadioLines;
+export default getukeRadiolines;

@@ -2,10 +2,9 @@ import path from "node:path";
 import url from "node:url";
 import { unlinkSync } from "node:fs";
 import readline from "node:readline";
-import { inArray } from "drizzle-orm";
 import XLSX from "xlsx";
 
-import { ukePermits, operators, type ratEnum } from "@openbts/drizzle";
+import { ukePermits, type ratEnum } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP } from "./config.ts";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
 
@@ -384,7 +383,11 @@ export async function importPermitDevices(): Promise<boolean> {
 	const operatorIds = new Map<string, number>();
 	if (operatorNamesNeeded.length > 0) {
 		const existingOperators = await db.query.operators.findMany({
-			where: inArray(operators.name, operatorNamesNeeded),
+			where: {
+				name: {
+					in: operatorNamesNeeded,
+				},
+			},
 		});
 		for (const op of existingOperators) {
 			operatorIds.set(op.name, op.id);

@@ -15,6 +15,11 @@ export const PICKER_LAYER_IDS = [PICKER_CIRCLE_LAYER_ID, PICKER_SYMBOL_LAYER_ID]
 
 export const PICKER_NEARBY_RADIUS_METERS = 100;
 
+export const PICKER_UKE_SOURCE_ID = "picker-uke-locations-source";
+export const PICKER_UKE_CIRCLE_LAYER_ID = "picker-uke-locations-circle";
+export const PICKER_UKE_SYMBOL_LAYER_ID = "picker-uke-locations-symbol";
+export const PICKER_UKE_LAYER_IDS = [PICKER_UKE_CIRCLE_LAYER_ID, PICKER_UKE_SYMBOL_LAYER_ID] as const;
+
 export const RADIOLINES_SOURCE_ID = "radiolines-source";
 export const RADIOLINES_ENDPOINTS_SOURCE_ID = "radiolines-endpoints-source";
 export const RADIOLINES_LINE_LAYER_ID = "radiolines-layer";

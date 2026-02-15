@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
@@ -47,21 +47,29 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	try {
 		const result = await db.transaction(async (tx) => {
 			const submission = await tx.query.submissions.findFirst({
-				where: (fields, { eq }) => eq(fields.id, id),
+				where: {
+					id: id,
+				},
 			});
 			if (!submission) throw new ErrorResponse("NOT_FOUND");
 			if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
 
 			const proposedStation = await tx.query.proposedStations.findFirst({
-				where: (fields, { eq }) => eq(fields.submission_id, id),
+				where: {
+					submission_id: id,
+				},
 			});
 
 			const proposedLocation = await tx.query.proposedLocations.findFirst({
-				where: (fields, { eq }) => eq(fields.submission_id, id),
+				where: {
+					submission_id: id,
+				},
 			});
 
 			const proposedCellRows = await tx.query.proposedCells.findMany({
-				where: (fields, { eq }) => eq(fields.submission_id, id),
+				where: {
+					submission_id: id,
+				},
 				with: { gsm: true, umts: true, lte: true, nr: true },
 			});
 
@@ -72,8 +80,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 				if (proposedLocation) {
 					const existingLocation = await tx.query.locations.findFirst({
-						where: (fields, { and, eq: feq }) =>
-							and(feq(fields.longitude, proposedLocation.longitude), feq(fields.latitude, proposedLocation.latitude)),
+						where: {
+							AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
+						},
 					});
 
 					if (existingLocation) {
@@ -129,8 +138,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 			if (submission.type === "update" && proposedLocation && stationId) {
 				const existingLocation = await tx.query.locations.findFirst({
-					where: (fields, { and, eq: feq }) =>
-						and(feq(fields.longitude, proposedLocation.longitude), feq(fields.latitude, proposedLocation.latitude)),
+					where: {
+						AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
+					},
 				});
 
 				let locationId: number;
@@ -236,7 +246,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 						if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot update cell without target_cell_id" });
 
 						const targetCell = await tx.query.cells.findFirst({
-							where: (fields, { eq }) => eq(fields.id, targetCellId),
+							where: {
+								id: targetCellId,
+							},
 						});
 						if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 
@@ -297,7 +309,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 						if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete cell without target_cell_id" });
 
 						const targetCell = await tx.query.cells.findFirst({
-							where: (fields, { eq }) => eq(fields.id, targetCellId),
+							where: {
+								id: targetCellId,
+							},
 						});
 						if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 

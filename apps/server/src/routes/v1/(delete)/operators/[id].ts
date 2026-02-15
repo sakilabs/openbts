@@ -19,7 +19,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 	const { id } = req.params;
 
 	const operator = await db.query.operators.findFirst({
-		where: (fields, { eq }) => eq(fields.id, id),
+		where: {
+			id: id,
+		},
 	});
 	if (!operator) throw new ErrorResponse("NOT_FOUND");
 

@@ -1,5 +1,5 @@
 import { bands } from "@openbts/drizzle";
-import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";

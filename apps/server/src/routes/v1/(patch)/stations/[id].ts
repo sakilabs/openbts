@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createUpdateSchema } from "drizzle-zod";
+import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -37,7 +37,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 	const { station_id } = req.params;
 
 	const station = await db.query.stations.findFirst({
-		where: (fields, { eq }) => eq(fields.id, station_id),
+		where: {
+			id: station_id,
+		},
 	});
 	if (!station) throw new ErrorResponse("NOT_FOUND");
 
