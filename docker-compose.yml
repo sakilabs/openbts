@@ -9,8 +9,10 @@ services:
       - "3000:3000"
     environment:
       - VITE_API_URL=http://localhost:3030/api/v1
+      - VITE_APP_NAME=OpenBTS
     depends_on:
       - server
+    restart: unless-stopped
 
   server:
     build:
@@ -19,28 +21,39 @@ services:
     ports:
       - "3030:3030"
     environment:
+      # Database
       - DATABASE_URL=postgres://user:password@pgbouncer:6432/openbts
       - REDIS_URL=redis://redis:6379
+      # Authentication
       - BETTER_AUTH_SECRET=your-generated-secret
       - GOOGLE_CLIENT_ID=your-google-client-id
       - GOOGLE_CLIENT_SECRET=your-google-client-secret
       - GITHUB_CLIENT_ID=your-github-client-id
       - GITHUB_CLIENT_SECRET=your-github-client-secret
+      - BASE_URL=http://localhost:3030
+      # App configuration
       - APP_NAME=OpenBTS
+      - WORKERS=4
+      # AXIOM HQ logging
+      - AXIOM_TOKEN=
+      - AXIOM_DATASET=openbts
     depends_on:
       - postgres
       - redis
+    restart: unless-stopped
 
   postgres:
     build:
       context: .
       dockerfile: docker/postgres/Dockerfile
     environment:
+      # Initial database setup, you can remove it after the first run
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=openbts
     volumes:
       - postgres-volume:/var/lib/postgresql/18/docker
+    restart: unless-stopped
 
   pgbouncer:
     image: dhi.io/pgbouncer:1.25
@@ -51,11 +64,13 @@ services:
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    restart: unless-stopped
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
 volumes:
   postgres-volume:

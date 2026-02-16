@@ -40,6 +40,7 @@ export const auth = betterAuth({
       },
     },
   },
+  baseURL: process.env.NODE_ENV === "production" ? process.env.BASE_URL : "http://localhost:3030",
   basePath: "/api/v1/auth",
   socialProviders: {
     google: {
