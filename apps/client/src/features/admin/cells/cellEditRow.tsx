@@ -10,10 +10,11 @@ import type { Band } from "@/types/station";
 import { useBandSelection } from "./hooks/useBandSelection";
 import { CellDetailsFields } from "./cellDetailsFields";
 import { useTranslation } from "react-i18next";
+import type { RAT_ORDER } from "./rat";
 
 export type CellDraftBase = {
   _localId: string;
-  rat: string;
+  rat: typeof RAT_ORDER[number];
   band_id: number;
   is_confirmed: boolean;
   notes: string;

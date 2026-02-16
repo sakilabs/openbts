@@ -8,7 +8,7 @@ import { fetchApiData } from "@/lib/api";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Station, Cell, Band } from "@/types/station";
+import type { Station, Cell, Band, UkeStation } from "@/types/station";
 import { RAT_ORDER } from "@/features/admin/cells/rat";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
@@ -29,7 +29,7 @@ function cellToLocal(cell: Cell): LocalCell {
   return {
     _localId: crypto.randomUUID(),
     _serverId: cell.id,
-    rat: cell.rat,
+    rat: cell.rat as typeof RAT_ORDER[number],
     band_id: cell.band.id,
     is_confirmed: cell.is_confirmed,
     notes: cell.notes ?? "",
@@ -143,7 +143,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const createNewStationCell = useCallback(
     (rat: string, defaultBand: Band): LocalCell => ({
       _localId: crypto.randomUUID(),
-      rat,
+      rat: rat as typeof RAT_ORDER[number],
       band_id: defaultBand.id,
       is_confirmed: false,
       notes: "",
@@ -173,6 +173,45 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {
     setLocation((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  const handleUkeStationSelect = useCallback(
+    (ukeStation: UkeStation) => {
+      setStationId(ukeStation.station_id);
+      setOperatorId(ukeStation.operator?.id ?? null);
+
+      if (ukeStation.location) {
+        setLocation({
+          latitude: ukeStation.location.latitude,
+          longitude: ukeStation.location.longitude,
+          city: ukeStation.location.city ?? "",
+          address: ukeStation.location.address ?? "",
+          region_id: ukeStation.location.region?.id ?? null,
+        });
+      }
+
+      const seen = new Set<string>();
+      const newCells: LocalCell[] = [];
+      for (const permit of ukeStation.permits) {
+        if (!permit.band || permit.band.rat === "IOT") continue;
+        const key = `${permit.band.rat}-${permit.band.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        newCells.push({
+          _localId: crypto.randomUUID(),
+          rat: permit.band.rat as typeof RAT_ORDER[number],
+          band_id: permit.band.id,
+          is_confirmed: false,
+          notes: "",
+          details: {},
+        });
+      }
+      newCells.sort((a, b) => RAT_ORDER.indexOf(a.rat) - RAT_ORDER.indexOf(b.rat));
+      setLocalCells(newCells);
+      setEnabledRats([...new Set(newCells.map((c) => c.rat))]);
+      setDeletedServerCellIds([]);
+    },
+    [setLocalCells, setEnabledRats],
+  );
 
   const handleSaveStation = () => {
     if (isCreateMode) {
@@ -306,6 +345,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
               onLocationChange={handleLocationChange}
               operators={operators}
               selectedOperator={selectedOperator}
+              onUkeStationSelect={handleUkeStationSelect}
             />
 
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
