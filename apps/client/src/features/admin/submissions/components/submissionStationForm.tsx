@@ -1,12 +1,13 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AirportTowerIcon } from "@hugeicons/core-free-icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import type { Operator, Station } from "@/types/station";
@@ -50,6 +51,11 @@ export function SubmissionStationForm({
 }: SubmissionStationFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
+  const { topOperators, restOperators } = useMemo(() => ({
+    topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
+    restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
+  }), [operators]);
+
   return (
     <>
       <div className="border rounded-xl overflow-hidden bg-card">
@@ -91,7 +97,16 @@ export function SubmissionStationForm({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {operators.map((op) => (
+                  {topOperators.map((op) => (
+                    <SelectItem key={op.id} value={op.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                        {op.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                  {topOperators.length > 0 && restOperators.length > 0 && <SelectSeparator />}
+                  {restOperators.map((op) => (
                     <SelectItem key={op.id} value={op.id.toString()}>
                       <div className="flex items-center gap-2">
                         <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(op.mnc) }} />

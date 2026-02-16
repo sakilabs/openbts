@@ -50,7 +50,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
       _localId: crypto.randomUUID(),
       operation: "unchanged" as const,
       target_cell_id: c.id,
-      rat: c.rat,
+      rat: c.rat as typeof RAT_ORDER[number],
       band_id: c.band.id,
       is_confirmed: c.is_confirmed,
       notes: c.notes ?? "",
@@ -66,7 +66,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
           _serverId: cell.id,
           operation: cell.operation,
           target_cell_id: cell.target_cell_id,
-          rat: target.rat,
+          rat: target.rat as typeof RAT_ORDER[number],
           band_id: target.band.id,
           is_confirmed: target.is_confirmed,
           notes: target.notes ?? "",
@@ -206,7 +206,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       _localId: crypto.randomUUID(),
       operation: "add",
       target_cell_id: null,
-      rat,
+      rat: rat as typeof RAT_ORDER[number],
       band_id: defaultBand.id,
       is_confirmed: false,
       notes: "",
@@ -422,7 +422,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             </span>
             <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value} MHz</span>
           </td>
-          <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>
+          {targetCell.rat !== "GSM" && (
+            <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>
+          )}
           {renderDetailCells()}
           <td className="px-3 py-1 font-mono text-xs text-muted-foreground truncate max-w-28">{targetCell.notes || "-"}</td>
           <td className="px-3 py-1" />

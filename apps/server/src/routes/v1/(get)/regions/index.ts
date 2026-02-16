@@ -20,7 +20,9 @@ const schemaRoute = {
 type Region = z.infer<typeof regionsSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Region[]>>) {
-  const regions = await db.query.regions.findMany();
+  const regions = await db.query.regions.findMany({
+    orderBy: { name: "asc" },
+  });
   return res.send({ data: regions });
 }
 

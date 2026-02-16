@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -5,10 +6,10 @@ import { Building02Icon } from "@hugeicons/core-free-icons";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { operatorsQueryOptions } from "@/features/shared/queries";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
 import type { ProposedStationForm } from "../types";
 import type { StationErrors } from "../utils/validation";
 
@@ -22,6 +23,11 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
   const { t } = useTranslation("submissions");
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
+
+  const { topOperators, restOperators } = useMemo(() => ({
+    topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
+    restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
+  }), [operators]);
 
   return (
     <div className="border rounded-xl overflow-hidden">
@@ -82,7 +88,16 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {operators.map((operator) => (
+                {topOperators.map((operator) => (
+                  <SelectItem key={operator.id} value={operator.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
+                      {operator.name}
+                    </div>
+                  </SelectItem>
+                ))}
+                {topOperators.length > 0 && restOperators.length > 0 && <SelectSeparator />}
+                {restOperators.map((operator) => (
                   <SelectItem key={operator.id} value={operator.id.toString()}>
                     <div className="flex items-center gap-2">
                       <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />

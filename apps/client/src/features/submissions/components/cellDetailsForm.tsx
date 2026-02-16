@@ -52,6 +52,26 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
 
   const tableHeaders = useMemo(() => getTableHeaders(rat, tStation, { showConfirmed: false }), [rat, tStation]);
 
+  const bandValueMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const b of allBands) map.set(b.id, b.value);
+    return map;
+  }, [allBands]);
+
+  const sortedCells = useMemo(() => {
+    const clidKey = rat === "GSM" || rat === "UMTS" ? "cid" : "clid";
+    return [...cells].sort((a, b) => {
+      const bandA = a.band_id !== null ? (bandValueMap.get(a.band_id) ?? 0) : 0;
+      const bandB = b.band_id !== null ? (bandValueMap.get(b.band_id) ?? 0) : 0;
+      if (bandA !== bandB) return bandA - bandB;
+      const d = a.details as Record<string, unknown>;
+      const e = b.details as Record<string, unknown>;
+      const clidA = (d[clidKey] as number) ?? 0;
+      const clidB = (e[clidKey] as number) ?? 0;
+      return clidA - clidB;
+    });
+  }, [cells, bandValueMap, rat]);
+
   const originalsMap = useMemo(() => buildOriginalCellsMap(originalCells), [originalCells]);
 
   const diffCounts = useMemo(() => {
@@ -170,7 +190,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
                   </tr>
                 </thead>
                 <tbody>
-                  {cells.map((cell) => {
+                  {sortedCells.map((cell) => {
                     const diffStatus: CellDiffStatus = isNewStation ? "added" : getCellDiffStatus(cell, originalsMap);
 
                     return (
@@ -224,6 +244,9 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
     const defaultDuplex = opts.length === 1 ? opts[0] : null;
     const newBandId = findBandId(value, defaultDuplex);
     onUpdate(cell.id, { band_id: newBandId });
+    if (rat === "GSM" && value === 1800) {
+      onDetailsChange(cell.id, "e_gsm", false);
+    }
   };
 
   const handleDuplexChange = (dup: string | null) => {
@@ -253,29 +276,32 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
           </SelectContent>
         </Select>
       </td>
-      <td className="px-3 py-1">
-        {hasDuplexChoice ? (
-          <Select value={duplex ?? "_none"} onValueChange={(value) => handleDuplexChange(value === "_none" ? null : value)}>
-            <SelectTrigger className="h-7 w-20 text-sm">
-              <SelectValue>{duplex ?? "-"}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {duplexOptions.includes(null) && <SelectItem value="_none">-</SelectItem>}
-              {duplexOptions
-                .filter((d) => d !== null)
-                .map((duplex) => (
-                  <SelectItem key={duplex} value={duplex}>
-                    {duplex}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        ) : (
+      {rat !== "GSM" && (
+        <td className="px-3 py-1">
+          {hasDuplexChoice ? (
+            <Select value={duplex ?? "_none"} onValueChange={(value) => handleDuplexChange(value === "_none" ? null : value)}>
+              <SelectTrigger className="h-7 w-20 text-sm">
+                <SelectValue>{duplex ?? "-"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {duplexOptions.includes(null) && <SelectItem value="_none">-</SelectItem>}
+                {duplexOptions
+                  .filter((d) => d !== null)
+                  .map((duplex) => (
+                    <SelectItem key={duplex} value={duplex}>
+                      {duplex}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          ) : (
           <span className="text-muted-foreground text-xs">-</span>
         )}
-      </td>
+        </td>
+      )}
       <CellDetailsFields
         rat={rat}
+        bandValue={bandValue}
         details={cell.details as Record<string, unknown>}
         detailErrors={error?.details}
         onDetailChange={(field, value) => onDetailsChange(cell.id, field, value)}

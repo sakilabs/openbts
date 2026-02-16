@@ -4,13 +4,14 @@ import { cn } from "@/lib/utils";
 
 type CellDetailsFieldsProps = {
   rat: string;
+  bandValue?: number | null;
   details: Record<string, unknown>;
   detailErrors?: Record<string, string>;
   disabled?: boolean;
   onDetailChange: (field: string, value: number | boolean | undefined) => void;
 };
 
-export function CellDetailsFields({ rat, details, detailErrors, disabled, onDetailChange }: CellDetailsFieldsProps) {
+export function CellDetailsFields({ rat, bandValue, details, detailErrors, disabled, onDetailChange }: CellDetailsFieldsProps) {
   const renderInput = (field: string, placeholder: string) => (
     <td className="px-2 py-1">
       <Input
@@ -40,9 +41,9 @@ export function CellDetailsFields({ rat, details, detailErrors, disabled, onDeta
           {renderInput("cid", "CID")}
           <td className="px-2 py-1">
             <Checkbox
-              checked={(d.e_gsm as boolean) ?? false}
+              checked={bandValue === 1800 ? false : ((d.e_gsm as boolean) ?? false)}
               onCheckedChange={(checked) => onDetailChange("e_gsm", checked === true)}
-              disabled={disabled}
+              disabled={disabled || (rat === "GSM" && bandValue === 1800)}
             />
           </td>
         </>

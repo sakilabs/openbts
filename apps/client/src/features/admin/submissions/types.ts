@@ -1,3 +1,5 @@
+import type { RAT_ORDER } from "../cells/rat";
+
 export type SubmissionUser = {
   id: string;
   name: string;
@@ -12,7 +14,7 @@ export type ProposedCell = {
   target_cell_id: number | null;
   station_id: number | null;
   band_id: number | null;
-  rat: string | null;
+  rat: typeof RAT_ORDER[number];
   notes: string | null;
   is_confirmed: boolean;
   details: Record<string, unknown> | null;

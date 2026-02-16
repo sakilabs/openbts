@@ -53,7 +53,13 @@ export const CellEditRow = memo(function CellEditRow({
     const opts = value ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
     const defaultDuplex = opts.length === 1 ? opts[0] : null;
     const newBandId = findBandId(value, defaultDuplex);
-    if (newBandId) onChange(localCell._localId, { band_id: newBandId });
+    if (newBandId) {
+      const patch: Partial<CellDraftBase> = { band_id: newBandId };
+      if (localCell.rat === "GSM" && value === 1800) {
+        patch.details = { ...localCell.details, e_gsm: false };
+      }
+      onChange(localCell._localId, patch);
+    }
   };
 
   const handleDuplexChange = (dup: string | null) => {
@@ -88,28 +94,30 @@ export const CellEditRow = memo(function CellEditRow({
           </SelectContent>
         </Select>
       </td>
-      <td className="px-3 py-1">
-        {hasDuplexChoice ? (
-          <Select value={duplex ?? "_none"} onValueChange={(v) => handleDuplexChange(v === "_none" ? null : v)} disabled={disabled}>
-            <SelectTrigger className="h-7 w-20 text-sm">
-              <SelectValue>{duplex ?? "-"}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {duplexOptions.includes(null) && <SelectItem value="_none">-</SelectItem>}
-              {duplexOptions
-                .filter((d) => d !== null)
-                .map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        ) : (
+      {localCell.rat !== "GSM" && (
+        <td className="px-3 py-1">
+          {hasDuplexChoice ? (
+            <Select value={duplex ?? "_none"} onValueChange={(v) => handleDuplexChange(v === "_none" ? null : v)} disabled={disabled}>
+              <SelectTrigger className="h-7 w-20 text-sm">
+                <SelectValue>{duplex ?? "-"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {duplexOptions.includes(null) && <SelectItem value="_none">-</SelectItem>}
+                {duplexOptions
+                  .filter((d) => d !== null)
+                  .map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          ) : (
           <span className="text-muted-foreground text-xs">-</span>
         )}
-      </td>
-      <CellDetailsFields rat={localCell.rat} details={localCell.details} disabled={disabled} onDetailChange={handleDetailChange} />
+        </td>
+      )}
+      <CellDetailsFields rat={localCell.rat} bandValue={bandValue} details={localCell.details} disabled={disabled} onDetailChange={handleDetailChange} />
       <td className="px-3 py-1">
         <Input
           type="text"

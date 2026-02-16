@@ -32,7 +32,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("common:labels.band")}</th>
-                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Duplex</th>
+                {rat !== "GSM" && <th className="px-4 py-2 text-left font-medium text-muted-foreground">Duplex</th>}
                 {rat === "GSM" && (
                   <>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">LAC</th>
@@ -100,7 +100,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2">{cell.band.duplex || "-"}</td>
+                  {rat !== "GSM" && <td className="px-4 py-2">{cell.band.duplex || "-"}</td>}
                   {rat === "GSM" && (
                     <>
                       <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>

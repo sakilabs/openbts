@@ -109,13 +109,13 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
-  const buildStationFilter = () => {
+  const buildStationFilter = (stationFields: typeof stations) => {
     if (!hasStationFilters) return undefined;
 
     const conditions: ReturnType<typeof sql>[] = [];
     if (operatorIds.length) {
       conditions.push(
-        sql`${stations.operator_id} = ANY(ARRAY[${sql.join(
+        sql`${stationFields.operator_id} = ANY(ARRAY[${sql.join(
           operatorIds.map((id) => sql`${id}`),
           sql`,`,
         )}]::int4[])`,
@@ -126,7 +126,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       const cellConditions: ReturnType<typeof sql>[] = [];
       if (bandIds.length) {
         cellConditions.push(
-          sql`c.band_id = ANY(ARRAY[${sql.join(
+          sql`${cells.band_id} = ANY(ARRAY[${sql.join(
             bandIds.map((id) => sql`${id}`),
             sql`,`,
           )}]::int4[])`,
@@ -134,7 +134,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       }
       if (nonIotRats.length) {
         cellConditions.push(
-          sql`c.rat IN (${sql.join(
+          sql`${cells.rat} IN (${sql.join(
             nonIotRats.map((r) => sql`${r}`),
             sql`,`,
           )})`,
@@ -142,18 +142,18 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       }
       if (iotRequested) {
         cellConditions.push(sql`(
-					EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = c.id AND lc.supports_nb_iot = true)
-					OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = c.id AND nc.supports_nr_redcap = true)
-				)`);
+          EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = ${cells.id} AND lc.supports_nb_iot = true)
+          OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = ${cells.id} AND nc.supports_nr_redcap = true)
+        )`);
       }
 
       const cellWhere = cellConditions.length > 1 ? sql`(${sql.join(cellConditions, sql` AND `)})` : cellConditions[0];
 
       conditions.push(sql`EXISTS (
-				SELECT 1 FROM cells c
-				WHERE c.station_id = ${stations.id}
-				AND ${cellWhere}
-			)`);
+        SELECT 1 FROM ${cells}
+        WHERE ${cells.station_id} = ${stationFields.id}
+        AND ${cellWhere}
+      )`);
     }
 
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
@@ -171,9 +171,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       region: true,
       stations: {
         columns: { status: false, location_id: false },
-        where: {
-          RAW: buildStationFilter(),
-        },
+        where: hasStationFilters ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
         with: {
           cells: {
             columns: { band_id: false, station_id: false },
