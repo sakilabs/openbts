@@ -33,7 +33,7 @@ function RadioLineEntry({ radioLine, onOpenDetails }: { radioLine: RadioLine; on
 				<span className="text-[10px] text-muted-foreground font-mono">#{radioLine.id}</span>
 			</div>
 			<div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-				<span className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50">
+				<span className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold tracking-wider text-muted-foreground border border-border/50">
 					{freqFormatted}
 				</span>
 				{radioLine.link.ch_width && (
