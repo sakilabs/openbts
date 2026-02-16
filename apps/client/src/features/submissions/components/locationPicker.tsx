@@ -722,7 +722,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 								<h3 className="font-medium text-sm leading-tight pr-4">{ukeStationPanel.location.city}</h3>
 								{ukeStationPanel.location.address && <p className="text-[11px] text-muted-foreground">{ukeStationPanel.location.address}</p>}
 							</div>
-							<div className="max-h-52 overflow-y-auto custom-scrollbar">
+							<div className="max-h-54 overflow-y-auto custom-scrollbar">
 								{ukeStationPanel.stations.map((station) => {
 									const mnc = station.operator?.mnc;
 									const operatorName = station.operator?.name || "Unknown";

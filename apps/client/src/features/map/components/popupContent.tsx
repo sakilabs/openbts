@@ -111,7 +111,7 @@ export const PopupContent = memo(function PopupContent({
 				{location.address && <p className="text-[11px] text-muted-foreground">{location.address}</p>}
 			</div>
 
-			<div className="max-h-52 overflow-y-auto custom-scrollbar">
+			<div className="max-h-54 overflow-y-auto custom-scrollbar">
 				{isLoading ? (
 					<>
 						<StationSkeleton />

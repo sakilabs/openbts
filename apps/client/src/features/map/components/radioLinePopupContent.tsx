@@ -74,7 +74,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ radio
 				<h3 className="font-medium text-sm leading-tight pr-4">{title}</h3>
 			</div>
 
-			<div className="max-h-52 overflow-y-auto custom-scrollbar divide-y divide-border/30">
+			<div className="max-h-54 overflow-y-auto custom-scrollbar divide-y divide-border/30">
 				{radioLines.map((rl) => (
 					<RadioLineEntry key={rl.id} radioLine={rl} onOpenDetails={onOpenDetails} />
 				))}
