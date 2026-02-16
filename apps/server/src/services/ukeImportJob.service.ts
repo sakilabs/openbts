@@ -6,6 +6,7 @@ import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 import { cleanupDownloads } from "@openbts/uke-importer/utils";
 import { pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
 import { logger } from "../utils/logger.js";
+import redis from "../database/redis.js";
 
 type ImportStepKey = "stations" | "radiolines" | "permits" | "prune_associations" | "associate" | "cleanup";
 type StepStatus = "pending" | "running" | "success" | "skipped" | "error";
@@ -27,35 +28,44 @@ interface ImportJobStatus {
 }
 
 const STEP_KEYS: ImportStepKey[] = ["stations", "radiolines", "permits", "prune_associations", "associate", "cleanup"];
+const REDIS_KEY = "uke:import:status";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WORKER_PATH = join(__dirname, "..", "workers", "ukeImport.worker.js");
-
-let currentJob: ImportJobStatus = { state: "idle", steps: [] };
 
 function makeSteps(): ImportStep[] {
   return STEP_KEYS.map((key) => ({ key, status: "pending" }));
 }
 
-function updateStep(key: ImportStepKey, update: Partial<ImportStep>): void {
-  const step = currentJob.steps.find((s) => s.key === key);
+async function loadJob(): Promise<ImportJobStatus> {
+  const raw = await redis.get(REDIS_KEY);
+  if (!raw) return { state: "idle", steps: [] };
+  return JSON.parse(raw) as ImportJobStatus;
+}
+
+async function saveJob(job: ImportJobStatus): Promise<void> {
+  await redis.set(REDIS_KEY, JSON.stringify(job));
+}
+
+function updateStep(job: ImportJobStatus, key: ImportStepKey, update: Partial<ImportStep>): void {
+  const step = job.steps.find((s) => s.key === key);
   if (step) Object.assign(step, update);
 }
 
-function markRunning(key: ImportStepKey): void {
-  updateStep(key, { status: "running", startedAt: new Date().toISOString() });
+function markRunning(job: ImportJobStatus, key: ImportStepKey): void {
+  updateStep(job, key, { status: "running", startedAt: new Date().toISOString() });
 }
 
-function markSuccess(key: ImportStepKey): void {
-  updateStep(key, { status: "success", finishedAt: new Date().toISOString() });
+function markSuccess(job: ImportJobStatus, key: ImportStepKey): void {
+  updateStep(job, key, { status: "success", finishedAt: new Date().toISOString() });
 }
 
-function markSkipped(key: ImportStepKey): void {
-  updateStep(key, { status: "skipped", finishedAt: new Date().toISOString() });
+function markSkipped(job: ImportJobStatus, key: ImportStepKey): void {
+  updateStep(job, key, { status: "skipped", finishedAt: new Date().toISOString() });
 }
 
-function markError(key: ImportStepKey): void {
-  updateStep(key, { status: "error", finishedAt: new Date().toISOString() });
+function markError(job: ImportJobStatus, key: ImportStepKey): void {
+  updateStep(job, key, { status: "error", finishedAt: new Date().toISOString() });
 }
 
 function runInWorker(task: string): Promise<boolean> {
@@ -80,24 +90,27 @@ function runInWorker(task: string): Promise<boolean> {
   });
 }
 
-export function getImportJobStatus(): ImportJobStatus {
-  return { ...currentJob, steps: currentJob.steps.map((s) => ({ ...s })) };
+export async function getImportJobStatus(): Promise<ImportJobStatus> {
+  const job = await loadJob();
+  return { ...job, steps: job.steps.map((s) => ({ ...s })) };
 }
 
-export function startImportJob(options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean }): ImportJobStatus {
-  if (currentJob.state === "running") return getImportJobStatus();
+export async function startImportJob(options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean }): Promise<ImportJobStatus> {
+  const existing = await loadJob();
+  if (existing.state === "running") return getImportJobStatus();
 
-  currentJob = {
+  const job: ImportJobStatus = {
     state: "running",
     startedAt: new Date().toISOString(),
     steps: makeSteps(),
   };
+  await saveJob(job);
 
-  setImmediate(() => runJob(options));
-  return getImportJobStatus();
+  setImmediate(() => runJob(job, options));
+  return { ...job, steps: job.steps.map((s) => ({ ...s })) };
 }
 
-async function runJob(options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean }): Promise<void> {
+async function runJob(job: ImportJobStatus, options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean }): Promise<void> {
   const {
     importStations: shouldImportStations = true,
     importRadiolines: shouldImportRadiolines = true,
@@ -109,85 +122,108 @@ async function runJob(options: { importStations?: boolean; importRadiolines?: bo
 
   try {
     if (shouldImportStations) {
-      markRunning("stations");
+      markRunning(job, "stations");
+      await saveJob(job);
       try {
         stationsChanged = await runInWorker("importStations");
-        if (stationsChanged) markSuccess("stations");
-        else markSkipped("stations");
+        if (stationsChanged) markSuccess(job, "stations");
+        else markSkipped(job, "stations");
+        await saveJob(job);
       } catch (e) {
-        markError("stations");
+        markError(job, "stations");
+        await saveJob(job);
         throw e;
       }
     } else {
-      markSkipped("stations");
+      markSkipped(job, "stations");
+      await saveJob(job);
     }
 
     if (shouldImportRadiolines) {
-      markRunning("radiolines");
+      markRunning(job, "radiolines");
+      await saveJob(job);
       try {
         const radiolinesChanged = await runInWorker("importRadiolines");
-        if (radiolinesChanged) markSuccess("radiolines");
-        else markSkipped("radiolines");
+        if (radiolinesChanged) markSuccess(job, "radiolines");
+        else markSkipped(job, "radiolines");
+        await saveJob(job);
       } catch (e) {
-        markError("radiolines");
+        markError(job, "radiolines");
+        await saveJob(job);
         throw e;
       }
     } else {
-      markSkipped("radiolines");
+      markSkipped(job, "radiolines");
+      await saveJob(job);
     }
 
     if (shouldImportPermits) {
-      markRunning("permits");
+      markRunning(job, "permits");
+      await saveJob(job);
       try {
         permitsChanged = await runInWorker("importPermitDevices");
-        if (permitsChanged) markSuccess("permits");
-        else markSkipped("permits");
+        if (permitsChanged) markSuccess(job, "permits");
+        else markSkipped(job, "permits");
+        await saveJob(job);
       } catch (e) {
-        markError("permits");
+        markError(job, "permits");
+        await saveJob(job);
         throw e;
       }
     } else {
-      markSkipped("permits");
+      markSkipped(job, "permits");
+      await saveJob(job);
     }
 
     if (stationsChanged || permitsChanged) {
-      markRunning("prune_associations");
+      markRunning(job, "prune_associations");
+      await saveJob(job);
       try {
         await pruneStationsPermits();
-        markSuccess("prune_associations");
+        markSuccess(job, "prune_associations");
+        await saveJob(job);
       } catch (e) {
-        markError("prune_associations");
+        markError(job, "prune_associations");
+        await saveJob(job);
         throw e;
       }
 
-      markRunning("associate");
+      markRunning(job, "associate");
+      await saveJob(job);
       try {
         await associateStationsWithPermits();
-        markSuccess("associate");
+        markSuccess(job, "associate");
+        await saveJob(job);
       } catch (e) {
-        markError("associate");
+        markError(job, "associate");
+        await saveJob(job);
         throw e;
       }
     } else {
-      markSkipped("prune_associations");
-      markSkipped("associate");
+      markSkipped(job, "prune_associations");
+      markSkipped(job, "associate");
+      await saveJob(job);
     }
 
-    currentJob.state = "success";
-    currentJob.finishedAt = new Date().toISOString();
+    job.state = "success";
+    job.finishedAt = new Date().toISOString();
+    await saveJob(job);
   } catch (e) {
-    currentJob.state = "error";
-    currentJob.finishedAt = new Date().toISOString();
-    currentJob.error = e instanceof Error ? e.message : String(e);
-    logger.error("UKE import job failed", { error: currentJob.error });
+    job.state = "error";
+    job.finishedAt = new Date().toISOString();
+    job.error = e instanceof Error ? e.message : String(e);
+    await saveJob(job);
+    logger.error("UKE import job failed", { error: job.error });
   } finally {
-    markRunning("cleanup");
+    markRunning(job, "cleanup");
+    await saveJob(job);
     try {
       await cleanupDownloads();
-      markSuccess("cleanup");
+      markSuccess(job, "cleanup");
     } catch (e) {
-      markError("cleanup");
+      markError(job, "cleanup");
       logger.error("Failed to cleanup downloads", { error: e instanceof Error ? e.message : String(e) });
     }
+    await saveJob(job);
   }
 }

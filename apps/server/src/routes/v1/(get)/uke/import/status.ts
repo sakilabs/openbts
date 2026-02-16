@@ -32,7 +32,7 @@ const schemaRoute = {
 type ResponseData = z.infer<typeof importJobStatusSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const status = getImportJobStatus();
+  const status = await getImportJobStatus();
   res.send({ data: status });
 }
 

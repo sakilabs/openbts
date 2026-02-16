@@ -41,7 +41,7 @@ type ReqBody = {
 type ResponseData = z.infer<typeof importJobStatusSchema>;
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const status = startImportJob(req.body);
+  const status = await startImportJob(req.body);
   res.send({ data: status });
 }
 
