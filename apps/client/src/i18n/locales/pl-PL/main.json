@@ -33,7 +33,7 @@
 		"radiolinesCount_many": "linii radiowych",
 		"radiolinesCount_other": "linii radiowych",
 		"zoomForRadiolines": "Przybliż, aby zobaczyć radiolinie",
-		"moreRadiolines": "Pokazano {{shown}} z {{total}} radiolinii. Przybliż, aby zobaczyć wszystkie"
+		"moreRadiolines": "Pokazano {{shown}} z {{total}} linii radiowych. Przybliż, aby zobaczyć wszystkie"
 	},
 	"stats": {
 		"dataInfo": "Informacje o danych",
