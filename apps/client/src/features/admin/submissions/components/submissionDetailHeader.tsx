@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
@@ -29,7 +28,6 @@ type SubmissionDetailHeaderProps = {
 };
 
 export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, onApprove, onReject, onSave }: SubmissionDetailHeaderProps) {
-	const navigate = useNavigate();
 	const { t } = useTranslation(["submissions", "common"]);
 
 	return (
@@ -38,7 +36,7 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() => navigate(-1)}
+					onClick={() => window.history.back()}
 					className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2 hover:bg-muted/50 transition-colors"
 				>
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

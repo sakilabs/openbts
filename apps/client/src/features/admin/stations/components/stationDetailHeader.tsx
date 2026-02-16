@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
@@ -40,7 +40,7 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 		deleteMutation.mutate(station.id, {
 			onSuccess: () => {
 				toast.success(t("toast.deleted"));
-				navigate("/admin/stations");
+				navigate({ to: "/admin/stations" });
 			},
 			onError: () => {
 				toast.error(t("common:error.toast"));
@@ -60,7 +60,7 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() => navigate(-1)}
+					onClick={() => window.history.back()}
 					className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2 hover:bg-muted/50 transition-colors"
 				>
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

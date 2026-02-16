@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SentIcon, AlertCircleIcon, PencilEdit02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
@@ -55,10 +55,7 @@ export function MySubmissions() {
 		onError: () => toast.error(t("common:error.toast")),
 	});
 
-	const submissions = useMemo(
-		() => allSubmissions?.filter((s) => s.submitter_id === session?.user?.id) ?? [],
-		[allSubmissions, session?.user?.id],
-	);
+	const submissions = useMemo(() => allSubmissions?.filter((s) => s.submitter_id === session?.user?.id) ?? [], [allSubmissions, session?.user?.id]);
 
 	if (isLoading) {
 		return (
@@ -127,32 +124,36 @@ export function MySubmissions() {
 								<span className="text-sm font-mono font-medium text-foreground">{submission.proposedStation.station_id}</span>
 							) : null}
 
-					<div className="ml-auto flex items-center gap-3">
-						{submission.status === "pending" && (
-							<div className="flex items-center gap-1">
-								<Button size="icon-sm" variant="ghost" render={<Link to={`/submission?edit=${submission.id}`} />}>
-									<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-								</Button>
-								<AlertDialog>
-									<AlertDialogTrigger render={<Button size="icon-sm" variant="ghost" />}>
-										<HugeiconsIcon icon={Delete02Icon} className="size-3.5 text-destructive" />
-									</AlertDialogTrigger>
-									<AlertDialogContent>
-										<AlertDialogHeader>
-											<AlertDialogTitle>{t("mySubmissions.confirmDelete")}</AlertDialogTitle>
-											<AlertDialogDescription>{t("mySubmissions.confirmDeleteDesc")}</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
-											<AlertDialogAction variant="destructive" onClick={() => deleteMutation.mutate(submission.id)} disabled={deleteMutation.isPending}>
-												{t("common:actions.delete")}
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
-							</div>
-						)}
-						<div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", statusCfg.bgClass)}>
+							<div className="ml-auto flex items-center gap-3">
+								{submission.status === "pending" && (
+									<div className="flex items-center gap-1">
+										<Button size="icon-sm" variant="ghost" render={<Link to="/submission" search={{ edit: submission.id }} />}>
+											<HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+										</Button>
+										<AlertDialog>
+											<AlertDialogTrigger render={<Button size="icon-sm" variant="ghost" />}>
+												<HugeiconsIcon icon={Delete02Icon} className="size-3.5 text-destructive" />
+											</AlertDialogTrigger>
+											<AlertDialogContent>
+												<AlertDialogHeader>
+													<AlertDialogTitle>{t("mySubmissions.confirmDelete")}</AlertDialogTitle>
+													<AlertDialogDescription>{t("mySubmissions.confirmDeleteDesc")}</AlertDialogDescription>
+												</AlertDialogHeader>
+												<AlertDialogFooter>
+													<AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
+													<AlertDialogAction
+														variant="destructive"
+														onClick={() => deleteMutation.mutate(submission.id)}
+														disabled={deleteMutation.isPending}
+													>
+														{t("common:actions.delete")}
+													</AlertDialogAction>
+												</AlertDialogFooter>
+											</AlertDialogContent>
+										</AlertDialog>
+									</div>
+								)}
+								<div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", statusCfg.bgClass)}>
 									<HugeiconsIcon icon={statusCfg.icon} className={cn("size-3.5", statusCfg.iconClass)} />
 									<span className="text-xs font-medium capitalize">{t(`common:status.${submission.status}`)}</span>
 								</div>

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Band, Cell, Station } from "@/types/station";
-import type { RouteHandle } from "@/routes/_layout";
 import { RAT_ORDER } from "@/features/admin/cells/rat";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
@@ -28,16 +27,6 @@ type LocalCell = CellDraftBase & {
 	_serverId?: number;
 	operation: "add" | "update" | "delete" | "unchanged";
 	target_cell_id: number | null;
-};
-
-export const handle: RouteHandle = {
-	titleKey: "detail.title",
-	i18nNamespace: "submissions",
-	breadcrumbs: [
-		{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
-		{ titleKey: "breadcrumbs.submissions", path: "/admin/submissions", i18nNamespace: "admin" },
-	],
-	allowedRoles: ["admin", "editor"],
 };
 
 function getOperationBorderClass(operation: string): string | undefined {
@@ -101,8 +90,8 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
 	return [...unchangedCells, ...proposedCells];
 }
 
-export default function SubmissionDetailPage() {
-	const { id } = useParams<{ id: string }>();
+function SubmissionDetailPage() {
+	const { id } = Route.useParams();
 	const navigate = useNavigate();
 	const { t } = useTranslation("submissions");
 
@@ -149,7 +138,7 @@ export default function SubmissionDetailPage() {
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
 					<p className="text-muted-foreground">{t("common:error.description")}</p>
-					<Button variant="outline" onClick={() => navigate("/admin/submissions")}>
+					<Button variant="outline" onClick={() => navigate({ to: "/admin/submissions" })}>
 						{t("common:actions.back")}
 					</Button>
 				</div>
@@ -286,7 +275,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 			{
 				onSuccess: () => {
 					toast.success(t("toast.approved"));
-					navigate("/admin/submissions");
+					navigate({ to: "/admin/submissions" });
 				},
 				onError: () => toast.error(t("common:error.toast")),
 			},
@@ -300,7 +289,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 			{
 				onSuccess: () => {
 					toast.success(t("toast.rejected"));
-					navigate("/admin/submissions");
+					navigate({ to: "/admin/submissions" });
 				},
 				onError: () => toast.error(t("common:error.toast")),
 			},
@@ -514,3 +503,16 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/submissions/$id")({
+	component: SubmissionDetailPage,
+	staticData: {
+		titleKey: "detail.title",
+		i18nNamespace: "submissions",
+		breadcrumbs: [
+			{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
+			{ titleKey: "breadcrumbs.submissions", path: "/admin/submissions", i18nNamespace: "admin" },
+		],
+		allowedRoles: ["admin", "editor"],
+	},
+});

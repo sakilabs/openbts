@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
-import { reactRouter } from "@react-router/dev/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
 function getGitCommit(): string {
 	try {
@@ -31,7 +31,10 @@ export default defineConfig({
 		"import.meta.env.VITE_GIT_COMMIT": JSON.stringify(getGitCommit()),
 	},
 	plugins: [
-		reactRouter(),
+		tanstackRouter({
+			target: "react",
+			autoCodeSplitting: true,
+		}),
 		tailwindcss(),
 		// babel({
 		// 	apply: "build",
@@ -44,6 +47,56 @@ export default defineConfig({
 	],
 	optimizeDeps: {
 		include: ["react", "react-dom", "react-i18next", "maplibre-gl", "@hugeicons/react"],
+	},
+	build: {
+		rollupOptions: {
+			output: {
+				codeSplitting: {
+					groups: [
+						{
+							name: "maplibre",
+							test: /node_modules[\\/]maplibre-gl/,
+							priority: 30,
+						},
+						{
+							name: "react-vendor",
+							test: /node_modules[\\/](react|react-dom|scheduler)\//,
+							priority: 25,
+						},
+						{
+							name: "router-vendor",
+							test: /node_modules[\\/]@tanstack[\\/](react-router|router)/,
+							priority: 20,
+						},
+						{
+							name: "ui-vendor",
+							test: /node_modules[\\/](@base-ui|@hugeicons|@floating-ui)/,
+							priority: 15,
+						},
+						{
+							name: "tanstack-vendor",
+							test: /node_modules[\\/]@tanstack[\\/](react-query|react-table|react-form|react-virtual|query-core|table-core|form-core|virtual-core)/,
+							priority: 13,
+						},
+						{
+							name: "auth-vendor",
+							test: /node_modules[\\/](better-auth|@daveyplate)/,
+							priority: 12,
+						},
+						{
+							name: "i18n-vendor",
+							test: /node_modules[\\/](i18next|react-i18next)/,
+							priority: 11,
+						},
+						{
+							name: "vendor",
+							test: /node_modules/,
+							priority: 10,
+						},
+					],
+				},
+			},
+		},
 	},
 	resolve: {
 		alias: {

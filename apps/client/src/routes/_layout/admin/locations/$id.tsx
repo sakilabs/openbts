@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,19 +14,9 @@ import { fetchLocationDetail } from "@/features/admin/locations/api";
 import { usePatchLocationMutation } from "@/features/admin/locations/mutations";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { ProposedLocationForm } from "@/features/submissions/types";
-import type { RouteHandle } from "@/routes/_layout";
 
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.editLocation",
-	i18nNamespace: "admin",
-	breadcrumbs: [
-		{ titleKey: "breadcrumbs.admin", path: "/admin/locations", i18nNamespace: "admin" },
-		{ titleKey: "breadcrumbs.locations", path: "/admin/locations", i18nNamespace: "admin" },
-	],
-};
-
-export default function AdminLocationDetailPage() {
-	const { id } = useParams<{ id: string }>();
+function AdminLocationDetailPage() {
+	const { id } = Route.useParams();
 	const navigate = useNavigate();
 	const { t } = useTranslation("admin");
 
@@ -66,7 +56,7 @@ export default function AdminLocationDetailPage() {
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
 					<p className="text-muted-foreground">{t("common:error.description")}</p>
-					<Button variant="outline" onClick={() => navigate("/admin/locations")}>
+					<Button variant="outline" onClick={() => navigate({ to: "/admin/locations" })}>
 						{t("common:actions.back")}
 					</Button>
 				</div>
@@ -78,7 +68,6 @@ export default function AdminLocationDetailPage() {
 }
 
 function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typeof fetchLocationDetail> extends Promise<infer T> ? T : never> }) {
-	const navigate = useNavigate();
 	const { t } = useTranslation("stations");
 
 	const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => ({
@@ -150,7 +139,12 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 		<div className="flex-1 flex flex-col overflow-hidden">
 			{headerTopStyle && <div className="shrink-0 h-0.75" style={headerTopStyle} />}
 			<div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 py-2 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm">
-				<Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2">
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() => window.history.back()}
+					className="text-muted-foreground hover:text-foreground gap-2 pl-1 pr-3 -ml-2"
+				>
 					<HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
 					<span className="font-medium">{t("common:actions.back")}</span>
 				</Button>
@@ -199,7 +193,8 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 									{stations.map((station) => (
 										<Link
 											key={station.id}
-											to={`/admin/stations/${station.id}`}
+											to={"/admin/stations/$id"}
+											params={{ id: String(station.id) }}
 											className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
 										>
 											{station.operator && (
@@ -234,3 +229,15 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/locations/$id")({
+	component: AdminLocationDetailPage,
+	staticData: {
+		titleKey: "breadcrumbs.editLocation",
+		i18nNamespace: "admin",
+		breadcrumbs: [
+			{ titleKey: "breadcrumbs.admin", path: "/admin/locations", i18nNamespace: "admin" },
+			{ titleKey: "breadcrumbs.locations", path: "/admin/locations", i18nNamespace: "admin" },
+		],
+	},
+});

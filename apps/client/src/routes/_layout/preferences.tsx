@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GoogleMapsIcon, AppleIcon, WazeIcon } from "@hugeicons/core-free-icons";
+import { createFileRoute } from "@tanstack/react-router";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,13 +10,6 @@ import { Slider } from "@/components/ui/slider";
 import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay } from "@/hooks/usePreferences";
 import { toggleValue } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import type { RouteHandle } from "./_layout";
-
-export const handle: RouteHandle = {
-	titleKey: "preferences.title",
-	i18nNamespace: "settings",
-	breadcrumbs: [{ titleKey: "secondary.settings", i18nNamespace: "nav" }],
-};
 
 const GPS_FORMAT_OPTIONS: { value: GpsFormat; labelKey: string; example: string }[] = [
 	{ value: "decimal", labelKey: "preferences.gpsDecimal", example: "52.23157, 21.00672" },
@@ -33,7 +27,7 @@ const NAV_DISPLAY_OPTIONS: { value: NavLinksDisplay; labelKey: string; descKey: 
 	{ value: "buttons", labelKey: "preferences.navDisplayButtons", descKey: "preferences.navDisplayButtonsDesc" },
 ];
 
-export default function PreferencesPage() {
+function PreferencesPage() {
 	const { t } = useTranslation("settings");
 	const { preferences, updatePreferences } = usePreferences();
 
@@ -158,3 +152,12 @@ export default function PreferencesPage() {
 		</main>
 	);
 }
+
+export const Route = createFileRoute("/_layout/preferences")({
+	component: PreferencesPage,
+	staticData: {
+		titleKey: "preferences.title",
+		i18nNamespace: "settings",
+		breadcrumbs: [{ titleKey: "secondary.settings", i18nNamespace: "nav" }],
+	},
+});

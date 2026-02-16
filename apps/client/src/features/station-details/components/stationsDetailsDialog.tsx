@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, PencilEdit02Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
-import { Link } from "react-router";
+import { Link } from "@tanstack/react-router";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { getHardwareLeaseOperator } from "@/lib/stationUtils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -98,7 +98,8 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 											/>
 											{settings?.submissionsEnabled && (
 												<Link
-													to={`/submission?station=${station.id}`}
+													to="/submission"
+													search={{ station: String(station.id) }}
 													className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
 													onClick={onClose}
 												>

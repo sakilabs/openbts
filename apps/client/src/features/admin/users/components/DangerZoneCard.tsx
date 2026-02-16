@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { authClient } from "@/lib/authClient";
@@ -79,7 +79,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
 		},
 		onSuccess: () => {
 			toast.success("User deleted successfully");
-			navigate("/admin/users");
+			navigate({ to: "/admin/users" });
 		},
 		onError: () => toast.error("Failed to delete user"),
 	});

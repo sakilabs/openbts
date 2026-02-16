@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
@@ -11,21 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useTablePagination } from "@/hooks/useTablePageSize";
-import type { RouteHandle } from "@/routes/_layout";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionListItem } from "@/features/admin/submissions/types";
 import { formatShortDate } from "@/lib/format";
 
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.submissions",
-	i18nNamespace: "admin",
-	breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
-	allowedRoles: ["admin", "editor"],
-};
-
 const columnHelper = createColumnHelper<SubmissionListItem>();
 
-export default function AdminSubmissionsListPage() {
+function AdminSubmissionsListPage() {
 	const { t, i18n } = useTranslation(["submissions", "common"]);
 	const navigate = useNavigate();
 
@@ -162,7 +154,7 @@ export default function AdminSubmissionsListPage() {
 		[i18n.language],
 	);
 
-	const handleRowClick = useCallback((submission: SubmissionListItem) => navigate(`/admin/submissions/${submission.id}`), [navigate]);
+	const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);
 
 	const table = useReactTable({
 		data: submissions,
@@ -264,3 +256,13 @@ export default function AdminSubmissionsListPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/submissions/")({
+	component: AdminSubmissionsListPage,
+	staticData: {
+		titleKey: "breadcrumbs.submissions",
+		i18nNamespace: "admin",
+		breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
+		allowedRoles: ["admin", "editor"],
+	},
+});

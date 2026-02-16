@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -13,7 +13,6 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "nav-collapsed-state";
@@ -83,7 +82,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
 										<SidebarMenuSub>
 											{item.items?.map((subItem) => (
 												<SidebarMenuSubItem key={subItem.url}>
-													<SidebarMenuSubButton render={<Link to={{ pathname: subItem.url }} />} isActive={location.pathname === subItem.url}>
+													<SidebarMenuSubButton render={<Link to={subItem.url} />} isActive={location.pathname === subItem.url}>
 														<span>{subItem.title}</span>
 													</SidebarMenuSubButton>
 												</SidebarMenuSubItem>
@@ -92,7 +91,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
 									</CollapsibleContent>
 								</>
 							) : (
-								<SidebarMenuButton render={<Link to={{ pathname: item.url }} />} tooltip={item.title}>
+								<SidebarMenuButton render={<Link to={item.url} />} tooltip={item.title}>
 									<HugeiconsIcon icon={item.icon} />
 									<span>{item.title}</span>
 								</SidebarMenuButton>

@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { Link, Outlet, useMatches } from "react-router";
+import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/api";
 import { AppSidebar } from "@/components/layout/app-sidebar";
@@ -25,12 +25,12 @@ export interface RouteHandle {
 	allowedRoles?: string[];
 }
 
-export default function AppLayout() {
+function AppLayout() {
 	const matches = useMatches();
 	const { t } = useTranslation();
 
-	const currentRoute = [...matches].reverse().find((match) => (match.handle as RouteHandle)?.titleKey || (match.handle as RouteHandle)?.title);
-	const handle = currentRoute?.handle as RouteHandle | undefined;
+	const currentRoute = [...matches].reverse().find((match) => (match.staticData as RouteHandle)?.titleKey || (match.staticData as RouteHandle)?.title);
+	const handle = currentRoute?.staticData as RouteHandle | undefined;
 
 	const pageTitle = handle?.titleKey ? t(handle.titleKey, { ns: handle.i18nNamespace }) : (handle?.title ?? "");
 	const breadcrumbs = handle?.breadcrumbs ?? [];
@@ -94,3 +94,7 @@ export default function AppLayout() {
 		</AuthGuard>
 	);
 }
+
+export const Route = createFileRoute("/_layout")({
+	component: AppLayout,
+});

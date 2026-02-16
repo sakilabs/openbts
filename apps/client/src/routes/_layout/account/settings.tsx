@@ -11,15 +11,7 @@ import {
 	SessionsCard,
 } from "@daveyplate/better-auth-ui";
 import { authClient } from "@/lib/authClient";
-import { Navigate } from "react-router";
-
-import type { RouteHandle } from "../_layout";
-
-export const handle: RouteHandle = {
-	titleKey: "page.shortTitle",
-	i18nNamespace: "settings",
-	breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings" }],
-};
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 function SectionHeader({ icon, title, description }: { icon: typeof UserIcon; title: string; description?: string }) {
 	return (
@@ -35,7 +27,7 @@ function SectionHeader({ icon, title, description }: { icon: typeof UserIcon; ti
 	);
 }
 
-export default function AccountSettingsPage() {
+function AccountSettingsPage() {
 	const { t } = useTranslation("settings");
 	const { data: session } = authClient.useSession();
 
@@ -88,3 +80,12 @@ export default function AccountSettingsPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/account/settings")({
+	component: AccountSettingsPage,
+	staticData: {
+		titleKey: "page.shortTitle",
+		i18nNamespace: "settings",
+		breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings" }],
+	},
+});

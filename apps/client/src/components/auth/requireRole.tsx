@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate } from "react-router";
+import { Navigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/authClient";
 import { RequireAuth } from "./requireAuth";
 

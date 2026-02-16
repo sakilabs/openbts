@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
-import { useParams, useNavigate } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ import type { ProposedLocationForm } from "@/features/submissions/types";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Station, Cell, Band } from "@/types/station";
-import type { RouteHandle } from "@/routes/_layout";
 import { RAT_ORDER } from "@/features/admin/cells/rat";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
@@ -24,15 +23,6 @@ import { useSettings } from "@/hooks/useSettings";
 
 type LocalCell = CellDraftBase & {
 	_serverId?: number;
-};
-
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.editStation",
-	i18nNamespace: "admin",
-	breadcrumbs: [
-		{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
-		{ titleKey: "breadcrumbs.stations", path: "/admin/stations", i18nNamespace: "admin" },
-	],
 };
 
 function cellToLocal(cell: Cell): LocalCell {
@@ -69,8 +59,8 @@ function getDiffBorderClass(status: CellDiffStatus): string | undefined {
 	return undefined;
 }
 
-export default function AdminStationDetailPage() {
-	const { id } = useParams<{ id: string }>();
+function AdminStationDetailPage() {
+	const { id } = Route.useParams();
 	const navigate = useNavigate();
 
 	const isCreateMode = id === "new";
@@ -111,7 +101,7 @@ export default function AdminStationDetailPage() {
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
 					<p className="text-muted-foreground">{t("common:error.description")}</p>
-					<Button variant="outline" onClick={() => navigate("/admin/stations")}>
+					<Button variant="outline" onClick={() => navigate({ to: "/admin/stations" })}>
 						{t("common:actions.back")}
 					</Button>
 				</div>
@@ -216,7 +206,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 				onSuccess: (result) => {
 					if (result.mode === "create") {
 						toast.success(t("toast.created"));
-						navigate(`/admin/stations/${result.station.id}`, { replace: true });
+						navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
 					} else {
 						toast.success(t("toast.cellsSaved"));
 						setDeletedServerCellIds([]);
@@ -340,3 +330,15 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/stations/$id")({
+	component: AdminStationDetailPage,
+	staticData: {
+		titleKey: "breadcrumbs.editStation",
+		i18nNamespace: "admin",
+		breadcrumbs: [
+			{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
+			{ titleKey: "breadcrumbs.stations", path: "/admin/stations", i18nNamespace: "admin" },
+		],
+	},
+});

@@ -11,18 +11,12 @@ import {
 	CheckmarkCircle02Icon,
 	AlertCircleIcon,
 } from "@hugeicons/core-free-icons";
+import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchSettings, patchSettings, type RuntimeSettings, type SettingsPatch } from "@/features/admin/settings/api";
-import type { RouteHandle } from "@/routes/_layout";
-
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.settings",
-	i18nNamespace: "admin",
-	breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
-};
 
 function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
 	return (
@@ -130,7 +124,7 @@ function SettingsCard({ icon, title, description, children }: { icon: ReactNode;
 	);
 }
 
-export default function AdminSettingsPage() {
+function AdminSettingsPage() {
 	const { t } = useTranslation(["admin", "common"]);
 	const queryClient = useQueryClient();
 	const [hasChanges, setHasChanges] = useState(false);
@@ -353,3 +347,12 @@ export default function AdminSettingsPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/settings")({
+	component: AdminSettingsPage,
+	staticData: {
+		titleKey: "breadcrumbs.settings",
+		i18nNamespace: "admin",
+		breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
+	},
+});

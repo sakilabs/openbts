@@ -29,7 +29,7 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
 import { useSettings } from "@/hooks/useSettings";
@@ -114,7 +114,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem>
-						<SidebarMenuButton size="lg" render={<Link to={{ pathname: "/" }} />}>
+						<SidebarMenuButton size="lg" render={<Link to="/" />}>
 							<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
 								<HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
 							</div>

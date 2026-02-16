@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Link, Navigate } from "react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,7 @@ import { RequireAuth } from "@/components/auth/requireAuth";
 import { MySubmissions } from "@/features/account/components/mySubmissions";
 import { useSettings } from "@/hooks/useSettings";
 
-import type { RouteHandle } from "../_layout";
-
-export const handle: RouteHandle = {
-	titleKey: "userPage.title",
-	i18nNamespace: "submissions",
-	breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" }],
-};
-
-export default function MySubmissionsPage() {
+function MySubmissionsPage() {
 	const { t } = useTranslation("submissions");
 	const { data: settings, isLoading } = useSettings();
 
@@ -41,3 +33,12 @@ export default function MySubmissionsPage() {
 		</RequireAuth>
 	);
 }
+
+export const Route = createFileRoute("/_layout/account/submissions")({
+	component: MySubmissionsPage,
+	staticData: {
+		titleKey: "userPage.title",
+		i18nNamespace: "submissions",
+		breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" }],
+	},
+});

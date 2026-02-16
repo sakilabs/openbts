@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Download04Icon } from "@hugeicons/core-free-icons";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,7 +30,6 @@ import { cn, toggleValue } from "@/lib/utils";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { EXTENDED_RAT_OPTIONS } from "@/features/shared/rat";
 import type { Operator } from "@/types/station";
-import type { RouteHandle } from "./_layout";
 
 const FORMAT_OPTIONS = [
 	{ value: "2.0", label: "CLF v2.0" },
@@ -57,13 +57,7 @@ const INITIAL_VALUES: FormValues = {
 	format: "4.0",
 };
 
-export const handle: RouteHandle = {
-	titleKey: "items.clfExport",
-	i18nNamespace: "nav",
-	breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
-};
-
-export default function ClfExportPage() {
+function ClfExportPage() {
 	const { t } = useTranslation("clfExport");
 
 	const { data: operators = [] } = useQuery({
@@ -373,3 +367,12 @@ export default function ClfExportPage() {
 		</main>
 	);
 }
+
+export const Route = createFileRoute("/_layout/clf-export")({
+	component: ClfExportPage,
+	staticData: {
+		titleKey: "items.clfExport",
+		i18nNamespace: "nav",
+		breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
+	},
+});

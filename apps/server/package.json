@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@axiomhq/js": "1.4.0",
 		"@axiomhq/logging": "0.2.0",
+		"@better-auth/core": "1.5.0-beta.13",
 		"@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",
 		"@better-auth/passkey": "^1.4.18",
 		"@fastify/cors": "11.2.0",
@@ -25,7 +26,7 @@
 		"@openbts/uke-importer": "workspace:*",
 		"better-auth": "1.4.18",
 		"debug": "4.4.3",
-		"dotenv": "17.2.4",
+		"dotenv": "17.3.1",
 		"drizzle-orm": "1.0.0-beta.15-859cf75",
 		"drizzle-zod": "0.8.3",
 		"fast-jwt": "6.1.0",
@@ -34,7 +35,7 @@
 		"figlet": "1.10.0",
 		"nanoid": "5.1.6",
 		"postgres": "3.4.8",
-		"redis": "5.10.0",
+		"redis": "5.11.0",
 		"zod": "4.3.6"
 	},
 	"devDependencies": {
@@ -43,7 +44,6 @@
 		"@types/figlet": "1.7.0",
 		"@types/json-schema": "7.0.15",
 		"@types/node": "24.3.0",
-		"drizzle-kit": "0.31.8",
 		"tsx": "4.21.0",
 		"typescript": "5.9.3"
 	},

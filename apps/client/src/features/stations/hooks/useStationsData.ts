@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { fetchApiData, fetchJson, API_BASE } from "@/lib/api";
 import { operatorsQueryOptions, bandsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
@@ -114,7 +114,9 @@ function paramsToState(searchParams: URLSearchParams): FullState {
 }
 
 export function useStationsData() {
-	const [searchParams, setSearchParams] = useSearchParams();
+	const location = useLocation();
+	const navigate = useNavigate();
+	const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
 	const state = useMemo(() => paramsToState(searchParams), [searchParams]);
 	const stateRef = useRef(state);
@@ -124,9 +126,9 @@ export function useStationsData() {
 		(patch: Partial<FullState>) => {
 			const merged = { ...stateRef.current, ...patch };
 			stateRef.current = merged;
-			setSearchParams(stateToParams(merged));
+			navigate({ to: ".", search: Object.fromEntries(stateToParams(merged).entries()), replace: true });
 		},
-		[setSearchParams],
+		[navigate],
 	);
 
 	const filters = useMemo<StationFilters>(

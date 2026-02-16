@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FilterIcon } from "@hugeicons/core-free-icons";
@@ -9,15 +9,8 @@ import { LocationsDataTable } from "@/features/admin/locations/components/locati
 import { LocationsResponsiveFilters } from "@/features/admin/locations/components/locationsResponsiveFilters";
 import { useLocationsData } from "@/features/admin/locations/hooks/useLocationsData";
 import type { LocationWithStations, LocationSortBy } from "@/types/station";
-import type { RouteHandle } from "@/routes/_layout";
 
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.locations",
-	i18nNamespace: "admin",
-	breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
-};
-
-export default function AdminLocationsPage() {
+function AdminLocationsPage() {
 	const { t } = useTranslation("admin");
 	const navigate = useNavigate();
 	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -64,7 +57,7 @@ export default function AdminLocationsPage() {
 		[sortBy, setSort, setSortBy],
 	);
 
-	const handleRowClick = useCallback((location: LocationWithStations) => navigate(`/admin/locations/${location.id}`), [navigate]);
+	const handleRowClick = useCallback((location: LocationWithStations) => navigate({ to: `/admin/locations/${location.id}` }), [navigate]);
 
 	return (
 		<>
@@ -119,3 +112,12 @@ export default function AdminLocationsPage() {
 		</>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/locations/")({
+	component: AdminLocationsPage,
+	staticData: {
+		titleKey: "breadcrumbs.locations",
+		i18nNamespace: "admin",
+		breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
+	},
+});

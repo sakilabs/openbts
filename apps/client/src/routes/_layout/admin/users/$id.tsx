@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useParams, useNavigate, Navigate } from "react-router";
+import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -26,17 +26,7 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import type { RouteHandle } from "@/routes/_layout";
 import type { AdminUser, Session } from "@/features/admin/users/types";
-
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.userDetail",
-	i18nNamespace: "admin",
-	breadcrumbs: [
-		{ titleKey: "breadcrumbs.admin", path: "/admin/users", i18nNamespace: "admin" },
-		{ titleKey: "breadcrumbs.users", path: "/admin/users", i18nNamespace: "admin" },
-	],
-};
 
 const ROLES = ["user", "editor", "moderator", "admin"] as const;
 
@@ -70,8 +60,8 @@ function InfoRow({ label, children }: { label: string; children: ReactNode }) {
 	);
 }
 
-export default function AdminUserDetailPage() {
-	const { id: userId } = useParams<{ id: string }>();
+function AdminUserDetailPage() {
+	const { id: userId } = Route.useParams();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 
@@ -478,3 +468,15 @@ export default function AdminUserDetailPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/users/$id")({
+	component: AdminUserDetailPage,
+	staticData: {
+		titleKey: "breadcrumbs.userDetail",
+		i18nNamespace: "admin",
+		breadcrumbs: [
+			{ titleKey: "breadcrumbs.admin", path: "/admin/users", i18nNamespace: "admin" },
+			{ titleKey: "breadcrumbs.users", path: "/admin/users", i18nNamespace: "admin" },
+		],
+	},
+});

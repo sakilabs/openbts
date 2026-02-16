@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
@@ -13,15 +13,8 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { authClient } from "@/lib/authClient";
-import type { RouteHandle } from "@/routes/_layout";
 import type { AdminUser } from "@/features/admin/users/types";
 import { i18n } from "@/i18n";
-
-export const handle: RouteHandle = {
-	titleKey: "breadcrumbs.users",
-	i18nNamespace: "admin",
-	breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
-};
 
 const columnHelper = createColumnHelper<AdminUser>();
 
@@ -78,7 +71,7 @@ function useColumns() {
 	);
 }
 
-export default function AdminUsersPage() {
+function AdminUsersPage() {
 	const navigate = useNavigate();
 	const { t } = useTranslation("admin");
 	const columns = useColumns();
@@ -158,3 +151,12 @@ export default function AdminUsersPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_layout/admin/users/")({
+	component: AdminUsersPage,
+	staticData: {
+		titleKey: "breadcrumbs.users",
+		i18nNamespace: "admin",
+		breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
+	},
+});

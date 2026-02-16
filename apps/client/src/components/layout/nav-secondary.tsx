@@ -1,7 +1,7 @@
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import { Link } from "@tanstack/react-router";
 import type { ComponentPropsWithoutRef } from "react";
 
 export function NavSecondary({
@@ -20,7 +20,7 @@ export function NavSecondary({
 				<SidebarMenu>
 					{items.map((item) => (
 						<SidebarMenuItem key={item.title}>
-							<SidebarMenuButton render={<Link to={{ pathname: item.url }} />} size="sm">
+							<SidebarMenuButton render={<Link to={item.url} />} size="sm">
 								<HugeiconsIcon icon={item.icon} />
 								<span>{item.title}</span>
 							</SidebarMenuButton>
