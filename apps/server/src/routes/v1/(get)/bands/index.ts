@@ -13,24 +13,24 @@ const bandSelectSchema = createSelectSchema(bands);
 type Bands = z.infer<typeof bandSelectSchema>;
 
 const schemaRoute = {
-	response: {
-		200: z.object({
-			data: z.array(bandSelectSchema),
-		}),
-	},
+  response: {
+    200: z.object({
+      data: z.array(bandSelectSchema),
+    }),
+  },
 };
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Bands[]>>) {
-	const bands = await db.query.bands.findMany();
-	return res.send({ data: bands });
+  const bands = await db.query.bands.findMany();
+  return res.send({ data: bands });
 }
 
 const getBands: Route<RouteGenericInterface, Bands[]> = {
-	url: "/bands",
-	method: "GET",
-	config: { permissions: ["read:bands"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/bands",
+  method: "GET",
+  config: { permissions: ["read:bands"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getBands;

@@ -1,141 +1,141 @@
 export type Band = {
-	id: number;
-	value: number;
-	rat: string;
-	name: string;
-	duplex: string | null;
-	variant: string | null;
+  id: number;
+  value: number;
+  rat: string;
+  name: string;
+  duplex: string | null;
+  variant: string | null;
 };
 
 export type Region = {
-	id: number;
-	name: string;
-	code: string;
+  id: number;
+  name: string;
+  code: string;
 };
 
 export type Location = {
-	id: number;
-	city: string;
-	address: string;
-	longitude: number;
-	latitude: number;
-	updatedAt: string;
-	createdAt: string;
-	region: Region;
+  id: number;
+  city: string;
+  address: string;
+  longitude: number;
+  latitude: number;
+  updatedAt: string;
+  createdAt: string;
+  region: Region;
 };
 
 export type Operator = {
-	id: number;
-	name: string;
-	full_name: string;
-	parent_id: number | null;
-	mnc: number;
+  id: number;
+  name: string;
+  full_name: string;
+  parent_id: number | null;
+  mnc: number;
 };
 
 export type CellDetails = {
-	// GSM
-	lac?: number;
-	cid?: number;
-	e_gsm?: boolean;
-	// UMTS
-	rnc?: number;
-	cid_long?: number;
-	carrier?: number;
-	// LTE
-	tac?: number;
-	enbid?: number;
-	clid?: number;
-	ecid?: number;
-	supports_nb_iot?: boolean;
-	// NR
-	gnbid?: number;
-	nci?: number;
-	nrtac?: number;
-	pci?: number;
-	supports_nr_redcap?: boolean;
+  // GSM
+  lac?: number;
+  cid?: number;
+  e_gsm?: boolean;
+  // UMTS
+  rnc?: number;
+  cid_long?: number;
+  carrier?: number;
+  // LTE
+  tac?: number;
+  enbid?: number;
+  clid?: number;
+  ecid?: number;
+  supports_nb_iot?: boolean;
+  // NR
+  gnbid?: number;
+  nci?: number;
+  nrtac?: number;
+  pci?: number;
+  supports_nr_redcap?: boolean;
 } | null;
 
 export type Cell = {
-	id: number;
-	rat: string;
-	station_id: number;
-	notes: string | null;
-	is_confirmed: boolean;
-	updatedAt: string;
-	createdAt: string;
-	band: Band;
-	details: CellDetails;
+  id: number;
+  rat: string;
+  station_id: number;
+  notes: string | null;
+  is_confirmed: boolean;
+  updatedAt: string;
+  createdAt: string;
+  band: Band;
+  details: CellDetails;
 };
 
 export type NetWorkS = {
-	id: number;
-	station_id: number;
-	networks_id: string;
-	networks_name: string | null;
-	mno_name: string | null;
-	updatedAt: string;
-	createdAt: string;
+  id: number;
+  station_id: number;
+  networks_id: string;
+  networks_name: string | null;
+  mno_name: string | null;
+  updatedAt: string;
+  createdAt: string;
 };
 
 export type Station = {
-	id: number;
-	station_id: string;
-	location_id: number;
-	operator_id: number;
-	notes: string | null;
-	updatedAt: string;
-	createdAt: string;
-	is_confirmed: boolean;
-	cells: Cell[];
-	location: Location;
-	operator: Operator;
-	networks?: NetWorkS;
+  id: number;
+  station_id: string;
+  location_id: number;
+  operator_id: number;
+  notes: string | null;
+  updatedAt: string;
+  createdAt: string;
+  is_confirmed: boolean;
+  cells: Cell[];
+  location: Location;
+  operator: Operator;
+  networks?: NetWorkS;
 };
 
 export type RadioLineEquipmentType = {
-	id: number;
-	name: string;
-	manufacturer?: { id: number; name: string };
+  id: number;
+  name: string;
+  manufacturer?: { id: number; name: string };
 };
 
 export type RadioLine = {
-	id: number;
-	tx: {
-		longitude: number;
-		latitude: number;
-		height: number;
-		eirp?: number;
-		antenna_attenuation?: number;
-		transmitter?: { type?: RadioLineEquipmentType };
-		antenna?: { type?: RadioLineEquipmentType; gain?: number; height?: number };
-	};
-	rx: {
-		longitude: number;
-		latitude: number;
-		height: number;
-		type?: RadioLineEquipmentType;
-		gain?: number;
-		height_antenna?: number;
-		noise_figure?: number;
-		atpc_attenuation?: number;
-	};
-	link: {
-		freq: number;
-		ch_num?: number;
-		plan_symbol?: string;
-		ch_width?: number;
-		polarization?: string;
-		modulation_type?: string;
-		bandwidth?: string;
-	};
-	operator?: UkeOperator;
-	permit: {
-		number?: string;
-		decision_type?: string;
-		expiry_date: string;
-	};
-	updatedAt: string;
-	createdAt: string;
+  id: number;
+  tx: {
+    longitude: number;
+    latitude: number;
+    height: number;
+    eirp?: number;
+    antenna_attenuation?: number;
+    transmitter?: { type?: RadioLineEquipmentType };
+    antenna?: { type?: RadioLineEquipmentType; gain?: number; height?: number };
+  };
+  rx: {
+    longitude: number;
+    latitude: number;
+    height: number;
+    type?: RadioLineEquipmentType;
+    gain?: number;
+    height_antenna?: number;
+    noise_figure?: number;
+    atpc_attenuation?: number;
+  };
+  link: {
+    freq: number;
+    ch_num?: number;
+    plan_symbol?: string;
+    ch_width?: number;
+    polarization?: string;
+    modulation_type?: string;
+    bandwidth?: string;
+  };
+  operator?: UkeOperator;
+  permit: {
+    number?: string;
+    decision_type?: string;
+    expiry_date: string;
+  };
+  updatedAt: string;
+  createdAt: string;
 };
 
 export type StationSource = "internal" | "uke";
@@ -147,111 +147,111 @@ export type LocationSortBy = "id" | "updatedAt" | "createdAt";
 export type LocationSortDirection = "asc" | "desc";
 
 export type StationFilters = {
-	operators: number[];
-	bands: number[];
-	rat: string[];
-	source: StationSource;
-	recentOnly: boolean;
-	showStations: boolean;
-	showRadiolines: boolean;
-	radiolineOperators: number[];
+  operators: number[];
+  bands: number[];
+  rat: string[];
+  source: StationSource;
+  recentOnly: boolean;
+  showStations: boolean;
+  showRadiolines: boolean;
+  radiolineOperators: number[];
 };
 
 export type StationWithoutCells = Omit<Station, "location" | "cells"> & {
-	cells?: Cell[];
+  cells?: Cell[];
 };
 
 export type LocationInfo = {
-	id: number;
-	city?: string;
-	address?: string;
-	latitude: number;
-	longitude: number;
+  id: number;
+  city?: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
 };
 
 export type LocationWithStations = LocationInfo & {
-	updatedAt: string;
-	createdAt: string;
-	region: Region;
-	stations: StationWithoutCells[];
+  updatedAt: string;
+  createdAt: string;
+  region: Region;
+  stations: StationWithoutCells[];
 };
 
 export type UkeOperator = {
-	id: number;
-	name: string;
-	full_name: string;
-	parent_id?: number | null;
-	mnc?: number | null;
+  id: number;
+  name: string;
+  full_name: string;
+  parent_id?: number | null;
+  mnc?: number | null;
 };
 
 export type UkeLocation = {
-	id: number;
-	region_id: number;
-	city: string | null;
-	address: string | null;
-	longitude: number;
-	latitude: number;
-	updatedAt: string;
-	createdAt: string;
+  id: number;
+  region_id: number;
+  city: string | null;
+  address: string | null;
+  longitude: number;
+  latitude: number;
+  updatedAt: string;
+  createdAt: string;
 };
 
 export type UkePermit = {
-	id: number;
-	station_id: string;
-	operator_id: number;
-	location_id?: number;
-	decision_number: string;
-	decision_type: "zmP" | "P";
-	expiry_date: string;
-	band_id: number;
-	updatedAt: string;
-	createdAt: string;
-	band?: Band | null;
-	operator?: UkeOperator | null;
-	location?: UkeLocation;
+  id: number;
+  station_id: string;
+  operator_id: number;
+  location_id?: number;
+  decision_number: string;
+  decision_type: "zmP" | "P";
+  expiry_date: string;
+  band_id: number;
+  updatedAt: string;
+  createdAt: string;
+  band?: Band | null;
+  operator?: UkeOperator | null;
+  location?: UkeLocation;
 };
 
 export type UkeLocationWithPermits = {
-	id: number;
-	city: string | null;
-	address: string | null;
-	longitude: number;
-	latitude: number;
-	updatedAt: string;
-	createdAt: string;
-	region: Region;
-	permits: UkePermit[];
+  id: number;
+  city: string | null;
+  address: string | null;
+  longitude: number;
+  latitude: number;
+  updatedAt: string;
+  createdAt: string;
+  region: Region;
+  permits: UkePermit[];
 };
 
 export type UkeStation = {
-	station_id: string;
-	operator: UkeOperator | null;
-	permits: UkePermit[];
-	location: {
-		city: string | null;
-		address: string | null;
-		latitude: number;
-		longitude: number;
-		region?: Region;
-	} | null;
+  station_id: string;
+  operator: UkeOperator | null;
+  permits: UkePermit[];
+  location: {
+    city: string | null;
+    address: string | null;
+    latitude: number;
+    longitude: number;
+    region?: Region;
+  } | null;
 };
 
 export type CommentAttachment = {
-	uuid: string;
-	type: string;
+  uuid: string;
+  type: string;
 };
 
 export type StationComment = {
-	id: number;
-	station_id: number;
-	author_id: number;
-	content: string;
-	createdAt: string;
-	updatedAt: string;
-	attachments?: CommentAttachment[];
-	author?: {
-		id: number;
-		name: string;
-		avatar_url: string | null;
-	};
+  id: number;
+  station_id: number;
+  author_id: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  attachments?: CommentAttachment[];
+  author?: {
+    id: number;
+    name: string;
+    avatar_url: string | null;
+  };
 };

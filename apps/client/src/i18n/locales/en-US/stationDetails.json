@@ -1,43 +1,43 @@
 {
-	"tabs": {
-		"specs": "Specification",
-		"permits": "UKE Permits"
-	},
-	"specs": {
-		"basicInfo": "Basic Information",
-		"cellDetails": "Cell Details",
-		"networkName": "Network Name:",
-		"mnoName": "MNO:",
-		"internalNotes": "Internal Notes"
-	},
-	"permits": {
-		"permitsCount_one": "{{count}} permit",
-		"permitsCount_few": "{{count}} permits",
-		"permitsCount_many": "{{count}} permits",
-		"permitsCount_other": "{{count}} permits",
-		"permit": "permit",
-		"permits": "permits",
-		"neverExpires": "Indefinite",
-		"decisionNumber": "Decision Number",
-		"expiryDate": "Expiry Date",
-		"sourceUke": "Source: Office of Electronic Communications (UKE)",
-		"noPermits": "No UKE permits for this station",
-		"decisionTypeP": "Permit",
-		"decisionTypeZmP": "Permit Change"
-	},
-	"dialog": {
-		"hardwareLease": "Hardware lease from {{operator}} (virtual station)",
-		"btsStation": "BTS Station"
-	},
-	"comments": {
-		"title": "Community Comments",
-		"loading": "Loading comments...",
-		"unavailable": "Comments are currently unavailable",
-		"noComments": "No comments",
-		"noCommentsHint": "Be the first to share information about this station",
-		"file": "File",
-		"placeholder": "Add a comment...",
-		"addImages": "Add images",
-		"postComment": "Post comment"
-	}
+  "tabs": {
+    "specs": "Specification",
+    "permits": "UKE Permits"
+  },
+  "specs": {
+    "basicInfo": "Basic Information",
+    "cellDetails": "Cell Details",
+    "networkName": "Network Name:",
+    "mnoName": "MNO:",
+    "internalNotes": "Internal Notes"
+  },
+  "permits": {
+    "permitsCount_one": "{{count}} permit",
+    "permitsCount_few": "{{count}} permits",
+    "permitsCount_many": "{{count}} permits",
+    "permitsCount_other": "{{count}} permits",
+    "permit": "permit",
+    "permits": "permits",
+    "neverExpires": "Indefinite",
+    "decisionNumber": "Decision Number",
+    "expiryDate": "Expiry Date",
+    "sourceUke": "Source: Office of Electronic Communications (UKE)",
+    "noPermits": "No UKE permits for this station",
+    "decisionTypeP": "Permit",
+    "decisionTypeZmP": "Permit Change"
+  },
+  "dialog": {
+    "hardwareLease": "Hardware lease from {{operator}} (virtual station)",
+    "btsStation": "BTS Station"
+  },
+  "comments": {
+    "title": "Community Comments",
+    "loading": "Loading comments...",
+    "unavailable": "Comments are currently unavailable",
+    "noComments": "No comments",
+    "noCommentsHint": "Be the first to share information about this station",
+    "file": "File",
+    "placeholder": "Add a comment...",
+    "addImages": "Add images",
+    "postComment": "Post comment"
+  }
 }

@@ -1,36 +1,36 @@
 {
-	"sections": {
-		"stations": "Stations",
-		"contribute": "Submissions",
-		"settings": "Settings",
-		"admin": "Admin"
-	},
-	"items": {
-		"mapView": "Map View",
-		"database": "Database",
-		"clfExport": "CLF Export",
-		"submitStation": "New Submission",
-		"preferences": "Preferences",
-		"accountSettings": "Account Settings",
-		"mySubmissions": "My Submissions",
-		"users": "Users",
-		"stations": "Stations",
-		"submissions": "Submissions",
-		"locations": "Locations",
-		"settings": "Settings",
-		"ukeImport": "UKE Import"
-	},
-	"secondary": {
-		"settings": "Settings",
-		"help": "Help",
-		"about": "About"
-	},
-	"user": {
-		"logout": "Logout",
-		"login": "Login"
-	},
-	"auth": {
-		"signIn": "Sign In",
-		"signInHint": "Access your account"
-	}
+  "sections": {
+    "stations": "Stations",
+    "contribute": "Submissions",
+    "settings": "Settings",
+    "admin": "Admin"
+  },
+  "items": {
+    "mapView": "Map View",
+    "database": "Database",
+    "clfExport": "CLF Export",
+    "submitStation": "New Submission",
+    "preferences": "Preferences",
+    "accountSettings": "Account Settings",
+    "mySubmissions": "My Submissions",
+    "users": "Users",
+    "stations": "Stations",
+    "submissions": "Submissions",
+    "locations": "Locations",
+    "settings": "Settings",
+    "ukeImport": "UKE Import"
+  },
+  "secondary": {
+    "settings": "Settings",
+    "help": "Help",
+    "about": "About"
+  },
+  "user": {
+    "logout": "Logout",
+    "login": "Login"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signInHint": "Access your account"
+  }
 }

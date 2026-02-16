@@ -10,40 +10,40 @@ import type { ReplyPayload } from "../../../../../../interfaces/fastify.interfac
 import type { Route, EmptyResponse } from "../../../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
-	params: z.object({
-		station_id: z.coerce.number<number>(),
-		comment_id: z.coerce.number<number>(),
-	}),
+  params: z.object({
+    station_id: z.coerce.number<number>(),
+    comment_id: z.coerce.number<number>(),
+  }),
 };
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyResponse>) {
-	const { station_id, comment_id } = req.params;
+  const { station_id, comment_id } = req.params;
 
-	if (Number.isNaN(station_id) || Number.isNaN(comment_id)) throw new ErrorResponse("INVALID_QUERY");
+  if (Number.isNaN(station_id) || Number.isNaN(comment_id)) throw new ErrorResponse("INVALID_QUERY");
 
-	const comment = await db.query.stationComments.findFirst({
-		where: {
-			AND: [{ id: { eq: comment_id } }, { station_id: { eq: station_id } }],
-		},
-	});
-	if (!comment) throw new ErrorResponse("NOT_FOUND");
+  const comment = await db.query.stationComments.findFirst({
+    where: {
+      AND: [{ id: { eq: comment_id } }, { station_id: { eq: station_id } }],
+    },
+  });
+  if (!comment) throw new ErrorResponse("NOT_FOUND");
 
-	try {
-		await db.delete(stationComments).where(eq(stationComments.id, comment_id));
+  try {
+    await db.delete(stationComments).where(eq(stationComments.id, comment_id));
 
-		return res.status(204).send();
-	} catch {
-		throw new ErrorResponse("FAILED_TO_DELETE");
-	}
+    return res.status(204).send();
+  } catch {
+    throw new ErrorResponse("FAILED_TO_DELETE");
+  }
 }
 
 const deleteComment: Route<ReqParams, void> = {
-	url: "/stations/:station_id/comments/:comment_id",
-	method: "DELETE",
-	schema: schemaRoute,
-	config: { permissions: ["delete:comments"] },
-	handler,
+  url: "/stations/:station_id/comments/:comment_id",
+  method: "DELETE",
+  schema: schemaRoute,
+  config: { permissions: ["delete:comments"] },
+  handler,
 };
 
 export default deleteComment;

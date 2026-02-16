@@ -28,138 +28,140 @@ const umtsInsertSchema = createInsertSchema(umtsCells).omit({ createdAt: true, u
 const lteInsertSchema = createInsertSchema(lteCells).omit({ createdAt: true, updatedAt: true });
 const nrInsertSchema = createInsertSchema(nrCells).omit({ createdAt: true, updatedAt: true });
 const cellWithDetailsInsert = baseCellsInsertSchema.extend({
-	details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
+  details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
 });
 
 type ReqBody = {
-	Body: z.infer<typeof stationsInsertSchema> & { cells: z.infer<typeof cellWithDetailsInsert>[] };
+  Body: z.infer<typeof stationsInsertSchema> & { cells: z.infer<typeof cellWithDetailsInsert>[] };
 };
 type CellResponse = z.infer<typeof cellsSchema> & { band: z.infer<typeof bandsSchema>; details: z.infer<typeof cellDetailsSchema> };
 type ResponseData = z.infer<typeof stationSchema> & {
-	cells: CellResponse[];
-	location: z.infer<typeof locationSchema>;
-	operator: z.infer<typeof operatorSchema>;
+  cells: CellResponse[];
+  location: z.infer<typeof locationSchema>;
+  operator: z.infer<typeof operatorSchema>;
 };
 const schemaRoute = {
-	body: stationsInsertSchema.extend({
-		cells: z.array(cellWithDetailsInsert),
-	}),
-	response: {
-		200: z.object({
-			data: stationSchema.extend({
-				cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
-				location: locationSchema,
-				operator: operatorSchema,
-			}),
-		}),
-	},
+  body: stationsInsertSchema.extend({
+    cells: z.array(cellWithDetailsInsert),
+  }),
+  response: {
+    200: z.object({
+      data: stationSchema.extend({
+        cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
+        location: locationSchema,
+        operator: operatorSchema,
+      }),
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { cells: cellsData, ...stationData } = req.body;
+  const { cells: cellsData, ...stationData } = req.body;
 
-	try {
-		const station = await db.transaction(async (tx) => {
-			const [newStation] = await tx
-				.insert(stations)
-				.values({
-					...stationData,
-					updatedAt: new Date(),
-					createdAt: new Date(),
-				})
-				.returning();
+  try {
+    const station = await db.transaction(async (tx) => {
+      const [newStation] = await tx
+        .insert(stations)
+        .values({
+          ...stationData,
+          updatedAt: new Date(),
+          createdAt: new Date(),
+        })
+        .returning();
 
-			if (!newStation) {
-				tx.rollback();
-				throw new ErrorResponse("FAILED_TO_CREATE");
-			}
+      if (!newStation) {
+        tx.rollback();
+        throw new ErrorResponse("FAILED_TO_CREATE");
+      }
 
-			if (cellsData && cellsData?.length > 0) {
-				const createdCells = await tx
-					.insert(cells)
-					.values(
-						cellsData.map((cell) => ({
-							...cell,
-							station_id: newStation.id,
-							updatedAt: new Date(),
-							createdAt: new Date(),
-						})),
-					)
-					.returning();
+      if (cellsData && cellsData?.length > 0) {
+        const createdCells = await tx
+          .insert(cells)
+          .values(
+            cellsData.map((cell) => ({
+              ...cell,
+              station_id: newStation.id,
+              updatedAt: new Date(),
+              createdAt: new Date(),
+            })),
+          )
+          .returning();
 
-				await Promise.all(
-					createdCells.map(async (row, idx) => {
-						const details = cellsData[idx]?.details;
-						if (!details) return;
-						switch (row.rat) {
-							case "GSM":
-								await tx.insert(gsmCells).values({ ...(details as z.infer<typeof gsmInsertSchema>), cell_id: row.id });
-								break;
-							case "UMTS":
-								await tx.insert(umtsCells).values({ ...(details as z.infer<typeof umtsInsertSchema>), cell_id: row.id });
-								break;
-							case "LTE":
-								await tx.insert(lteCells).values({ ...(details as z.infer<typeof lteInsertSchema>), cell_id: row.id });
-								break;
-							case "NR":
-								await tx.insert(nrCells).values({ ...(details as z.infer<typeof nrInsertSchema>), cell_id: row.id });
-								break;
-						}
-					}),
-				);
-			}
+        await Promise.all(
+          createdCells.map(async (row, idx) => {
+            const details = cellsData[idx]?.details;
+            if (!details) return;
+            switch (row.rat) {
+              case "GSM":
+                await tx.insert(gsmCells).values({ ...(details as z.infer<typeof gsmInsertSchema>), cell_id: row.id });
+                break;
+              case "UMTS":
+                await tx.insert(umtsCells).values({ ...(details as z.infer<typeof umtsInsertSchema>), cell_id: row.id });
+                break;
+              case "LTE":
+                await tx.insert(lteCells).values({ ...(details as z.infer<typeof lteInsertSchema>), cell_id: row.id });
+                break;
+              case "NR":
+                await tx.insert(nrCells).values({ ...(details as z.infer<typeof nrInsertSchema>), cell_id: row.id });
+                break;
+            }
+          }),
+        );
+      }
 
-			const full = await tx.query.stations.findFirst({
-				where: {
-					id: newStation.id,
-				},
-				with: {
-					cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
-					location: { columns: { point: false } },
-					operator: true,
-				},
-				columns: { status: false },
-			});
-			if (!full) {
-				tx.rollback();
-				throw new ErrorResponse("NOT_FOUND");
-			}
+      const full = await tx.query.stations.findFirst({
+        where: {
+          id: newStation.id,
+        },
+        with: {
+          cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
+          location: { columns: { point: false } },
+          operator: true,
+        },
+        columns: { status: false },
+      });
+      if (!full) {
+        tx.rollback();
+        throw new ErrorResponse("NOT_FOUND");
+      }
 
-			const cellsWithDetails = (
-				full.cells as Array<
-					z.infer<typeof cellsSchema> & {
-						band: z.infer<typeof bandsSchema>;
-						gsm?: z.infer<typeof gsmCellsSchema>;
-						umts?: z.infer<typeof umtsCellsSchema>;
-						lte?: z.infer<typeof lteCellsSchema>;
-						nr?: z.infer<typeof nrCellsSchema>;
-					}
-				>
-			).map((cell) => {
-				const { gsm, umts, lte, nr, band, ...rest } = cell;
-				const details: z.infer<typeof cellDetailsSchema> = gsm ?? umts ?? lte ?? nr ?? null;
-				return { ...rest, band, details } as CellResponse;
-			});
+      const cellsWithDetails = (
+        full.cells as Array<
+          z.infer<typeof cellsSchema> & {
+            band: z.infer<typeof bandsSchema>;
+            gsm?: z.infer<typeof gsmCellsSchema>;
+            umts?: z.infer<typeof umtsCellsSchema>;
+            lte?: z.infer<typeof lteCellsSchema>;
+            nr?: z.infer<typeof nrCellsSchema>;
+          }
+        >
+      ).map((cell) => {
+        const { gsm, umts, lte, nr, band, ...rest } = cell;
+        const details: z.infer<typeof cellDetailsSchema> = gsm ?? umts ?? lte ?? nr ?? null;
+        return { ...rest, band, details } as CellResponse;
+      });
 
-			const response: ResponseData = { ...full, cells: cellsWithDetails } as ResponseData;
-			return response;
-		});
+      const response: ResponseData = { ...full, cells: cellsWithDetails } as ResponseData;
+      return response;
+    });
 
-		void rebuildStationsPermitsAssociations().catch((e) => logger.error("Failed to rebuild stations_permits after station creation", { error: e instanceof Error ? e.message : String(e) }));
+    void rebuildStationsPermitsAssociations().catch((e) =>
+      logger.error("Failed to rebuild stations_permits after station creation", { error: e instanceof Error ? e.message : String(e) }),
+    );
 
-		return res.send({ data: station });
-	} catch (error) {
-		if (error instanceof ErrorResponse) throw error;
-		throw new ErrorResponse("FAILED_TO_CREATE");
-	}
+    return res.send({ data: station });
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
+    throw new ErrorResponse("FAILED_TO_CREATE");
+  }
 }
 
 const createStation: Route<ReqBody, ResponseData> = {
-	url: "/stations",
-	method: "POST",
-	config: { permissions: ["write:stations"] },
-	schema: schemaRoute,
-	handler,
+  url: "/stations",
+  method: "POST",
+  config: { permissions: ["write:stations"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default createStation;

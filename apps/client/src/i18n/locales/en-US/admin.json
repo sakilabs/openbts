@@ -1,83 +1,83 @@
 {
-	"breadcrumbs": {
-		"admin": "Admin",
-		"stations": "Stations",
-		"editStation": "Edit Station",
-		"submissions": "Submissions",
-		"users": "Users",
-		"userDetail": "User Detail",
-		"locations": "Locations",
-		"editLocation": "Edit Location",
-		"settings": "Settings",
-		"ukeImport": "UKE Import"
-	},
-	"settings": {
-		"title": "System Settings",
-		"subtitle": "Manage system configuration",
-		"loading": "Loading settings...",
-		"errorTitle": "Failed to load settings",
-		"errorDescription": "There was a problem loading system settings.",
-		"authentication": "Authentication",
-		"authenticationDesc": "Control access and authentication requirements",
-		"enforceAuth": "Enforce authentication for all routes",
-		"enforceAuthDesc": "Require authentication for all API endpoints",
-		"allowedRoutes": "Allowed API endpoints without authentication",
-		"allowedRoutesDesc": "API endpoints that bypass authentication (press Enter to add)",
-		"disabledRoutes": "Disabled API endpoints",
-		"disabledRoutesDesc": "API endpoints that are completely disabled (press Enter to add)",
-		"comments": "Station Comments",
-		"commentsDesc": "Allow users to comment on stations",
-		"enableComments": "Enable comments",
-		"commentsEnabled": "Users can comment on stations",
-		"commentsDisabled": "Comments are disabled",
-		"submissions": "Submissions",
-		"submissionsDesc": "Allow users to submit new stations",
-		"enableSubmissions": "Enable submissions",
-		"submissionsEnabled": "Users can submit stations",
-		"submissionsDisabled": "Submissions are disabled"
-	},
-	"users": {
-		"table": {
-			"name": "Name",
-			"email": "Email",
-			"role": "Role",
-			"status": "Status",
-			"created": "Created"
-		}
-	},
-	"locations": {
-		"title": "Locations"
-	},
-	"ukeImport": {
-		"title": "UKE Import",
-		"subtitle": "Import data from UKE (Urząd Komunikacji Elektronicznej)",
-		"importStations": "Import stations",
-		"importRadiolines": "Import radiolines",
-		"importPermits": "Import permits",
-		"startImport": "Start Import",
-		"alreadyRunning": "Import is already in progress",
-		"status": {
-			"idle": "Idle",
-			"running": "Running",
-			"success": "Completed",
-			"error": "Failed"
-		},
-		"steps": {
-			"stations": "Import stations",
-			"radiolines": "Import radiolines",
-			"permits": "Import permits",
-			"prune_associations": "Prune station-permit associations",
-			"associate": "Associate stations with permits",
-			"cleanup": "Cleanup temporary files"
-		},
-		"stepStatus": {
-			"pending": "Pending",
-			"running": "Running",
-			"success": "Done",
-			"skipped": "Skipped",
-			"error": "Error"
-		},
-		"startedAt": "Started at",
-		"finishedAt": "Finished at"
-	}
+  "breadcrumbs": {
+    "admin": "Admin",
+    "stations": "Stations",
+    "editStation": "Edit Station",
+    "submissions": "Submissions",
+    "users": "Users",
+    "userDetail": "User Detail",
+    "locations": "Locations",
+    "editLocation": "Edit Location",
+    "settings": "Settings",
+    "ukeImport": "UKE Import"
+  },
+  "settings": {
+    "title": "System Settings",
+    "subtitle": "Manage system configuration",
+    "loading": "Loading settings...",
+    "errorTitle": "Failed to load settings",
+    "errorDescription": "There was a problem loading system settings.",
+    "authentication": "Authentication",
+    "authenticationDesc": "Control access and authentication requirements",
+    "enforceAuth": "Enforce authentication for all routes",
+    "enforceAuthDesc": "Require authentication for all API endpoints",
+    "allowedRoutes": "Allowed API endpoints without authentication",
+    "allowedRoutesDesc": "API endpoints that bypass authentication (press Enter to add)",
+    "disabledRoutes": "Disabled API endpoints",
+    "disabledRoutesDesc": "API endpoints that are completely disabled (press Enter to add)",
+    "comments": "Station Comments",
+    "commentsDesc": "Allow users to comment on stations",
+    "enableComments": "Enable comments",
+    "commentsEnabled": "Users can comment on stations",
+    "commentsDisabled": "Comments are disabled",
+    "submissions": "Submissions",
+    "submissionsDesc": "Allow users to submit new stations",
+    "enableSubmissions": "Enable submissions",
+    "submissionsEnabled": "Users can submit stations",
+    "submissionsDisabled": "Submissions are disabled"
+  },
+  "users": {
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "created": "Created"
+    }
+  },
+  "locations": {
+    "title": "Locations"
+  },
+  "ukeImport": {
+    "title": "UKE Import",
+    "subtitle": "Import data from UKE (Urząd Komunikacji Elektronicznej)",
+    "importStations": "Import stations",
+    "importRadiolines": "Import radiolines",
+    "importPermits": "Import permits",
+    "startImport": "Start Import",
+    "alreadyRunning": "Import is already in progress",
+    "status": {
+      "idle": "Idle",
+      "running": "Running",
+      "success": "Completed",
+      "error": "Failed"
+    },
+    "steps": {
+      "stations": "Import stations",
+      "radiolines": "Import radiolines",
+      "permits": "Import permits",
+      "prune_associations": "Prune station-permit associations",
+      "associate": "Associate stations with permits",
+      "cleanup": "Cleanup temporary files"
+    },
+    "stepStatus": {
+      "pending": "Pending",
+      "running": "Running",
+      "success": "Done",
+      "skipped": "Skipped",
+      "error": "Error"
+    },
+    "startedAt": "Started at",
+    "finishedAt": "Finished at"
+  }
 }

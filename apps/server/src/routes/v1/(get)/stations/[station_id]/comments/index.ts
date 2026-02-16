@@ -13,55 +13,55 @@ import type { JSONBody, Route } from "../../../../../../interfaces/routes.interf
 const stationCommentSelectSchema = createSelectSchema(stationComments);
 
 const schemaRoute = {
-	params: z.object({
-		station_id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: z.array(stationCommentSelectSchema),
-		}),
-	},
+  params: z.object({
+    station_id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: z.array(stationCommentSelectSchema),
+    }),
+  },
 };
 
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 type ResponseData = z.infer<typeof stationCommentSelectSchema>[];
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { station_id } = req.params;
+  const { station_id } = req.params;
 
-	if (!getRuntimeSettings().enableStationComments) throw new ErrorResponse("FORBIDDEN");
+  if (!getRuntimeSettings().enableStationComments) throw new ErrorResponse("FORBIDDEN");
 
-	const station = await db.query.stations.findFirst({
-		where: {
-			id: station_id,
-		},
-	});
-	if (!station) throw new ErrorResponse("NOT_FOUND");
+  const station = await db.query.stations.findFirst({
+    where: {
+      id: station_id,
+    },
+  });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
 
-	try {
-		const comments = await db.query.stationComments.findMany({
-			where: {
-				RAW: (fields, { eq }) => eq(fields.station_id, station_id),
-			},
-			with: {
-				author: true,
-			},
-			orderBy: { createdAt: "desc" },
-		});
+  try {
+    const comments = await db.query.stationComments.findMany({
+      where: {
+        RAW: (fields, { eq }) => eq(fields.station_id, station_id),
+      },
+      with: {
+        author: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-		return res.send({ data: comments });
-	} catch (error) {
-		if (error instanceof ErrorResponse) throw error;
-		throw new ErrorResponse("INTERNAL_SERVER_ERROR");
-	}
+    return res.send({ data: comments });
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
+    throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+  }
 }
 
 const getStationComments: Route<ReqParams, ResponseData> = {
-	url: "/stations/:station_id/comments",
-	method: "GET",
-	config: { permissions: ["read:stations", "read:comments"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/stations/:station_id/comments",
+  method: "GET",
+  config: { permissions: ["read:stations", "read:comments"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getStationComments;

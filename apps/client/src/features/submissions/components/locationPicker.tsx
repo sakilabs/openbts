@@ -12,16 +12,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Map as MapGL, useMap, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
 import {
-	POLAND_CENTER,
-	PICKER_SOURCE_ID,
-	PICKER_CIRCLE_LAYER_ID,
-	PICKER_SYMBOL_LAYER_ID,
-	PICKER_LAYER_IDS,
-	PICKER_NEARBY_RADIUS_METERS,
-	PICKER_UKE_SOURCE_ID,
-	PICKER_UKE_CIRCLE_LAYER_ID,
-	PICKER_UKE_SYMBOL_LAYER_ID,
-	PICKER_UKE_LAYER_IDS,
+  POLAND_CENTER,
+  PICKER_SOURCE_ID,
+  PICKER_CIRCLE_LAYER_ID,
+  PICKER_SYMBOL_LAYER_ID,
+  PICKER_LAYER_IDS,
+  PICKER_NEARBY_RADIUS_METERS,
+  PICKER_UKE_SOURCE_ID,
+  PICKER_UKE_CIRCLE_LAYER_ID,
+  PICKER_UKE_SYMBOL_LAYER_ID,
+  PICKER_UKE_LAYER_IDS,
 } from "@/features/map/constants";
 import { useMapBounds } from "@/features/map/hooks/useMapBounds";
 import { syncPieImages } from "@/features/map/pieChart";
@@ -36,737 +36,737 @@ import { ChangeBadge } from "@/features/admin/submissions/components/common";
 import type { LocationErrors } from "../utils/validation";
 
 function roundCoord(value: number): number {
-	return Math.round(value * 1000000) / 1000000;
+  return Math.round(value * 1000000) / 1000000;
 }
 
 function locationsToPickerGeoJSON(locations: LocationWithStations[]): GeoJSON.FeatureCollection {
-	const features: GeoJSON.Feature[] = [];
+  const features: GeoJSON.Feature[] = [];
 
-	for (const loc of locations) {
-		if (!loc.latitude || !loc.longitude) continue;
+  for (const loc of locations) {
+    if (!loc.latitude || !loc.longitude) continue;
 
-		const { operators, isMultiOperator, color } = getOperatorData((loc.stations ?? []).map((s) => s.operator?.mnc));
-		const pieImageId = isMultiOperator ? `picker-pie-${operators.join("-")}` : undefined;
+    const { operators, isMultiOperator, color } = getOperatorData((loc.stations ?? []).map((s) => s.operator?.mnc));
+    const pieImageId = isMultiOperator ? `picker-pie-${operators.join("-")}` : undefined;
 
-		features.push({
-			type: "Feature",
-			geometry: { type: "Point", coordinates: [loc.longitude, loc.latitude] },
-			properties: {
-				locationId: loc.id,
-				city: loc.city ?? "",
-				address: loc.address ?? "",
-				stationCount: loc.stations?.length ?? 0,
-				color,
-				isMultiOperator,
-				operators: JSON.stringify(operators),
-				pieImageId,
-			},
-		});
-	}
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [loc.longitude, loc.latitude] },
+      properties: {
+        locationId: loc.id,
+        city: loc.city ?? "",
+        address: loc.address ?? "",
+        stationCount: loc.stations?.length ?? 0,
+        color,
+        isMultiOperator,
+        operators: JSON.stringify(operators),
+        pieImageId,
+      },
+    });
+  }
 
-	return { type: "FeatureCollection", features };
+  return { type: "FeatureCollection", features };
 }
 
 function ukeLocationsToPickerGeoJSON(locations: UkeLocationWithPermits[]): GeoJSON.FeatureCollection {
-	const features: GeoJSON.Feature[] = [];
+  const features: GeoJSON.Feature[] = [];
 
-	for (const loc of locations) {
-		if (!loc.latitude || !loc.longitude || !loc.permits?.length) continue;
+  for (const loc of locations) {
+    if (!loc.latitude || !loc.longitude || !loc.permits?.length) continue;
 
-		const { operators, isMultiOperator, color } = getOperatorData(loc.permits.map((p) => p.operator?.mnc));
-		const pieImageId = isMultiOperator ? `picker-uke-pie-${operators.join("-")}` : undefined;
+    const { operators, isMultiOperator, color } = getOperatorData(loc.permits.map((p) => p.operator?.mnc));
+    const pieImageId = isMultiOperator ? `picker-uke-pie-${operators.join("-")}` : undefined;
 
-		features.push({
-			type: "Feature",
-			geometry: { type: "Point", coordinates: [loc.longitude, loc.latitude] },
-			properties: {
-				locationId: loc.id,
-				city: loc.city ?? "",
-				address: loc.address ?? "",
-				stationCount: loc.permits.length,
-				color,
-				isMultiOperator,
-				operators: JSON.stringify(operators),
-				pieImageId,
-			},
-		});
-	}
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [loc.longitude, loc.latitude] },
+      properties: {
+        locationId: loc.id,
+        city: loc.city ?? "",
+        address: loc.address ?? "",
+        stationCount: loc.permits.length,
+        color,
+        isMultiOperator,
+        operators: JSON.stringify(operators),
+        pieImageId,
+      },
+    });
+  }
 
-	return { type: "FeatureCollection", features };
+  return { type: "FeatureCollection", features };
 }
 
 function applyGeocodeResult(result: NominatimResult, regions: Region[], onLocationChange: (patch: Partial<ProposedLocationForm>) => void) {
-	const city = result.address.city || result.address.town || result.address.village || result.address.municipality;
-	const addressParts = [result.address.road, result.address.house_number].filter(Boolean);
-	const address = addressParts.join(" ") || result.display_name?.split(",")[0];
-	const regionName = result.address.state?.replace(" Voivodeship", "").replace("województwo ", "");
-	const matchedRegion = regions.find((r) => r.name.toLowerCase() === regionName?.toLowerCase());
+  const city = result.address.city || result.address.town || result.address.village || result.address.municipality;
+  const addressParts = [result.address.road, result.address.house_number].filter(Boolean);
+  const address = addressParts.join(" ") || result.display_name?.split(",")[0];
+  const regionName = result.address.state?.replace(" Voivodeship", "").replace("województwo ", "");
+  const matchedRegion = regions.find((r) => r.name.toLowerCase() === regionName?.toLowerCase());
 
-	const patch: Partial<ProposedLocationForm> = {};
-	if (city) patch.city = city;
-	if (address) patch.address = address;
-	if (matchedRegion) patch.region_id = matchedRegion.id;
+  const patch: Partial<ProposedLocationForm> = {};
+  if (city) patch.city = city;
+  if (address) patch.address = address;
+  if (matchedRegion) patch.region_id = matchedRegion.id;
 
-	onLocationChange(patch);
+  onLocationChange(patch);
 }
 
 function computeNearby(coords: { lat: number; lng: number }, locations: LocationWithStations[]): (LocationWithStations & { distance: number })[] {
-	return locations
-		.map((loc) => ({
-			...loc,
-			distance: calculateDistance(coords.lat, coords.lng, loc.latitude, loc.longitude),
-		}))
-		.filter((loc) => loc.distance <= PICKER_NEARBY_RADIUS_METERS)
-		.sort((a, b) => a.distance - b.distance)
-		.slice(0, 5);
+  return locations
+    .map((loc) => ({
+      ...loc,
+      distance: calculateDistance(coords.lat, coords.lng, loc.latitude, loc.longitude),
+    }))
+    .filter((loc) => loc.distance <= PICKER_NEARBY_RADIUS_METERS)
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, 5);
 }
 
 type LocationPickerProps = {
-	location: ProposedLocationForm;
-	errors?: LocationErrors;
-	onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
-	onUkeStationSelect?: (station: UkeStation) => void;
-	locationDiffs?: { coords: boolean; city: boolean; address: boolean } | null;
-	currentLocation?: Location | null;
+  location: ProposedLocationForm;
+  errors?: LocationErrors;
+  onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
+  onUkeStationSelect?: (station: UkeStation) => void;
+  locationDiffs?: { coords: boolean; city: boolean; address: boolean } | null;
+  currentLocation?: Location | null;
 };
 
 export function LocationPicker({ location, errors, onLocationChange, onUkeStationSelect, locationDiffs, currentLocation }: LocationPickerProps) {
-	const { t } = useTranslation(["submissions", "common"]);
-	const [isFetchingAddress, setIsFetchingAddress] = useState(false);
-	const [showUkeLocations, setShowUkeLocations] = useState(false);
+  const { t } = useTranslation(["submissions", "common"]);
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [showUkeLocations, setShowUkeLocations] = useState(false);
 
-	const { data: regions = [] } = useQuery(regionsQueryOptions());
+  const { data: regions = [] } = useQuery(regionsQueryOptions());
 
-	const handleFetchAddress = async () => {
-		if (location.latitude === null || location.longitude === null) return;
-		setIsFetchingAddress(true);
-		try {
-			const result = await reverseGeocode(location.latitude, location.longitude);
-			if (result) applyGeocodeResult(result, regions, onLocationChange);
-		} finally {
-			setIsFetchingAddress(false);
-		}
-	};
+  const handleFetchAddress = async () => {
+    if (location.latitude === null || location.longitude === null) return;
+    setIsFetchingAddress(true);
+    try {
+      const result = await reverseGeocode(location.latitude, location.longitude);
+      if (result) applyGeocodeResult(result, regions, onLocationChange);
+    } finally {
+      setIsFetchingAddress(false);
+    }
+  };
 
-	const handleMapCoordinatesSet = useCallback(
-		async (lat: number, lon: number) => {
-			onLocationChange({ latitude: roundCoord(lat), longitude: roundCoord(lon) });
-			try {
-				const result = await reverseGeocode(lat, lon);
-				if (result) applyGeocodeResult(result, regions, onLocationChange);
-			} catch {}
-		},
-		[regions, onLocationChange],
-	);
+  const handleMapCoordinatesSet = useCallback(
+    async (lat: number, lon: number) => {
+      onLocationChange({ latitude: roundCoord(lat), longitude: roundCoord(lon) });
+      try {
+        const result = await reverseGeocode(lat, lon);
+        if (result) applyGeocodeResult(result, regions, onLocationChange);
+      } catch {}
+    },
+    [regions, onLocationChange],
+  );
 
-	const handleExistingLocationSelect = useCallback(
-		(loc: LocationWithStations) => {
-			onLocationChange({
-				latitude: loc.latitude,
-				longitude: loc.longitude,
-				city: loc.city ?? undefined,
-				address: loc.address ?? undefined,
-				region_id: loc.region?.id ?? null,
-			});
-		},
-		[onLocationChange],
-	);
+  const handleExistingLocationSelect = useCallback(
+    (loc: LocationWithStations) => {
+      onLocationChange({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        city: loc.city ?? undefined,
+        address: loc.address ?? undefined,
+        region_id: loc.region?.id ?? null,
+      });
+    },
+    [onLocationChange],
+  );
 
-	const hasCoordinates = location.latitude !== null && location.longitude !== null;
+  const hasCoordinates = location.latitude !== null && location.longitude !== null;
 
-	const [initialView] = useState(() => {
-		const has = location.longitude !== null && location.longitude !== undefined && location.latitude !== null && location.latitude !== undefined;
-		return {
-			center: (has ? [location.longitude, location.latitude] : POLAND_CENTER) as [number, number],
-			zoom: has ? 15 : 6,
-		};
-	});
+  const [initialView] = useState(() => {
+    const has = location.longitude !== null && location.longitude !== undefined && location.latitude !== null && location.latitude !== undefined;
+    return {
+      center: (has ? [location.longitude, location.latitude] : POLAND_CENTER) as [number, number],
+      zoom: has ? 15 : 6,
+    };
+  });
 
-	return (
-		<div className="border rounded-xl overflow-hidden">
-			<div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<HugeiconsIcon icon={Location01Icon} className="size-4 text-primary" />
-					<span className="font-semibold text-sm">{t("locationPicker.title")}</span>
-				</div>
-				{onUkeStationSelect && (
-					<label htmlFor="enable-uke-locations" className="flex items-center gap-1.5 cursor-pointer">
-						<Checkbox id="enable-uke-locations" checked={showUkeLocations} onCheckedChange={(checked) => setShowUkeLocations(!!checked)} />
-						<span className="text-xs text-muted-foreground select-none">{t("locationPicker.showUkeLocations")}</span>
-					</label>
-				)}
-			</div>
+  return (
+    <div className="border rounded-xl overflow-hidden">
+      <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <HugeiconsIcon icon={Location01Icon} className="size-4 text-primary" />
+          <span className="font-semibold text-sm">{t("locationPicker.title")}</span>
+        </div>
+        {onUkeStationSelect && (
+          <label htmlFor="enable-uke-locations" className="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox id="enable-uke-locations" checked={showUkeLocations} onCheckedChange={(checked) => setShowUkeLocations(!!checked)} />
+            <span className="text-xs text-muted-foreground select-none">{t("locationPicker.showUkeLocations")}</span>
+          </label>
+        )}
+      </div>
 
-			<div className="h-75 lg:h-87.5 relative">
-				<MapGL center={initialView.center} zoom={initialView.zoom}>
-					<PickerMapInner
-						location={location}
-						onCoordinatesSet={handleMapCoordinatesSet}
-						onExistingLocationSelect={handleExistingLocationSelect}
-						showUkeLocations={showUkeLocations}
-						onUkeStationSelect={onUkeStationSelect}
-					/>
-					<MapControls showZoom showLocate position="bottom-right" />
-				</MapGL>
-			</div>
+      <div className="h-75 lg:h-87.5 relative">
+        <MapGL center={initialView.center} zoom={initialView.zoom}>
+          <PickerMapInner
+            location={location}
+            onCoordinatesSet={handleMapCoordinatesSet}
+            onExistingLocationSelect={handleExistingLocationSelect}
+            showUkeLocations={showUkeLocations}
+            onUkeStationSelect={onUkeStationSelect}
+          />
+          <MapControls showZoom showLocate position="bottom-right" />
+        </MapGL>
+      </div>
 
-			<div className="p-4 space-y-4">
-				<div className="flex gap-2">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={handleFetchAddress}
-						disabled={!hasCoordinates || isFetchingAddress}
-						className="h-8 text-xs"
-					>
-						{isFetchingAddress ? (
-							<HugeiconsIcon icon={Loading01Icon} className="size-3.5 animate-spin" />
-						) : (
-							<HugeiconsIcon icon={Location01Icon} className="size-3.5" />
-						)}
-						{t("locationPicker.fetchAddress")}
-					</Button>
-				</div>
+      <div className="p-4 space-y-4">
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleFetchAddress}
+            disabled={!hasCoordinates || isFetchingAddress}
+            className="h-8 text-xs"
+          >
+            {isFetchingAddress ? (
+              <HugeiconsIcon icon={Loading01Icon} className="size-3.5 animate-spin" />
+            ) : (
+              <HugeiconsIcon icon={Location01Icon} className="size-3.5" />
+            )}
+            {t("locationPicker.fetchAddress")}
+          </Button>
+        </div>
 
-				<div className="grid grid-cols-2 gap-3">
-					<div className="space-y-1.5">
-						<Label htmlFor="latitude" className="text-xs">
-							{t("common:labels.latitude")}
-						</Label>
-						<Input
-							id="latitude"
-							type="number"
-							step="0.001"
-							placeholder="52.2297"
-							value={location.latitude ?? ""}
-							onChange={(e) => onLocationChange({ latitude: e.target.value ? Number.parseFloat(e.target.value) : null })}
-							className={`h-8 font-mono text-sm ${errors?.latitude ? "border-destructive" : ""}`}
-						/>
-						{errors?.latitude && <p className="text-xs text-destructive">{t(errors.latitude)}</p>}
-						{locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.latitude.toFixed(6)} />}
-					</div>
-					<div className="space-y-1.5">
-						<Label htmlFor="longitude" className="text-xs">
-							{t("common:labels.longitude")}
-						</Label>
-						<Input
-							id="longitude"
-							type="number"
-							step="0.001"
-							placeholder="21.0122"
-							value={location.longitude ?? ""}
-							onChange={(e) => onLocationChange({ longitude: e.target.value ? Number.parseFloat(e.target.value) : null })}
-							className={`h-8 font-mono text-sm ${errors?.longitude ? "border-destructive" : ""}`}
-						/>
-						{errors?.longitude && <p className="text-xs text-destructive">{t(errors.longitude)}</p>}
-						{locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.longitude.toFixed(6)} />}
-					</div>
-				</div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="latitude" className="text-xs">
+              {t("common:labels.latitude")}
+            </Label>
+            <Input
+              id="latitude"
+              type="number"
+              step="0.001"
+              placeholder="52.2297"
+              value={location.latitude ?? ""}
+              onChange={(e) => onLocationChange({ latitude: e.target.value ? Number.parseFloat(e.target.value) : null })}
+              className={`h-8 font-mono text-sm ${errors?.latitude ? "border-destructive" : ""}`}
+            />
+            {errors?.latitude && <p className="text-xs text-destructive">{t(errors.latitude)}</p>}
+            {locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.latitude.toFixed(6)} />}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="longitude" className="text-xs">
+              {t("common:labels.longitude")}
+            </Label>
+            <Input
+              id="longitude"
+              type="number"
+              step="0.001"
+              placeholder="21.0122"
+              value={location.longitude ?? ""}
+              onChange={(e) => onLocationChange({ longitude: e.target.value ? Number.parseFloat(e.target.value) : null })}
+              className={`h-8 font-mono text-sm ${errors?.longitude ? "border-destructive" : ""}`}
+            />
+            {errors?.longitude && <p className="text-xs text-destructive">{t(errors.longitude)}</p>}
+            {locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.longitude.toFixed(6)} />}
+          </div>
+        </div>
 
-				<div className="space-y-1.5">
-					<Label htmlFor="region" className="text-xs">
-						{t("common:labels.region")}
-					</Label>
-					<Select
-						value={location.region_id?.toString() ?? ""}
-						onValueChange={(value) => onLocationChange({ region_id: value ? Number.parseInt(value, 10) : null })}
-					>
-						<SelectTrigger className={`h-8 text-sm ${errors?.region_id ? "border-destructive" : ""}`}>
-							<SelectValue>
-								{location.region_id ? regions.find((r) => r.id === location.region_id)?.name : t("locationPicker.regionPlaceholder")}
-							</SelectValue>
-						</SelectTrigger>
-						<SelectContent>
-							{regions.map((region) => (
-								<SelectItem key={region.id} value={region.id.toString()}>
-									{region.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-					{errors?.region_id && <p className="text-xs text-destructive">{t(errors.region_id)}</p>}
-				</div>
+        <div className="space-y-1.5">
+          <Label htmlFor="region" className="text-xs">
+            {t("common:labels.region")}
+          </Label>
+          <Select
+            value={location.region_id?.toString() ?? ""}
+            onValueChange={(value) => onLocationChange({ region_id: value ? Number.parseInt(value, 10) : null })}
+          >
+            <SelectTrigger className={`h-8 text-sm ${errors?.region_id ? "border-destructive" : ""}`}>
+              <SelectValue>
+                {location.region_id ? regions.find((r) => r.id === location.region_id)?.name : t("locationPicker.regionPlaceholder")}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {regions.map((region) => (
+                <SelectItem key={region.id} value={region.id.toString()}>
+                  {region.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors?.region_id && <p className="text-xs text-destructive">{t(errors.region_id)}</p>}
+        </div>
 
-				<div className="grid grid-cols-2 gap-3">
-					<div className="space-y-1.5">
-						<Label htmlFor="city" className="text-xs">
-							{t("common:labels.city")}
-						</Label>
-						<Input
-							id="city"
-							placeholder={t("locationPicker.cityPlaceholder")}
-							value={location.city ?? ""}
-							onChange={(e) => onLocationChange({ city: e.target.value })}
-							className="h-8 text-sm"
-						/>
-						{locationDiffs?.city && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.city || "—"} />}
-					</div>
-					<div className="space-y-1.5">
-						<Label htmlFor="address" className="text-xs">
-							{t("common:labels.address")}
-						</Label>
-						<Input
-							id="address"
-							placeholder={t("locationPicker.addressPlaceholder")}
-							value={location.address ?? ""}
-							onChange={(e) => onLocationChange({ address: e.target.value })}
-							className="h-8 text-sm"
-						/>
-						{locationDiffs?.address && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.address || "—"} />}
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="city" className="text-xs">
+              {t("common:labels.city")}
+            </Label>
+            <Input
+              id="city"
+              placeholder={t("locationPicker.cityPlaceholder")}
+              value={location.city ?? ""}
+              onChange={(e) => onLocationChange({ city: e.target.value })}
+              className="h-8 text-sm"
+            />
+            {locationDiffs?.city && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.city || "—"} />}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="address" className="text-xs">
+              {t("common:labels.address")}
+            </Label>
+            <Input
+              id="address"
+              placeholder={t("locationPicker.addressPlaceholder")}
+              value={location.address ?? ""}
+              onChange={(e) => onLocationChange({ address: e.target.value })}
+              className="h-8 text-sm"
+            />
+            {locationDiffs?.address && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.address || "—"} />}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function SelectedLocationMarker() {
-	return (
-		<div className="relative flex items-center justify-center">
-			<span className="absolute h-7 w-7 rounded-full bg-foreground/20 animate-ping" />
-			<span className="absolute h-5 w-5 rounded-full bg-foreground/10" />
-			<div className="relative h-4 w-4 rounded-full border-[3px] border-foreground bg-background shadow-lg" />
-		</div>
-	);
+  return (
+    <div className="relative flex items-center justify-center">
+      <span className="absolute h-7 w-7 rounded-full bg-foreground/20 animate-ping" />
+      <span className="absolute h-5 w-5 rounded-full bg-foreground/10" />
+      <div className="relative h-4 w-4 rounded-full border-[3px] border-foreground bg-background shadow-lg" />
+    </div>
+  );
 }
 
 type NearbyPanel = {
-	coords: { lat: number; lng: number };
-	locations: (LocationWithStations & { distance: number })[];
+  coords: { lat: number; lng: number };
+  locations: (LocationWithStations & { distance: number })[];
 };
 
 type UkeStationPanel = {
-	location: UkeLocationWithPermits;
-	stations: UkeStation[];
+  location: UkeLocationWithPermits;
+  stations: UkeStation[];
 };
 
 type PickerMapInnerProps = {
-	location: ProposedLocationForm;
-	onCoordinatesSet: (lat: number, lon: number) => void;
-	onExistingLocationSelect: (loc: LocationWithStations) => void;
-	showUkeLocations: boolean;
-	onUkeStationSelect?: (station: UkeStation) => void;
+  location: ProposedLocationForm;
+  onCoordinatesSet: (lat: number, lon: number) => void;
+  onExistingLocationSelect: (loc: LocationWithStations) => void;
+  showUkeLocations: boolean;
+  onUkeStationSelect?: (station: UkeStation) => void;
 };
 
 function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, showUkeLocations, onUkeStationSelect }: PickerMapInnerProps) {
-	const { t } = useTranslation("submissions");
-	const { map, isLoaded } = useMap();
-	const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
-	const [nearbyPanel, setNearbyPanel] = useState<NearbyPanel | null>(null);
-	const [ukeStationPanel, setUkeStationPanel] = useState<UkeStationPanel | null>(null);
+  const { t } = useTranslation("submissions");
+  const { map, isLoaded } = useMap();
+  const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
+  const [nearbyPanel, setNearbyPanel] = useState<NearbyPanel | null>(null);
+  const [ukeStationPanel, setUkeStationPanel] = useState<UkeStationPanel | null>(null);
 
-	const lastInternalCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
-	const addedImagesRef = useRef(new Set<string>());
-	const addedUkeImagesRef = useRef(new Set<string>());
+  const lastInternalCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const addedImagesRef = useRef(new Set<string>());
+  const addedUkeImagesRef = useRef(new Set<string>());
 
-	const { data: viewportLocations = [] } = useQuery({
-		queryKey: ["picker-locations", bounds],
-		queryFn: () => fetchLocationsInViewport(bounds),
-		enabled: !!bounds,
-		staleTime: 1000 * 60 * 2,
-		placeholderData: (prev) => prev,
-	});
+  const { data: viewportLocations = [] } = useQuery({
+    queryKey: ["picker-locations", bounds],
+    queryFn: () => fetchLocationsInViewport(bounds),
+    enabled: !!bounds,
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prev) => prev,
+  });
 
-	const { data: viewportUkeLocations = [] } = useQuery({
-		queryKey: ["picker-uke-locations", bounds],
-		queryFn: () => fetchUkeLocationsInViewport(bounds),
-		enabled: !!bounds && showUkeLocations,
-		staleTime: 1000 * 60 * 2,
-		placeholderData: (prev) => prev,
-	});
+  const { data: viewportUkeLocations = [] } = useQuery({
+    queryKey: ["picker-uke-locations", bounds],
+    queryFn: () => fetchUkeLocationsInViewport(bounds),
+    enabled: !!bounds && showUkeLocations,
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prev) => prev,
+  });
 
-	const geoJSON = useMemo(() => locationsToPickerGeoJSON(viewportLocations), [viewportLocations]);
-	const ukeGeoJSON = useMemo(() => ukeLocationsToPickerGeoJSON(viewportUkeLocations), [viewportUkeLocations]);
+  const geoJSON = useMemo(() => locationsToPickerGeoJSON(viewportLocations), [viewportLocations]);
+  const ukeGeoJSON = useMemo(() => ukeLocationsToPickerGeoJSON(viewportUkeLocations), [viewportUkeLocations]);
 
-	const viewportLocationsRef = useRef(viewportLocations);
-	viewportLocationsRef.current = viewportLocations;
-	const viewportUkeLocationsRef = useRef(viewportUkeLocations);
-	viewportUkeLocationsRef.current = viewportUkeLocations;
-	const showUkeLocationsRef = useRef(showUkeLocations);
-	showUkeLocationsRef.current = showUkeLocations;
-	const callbackRefs = useRef({ onCoordinatesSet, onExistingLocationSelect });
-	callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
+  const viewportLocationsRef = useRef(viewportLocations);
+  viewportLocationsRef.current = viewportLocations;
+  const viewportUkeLocationsRef = useRef(viewportUkeLocations);
+  viewportUkeLocationsRef.current = viewportUkeLocations;
+  const showUkeLocationsRef = useRef(showUkeLocations);
+  showUkeLocationsRef.current = showUkeLocations;
+  const callbackRefs = useRef({ onCoordinatesSet, onExistingLocationSelect });
+  callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
 
-	useEffect(() => {
-		if (!map || !isLoaded) return;
+  useEffect(() => {
+    if (!map || !isLoaded) return;
 
-		const ensureLayersExist = () => {
-			if (!map.getSource(PICKER_SOURCE_ID)) {
-				map.addSource(PICKER_SOURCE_ID, {
-					type: "geojson",
-					data: { type: "FeatureCollection", features: [] },
-				});
-				addedImagesRef.current.clear();
-			}
-			if (!map.getLayer(PICKER_CIRCLE_LAYER_ID)) {
-				map.addLayer({
-					id: PICKER_CIRCLE_LAYER_ID,
-					type: "circle",
-					source: PICKER_SOURCE_ID,
-					filter: ["!", ["get", "isMultiOperator"]],
-					paint: {
-						"circle-color": ["get", "color"],
-						"circle-radius": 6,
-						"circle-stroke-width": 2,
-						"circle-stroke-color": "#fff",
-					},
-				});
-			}
-			if (!map.getLayer(PICKER_SYMBOL_LAYER_ID)) {
-				map.addLayer({
-					id: PICKER_SYMBOL_LAYER_ID,
-					type: "symbol",
-					source: PICKER_SOURCE_ID,
-					filter: ["get", "isMultiOperator"],
-					layout: {
-						"icon-image": ["get", "pieImageId"],
-						"icon-size": 0.5,
-						"icon-allow-overlap": true,
-					},
-				});
-			}
-		};
+    const ensureLayersExist = () => {
+      if (!map.getSource(PICKER_SOURCE_ID)) {
+        map.addSource(PICKER_SOURCE_ID, {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        addedImagesRef.current.clear();
+      }
+      if (!map.getLayer(PICKER_CIRCLE_LAYER_ID)) {
+        map.addLayer({
+          id: PICKER_CIRCLE_LAYER_ID,
+          type: "circle",
+          source: PICKER_SOURCE_ID,
+          filter: ["!", ["get", "isMultiOperator"]],
+          paint: {
+            "circle-color": ["get", "color"],
+            "circle-radius": 6,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff",
+          },
+        });
+      }
+      if (!map.getLayer(PICKER_SYMBOL_LAYER_ID)) {
+        map.addLayer({
+          id: PICKER_SYMBOL_LAYER_ID,
+          type: "symbol",
+          source: PICKER_SOURCE_ID,
+          filter: ["get", "isMultiOperator"],
+          layout: {
+            "icon-image": ["get", "pieImageId"],
+            "icon-size": 0.5,
+            "icon-allow-overlap": true,
+          },
+        });
+      }
+    };
 
-		const handleMouseEnter = () => {
-			map.getCanvas().style.cursor = "pointer";
-		};
-		const handleMouseLeave = () => {
-			map.getCanvas().style.cursor = "";
-		};
+    const handleMouseEnter = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const handleMouseLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
 
-		ensureLayersExist();
-		map.on("styledata", ensureLayersExist);
+    ensureLayersExist();
+    map.on("styledata", ensureLayersExist);
 
-		for (const layerId of PICKER_LAYER_IDS) {
-			map.on("mouseenter", layerId, handleMouseEnter);
-			map.on("mouseleave", layerId, handleMouseLeave);
-		}
+    for (const layerId of PICKER_LAYER_IDS) {
+      map.on("mouseenter", layerId, handleMouseEnter);
+      map.on("mouseleave", layerId, handleMouseLeave);
+    }
 
-		return () => {
-			try {
-				map.off("styledata", ensureLayersExist);
+    return () => {
+      try {
+        map.off("styledata", ensureLayersExist);
 
-				for (const layerId of PICKER_LAYER_IDS) {
-					map.off("mouseenter", layerId, handleMouseEnter);
-					map.off("mouseleave", layerId, handleMouseLeave);
-					if (map.getLayer(layerId)) map.removeLayer(layerId);
-				}
-				if (map.getSource(PICKER_SOURCE_ID)) map.removeSource(PICKER_SOURCE_ID);
-			} catch {}
+        for (const layerId of PICKER_LAYER_IDS) {
+          map.off("mouseenter", layerId, handleMouseEnter);
+          map.off("mouseleave", layerId, handleMouseLeave);
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        }
+        if (map.getSource(PICKER_SOURCE_ID)) map.removeSource(PICKER_SOURCE_ID);
+      } catch {}
 
-			addedImagesRef.current.clear();
-		};
-	}, [map, isLoaded]);
+      addedImagesRef.current.clear();
+    };
+  }, [map, isLoaded]);
 
-	useEffect(() => {
-		if (!map || !isLoaded) return;
-		const source = map.getSource(PICKER_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
-		if (!source) return;
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    const source = map.getSource(PICKER_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
+    if (!source) return;
 
-		syncPieImages(map, geoJSON.features, addedImagesRef.current);
-		source.setData(geoJSON);
-	}, [map, isLoaded, geoJSON]);
+    syncPieImages(map, geoJSON.features, addedImagesRef.current);
+    source.setData(geoJSON);
+  }, [map, isLoaded, geoJSON]);
 
-	useEffect(() => {
-		if (!map || !isLoaded) return;
+  useEffect(() => {
+    if (!map || !isLoaded) return;
 
-		const ensureUkeLayersExist = () => {
-			if (!map.getSource(PICKER_UKE_SOURCE_ID)) {
-				map.addSource(PICKER_UKE_SOURCE_ID, {
-					type: "geojson",
-					data: { type: "FeatureCollection", features: [] },
-				});
-				addedUkeImagesRef.current.clear();
-			}
-			if (!map.getLayer(PICKER_UKE_CIRCLE_LAYER_ID)) {
-				map.addLayer({
-					id: PICKER_UKE_CIRCLE_LAYER_ID,
-					type: "circle",
-					source: PICKER_UKE_SOURCE_ID,
-					filter: ["!", ["get", "isMultiOperator"]],
-					paint: {
-						"circle-color": ["get", "color"],
-						"circle-radius": 6,
-						"circle-stroke-width": 2,
-						"circle-stroke-color": "#fff",
-					},
-				});
-			}
-			if (!map.getLayer(PICKER_UKE_SYMBOL_LAYER_ID)) {
-				map.addLayer({
-					id: PICKER_UKE_SYMBOL_LAYER_ID,
-					type: "symbol",
-					source: PICKER_UKE_SOURCE_ID,
-					filter: ["get", "isMultiOperator"],
-					layout: {
-						"icon-image": ["get", "pieImageId"],
-						"icon-size": 0.5,
-						"icon-allow-overlap": true,
-					},
-				});
-			}
-			if (map.getLayer(PICKER_CIRCLE_LAYER_ID)) map.moveLayer(PICKER_CIRCLE_LAYER_ID);
-			if (map.getLayer(PICKER_SYMBOL_LAYER_ID)) map.moveLayer(PICKER_SYMBOL_LAYER_ID);
-		};
+    const ensureUkeLayersExist = () => {
+      if (!map.getSource(PICKER_UKE_SOURCE_ID)) {
+        map.addSource(PICKER_UKE_SOURCE_ID, {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        addedUkeImagesRef.current.clear();
+      }
+      if (!map.getLayer(PICKER_UKE_CIRCLE_LAYER_ID)) {
+        map.addLayer({
+          id: PICKER_UKE_CIRCLE_LAYER_ID,
+          type: "circle",
+          source: PICKER_UKE_SOURCE_ID,
+          filter: ["!", ["get", "isMultiOperator"]],
+          paint: {
+            "circle-color": ["get", "color"],
+            "circle-radius": 6,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff",
+          },
+        });
+      }
+      if (!map.getLayer(PICKER_UKE_SYMBOL_LAYER_ID)) {
+        map.addLayer({
+          id: PICKER_UKE_SYMBOL_LAYER_ID,
+          type: "symbol",
+          source: PICKER_UKE_SOURCE_ID,
+          filter: ["get", "isMultiOperator"],
+          layout: {
+            "icon-image": ["get", "pieImageId"],
+            "icon-size": 0.5,
+            "icon-allow-overlap": true,
+          },
+        });
+      }
+      if (map.getLayer(PICKER_CIRCLE_LAYER_ID)) map.moveLayer(PICKER_CIRCLE_LAYER_ID);
+      if (map.getLayer(PICKER_SYMBOL_LAYER_ID)) map.moveLayer(PICKER_SYMBOL_LAYER_ID);
+    };
 
-		const handleMouseEnter = () => {
-			map.getCanvas().style.cursor = "pointer";
-		};
-		const handleMouseLeave = () => {
-			map.getCanvas().style.cursor = "";
-		};
+    const handleMouseEnter = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const handleMouseLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
 
-		if (showUkeLocations) {
-			ensureUkeLayersExist();
-			map.on("styledata", ensureUkeLayersExist);
+    if (showUkeLocations) {
+      ensureUkeLayersExist();
+      map.on("styledata", ensureUkeLayersExist);
 
-			for (const layerId of PICKER_UKE_LAYER_IDS) {
-				map.on("mouseenter", layerId, handleMouseEnter);
-				map.on("mouseleave", layerId, handleMouseLeave);
-			}
-		}
+      for (const layerId of PICKER_UKE_LAYER_IDS) {
+        map.on("mouseenter", layerId, handleMouseEnter);
+        map.on("mouseleave", layerId, handleMouseLeave);
+      }
+    }
 
-		return () => {
-			try {
-				map.off("styledata", ensureUkeLayersExist);
+    return () => {
+      try {
+        map.off("styledata", ensureUkeLayersExist);
 
-				for (const layerId of PICKER_UKE_LAYER_IDS) {
-					map.off("mouseenter", layerId, handleMouseEnter);
-					map.off("mouseleave", layerId, handleMouseLeave);
-					if (map.getLayer(layerId)) map.removeLayer(layerId);
-				}
-				if (map.getSource(PICKER_UKE_SOURCE_ID)) map.removeSource(PICKER_UKE_SOURCE_ID);
-			} catch {}
+        for (const layerId of PICKER_UKE_LAYER_IDS) {
+          map.off("mouseenter", layerId, handleMouseEnter);
+          map.off("mouseleave", layerId, handleMouseLeave);
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        }
+        if (map.getSource(PICKER_UKE_SOURCE_ID)) map.removeSource(PICKER_UKE_SOURCE_ID);
+      } catch {}
 
-			addedUkeImagesRef.current.clear();
-		};
-	}, [map, isLoaded, showUkeLocations]);
+      addedUkeImagesRef.current.clear();
+    };
+  }, [map, isLoaded, showUkeLocations]);
 
-	useEffect(() => {
-		if (!map || !isLoaded || !showUkeLocations) return;
-		const source = map.getSource(PICKER_UKE_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
-		if (!source) return;
+  useEffect(() => {
+    if (!map || !isLoaded || !showUkeLocations) return;
+    const source = map.getSource(PICKER_UKE_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
+    if (!source) return;
 
-		syncPieImages(map, ukeGeoJSON.features, addedUkeImagesRef.current);
-		source.setData(ukeGeoJSON);
-	}, [map, isLoaded, showUkeLocations, ukeGeoJSON]);
+    syncPieImages(map, ukeGeoJSON.features, addedUkeImagesRef.current);
+    source.setData(ukeGeoJSON);
+  }, [map, isLoaded, showUkeLocations, ukeGeoJSON]);
 
-	useEffect(() => {
-		if (!map || !isLoaded) return;
+  useEffect(() => {
+    if (!map || !isLoaded) return;
 
-		const handleMapClick = (e: maplibregl.MapMouseEvent) => {
-			const features = map.queryRenderedFeatures(e.point, { layers: [...PICKER_LAYER_IDS] });
+    const handleMapClick = (e: maplibregl.MapMouseEvent) => {
+      const features = map.queryRenderedFeatures(e.point, { layers: [...PICKER_LAYER_IDS] });
 
-			if (features.length > 0) {
-				const locationId = features[0].properties?.locationId;
-				const loc = viewportLocationsRef.current.find((l) => l.id === locationId);
-				if (loc) {
-					lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
-					callbackRefs.current.onExistingLocationSelect(loc);
-					setNearbyPanel(null);
-					setUkeStationPanel(null);
-				}
-				return;
-			}
+      if (features.length > 0) {
+        const locationId = features[0].properties?.locationId;
+        const loc = viewportLocationsRef.current.find((l) => l.id === locationId);
+        if (loc) {
+          lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
+          callbackRefs.current.onExistingLocationSelect(loc);
+          setNearbyPanel(null);
+          setUkeStationPanel(null);
+        }
+        return;
+      }
 
-			if (showUkeLocationsRef.current) {
-				const ukeFeatures = map.queryRenderedFeatures(e.point, { layers: [...PICKER_UKE_LAYER_IDS] });
-				if (ukeFeatures.length > 0) {
-					const locationId = ukeFeatures[0].properties?.locationId;
-					const ukeLoc = viewportUkeLocationsRef.current.find((l) => l.id === locationId);
-					if (ukeLoc) {
-						const stations = groupPermitsByStation(ukeLoc.permits ?? [], ukeLoc);
-						setUkeStationPanel({ location: ukeLoc, stations });
-						setNearbyPanel(null);
-					}
-					return;
-				}
-			}
+      if (showUkeLocationsRef.current) {
+        const ukeFeatures = map.queryRenderedFeatures(e.point, { layers: [...PICKER_UKE_LAYER_IDS] });
+        if (ukeFeatures.length > 0) {
+          const locationId = ukeFeatures[0].properties?.locationId;
+          const ukeLoc = viewportUkeLocationsRef.current.find((l) => l.id === locationId);
+          if (ukeLoc) {
+            const stations = groupPermitsByStation(ukeLoc.permits ?? [], ukeLoc);
+            setUkeStationPanel({ location: ukeLoc, stations });
+            setNearbyPanel(null);
+          }
+          return;
+        }
+      }
 
-			const { lat, lng } = e.lngLat;
-			const nearby = computeNearby({ lat, lng }, viewportLocationsRef.current);
+      const { lat, lng } = e.lngLat;
+      const nearby = computeNearby({ lat, lng }, viewportLocationsRef.current);
 
-			if (nearby.length > 0) {
-				setNearbyPanel({ coords: { lat, lng }, locations: nearby });
-			} else {
-				setNearbyPanel(null);
-				lastInternalCoordsRef.current = { lat, lng };
-				callbackRefs.current.onCoordinatesSet(lat, lng);
-			}
-			setUkeStationPanel(null);
-		};
+      if (nearby.length > 0) {
+        setNearbyPanel({ coords: { lat, lng }, locations: nearby });
+      } else {
+        setNearbyPanel(null);
+        lastInternalCoordsRef.current = { lat, lng };
+        callbackRefs.current.onCoordinatesSet(lat, lng);
+      }
+      setUkeStationPanel(null);
+    };
 
-		map.on("click", handleMapClick);
-		return () => {
-			map.off("click", handleMapClick);
-		};
-	}, [map, isLoaded]);
+    map.on("click", handleMapClick);
+    return () => {
+      map.off("click", handleMapClick);
+    };
+  }, [map, isLoaded]);
 
-	useEffect(() => {
-		if (!map || location.latitude === null || location.longitude === null) return;
+  useEffect(() => {
+    if (!map || location.latitude === null || location.longitude === null) return;
 
-		const last = lastInternalCoordsRef.current;
-		if (last && roundCoord(last.lat) === roundCoord(location.latitude) && roundCoord(last.lng) === roundCoord(location.longitude)) {
-			lastInternalCoordsRef.current = null;
-			return;
-		}
-		lastInternalCoordsRef.current = null;
+    const last = lastInternalCoordsRef.current;
+    if (last && roundCoord(last.lat) === roundCoord(location.latitude) && roundCoord(last.lng) === roundCoord(location.longitude)) {
+      lastInternalCoordsRef.current = null;
+      return;
+    }
+    lastInternalCoordsRef.current = null;
 
-		map.flyTo({
-			center: [location.longitude, location.latitude],
-			zoom: Math.max(map.getZoom(), 15),
-			duration: 1000,
-			speed: 1.5,
-		});
-	}, [map, location.latitude, location.longitude]);
+    map.flyTo({
+      center: [location.longitude, location.latitude],
+      zoom: Math.max(map.getZoom(), 15),
+      duration: 1000,
+      speed: 1.5,
+    });
+  }, [map, location.latitude, location.longitude]);
 
-	const handleDragEnd = useCallback(
-		(lngLat: { lng: number; lat: number }) => {
-			lastInternalCoordsRef.current = { lat: lngLat.lat, lng: lngLat.lng };
-			onCoordinatesSet(lngLat.lat, lngLat.lng);
-		},
-		[onCoordinatesSet],
-	);
+  const handleDragEnd = useCallback(
+    (lngLat: { lng: number; lat: number }) => {
+      lastInternalCoordsRef.current = { lat: lngLat.lat, lng: lngLat.lng };
+      onCoordinatesSet(lngLat.lat, lngLat.lng);
+    },
+    [onCoordinatesSet],
+  );
 
-	const handleSelectNearby = useCallback(
-		(loc: LocationWithStations) => {
-			lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
-			onExistingLocationSelect(loc);
-			setNearbyPanel(null);
-		},
-		[onExistingLocationSelect],
-	);
+  const handleSelectNearby = useCallback(
+    (loc: LocationWithStations) => {
+      lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
+      onExistingLocationSelect(loc);
+      setNearbyPanel(null);
+    },
+    [onExistingLocationSelect],
+  );
 
-	const handleCreateNewHere = useCallback(() => {
-		if (!nearbyPanel) return;
-		lastInternalCoordsRef.current = nearbyPanel.coords;
-		onCoordinatesSet(nearbyPanel.coords.lat, nearbyPanel.coords.lng);
-		setNearbyPanel(null);
-	}, [nearbyPanel, onCoordinatesSet]);
+  const handleCreateNewHere = useCallback(() => {
+    if (!nearbyPanel) return;
+    lastInternalCoordsRef.current = nearbyPanel.coords;
+    onCoordinatesSet(nearbyPanel.coords.lat, nearbyPanel.coords.lng);
+    setNearbyPanel(null);
+  }, [nearbyPanel, onCoordinatesSet]);
 
-	const handleSelectUkeStation = useCallback(
-		(station: UkeStation) => {
-			onUkeStationSelect?.(station);
-			setUkeStationPanel(null);
-		},
-		[onUkeStationSelect],
-	);
+  const handleSelectUkeStation = useCallback(
+    (station: UkeStation) => {
+      onUkeStationSelect?.(station);
+      setUkeStationPanel(null);
+    },
+    [onUkeStationSelect],
+  );
 
-	return (
-		<>
-			{location.latitude !== null && location.longitude !== null && (
-				<MapMarker longitude={location.longitude} latitude={location.latitude} draggable onDragEnd={handleDragEnd}>
-					<MarkerContent>
-						<SelectedLocationMarker />
-					</MarkerContent>
-				</MapMarker>
-			)}
+  return (
+    <>
+      {location.latitude !== null && location.longitude !== null && (
+        <MapMarker longitude={location.longitude} latitude={location.latitude} draggable onDragEnd={handleDragEnd}>
+          <MarkerContent>
+            <SelectedLocationMarker />
+          </MarkerContent>
+        </MapMarker>
+      )}
 
-			{nearbyPanel && nearbyPanel.locations.length > 0 && (
-				<MapMarker longitude={nearbyPanel.coords.lng} latitude={nearbyPanel.coords.lat} anchor="bottom">
-					<MarkerContent className="cursor-default">
-						<div
-							role="dialog"
-							className="w-52 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden"
-							onClick={(e) => e.stopPropagation()}
-							onKeyDown={(e) => e.stopPropagation()}
-						>
-							<div className="px-2.5 py-1.5 border-b bg-muted/50 flex items-center justify-between">
-								<span className="text-[11px] font-medium text-muted-foreground">{t("locationPicker.nearbyLocations")}</span>
-								<button type="button" onClick={() => setNearbyPanel(null)} className="text-muted-foreground hover:text-foreground" aria-label="Close">
-									<HugeiconsIcon icon={Cancel01Icon} className="size-3" />
-								</button>
-							</div>
-							<div className="max-h-28 overflow-y-auto">
-								{nearbyPanel.locations.map((loc) => (
-									<button
-										key={loc.id}
-										type="button"
-										onClick={() => handleSelectNearby(loc)}
-										className="w-full flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-accent transition-colors text-left border-b last:border-b-0"
-									>
-										<HugeiconsIcon icon={Location01Icon} className="size-3 shrink-0 text-muted-foreground" />
-										<div className="min-w-0 flex-1">
-											<div className="text-xs font-medium truncate">{loc.address || loc.city || `#${loc.id}`}</div>
-											<div className="text-[10px] text-muted-foreground leading-tight">
-												{t("stations:stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)}m
-											</div>
-										</div>
-									</button>
-								))}
-							</div>
-							<button
-								type="button"
-								onClick={handleCreateNewHere}
-								className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors border-t"
-							>
-								<HugeiconsIcon icon={Add01Icon} className="size-3" />
-								{t("locationPicker.createNewLocation")}
-							</button>
-						</div>
-					</MarkerContent>
-				</MapMarker>
-			)}
+      {nearbyPanel && nearbyPanel.locations.length > 0 && (
+        <MapMarker longitude={nearbyPanel.coords.lng} latitude={nearbyPanel.coords.lat} anchor="bottom">
+          <MarkerContent className="cursor-default">
+            <div
+              role="dialog"
+              className="w-52 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <div className="px-2.5 py-1.5 border-b bg-muted/50 flex items-center justify-between">
+                <span className="text-[11px] font-medium text-muted-foreground">{t("locationPicker.nearbyLocations")}</span>
+                <button type="button" onClick={() => setNearbyPanel(null)} className="text-muted-foreground hover:text-foreground" aria-label="Close">
+                  <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
+                </button>
+              </div>
+              <div className="max-h-28 overflow-y-auto">
+                {nearbyPanel.locations.map((loc) => (
+                  <button
+                    key={loc.id}
+                    type="button"
+                    onClick={() => handleSelectNearby(loc)}
+                    className="w-full flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-accent transition-colors text-left border-b last:border-b-0"
+                  >
+                    <HugeiconsIcon icon={Location01Icon} className="size-3 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium truncate">{loc.address || loc.city || `#${loc.id}`}</div>
+                      <div className="text-[10px] text-muted-foreground leading-tight">
+                        {t("stations:stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)}m
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleCreateNewHere}
+                className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors border-t"
+              >
+                <HugeiconsIcon icon={Add01Icon} className="size-3" />
+                {t("locationPicker.createNewLocation")}
+              </button>
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      )}
 
-			{ukeStationPanel && (
-				<MapMarker longitude={ukeStationPanel.location.longitude} latitude={ukeStationPanel.location.latitude} anchor="bottom">
-					<MarkerContent className="cursor-default">
-						<div
-							role="dialog"
-							className="w-72 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden text-sm"
-							onClick={(e) => e.stopPropagation()}
-							onKeyDown={(e) => e.stopPropagation()}
-						>
-							<div className="px-3 py-2 border-b border-border/50">
-								<h3 className="font-medium text-sm leading-tight pr-4">{ukeStationPanel.location.city}</h3>
-								{ukeStationPanel.location.address && <p className="text-[11px] text-muted-foreground">{ukeStationPanel.location.address}</p>}
-							</div>
-							<div className="max-h-54 overflow-y-auto custom-scrollbar">
-								{ukeStationPanel.stations.map((station) => {
-									const mnc = station.operator?.mnc;
-									const operatorName = station.operator?.name || "Unknown";
-									const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
-									const bands = getPermitBands(station.permits);
+      {ukeStationPanel && (
+        <MapMarker longitude={ukeStationPanel.location.longitude} latitude={ukeStationPanel.location.latitude} anchor="bottom">
+          <MarkerContent className="cursor-default">
+            <div
+              role="dialog"
+              className="w-72 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden text-sm"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <div className="px-3 py-2 border-b border-border/50">
+                <h3 className="font-medium text-sm leading-tight pr-4">{ukeStationPanel.location.city}</h3>
+                {ukeStationPanel.location.address && <p className="text-[11px] text-muted-foreground">{ukeStationPanel.location.address}</p>}
+              </div>
+              <div className="max-h-54 overflow-y-auto custom-scrollbar">
+                {ukeStationPanel.stations.map((station) => {
+                  const mnc = station.operator?.mnc;
+                  const operatorName = station.operator?.name || "Unknown";
+                  const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
+                  const bands = getPermitBands(station.permits);
 
-									return (
-										<button
-											key={station.station_id}
-											type="button"
-											onClick={() => handleSelectUkeStation(station)}
-											className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
-										>
-											<div className="flex items-center gap-1.5">
-												<div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-												<span className="font-medium text-xs" style={{ color }}>
-													{operatorName}
-												</span>
-												<span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
-											</div>
-											<div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-												{bands.map((band) => (
-													<span
-														key={band}
-														className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
-													>
-														{band}
-													</span>
-												))}
-												<span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
-													{station.permits.length} {station.permits.length === 1 ? "permit" : "permits"}
-												</span>
-											</div>
-										</button>
-									);
-								})}
-							</div>
-							<div className="px-3 py-1 border-t border-border/50">
-								<span className="text-[10px] text-muted-foreground">{t("locationPicker.selectStation")}</span>
-							</div>
-						</div>
-					</MarkerContent>
-				</MapMarker>
-			)}
-		</>
-	);
+                  return (
+                    <button
+                      key={station.station_id}
+                      type="button"
+                      onClick={() => handleSelectUkeStation(station)}
+                      className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                        <span className="font-medium text-xs" style={{ color }}>
+                          {operatorName}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
+                        {bands.map((band) => (
+                          <span
+                            key={band}
+                            className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+                          >
+                            {band}
+                          </span>
+                        ))}
+                        <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
+                          {station.permits.length} {station.permits.length === 1 ? "permit" : "permits"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="px-3 py-1 border-t border-border/50">
+                <span className="text-[10px] text-muted-foreground">{t("locationPicker.selectStation")}</span>
+              </div>
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      )}
+    </>
+  );
 }

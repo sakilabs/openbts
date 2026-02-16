@@ -6,16 +6,16 @@ import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import {
-	stations,
-	submissions,
-	users,
-	proposedCells,
-	proposedGSMCells,
-	proposedUMTSCells,
-	proposedLTECells,
-	proposedNRCells,
-	proposedStations,
-	proposedLocations,
+  stations,
+  submissions,
+  users,
+  proposedCells,
+  proposedGSMCells,
+  proposedUMTSCells,
+  proposedLTECells,
+  proposedNRCells,
+  proposedStations,
+  proposedLocations,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -33,85 +33,85 @@ const lteSchema = createSelectSchema(proposedLTECells).omit({ proposed_cell_id: 
 const nrSchema = createSelectSchema(proposedNRCells).omit({ proposed_cell_id: true });
 const proposedDetailsSchema = z.union([gsmSchema, umtsSchema, lteSchema, nrSchema]).nullable();
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.string<string>(),
-	}),
-	response: {
-		200: z.object({
-			data: submissionsSchema.extend({
-				station: stationsSchema.nullable(),
-				submitter: submittersSchema,
-				reviewer: reviewersSchema.nullable(),
-				proposedLocation: createSelectSchema(proposedLocations).nullable(),
-				proposedStation: createSelectSchema(proposedStations).nullable(),
-				cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
-			}),
-		}),
-	},
+  params: z.object({
+    id: z.coerce.string<string>(),
+  }),
+  response: {
+    200: z.object({
+      data: submissionsSchema.extend({
+        station: stationsSchema.nullable(),
+        submitter: submittersSchema,
+        reviewer: reviewersSchema.nullable(),
+        proposedLocation: createSelectSchema(proposedLocations).nullable(),
+        proposedStation: createSelectSchema(proposedStations).nullable(),
+        cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
+      }),
+    }),
+  },
 };
 type ReqParams = { Params: { id: string } };
 type Submission = z.infer<typeof submissionsSchema> & {
-	station: z.infer<typeof stationsSchema> | null;
-	submitter: z.infer<typeof submittersSchema>;
-	reviewer: z.infer<typeof reviewersSchema> | null;
-	cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
+  station: z.infer<typeof stationsSchema> | null;
+  submitter: z.infer<typeof submittersSchema>;
+  reviewer: z.infer<typeof reviewersSchema> | null;
+  cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Submission>>) {
-	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
-	const { id } = req.params;
-	const session = req.userSession;
-	if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
-	const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read_all"] })) || false;
+  if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
+  const { id } = req.params;
+  const session = req.userSession;
+  if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
+  const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read_all"] })) || false;
 
-	const submission = await db.query.submissions.findFirst({
-		where: {
-			id: id,
-		},
-		with: {
-			station: true,
-			submitter: true,
-			reviewer: {
-				columns: {
-					id: true,
-					name: true,
-					image: true,
-					displayUsername: true,
-				},
-			},
-			proposedLocation: true,
-			proposedStation: true,
-		},
-	});
-	if (!submission) throw new ErrorResponse("NOT_FOUND");
-	if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");
+  const submission = await db.query.submissions.findFirst({
+    where: {
+      id: id,
+    },
+    with: {
+      station: true,
+      submitter: true,
+      reviewer: {
+        columns: {
+          id: true,
+          name: true,
+          image: true,
+          displayUsername: true,
+        },
+      },
+      proposedLocation: true,
+      proposedStation: true,
+    },
+  });
+  if (!submission) throw new ErrorResponse("NOT_FOUND");
+  if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");
 
-	const rawCells = await db.query.proposedCells.findMany({
-		where: {
-			submission_id: id,
-		},
-		with: {
-			gsm: true,
-			umts: true,
-			lte: true,
-			nr: true,
-		},
-	});
+  const rawCells = await db.query.proposedCells.findMany({
+    where: {
+      submission_id: id,
+    },
+    with: {
+      gsm: true,
+      umts: true,
+      lte: true,
+      nr: true,
+    },
+  });
 
-	const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
-		...base,
-		details: gsm ?? umts ?? lte ?? nr ?? null,
-	}));
+  const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
+    ...base,
+    details: gsm ?? umts ?? lte ?? nr ?? null,
+  }));
 
-	return res.send({ data: { ...submission, cells } });
+  return res.send({ data: { ...submission, cells } });
 }
 
 const getSubmission: Route<ReqParams, Submission> = {
-	url: "/submissions/:id",
-	method: "GET",
-	config: { permissions: ["read:submissions"] },
-	schema: schemaRoute,
-	handler,
+  url: "/submissions/:id",
+  method: "GET",
+  config: { permissions: ["read:submissions"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getSubmission;

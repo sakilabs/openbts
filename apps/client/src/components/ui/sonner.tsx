@@ -5,35 +5,35 @@ import { CheckmarkCircle02Icon, InformationCircleIcon, Alert02Icon, Multiplicati
 import { Spinner } from "./spinner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-	const { theme = "system" } = useTheme();
+  const { theme = "system" } = useTheme();
 
-	return (
-		<Sonner
-			theme={theme as ToasterProps["theme"]}
-			className="toaster group"
-			icons={{
-				success: <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-4" />,
-				info: <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} className="size-4" />,
-				warning: <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} className="size-4" />,
-				error: <HugeiconsIcon icon={MultiplicationSignCircleIcon} strokeWidth={2} className="size-4" />,
-				loading: <Spinner className="size-4" />,
-			}}
-			style={
-				{
-					"--normal-bg": "var(--popover)",
-					"--normal-text": "var(--popover-foreground)",
-					"--normal-border": "var(--border)",
-					"--border-radius": "var(--radius)",
-				} as React.CSSProperties
-			}
-			toastOptions={{
-				classNames: {
-					toast: "cn-toast",
-				},
-			}}
-			{...props}
-		/>
-	);
+  return (
+    <Sonner
+      theme={theme as ToasterProps["theme"]}
+      className="toaster group"
+      icons={{
+        success: <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-4" />,
+        info: <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} className="size-4" />,
+        warning: <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} className="size-4" />,
+        error: <HugeiconsIcon icon={MultiplicationSignCircleIcon} strokeWidth={2} className="size-4" />,
+        loading: <Spinner className="size-4" />,
+      }}
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          "--border-radius": "var(--radius)",
+        } as React.CSSProperties
+      }
+      toastOptions={{
+        classNames: {
+          toast: "cn-toast",
+        },
+      }}
+      {...props}
+    />
+  );
 };
 
 export { Toaster };

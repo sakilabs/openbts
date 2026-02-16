@@ -10,36 +10,36 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, Route, EmptyResponse } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.number<number>(),
-	}),
+  params: z.object({
+    id: z.coerce.number<number>(),
+  }),
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyResponse>) {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	const location = await db.query.locations.findFirst({
-		where: {
-			id: id,
-		},
-	});
-	if (!location) throw new ErrorResponse("NOT_FOUND");
+  const location = await db.query.locations.findFirst({
+    where: {
+      id: id,
+    },
+  });
+  if (!location) throw new ErrorResponse("NOT_FOUND");
 
-	try {
-		await db.delete(locations).where(eq(locations.id, id));
-	} catch {
-		throw new ErrorResponse("FAILED_TO_DELETE");
-	}
+  try {
+    await db.delete(locations).where(eq(locations.id, id));
+  } catch {
+    throw new ErrorResponse("FAILED_TO_DELETE");
+  }
 
-	return res.status(204).send();
+  return res.status(204).send();
 }
 
 const deleteLocation: Route<IdParams, void> = {
-	url: "/locations/:id",
-	method: "DELETE",
-	config: { permissions: ["delete:locations"] },
-	schema: schemaRoute,
-	handler,
+  url: "/locations/:id",
+  method: "DELETE",
+  config: { permissions: ["delete:locations"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default deleteLocation;

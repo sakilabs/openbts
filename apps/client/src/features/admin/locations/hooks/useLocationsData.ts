@@ -8,168 +8,168 @@ const FETCH_LIMIT = 100;
 const STORAGE_KEY = "admin:locations:filters";
 
 export type LocationFilters = {
-	operators: number[];
+  operators: number[];
 };
 
 type StoredState = {
-	operators: number[];
-	regions: number[];
-	sort: LocationSortDirection;
-	sortBy: LocationSortBy;
+  operators: number[];
+  regions: number[];
+  sort: LocationSortDirection;
+  sortBy: LocationSortBy;
 };
 
 function loadFromStorage(): StoredState {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return { operators: [], regions: [], sort: "desc", sortBy: "updatedAt" };
-		const parsed = JSON.parse(raw);
-		return {
-			operators: Array.isArray(parsed.operators) ? parsed.operators : [],
-			regions: Array.isArray(parsed.regions) ? parsed.regions : [],
-			sort: parsed.sort === "asc" || parsed.sort === "desc" ? parsed.sort : "desc",
-			sortBy: parsed.sortBy ?? "updatedAt",
-		};
-	} catch {
-		return { operators: [], regions: [], sort: "desc", sortBy: "updatedAt" };
-	}
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { operators: [], regions: [], sort: "desc", sortBy: "updatedAt" };
+    const parsed = JSON.parse(raw);
+    return {
+      operators: Array.isArray(parsed.operators) ? parsed.operators : [],
+      regions: Array.isArray(parsed.regions) ? parsed.regions : [],
+      sort: parsed.sort === "asc" || parsed.sort === "desc" ? parsed.sort : "desc",
+      sortBy: parsed.sortBy ?? "updatedAt",
+    };
+  } catch {
+    return { operators: [], regions: [], sort: "desc", sortBy: "updatedAt" };
+  }
 }
 
 function persist(state: StoredState) {
-	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-	} catch {}
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {}
 }
 
 export function useLocationsData() {
-	const stored = useMemo(() => loadFromStorage(), []);
+  const stored = useMemo(() => loadFromStorage(), []);
 
-	const [filters, setFiltersRaw] = useState<LocationFilters>({ operators: stored.operators });
-	const [selectedRegions, setSelectedRegionsRaw] = useState<number[]>(stored.regions);
-	const [searchQuery, setSearchQuery] = useState("");
-	const [sort, setSortRaw] = useState<LocationSortDirection>(stored.sort);
-	const [sortBy, setSortByRaw] = useState<LocationSortBy>(stored.sortBy);
+  const [filters, setFiltersRaw] = useState<LocationFilters>({ operators: stored.operators });
+  const [selectedRegions, setSelectedRegionsRaw] = useState<number[]>(stored.regions);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSortRaw] = useState<LocationSortDirection>(stored.sort);
+  const [sortBy, setSortByRaw] = useState<LocationSortBy>(stored.sortBy);
 
-	const stateRef = useRef<StoredState>({ operators: stored.operators, regions: stored.regions, sort: stored.sort, sortBy: stored.sortBy });
+  const stateRef = useRef<StoredState>({ operators: stored.operators, regions: stored.regions, sort: stored.sort, sortBy: stored.sortBy });
 
-	const save = useCallback((patch: Partial<StoredState>) => {
-		Object.assign(stateRef.current, patch);
-		persist(stateRef.current);
-	}, []);
+  const save = useCallback((patch: Partial<StoredState>) => {
+    Object.assign(stateRef.current, patch);
+    persist(stateRef.current);
+  }, []);
 
-	const setFilters = useCallback(
-		(newFilters: LocationFilters | ((prev: LocationFilters) => LocationFilters)) => {
-			setFiltersRaw((prev) => {
-				const resolved = typeof newFilters === "function" ? newFilters(prev) : newFilters;
-				save({ operators: resolved.operators });
-				return resolved;
-			});
-		},
-		[save],
-	);
+  const setFilters = useCallback(
+    (newFilters: LocationFilters | ((prev: LocationFilters) => LocationFilters)) => {
+      setFiltersRaw((prev) => {
+        const resolved = typeof newFilters === "function" ? newFilters(prev) : newFilters;
+        save({ operators: resolved.operators });
+        return resolved;
+      });
+    },
+    [save],
+  );
 
-	const setSelectedRegions = useCallback(
-		(value: number[] | ((prev: number[]) => number[])) => {
-			setSelectedRegionsRaw((prev) => {
-				const resolved = typeof value === "function" ? value(prev) : value;
-				save({ regions: resolved });
-				return resolved;
-			});
-		},
-		[save],
-	);
+  const setSelectedRegions = useCallback(
+    (value: number[] | ((prev: number[]) => number[])) => {
+      setSelectedRegionsRaw((prev) => {
+        const resolved = typeof value === "function" ? value(prev) : value;
+        save({ regions: resolved });
+        return resolved;
+      });
+    },
+    [save],
+  );
 
-	const clearAllFilters = useCallback(() => {
-		setFiltersRaw({ operators: [] });
-		setSelectedRegionsRaw([]);
-		save({ operators: [], regions: [] });
-	}, [save]);
+  const clearAllFilters = useCallback(() => {
+    setFiltersRaw({ operators: [] });
+    setSelectedRegionsRaw([]);
+    save({ operators: [], regions: [] });
+  }, [save]);
 
-	const setSort = useCallback(
-		(value: LocationSortDirection | ((prev: LocationSortDirection) => LocationSortDirection)) => {
-			setSortRaw((prev) => {
-				const resolved = typeof value === "function" ? value(prev) : value;
-				save({ sort: resolved });
-				return resolved;
-			});
-		},
-		[save],
-	);
+  const setSort = useCallback(
+    (value: LocationSortDirection | ((prev: LocationSortDirection) => LocationSortDirection)) => {
+      setSortRaw((prev) => {
+        const resolved = typeof value === "function" ? value(prev) : value;
+        save({ sort: resolved });
+        return resolved;
+      });
+    },
+    [save],
+  );
 
-	const setSortBy = useCallback(
-		(value: LocationSortBy | undefined | ((prev: LocationSortBy | undefined) => LocationSortBy | undefined)) => {
-			setSortByRaw((prev) => {
-				const resolved = (typeof value === "function" ? value(prev) : value) ?? "updatedAt";
-				save({ sortBy: resolved });
-				return resolved;
-			});
-		},
-		[save],
-	);
+  const setSortBy = useCallback(
+    (value: LocationSortBy | undefined | ((prev: LocationSortBy | undefined) => LocationSortBy | undefined)) => {
+      setSortByRaw((prev) => {
+        const resolved = (typeof value === "function" ? value(prev) : value) ?? "updatedAt";
+        save({ sortBy: resolved });
+        return resolved;
+      });
+    },
+    [save],
+  );
 
-	const { data: operators = [] } = useQuery(operatorsQueryOptions());
-	const { data: regions = [] } = useQuery(regionsQueryOptions());
+  const { data: operators = [] } = useQuery(operatorsQueryOptions());
+  const { data: regions = [] } = useQuery(regionsQueryOptions());
 
-	const selectedRegionCodes = useMemo(() => {
-		return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
-	}, [selectedRegions, regions]);
+  const selectedRegionCodes = useMemo(() => {
+    return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
+  }, [selectedRegions, regions]);
 
-	const { data, fetchNextPage, hasNextPage, isLoading, isFetching } = useInfiniteQuery({
-		queryKey: ["admin-locations-list", FETCH_LIMIT, filters.operators, selectedRegionCodes, sort, sortBy],
-		queryFn: ({ pageParam }) =>
-			fetchLocationsList({
-				page: pageParam,
-				limit: FETCH_LIMIT,
-				regions: selectedRegionCodes.length ? selectedRegionCodes.join(",") : undefined,
-				operators: filters.operators.length ? filters.operators.join(",") : undefined,
-				sort,
-				sortBy,
-			}),
-		initialPageParam: 1,
-		getNextPageParam: (lastPage, allPages) => {
-			return lastPage.data.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
-		},
-		staleTime: 1000 * 60 * 5,
-	});
+  const { data, fetchNextPage, hasNextPage, isLoading, isFetching } = useInfiniteQuery({
+    queryKey: ["admin-locations-list", FETCH_LIMIT, filters.operators, selectedRegionCodes, sort, sortBy],
+    queryFn: ({ pageParam }) =>
+      fetchLocationsList({
+        page: pageParam,
+        limit: FETCH_LIMIT,
+        regions: selectedRegionCodes.length ? selectedRegionCodes.join(",") : undefined,
+        operators: filters.operators.length ? filters.operators.join(",") : undefined,
+        sort,
+        sortBy,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.data.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-	const allLocations = useMemo(() => {
-		return data?.pages.flatMap((page) => page.data) ?? [];
-	}, [data]);
+  const allLocations = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) ?? [];
+  }, [data]);
 
-	const locations = useMemo(() => {
-		if (!searchQuery.trim()) return allLocations;
-		const q = searchQuery.toLowerCase();
-		return allLocations.filter(
-			(loc) => loc.city?.toLowerCase().includes(q) || loc.address?.toLowerCase().includes(q) || loc.id.toString().includes(q),
-		);
-	}, [allLocations, searchQuery]);
+  const locations = useMemo(() => {
+    if (!searchQuery.trim()) return allLocations;
+    const q = searchQuery.toLowerCase();
+    return allLocations.filter(
+      (loc) => loc.city?.toLowerCase().includes(q) || loc.address?.toLowerCase().includes(q) || loc.id.toString().includes(q),
+    );
+  }, [allLocations, searchQuery]);
 
-	const totalLocations = useMemo(() => {
-		if (!data?.pages.length) return undefined;
-		return data.pages[data.pages.length - 1]?.totalCount;
-	}, [data]);
+  const totalLocations = useMemo(() => {
+    if (!data?.pages.length) return undefined;
+    return data.pages[data.pages.length - 1]?.totalCount;
+  }, [data]);
 
-	const activeFilterCount = filters.operators.length + selectedRegions.length;
+  const activeFilterCount = filters.operators.length + selectedRegions.length;
 
-	return {
-		locations,
-		operators,
-		regions,
-		totalLocations,
-		filters,
-		setFilters,
-		selectedRegions,
-		setSelectedRegions,
-		clearAllFilters,
-		activeFilterCount,
-		searchQuery,
-		setSearchQuery,
-		sort,
-		sortBy,
-		setSort,
-		setSortBy,
-		isLoading,
-		isFetching,
-		hasMore: hasNextPage,
-		loadMore: hasNextPage ? fetchNextPage : undefined,
-	};
+  return {
+    locations,
+    operators,
+    regions,
+    totalLocations,
+    filters,
+    setFilters,
+    selectedRegions,
+    setSelectedRegions,
+    clearAllFilters,
+    activeFilterCount,
+    searchQuery,
+    setSearchQuery,
+    sort,
+    sortBy,
+    setSort,
+    setSortBy,
+    isLoading,
+    isFetching,
+    hasMore: hasNextPage,
+    loadMore: hasNextPage ? fetchNextPage : undefined,
+  };
 }

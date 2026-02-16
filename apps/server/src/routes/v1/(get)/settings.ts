@@ -7,30 +7,30 @@ import { getRuntimeSettings, type RuntimeSettings } from "../../../services/sett
 type Response = RuntimeSettings;
 
 const schemaRoute = {
-	response: {
-		200: z.object({
-			data: z.object({
-				enforceAuthForAllRoutes: z.boolean(),
-				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
-				disabledRoutes: z.array(z.string().min(1)),
-				enableStationComments: z.boolean(),
-				submissionsEnabled: z.boolean(),
-			}),
-		}),
-	},
+  response: {
+    200: z.object({
+      data: z.object({
+        enforceAuthForAllRoutes: z.boolean(),
+        allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
+        disabledRoutes: z.array(z.string().min(1)),
+        enableStationComments: z.boolean(),
+        submissionsEnabled: z.boolean(),
+      }),
+    }),
+  },
 };
 
 async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>) {
-	const settings = getRuntimeSettings();
-	res.send({ data: settings });
+  const settings = getRuntimeSettings();
+  res.send({ data: settings });
 }
 
 const getSettings: Route<never, Response> = {
-	url: "/settings",
-	method: "GET",
-	schema: schemaRoute,
-	config: { permissions: ["read:settings"], allowGuestAccess: true },
-	handler,
+  url: "/settings",
+  method: "GET",
+  schema: schemaRoute,
+  config: { permissions: ["read:settings"], allowGuestAccess: true },
+  handler,
 };
 
 export default getSettings;

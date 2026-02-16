@@ -11,25 +11,25 @@ import type { RouteGenericInterface } from "fastify";
 
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
-	response: {
-		200: z.object({
-			data: z.array(regionsSchema),
-		}),
-	},
+  response: {
+    200: z.object({
+      data: z.array(regionsSchema),
+    }),
+  },
 };
 type Region = z.infer<typeof regionsSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Region[]>>) {
-	const regions = await db.query.regions.findMany();
-	return res.send({ data: regions });
+  const regions = await db.query.regions.findMany();
+  return res.send({ data: regions });
 }
 
 const getRegions: Route<RouteGenericInterface, Region[]> = {
-	url: "/regions",
-	method: "GET",
-	config: { permissions: ["read:regions"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/regions",
+  method: "GET",
+  config: { permissions: ["read:regions"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getRegions;

@@ -1,87 +1,87 @@
 {
-	"search": {
-		"placeholderAddMore": "Dodaj więcej...",
-		"searching": "Wyszukiwanie wyników...",
-		"noResults": "Brak wyników",
-		"noResultsHint": "Spróbuj innych słów kluczowych lub filtrów",
-		"found": "Znaleziono: {{count}}",
-		"showingTop": "Pokazano {{shown}} z {{total}} stacji"
-	},
-	"autocomplete": {
-		"availableFilters": "Dostępne filtry",
-		"tip": "Wskazówka:",
-		"tipText": "Użyj wartości oddzielonych przecinkami dla wielu elementów",
-		"example": "Przykład"
-	},
-	"searchResults": {
-		"locations": "Lokalizacje geograficzne",
-		"stations": "Stacje bazowe"
-	},
-	"popup": {
-		"loading": "Ładowanie stacji...",
-		"noStations": "Brak stacji",
-		"noPermits": "Brak pozwoleń"
-	},
-	"overlay": {
-		"locations": "lokalizacji",
-		"zoom": "Zoom",
-		"mapStyle": "Styl mapy",
-		"moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie",
-		"radiolines": "radiolinie",
-		"radiolinesCount_one": "radiolinia",
-		"radiolinesCount_few": "linie radiowe",
-		"radiolinesCount_many": "linii radiowych",
-		"radiolinesCount_other": "linii radiowych",
-		"zoomForRadiolines": "Przybliż, aby zobaczyć radiolinie",
-		"moreRadiolines": "Pokazano {{shown}} z {{total}} linii radiowych. Przybliż, aby zobaczyć wszystkie"
-	},
-	"stats": {
-		"dataInfo": "Informacje o danych",
-		"lastUpdated": "Ostatnia aktualizacja",
-		"internalData": "Wewnętrzna baza",
-		"ukeStations": "Stacje UKE",
-		"stations": "Liczba stacji",
-		"permits": "Liczba pozwoleń"
-	},
-	"filters": {
-		"dataSource": "Źródło danych",
-		"internalDb": "Wewnętrzna baza",
-		"newOnly": "Pokaż nowe (ostatnie 30 dni)",
-		"showingStationsOfTotal": "Pokazano {{count}} z {{total}} stacji",
-		"showingLocationsOfTotal": "Pokazano {{count}} z {{total}} lokalizacji",
-		"showingStations": "Pokazano {{count}} stacji",
-		"layers": "Warstwy",
-		"showStations": "Stacje",
-		"showRadiolines": "Radiolinie",
-		"radiolineOperator": "Operator radiolinii",
-		"radiolineOperators_one": "{{count}} operator radiolinii",
-		"radiolineOperators_few": "{{count}} operatorzy radiolinii",
-		"radiolineOperators_many": "{{count}} operatorów radiolinii",
-		"radiolineOperators_other": "{{count}} operatorów radiolinii",
-		"searchRadiolineOperators": "Szukaj operatorów radiolinii..."
-	},
-	"unknownOperator": "Nieznany operator",
-	"radiolines": {
-		"title": "Radiolinia #{{id}}",
-		"viewDetails": "Zobacz szczegóły",
-		"distance": "Odległość",
-		"txSide": "Strona wysyłająca (TX)",
-		"rxSide": "Strona odbierająca (RX)",
-		"linkParams": "Parametry łącza",
-		"frequency": "Częstotliwość",
-		"channel": "Kanał",
-		"channelWidth": "Szerokość kanału",
-		"polarization": "Polaryzacja",
-		"modulation": "Modulacja",
-		"bandwidth": "Przepustowość",
-		"height": "Wysokość",
-		"antennaGain": "Zysk anteny",
-		"antennaHeight": "Wysokość anteny",
-		"eirp": "EIRP",
-		"noiseFigure": "Współczynnik szumów",
-		"antennaType": "Typ anteny",
-		"transmitterType": "Typ nadajnika",
-		"receiverType": "Typ odbiornika",
-		"manufacturer": "Producent"
-	}
+  "search": {
+    "placeholderAddMore": "Dodaj więcej...",
+    "searching": "Wyszukiwanie wyników...",
+    "noResults": "Brak wyników",
+    "noResultsHint": "Spróbuj innych słów kluczowych lub filtrów",
+    "found": "Znaleziono: {{count}}",
+    "showingTop": "Pokazano {{shown}} z {{total}} stacji"
+  },
+  "autocomplete": {
+    "availableFilters": "Dostępne filtry",
+    "tip": "Wskazówka:",
+    "tipText": "Użyj wartości oddzielonych przecinkami dla wielu elementów",
+    "example": "Przykład"
+  },
+  "searchResults": {
+    "locations": "Lokalizacje geograficzne",
+    "stations": "Stacje bazowe"
+  },
+  "popup": {
+    "loading": "Ładowanie stacji...",
+    "noStations": "Brak stacji",
+    "noPermits": "Brak pozwoleń"
+  },
+  "overlay": {
+    "locations": "lokalizacji",
+    "zoom": "Zoom",
+    "mapStyle": "Styl mapy",
+    "moreStations": "Pokazano {{shown}} z {{total}} lokalizacji. Przybliż, aby zobaczyć wszystkie",
+    "radiolines": "radiolinie",
+    "radiolinesCount_one": "radiolinia",
+    "radiolinesCount_few": "linie radiowe",
+    "radiolinesCount_many": "linii radiowych",
+    "radiolinesCount_other": "linii radiowych",
+    "zoomForRadiolines": "Przybliż, aby zobaczyć radiolinie",
+    "moreRadiolines": "Pokazano {{shown}} z {{total}} linii radiowych. Przybliż, aby zobaczyć wszystkie"
+  },
+  "stats": {
+    "dataInfo": "Informacje o danych",
+    "lastUpdated": "Ostatnia aktualizacja",
+    "internalData": "Wewnętrzna baza",
+    "ukeStations": "Stacje UKE",
+    "stations": "Liczba stacji",
+    "permits": "Liczba pozwoleń"
+  },
+  "filters": {
+    "dataSource": "Źródło danych",
+    "internalDb": "Wewnętrzna baza",
+    "newOnly": "Pokaż nowe (ostatnie 30 dni)",
+    "showingStationsOfTotal": "Pokazano {{count}} z {{total}} stacji",
+    "showingLocationsOfTotal": "Pokazano {{count}} z {{total}} lokalizacji",
+    "showingStations": "Pokazano {{count}} stacji",
+    "layers": "Warstwy",
+    "showStations": "Stacje",
+    "showRadiolines": "Radiolinie",
+    "radiolineOperator": "Operator radiolinii",
+    "radiolineOperators_one": "{{count}} operator radiolinii",
+    "radiolineOperators_few": "{{count}} operatorzy radiolinii",
+    "radiolineOperators_many": "{{count}} operatorów radiolinii",
+    "radiolineOperators_other": "{{count}} operatorów radiolinii",
+    "searchRadiolineOperators": "Szukaj operatorów radiolinii..."
+  },
+  "unknownOperator": "Nieznany operator",
+  "radiolines": {
+    "title": "Radiolinia #{{id}}",
+    "viewDetails": "Zobacz szczegóły",
+    "distance": "Odległość",
+    "txSide": "Strona wysyłająca (TX)",
+    "rxSide": "Strona odbierająca (RX)",
+    "linkParams": "Parametry łącza",
+    "frequency": "Częstotliwość",
+    "channel": "Kanał",
+    "channelWidth": "Szerokość kanału",
+    "polarization": "Polaryzacja",
+    "modulation": "Modulacja",
+    "bandwidth": "Przepustowość",
+    "height": "Wysokość",
+    "antennaGain": "Zysk anteny",
+    "antennaHeight": "Wysokość anteny",
+    "eirp": "EIRP",
+    "noiseFigure": "Współczynnik szumów",
+    "antennaType": "Typ anteny",
+    "transmitterType": "Typ nadajnika",
+    "receiverType": "Typ odbiornika",
+    "manufacturer": "Producent"
+  }
 }

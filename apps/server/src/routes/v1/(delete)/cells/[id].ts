@@ -10,53 +10,53 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.number<number>(),
-	}),
+  params: z.object({
+    id: z.coerce.number<number>(),
+  }),
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyResponse>) {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	const cell = await db.query.cells.findFirst({
-		where: {
-			id: id,
-		},
-	});
-	if (!cell) throw new ErrorResponse("NOT_FOUND");
+  const cell = await db.query.cells.findFirst({
+    where: {
+      id: id,
+    },
+  });
+  if (!cell) throw new ErrorResponse("NOT_FOUND");
 
-	try {
-		await db.transaction(async (tx) => {
-			switch (cell.rat) {
-				case "GSM":
-					await tx.delete(gsmCells).where(eq(gsmCells.cell_id, cell.id));
-					break;
-				case "UMTS":
-					await tx.delete(umtsCells).where(eq(umtsCells.cell_id, cell.id));
-					break;
-				case "LTE":
-					await tx.delete(lteCells).where(eq(lteCells.cell_id, cell.id));
-					break;
-				case "NR":
-					await tx.delete(nrCells).where(eq(nrCells.cell_id, cell.id));
-					break;
-			}
+  try {
+    await db.transaction(async (tx) => {
+      switch (cell.rat) {
+        case "GSM":
+          await tx.delete(gsmCells).where(eq(gsmCells.cell_id, cell.id));
+          break;
+        case "UMTS":
+          await tx.delete(umtsCells).where(eq(umtsCells.cell_id, cell.id));
+          break;
+        case "LTE":
+          await tx.delete(lteCells).where(eq(lteCells.cell_id, cell.id));
+          break;
+        case "NR":
+          await tx.delete(nrCells).where(eq(nrCells.cell_id, cell.id));
+          break;
+      }
 
-			await tx.delete(cells).where(eq(cells.id, cell.id));
-		});
+      await tx.delete(cells).where(eq(cells.id, cell.id));
+    });
 
-		return res.status(204).send();
-	} catch {
-		throw new ErrorResponse("FAILED_TO_DELETE");
-	}
+    return res.status(204).send();
+  } catch {
+    throw new ErrorResponse("FAILED_TO_DELETE");
+  }
 }
 
 const deleteCell: Route<IdParams, void> = {
-	url: "/cells/:id",
-	method: "DELETE",
-	config: { permissions: ["delete:cells"] },
-	schema: schemaRoute,
-	handler,
+  url: "/cells/:id",
+  method: "DELETE",
+  config: { permissions: ["delete:cells"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default deleteCell;

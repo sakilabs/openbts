@@ -13,35 +13,35 @@ const bandSelectSchema = createSelectSchema(bands);
 type Band = z.infer<typeof bandSelectSchema>;
 
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: bandSelectSchema,
-		}),
-	},
+  params: z.object({
+    id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: bandSelectSchema,
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Band>>) {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	const band = await db.query.bands.findFirst({
-		where: {
-			id: id,
-		},
-	});
-	if (!band) throw new ErrorResponse("NOT_FOUND");
+  const band = await db.query.bands.findFirst({
+    where: {
+      id: id,
+    },
+  });
+  if (!band) throw new ErrorResponse("NOT_FOUND");
 
-	return res.send({ data: band });
+  return res.send({ data: band });
 }
 
 const getBand: Route<IdParams, Band> = {
-	url: "/bands/:id",
-	method: "GET",
-	config: { permissions: ["read:bands"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/bands/:id",
+  method: "GET",
+  config: { permissions: ["read:bands"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getBand;

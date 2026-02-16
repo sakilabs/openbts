@@ -14,31 +14,31 @@ const bandsInsertSchema = createInsertSchema(bands).strict();
 type ReqBody = { Body: z.infer<typeof bandsInsertSchema> };
 type ResponseData = z.infer<typeof bandsSelectSchema>;
 const schemaRoute = {
-	body: bandsInsertSchema,
-	response: {
-		200: z.object({
-			data: bandsSelectSchema,
-		}),
-	},
+  body: bandsInsertSchema,
+  response: {
+    200: z.object({
+      data: bandsSelectSchema,
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	try {
-		const [band] = await db.insert(bands).values(req.body).returning();
+  try {
+    const [band] = await db.insert(bands).values(req.body).returning();
 
-		if (!band) throw new ErrorResponse("FAILED_TO_CREATE");
-		return res.send({ data: band });
-	} catch {
-		throw new ErrorResponse("FAILED_TO_CREATE");
-	}
+    if (!band) throw new ErrorResponse("FAILED_TO_CREATE");
+    return res.send({ data: band });
+  } catch {
+    throw new ErrorResponse("FAILED_TO_CREATE");
+  }
 }
 
 const createBand: Route<ReqBody, ResponseData> = {
-	url: "/bands",
-	method: "POST",
-	config: { permissions: ["write:bands"] },
-	schema: schemaRoute,
-	handler,
+  url: "/bands",
+  method: "POST",
+  config: { permissions: ["write:bands"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default createBand;

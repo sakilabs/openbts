@@ -11,36 +11,36 @@ import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.in
 
 const regionsSchema = createSelectSchema(regions);
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: regionsSchema,
-		}),
-	},
+  params: z.object({
+    id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: regionsSchema,
+    }),
+  },
 };
 type Region = z.infer<typeof regionsSchema>;
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Region>>) {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	const region = await db.query.regions.findFirst({
-		where: {
-			id: id,
-		},
-	});
-	if (!region) throw new ErrorResponse("NOT_FOUND");
+  const region = await db.query.regions.findFirst({
+    where: {
+      id: id,
+    },
+  });
+  if (!region) throw new ErrorResponse("NOT_FOUND");
 
-	return res.send({ data: region });
+  return res.send({ data: region });
 }
 
 const getRegion: Route<IdParams, Region> = {
-	url: "/regions/:id",
-	method: "GET",
-	config: { permissions: ["read:regions"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/regions/:id",
+  method: "GET",
+  config: { permissions: ["read:regions"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getRegion;

@@ -10,10 +10,10 @@ console.log(await figlet("sora"));
 installProcessErrorHandlers();
 const app = new App();
 app.listen(port).then(() => {
-	logger.info("server_started", { port });
+  logger.info("server_started", { port });
 
-	setInterval(() => {
-		logger.info("uke_import_scheduled", { trigger: "daily" });
-		startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
-	}, ONE_DAY_MS);
+  setInterval(() => {
+    logger.info("uke_import_scheduled", { trigger: "daily" });
+    startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
+  }, ONE_DAY_MS);
 });

@@ -7,15 +7,15 @@ import { ErrorResponse } from "../../../../errors.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import {
-	stations,
-	submissions,
-	users,
-	proposedCells,
-	proposedGSMCells,
-	proposedUMTSCells,
-	proposedLTECells,
-	proposedNRCells,
-	proposedStations,
+  stations,
+  submissions,
+  users,
+  proposedCells,
+  proposedGSMCells,
+  proposedUMTSCells,
+  proposedLTECells,
+  proposedNRCells,
+  proposedStations,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -35,144 +35,144 @@ const proposedDetailsSchema = z.union([gsmSchema, umtsSchema, lteSchema, nrSchem
 const proposedCellWithDetails = proposedCellsSchema.extend({ details: proposedDetailsSchema });
 
 const schemaRoute = {
-	querystring: z.object({
-		limit: z.coerce.number().min(1).max(100).default(10),
-		offset: z.coerce.number().min(0).default(0),
-		status: z.enum(["pending", "approved", "rejected"]).optional(),
-		type: z.enum(["new", "update", "delete"]).optional(),
-	}),
-	response: {
-		200: z.object({
-			data: z.array(
-				submissionsSchema.extend({
-					station: stationsSchema.nullable(),
-					submitter: usersSchema,
-					reviewer: usersSchema.nullable(),
-					cells: z.array(proposedCellWithDetails),
-					proposedStation: proposedStationSchema.nullable(),
-				}),
-			),
-			totalCount: z.number(),
-		}),
-	},
+  querystring: z.object({
+    limit: z.coerce.number().min(1).max(100).default(10),
+    offset: z.coerce.number().min(0).default(0),
+    status: z.enum(["pending", "approved", "rejected"]).optional(),
+    type: z.enum(["new", "update", "delete"]).optional(),
+  }),
+  response: {
+    200: z.object({
+      data: z.array(
+        submissionsSchema.extend({
+          station: stationsSchema.nullable(),
+          submitter: usersSchema,
+          reviewer: usersSchema.nullable(),
+          cells: z.array(proposedCellWithDetails),
+          proposedStation: proposedStationSchema.nullable(),
+        }),
+      ),
+      totalCount: z.number(),
+    }),
+  },
 };
 
 type Submission = z.infer<typeof submissionsSchema> & {
-	station: z.infer<typeof stationsSchema> | null;
-	submitter: z.infer<typeof usersSchema>;
-	reviewer: z.infer<typeof usersSchema> | null;
-	cells: z.infer<typeof proposedCellWithDetails>[];
-	proposedStation: z.infer<typeof proposedStationSchema> | null;
+  station: z.infer<typeof stationsSchema> | null;
+  submitter: z.infer<typeof usersSchema>;
+  reviewer: z.infer<typeof usersSchema> | null;
+  cells: z.infer<typeof proposedCellWithDetails>[];
+  proposedStation: z.infer<typeof proposedStationSchema> | null;
 };
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 type ResponseData = z.infer<typeof submissionsSchema> & {
-	station: z.infer<typeof stationsSchema> | null;
-	submitter: z.infer<typeof usersSchema>;
-	reviewer: z.infer<typeof usersSchema> | null;
-	cells: z.infer<typeof proposedCellWithDetails>[];
-	proposedStation: z.infer<typeof proposedStationSchema> | null;
+  station: z.infer<typeof stationsSchema> | null;
+  submitter: z.infer<typeof usersSchema>;
+  reviewer: z.infer<typeof usersSchema> | null;
+  cells: z.infer<typeof proposedCellWithDetails>[];
+  proposedStation: z.infer<typeof proposedStationSchema> | null;
 };
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-	if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
+  if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
 
-	const session = req.userSession;
-	const apiToken = req.apiToken;
-	if (!session?.user && !apiToken) throw new ErrorResponse("UNAUTHORIZED");
+  const session = req.userSession;
+  const apiToken = req.apiToken;
+  if (!session?.user && !apiToken) throw new ErrorResponse("UNAUTHORIZED");
 
-	const userId = session?.user?.id ?? apiToken?.userId;
-	if (!userId) throw new ErrorResponse("UNAUTHORIZED");
+  const userId = session?.user?.id ?? apiToken?.userId;
+  if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
-	const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read_all"] })) || false;
+  const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read_all"] })) || false;
 
-	const { limit, offset, status, type } = req.query;
+  const { limit, offset, status, type } = req.query;
 
-	const whereFilter: Record<string, unknown> = {};
-	const countConditions = [];
-	if (!hasAdminPermission) {
-		whereFilter.submitter_id = userId;
-		countConditions.push(eq(submissions.submitter_id, userId));
-	}
-	if (status) {
-		whereFilter.status = status;
-		countConditions.push(eq(submissions.status, status));
-	}
-	if (type) {
-		whereFilter.type = type;
-		countConditions.push(eq(submissions.type, type));
-	}
+  const whereFilter: Record<string, unknown> = {};
+  const countConditions = [];
+  if (!hasAdminPermission) {
+    whereFilter.submitter_id = userId;
+    countConditions.push(eq(submissions.submitter_id, userId));
+  }
+  if (status) {
+    whereFilter.status = status;
+    countConditions.push(eq(submissions.status, status));
+  }
+  if (type) {
+    whereFilter.type = type;
+    countConditions.push(eq(submissions.type, type));
+  }
 
-	const [totalCount] = await db
-		.select({ count: count() })
-		.from(submissions)
-		.where(countConditions.length > 0 ? and(...countConditions) : undefined);
+  const [totalCount] = await db
+    .select({ count: count() })
+    .from(submissions)
+    .where(countConditions.length > 0 ? and(...countConditions) : undefined);
 
-	const rows = await db.query.submissions.findMany({
-		limit,
-		offset,
-		orderBy: { createdAt: "desc" },
-		where: Object.keys(whereFilter).length > 0 ? whereFilter : undefined,
-		with: {
-			station: true,
-			submitter: {
-				columns: {
-					id: true,
-					name: true,
-					image: true,
-					displayUsername: true,
-				},
-			},
-			reviewer: {
-				columns: {
-					id: true,
-					name: true,
-					image: true,
-					displayUsername: true,
-				},
-			},
-			proposedStation: true,
-		},
-	});
+  const rows = await db.query.submissions.findMany({
+    limit,
+    offset,
+    orderBy: { createdAt: "desc" },
+    where: Object.keys(whereFilter).length > 0 ? whereFilter : undefined,
+    with: {
+      station: true,
+      submitter: {
+        columns: {
+          id: true,
+          name: true,
+          image: true,
+          displayUsername: true,
+        },
+      },
+      reviewer: {
+        columns: {
+          id: true,
+          name: true,
+          image: true,
+          displayUsername: true,
+        },
+      },
+      proposedStation: true,
+    },
+  });
 
-	const submissionIds = rows.map((s) => s.id).filter((n): n is string => n !== null && n !== undefined);
-	const cellsBySubmission = new Map<string, z.infer<typeof proposedCellWithDetails>[]>();
+  const submissionIds = rows.map((s) => s.id).filter((n): n is string => n !== null && n !== undefined);
+  const cellsBySubmission = new Map<string, z.infer<typeof proposedCellWithDetails>[]>();
 
-	if (submissionIds.length > 0) {
-		const rawCells = await db.query.proposedCells.findMany({
-			where: { submission_id: { in: submissionIds } },
-			with: {
-				gsm: true,
-				umts: true,
-				lte: true,
-				nr: true,
-			},
-		});
+  if (submissionIds.length > 0) {
+    const rawCells = await db.query.proposedCells.findMany({
+      where: { submission_id: { in: submissionIds } },
+      with: {
+        gsm: true,
+        umts: true,
+        lte: true,
+        nr: true,
+      },
+    });
 
-		for (const { gsm, umts, lte, nr, ...base } of rawCells) {
-			const pc = { ...base, details: gsm ?? umts ?? lte ?? nr ?? null } as z.infer<typeof proposedCellWithDetails>;
-			const key = base.submission_id as string;
-			const arr = cellsBySubmission.get(key) ?? [];
-			arr.push(pc);
-			cellsBySubmission.set(key, arr);
-		}
-	}
+    for (const { gsm, umts, lte, nr, ...base } of rawCells) {
+      const pc = { ...base, details: gsm ?? umts ?? lte ?? nr ?? null } as z.infer<typeof proposedCellWithDetails>;
+      const key = base.submission_id as string;
+      const arr = cellsBySubmission.get(key) ?? [];
+      arr.push(pc);
+      cellsBySubmission.set(key, arr);
+    }
+  }
 
-	const data: Submission[] = rows.map((s) => ({
-		...s,
-		cells: cellsBySubmission.get(s.id) ?? [],
-	}));
+  const data: Submission[] = rows.map((s) => ({
+    ...s,
+    cells: cellsBySubmission.get(s.id) ?? [],
+  }));
 
-	return res.send({ data, totalCount: totalCount?.count ?? 0 });
+  return res.send({ data, totalCount: totalCount?.count ?? 0 });
 }
 
 const getSubmissions: Route<ReqQuery, ResponseBody> = {
-	url: "/submissions",
-	method: "GET",
-	config: { permissions: ["read:submissions"] },
-	schema: schemaRoute,
-	handler: handler,
+  url: "/submissions",
+  method: "GET",
+  config: { permissions: ["read:submissions"] },
+  schema: schemaRoute,
+  handler: handler,
 };
 
 export default getSubmissions;

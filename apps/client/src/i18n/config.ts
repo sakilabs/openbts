@@ -25,67 +25,67 @@ import plPLAdmin from "./locales/pl-PL/admin.json";
 
 export const defaultNS = "common";
 export const resources = {
-	"en-US": {
-		common: enUSCommon,
-		stations: enUSStations,
-		nav: enUSNav,
-		main: enUSMain,
-		stationDetails: enUSStationDetails,
-		submissions: enUSSubmissions,
-		clfExport: enUSClfExport,
-		auth: enUSAuth,
-		settings: enUSSettings,
-		admin: enUSAdmin,
-	},
-	"pl-PL": {
-		common: plPLCommon,
-		stations: plPLStations,
-		nav: plPLNav,
-		main: plPLMain,
-		stationDetails: plPLStationDetails,
-		submissions: plPLSubmissions,
-		clfExport: plPLClfExport,
-		auth: plPLAuth,
-		settings: plPLSettings,
-		admin: plPLAdmin,
-	},
+  "en-US": {
+    common: enUSCommon,
+    stations: enUSStations,
+    nav: enUSNav,
+    main: enUSMain,
+    stationDetails: enUSStationDetails,
+    submissions: enUSSubmissions,
+    clfExport: enUSClfExport,
+    auth: enUSAuth,
+    settings: enUSSettings,
+    admin: enUSAdmin,
+  },
+  "pl-PL": {
+    common: plPLCommon,
+    stations: plPLStations,
+    nav: plPLNav,
+    main: plPLMain,
+    stationDetails: plPLStationDetails,
+    submissions: plPLSubmissions,
+    clfExport: plPLClfExport,
+    auth: plPLAuth,
+    settings: plPLSettings,
+    admin: plPLAdmin,
+  },
 } as const;
 
 export const supportedLanguages = [
-	{ code: "en-US", name: "English", nativeName: "English" },
-	{ code: "pl-PL", name: "Polish", nativeName: "Polski" },
+  { code: "en-US", name: "English", nativeName: "English" },
+  { code: "pl-PL", name: "Polish", nativeName: "Polski" },
 ] as const;
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
 
 function getDefaultLanguage(): SupportedLanguage {
-	if (typeof window === "undefined") return "pl-PL";
+  if (typeof window === "undefined") return "pl-PL";
 
-	const stored = localStorage.getItem("i18nextLng");
-	if (stored && (stored === "en-US" || stored === "pl-PL")) return stored;
+  const stored = localStorage.getItem("i18nextLng");
+  if (stored && (stored === "en-US" || stored === "pl-PL")) return stored;
 
-	const browserLang = navigator.language;
-	if (browserLang.startsWith("pl")) return "pl-PL";
-	if (browserLang.startsWith("en")) return "en-US";
+  const browserLang = navigator.language;
+  if (browserLang.startsWith("pl")) return "pl-PL";
+  if (browserLang.startsWith("en")) return "en-US";
 
-	return "pl-PL";
+  return "pl-PL";
 }
 
 i18n.use(initReactI18next).init({
-	resources,
-	lng: getDefaultLanguage(),
-	fallbackLng: "en-US",
-	defaultNS,
-	ns: ["common", "stations", "nav", "map", "stationDetails", "submissions", "clfExport", "auth", "settings", "admin"],
-	interpolation: {
-		escapeValue: false,
-	},
-	react: {
-		useSuspense: false,
-		bindI18n: "languageChanged loaded",
-		bindI18nStore: "added removed",
-	},
-	showSupportNotice: false,
+  resources,
+  lng: getDefaultLanguage(),
+  fallbackLng: "en-US",
+  defaultNS,
+  ns: ["common", "stations", "nav", "map", "stationDetails", "submissions", "clfExport", "auth", "settings", "admin"],
+  interpolation: {
+    escapeValue: false,
+  },
+  react: {
+    useSuspense: false,
+    bindI18n: "languageChanged loaded",
+    bindI18nStore: "added removed",
+  },
+  showSupportNotice: false,
 });
 
 export default i18n;

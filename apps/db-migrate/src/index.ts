@@ -12,5 +12,5 @@ const batchArg = process.argv.find((a) => a.startsWith("--batch=") || a.startsWi
 const batchSize = batchArg ? Number((batchArg.split("=")[1] || "").trim()) : undefined;
 
 runMigrate({ directory: dir, batchSize }).catch((e) => {
-	logger.error(e);
+  logger.error(e);
 });

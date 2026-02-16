@@ -20,58 +20,58 @@ const stationsSchema = createSelectSchema(stations);
 type CellBase = z.infer<typeof cellsSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
 type CellWithRats = CellBase & {
-	station: z.infer<typeof stationsSchema>;
-	band: z.infer<typeof bandsSchema>;
-	gsm?: z.infer<typeof gsmCellsSchema>;
-	umts?: z.infer<typeof umtsCellsSchema>;
-	lte?: z.infer<typeof lteCellsSchema>;
-	nr?: z.infer<typeof nrCellsSchema>;
+  station: z.infer<typeof stationsSchema>;
+  band: z.infer<typeof bandsSchema>;
+  gsm?: z.infer<typeof gsmCellsSchema>;
+  umts?: z.infer<typeof umtsCellsSchema>;
+  lte?: z.infer<typeof lteCellsSchema>;
+  nr?: z.infer<typeof nrCellsSchema>;
 };
 type Cell = CellBase & { station: z.infer<typeof stationsSchema>; band: z.infer<typeof bandsSchema>; details: CellDetails };
 const schemaRoute = {
-	params: z.object({
-		station_id: z.coerce.number<number>(),
-		cell_id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: cellsSchema.extend({ station: stationsSchema, band: bandsSchema, details: cellDetailsSchema }),
-		}),
-	},
+  params: z.object({
+    station_id: z.coerce.number<number>(),
+    cell_id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: cellsSchema.extend({ station: stationsSchema, band: bandsSchema, details: cellDetailsSchema }),
+    }),
+  },
 };
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cell>>) {
-	const { station_id, cell_id } = req.params;
+  const { station_id, cell_id } = req.params;
 
-	const station = await db.query.stations.findFirst({
-		where: {
-			RAW: (fields, { eq }) => eq(fields.id, station_id),
-		},
-	});
-	if (!station) throw new ErrorResponse("NOT_FOUND");
+  const station = await db.query.stations.findFirst({
+    where: {
+      RAW: (fields, { eq }) => eq(fields.id, station_id),
+    },
+  });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
 
-	const cell = await db.query.cells.findFirst({
-		where: {
-			id: cell_id,
-		},
-		with: { station: true, band: true, gsm: true, umts: true, lte: true, nr: true },
-		columns: { band_id: false },
-	});
-	if (!cell) throw new ErrorResponse("NOT_FOUND");
-	if (cell.station_id !== station_id) throw new ErrorResponse("INVALID_QUERY", { message: "Requested cell does not belong to this station" });
+  const cell = await db.query.cells.findFirst({
+    where: {
+      id: cell_id,
+    },
+    with: { station: true, band: true, gsm: true, umts: true, lte: true, nr: true },
+    columns: { band_id: false },
+  });
+  if (!cell) throw new ErrorResponse("NOT_FOUND");
+  if (cell.station_id !== station_id) throw new ErrorResponse("INVALID_QUERY", { message: "Requested cell does not belong to this station" });
 
-	const { gsm, umts, lte, nr, ...rest } = cell as CellWithRats;
-	const details: CellDetails = gsm ?? umts ?? lte ?? nr ?? null;
-	return res.send({ data: { ...rest, details } as Cell });
+  const { gsm, umts, lte, nr, ...rest } = cell as CellWithRats;
+  const details: CellDetails = gsm ?? umts ?? lte ?? nr ?? null;
+  return res.send({ data: { ...rest, details } as Cell });
 }
 
 const getCellFromStation: Route<ReqParams, Cell> = {
-	url: "/stations/:station_id/cells/:cell_id",
-	method: "GET",
-	config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/stations/:station_id/cells/:cell_id",
+  method: "GET",
+  config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getCellFromStation;

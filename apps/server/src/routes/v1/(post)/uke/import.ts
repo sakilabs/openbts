@@ -7,53 +7,53 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const importStepSchema = z.object({
-	key: z.enum(["stations", "radiolines", "permits", "prune_associations", "associate", "cleanup"]),
-	status: z.enum(["pending", "running", "success", "skipped", "error"]),
-	startedAt: z.string().optional(),
-	finishedAt: z.string().optional(),
+  key: z.enum(["stations", "radiolines", "permits", "prune_associations", "associate", "cleanup"]),
+  status: z.enum(["pending", "running", "success", "skipped", "error"]),
+  startedAt: z.string().optional(),
+  finishedAt: z.string().optional(),
 });
 
 const importJobStatusSchema = z.object({
-	state: z.enum(["idle", "running", "success", "error"]),
-	startedAt: z.string().optional(),
-	finishedAt: z.string().optional(),
-	steps: z.array(importStepSchema),
-	error: z.string().optional(),
+  state: z.enum(["idle", "running", "success", "error"]),
+  startedAt: z.string().optional(),
+  finishedAt: z.string().optional(),
+  steps: z.array(importStepSchema),
+  error: z.string().optional(),
 });
 
 const schemaRoute = {
-	body: z.object({
-		importStations: z.boolean().optional().default(true),
-		importRadiolines: z.boolean().optional().default(true),
-		importPermits: z.boolean().optional().default(true),
-	}),
-	response: {
-		200: z.object({
-			data: importJobStatusSchema,
-		}),
-	},
+  body: z.object({
+    importStations: z.boolean().optional().default(true),
+    importRadiolines: z.boolean().optional().default(true),
+    importPermits: z.boolean().optional().default(true),
+  }),
+  response: {
+    200: z.object({
+      data: importJobStatusSchema,
+    }),
+  },
 };
 
 type ReqBody = {
-	Body: z.infer<typeof schemaRoute.body>;
+  Body: z.infer<typeof schemaRoute.body>;
 };
 
 type ResponseData = z.infer<typeof importJobStatusSchema>;
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const status = startImportJob(req.body);
-	res.send({ data: status });
+  const status = startImportJob(req.body);
+  res.send({ data: status });
 }
 
 const importUkeData: Route<ReqBody, ResponseData> = {
-	url: "/uke/import",
-	method: "POST",
-	schema: schemaRoute,
-	config: {
-		permissions: ["write:uke_permits", "write:uke_radiolines"],
-		allowGuestAccess: false,
-	},
-	handler,
+  url: "/uke/import",
+  method: "POST",
+  schema: schemaRoute,
+  config: {
+    permissions: ["write:uke_permits", "write:uke_radiolines"],
+    allowGuestAccess: false,
+  },
+  handler,
 };
 
 export default importUkeData;

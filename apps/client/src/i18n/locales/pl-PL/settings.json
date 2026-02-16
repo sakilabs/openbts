@@ -1,53 +1,53 @@
 {
-	"preferences": {
-		"title": "Preferencje",
-		"description": "Te ustawienia są zapisywane lokalnie na tym urządzeniu",
-		"gpsFormat": "Format współrzędnych GPS",
-		"gpsFormatHint": "Wybierz sposób wyświetlania współrzędnych GPS w aplikacji",
-		"gpsDecimal": "Stopnie dziesiętne",
-		"gpsDms": "Stopnie, minuty, sekundy",
-		"navigationApps": "Aplikacje nawigacyjne",
-		"navigationAppsHint": "Wybierz, które przyciski nawigacji wyświetlać przy współrzędnych",
-		"navGoogleMaps": "Mapy Google",
-		"navAppleMaps": "Apple Maps",
-		"navWaze": "Waze",
-		"openWith": "Otwórz w {{app}}",
-		"navDisplayMode": "Styl przycisków nawigacji",
-		"navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji",
-		"navDisplayInline": "Rozwijane menu",
-		"navDisplayInlineDesc": "Mała ikona obok współrzędnych GPS otwierająca menu rozwijane",
-		"navDisplayButtons": "Osobne przyciski",
-		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje",
-		"radiolinesMinZoom": "Minimalny zoom radiolinii",
-		"radiolinesMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego radiolinie będą widoczne na mapie",
-		"mapStationsLimit": "Limit stacji na mapie",
-		"mapStationsLimitHint": "Maksymalna liczba stacji wyświetlanych jednocześnie na mapie",
-		"mapRadiolinesLimit": "Limit radiolinii na mapie",
-		"mapRadiolinesLimitHint": "Maksymalna liczba radiolinii wyświetlanych jednocześnie na mapie"
-	},
-	"page": {
-		"title": "Ustawienia konta",
-		"shortTitle": "Ustawienia",
-		"description": "Zarządzaj kontem i bezpieczeństwem"
-	},
-	"account": {
-		"title": "Konto",
-		"description": "Twój profil i dane osobowe"
-	},
-	"security": {
-		"title": "Bezpieczeństwo",
-		"description": "Hasło, klucze dostępu i uwierzytelnianie"
-	},
-	"apiKeys": {
-		"title": "Klucze API",
-		"description": "Zarządzaj kluczami do dostępu programistycznego"
-	},
-	"sessions": {
-		"title": "Sesje",
-		"description": "Aktywne sesje na Twoich urządzeniach"
-	},
-	"dangerZone": {
-		"title": "Strefa zagrożenia",
-		"description": "Trwałe usunięcie konta i wszystkich powiązanych danych"
-	}
+  "preferences": {
+    "title": "Preferencje",
+    "description": "Te ustawienia są zapisywane lokalnie na tym urządzeniu",
+    "gpsFormat": "Format współrzędnych GPS",
+    "gpsFormatHint": "Wybierz sposób wyświetlania współrzędnych GPS w aplikacji",
+    "gpsDecimal": "Stopnie dziesiętne",
+    "gpsDms": "Stopnie, minuty, sekundy",
+    "navigationApps": "Aplikacje nawigacyjne",
+    "navigationAppsHint": "Wybierz, które przyciski nawigacji wyświetlać przy współrzędnych",
+    "navGoogleMaps": "Mapy Google",
+    "navAppleMaps": "Apple Maps",
+    "navWaze": "Waze",
+    "openWith": "Otwórz w {{app}}",
+    "navDisplayMode": "Styl przycisków nawigacji",
+    "navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji",
+    "navDisplayInline": "Rozwijane menu",
+    "navDisplayInlineDesc": "Mała ikona obok współrzędnych GPS otwierająca menu rozwijane",
+    "navDisplayButtons": "Osobne przyciski",
+    "navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje",
+    "radiolinesMinZoom": "Minimalny zoom radiolinii",
+    "radiolinesMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego radiolinie będą widoczne na mapie",
+    "mapStationsLimit": "Limit stacji na mapie",
+    "mapStationsLimitHint": "Maksymalna liczba stacji wyświetlanych jednocześnie na mapie",
+    "mapRadiolinesLimit": "Limit radiolinii na mapie",
+    "mapRadiolinesLimitHint": "Maksymalna liczba radiolinii wyświetlanych jednocześnie na mapie"
+  },
+  "page": {
+    "title": "Ustawienia konta",
+    "shortTitle": "Ustawienia",
+    "description": "Zarządzaj kontem i bezpieczeństwem"
+  },
+  "account": {
+    "title": "Konto",
+    "description": "Twój profil i dane osobowe"
+  },
+  "security": {
+    "title": "Bezpieczeństwo",
+    "description": "Hasło, klucze dostępu i uwierzytelnianie"
+  },
+  "apiKeys": {
+    "title": "Klucze API",
+    "description": "Zarządzaj kluczami do dostępu programistycznego"
+  },
+  "sessions": {
+    "title": "Sesje",
+    "description": "Aktywne sesje na Twoich urządzeniach"
+  },
+  "dangerZone": {
+    "title": "Strefa zagrożenia",
+    "description": "Trwałe usunięcie konta i wszystkich powiązanych danych"
+  }
 }

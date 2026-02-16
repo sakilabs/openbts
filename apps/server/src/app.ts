@@ -17,140 +17,140 @@ import { logger, serializeError } from "./utils/logger.js";
 import type { FastifyZodInstance } from "./interfaces/fastify.interface.js";
 
 export default class App {
-	fastify: FastifyZodInstance;
-	dlogger: debug.Debugger;
+  fastify: FastifyZodInstance;
+  dlogger: debug.Debugger;
 
-	constructor() {
-		this.dlogger = dlogger.extend("app");
-		this.fastify = Fastify({
-			logger: false,
-			trustProxy: true,
-			genReqId: () => randomUUID(),
-			// ajv: {
-			// 	customOptions: {
-			// 		allErrors: true,
-			// 	},
-			// },
-			// schemaErrorFormatter: (errors, _) => {
-			// 	const formattedErrors = errors.map((err) => ({
-			// 		field: String(err.instancePath?.slice(1) || err.params?.missingProperty || "unknown"),
-			// 		validationMessage: err.message,
-			// 	}));
+  constructor() {
+    this.dlogger = dlogger.extend("app");
+    this.fastify = Fastify({
+      logger: false,
+      trustProxy: true,
+      genReqId: () => randomUUID(),
+      // ajv: {
+      // 	customOptions: {
+      // 		allErrors: true,
+      // 	},
+      // },
+      // schemaErrorFormatter: (errors, _) => {
+      // 	const formattedErrors = errors.map((err) => ({
+      // 		field: String(err.instancePath?.slice(1) || err.params?.missingProperty || "unknown"),
+      // 		validationMessage: err.message,
+      // 	}));
 
-			// 	return new ValidationError(formattedErrors);
-			// },
-		}).withTypeProvider<ZodTypeProvider>();
-		this.fastify.setValidatorCompiler(validatorCompiler);
-		this.fastify.setSerializerCompiler(serializerCompiler);
+      // 	return new ValidationError(formattedErrors);
+      // },
+    }).withTypeProvider<ZodTypeProvider>();
+    this.fastify.setValidatorCompiler(validatorCompiler);
+    this.fastify.setSerializerCompiler(serializerCompiler);
 
-		debug.enable("sakilabs/openbts:*");
+    debug.enable("sakilabs/openbts:*");
 
-		this.checkEnvironment();
-		this.initServices();
-		this.initHooks();
-		this.initMiddlewares();
-		this.initControllers();
-	}
+    this.checkEnvironment();
+    this.initServices();
+    this.initHooks();
+    this.initMiddlewares();
+    this.initControllers();
+  }
 
-	private checkEnvironment(): void {
-		const requiredEnvVars = ["DATABASE_URL"];
-		const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+  private checkEnvironment(): void {
+    const requiredEnvVars = ["DATABASE_URL"];
+    const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
-		if (missingEnvVars.length > 0) throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
-	}
+    if (missingEnvVars.length > 0) throw new Error(`Missing required environment variables: ${missingEnvVars.join(", ")}`);
+  }
 
-	private async initServices(): Promise<void> {
-		await initRuntimeSettings();
-	}
+  private async initServices(): Promise<void> {
+    await initRuntimeSettings();
+  }
 
-	private initHooks(): void {
-		this.dlogger("Registering hooks");
+  private initHooks(): void {
+    this.dlogger("Registering hooks");
 
-		const requestStartTime = Symbol("requestStartTime");
-		this.fastify.decorateRequest(requestStartTime, 0);
-		this.fastify.addHook("onRequest", OnRequestHook);
-		this.fastify.addHook("preHandler", PreHandlerHook);
-		this.fastify.addHook("onSend", OnSendHook);
-		registerRateLimit(this.fastify);
-		this.fastify.setErrorHandler((error: ErrorResponse | ValidationError, req, res) => {
-			const statusCode = error.statusCode || 500;
-			const message = error.message || "An internal server error occurred.";
-			const code = error.code || "INTERNAL_SERVER_ERROR";
+    const requestStartTime = Symbol("requestStartTime");
+    this.fastify.decorateRequest(requestStartTime, 0);
+    this.fastify.addHook("onRequest", OnRequestHook);
+    this.fastify.addHook("preHandler", PreHandlerHook);
+    this.fastify.addHook("onSend", OnSendHook);
+    registerRateLimit(this.fastify);
+    this.fastify.setErrorHandler((error: ErrorResponse | ValidationError, req, res) => {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || "An internal server error occurred.";
+      const code = error.code || "INTERNAL_SERVER_ERROR";
 
-			if (statusCode !== 404) {
-				logger.error(error.code, {
-					...serializeError(error),
-					statusCode,
-					code,
-					method: req?.method,
-					url: req?.url,
-					ip: req?.ip,
-					host: req?.hostname,
-					reqId: req?.id,
-					userId: req?.userSession?.user?.id ?? undefined,
-				});
-			}
+      if (statusCode !== 404) {
+        logger.error(error.code, {
+          ...serializeError(error),
+          statusCode,
+          code,
+          method: req?.method,
+          url: req?.url,
+          ip: req?.ip,
+          host: req?.hostname,
+          reqId: req?.id,
+          userId: req?.userSession?.user?.id ?? undefined,
+        });
+      }
 
-			const errorResponse: {
-				errors: {
-					code: string;
-					message: string;
-					details?: {
-						field: string;
-						validationMessage: string | undefined;
-					}[];
-				}[];
-			} = {
-				errors: [
-					{
-						code,
-						message,
-					},
-				],
-			};
-			if (error instanceof ValidationError && errorResponse.errors[0]) {
-				errorResponse.errors[0].details = (error as ValidationError)?.details || [];
-			}
+      const errorResponse: {
+        errors: {
+          code: string;
+          message: string;
+          details?: {
+            field: string;
+            validationMessage: string | undefined;
+          }[];
+        }[];
+      } = {
+        errors: [
+          {
+            code,
+            message,
+          },
+        ],
+      };
+      if (error instanceof ValidationError && errorResponse.errors[0]) {
+        errorResponse.errors[0].details = (error as ValidationError)?.details || [];
+      }
 
-			return res.status(statusCode).send(errorResponse);
-		});
-	}
+      return res.status(statusCode).send(errorResponse);
+    });
+  }
 
-	private initMiddlewares(): void {
-		this.dlogger("Registering middlewares");
-		this.fastify
-			.register(cors, {
-				origin: (origin, cb) => {
-					if (typeof origin === "undefined") {
-						cb(null, true);
-						return;
-					}
+  private initMiddlewares(): void {
+    this.dlogger("Registering middlewares");
+    this.fastify
+      .register(cors, {
+        origin: (origin, cb) => {
+          if (typeof origin === "undefined") {
+            cb(null, true);
+            return;
+          }
 
-					const hostname = new URL(origin).hostname;
-					if (hostname === "localhost" || hostname === "openbts.sakilabs.com") {
-						cb(null, true);
-						return;
-					}
+          const hostname = new URL(origin).hostname;
+          if (hostname === "localhost" || hostname === "openbts.sakilabs.com") {
+            cb(null, true);
+            return;
+          }
 
-					cb(new Error("CORS origin not allowed"), false);
-				},
-				credentials: true,
-			})
-			.register(import("@fastify/multipart"));
-	}
+          cb(new Error("CORS origin not allowed"), false);
+        },
+        credentials: true,
+      })
+      .register(import("@fastify/multipart"));
+  }
 
-	private initControllers(): void {
-		this.dlogger("Registering controllers");
-		this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
-	}
+  private initControllers(): void {
+    this.dlogger("Registering controllers");
+    this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
+  }
 
-	public async listen(port: number): Promise<void> {
-		try {
-			await this.fastify.listen({ port, host: "127.0.0.1" });
-			this.dlogger("Server is ready on port %d", port);
-		} catch (err) {
-			this.dlogger("Error starting server: %O", err);
-			process.exit(1);
-		}
-	}
+  public async listen(port: number): Promise<void> {
+    try {
+      await this.fastify.listen({ port, host: "127.0.0.1" });
+      this.dlogger("Server is ready on port %d", port);
+    } catch (err) {
+      this.dlogger("Error starting server: %O", err);
+      process.exit(1);
+    }
+  }
 }

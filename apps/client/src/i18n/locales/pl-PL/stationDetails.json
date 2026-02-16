@@ -1,42 +1,42 @@
 {
-	"tabs": {
-		"specs": "Specyfikacja",
-		"permits": "Pozwolenia UKE"
-	},
-	"specs": {
-		"basicInfo": "Podstawowe informacje",
-		"cellDetails": "Szczegóły komórek",
-		"networkName": "Nazwa N!:",
-		"mnoName": "MNO:",
-		"internalNotes": "Notatki wewnętrzne"
-	},
-	"permits": {
-		"permitsCount_one": "{{count}} pozwolenie",
-		"permitsCount_few": "{{count}} pozwolenia",
-		"permitsCount_many": "{{count}} pozwoleń",
-		"permit": "pozwolenie",
-		"permits": "pozwoleń",
-		"neverExpires": "Bezterminowe",
-		"decisionNumber": "Numer decyzji",
-		"expiryDate": "Data ważności",
-		"sourceUke": "Źródło: Urząd Komunikacji Elektronicznej (UKE)",
-		"noPermits": "Brak pozwoleń UKE dla tej stacji",
-		"decisionTypeP": "Pozwolenie",
-		"decisionTypeZmP": "Zmiana Pozwolenia"
-	},
-	"dialog": {
-		"hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
-		"btsStation": "Stacja BTS"
-	},
-	"comments": {
-		"title": "Komentarze społeczności",
-		"loading": "Ładowanie komentarzy...",
-		"unavailable": "Komentarze są obecnie niedostępne",
-		"noComments": "Brak komentarzy",
-		"noCommentsHint": "Bądź pierwszą osobą, która podzieli się informacjami o tej stacji",
-		"file": "Plik",
-		"placeholder": "Dodaj komentarz...",
-		"addImages": "Dodaj obrazy",
-		"postComment": "Opublikuj komentarz"
-	}
+  "tabs": {
+    "specs": "Specyfikacja",
+    "permits": "Pozwolenia UKE"
+  },
+  "specs": {
+    "basicInfo": "Podstawowe informacje",
+    "cellDetails": "Szczegóły komórek",
+    "networkName": "Nazwa N!:",
+    "mnoName": "MNO:",
+    "internalNotes": "Notatki wewnętrzne"
+  },
+  "permits": {
+    "permitsCount_one": "{{count}} pozwolenie",
+    "permitsCount_few": "{{count}} pozwolenia",
+    "permitsCount_many": "{{count}} pozwoleń",
+    "permit": "pozwolenie",
+    "permits": "pozwoleń",
+    "neverExpires": "Bezterminowe",
+    "decisionNumber": "Numer decyzji",
+    "expiryDate": "Data ważności",
+    "sourceUke": "Źródło: Urząd Komunikacji Elektronicznej (UKE)",
+    "noPermits": "Brak pozwoleń UKE dla tej stacji",
+    "decisionTypeP": "Pozwolenie",
+    "decisionTypeZmP": "Zmiana Pozwolenia"
+  },
+  "dialog": {
+    "hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
+    "btsStation": "Stacja BTS"
+  },
+  "comments": {
+    "title": "Komentarze społeczności",
+    "loading": "Ładowanie komentarzy...",
+    "unavailable": "Komentarze są obecnie niedostępne",
+    "noComments": "Brak komentarzy",
+    "noCommentsHint": "Bądź pierwszą osobą, która podzieli się informacjami o tej stacji",
+    "file": "Plik",
+    "placeholder": "Dodaj komentarz...",
+    "addImages": "Dodaj obrazy",
+    "postComment": "Opublikuj komentarz"
+  }
 }

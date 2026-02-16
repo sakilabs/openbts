@@ -11,36 +11,36 @@ import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.in
 
 const operatorsSchema = createSelectSchema(operators);
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: operatorsSchema,
-		}),
-	},
+  params: z.object({
+    id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: operatorsSchema,
+    }),
+  },
 };
 type ResponseData = z.infer<typeof operatorsSchema>;
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	const operator = await db.query.operators.findFirst({
-		where: {
-			id: id,
-		},
-	});
-	if (!operator) throw new ErrorResponse("NOT_FOUND");
+  const operator = await db.query.operators.findFirst({
+    where: {
+      id: id,
+    },
+  });
+  if (!operator) throw new ErrorResponse("NOT_FOUND");
 
-	return res.send({ data: operator });
+  return res.send({ data: operator });
 }
 
 const getOperator: Route<IdParams, ResponseData> = {
-	url: "/operators/:id",
-	method: "GET",
-	config: { permissions: ["read:operators"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/operators/:id",
+  method: "GET",
+  config: { permissions: ["read:operators"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getOperator;

@@ -1,36 +1,36 @@
 {
-	"sections": {
-		"stations": "Stacje",
-		"contribute": "Zgłoszenia",
-		"settings": "Ustawienia",
-		"admin": "Admin"
-	},
-	"items": {
-		"mapView": "Widok mapy",
-		"database": "Baza danych",
-		"clfExport": "Eksport CLF",
-		"submitStation": "Nowe zgłoszenie",
-		"preferences": "Preferencje",
-		"accountSettings": "Ustawienia konta",
-		"mySubmissions": "Moje zgłoszenia",
-		"users": "Użytkownicy",
-		"stations": "Stacje",
-		"submissions": "Zgłoszenia",
-		"locations": "Lokalizacje",
-		"settings": "Ustawienia",
-		"ukeImport": "Import UKE"
-	},
-	"secondary": {
-		"settings": "Ustawienia",
-		"help": "Pomoc",
-		"about": "O aplikacji"
-	},
-	"user": {
-		"logout": "Wyloguj się",
-		"login": "Zaloguj się"
-	},
-	"auth": {
-		"signIn": "Zaloguj się",
-		"signInHint": "Dostęp do konta"
-	}
+  "sections": {
+    "stations": "Stacje",
+    "contribute": "Zgłoszenia",
+    "settings": "Ustawienia",
+    "admin": "Admin"
+  },
+  "items": {
+    "mapView": "Widok mapy",
+    "database": "Baza danych",
+    "clfExport": "Eksport CLF",
+    "submitStation": "Nowe zgłoszenie",
+    "preferences": "Preferencje",
+    "accountSettings": "Ustawienia konta",
+    "mySubmissions": "Moje zgłoszenia",
+    "users": "Użytkownicy",
+    "stations": "Stacje",
+    "submissions": "Zgłoszenia",
+    "locations": "Lokalizacje",
+    "settings": "Ustawienia",
+    "ukeImport": "Import UKE"
+  },
+  "secondary": {
+    "settings": "Ustawienia",
+    "help": "Pomoc",
+    "about": "O aplikacji"
+  },
+  "user": {
+    "logout": "Wyloguj się",
+    "login": "Zaloguj się"
+  },
+  "auth": {
+    "signIn": "Zaloguj się",
+    "signInHint": "Dostęp do konta"
+  }
 }

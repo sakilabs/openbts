@@ -18,51 +18,51 @@ const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 type Cells = z.infer<typeof cellsSchema>[];
 const schemaRoute = {
-	params: z.object({
-		station_id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: z.array(cellsSchema.extend({ details: cellDetailsSchema, band: bandSchema })),
-		}),
-	},
+  params: z.object({
+    station_id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: z.array(cellsSchema.extend({ details: cellDetailsSchema, band: bandSchema })),
+    }),
+  },
 };
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 
 type CellWithRats = z.infer<typeof cellsSchema> & {
-	gsm?: z.infer<typeof gsmCellsSchema>;
-	umts?: z.infer<typeof umtsCellsSchema>;
-	lte?: z.infer<typeof lteCellsSchema>;
-	nr?: z.infer<typeof nrCellsSchema>;
+  gsm?: z.infer<typeof gsmCellsSchema>;
+  umts?: z.infer<typeof umtsCellsSchema>;
+  lte?: z.infer<typeof lteCellsSchema>;
+  nr?: z.infer<typeof nrCellsSchema>;
 };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Cells>>) {
-	const { station_id } = req.params;
+  const { station_id } = req.params;
 
-	const station = await db.query.stations.findFirst({
-		where: {
-			id: station_id,
-		},
-		with: {
-			cells: { with: { gsm: true, umts: true, lte: true, nr: true, band: true } },
-		},
-	});
-	if (!station) throw new ErrorResponse("NOT_FOUND");
+  const station = await db.query.stations.findFirst({
+    where: {
+      id: station_id,
+    },
+    with: {
+      cells: { with: { gsm: true, umts: true, lte: true, nr: true, band: true } },
+    },
+  });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
 
-	const data = (station.cells as CellWithRats[]).map((cell) => {
-		const { gsm, umts, lte, nr, ...rest } = cell;
-		return { ...rest, details: gsm ?? umts ?? lte ?? nr ?? null };
-	});
+  const data = (station.cells as CellWithRats[]).map((cell) => {
+    const { gsm, umts, lte, nr, ...rest } = cell;
+    return { ...rest, details: gsm ?? umts ?? lte ?? nr ?? null };
+  });
 
-	return res.send({ data });
+  return res.send({ data });
 }
 
 const getCellsFromStation: Route<ReqParams, Cells> = {
-	url: "/stations/:station_id/cells",
-	method: "GET",
-	config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/stations/:station_id/cells",
+  method: "GET",
+  config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getCellsFromStation;

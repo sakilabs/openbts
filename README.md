@@ -81,6 +81,7 @@ Start the server in watch mode:
 ```bash
 bun run dev
 ```
+
 _The server will run on `http://localhost:3030`._
 
 #### Building & Running Production
@@ -119,6 +120,7 @@ Start the dev server:
 ```bash
 bun run dev
 ```
+
 _Access the client at the URL shown in the terminal (usually `http://localhost:5173`)._
 
 #### Building & Previewing

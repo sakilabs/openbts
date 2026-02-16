@@ -9,30 +9,30 @@ import { useStationsData } from "@/features/stations/hooks/useStationsData";
 import type { Station } from "@/types/station";
 
 function AdminStationsListPage() {
-	const { t } = useTranslation("stations");
-	const navigate = useNavigate();
-	const data = useStationsData();
-	const handleRowClick = useCallback((station: Station) => navigate({ to: "/admin/stations/$id", params: { id: String(station.id) } }), [navigate]);
+  const { t } = useTranslation("stations");
+  const navigate = useNavigate();
+  const data = useStationsData();
+  const handleRowClick = useCallback((station: Station) => navigate({ to: "/admin/stations/$id", params: { id: String(station.id) } }), [navigate]);
 
-	return (
-		<StationsListLayout
-			data={data}
-			onRowClick={handleRowClick}
-			headerActions={
-				<Button size="sm" onClick={() => navigate({ to: "/admin/stations/$id", params: { id: "new" } })}>
-					<HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
-					{t("actions.newStation")}
-				</Button>
-			}
-		/>
-	);
+  return (
+    <StationsListLayout
+      data={data}
+      onRowClick={handleRowClick}
+      headerActions={
+        <Button size="sm" onClick={() => navigate({ to: "/admin/stations/$id", params: { id: "new" } })}>
+          <HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
+          {t("actions.newStation")}
+        </Button>
+      }
+    />
+  );
 }
 
 export const Route = createFileRoute("/_layout/admin/stations/")({
-	component: AdminStationsListPage,
-	staticData: {
-		titleKey: "breadcrumbs.stations",
-		i18nNamespace: "admin",
-		breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
-	},
+  component: AdminStationsListPage,
+  staticData: {
+    titleKey: "breadcrumbs.stations",
+    i18nNamespace: "admin",
+    breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
+  },
 });

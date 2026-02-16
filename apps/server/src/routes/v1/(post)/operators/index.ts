@@ -14,31 +14,31 @@ const operatorsInsertSchema = createInsertSchema(operators).strict();
 type ReqBody = { Body: z.infer<typeof operatorsInsertSchema> };
 type ResponseData = z.infer<typeof operatorsSelectSchema>;
 const schemaRoute = {
-	body: operatorsInsertSchema,
-	response: {
-		200: z.object({
-			data: operatorsSelectSchema,
-		}),
-	},
+  body: operatorsInsertSchema,
+  response: {
+    200: z.object({
+      data: operatorsSelectSchema,
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	try {
-		const [operator] = await db.insert(operators).values(req.body).returning();
+  try {
+    const [operator] = await db.insert(operators).values(req.body).returning();
 
-		if (!operator) throw new ErrorResponse("FAILED_TO_CREATE");
-		return res.send({ data: operator });
-	} catch {
-		throw new ErrorResponse("FAILED_TO_CREATE");
-	}
+    if (!operator) throw new ErrorResponse("FAILED_TO_CREATE");
+    return res.send({ data: operator });
+  } catch {
+    throw new ErrorResponse("FAILED_TO_CREATE");
+  }
 }
 
 const createOperator: Route<ReqBody, ResponseData> = {
-	url: "/operators",
-	method: "POST",
-	config: { permissions: ["write:operators"] },
-	schema: schemaRoute,
-	handler,
+  url: "/operators",
+  method: "POST",
+  config: { permissions: ["write:operators"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default createOperator;

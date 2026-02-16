@@ -1,12 +1,12 @@
 {
-	"extends": "@openbts/typescript-configs/base.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"outDir": "./dist",
-		"rootDir": ".",
-		"allowImportingTsExtensions": true,
-		"rewriteRelativeImportExtensions": true
-	},
-	"include": ["./**/*"],
-	"exclude": ["node_modules", "dist", "migrations", "server"]
+  "extends": "@openbts/typescript-configs/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["./**/*"],
+  "exclude": ["node_modules", "dist", "migrations", "server"]
 }

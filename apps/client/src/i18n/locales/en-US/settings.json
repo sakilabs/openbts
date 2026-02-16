@@ -1,53 +1,53 @@
 {
-	"preferences": {
-		"title": "Preferences",
-		"description": "These settings are saved locally on this device",
-		"gpsFormat": "GPS Coordinates Format",
-		"gpsFormatHint": "Choose how GPS coordinates are displayed in the application",
-		"gpsDecimal": "Decimal Degrees",
-		"gpsDms": "Degrees, Minutes, Seconds",
-		"navigationApps": "Navigation Apps",
-		"navigationAppsHint": "Choose which navigation buttons to display next to coordinates",
-		"navGoogleMaps": "Google Maps",
-		"navAppleMaps": "Apple Maps",
-		"navWaze": "Waze",
-		"openWith": "Open with {{app}}",
-		"navDisplayMode": "Navigation Buttons Style",
-		"navDisplayModeHint": "Choose how navigation links are displayed in station details",
-		"navDisplayInline": "Dropdown Menu",
-		"navDisplayInlineDesc": "Small icon next to GPS coordinates opening a dropdown menu",
-		"navDisplayButtons": "Separate Buttons",
-		"navDisplayButtonsDesc": "Buttons displayed below the Info section",
-		"radiolinesMinZoom": "Radiolines Minimum Zoom",
-		"radiolinesMinZoomHint": "Set the minimum zoom level at which radiolines become visible on the map",
-		"mapStationsLimit": "Stations Limit on Map",
-		"mapStationsLimitHint": "Maximum number of stations displayed on the map at once",
-		"mapRadiolinesLimit": "Radiolines Limit on Map",
-		"mapRadiolinesLimitHint": "Maximum number of radiolines displayed on the map at once"
-	},
-	"page": {
-		"title": "Account Settings",
-		"shortTitle": "Settings",
-		"description": "Manage your account and security"
-	},
-	"account": {
-		"title": "Account",
-		"description": "Your profile and personal information"
-	},
-	"security": {
-		"title": "Security",
-		"description": "Password, passkeys, and authentication"
-	},
-	"apiKeys": {
-		"title": "API Keys",
-		"description": "Manage keys for programmatic access"
-	},
-	"sessions": {
-		"title": "Sessions",
-		"description": "Active sessions on your devices"
-	},
-	"dangerZone": {
-		"title": "Danger Zone",
-		"description": "Permanently delete your account and all associated data"
-	}
+  "preferences": {
+    "title": "Preferences",
+    "description": "These settings are saved locally on this device",
+    "gpsFormat": "GPS Coordinates Format",
+    "gpsFormatHint": "Choose how GPS coordinates are displayed in the application",
+    "gpsDecimal": "Decimal Degrees",
+    "gpsDms": "Degrees, Minutes, Seconds",
+    "navigationApps": "Navigation Apps",
+    "navigationAppsHint": "Choose which navigation buttons to display next to coordinates",
+    "navGoogleMaps": "Google Maps",
+    "navAppleMaps": "Apple Maps",
+    "navWaze": "Waze",
+    "openWith": "Open with {{app}}",
+    "navDisplayMode": "Navigation Buttons Style",
+    "navDisplayModeHint": "Choose how navigation links are displayed in station details",
+    "navDisplayInline": "Dropdown Menu",
+    "navDisplayInlineDesc": "Small icon next to GPS coordinates opening a dropdown menu",
+    "navDisplayButtons": "Separate Buttons",
+    "navDisplayButtonsDesc": "Buttons displayed below the Info section",
+    "radiolinesMinZoom": "Radiolines Minimum Zoom",
+    "radiolinesMinZoomHint": "Set the minimum zoom level at which radiolines become visible on the map",
+    "mapStationsLimit": "Stations Limit on Map",
+    "mapStationsLimitHint": "Maximum number of stations displayed on the map at once",
+    "mapRadiolinesLimit": "Radiolines Limit on Map",
+    "mapRadiolinesLimitHint": "Maximum number of radiolines displayed on the map at once"
+  },
+  "page": {
+    "title": "Account Settings",
+    "shortTitle": "Settings",
+    "description": "Manage your account and security"
+  },
+  "account": {
+    "title": "Account",
+    "description": "Your profile and personal information"
+  },
+  "security": {
+    "title": "Security",
+    "description": "Password, passkeys, and authentication"
+  },
+  "apiKeys": {
+    "title": "API Keys",
+    "description": "Manage keys for programmatic access"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "description": "Active sessions on your devices"
+  },
+  "dangerZone": {
+    "title": "Danger Zone",
+    "description": "Permanently delete your account and all associated data"
+  }
 }

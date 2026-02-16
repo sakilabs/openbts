@@ -11,25 +11,25 @@ import type { RouteGenericInterface } from "fastify";
 
 const operatorsSchema = createSelectSchema(operators);
 const schemaRoute = {
-	response: {
-		200: z.object({
-			data: z.array(operatorsSchema),
-		}),
-	},
+  response: {
+    200: z.object({
+      data: z.array(operatorsSchema),
+    }),
+  },
 };
 type ResponseData = z.infer<typeof operatorsSchema>;
 
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData[]>>) {
-	const operators = await db.query.operators.findMany();
-	return res.send({ data: operators });
+  const operators = await db.query.operators.findMany();
+  return res.send({ data: operators });
 }
 
 const getOperators: Route<RouteGenericInterface, ResponseData[]> = {
-	url: "/operators",
-	method: "GET",
-	config: { permissions: ["read:operators"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/operators",
+  method: "GET",
+  config: { permissions: ["read:operators"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getOperators;

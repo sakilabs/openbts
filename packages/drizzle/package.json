@@ -1,40 +1,40 @@
 {
-	"name": "@openbts/drizzle",
-	"description": "Drizzle schemas",
-	"version": "1.0.0",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"build": "tsc",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "tsx migrate.ts",
-		"db:migrate:kit": "drizzle-kit migrate",
-		"check-types": "tsc --noEmit"
-	},
-	"dependencies": {
-		"dotenv": "17.2.3",
-		"drizzle-orm": "1.0.0-beta.15-859cf75",
-		"nanoid": "5.1.6",
-		"postgres": "3.4.8",
-		"redis": "5.10.0",
-		"tsx": "4.21.0"
-	},
-	"devDependencies": {
-		"@openbts/typescript-configs": "workspace:*",
-		"drizzle-kit": "1.0.0-beta.15-859cf75"
-	},
-	"exports": {
-		".": {
-			"types": "./schemas/index.ts",
-			"default": "./dist/schemas/index.js"
-		},
-		"./types": {
-			"types": "./schemas/types.ts",
-			"default": "./dist/schemas/types.js"
-		},
-		"./db": {
-			"types": "./db.ts",
-			"default": "./dist/db.js"
-		}
-	}
+  "name": "@openbts/drizzle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Drizzle schemas",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./schemas/index.ts",
+      "default": "./dist/schemas/index.js"
+    },
+    "./types": {
+      "types": "./schemas/types.ts",
+      "default": "./dist/schemas/types.js"
+    },
+    "./db": {
+      "types": "./db.ts",
+      "default": "./dist/db.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx migrate.ts",
+    "db:migrate:kit": "drizzle-kit migrate",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "17.2.3",
+    "drizzle-orm": "1.0.0-beta.15-859cf75",
+    "nanoid": "5.1.6",
+    "postgres": "3.4.8",
+    "redis": "5.10.0",
+    "tsx": "4.21.0"
+  },
+  "devDependencies": {
+    "@openbts/typescript-configs": "workspace:*",
+    "drizzle-kit": "1.0.0-beta.15-859cf75"
+  }
 }

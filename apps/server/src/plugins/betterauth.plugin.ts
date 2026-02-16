@@ -16,210 +16,210 @@ import type { FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
 
 export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown>) {
-	const entries = Object.entries(headers);
-	const map = new Map();
-	for (const [headerKey, headerValue] of entries) {
-		if (headerValue) map.set(headerKey, headerValue);
-	}
-	return map;
+  const entries = Object.entries(headers);
+  const map = new Map();
+  for (const [headerKey, headerValue] of entries) {
+    if (headerValue) map.set(headerKey, headerValue);
+  }
+  return map;
 }
 
 export const auth = betterAuth({
-	appName: APP_NAME,
-	advanced: {
-		cookiePrefix: "openbts",
-		database: {
-			generateId: false,
-		},
-		cookies: {
-			session_token: {
-				attributes: {
-					sameSite: "none",
-					secure: true,
-				},
-			},
-		},
-	},
-	basePath: "/api/v1/auth",
-	socialProviders: {
-		google: {
-			clientId: process.env.GOOGLE_CLIENT_ID!,
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-		},
-		github: {
-			clientId: process.env.GITHUB_CLIENT_ID!,
-			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-		},
-	},
-	database: drizzleAdapter(db, {
-		provider: "pg",
-		usePlural: true,
-		schema: {
-			...schema,
-			verifications: schema.verificationTokens,
-			apikeys: schema.apikeys,
-		},
-	}),
-	emailAndPassword: {
-		enabled: true,
-		password: {
-			hash: async (password) => {
-				const hashedPwd = await hash(password, ARGON2_OPTIONS);
-				return hashedPwd;
-			},
-			verify: async (data: { password: string; hash: string }) => {
-				const { password, hash } = data;
-				const isValid = await verify(hash, password, ARGON2_OPTIONS);
-				return isValid;
-			},
-		},
-	},
-	experimental: { joins: true },
-	hooks: {
-		before: createAuthMiddleware(beforeAuthHook.bind(this)),
-	},
-	plugins: [
-		admin({
-			ac: accessControl,
-			adminRoles: ["admin"],
-			defaultRole: "user" as UserRole,
-			roles: {
-				admin: adminRole,
-				// moderator: modRole,
-				user: userRole,
-			},
-		}),
-		apiKey({
-			apiKeyHeaders: ["authorization"],
-			enableMetadata: true,
-			permissions: {
-				defaultPermissions: async (userId, ctx) => {
-					return {
-						cells: ["read"],
-						stations: ["read"],
-						operators: ["read"],
-						locations: ["read"],
-						bands: ["read"],
-						uke_permits: ["read"],
-						uke_radiolines: ["read"],
-					};
-				},
-			},
-		}),
-		multiSession(),
-		username({
-			minUsernameLength: 3,
-			maxUsernameLength: 25,
-			// usernameValidator: (username) => {
-			// 	if (["admin", "administrator", "mod", "moderator"].includes(username)) return false;
-			// 	return true;
-			// },
-		}),
-		passkey({
-			rpID: process.env.NODE_ENV === "production" ? "openbts.sakilabs.com" : "localhost",
-			rpName: APP_NAME,
-			advanced: {
-				webAuthnChallengeCookie: "webauthn_challenge",
-			},
-		}),
-		twoFactor({
-			issuer: APP_NAME,
-		}),
-	],
-	telemetry: {
-		enabled: false,
-	},
-	rateLimit: {
-		enabled: false,
-	},
-	session: {
-		expiresIn: 60 * 60 * 24 * 7, // 7 days
-		updateAge: 60 * 60 * 24, // 1 day
-	},
-	secondaryStorage: {
-		get: async (key) => {
-			const value = await redis.get(`auth:${key}`);
-			return value ? value : null;
-		},
-		set: async (key, value, ttl) => {
-			if (ttl) await redis.setEx(`auth:${key}`, ttl, value);
-			else await redis.set(`auth:${key}`, value);
-		},
-		delete: async (key) => {
-			await redis.del(`auth:${key}`);
-		},
-	},
-	deleteUser: {
-		enabled: true,
-	},
-	trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com"],
-	// disabledPaths: PUBLIC_ROUTES,
+  appName: APP_NAME,
+  advanced: {
+    cookiePrefix: "openbts",
+    database: {
+      generateId: false,
+    },
+    cookies: {
+      session_token: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+        },
+      },
+    },
+  },
+  basePath: "/api/v1/auth",
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    },
+  },
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    usePlural: true,
+    schema: {
+      ...schema,
+      verifications: schema.verificationTokens,
+      apikeys: schema.apikeys,
+    },
+  }),
+  emailAndPassword: {
+    enabled: true,
+    password: {
+      hash: async (password) => {
+        const hashedPwd = await hash(password, ARGON2_OPTIONS);
+        return hashedPwd;
+      },
+      verify: async (data: { password: string; hash: string }) => {
+        const { password, hash } = data;
+        const isValid = await verify(hash, password, ARGON2_OPTIONS);
+        return isValid;
+      },
+    },
+  },
+  experimental: { joins: true },
+  hooks: {
+    before: createAuthMiddleware(beforeAuthHook.bind(this)),
+  },
+  plugins: [
+    admin({
+      ac: accessControl,
+      adminRoles: ["admin"],
+      defaultRole: "user" as UserRole,
+      roles: {
+        admin: adminRole,
+        // moderator: modRole,
+        user: userRole,
+      },
+    }),
+    apiKey({
+      apiKeyHeaders: ["authorization"],
+      enableMetadata: true,
+      permissions: {
+        defaultPermissions: async (userId, ctx) => {
+          return {
+            cells: ["read"],
+            stations: ["read"],
+            operators: ["read"],
+            locations: ["read"],
+            bands: ["read"],
+            uke_permits: ["read"],
+            uke_radiolines: ["read"],
+          };
+        },
+      },
+    }),
+    multiSession(),
+    username({
+      minUsernameLength: 3,
+      maxUsernameLength: 25,
+      // usernameValidator: (username) => {
+      // 	if (["admin", "administrator", "mod", "moderator"].includes(username)) return false;
+      // 	return true;
+      // },
+    }),
+    passkey({
+      rpID: process.env.NODE_ENV === "production" ? "openbts.sakilabs.com" : "localhost",
+      rpName: APP_NAME,
+      advanced: {
+        webAuthnChallengeCookie: "webauthn_challenge",
+      },
+    }),
+    twoFactor({
+      issuer: APP_NAME,
+    }),
+  ],
+  telemetry: {
+    enabled: false,
+  },
+  rateLimit: {
+    enabled: false,
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+  secondaryStorage: {
+    get: async (key) => {
+      const value = await redis.get(`auth:${key}`);
+      return value ? value : null;
+    },
+    set: async (key, value, ttl) => {
+      if (ttl) await redis.setEx(`auth:${key}`, ttl, value);
+      else await redis.set(`auth:${key}`, value);
+    },
+    delete: async (key) => {
+      await redis.del(`auth:${key}`);
+    },
+  },
+  deleteUser: {
+    enabled: true,
+  },
+  trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com"],
+  // disabledPaths: PUBLIC_ROUTES,
 });
 
 async function beforeAuthHook(
-	ctx: MiddlewareContext<
-		MiddlewareOptions,
-		AuthContext & {
-			returned?: unknown;
-			responseHeaders?: Headers;
-		}
-	>,
+  ctx: MiddlewareContext<
+    MiddlewareOptions,
+    AuthContext & {
+      returned?: unknown;
+      responseHeaders?: Headers;
+    }
+  >,
 ) {
-	if (ctx.path.startsWith("/api-key/create")) {
-		const session = await getSessionFromCtx(ctx);
+  if (ctx.path.startsWith("/api-key/create")) {
+    const session = await getSessionFromCtx(ctx);
 
-		if (!session) {
-			throw new APIError("UNAUTHORIZED", {
-				message: "Unauthorized access to this endpoint.",
-			});
-		}
+    if (!session) {
+      throw new APIError("UNAUTHORIZED", {
+        message: "Unauthorized access to this endpoint.",
+      });
+    }
 
-		const keys = await db.query.apikeys.findMany({
-			where: { userId: session.user.id },
-		});
+    const keys = await db.query.apikeys.findMany({
+      where: { userId: session.user.id },
+    });
 
-		if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
-			throw new APIError("FORBIDDEN", {
-				message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
-			});
-		}
+    if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
+      throw new APIError("FORBIDDEN", {
+        message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
+      });
+    }
 
-		if (session.user.role !== "admin") {
-			const cooldownKey = `auth:apikey-cooldown:${session.user.id}`;
-			const cooldown = await redis.get(cooldownKey);
+    if (session.user.role !== "admin") {
+      const cooldownKey = `auth:apikey-cooldown:${session.user.id}`;
+      const cooldown = await redis.get(cooldownKey);
 
-			if (cooldown) {
-				const ttl = await redis.ttl(cooldownKey);
-				const daysLeft = Math.ceil(ttl / 86400);
-				throw new APIError("TOO_MANY_REQUESTS", {
-					message: `You can only create one API key every 7 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
-				});
-			}
+      if (cooldown) {
+        const ttl = await redis.ttl(cooldownKey);
+        const daysLeft = Math.ceil(ttl / 86400);
+        throw new APIError("TOO_MANY_REQUESTS", {
+          message: `You can only create one API key every 7 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
+        });
+      }
 
-			await redis.setEx(cooldownKey, API_KEY_COOLDOWN_SECONDS, "1");
-		}
+      await redis.setEx(cooldownKey, API_KEY_COOLDOWN_SECONDS, "1");
+    }
 
-		if (ctx.body?.metadata) {
-			throw new APIError("BAD_REQUEST", {
-				message: "Metadata is not allowed when creating API keys.",
-			});
-		}
-	}
+    if (ctx.body?.metadata) {
+      throw new APIError("BAD_REQUEST", {
+        message: "Metadata is not allowed when creating API keys.",
+      });
+    }
+  }
 }
 
 export async function getCurrentUser(req: FastifyRequest) {
-	const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
+  const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
 
-	return session;
+  return session;
 }
 
 export async function verifyApiKey(apiKey: string, requiredPermissions?: Record<string, string[]>) {
-	const result = await auth.api.verifyApiKey({
-		body: {
-			key: apiKey,
-			permissions: requiredPermissions,
-		},
-	});
+  const result = await auth.api.verifyApiKey({
+    body: {
+      key: apiKey,
+      permissions: requiredPermissions,
+    },
+  });
 
-	return result;
+  return result;
 }

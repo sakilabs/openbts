@@ -9,88 +9,88 @@ import type { RadioLine } from "@/types/station";
 import { usePreferences } from "@/hooks/usePreferences";
 
 const RadioLineDetailsDialog = lazy(() =>
-	import("@/features/station-details/components/radioLineDetailsDialog").then((m) => ({ default: m.RadioLineDetailsDialog })),
+  import("@/features/station-details/components/radioLineDetailsDialog").then((m) => ({ default: m.RadioLineDetailsDialog })),
 );
 
 const EMPTY_LINES: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const EMPTY_ENDPOINTS: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 type RadioLinesLayerProps = {
-	radioLines: RadioLine[];
+  radioLines: RadioLine[];
 };
 
 export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
-	const { map, isLoaded } = useMap();
-	const { preferences } = usePreferences();
-	const [selectedRadioLine, setSelectedRadioLine] = useState<RadioLine | null>(null);
+  const { map, isLoaded } = useMap();
+  const { preferences } = usePreferences();
+  const [selectedRadioLine, setSelectedRadioLine] = useState<RadioLine | null>(null);
 
-	const popupRef = useRef<MapLibreGL.Popup | null>(null);
-	const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
+  const popupRef = useRef<MapLibreGL.Popup | null>(null);
+  const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
-	const { lines, endpoints } = useMemo(() => {
-		if (!radioLines.length) return { lines: EMPTY_LINES, endpoints: EMPTY_ENDPOINTS };
-		return radioLinesToGeoJSON(radioLines);
-	}, [radioLines]);
+  const { lines, endpoints } = useMemo(() => {
+    if (!radioLines.length) return { lines: EMPTY_LINES, endpoints: EMPTY_ENDPOINTS };
+    return radioLinesToGeoJSON(radioLines);
+  }, [radioLines]);
 
-	const cleanupPopup = useCallback(() => {
-		popupRef.current?.remove();
-		popupRootRef.current?.unmount();
-		popupRef.current = null;
-		popupRootRef.current = null;
-	}, []);
+  const cleanupPopup = useCallback(() => {
+    popupRef.current?.remove();
+    popupRootRef.current?.unmount();
+    popupRef.current = null;
+    popupRootRef.current = null;
+  }, []);
 
-	const handleOpenDetails = useCallback(
-		(radioLine: RadioLine) => {
-			setSelectedRadioLine(radioLine);
-			cleanupPopup();
-		},
-		[cleanupPopup],
-	);
+  const handleOpenDetails = useCallback(
+    (radioLine: RadioLine) => {
+      setSelectedRadioLine(radioLine);
+      cleanupPopup();
+    },
+    [cleanupPopup],
+  );
 
-	const handleFeatureClick = useCallback(
-		(radioLines: RadioLine[], coordinates: [number, number]) => {
-			if (!map) return;
+  const handleFeatureClick = useCallback(
+    (radioLines: RadioLine[], coordinates: [number, number]) => {
+      if (!map) return;
 
-			cleanupPopup();
+      cleanupPopup();
 
-			const container = document.createElement("div");
-			container.className = "station-popup-container";
+      const container = document.createElement("div");
+      container.className = "station-popup-container";
 
-			const root = createRoot(container);
-			popupRootRef.current = root;
+      const root = createRoot(container);
+      popupRootRef.current = root;
 
-			root.render(<RadioLinePopupContent radioLines={radioLines} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
+      root.render(<RadioLinePopupContent radioLines={radioLines} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
 
-			const popup = new MapLibreGL.Popup({
-				closeButton: true,
-				closeOnClick: true,
-				maxWidth: "none",
-				offset: 12,
-			})
-				.setLngLat(coordinates)
-				.setDOMContent(container)
-				.addTo(map);
+      const popup = new MapLibreGL.Popup({
+        closeButton: true,
+        closeOnClick: true,
+        maxWidth: "none",
+        offset: 12,
+      })
+        .setLngLat(coordinates)
+        .setDOMContent(container)
+        .addTo(map);
 
-			popupRef.current = popup;
-		},
-		[map, cleanupPopup, handleOpenDetails],
-	);
+      popupRef.current = popup;
+    },
+    [map, cleanupPopup, handleOpenDetails],
+  );
 
-	useRadioLinesLayer({
-		map,
-		isLoaded,
-		linesGeoJSON: lines,
-		endpointsGeoJSON: endpoints,
-		radioLines,
-		minZoom: preferences.radiolinesMinZoom,
-		onFeatureClick: handleFeatureClick,
-	});
+  useRadioLinesLayer({
+    map,
+    isLoaded,
+    linesGeoJSON: lines,
+    endpointsGeoJSON: endpoints,
+    radioLines,
+    minZoom: preferences.radiolinesMinZoom,
+    onFeatureClick: handleFeatureClick,
+  });
 
-	const handleCloseDetails = useCallback(() => setSelectedRadioLine(null), []);
+  const handleCloseDetails = useCallback(() => setSelectedRadioLine(null), []);
 
-	return (
-		<Suspense fallback={null}>
-			{selectedRadioLine && <RadioLineDetailsDialog key={selectedRadioLine.id} radioLine={selectedRadioLine} onClose={handleCloseDetails} />}
-		</Suspense>
-	);
+  return (
+    <Suspense fallback={null}>
+      {selectedRadioLine && <RadioLineDetailsDialog key={selectedRadioLine.id} radioLine={selectedRadioLine} onClose={handleCloseDetails} />}
+    </Suspense>
+  );
 }

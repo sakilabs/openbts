@@ -13,61 +13,61 @@ import i18n from "@/i18n/config";
 import "@/index.css";
 
 function AuthLink({ href, ...props }: { href: string; className?: string; children: ReactNode }) {
-	return <RouterLink to={href} {...props} />;
+  return <RouterLink to={href} {...props} />;
 }
 
 const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 1000 * 60 * 5,
-			gcTime: 1000 * 60 * 10,
-			refetchOnWindowFocus: false,
-			retry: (failureCount, error) => {
-				if (error instanceof BackendUnavailableError) return false;
-				return failureCount < 3;
-			},
-		},
-	},
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 10,
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        if (error instanceof BackendUnavailableError) return false;
+        return failureCount < 3;
+      },
+    },
+  },
 });
 
 function AppProviders({ children }: { children: ReactNode }) {
-	const navigate = useNavigate();
+  const navigate = useNavigate();
 
-	return (
-		<AuthUIProvider
-			authClient={authClient}
-			navigate={(path) => navigate({ to: path })}
-			replace={(path) => navigate({ to: path, replace: true })}
-			Link={AuthLink}
-			onSessionChange={() => queryClient.invalidateQueries()}
-			social={{
-				providers: ["github", "google"],
-			}}
-			passkey
-			twoFactor={["totp"]}
-		>
-			<ErrorBoundary>{children}</ErrorBoundary>
-			<Toaster />
-		</AuthUIProvider>
-	);
+  return (
+    <AuthUIProvider
+      authClient={authClient}
+      navigate={(path) => navigate({ to: path })}
+      replace={(path) => navigate({ to: path, replace: true })}
+      Link={AuthLink}
+      onSessionChange={() => queryClient.invalidateQueries()}
+      social={{
+        providers: ["github", "google"],
+      }}
+      passkey
+      twoFactor={["totp"]}
+    >
+      <ErrorBoundary>{children}</ErrorBoundary>
+      <Toaster />
+    </AuthUIProvider>
+  );
 }
 
 function RootComponent() {
-	return (
-		<I18nextProvider i18n={i18n}>
-			<QueryClientProvider client={queryClient}>
-				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-					<BackendStatusProvider queryClient={queryClient}>
-						<AppProviders>
-							<Outlet />
-						</AppProviders>
-					</BackendStatusProvider>
-				</ThemeProvider>
-			</QueryClientProvider>
-		</I18nextProvider>
-	);
+  return (
+    <I18nextProvider i18n={i18n}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <BackendStatusProvider queryClient={queryClient}>
+            <AppProviders>
+              <Outlet />
+            </AppProviders>
+          </BackendStatusProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </I18nextProvider>
+  );
 }
 
 export const Route = createRootRoute({
-	component: RootComponent,
+  component: RootComponent,
 });

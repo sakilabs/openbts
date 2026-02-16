@@ -14,39 +14,39 @@ const regionsInsertSchema = createInsertSchema(regions).strict();
 type ReqBody = { Body: z.infer<typeof regionsInsertSchema> };
 type ResponseData = z.infer<typeof regionsSelectSchema>;
 const schemaRoute = {
-	body: regionsInsertSchema,
-	response: {
-		200: z.object({
-			data: regionsSelectSchema,
-		}),
-	},
+  body: regionsInsertSchema,
+  response: {
+    200: z.object({
+      data: regionsSelectSchema,
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
-	const { name, code } = req.body;
+  const { name, code } = req.body;
 
-	try {
-		const [region] = await db
-			.insert(regions)
-			.values({
-				name,
-				code,
-			})
-			.returning();
+  try {
+    const [region] = await db
+      .insert(regions)
+      .values({
+        name,
+        code,
+      })
+      .returning();
 
-		if (!region) throw new ErrorResponse("FAILED_TO_CREATE");
-		return res.send({ data: region });
-	} catch {
-		throw new ErrorResponse("FAILED_TO_CREATE");
-	}
+    if (!region) throw new ErrorResponse("FAILED_TO_CREATE");
+    return res.send({ data: region });
+  } catch {
+    throw new ErrorResponse("FAILED_TO_CREATE");
+  }
 }
 
 const createRegion: Route<ReqBody, ResponseData> = {
-	url: "/regions",
-	method: "POST",
-	config: { permissions: ["write:regions"] },
-	schema: schemaRoute,
-	handler,
+  url: "/regions",
+  method: "POST",
+  config: { permissions: ["write:regions"] },
+  schema: schemaRoute,
+  handler,
 };
 
 export default createRegion;

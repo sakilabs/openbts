@@ -2,4 +2,4 @@ import debug from "debug";
 import "dotenv/config";
 
 export const dlogger: debug.Debugger = debug("sakilabs/openbts:sora"),
-	port = Number(process.env.PORT) || 3030;
+  port = Number(process.env.PORT) || 3030;

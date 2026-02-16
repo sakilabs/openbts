@@ -1,42 +1,42 @@
 {
-	"header": {
-		"deleteStation": "Delete Station",
-		"confirmDelete": "Are you sure you want to delete the station?",
-		"confirmDeleteDesc": "After deletion, the station will be marked as 'inactive' and will no longer be visible on the map or in search results",
-		"createStation": "Create Station"
-	},
-	"actions": {
-		"newStation": "Create New Station"
-	},
-	"cells": {
-		"cellsCount_one": "{{count}} cell",
-		"cellsCount_few": "{{count}} cells",
-		"cellsCount_many": "{{count}} cells",
-		"cellsCount_other": "{{count}} cells",
-		"notesPlaceholder": "e.g. picocell",
-		"addCell": "Add Cell",
-		"noRats": "No cells found for this station. Add RATs to add cells",
-		"noStationCells": "No cells found for this station",
-		"noCells": "No cells. Click \"Add Cell\" to create",
-		"diffAdded": "new",
-		"diffModified": "modified",
-		"diffDeleted": "deleted",
-		"cellNotConfirmed": "This cell is not confirmed",
-		"carrier": "Carrier",
-		"unknownBand": "Unknown Band"
-	},
-	"stationsAtLocation": "Stations at this location",
-	"stationsCount_one": "{{count}} station",
-	"stationsCount_few": "{{count}} stations",
-	"stationsCount_many": "{{count}} stations",
-	"toast": {
-		"locationSaved": "Location has been saved",
-		"deleted": "Station has been deleted",
-		"created": "Station has been created",
-		"stationIdRquired": "Station ID is required",
-		"operatorRequired": "Operator is required",
-		"locationRequired": "Location is required",
-		"cellsSaved": "Cells have been saved",
-		"noBands": "No available bands for {{rat}}"
-	}
+  "header": {
+    "deleteStation": "Delete Station",
+    "confirmDelete": "Are you sure you want to delete the station?",
+    "confirmDeleteDesc": "After deletion, the station will be marked as 'inactive' and will no longer be visible on the map or in search results",
+    "createStation": "Create Station"
+  },
+  "actions": {
+    "newStation": "Create New Station"
+  },
+  "cells": {
+    "cellsCount_one": "{{count}} cell",
+    "cellsCount_few": "{{count}} cells",
+    "cellsCount_many": "{{count}} cells",
+    "cellsCount_other": "{{count}} cells",
+    "notesPlaceholder": "e.g. picocell",
+    "addCell": "Add Cell",
+    "noRats": "No cells found for this station. Add RATs to add cells",
+    "noStationCells": "No cells found for this station",
+    "noCells": "No cells. Click \"Add Cell\" to create",
+    "diffAdded": "new",
+    "diffModified": "modified",
+    "diffDeleted": "deleted",
+    "cellNotConfirmed": "This cell is not confirmed",
+    "carrier": "Carrier",
+    "unknownBand": "Unknown Band"
+  },
+  "stationsAtLocation": "Stations at this location",
+  "stationsCount_one": "{{count}} station",
+  "stationsCount_few": "{{count}} stations",
+  "stationsCount_many": "{{count}} stations",
+  "toast": {
+    "locationSaved": "Location has been saved",
+    "deleted": "Station has been deleted",
+    "created": "Station has been created",
+    "stationIdRquired": "Station ID is required",
+    "operatorRequired": "Operator is required",
+    "locationRequired": "Location is required",
+    "cellsSaved": "Cells have been saved",
+    "noBands": "No available bands for {{rat}}"
+  }
 }

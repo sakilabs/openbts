@@ -1,83 +1,83 @@
 {
-	"breadcrumbs": {
-		"admin": "Admin",
-		"stations": "Stacje",
-		"editStation": "Edytuj stację",
-		"submissions": "Zgłoszenia",
-		"users": "Użytkownicy",
-		"userDetail": "Szczegóły użytkownika",
-		"locations": "Lokalizacje",
-		"editLocation": "Edytuj lokalizację",
-		"settings": "Ustawienia",
-		"ukeImport": "Import UKE"
-	},
-	"settings": {
-		"title": "Ustawienia systemowe",
-		"subtitle": "Zarządzaj konfiguracją systemu",
-		"loading": "Ładowanie ustawień...",
-		"errorTitle": "Nie udało się załadować ustawień",
-		"errorDescription": "Wystąpił problem podczas ładowania ustawień systemowych.",
-		"authentication": "Uwierzytelnianie",
-		"authenticationDesc": "Kontroluj dostęp i wymagania uwierzytelniania",
-		"enforceAuth": "Wymuś uwierzytelnianie dla wszystkich endpointów",
-		"enforceAuthDesc": "Wymagaj uwierzytelniania dla wszystkich endpointów API",
-		"allowedRoutes": "Dozwolone endpointy API bez uwierzytelniania",
-		"allowedRoutesDesc": "Endpointy API, które omijają uwierzytelnianie (naciśnij Enter, aby dodać)",
-		"disabledRoutes": "Wyłączone endpointy API",
-		"disabledRoutesDesc": "Endpointy API, które są całkowicie wyłączone (naciśnij Enter, aby dodać)",
-		"comments": "Komentarze do stacji",
-		"commentsDesc": "Pozwól użytkownikom komentować stacje",
-		"enableComments": "Włącz komentarze",
-		"commentsEnabled": "Użytkownicy mogą komentować stacje",
-		"commentsDisabled": "Komentarze są wyłączone",
-		"submissions": "Zgłoszenia",
-		"submissionsDesc": "Pozwól użytkownikom zgłaszać nowe stacje",
-		"enableSubmissions": "Włącz zgłoszenia",
-		"submissionsEnabled": "Użytkownicy mogą zgłaszać stacje",
-		"submissionsDisabled": "Zgłoszenia są wyłączone"
-	},
-	"users": {
-		"table": {
-			"name": "Nazwa",
-			"email": "Email",
-			"role": "Rola",
-			"status": "Status",
-			"created": "Utworzono"
-		}
-	},
-	"locations": {
-		"title": "Lokalizacje"
-	},
-	"ukeImport": {
-		"title": "Import UKE",
-		"subtitle": "Importuj dane z UKE (Urząd Komunikacji Elektronicznej)",
-		"importStations": "Importuj stacje",
-		"importRadiolines": "Importuj radiolinie",
-		"importPermits": "Importuj pozwolenia",
-		"startImport": "Rozpocznij import",
-		"alreadyRunning": "Import jest już w toku",
-		"status": {
-			"idle": "Bezczynne",
-			"running": "W toku",
-			"success": "Zakończono",
-			"error": "Błąd"
-		},
-		"steps": {
-			"stations": "Import stacji",
-			"radiolines": "Import radiolinii",
-			"permits": "Import pozwoleń",
-			"prune_associations": "Czyszczenie powiązań stacji z pozwoleniami",
-			"associate": "Powiązanie stacji z pozwoleniami",
-			"cleanup": "Czyszczenie plików tymczasowych"
-		},
-		"stepStatus": {
-			"pending": "Oczekujące",
-			"running": "W toku",
-			"success": "Gotowe",
-			"skipped": "Pominięte",
-			"error": "Błąd"
-		},
-		"startedAt": "Rozpoczęto",
-		"finishedAt": "Zakończono"
-	}
+  "breadcrumbs": {
+    "admin": "Admin",
+    "stations": "Stacje",
+    "editStation": "Edytuj stację",
+    "submissions": "Zgłoszenia",
+    "users": "Użytkownicy",
+    "userDetail": "Szczegóły użytkownika",
+    "locations": "Lokalizacje",
+    "editLocation": "Edytuj lokalizację",
+    "settings": "Ustawienia",
+    "ukeImport": "Import UKE"
+  },
+  "settings": {
+    "title": "Ustawienia systemowe",
+    "subtitle": "Zarządzaj konfiguracją systemu",
+    "loading": "Ładowanie ustawień...",
+    "errorTitle": "Nie udało się załadować ustawień",
+    "errorDescription": "Wystąpił problem podczas ładowania ustawień systemowych.",
+    "authentication": "Uwierzytelnianie",
+    "authenticationDesc": "Kontroluj dostęp i wymagania uwierzytelniania",
+    "enforceAuth": "Wymuś uwierzytelnianie dla wszystkich endpointów",
+    "enforceAuthDesc": "Wymagaj uwierzytelniania dla wszystkich endpointów API",
+    "allowedRoutes": "Dozwolone endpointy API bez uwierzytelniania",
+    "allowedRoutesDesc": "Endpointy API, które omijają uwierzytelnianie (naciśnij Enter, aby dodać)",
+    "disabledRoutes": "Wyłączone endpointy API",
+    "disabledRoutesDesc": "Endpointy API, które są całkowicie wyłączone (naciśnij Enter, aby dodać)",
+    "comments": "Komentarze do stacji",
+    "commentsDesc": "Pozwól użytkownikom komentować stacje",
+    "enableComments": "Włącz komentarze",
+    "commentsEnabled": "Użytkownicy mogą komentować stacje",
+    "commentsDisabled": "Komentarze są wyłączone",
+    "submissions": "Zgłoszenia",
+    "submissionsDesc": "Pozwól użytkownikom zgłaszać nowe stacje",
+    "enableSubmissions": "Włącz zgłoszenia",
+    "submissionsEnabled": "Użytkownicy mogą zgłaszać stacje",
+    "submissionsDisabled": "Zgłoszenia są wyłączone"
+  },
+  "users": {
+    "table": {
+      "name": "Nazwa",
+      "email": "Email",
+      "role": "Rola",
+      "status": "Status",
+      "created": "Utworzono"
+    }
+  },
+  "locations": {
+    "title": "Lokalizacje"
+  },
+  "ukeImport": {
+    "title": "Import UKE",
+    "subtitle": "Importuj dane z UKE (Urząd Komunikacji Elektronicznej)",
+    "importStations": "Importuj stacje",
+    "importRadiolines": "Importuj radiolinie",
+    "importPermits": "Importuj pozwolenia",
+    "startImport": "Rozpocznij import",
+    "alreadyRunning": "Import jest już w toku",
+    "status": {
+      "idle": "Bezczynne",
+      "running": "W toku",
+      "success": "Zakończono",
+      "error": "Błąd"
+    },
+    "steps": {
+      "stations": "Import stacji",
+      "radiolines": "Import radiolinii",
+      "permits": "Import pozwoleń",
+      "prune_associations": "Czyszczenie powiązań stacji z pozwoleniami",
+      "associate": "Powiązanie stacji z pozwoleniami",
+      "cleanup": "Czyszczenie plików tymczasowych"
+    },
+    "stepStatus": {
+      "pending": "Oczekujące",
+      "running": "W toku",
+      "success": "Gotowe",
+      "skipped": "Pominięte",
+      "error": "Błąd"
+    },
+    "startedAt": "Rozpoczęto",
+    "finishedAt": "Zakończono"
+  }
 }

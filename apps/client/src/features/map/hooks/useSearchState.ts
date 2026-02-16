@@ -5,153 +5,153 @@ import type { FilterKeyword, ParsedFilter } from "../types";
 type OverlayType = "autocomplete" | "results" | null;
 
 type UseSearchStateArgs = {
-	filterKeywords: FilterKeyword[];
-	parseFilters: (query: string) => {
-		filters: ParsedFilter[];
-		remainingText: string;
-	};
+  filterKeywords: FilterKeyword[];
+  parseFilters: (query: string) => {
+    filters: ParsedFilter[];
+    remainingText: string;
+  };
 };
 
 function computeOverlay(input: string, hasMatches: boolean): OverlayType {
-	if (input === "") return "autocomplete";
-	if (hasMatches) return "autocomplete";
-	if (input.trim() !== "") return "results";
-	return null;
+  if (input === "") return "autocomplete";
+  if (hasMatches) return "autocomplete";
+  if (input.trim() !== "") return "results";
+  return null;
 }
 
 function getLastWord(input: string): string {
-	const words = input.split(/\s/);
-	return words[words.length - 1] || "";
+  const words = input.split(/\s/);
+  return words[words.length - 1] || "";
 }
 
 function getAutocompleteMatches(input: string, keywords: FilterKeyword[]): FilterKeyword[] {
-	if (input === "") return keywords;
+  if (input === "") return keywords;
 
-	const lastWord = getLastWord(input);
-	if (lastWord.length === 0 || lastWord.includes(":")) return [];
+  const lastWord = getLastWord(input);
+  if (lastWord.length === 0 || lastWord.includes(":")) return [];
 
-	return keywords.filter((kw) => kw.key.toLowerCase().startsWith(lastWord.toLowerCase()));
+  return keywords.filter((kw) => kw.key.toLowerCase().startsWith(lastWord.toLowerCase()));
 }
 
 function getUrlHashQueryParam(key: string): string | null {
-	const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
-	if (!hash.startsWith("map=")) return null;
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  if (!hash.startsWith("map=")) return null;
 
-	const [, queryPart = ""] = hash.split("?");
-	const params = new URLSearchParams(queryPart);
-	return params.get(key);
+  const [, queryPart = ""] = hash.split("?");
+  const params = new URLSearchParams(queryPart);
+  return params.get(key);
 }
 
 export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateArgs) {
-	const [inputValue, setInputValue] = useState("");
-	const [parsedFilters, setParsedFilters] = useState<ParsedFilter[]>([]);
-	const [isFocused, setIsFocused] = useState(false);
-	const [activeOverlay, setActiveOverlay] = useState<OverlayType>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [parsedFilters, setParsedFilters] = useState<ParsedFilter[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const [activeOverlay, setActiveOverlay] = useState<OverlayType>(null);
 
-	const containerRef = useRef<HTMLDivElement>(null);
-	const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-	const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue].filter(Boolean).join(" "), [parsedFilters, inputValue]);
+  const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue].filter(Boolean).join(" "), [parsedFilters, inputValue]);
 
-	const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedQuery = useDebouncedValue(query, 500);
 
-	const searchMode = debouncedQuery.trim() === "" ? "bounds" : "search";
+  const searchMode = debouncedQuery.trim() === "" ? "bounds" : "search";
 
-	const autocompleteOptions = useMemo(() => getAutocompleteMatches(inputValue, filterKeywords), [inputValue, filterKeywords]);
+  const autocompleteOptions = useMemo(() => getAutocompleteMatches(inputValue, filterKeywords), [inputValue, filterKeywords]);
 
-	useEffect(() => {
-		const q = getUrlHashQueryParam("q");
-		if (!q) return;
+  useEffect(() => {
+    const q = getUrlHashQueryParam("q");
+    if (!q) return;
 
-		const { filters, remainingText } = parseFilters(q);
-		setParsedFilters(filters);
-		setInputValue(remainingText);
-		setActiveOverlay(computeOverlay(remainingText, getAutocompleteMatches(remainingText, filterKeywords).length > 0));
-	}, [filterKeywords, parseFilters]);
+    const { filters, remainingText } = parseFilters(q);
+    setParsedFilters(filters);
+    setInputValue(remainingText);
+    setActiveOverlay(computeOverlay(remainingText, getAutocompleteMatches(remainingText, filterKeywords).length > 0));
+  }, [filterKeywords, parseFilters]);
 
-	function handleContainerBlur(e: FocusEvent) {
-		const relatedTarget = e.relatedTarget as Node | null;
-		if (!containerRef.current?.contains(relatedTarget)) {
-			setIsFocused(false);
-			setActiveOverlay(null);
-		}
-	}
+  function handleContainerBlur(e: FocusEvent) {
+    const relatedTarget = e.relatedTarget as Node | null;
+    if (!containerRef.current?.contains(relatedTarget)) {
+      setIsFocused(false);
+      setActiveOverlay(null);
+    }
+  }
 
-	function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-		const value = e.target.value;
-		setInputValue(value);
+  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setInputValue(value);
 
-		if (value.endsWith(" ") || value === "") {
-			const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
-			const { filters: detected, remainingText } = parseFilters(fullQuery);
+    if (value.endsWith(" ") || value === "") {
+      const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
+      const { filters: detected, remainingText } = parseFilters(fullQuery);
 
-			if (detected.length > parsedFilters.length) {
-				setParsedFilters(detected);
-				setInputValue(remainingText);
-				setActiveOverlay("results");
-				return;
-			}
-		}
+      if (detected.length > parsedFilters.length) {
+        setParsedFilters(detected);
+        setInputValue(remainingText);
+        setActiveOverlay("results");
+        return;
+      }
+    }
 
-		const matches = getAutocompleteMatches(value, filterKeywords);
-		setActiveOverlay(computeOverlay(value, matches.length > 0));
-	}
+    const matches = getAutocompleteMatches(value, filterKeywords);
+    setActiveOverlay(computeOverlay(value, matches.length > 0));
+  }
 
-	function applyAutocomplete(keyword: string) {
-		const words = inputValue.split(/\s/);
-		words[words.length - 1] = keyword;
-		setInputValue(words.join(" "));
-		setActiveOverlay("results");
-		inputRef.current?.focus();
-	}
+  function applyAutocomplete(keyword: string) {
+    const words = inputValue.split(/\s/);
+    words[words.length - 1] = keyword;
+    setInputValue(words.join(" "));
+    setActiveOverlay("results");
+    inputRef.current?.focus();
+  }
 
-	function clearSearch() {
-		setInputValue("");
-		setParsedFilters([]);
-		setActiveOverlay(null);
-		inputRef.current?.focus();
-	}
+  function clearSearch() {
+    setInputValue("");
+    setParsedFilters([]);
+    setActiveOverlay(null);
+    inputRef.current?.focus();
+  }
 
-	function removeFilter(filter: ParsedFilter) {
-		setParsedFilters((prev) => prev.filter((f) => f !== filter));
-		inputRef.current?.focus();
-	}
+  function removeFilter(filter: ParsedFilter) {
+    setParsedFilters((prev) => prev.filter((f) => f !== filter));
+    inputRef.current?.focus();
+  }
 
-	function handleInputFocus() {
-		setIsFocused(true);
-		if (inputValue === "" && parsedFilters.length === 0) setActiveOverlay("autocomplete");
-		else if (query.trim() !== "") setActiveOverlay("results");
-	}
+  function handleInputFocus() {
+    setIsFocused(true);
+    if (inputValue === "" && parsedFilters.length === 0) setActiveOverlay("autocomplete");
+    else if (query.trim() !== "") setActiveOverlay("results");
+  }
 
-	function handleInputClick() {
-		if (query.trim() !== "" && activeOverlay !== "autocomplete") setActiveOverlay("results");
-	}
+  function handleInputClick() {
+    if (query.trim() !== "" && activeOverlay !== "autocomplete") setActiveOverlay("results");
+  }
 
-	function closeOverlay() {
-		setActiveOverlay(null);
-	}
+  function closeOverlay() {
+    setActiveOverlay(null);
+  }
 
-	return {
-		query,
-		searchMode,
-		autocompleteOptions,
+  return {
+    query,
+    searchMode,
+    autocompleteOptions,
 
-		inputValue,
-		debouncedQuery,
-		isFocused,
-		parsedFilters,
-		activeOverlay,
+    inputValue,
+    debouncedQuery,
+    isFocused,
+    parsedFilters,
+    activeOverlay,
 
-		containerRef,
-		inputRef,
+    containerRef,
+    inputRef,
 
-		handleContainerBlur,
-		handleInputChange,
-		handleInputFocus,
-		handleInputClick,
-		applyAutocomplete,
-		clearSearch,
-		removeFilter,
-		closeOverlay,
-	};
+    handleContainerBlur,
+    handleInputChange,
+    handleInputFocus,
+    handleInputClick,
+    applyAutocomplete,
+    clearSearch,
+    removeFilter,
+    closeOverlay,
+  };
 }

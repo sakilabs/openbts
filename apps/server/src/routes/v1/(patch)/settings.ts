@@ -9,41 +9,41 @@ type ReqBody = { Body: Partial<RuntimeSettings> };
 type Response = RuntimeSettings;
 
 const schemaRoute = {
-	body: z
-		.object({
-			enforceAuthForAllRoutes: z.boolean().optional(),
-			allowedUnauthenticatedRoutes: z.array(z.string().min(1)).optional(),
-			disabledRoutes: z.array(z.string().min(1)).optional(),
-			enableStationComments: z.boolean().optional(),
-			submissionsEnabled: z.boolean().optional(),
-		})
-		.strict(),
-	response: {
-		200: z.object({
-			data: z.object({
-				enforceAuthForAllRoutes: z.boolean(),
-				allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
-				disabledRoutes: z.array(z.string().min(1)),
-				enableStationComments: z.boolean(),
-				submissionsEnabled: z.boolean(),
-			}),
-		}),
-	},
+  body: z
+    .object({
+      enforceAuthForAllRoutes: z.boolean().optional(),
+      allowedUnauthenticatedRoutes: z.array(z.string().min(1)).optional(),
+      disabledRoutes: z.array(z.string().min(1)).optional(),
+      enableStationComments: z.boolean().optional(),
+      submissionsEnabled: z.boolean().optional(),
+    })
+    .strict(),
+  response: {
+    200: z.object({
+      data: z.object({
+        enforceAuthForAllRoutes: z.boolean(),
+        allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
+        disabledRoutes: z.array(z.string().min(1)),
+        enableStationComments: z.boolean(),
+        submissionsEnabled: z.boolean(),
+      }),
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<Response>>) {
-	const patch = req.body;
-	if (!patch || typeof patch !== "object") throw new ErrorResponse("BAD_REQUEST");
-	const updated = await updateRuntimeSettings(patch);
-	res.send({ data: updated });
+  const patch = req.body;
+  if (!patch || typeof patch !== "object") throw new ErrorResponse("BAD_REQUEST");
+  const updated = await updateRuntimeSettings(patch);
+  res.send({ data: updated });
 }
 
 const patchSettings: Route<ReqBody, Response> = {
-	url: "/settings",
-	method: "PATCH",
-	schema: schemaRoute,
-	config: { permissions: ["update:settings"] },
-	handler,
+  url: "/settings",
+  method: "PATCH",
+  schema: schemaRoute,
+  config: { permissions: ["update:settings"] },
+  handler,
 };
 
 export default patchSettings;

@@ -1,10 +1,10 @@
 {
-	"$schema": "./node_modules/oxlint/configuration_schema.json",
-	"rules": {
-		"no-await-in-loop": "error",
-		"unicorn/prefer-array-find": "error",
-		"unicorn/prefer-array-flat-map": "error",
-		"unicorn/prefer-set-has": "error"
-	},
-	"ignorePatterns": ["*.gen.ts"]
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "no-await-in-loop": "error",
+    "unicorn/prefer-array-find": "error",
+    "unicorn/prefer-array-flat-map": "error",
+    "unicorn/prefer-set-has": "error"
+  },
+  "ignorePatterns": ["*.gen.ts"]
 }

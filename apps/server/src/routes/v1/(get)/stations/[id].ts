@@ -24,69 +24,69 @@ const networksSchema = createSelectSchema(networksIds).omit({ station_id: true }
 type StationBase = z.infer<typeof stationSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
 type CellWithRats = z.infer<typeof cellsSchema> & {
-	band: z.infer<typeof bandsSchema>;
-	gsm?: z.infer<typeof gsmCellsSchema>;
-	umts?: z.infer<typeof umtsCellsSchema>;
-	lte?: z.infer<typeof lteCellsSchema>;
-	nr?: z.infer<typeof nrCellsSchema>;
+  band: z.infer<typeof bandsSchema>;
+  gsm?: z.infer<typeof gsmCellsSchema>;
+  umts?: z.infer<typeof umtsCellsSchema>;
+  lte?: z.infer<typeof lteCellsSchema>;
+  nr?: z.infer<typeof nrCellsSchema>;
 };
 type CellResponse = z.infer<typeof cellsSchema> & { band: z.infer<typeof bandsSchema>; details: CellDetails };
 type StationResponse = StationBase & {
-	cells: CellResponse[];
-	location: z.infer<typeof locationSchema>;
-	operator: z.infer<typeof operatorSchema>;
-	networks?: z.infer<typeof networksSchema>;
+  cells: CellResponse[];
+  location: z.infer<typeof locationSchema>;
+  operator: z.infer<typeof operatorSchema>;
+  networks?: z.infer<typeof networksSchema>;
 };
 const schemaRoute = {
-	params: z.object({
-		id: z.coerce.number<number>(),
-	}),
-	response: {
-		200: z.object({
-			data: stationSchema.extend({
-				cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
-				location: locationSchema.extend({ region: regionSchema }),
-				operator: operatorSchema,
-				networks: networksSchema.optional(),
-			}),
-		}),
-	},
+  params: z.object({
+    id: z.coerce.number<number>(),
+  }),
+  response: {
+    200: z.object({
+      data: stationSchema.extend({
+        cells: z.array(cellsSchema.extend({ band: bandsSchema, details: cellDetailsSchema })),
+        location: locationSchema.extend({ region: regionSchema }),
+        operator: operatorSchema,
+        networks: networksSchema.optional(),
+      }),
+    }),
+  },
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	const station = await db.query.stations.findFirst({
-		where: {
-			id: id,
-		},
-		with: {
-			cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
-			location: { columns: { point: false, region_id: false }, with: { region: true } },
-			operator: true,
-			networks: { columns: { station_id: false } },
-		},
-		columns: { status: false },
-	});
-	if (!station) throw new ErrorResponse("NOT_FOUND");
+  const station = await db.query.stations.findFirst({
+    where: {
+      id: id,
+    },
+    with: {
+      cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
+      location: { columns: { point: false, region_id: false }, with: { region: true } },
+      operator: true,
+      networks: { columns: { station_id: false } },
+    },
+    columns: { status: false },
+  });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
 
-	const cells: CellResponse[] = (station.cells as CellWithRats[]).map((cell) => {
-		const { gsm, umts, lte, nr, band, ...rest } = cell;
-		const details: CellDetails = gsm ?? umts ?? lte ?? nr ?? null;
-		return { ...rest, band, details };
-	});
+  const cells: CellResponse[] = (station.cells as CellWithRats[]).map((cell) => {
+    const { gsm, umts, lte, nr, band, ...rest } = cell;
+    const details: CellDetails = gsm ?? umts ?? lte ?? nr ?? null;
+    return { ...rest, band, details };
+  });
 
-	const data = { ...station, cells } as StationResponse & { networks?: z.infer<typeof networksSchema> | null };
-	if (!data.networks) delete (data as { networks?: unknown }).networks;
-	return res.send({ data });
+  const data = { ...station, cells } as StationResponse & { networks?: z.infer<typeof networksSchema> | null };
+  if (!data.networks) delete (data as { networks?: unknown }).networks;
+  return res.send({ data });
 }
 
 const getStation: Route<IdParams, StationResponse> = {
-	url: "/stations/:id",
-	method: "GET",
-	config: { permissions: ["read:stations"], allowGuestAccess: true },
-	schema: schemaRoute,
-	handler,
+  url: "/stations/:id",
+  method: "GET",
+  config: { permissions: ["read:stations"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
 };
 
 export default getStation;

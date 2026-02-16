@@ -1,82 +1,82 @@
 {
-	"search": {
-		"placeholderAddMore": "Add more...",
-		"searching": "Searching results...",
-		"noResults": "No results",
-		"noResultsHint": "Try other keywords or filters",
-		"found": "Found: {{count}}",
-		"showingTop": "Showing {{shown}} of {{total}} stations"
-	},
-	"autocomplete": {
-		"availableFilters": "Available filters",
-		"tip": "Tip:",
-		"tipText": "Use comma-separated values for multiple items",
-		"example": "Example"
-	},
-	"searchResults": {
-		"locations": "Geographic Locations",
-		"stations": "Base Stations"
-	},
-	"popup": {
-		"loading": "Loading stations...",
-		"noStations": "No stations",
-		"noPermits": "No permits"
-	},
-	"overlay": {
-		"locations": "locations",
-		"zoom": "Zoom",
-		"mapStyle": "Map Style",
-		"moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all",
-		"radiolines": "radiolines",
-		"radiolinesCount_one": "radioline",
-		"radiolinesCount_few": "radiolines",
-		"radiolinesCount_many": "radiolines",
-		"radiolinesCount_other": "radiolines",
-		"zoomForRadiolines": "Zoom in to see radiolines",
-		"moreRadiolines": "Showing {{shown}} of {{total}} radiolines. Zoom in to see all"
-	},
-	"stats": {
-		"dataInfo": "Data Information",
-		"lastUpdated": "Last Updated",
-		"internalData": "Internal DB",
-		"ukeStations": "UKE Stations",
-		"stations": "Number of stations",
-		"permits": "Number of permits"
-	},
-	"filters": {
-		"dataSource": "Data Source",
-		"internalDb": "Internal Database",
-		"newOnly": "Show new (last 30 days)",
-		"showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
-		"showingLocationsOfTotal": "Showing {{count}} of {{total}} locations",
-		"showingStations": "Showing {{count}} stations",
-		"layers": "Layers",
-		"showStations": "Stations",
-		"showRadiolines": "Radiolines",
-		"radiolineOperator": "Radioline Operator"
-	},
-	"unknownOperator": "Unknown Operator",
-	"radiolines": {
-		"title": "Radiolink #{{id}}",
-		"viewDetails": "View details",
-		"distance": "Distance",
-		"txSide": "Transmitting Side (TX)",
-		"rxSide": "Receiving Side (RX)",
-		"linkParams": "Link Parameters",
-		"frequency": "Frequency",
-		"channel": "Channel",
-		"channelWidth": "Channel Width",
-		"polarization": "Polarization",
-		"modulation": "Modulation",
-		"bandwidth": "Bandwidth",
-		"height": "Height",
-		"antennaGain": "Antenna Gain",
-		"antennaHeight": "Antenna Height",
-		"eirp": "EIRP",
-		"noiseFigure": "Noise Figure",
-		"antennaType": "Antenna Type",
-		"transmitterType": "Transmitter Type",
-		"receiverType": "Receiver Type",
-		"manufacturer": "Manufacturer"
-	}
+  "search": {
+    "placeholderAddMore": "Add more...",
+    "searching": "Searching results...",
+    "noResults": "No results",
+    "noResultsHint": "Try other keywords or filters",
+    "found": "Found: {{count}}",
+    "showingTop": "Showing {{shown}} of {{total}} stations"
+  },
+  "autocomplete": {
+    "availableFilters": "Available filters",
+    "tip": "Tip:",
+    "tipText": "Use comma-separated values for multiple items",
+    "example": "Example"
+  },
+  "searchResults": {
+    "locations": "Geographic Locations",
+    "stations": "Base Stations"
+  },
+  "popup": {
+    "loading": "Loading stations...",
+    "noStations": "No stations",
+    "noPermits": "No permits"
+  },
+  "overlay": {
+    "locations": "locations",
+    "zoom": "Zoom",
+    "mapStyle": "Map Style",
+    "moreStations": "Showing {{shown}} of {{total}} locations. Zoom in to see all",
+    "radiolines": "radiolines",
+    "radiolinesCount_one": "radioline",
+    "radiolinesCount_few": "radiolines",
+    "radiolinesCount_many": "radiolines",
+    "radiolinesCount_other": "radiolines",
+    "zoomForRadiolines": "Zoom in to see radiolines",
+    "moreRadiolines": "Showing {{shown}} of {{total}} radiolines. Zoom in to see all"
+  },
+  "stats": {
+    "dataInfo": "Data Information",
+    "lastUpdated": "Last Updated",
+    "internalData": "Internal DB",
+    "ukeStations": "UKE Stations",
+    "stations": "Number of stations",
+    "permits": "Number of permits"
+  },
+  "filters": {
+    "dataSource": "Data Source",
+    "internalDb": "Internal Database",
+    "newOnly": "Show new (last 30 days)",
+    "showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
+    "showingLocationsOfTotal": "Showing {{count}} of {{total}} locations",
+    "showingStations": "Showing {{count}} stations",
+    "layers": "Layers",
+    "showStations": "Stations",
+    "showRadiolines": "Radiolines",
+    "radiolineOperator": "Radioline Operator"
+  },
+  "unknownOperator": "Unknown Operator",
+  "radiolines": {
+    "title": "Radiolink #{{id}}",
+    "viewDetails": "View details",
+    "distance": "Distance",
+    "txSide": "Transmitting Side (TX)",
+    "rxSide": "Receiving Side (RX)",
+    "linkParams": "Link Parameters",
+    "frequency": "Frequency",
+    "channel": "Channel",
+    "channelWidth": "Channel Width",
+    "polarization": "Polarization",
+    "modulation": "Modulation",
+    "bandwidth": "Bandwidth",
+    "height": "Height",
+    "antennaGain": "Antenna Gain",
+    "antennaHeight": "Antenna Height",
+    "eirp": "EIRP",
+    "noiseFigure": "Noise Figure",
+    "antennaType": "Antenna Type",
+    "transmitterType": "Transmitter Type",
+    "receiverType": "Receiver Type",
+    "manufacturer": "Manufacturer"
+  }
 }

@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - name: Build packages/drizzle
+        run: pnpm --filter @openbts/drizzle build
+      - name: Build packages/uke-importer
+        run: pnpm --filter @openbts/uke-importer build
+      - name: Build apps/server
+        run: pnpm --filter @openbts/sora build
+      - name: Build apps/client
+        run: pnpm --filter @openbts/client build

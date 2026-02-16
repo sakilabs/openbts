@@ -3,10 +3,10 @@ import db from "../database/psql.js";
 import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 
 export async function pruneStationsPermits(): Promise<void> {
-	await db.delete(stationsPermits);
+  await db.delete(stationsPermits);
 }
 
 export async function rebuildStationsPermitsAssociations(): Promise<void> {
-	await pruneStationsPermits();
-	await associateStationsWithPermits();
+  await pruneStationsPermits();
+  await associateStationsWithPermits();
 }

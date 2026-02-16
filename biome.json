@@ -39,7 +39,7 @@
 	"formatter": {
 		"enabled": true,
 		"formatWithErrors": true,
-		"indentStyle": "tab",
+		"indentStyle": "space",
 		"indentWidth": 2,
 		"lineWidth": 150,
 		"includes": ["!*.gen.ts"]
