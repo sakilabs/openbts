@@ -254,7 +254,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     .from(stations)
     .where(and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE '%${searchQuery}%'`))
     .orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
-    .limit(limit);
+    .limit(limit).catch(() => [])
 
   const fuzzyStations =
     fuzzyIds.length > 0
@@ -263,7 +263,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
             id: { in: fuzzyIds.map((r) => r.id) },
           },
           ...stationQueryConfig,
-        })
+        }).catch(() => [])
       : [];
   for (const station of fuzzyStations) {
     stationMap.set(station.id, withCellDetails(station));
