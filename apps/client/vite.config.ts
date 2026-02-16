@@ -49,7 +49,7 @@ export default defineConfig({
 		include: ["react", "react-dom", "react-i18next", "maplibre-gl", "@hugeicons/react"],
 	},
 	build: {
-		rollupOptions: {
+		rolldownOptions: {
 			output: {
 				codeSplitting: {
 					groups: [
