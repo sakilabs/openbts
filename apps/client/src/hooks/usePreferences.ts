@@ -9,6 +9,8 @@ export interface UserPreferences {
 	navigationApps: NavigationApp[];
 	navLinksDisplay: NavLinksDisplay;
 	radiolinesMinZoom: number;
+	mapStationsLimit: number;
+	mapRadiolinesLimit: number;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -18,6 +20,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 	navigationApps: ["google-maps"],
 	navLinksDisplay: "inline",
 	radiolinesMinZoom: 8,
+	mapStationsLimit: 1000,
+	mapRadiolinesLimit: 500,
 };
 
 let listeners: Array<() => void> = [];

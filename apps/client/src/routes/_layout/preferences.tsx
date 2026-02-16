@@ -146,6 +146,44 @@ function PreferencesPage() {
 								</span>
 							</div>
 						</div>
+
+						<Separator />
+
+						<div className="space-y-3">
+							<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapStationsLimit")}</Label>
+							<p className="text-xs text-muted-foreground">{t("preferences.mapStationsLimitHint")}</p>
+							<div className="flex items-center gap-4 px-3 py-2.5">
+								<Slider
+									value={[preferences.mapStationsLimit]}
+									onValueChange={(value) => updatePreferences({ mapStationsLimit: Array.isArray(value) ? value[0] : value })}
+									min={10}
+									max={1000}
+									step={10}
+								/>
+								<span className="text-sm font-mono font-medium tabular-nums w-12 text-right shrink-0">
+									{preferences.mapStationsLimit}
+								</span>
+							</div>
+						</div>
+
+						<Separator />
+
+						<div className="space-y-3">
+							<Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapRadiolinesLimit")}</Label>
+							<p className="text-xs text-muted-foreground">{t("preferences.mapRadiolinesLimitHint")}</p>
+							<div className="flex items-center gap-4 px-3 py-2.5">
+								<Slider
+									value={[preferences.mapRadiolinesLimit]}
+									onValueChange={(value) => updatePreferences({ mapRadiolinesLimit: Array.isArray(value) ? value[0] : value })}
+									min={10}
+									max={1000}
+									step={10}
+								/>
+								<span className="text-sm font-mono font-medium tabular-nums w-12 text-right shrink-0">
+									{preferences.mapRadiolinesLimit}
+								</span>
+							</div>
+						</div>
 					</section>
 				</div>
 			</div>

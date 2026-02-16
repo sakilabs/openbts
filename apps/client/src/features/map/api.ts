@@ -23,17 +23,17 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
 	return params;
 }
 
-export async function fetchLocations(bounds: string, filters: StationFilters): Promise<LocationsResponse> {
+export async function fetchLocations(bounds: string, filters: StationFilters, limit = 1000): Promise<LocationsResponse> {
 	if (filters.source === "uke") {
 		const params = buildFilterParams(filters);
-		params.set("limit", "750");
+		params.set("limit", String(limit));
 		params.set("bounds", bounds);
 		const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
 		return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
 	}
 
 	const params = buildFilterParams(filters);
-	params.set("limit", "1000");
+	params.set("limit", String(limit));
 	params.set("bounds", bounds);
 
 	const result = await fetchJson<LocationsResponse>(`${API_BASE}/locations?${decodeURIComponent(params.toString())}`);
@@ -52,10 +52,10 @@ export type RadioLinesResponse = {
 	totalCount: number;
 };
 
-export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorIds?: number[] }): Promise<RadioLinesResponse> {
+export async function fetchRadioLines(bounds: string, options?: { signal?: AbortSignal; operatorIds?: number[]; limit?: number }): Promise<RadioLinesResponse> {
 	const params = new URLSearchParams();
 	params.set("bounds", bounds);
-	params.set("limit", "500");
+	params.set("limit", String(options?.limit ?? 500));
 	if (options?.operatorIds?.length) params.set("operators", options.operatorIds.join(","));
 
 	return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {

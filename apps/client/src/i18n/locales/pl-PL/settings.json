@@ -19,7 +19,11 @@
 		"navDisplayButtons": "Osobne przyciski",
 		"navDisplayButtonsDesc": "Przyciski wyświetlane pod sekcją Informacje",
 		"radiolinesMinZoom": "Minimalny zoom radiolinii",
-		"radiolinesMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego radiolinie będą widoczne na mapie"
+		"radiolinesMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego radiolinie będą widoczne na mapie",
+		"mapStationsLimit": "Limit stacji na mapie",
+		"mapStationsLimitHint": "Maksymalna liczba stacji wyświetlanych jednocześnie na mapie",
+		"mapRadiolinesLimit": "Limit radiolinii na mapie",
+		"mapRadiolinesLimitHint": "Maksymalna liczba radiolinii wyświetlanych jednocześnie na mapie"
 	},
 	"page": {
 		"title": "Ustawienia konta",

@@ -5,7 +5,9 @@ import { I18nextProvider } from "react-i18next";
 import { AuthUIProvider } from "@daveyplate/better-auth-ui";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { BackendStatusProvider } from "@/components/backend-status";
 import { Toaster } from "@/components/ui/sonner";
+import { BackendUnavailableError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import i18n from "@/i18n/config";
 import "@/index.css";
@@ -20,6 +22,10 @@ const queryClient = new QueryClient({
 			staleTime: 1000 * 60 * 5,
 			gcTime: 1000 * 60 * 10,
 			refetchOnWindowFocus: false,
+			retry: (failureCount, error) => {
+				if (error instanceof BackendUnavailableError) return false;
+				return failureCount < 3;
+			},
 		},
 	},
 });
@@ -51,9 +57,11 @@ function RootComponent() {
 		<I18nextProvider i18n={i18n}>
 			<QueryClientProvider client={queryClient}>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-					<AppProviders>
-						<Outlet />
-					</AppProviders>
+					<BackendStatusProvider queryClient={queryClient}>
+						<AppProviders>
+							<Outlet />
+						</AppProviders>
+					</BackendStatusProvider>
 				</ThemeProvider>
 			</QueryClientProvider>
 		</I18nextProvider>

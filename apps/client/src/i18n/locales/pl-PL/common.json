@@ -155,6 +155,10 @@
 		"reload": "Odśwież stronę",
 		"toast": "Wystąpił błąd podczas przetwarzania twojej akcji. Spróbuj ponownie później (zobacz konsolę po więcej szczegółów)"
 	},
+	"backendUnavailable": {
+		"title": "Serwer niedostępny",
+		"description": "Serwer jest obecnie niedostępny. Spróbuj ponownie później."
+	},
 	"notFound": {
 		"gps": "Brak współrzędnych GPS",
 		"region": "Brak województwa",

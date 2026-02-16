@@ -160,6 +160,10 @@
 		"reload": "Reload page",
 		"toast": "An error occurred while processing your action. Please try again later (check console for details)"
 	},
+	"backendUnavailable": {
+		"title": "Backend Unavailable",
+		"description": "The server is currently unavailable. Please try again later."
+	},
 	"notFound": {
 		"gps": "No GPS coordinates",
 		"region": "No region",

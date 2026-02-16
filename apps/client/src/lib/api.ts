@@ -16,6 +16,15 @@ export class ApiResponseError extends Error {
 	}
 }
 
+export class BackendUnavailableError extends Error {
+	status: number;
+
+	constructor(status: number) {
+		super(`Backend unavailable (HTTP ${status})`);
+		this.status = status;
+	}
+}
+
 type FetchOptions = RequestInit & {
 	allowedErrors?: number[];
 };
@@ -27,6 +36,9 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 
 	if (!response.ok) {
 		if (allowedErrors?.includes(response.status)) return null as T;
+
+		if (response.status === 500 || response.status === 502)
+			throw new BackendUnavailableError(response.status);
 
 		try {
 			const errorData = await response.json();

@@ -19,7 +19,11 @@
 		"navDisplayButtons": "Separate Buttons",
 		"navDisplayButtonsDesc": "Buttons displayed below the Info section",
 		"radiolinesMinZoom": "Radiolines Minimum Zoom",
-		"radiolinesMinZoomHint": "Set the minimum zoom level at which radiolines become visible on the map"
+		"radiolinesMinZoomHint": "Set the minimum zoom level at which radiolines become visible on the map",
+		"mapStationsLimit": "Stations Limit on Map",
+		"mapStationsLimitHint": "Maximum number of stations displayed on the map at once",
+		"mapRadiolinesLimit": "Radiolines Limit on Map",
+		"mapRadiolinesLimitHint": "Maximum number of radiolines displayed on the map at once"
 	},
 	"page": {
 		"title": "Account Settings",

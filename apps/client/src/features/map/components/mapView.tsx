@@ -59,8 +59,8 @@ function MapViewInner() {
 		isLoading,
 		isFetching,
 	} = useQuery({
-		queryKey: ["locations", bounds, filters],
-		queryFn: () => fetchLocations(bounds, filters),
+		queryKey: ["locations", bounds, filters, preferences.mapStationsLimit],
+		queryFn: () => fetchLocations(bounds, filters, preferences.mapStationsLimit),
 		enabled: isLoaded && !!bounds && !isMoving,
 		staleTime: 1000 * 60 * 2,
 		placeholderData: (prev) => prev,
@@ -71,8 +71,8 @@ function MapViewInner() {
 	const totalCount = locationsResponse?.totalCount ?? 0;
 
 	const { data: radioLinesResponse, isFetching: isRadioLinesFetching } = useQuery({
-		queryKey: ["radiolines", bounds, filters.radiolineOperators],
-		queryFn: ({ signal }) => fetchRadioLines(bounds, { signal, operatorIds: filters.radiolineOperators }),
+		queryKey: ["radiolines", bounds, filters.radiolineOperators, preferences.mapRadiolinesLimit],
+		queryFn: ({ signal }) => fetchRadioLines(bounds, { signal, operatorIds: filters.radiolineOperators, limit: preferences.mapRadiolinesLimit }),
 		enabled: filters.showRadiolines && !!bounds && !isMoving && zoom >= preferences.radiolinesMinZoom,
 		staleTime: 1000 * 60 * 5,
 		placeholderData: (prev) => prev,
