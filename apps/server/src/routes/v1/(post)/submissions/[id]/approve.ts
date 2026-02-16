@@ -6,6 +6,8 @@ import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
+import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
+import { logger } from "../../../../../utils/logger.js";
 import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -337,6 +339,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
 			return updated;
 		});
+
+		void rebuildStationsPermitsAssociations().catch((e) => logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }));
 
 		return res.send({ data: result });
 	} catch (error) {

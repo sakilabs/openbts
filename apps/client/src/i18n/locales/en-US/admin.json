@@ -8,7 +8,8 @@
 		"userDetail": "User Detail",
 		"locations": "Locations",
 		"editLocation": "Edit Location",
-		"settings": "Settings"
+		"settings": "Settings",
+		"ukeImport": "UKE Import"
 	},
 	"settings": {
 		"title": "System Settings",
@@ -46,5 +47,37 @@
 	},
 	"locations": {
 		"title": "Locations"
+	},
+	"ukeImport": {
+		"title": "UKE Import",
+		"subtitle": "Import data from UKE (Urząd Komunikacji Elektronicznej)",
+		"importStations": "Import stations",
+		"importRadiolines": "Import radiolines",
+		"importPermits": "Import permits",
+		"startImport": "Start Import",
+		"alreadyRunning": "Import is already in progress",
+		"status": {
+			"idle": "Idle",
+			"running": "Running",
+			"success": "Completed",
+			"error": "Failed"
+		},
+		"steps": {
+			"stations": "Import stations",
+			"radiolines": "Import radiolines",
+			"permits": "Import permits",
+			"prune_associations": "Prune station-permit associations",
+			"associate": "Associate stations with permits",
+			"cleanup": "Cleanup temporary files"
+		},
+		"stepStatus": {
+			"pending": "Pending",
+			"running": "Running",
+			"success": "Done",
+			"skipped": "Skipped",
+			"error": "Error"
+		},
+		"startedAt": "Started at",
+		"finishedAt": "Finished at"
 	}
 }

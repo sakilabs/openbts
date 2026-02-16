@@ -72,6 +72,7 @@ const adminNavConfig = [
 			{ titleKey: "items.stations", url: "/admin/stations" },
 			{ titleKey: "items.locations", url: "/admin/locations" },
 			{ titleKey: "items.submissions", url: "/admin/submissions" },
+			{ titleKey: "items.ukeImport", url: "/admin/uke-import" },
 			{ titleKey: "items.settings", url: "/admin/settings" },
 		],
 	},

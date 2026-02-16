@@ -17,7 +17,8 @@
 		"stations": "Stations",
 		"submissions": "Submissions",
 		"locations": "Locations",
-		"settings": "Settings"
+		"settings": "Settings",
+		"ukeImport": "UKE Import"
 	},
 	"secondary": {
 		"settings": "Settings",

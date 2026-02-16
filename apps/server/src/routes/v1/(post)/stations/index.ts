@@ -4,6 +4,8 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { rebuildStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
+import { logger } from "../../../../utils/logger.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -142,6 +144,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 			const response: ResponseData = { ...full, cells: cellsWithDetails } as ResponseData;
 			return response;
 		});
+
+		void rebuildStationsPermitsAssociations().catch((e) => logger.error("Failed to rebuild stations_permits after station creation", { error: e instanceof Error ? e.message : String(e) }));
 
 		return res.send({ data: station });
 	} catch (error) {

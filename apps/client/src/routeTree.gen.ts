@@ -15,6 +15,7 @@ import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submissio
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
 import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferences'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
+import { Route as LayoutAdminUkeImportRouteImport } from './routes/_layout/admin/uke-import'
 import { Route as LayoutAdminSettingsRouteImport } from './routes/_layout/admin/settings'
 import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_layout'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
@@ -55,6 +56,11 @@ const LayoutPreferencesRoute = LayoutPreferencesRouteImport.update({
 const LayoutClfExportRoute = LayoutClfExportRouteImport.update({
   id: '/clf-export',
   path: '/clf-export',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAdminUkeImportRoute = LayoutAdminUkeImportRouteImport.update({
+  id: '/admin/uke-import',
+  path: '/admin/uke-import',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminSettingsRoute = LayoutAdminSettingsRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/admin': typeof LayoutAdminLayoutRoute
   '/admin/settings': typeof LayoutAdminSettingsRoute
+  '/admin/uke-import': typeof LayoutAdminUkeImportRoute
   '/admin/locations/$id': typeof LayoutAdminLocationsIdRoute
   '/admin/stations/$id': typeof LayoutAdminStationsIdRoute
   '/admin/submissions/$id': typeof LayoutAdminSubmissionsIdRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/admin': typeof LayoutAdminLayoutRoute
   '/admin/settings': typeof LayoutAdminSettingsRoute
+  '/admin/uke-import': typeof LayoutAdminUkeImportRoute
   '/admin/locations/$id': typeof LayoutAdminLocationsIdRoute
   '/admin/stations/$id': typeof LayoutAdminStationsIdRoute
   '/admin/submissions/$id': typeof LayoutAdminSubmissionsIdRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/_layout/admin/_layout': typeof LayoutAdminLayoutRoute
   '/_layout/admin/settings': typeof LayoutAdminSettingsRoute
+  '/_layout/admin/uke-import': typeof LayoutAdminUkeImportRoute
   '/_layout/admin/locations/$id': typeof LayoutAdminLocationsIdRoute
   '/_layout/admin/stations/$id': typeof LayoutAdminStationsIdRoute
   '/_layout/admin/submissions/$id': typeof LayoutAdminSubmissionsIdRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/account/submissions'
     | '/admin'
     | '/admin/settings'
+    | '/admin/uke-import'
     | '/admin/locations/$id'
     | '/admin/stations/$id'
     | '/admin/submissions/$id'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/account/submissions'
     | '/admin'
     | '/admin/settings'
+    | '/admin/uke-import'
     | '/admin/locations/$id'
     | '/admin/stations/$id'
     | '/admin/submissions/$id'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/_layout/account/submissions'
     | '/_layout/admin/_layout'
     | '/_layout/admin/settings'
+    | '/_layout/admin/uke-import'
     | '/_layout/admin/locations/$id'
     | '/_layout/admin/stations/$id'
     | '/_layout/admin/submissions/$id'
@@ -289,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/clf-export'
       fullPath: '/clf-export'
       preLoaderRoute: typeof LayoutClfExportRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/admin/uke-import': {
+      id: '/_layout/admin/uke-import'
+      path: '/admin/uke-import'
+      fullPath: '/admin/uke-import'
+      preLoaderRoute: typeof LayoutAdminUkeImportRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin/settings': {
@@ -388,6 +407,7 @@ interface LayoutRouteChildren {
   LayoutAccountSubmissionsRoute: typeof LayoutAccountSubmissionsRoute
   LayoutAdminLayoutRoute: typeof LayoutAdminLayoutRoute
   LayoutAdminSettingsRoute: typeof LayoutAdminSettingsRoute
+  LayoutAdminUkeImportRoute: typeof LayoutAdminUkeImportRoute
   LayoutAdminLocationsIdRoute: typeof LayoutAdminLocationsIdRoute
   LayoutAdminStationsIdRoute: typeof LayoutAdminStationsIdRoute
   LayoutAdminSubmissionsIdRoute: typeof LayoutAdminSubmissionsIdRoute
@@ -408,6 +428,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAccountSubmissionsRoute: LayoutAccountSubmissionsRoute,
   LayoutAdminLayoutRoute: LayoutAdminLayoutRoute,
   LayoutAdminSettingsRoute: LayoutAdminSettingsRoute,
+  LayoutAdminUkeImportRoute: LayoutAdminUkeImportRoute,
   LayoutAdminLocationsIdRoute: LayoutAdminLocationsIdRoute,
   LayoutAdminStationsIdRoute: LayoutAdminStationsIdRoute,
   LayoutAdminSubmissionsIdRoute: LayoutAdminSubmissionsIdRoute,

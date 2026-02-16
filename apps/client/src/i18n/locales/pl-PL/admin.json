@@ -8,7 +8,8 @@
 		"userDetail": "Szczegóły użytkownika",
 		"locations": "Lokalizacje",
 		"editLocation": "Edytuj lokalizację",
-		"settings": "Ustawienia"
+		"settings": "Ustawienia",
+		"ukeImport": "Import UKE"
 	},
 	"settings": {
 		"title": "Ustawienia systemowe",
@@ -46,5 +47,37 @@
 	},
 	"locations": {
 		"title": "Lokalizacje"
+	},
+	"ukeImport": {
+		"title": "Import UKE",
+		"subtitle": "Importuj dane z UKE (Urząd Komunikacji Elektronicznej)",
+		"importStations": "Importuj stacje",
+		"importRadiolines": "Importuj radiolinie",
+		"importPermits": "Importuj pozwolenia",
+		"startImport": "Rozpocznij import",
+		"alreadyRunning": "Import jest już w toku",
+		"status": {
+			"idle": "Bezczynne",
+			"running": "W toku",
+			"success": "Zakończono",
+			"error": "Błąd"
+		},
+		"steps": {
+			"stations": "Import stacji",
+			"radiolines": "Import radiolinii",
+			"permits": "Import pozwoleń",
+			"prune_associations": "Czyszczenie powiązań stacji z pozwoleniami",
+			"associate": "Powiązanie stacji z pozwoleniami",
+			"cleanup": "Czyszczenie plików tymczasowych"
+		},
+		"stepStatus": {
+			"pending": "Oczekujące",
+			"running": "W toku",
+			"success": "Gotowe",
+			"skipped": "Pominięte",
+			"error": "Błąd"
+		},
+		"startedAt": "Rozpoczęto",
+		"finishedAt": "Zakończono"
 	}
 }
