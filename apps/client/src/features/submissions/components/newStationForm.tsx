@@ -24,10 +24,13 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
 
-  const { topOperators, restOperators } = useMemo(() => ({
-    topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
-    restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
-  }), [operators]);
+  const { topOperators, restOperators } = useMemo(
+    () => ({
+      topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
+      restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
+    }),
+    [operators],
+  );
 
   return (
     <div className="border rounded-xl overflow-hidden">

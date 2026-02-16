@@ -4,7 +4,7 @@ export function getTableHeaders(rat: string, t: TFunction, options?: { showConfi
   const showConfirmed = options?.showConfirmed ?? true;
   switch (rat) {
     case "GSM": {
-      const headers = [t("common:labels.band"),"LAC", "CID", "E-GSM", t("common:labels.notes")];
+      const headers = [t("common:labels.band"), "LAC", "CID", "E-GSM", t("common:labels.notes")];
       if (showConfirmed) headers.push(t("common:labels.confirmed"));
       headers.push("");
       return headers;

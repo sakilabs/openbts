@@ -45,10 +45,13 @@ export function StationInfoForm({
 }: StationInfoFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
-  const { topOperators, restOperators } = useMemo(() => ({
-    topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
-    restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
-  }), [operators]);
+  const { topOperators, restOperators } = useMemo(
+    () => ({
+      topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
+      restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
+    }),
+    [operators],
+  );
 
   return (
     <div className="space-y-3">

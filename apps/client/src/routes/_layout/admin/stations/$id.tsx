@@ -29,7 +29,7 @@ function cellToLocal(cell: Cell): LocalCell {
   return {
     _localId: crypto.randomUUID(),
     _serverId: cell.id,
-    rat: cell.rat as typeof RAT_ORDER[number],
+    rat: cell.rat as (typeof RAT_ORDER)[number],
     band_id: cell.band.id,
     is_confirmed: cell.is_confirmed,
     notes: cell.notes ?? "",
@@ -143,7 +143,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const createNewStationCell = useCallback(
     (rat: string, defaultBand: Band): LocalCell => ({
       _localId: crypto.randomUUID(),
-      rat: rat as typeof RAT_ORDER[number],
+      rat: rat as (typeof RAT_ORDER)[number],
       band_id: defaultBand.id,
       is_confirmed: false,
       notes: "",
@@ -198,7 +198,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
         seen.add(key);
         newCells.push({
           _localId: crypto.randomUUID(),
-          rat: permit.band.rat as typeof RAT_ORDER[number],
+          rat: permit.band.rat as (typeof RAT_ORDER)[number],
           band_id: permit.band.id,
           is_confirmed: false,
           notes: "",

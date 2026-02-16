@@ -14,7 +14,7 @@ export type ProposedCell = {
   target_cell_id: number | null;
   station_id: number | null;
   band_id: number | null;
-  rat: typeof RAT_ORDER[number];
+  rat: (typeof RAT_ORDER)[number];
   notes: string | null;
   is_confirmed: boolean;
   details: Record<string, unknown> | null;

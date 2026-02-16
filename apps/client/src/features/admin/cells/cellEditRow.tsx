@@ -14,7 +14,7 @@ import type { RAT_ORDER } from "./rat";
 
 export type CellDraftBase = {
   _localId: string;
-  rat: typeof RAT_ORDER[number];
+  rat: (typeof RAT_ORDER)[number];
   band_id: number;
   is_confirmed: boolean;
   notes: string;
@@ -113,11 +113,17 @@ export const CellEditRow = memo(function CellEditRow({
               </SelectContent>
             </Select>
           ) : (
-          <span className="text-muted-foreground text-xs">-</span>
-        )}
+            <span className="text-muted-foreground text-xs">-</span>
+          )}
         </td>
       )}
-      <CellDetailsFields rat={localCell.rat} bandValue={bandValue} details={localCell.details} disabled={disabled} onDetailChange={handleDetailChange} />
+      <CellDetailsFields
+        rat={localCell.rat}
+        bandValue={bandValue}
+        details={localCell.details}
+        disabled={disabled}
+        onDetailChange={handleDetailChange}
+      />
       <td className="px-3 py-1">
         <Input
           type="text"

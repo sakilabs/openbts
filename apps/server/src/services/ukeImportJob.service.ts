@@ -95,7 +95,11 @@ export async function getImportJobStatus(): Promise<ImportJobStatus> {
   return { ...job, steps: job.steps.map((s) => ({ ...s })) };
 }
 
-export async function startImportJob(options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean }): Promise<ImportJobStatus> {
+export async function startImportJob(options: {
+  importStations?: boolean;
+  importRadiolines?: boolean;
+  importPermits?: boolean;
+}): Promise<ImportJobStatus> {
   const existing = await loadJob();
   if (existing.state === "running") return getImportJobStatus();
 
@@ -110,7 +114,10 @@ export async function startImportJob(options: { importStations?: boolean; import
   return { ...job, steps: job.steps.map((s) => ({ ...s })) };
 }
 
-async function runJob(job: ImportJobStatus, options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean }): Promise<void> {
+async function runJob(
+  job: ImportJobStatus,
+  options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean },
+): Promise<void> {
   const {
     importStations: shouldImportStations = true,
     importRadiolines: shouldImportRadiolines = true,
