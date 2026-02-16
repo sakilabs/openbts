@@ -140,7 +140,7 @@ function AdminUsersPage() {
 						{isLoading ? (
 							<DataTable.Skeleton rows={pagination.pageSize} columns={columns.length} />
 						) : (
-							<DataTable.Body onRowClick={(user) => navigate(`/admin/users/${(user as AdminUser).id}`)} />
+							<DataTable.Body onRowClick={(user) => navigate({ to: "/admin/users/$id", params: { id: (user as AdminUser).id } })} />
 						)}
 						<DataTable.Footer columns={columns.length}>
 							<DataTablePagination table={table} totalItems={total} showRowsPerPage={false} />

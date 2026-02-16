@@ -182,7 +182,7 @@ function AdminUserDetailPage() {
 		},
 		onSuccess: () => {
 			toast.success("User deleted successfully");
-			navigate("/admin/users");
+			navigate({ to: "/admin/users" });
 		},
 		onError: () => toast.error("Failed to delete user"),
 	});
@@ -237,7 +237,7 @@ function AdminUserDetailPage() {
 			<div className="flex-1 flex items-center justify-center">
 				<div className="text-center space-y-4">
 					<p className="text-muted-foreground">User not found</p>
-					<Button variant="outline" onClick={() => navigate("/admin/users")}>
+					<Button variant="outline" onClick={() => navigate({ to: "/admin/users" })}>
 						Back to Users
 					</Button>
 				</div>
