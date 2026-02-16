@@ -141,7 +141,7 @@ bun run preview
   - [Drizzle](https://orm.drizzle.team/)
   - [Better Auth](https://better-auth.com/)
 - [Vite](https://vite.dev/)
-  - [React Router](https://reactrouter.com/)
+  - [TanStack Router](https://tanstack.com/router/latest/)
   - [MapLibreJS](https://maplibre.org/)
 - [PostgreSQL](https://www.postgresql.org/)
   - [PostGIS](https://postgis.net/)
