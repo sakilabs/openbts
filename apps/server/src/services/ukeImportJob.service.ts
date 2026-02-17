@@ -4,11 +4,11 @@ import { join, dirname } from "node:path";
 
 import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 import { cleanupDownloads } from "@openbts/uke-importer/utils";
-import { pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
+import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
 import { logger } from "../utils/logger.js";
 import redis from "../database/redis.js";
 
-type ImportStepKey = "stations" | "radiolines" | "permits" | "prune_associations" | "associate" | "cleanup";
+type ImportStepKey = "stations" | "radiolines" | "permits" | "prune_associations" | "cleanup_orphaned_uke_locations" | "associate" | "cleanup";
 type StepStatus = "pending" | "running" | "success" | "skipped" | "error";
 type JobState = "idle" | "running" | "success" | "error";
 
@@ -27,7 +27,15 @@ interface ImportJobStatus {
   error?: string;
 }
 
-const STEP_KEYS: ImportStepKey[] = ["stations", "radiolines", "permits", "prune_associations", "associate", "cleanup"];
+const STEP_KEYS: ImportStepKey[] = [
+  "stations",
+  "radiolines",
+  "permits",
+  "prune_associations",
+  "cleanup_orphaned_uke_locations",
+  "associate",
+  "cleanup",
+];
 const REDIS_KEY = "uke:import:status";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -183,6 +191,18 @@ async function runJob(
     }
 
     if (stationsChanged || permitsChanged) {
+      markRunning(job, "cleanup_orphaned_uke_locations");
+      await saveJob(job);
+      try {
+        await cleanupOrphanedUkeLocations();
+        markSuccess(job, "cleanup_orphaned_uke_locations");
+        await saveJob(job);
+      } catch (e) {
+        markError(job, "cleanup_orphaned_uke_locations");
+        await saveJob(job);
+        throw e;
+      }
+
       markRunning(job, "prune_associations");
       await saveJob(job);
       try {
@@ -207,6 +227,7 @@ async function runJob(
         throw e;
       }
     } else {
+      markSkipped(job, "cleanup_orphaned_uke_locations");
       markSkipped(job, "prune_associations");
       markSkipped(job, "associate");
       await saveJob(job);

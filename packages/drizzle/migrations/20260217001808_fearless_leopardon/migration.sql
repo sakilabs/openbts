@@ -4,6 +4,7 @@ CREATE SCHEMA "submissions";
 --> statement-breakpoint
 CREATE TYPE "band_variant" AS ENUM('commercial', 'railway');--> statement-breakpoint
 CREATE TYPE "duplex" AS ENUM('FDD', 'TDD');--> statement-breakpoint
+CREATE TYPE "permits_source" AS ENUM('permits', 'device_registry');--> statement-breakpoint
 CREATE TYPE "station_status" AS ENUM('published', 'inactive', 'pending');--> statement-breakpoint
 CREATE TYPE "uke_permission_type" AS ENUM('zmP', 'P');--> statement-breakpoint
 CREATE TYPE "rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> statement-breakpoint
@@ -186,6 +187,7 @@ CREATE TABLE "uke_permits" (
 	"decision_type" "uke_permission_type" NOT NULL,
 	"expiry_date" timestamp with time zone NOT NULL,
 	"band_id" integer NOT NULL,
+	"source" "permits_source" DEFAULT 'permits'::"permits_source" NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "uke_permits_unique_permit" UNIQUE("station_id","operator_id","location_id","band_id","decision_number","decision_type","expiry_date")
@@ -515,6 +517,7 @@ CREATE INDEX "uke_permits_decision_number_trgm_idx" ON "uke_permits" USING gin (
 CREATE INDEX "uke_permits_station_id_trgm_idx" ON "uke_permits" USING gin (("station_id") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "uke_permits_operator_band_idx" ON "uke_permits" ("operator_id","band_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_operator_location_idx" ON "uke_permits" ("operator_id","location_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_source_idx" ON "uke_permits" ("source");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_operator_id_idx" ON "uke_radiolines" ("operator_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_idx" ON "uke_radiolines" ("permit_number");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_trgm_idx" ON "uke_radiolines" USING gin (("permit_number") gin_trgm_ops);--> statement-breakpoint

@@ -21,6 +21,7 @@ export const DuplexType = pgEnum("duplex", ["FDD", "TDD"]);
 export const ratEnum = pgEnum("rat", ["GSM", "CDMA", "UMTS", "LTE", "NR", "IOT"]);
 export const BandVariant = pgEnum("band_variant", ["commercial", "railway"]);
 export const StationStatus = pgEnum("station_status", ["published", "inactive", "pending"]);
+export const PermitsSource = pgEnum("permits_source", ["permits", "device_registry"]);
 
 /**
  * Operator table
@@ -202,6 +203,7 @@ export const ukePermits = pgTable(
     band_id: integer("band_id")
       .references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),
+    source: PermitsSource("source").notNull().default("permits"),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
@@ -216,6 +218,7 @@ export const ukePermits = pgTable(
     index("uke_permits_station_id_trgm_idx").using("gin", sql`(${t.station_id}) gin_trgm_ops`),
     index("uke_permits_operator_band_idx").on(t.operator_id, t.band_id),
     index("uke_permits_operator_location_idx").on(t.operator_id, t.location_id),
+    index("uke_permits_source_idx").on(t.source),
   ],
 );
 

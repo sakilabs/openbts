@@ -67,6 +67,7 @@
       "radiolines": "Import radiolinii",
       "permits": "Import pozwoleń",
       "prune_associations": "Czyszczenie powiązań stacji z pozwoleniami",
+      "cleanup_orphaned_uke_locations": "Usuwanie lokalizacji UKE bez powiązanych pozwoleń",
       "associate": "Powiązanie stacji z pozwoleniami",
       "cleanup": "Czyszczenie plików tymczasowych"
     },

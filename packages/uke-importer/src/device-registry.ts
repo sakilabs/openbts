@@ -14,6 +14,7 @@ import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
 import { db } from "@openbts/drizzle/db";
+import { and, eq, lt } from "drizzle-orm/sql/expressions/conditions";
 
 function getRegionByTeryt(teryt: string): { name: string; code: string } | null {
   return REGION_BY_TERYT_PREFIX[teryt] ?? null;
@@ -335,6 +336,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
         decision_type: r.decisionType,
         expiry_date: new Date("2099-12-31T23:59:59Z"),
         band_id: bandId,
+        source: "device_registry" as const,
       };
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
@@ -345,7 +347,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
       await db
         .insert(ukePermits)
         .values(group)
-        .onConflictDoNothing({
+        .onConflictDoUpdate({
           target: [
             ukePermits.station_id,
             ukePermits.operator_id,
@@ -355,6 +357,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
             ukePermits.decision_type,
             ukePermits.expiry_date,
           ],
+          set: { updatedAt: new Date(), source: "device_registry" },
         });
       insertedCount += group.length;
     }
@@ -365,6 +368,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
 
 export async function importPermitDevices(): Promise<boolean> {
   logger.log("Starting import from device registry...");
+  const importStartTime = new Date();
   logger.log("Scraping file links from:", PERMITS_DEVICES_URL);
   const links = await scrapePermitDeviceLinks(PERMITS_DEVICES_URL);
   logger.log(`Found ${links.length} files:`, links.map((l) => l.operatorKey).join(", "));
@@ -441,6 +445,13 @@ export async function importPermitDevices(): Promise<boolean> {
       } catch {}
     }
   }
+
+  logger.log("Deleting stale device registry permits...");
+  const stalePermits = await db
+    .delete(ukePermits)
+    .where(and(eq(ukePermits.source, "device_registry"), lt(ukePermits.updatedAt, importStartTime)))
+    .returning({ id: ukePermits.id });
+  logger.log(`Deleted ${stalePermits.length} stale device registry permits`);
 
   logger.log(`Total: ${totalRows} rows processed, ${totalInserted} records inserted`);
   await recordImportMetadata("permits", linksForCheck, "success");

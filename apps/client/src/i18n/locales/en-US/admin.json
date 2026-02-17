@@ -67,6 +67,7 @@
       "radiolines": "Import radiolines",
       "permits": "Import permits",
       "prune_associations": "Prune station-permit associations",
+      "cleanup_orphaned_uke_locations": "Clean up orphaned UKE locations",
       "associate": "Associate stations with permits",
       "cleanup": "Cleanup temporary files"
     },

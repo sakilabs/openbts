@@ -1,12 +1,13 @@
 import path from "node:path";
 import url from "node:url";
 
-import { radiolinesAntennaTypes, radioLinesManufacturers, radiolinesTransmitterTypes, ukeRadiolines } from "@openbts/drizzle";
+import { radiolinesAntennaTypes, radioLinesManufacturers, radiolinesTransmitterTypes, ukeOperators, ukeRadiolines } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, RADIOLINES_URL } from "./config.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertUkeOperators } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
+import { sql } from "drizzle-orm";
 import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 
 import type { RawRadioLineData } from "./types.js";
@@ -51,6 +52,9 @@ export async function importRadiolines(): Promise<boolean> {
     if (r.Typ_nad) txTypeTuples.add(`${String(r.Typ_nad).trim()}|${String(r.Prod_nad || "").trim()}`);
   }
   console.log(`[radiolines] Found ${manufNames.size} manufacturers, ${antTypeTuples.size} antenna types, ${txTypeTuples.size} transmitter types`);
+
+  console.log("[radiolines] Truncating radiolines tables");
+  await db.execute(sql`TRUNCATE TABLE ${ukeRadiolines}, ${ukeOperators}, ${radioLinesManufacturers}, ${radiolinesAntennaTypes}, ${radiolinesTransmitterTypes} RESTART IDENTITY CASCADE;`);
 
   console.log("[radiolines] Upserting manufacturers...");
   const manufArr = Array.from(manufNames).filter((s) => s.length > 0);

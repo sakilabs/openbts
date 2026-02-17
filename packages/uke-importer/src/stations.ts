@@ -2,6 +2,7 @@ import path from "node:path";
 import url from "node:url";
 
 import { ukePermits, stationsPermits, type ratEnum, type BandVariant } from "@openbts/drizzle";
+import { and, lt, eq } from "drizzle-orm";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import {
   chunk,
@@ -104,6 +105,7 @@ async function insertUkePermits(
         decision_type: (r["Rodzaj decyzji"] ?? "P") as "zmP" | "P",
         expiry_date: permitDate,
         band_id: bandId,
+        source: "permits" as const,
       };
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
@@ -112,7 +114,7 @@ async function insertUkePermits(
       await db
         .insert(ukePermits)
         .values(group)
-        .onConflictDoNothing({
+        .onConflictDoUpdate({
           target: [
             ukePermits.station_id,
             ukePermits.operator_id,
@@ -122,12 +124,14 @@ async function insertUkePermits(
             ukePermits.decision_type,
             ukePermits.expiry_date,
           ],
+          set: { updatedAt: new Date(), source: "permits" },
         });
   }
 }
 
 export async function importStations(): Promise<boolean> {
   logger.log("Starting stations import...");
+  const importStartTime = new Date();
   logger.log("Scraping file links from:", STATIONS_URL);
   const unfiltered = await scrapeXlsxLinks(STATIONS_URL);
   const links = unfiltered;
@@ -196,6 +200,13 @@ export async function importStations(): Promise<boolean> {
     logger.log(`Processing: ${fr.label} (${fr.rows.length} rows)`);
     await insertUkePermits(fr.rows, bandMap, operatorIdByName, locationIdByLonLat, parseBandFromLabel, fr.label);
   }
+
+  logger.log("Deleting stale station permits...");
+  const stalePermits = await db
+    .delete(ukePermits)
+    .where(and(eq(ukePermits.source, "permits"), lt(ukePermits.updatedAt, importStartTime)))
+    .returning({ id: ukePermits.id });
+  logger.log(`Deleted ${stalePermits.length} stale station permits`);
 
   await recordImportMetadata("stations", links, "success");
   logger.log("Import completed successfully");
