@@ -1,4 +1,4 @@
-import { eq, inArray, sql as dsql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import {
   bands,
@@ -15,7 +15,7 @@ import {
   type DuplexType,
   type BandVariant,
 } from "@openbts/drizzle";
-import { sql, db } from "@openbts/drizzle/db";
+import { db } from "@openbts/drizzle/db";
 import type { Database } from "@openbts/drizzle/db";
 import type { PreparedBandKey, PreparedCell, PreparedLocation, PreparedOperator, PreparedRegion, PreparedStation } from "./transformers.js";
 import { logger } from "../logger.js";
@@ -49,11 +49,13 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
-export { sql, db };
+export { db };
 export type { Database };
 
 export async function pruneTables(): Promise<void> {
-  await db.execute(dsql`TRUNCATE TABLE nr_cells, lte_cells, umts_cells, gsm_cells, cells, stations, locations RESTART IDENTITY CASCADE`);
+  await db.execute(
+    sql`TRUNCATE TABLE ${nrCells}, ${lteCells}, ${umtsCells}, ${gsmCells}, ${cells}, ${stations}, ${locations} RESTART IDENTITY CASCADE`,
+  );
 }
 
 export async function writeRegions(items: PreparedRegion[], options: WriteOptions = {}): Promise<RegionIdMap> {
@@ -79,7 +81,7 @@ export async function writeRegions(items: PreparedRegion[], options: WriteOption
     }
   }
   const names = dedup.map((region) => region.name);
-  const rows = names.length ? await db.query.regions.findMany({ where: inArray(regions.name, names) }) : [];
+  const rows = names.length ? await db.query.regions.findMany({ where: { name: { in: names } } }) : [];
   const map: RegionIdMap = new Map();
   for (const row of rows) map.set(row.name, row.id);
   return map;
@@ -108,7 +110,7 @@ export async function writeOperators(items: PreparedOperator[], options: WriteOp
     }
   }
   const mncs = dedup.map((operator) => operator.mnc);
-  const rows = mncs.length ? await db.query.operators.findMany({ where: inArray(operators.mnc, mncs) }) : [];
+  const rows = mncs.length ? await db.query.operators.findMany({ where: { mnc: { in: mncs } } }) : [];
   const map: OperatorIdMap = new Map();
   for (const row of rows) map.set(row.mnc ?? 0, row.id);
   return map;
@@ -116,7 +118,7 @@ export async function writeOperators(items: PreparedOperator[], options: WriteOp
 
 export async function updateOperatorParents(): Promise<void> {
   const relevant = ["NetWorkS!", "T-Mobile", "Orange", "Plus", "Aero 2", "Sferia"] as const;
-  const rows = await db.query.operators.findMany({ where: inArray(operators.name, relevant as unknown as string[]) });
+  const rows = await db.query.operators.findMany({ where: { name: { in: relevant as unknown as string[] } } });
   const nameToId = new Map<string, number>();
   for (const operator of rows) nameToId.set(operator.name, operator.id);
 
@@ -236,7 +238,7 @@ export async function writeStations(
     }
   }
   const uniqueStationIds = Array.from(new Set(prepared.map((p) => p.station.station_id)));
-  const rows = uniqueStationIds.length ? await db.query.stations.findMany({ where: inArray(stations.station_id, uniqueStationIds) }) : [];
+  const rows = uniqueStationIds.length ? await db.query.stations.findMany({ where: { station_id: { in: uniqueStationIds } } }) : [];
   const pairToId = new Map<string, number>();
   for (const row of rows) {
     const key = row.station_id;

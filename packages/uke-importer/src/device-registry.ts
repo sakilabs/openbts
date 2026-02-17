@@ -341,8 +341,17 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
 
+  const deduplicatedMap = new Map<string, (typeof values)[number]>();
+  for (const row of values) {
+    const uniqueKey = `${row.station_id}|${row.operator_id}|${row.location_id}|${row.band_id}|${row.decision_number}|${row.decision_type}|${row.expiry_date.toISOString()}`;
+    deduplicatedMap.set(uniqueKey, row);
+  }
+
+  const uniqueValues = Array.from(deduplicatedMap.values());
+
   let insertedCount = 0;
-  for (const group of chunk(values, BATCH_SIZE)) {
+  const date = new Date();
+  for (const group of chunk(uniqueValues, BATCH_SIZE)) {
     if (group.length) {
       await db
         .insert(ukePermits)
@@ -357,7 +366,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
             ukePermits.decision_type,
             ukePermits.expiry_date,
           ],
-          set: { updatedAt: new Date(), source: "device_registry" },
+          set: { updatedAt: date, source: "device_registry" },
         });
       insertedCount += group.length;
     }

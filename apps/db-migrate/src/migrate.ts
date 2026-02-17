@@ -9,9 +9,9 @@ import {
   writeCellsAndDetails,
   writeLocations,
   writeStations,
-  sql,
   db,
 } from "./executors/writers.js";
+import { sql } from "@openbts/drizzle/db";
 import cliProgress from "cli-progress";
 
 export interface MigratorOptions {

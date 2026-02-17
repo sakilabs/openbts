@@ -54,7 +54,9 @@ export async function importRadiolines(): Promise<boolean> {
   console.log(`[radiolines] Found ${manufNames.size} manufacturers, ${antTypeTuples.size} antenna types, ${txTypeTuples.size} transmitter types`);
 
   console.log("[radiolines] Truncating radiolines tables");
-  await db.execute(sql`TRUNCATE TABLE ${ukeRadiolines}, ${ukeOperators}, ${radioLinesManufacturers}, ${radiolinesAntennaTypes}, ${radiolinesTransmitterTypes} RESTART IDENTITY CASCADE;`);
+  await db.execute(
+    sql`TRUNCATE TABLE ${ukeRadiolines}, ${ukeOperators}, ${radioLinesManufacturers}, ${radiolinesAntennaTypes}, ${radiolinesTransmitterTypes} RESTART IDENTITY CASCADE;`,
+  );
 
   console.log("[radiolines] Upserting manufacturers...");
   const manufArr = Array.from(manufNames).filter((s) => s.length > 0);
