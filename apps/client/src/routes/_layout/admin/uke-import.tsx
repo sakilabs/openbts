@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -10,6 +10,32 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchImportStatus, startImport, type ImportStep, type StepStatus, type JobState } from "@/features/admin/uke-import/api";
 import { i18n } from "@/i18n";
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
+function StepTimer({ startedAt, finishedAt }: { startedAt?: string; finishedAt?: string }) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!startedAt || finishedAt) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [startedAt, finishedAt]);
+
+  if (!startedAt) return null;
+
+  const start = new Date(startedAt).getTime();
+  const end = finishedAt ? new Date(finishedAt).getTime() : now;
+  const elapsed = Math.max(0, end - start);
+
+  return <span className="text-xs text-muted-foreground tabular-nums">{formatDuration(elapsed)}</span>;
+}
 
 function StepStatusIcon({ status }: { status: StepStatus }) {
   switch (status) {
@@ -156,6 +182,7 @@ function UkeImportPage() {
                     >
                       <StepStatusIcon status={step.status} />
                       <span className="flex-1">{t(`ukeImport.steps.${step.key}`)}</span>
+                      <StepTimer startedAt={step.startedAt} finishedAt={step.finishedAt} />
                       <span className="text-xs text-muted-foreground">{t(`ukeImport.stepStatus.${step.status}`)}</span>
                     </div>
                   ))}
