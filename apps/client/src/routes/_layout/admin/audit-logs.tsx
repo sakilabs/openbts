@@ -13,9 +13,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTablePagination } from "@/hooks/useTablePageSize";
-import { DatePickerButton } from "./components/audit-logs/date-picker-button";
-import { AuditLogDetailSheet } from "./components/audit-logs/audit-log-detail-sheet";
-import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "./components/audit-logs/constants";
+import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
+import { AuditLogDetailSheet } from "@/features/admin/audit-logs/components/audit-log-detail-sheet";
+import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "../../../features/admin/audit-logs/constants";
 
 function formatAuditDate(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleDateString(locale, {

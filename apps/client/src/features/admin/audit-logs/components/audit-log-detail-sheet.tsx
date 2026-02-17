@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatFullDate } from "@/lib/format";
-import { type AuditLogEntry, TABLE_LABELS, getActionStyle } from "./constants";
+import { type AuditLogEntry, TABLE_LABELS, getActionStyle } from "../constants";
 import { ChangesTable } from "./changes-table";
 
 interface AuditLogDetailSheetProps {
