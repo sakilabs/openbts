@@ -57,7 +57,13 @@ const schemaRoute = {
   body: requestSchema,
   response: {
     200: z.object({
-      data: z.array(submissionsSelectSchema),
+      data: z.array(
+        submissionsSelectSchema.extend({
+          proposedStation: proposedStationInsert.optional(),
+          proposedLocation: proposedLocationInsert.optional(),
+          cells: z.array(proposedCellInsert).optional(),
+        }),
+      ),
     }),
   },
 };
@@ -75,11 +81,17 @@ function mapCellOperation(op: string): "add" | "update" | "delete" {
   }
 }
 
+type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
+  proposedStation?: z.infer<typeof proposedStationInsert>;
+  proposedLocation?: z.infer<typeof proposedLocationInsert>;
+  cells?: z.infer<typeof proposedCellInsert>[];
+};
+
 async function processSubmission(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   input: SingleSubmission,
   userId: string,
-): Promise<z.infer<typeof submissionsSelectSchema>> {
+): Promise<SubmissionWithExtras> {
   const { station_id, type, submitter_note, station: stationData, location: locationData, cells: proposedCellsInput } = input;
 
   if ((type === "update" || type === "delete") && !station_id)
@@ -172,7 +184,7 @@ async function processSubmission(
     }
   }
 
-  return submission;
+  return { ...submission, proposedStation: stationData, proposedLocation: locationData, cells: proposedCellsInput };
 }
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
@@ -186,7 +198,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   try {
     const results = await db.transaction(async (tx) => {
-      const created: z.infer<typeof submissionsSelectSchema>[] = [];
+      const created: SubmissionWithExtras[] = [];
       for (const input of submissionInputs) {
         const submission = await processSubmission(tx, input, userId);
         created.push(submission);
