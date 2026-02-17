@@ -4,7 +4,7 @@ info:
   description: API documentation for OpenBTS server
   version: 1.0.0
 servers:
-  - url: /api/v1
+  - url: https://openbts.sakilabs.com/api/v1
     description: Main API version
 
 components:
@@ -93,13 +93,11 @@ components:
           nullable: true
         region:
           $ref: "#/components/schemas/Region"
-      required: [id, latitude, longitude, region_id]
+      required: [id, latitude, longitude, region]
 
     LocationToInsert:
       type: object
       properties:
-        id:
-          type: integer
         latitude:
           type: number
           format: double
@@ -114,7 +112,7 @@ components:
           nullable: true
         region_id:
           type: integer
-      required: [id, latitude, longitude, region_id]
+      required: [latitude, longitude, region_id]
 
     CellDetails:
       description: RAT-specific details (GSM, UMTS, LTE, NR)
@@ -135,61 +133,93 @@ components:
     GSMDetails:
       type: object
       properties:
-        cid:
-          type: integer
         lac:
+          type: integer
+        cid:
           type: integer
         e_gsm:
           type: boolean
+      required: [lac, cid]
+
+    GSMDetailsToInsert:
+      type: object
+      properties:
+        lac:
+          type: integer
+        cid:
+          type: integer
+        e_gsm:
+          type: boolean
+      required: [lac, cid]
 
     UMTSDetails:
       type: object
       properties:
-        cid:
-          type: integer
         lac:
           type: integer
           nullable: true
-        carier:
+        carrier:
           type: integer
           nullable: true
         rnc:
           type: integer
+        cid:
+          type: integer
         cid_long:
           type: integer
           format: int64
+      required: [rnc, cid]
+
+    UMTSDetailsToInsert:
+      type: object
+      properties:
+        lac:
+          type: integer
+          nullable: true
+        carrier:
+          type: integer
+          nullable: true
+        rnc:
+          type: integer
+        cid:
+          type: integer
+      required: [rnc, cid]
 
     LTEDetails:
       type: object
       properties:
-        clid:
-          type: integer
         tac:
           type: integer
           nullable: true
         enbid:
           type: integer
-          nullable: true
+        clid:
+          type: integer
         ecid:
           type: integer
-          nullable: true
+          format: int64
         supports_nb_iot:
           type: boolean
+      required: [enbid, clid]
+
+    LTEDetailsToInsert:
+      type: object
+      properties:
+        tac:
+          type: integer
+          nullable: true
+        enbid:
+          type: integer
+        clid:
+          type: integer
+        supports_nb_iot:
+          type: boolean
+      required: [enbid, clid]
 
     NRDetails:
       type: object
       properties:
-        clid:
-          type: integer
-          nullable: true
-        nci:
-          type: integer
-          format: int64
-          nullable: true
         nrtac:
-          type: integer
-          nullable: true
-        pci:
           type: integer
           nullable: true
         gnbid:
@@ -197,60 +227,35 @@ components:
           nullable: true
         gnbid_length:
           type: integer
-        supports_nr_redcap:
-          type: boolean
-
-    GSMDetailsToInsert:
-      type: object
-      properties:
-        cid:
-          type: integer
-        lac:
-          type: integer
-        e_gsm:
-          type: boolean
-
-    UMTSDetailsToInsert:
-      type: object
-      properties:
-        cid:
-          type: integer
-        lac:
-          type: integer
-          nullable: true
-        carier:
-          type: integer
-          nullable: true
-        rnc:
-          type: integer
-
-    LTEDetailsToInsert:
-      type: object
-      properties:
+          default: 24
         clid:
           type: integer
-        tac:
+          nullable: true
+        nci:
+          type: integer
+          format: int64
+        pci:
           type: integer
           nullable: true
-        enbid:
-          type: integer
-          nullable: true
-        supports_nb_iot:
+        supports_nr_redcap:
           type: boolean
 
     NRDetailsToInsert:
       type: object
       properties:
-        clid:
-          type: integer
-          nullable: true
         nrtac:
           type: integer
           nullable: true
-        pci:
+        gnbid:
           type: integer
           nullable: true
-        gnbid:
+        gnbid_length:
+          type: integer
+          default: 24
+        clid:
+          type: integer
+          nullable: true
+        pci:
           type: integer
           nullable: true
         supports_nr_redcap:
@@ -501,14 +506,16 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         name:
           type: string
+          nullable: true
         image:
           type: string
           nullable: true
         displayUsername:
           type: string
-      required: [id, name, displayUsername]
+      required: [id, displayUsername]
 
     ProposedCellInsert:
       type: object
@@ -533,44 +540,150 @@ components:
           type: string
           enum: [added, updated, removed]
         details:
-          $ref: "#/components/schemas/CellDetails"
+          $ref: "#/components/schemas/CellDetailsToInsert"
 
     ProposedStationInsert:
       type: object
       properties:
-        name:
+        operation:
           type: string
+          enum: [add, update, delete]
+          default: add
+        target_station_id:
+          type: integer
+          nullable: true
+        station_id:
+          type: string
+          maxLength: 16
+          nullable: true
+        location_id:
+          type: integer
           nullable: true
         operator_id:
           type: integer
-        status:
+          nullable: true
+        notes:
           type: string
           nullable: true
-      required: [operator_id]
+        is_confirmed:
+          type: boolean
+          default: false
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+          default: pending
 
     ProposedLocationInsert:
       type: object
       properties:
-        latitude:
-          type: number
-          format: double
-        longitude:
-          type: number
-          format: double
-        address:
-          type: string
-          nullable: true
+        region_id:
+          type: integer
         city:
           type: string
           nullable: true
-        region_id:
-          type: integer
+        address:
+          type: string
+          nullable: true
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
       required: [latitude, longitude, region_id]
+
+    ProposedCellWithDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+        submission_id:
+          type: string
+          format: uuid
+          nullable: true
+        operation:
+          type: string
+          enum: [add, update, delete]
+        target_cell_id:
+          type: integer
+          nullable: true
+        station_id:
+          type: integer
+          nullable: true
+        band_id:
+          type: integer
+          nullable: true
+        rat:
+          type: string
+          enum: [GSM, UMTS, LTE, NR]
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        is_confirmed:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        details:
+          $ref: "#/components/schemas/CellDetails"
+          nullable: true
+      required: [id, operation, is_confirmed, updatedAt, createdAt]
+
+    ProposedStation:
+      type: object
+      properties:
+        id:
+          type: integer
+        submission_id:
+          type: string
+          format: uuid
+          nullable: true
+        operation:
+          type: string
+          enum: [add, update, delete]
+        target_station_id:
+          type: integer
+          nullable: true
+        station_id:
+          type: string
+          maxLength: 16
+          nullable: true
+        location_id:
+          type: integer
+          nullable: true
+        operator_id:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        is_confirmed:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+      required: [id, operation, is_confirmed, status, updatedAt, createdAt]
 
     Submission:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        station_id:
+          type: integer
+          nullable: true
+        submitter_id:
           type: string
           format: uuid
         status:
@@ -579,17 +692,51 @@ components:
         type:
           type: string
           enum: [new, update, delete]
+        reviewer_id:
+          type: string
+          format: uuid
+          nullable: true
+        review_notes:
+          type: string
+          nullable: true
+        submitter_note:
+          type: string
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
         station:
           $ref: "#/components/schemas/Station"
+          nullable: true
         submitter:
           $ref: "#/components/schemas/User"
         reviewer:
           $ref: "#/components/schemas/User"
+          nullable: true
+        proposedStation:
+          $ref: "#/components/schemas/ProposedStation"
+          nullable: true
         cells:
           type: array
           items:
-            $ref: "#/components/schemas/ProposedCellInsert"
-      required: [id, status, type, submitter]
+            $ref: "#/components/schemas/ProposedCellWithDetails"
+      required: [id, submitter_id, status, type, createdAt, updatedAt, submitter, cells]
+
+    SubmissionCreated:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            proposedLocation:
+              $ref: "#/components/schemas/ProposedLocationInsert"
+              nullable: true
 
     CreateSubmissionRequest:
       oneOf:
@@ -605,12 +752,13 @@ components:
       properties:
         station_id:
           type: integer
-          nullable: true
+          description: "Required for type=update and type=delete"
         type:
           type: string
           enum: [new, update, delete]
         submitter_note:
           type: string
+          nullable: true
         station:
           $ref: "#/components/schemas/ProposedStationInsert"
         location:
@@ -625,8 +773,10 @@ components:
       properties:
         review_notes:
           type: string
+          nullable: true
         submitter_note:
           type: string
+          nullable: true
         station:
           $ref: "#/components/schemas/ProposedStationInsert"
         location:
@@ -1746,7 +1896,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: "#/components/schemas/LocationToInsert"
+                    $ref: "#/components/schemas/Location"
         "400":
           description: Bad Request (e.g. Validation error)
           content:
@@ -2047,11 +2197,14 @@ paths:
           schema:
             type: integer
             default: 10
+            minimum: 1
+            maximum: 100
         - name: offset
           in: query
           schema:
             type: integer
             default: 0
+            minimum: 0
         - name: status
           in: query
           schema:
@@ -2076,6 +2229,7 @@ paths:
                       $ref: "#/components/schemas/Submission"
                   totalCount:
                     type: integer
+                required: [data, totalCount]
         "400":
           description: Bad Request
           content:
@@ -2089,7 +2243,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: Forbidden
+          description: Forbidden (submissions disabled)
           content:
             application/json:
               schema:
@@ -2101,7 +2255,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     post:
-      summary: Create a submission
+      summary: Create one or multiple submissions
+      description: |
+        Accepts either a single submission object or an array of up to 10.
+        Requires `write:submissions` permission.
+        - `station_id` is required when `type` is `update` or `delete`.
+        - For `type: new`, providing a `station` with an already-existing `station_id` + `operator_id` pair will return a 400 error.
+        - All submissions in a batch are processed in a single transaction.
       tags: [Submissions]
       security:
         - webLogin: []
@@ -2114,7 +2274,7 @@ paths:
               $ref: "#/components/schemas/CreateSubmissionRequest"
       responses:
         "200":
-          description: Submission created
+          description: Submission(s) created successfully
           content:
             application/json:
               schema:
@@ -2123,15 +2283,28 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Submission"
+                      $ref: "#/components/schemas/SubmissionCreated"
+                required: [data]
         "400":
-          description: Bad Request
+          description: Bad Request (e.g. validation error or duplicate station)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (submissions disabled)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Referenced station not found
           content:
             application/json:
               schema:
