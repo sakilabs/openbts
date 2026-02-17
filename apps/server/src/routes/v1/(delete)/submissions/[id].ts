@@ -14,6 +14,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -82,6 +83,18 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
   } catch {
     throw new ErrorResponse("FAILED_TO_DELETE");
   }
+
+  await createAuditLog(
+    {
+      action: "submissions.delete",
+      table_name: "submissions",
+      record_id: undefined,
+      old_values: submission,
+      new_values: null,
+      metadata: { submission_id: id },
+    },
+    req,
+  );
 
   return res.status(204).send();
 }

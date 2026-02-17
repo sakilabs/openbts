@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { rebuildStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../utils/logger.js";
 
@@ -147,6 +148,17 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
     void rebuildStationsPermitsAssociations().catch((e) =>
       logger.error("Failed to rebuild stations_permits after station creation", { error: e instanceof Error ? e.message : String(e) }),
+    );
+
+    await createAuditLog(
+      {
+        action: "stations.create",
+        table_name: "stations",
+        record_id: station.id,
+        old_values: null,
+        new_values: station,
+      },
+      req,
     );
 
     return res.send({ data: station });

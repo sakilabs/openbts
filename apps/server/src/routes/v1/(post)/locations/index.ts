@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -27,6 +28,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     const [location] = await db.insert(locations).values(req.body).returning();
 
     if (!location) throw new ErrorResponse("FAILED_TO_CREATE");
+    await createAuditLog(
+      { action: "locations.create", table_name: "locations", record_id: location.id, old_values: null, new_values: location },
+      req,
+    );
     return res.send({ data: location });
   } catch {
     throw new ErrorResponse("FAILED_TO_CREATE");

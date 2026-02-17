@@ -5,6 +5,39 @@ import { sql } from "drizzle-orm/sql";
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
+export const AuditAction = pgEnum("audit_action", [
+  "stations.create",
+  "stations.update",
+  "stations.delete",
+  "cells.create",
+  "cells.update",
+  "cells.delete",
+  "locations.create",
+  "locations.update",
+  "locations.delete",
+  "operators.create",
+  "operators.update",
+  "operators.delete",
+  "bands.create",
+  "bands.update",
+  "bands.delete",
+  "regions.create",
+  "regions.update",
+  "regions.delete",
+  "submissions.create",
+  "submissions.update",
+  "submissions.delete",
+  "submissions.approve",
+  "submissions.reject",
+  "settings.update",
+  "station_comments.create",
+  "station_comments.delete",
+  "user_lists.create",
+  "user_lists.update",
+  "user_lists.delete",
+  "uke_import.start",
+]);
+export const AuditSource = pgEnum("audit_source", ["api", "import", "system"]);
 export const AuthSchema = pgSchema("auth");
 
 export const users = AuthSchema.table(
@@ -251,13 +284,13 @@ export const auditLogs = pgTable(
   "audit_logs",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-    action: varchar("action", { length: 100 }).notNull(),
+    action: AuditAction("action").notNull(),
     table_name: varchar("table_name", { length: 100 }).notNull(),
     record_id: integer("record_id"),
     old_values: jsonb("old_values"),
     new_values: jsonb("new_values"),
     metadata: jsonb("metadata"),
-    source: varchar("source", { length: 50 }),
+    source: AuditSource("source"),
     ip_address: varchar("ip_address", { length: 60 }),
     user_agent: text("user_agent"),
     invoked_by: uuid("invoked_by").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),

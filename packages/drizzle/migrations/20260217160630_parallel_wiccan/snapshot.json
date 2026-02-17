@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "e70336c9-ddf3-451a-9beb-6bec6cd98fca",
+  "id": "ee74b8a5-64e2-4d19-bd51-9a3e2e88c417",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -51,6 +51,49 @@
     {
       "values": ["basic", "pro", "unlimited"],
       "name": "api_token_tier",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "stations.create",
+        "stations.update",
+        "stations.delete",
+        "cells.create",
+        "cells.update",
+        "cells.delete",
+        "locations.create",
+        "locations.update",
+        "locations.delete",
+        "operators.create",
+        "operators.update",
+        "operators.delete",
+        "bands.create",
+        "bands.update",
+        "bands.delete",
+        "regions.create",
+        "regions.update",
+        "regions.delete",
+        "submissions.create",
+        "submissions.update",
+        "submissions.delete",
+        "submissions.approve",
+        "submissions.reject",
+        "settings.update",
+        "station_comments.create",
+        "station_comments.delete",
+        "user_lists.create",
+        "user_lists.update",
+        "user_lists.delete",
+        "uke_import.start"
+      ],
+      "name": "audit_action",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["api", "import", "system"],
+      "name": "audit_source",
       "entityType": "enums",
       "schema": "public"
     },
@@ -3116,8 +3159,8 @@
       "table": "audit_logs"
     },
     {
-      "type": "varchar(100)",
-      "typeSchema": null,
+      "type": "audit_action",
+      "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
       "default": null,
@@ -3194,8 +3237,8 @@
       "table": "audit_logs"
     },
     {
-      "type": "varchar(50)",
-      "typeSchema": null,
+      "type": "audit_source",
+      "typeSchema": "public",
       "notNull": false,
       "dimensions": 0,
       "default": null,

@@ -8,6 +8,7 @@ import fs from "node:fs/promises";
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { stationComments, attachments } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -116,6 +117,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       .returning();
 
     if (!newComment) throw new ErrorResponse("FAILED_TO_CREATE");
+
+    await createAuditLog(
+      {
+        action: "station_comments.create",
+        table_name: "station_comments",
+        record_id: newComment.id,
+        old_values: null,
+        new_values: newComment,
+      },
+      req,
+    );
 
     return res.code(201).send({ data: newComment });
   } catch (error) {

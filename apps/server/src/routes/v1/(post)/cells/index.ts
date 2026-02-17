@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -98,6 +99,17 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
           break;
       }
     }
+
+    await createAuditLog(
+      {
+        action: "cells.create",
+        table_name: "cells",
+        record_id: inserted.id,
+        old_values: null,
+        new_values: { ...inserted, details },
+      },
+      req,
+    );
 
     return res.send({ data: { ...inserted, details } as ResponseData });
   } catch {

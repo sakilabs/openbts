@@ -9,6 +9,8 @@ CREATE TYPE "station_status" AS ENUM('published', 'inactive', 'pending');--> sta
 CREATE TYPE "uke_permission_type" AS ENUM('zmP', 'P');--> statement-breakpoint
 CREATE TYPE "rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> statement-breakpoint
 CREATE TYPE "api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
+CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'settings.update', 'station_comments.create', 'station_comments.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
+CREATE TYPE "audit_source" AS ENUM('api', 'import', 'system');--> statement-breakpoint
 CREATE TYPE "role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
 CREATE TYPE "cell_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
 CREATE TYPE "station_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
@@ -304,13 +306,13 @@ CREATE TABLE "attachments" (
 --> statement-breakpoint
 CREATE TABLE "audit_logs" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "audit_logs_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"action" varchar(100) NOT NULL,
+	"action" "audit_action" NOT NULL,
 	"table_name" varchar(100) NOT NULL,
 	"record_id" integer,
 	"old_values" jsonb,
 	"new_values" jsonb,
 	"metadata" jsonb,
-	"source" varchar(50),
+	"source" "audit_source",
 	"ip_address" varchar(60),
 	"user_agent" text,
 	"invoked_by" uuid,

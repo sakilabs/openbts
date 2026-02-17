@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import {
   submissions,
@@ -100,6 +101,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
       return updated;
     });
+
+    await createAuditLog(
+      {
+        action: "submissions.reject",
+        table_name: "submissions",
+        record_id: undefined,
+        old_values: null,
+        new_values: result,
+        metadata: { submission_id: id },
+      },
+      req,
+    );
 
     return res.send({ data: result });
   } catch (error) {

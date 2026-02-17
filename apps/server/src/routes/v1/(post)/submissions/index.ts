@@ -14,6 +14,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -192,6 +193,20 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       }
       return created;
     });
+
+    for (const submission of results) {
+      await createAuditLog(
+        {
+          action: "submissions.create",
+          table_name: "submissions",
+          record_id: undefined,
+          old_values: null,
+          new_values: submission,
+          metadata: { submission_id: submission.id },
+        },
+        req,
+      );
+    }
 
     return res.send({ data: results });
   } catch (error) {

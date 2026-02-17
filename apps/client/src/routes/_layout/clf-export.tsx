@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -27,7 +27,7 @@ import {
 import { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
 import { API_BASE } from "@/lib/api";
 import { cn, toggleValue } from "@/lib/utils";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import { EXTENDED_RAT_OPTIONS } from "@/features/shared/rat";
 import type { Operator } from "@/types/station";
 
@@ -79,6 +79,8 @@ function ClfExportPage() {
   });
 
   const uniqueBandValues = [...new Set(bands.map((b) => b.value))].sort((a, b) => a - b);
+  const sortedOperators = useMemo(() =>
+    operators.filter((op) => TOP4_MNCS.includes(op.mnc) || op.mnc === 26034).sort((a, b) => a.mnc - b.mnc), [operators]);
 
   const operatorChipsRef = useRef<HTMLDivElement>(null);
 
@@ -163,13 +165,13 @@ function ClfExportPage() {
               {(field) => (
                 <Combobox
                   multiple
-                  value={field.state.value.map((mnc) => operators.find((op) => op.mnc === mnc)).filter(Boolean) as Operator[]}
+                  value={field.state.value.map((mnc) => sortedOperators.find((op) => op.mnc === mnc)).filter(Boolean) as Operator[]}
                   onValueChange={(values) => field.handleChange(values.map((v) => v.mnc))}
-                  items={operators}
+                  items={sortedOperators}
                 >
                   <ComboboxChips ref={operatorChipsRef} className="min-h-10 max-h-24 overflow-y-auto text-base md:text-sm">
                     {field.state.value.map((mnc) => {
-                      const operator = operators.find((op) => op.mnc === mnc);
+                      const operator = sortedOperators.find((op) => op.mnc === mnc);
                       return operator ? (
                         <ComboboxChip key={mnc}>
                           <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(mnc) }} />
@@ -185,7 +187,7 @@ function ClfExportPage() {
                   <ComboboxContent anchor={operatorChipsRef}>
                     <ComboboxList>
                       <ComboboxEmpty>{t("common:placeholder.noOperatorsFound")}</ComboboxEmpty>
-                      {operators.map((operator) => (
+                      {sortedOperators.map((operator) => (
                         <ComboboxItem key={operator.mnc} value={operator}>
                           <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
                           <span>{operator.name}</span>

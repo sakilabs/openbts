@@ -307,7 +307,11 @@ export async function fetchRegionIds(): Promise<RegionIdMap> {
 }
 
 export async function fetchBandIds(): Promise<BandIdMap> {
-  const rows = await db.query.bands.findMany();
+  const rows = await db.query.bands.findMany({
+    where: {
+      variant: "commercial",
+    },
+  });
   const map: BandIdMap = new Map();
   for (const row of rows) {
     map.set(bandKeyId({ rat: row.rat, value: row.value ?? 0, duplex: row.duplex }), row.id);

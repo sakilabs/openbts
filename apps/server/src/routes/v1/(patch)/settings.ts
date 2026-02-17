@@ -2,7 +2,8 @@ import { z } from "zod/v4";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
-import { updateRuntimeSettings, type RuntimeSettings } from "../../../services/settings.service.js";
+import { getRuntimeSettings, updateRuntimeSettings, type RuntimeSettings } from "../../../services/settings.service.js";
+import { createAuditLog } from "../../../services/auditLog.service.js";
 import { ErrorResponse } from "../../../errors.js";
 
 type ReqBody = { Body: Partial<RuntimeSettings> };
@@ -34,7 +35,17 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<Response>>) {
   const patch = req.body;
   if (!patch || typeof patch !== "object") throw new ErrorResponse("BAD_REQUEST");
+  const oldSettings = getRuntimeSettings();
   const updated = await updateRuntimeSettings(patch);
+  await createAuditLog(
+    {
+      action: "settings.update",
+      table_name: "settings",
+      old_values: oldSettings,
+      new_values: updated,
+    },
+    req,
+  );
   res.send({ data: updated });
 }
 

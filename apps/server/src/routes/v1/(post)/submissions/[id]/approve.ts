@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../../utils/logger.js";
@@ -342,6 +343,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
     void rebuildStationsPermitsAssociations().catch((e) =>
       logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
+    );
+
+    await createAuditLog(
+      {
+        action: "submissions.approve",
+        table_name: "submissions",
+        record_id: undefined,
+        old_values: null,
+        new_values: result,
+        metadata: { submission_id: id },
+      },
+      req,
     );
 
     return res.send({ data: result });

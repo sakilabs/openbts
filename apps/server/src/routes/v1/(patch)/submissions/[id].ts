@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import {
   submissions,
@@ -32,6 +33,7 @@ const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_
 const cellInputSchema = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true })
   .extend({
+    operation: z.enum(["added", "updated", "removed"]).optional(),
     details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
   });
 
@@ -68,6 +70,17 @@ const schemaRoute = {
     }),
   },
 };
+
+function mapCellOperation(op: string): "add" | "update" | "delete" {
+  switch (op) {
+    case "updated":
+      return "update";
+    case "removed":
+      return "delete";
+    default:
+      return "add";
+  }
+}
 
 type ReqParams = { Params: { id: string } };
 type ReqBody = { Body: z.infer<typeof requestSchema> };
@@ -142,11 +155,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               ...cellData,
               submission_id: id,
               is_confirmed: false,
+              operation: mapCellOperation(cell.operation ?? "added"),
             })
             .returning();
           if (!base) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-          if (details && cell.operation !== "delete") {
+          if (details && cell.operation !== "removed") {
             switch (cell.rat) {
               case "GSM":
                 await tx.insert(proposedGSMCells).values({ ...(details as z.infer<typeof gsmInsertSchema>), proposed_cell_id: base.id });
@@ -186,6 +200,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
       return { ...updated, cells };
     });
+
+    await createAuditLog(
+      {
+        action: "submissions.update",
+        table_name: "submissions",
+        record_id: undefined,
+        old_values: submission,
+        new_values: result,
+        metadata: { submission_id: id },
+      },
+      req,
+    );
 
     return res.send({ data: result });
   } catch (error) {

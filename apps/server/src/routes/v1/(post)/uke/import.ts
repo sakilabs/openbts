@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import { startImportJob } from "../../../../services/ukeImportJob.service.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -42,6 +43,15 @@ type ResponseData = z.infer<typeof importJobStatusSchema>;
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const status = await startImportJob(req.body);
+  await createAuditLog(
+    {
+      action: "uke_import.start",
+      table_name: "uke_import",
+      source: "import",
+      metadata: { config: req.body, status: status.state },
+    },
+    req,
+  );
   res.send({ data: status });
 }
 

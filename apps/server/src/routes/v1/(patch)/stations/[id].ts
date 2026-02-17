@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { stations } from "@openbts/drizzle";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -53,6 +54,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       .where(eq(stations.id, station_id))
       .returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+    await createAuditLog(
+      {
+        action: "stations.update",
+        table_name: "stations",
+        record_id: station_id,
+        old_values: station,
+        new_values: updated,
+      },
+      req,
+    );
 
     return res.send({ data: updated });
   } catch (error) {

@@ -22,7 +22,7 @@ import {
   ukeOperators,
   ukeImportMetadata,
 } from "./bts.ts";
-import { accounts, apikeys, attachments, passkeys, stationComments, twoFactors, userLists, users } from "./auth.ts";
+import { accounts, apikeys, attachments, auditLogs, passkeys, stationComments, twoFactors, userLists, users } from "./auth.ts";
 import {
   submissions,
   proposedCells,
@@ -58,6 +58,7 @@ export const relations = defineRelations(
     accounts,
     apikeys,
     attachments,
+    auditLogs,
     passkeys,
     stationComments,
     twoFactors,
@@ -186,6 +187,12 @@ export const relations = defineRelations(
         to: helpers.stations.id,
       }),
     },
+    auditLogs: {
+      user: helpers.one.users({
+        from: helpers.auditLogs.invoked_by,
+        to: helpers.users.id,
+      }),
+    },
     users: {
       accounts: helpers.many.accounts(),
       comments: helpers.many.stationComments(),
@@ -198,6 +205,7 @@ export const relations = defineRelations(
         to: helpers.attachments.author_id,
         alias: "author",
       }),
+      auditLogs: helpers.many.auditLogs(),
       submittedSubmissions: helpers.many.submissions({
         from: helpers.users.id,
         to: helpers.submissions.submitter_id,

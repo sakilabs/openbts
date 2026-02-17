@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 import { and, or, inArray, sql } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
-import { type cells, locations, lteCells, nrCells, regions, stations } from "@openbts/drizzle";
+import { bands, type cells, locations, lteCells, nrCells, regions, stations } from "@openbts/drizzle";
 import { convertToCLF, sortCLFLines, type ClfFormat, type CellExportData } from "../../../../utils/clf-export.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -109,6 +109,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       const ratConditions = [];
       const standardRats = rat.filter((r) => r !== "IOT") as ("GSM" | "UMTS" | "LTE" | "NR")[];
       if (standardRats.length > 0) ratConditions.push(inArray(fields.rat, standardRats));
+
       if (rat.includes("IOT")) {
         ratConditions.push(
           sql`EXISTS (
@@ -123,11 +124,22 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
 					)`,
         );
       }
-      if (ratConditions.length > 0) {
-        conditions.push(or(...ratConditions));
-      }
+      if (ratConditions.length > 0) conditions.push(or(...ratConditions));
     }
-    if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
+
+    if (bandIds && bandIds.length > 0) {
+      conditions.push(sql`
+        EXISTS (
+          SELECT 1 FROM ${bands}
+          WHERE ${bands.id} = ${fields.band_id}
+          AND ${bands.value} IN (${sql.join(
+            bandIds.map((id) => sql`${id}`),
+            sql`,`,
+          )})
+          AND ${bands.variant} = 'commercial'
+        )
+      `);
+    }
 
     return conditions;
   };
@@ -146,7 +158,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
           location: { columns: { point: false } },
         },
       },
-      band: true,
+      band: {
+        columns: {
+          value: true,
+          name: true,
+        },
+        where: {
+          variant: "commercial",
+        },
+      },
       gsm: true,
       umts: true,
       lte: true,
@@ -170,8 +190,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       gnbid: row.nr?.gnbid,
       nci: row.nr?.nci,
       rat: row.rat as "GSM" | "CDMA" | "UMTS" | "LTE" | "NR",
-      band_value: row.band.value,
-      band_name: row.band.name,
+      band_value: row.band?.value,
+      band_name: row.band?.name as string,
       station_id: row.station.station_id,
       operator_mnc: row.station.operator?.mnc,
       latitude: row.station.location?.latitude,

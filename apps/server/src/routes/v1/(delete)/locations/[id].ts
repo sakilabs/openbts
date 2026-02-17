@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -27,6 +28,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 
   try {
     await db.delete(locations).where(eq(locations.id, id));
+    await createAuditLog({ action: "locations.delete", table_name: "locations", record_id: id, old_values: location, new_values: null }, req);
   } catch {
     throw new ErrorResponse("FAILED_TO_DELETE");
   }

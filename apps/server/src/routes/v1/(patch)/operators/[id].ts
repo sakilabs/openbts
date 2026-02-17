@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { operators } from "@openbts/drizzle";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -41,6 +42,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   try {
     const [updated] = await db.update(operators).set(req.body).where(eq(operators.id, operator_id)).returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+    await createAuditLog(
+      { action: "operators.update", table_name: "operators", record_id: operator_id, old_values: operator, new_values: updated },
+      req,
+    );
 
     return res.send({ data: updated });
   } catch (error) {
