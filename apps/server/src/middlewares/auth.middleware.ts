@@ -19,7 +19,7 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
   if (isPublicByStatic && !settings.enforceAuthForAllRoutes) return;
 
   const { headers } = req;
-  const authHeader = headers.authorization;
+  const authHeader = headers["X-API-Key"];
   if (!authHeader) {
     const user = await getCurrentUser(req);
     const allowGuest = route?.config?.allowGuestAccess && !settings.enforceAuthForAllRoutes;
@@ -29,7 +29,7 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
   }
 
   if (authHeader) {
-    const apiKey = authHeader.split(" ")[1];
+    const apiKey = String(authHeader).trim();
     if (!apiKey) throw new ErrorResponse("UNAUTHORIZED");
 
     let routePermissions: Record<string, string[]> | undefined;

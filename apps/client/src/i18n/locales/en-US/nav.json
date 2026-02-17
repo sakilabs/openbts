@@ -18,7 +18,8 @@
     "submissions": "Submissions",
     "locations": "Locations",
     "settings": "Settings",
-    "ukeImport": "UKE Import"
+    "ukeImport": "UKE Import",
+    "auditLogs": "Audit Logs"
   },
   "secondary": {
     "settings": "Settings",

@@ -1,5 +1,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpDownIcon, Logout02Icon } from "@hugeicons/core-free-icons";
+import { Logout02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { ElipsisIcon } from "@/components/ui/elipsis-icon";
+import { Link } from "@tanstack/react-router";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -37,7 +39,7 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs">{user.email}</span>
             </div>
-            <HugeiconsIcon icon={ArrowUpDownIcon} className="ml-auto size-4" />
+            <ElipsisIcon className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-(--anchor-width) min-w-56 rounded-lg" side={isMobile ? "bottom" : "right"} align="end" sideOffset={4}>
             <DropdownMenuGroup>
@@ -53,6 +55,10 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem render={<Link to="/account/settings" />}>
+                <HugeiconsIcon icon={Settings02Icon} className="size-4" />
+                {t("items.accountSettings")}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   await authClient.signOut({

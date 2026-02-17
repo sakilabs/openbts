@@ -22,7 +22,7 @@ function MySubmissionsPage() {
               <h1 className="text-xl font-bold tracking-tight">{t("userPage.title")}</h1>
               <p className="text-muted-foreground text-sm">{t("userPage.description")}</p>
             </div>
-            <Button size="sm" render={<Link to="/submission" />}>
+            <Button size="sm" nativeButton={false} render={<Link to="/submission" />}>
               <HugeiconsIcon icon={Add01Icon} className="size-4" />
               {t("submitNew")}
             </Button>

@@ -251,7 +251,7 @@ function AdminSettingsPage() {
               {t("common:actions.revert", "Reset")}
             </Button>
             <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
-              {mutation.isPending ? <Spinner className="size-4 mr-2" /> : <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 mr-2" />}
+              {mutation.isPending && <Spinner className="size-4 mr-2" />}
               {t("common:actions.saveChanges")}
             </Button>
           </div>

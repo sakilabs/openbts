@@ -80,5 +80,42 @@
     },
     "startedAt": "Rozpoczęto",
     "finishedAt": "Zakończono"
+  },
+  "auditLogs": {
+    "title": "Logi audytu",
+    "subtitle": "Przeglądaj aktywność systemu i zmiany",
+    "columns": {
+      "timestamp": "Data utworzenia",
+      "actor": "Użytkownik",
+      "action": "Akcja",
+      "entity": "Tabela",
+      "record": "Rekord",
+      "source": "Źródło"
+    },
+    "actor": {
+      "system": "System"
+    },
+    "filters": {
+      "allEntities": "Wszystkie tabele",
+      "allActions": "Wszystkie akcje",
+      "dateFrom": "Od",
+      "dateTo": "Do"
+    },
+    "empty": {
+      "title": "Nie znaleziono logów",
+      "subtitle": "Spróbuj zmienić filtry"
+    },
+    "detail": {
+      "title": "Szczegóły logu",
+      "overview": "Informacje",
+      "changes": "Zmiany",
+      "field": "Pole",
+      "oldValues": "Stara wartość",
+      "newValues": "Nowa wartość",
+      "noChanges": "Brak zapisanych zmian",
+      "metadata": "Metadane",
+      "ipAddress": "Adres IP",
+      "userAgent": "Przeglądarka"
+    }
   }
 }

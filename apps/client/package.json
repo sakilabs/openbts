@@ -27,6 +27,7 @@
     "better-auth": "1.4.18",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "country-flag-icons": "^1.6.13",
     "i18next": "25.8.10",
     "input-otp": "1.4.2",
     "maplibre-gl": "5.18.0",

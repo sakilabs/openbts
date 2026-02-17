@@ -66,7 +66,7 @@ export function cellsToPayloads(cells: ProposedCellForm[]): CellPayload[] {
   return cells.map((cell) => toCellPayload(cell, "added"));
 }
 
-export type CellDiffStatus = "added" | "modified" | "unchanged";
+export type CellDiffStatus = "added" | "modified" | "unchanged" | "deleted";
 
 export function buildOriginalCellsMap(originalCells: ProposedCellForm[]): Map<number, ProposedCellForm> {
   const map = new Map<number, ProposedCellForm>();

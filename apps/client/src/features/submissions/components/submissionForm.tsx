@@ -255,11 +255,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
     form.setFieldValue("action", editSubmission.type === "delete" ? "delete" : "update");
     form.setFieldValue("submitterNote", editSubmission.submitter_note ?? "");
 
-    if (!isNew && editSubmission.station) {
-      fetchStationForSubmission(editSubmission.station.id).then((station) => {
-        if (!ignore) loadStation(station);
-      });
-    } else if (isNew && editSubmission.proposedStation) {
+    if (isNew && editSubmission.proposedStation) {
       form.setFieldValue("newStation", {
         station_id: editSubmission.proposedStation.station_id ?? "",
         operator_id: editSubmission.proposedStation.operator_id,
@@ -277,7 +273,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
       });
     }
 
-    const cells: ProposedCellForm[] = editSubmission.cells.map((cell) => ({
+    const proposedCells: ProposedCellForm[] = editSubmission.cells.map((cell) => ({
       id: generateCellId(),
       existingCellId: cell.target_cell_id ?? undefined,
       rat: cell.rat as RatType,
@@ -286,14 +282,51 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
       is_confirmed: cell.is_confirmed,
       details: cell.details ?? {},
     }));
-    form.setFieldValue("cells", cells);
-    form.setFieldValue("originalCells", structuredClone(cells));
-    form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
+
+    const deletedTargetIds = new Set(
+      editSubmission.cells.filter((c) => c.operation === "delete" && c.target_cell_id !== null).map((c) => c.target_cell_id),
+    );
+    const updatedTargetIds = new Set(
+      editSubmission.cells.filter((c) => c.operation === "update" && c.target_cell_id !== null).map((c) => c.target_cell_id),
+    );
+
+    if (!isNew && editSubmission.station) {
+      fetchStationForSubmission(editSubmission.station.id).then((station) => {
+        if (ignore) return;
+        form.setFieldValue("selectedStation", station);
+        const originals = stationCellsToForm(station);
+        form.setFieldValue("originalCells", originals);
+
+        // Merge: start with unchanged originals (not updated/deleted), then add proposed changes (added + updated)
+        const unchangedCells = originals.filter(
+          (c) => c.existingCellId !== undefined && !updatedTargetIds.has(c.existingCellId) && !deletedTargetIds.has(c.existingCellId),
+        );
+        const changedCells = proposedCells.filter((c) => c.existingCellId === undefined || updatedTargetIds.has(c.existingCellId));
+        const mergedCells = [...unchangedCells, ...changedCells];
+
+        form.setFieldValue("cells", mergedCells);
+        form.setFieldValue("selectedRats", [...new Set(mergedCells.map((c) => c.rat))]);
+
+        if (station.location && !editSubmission.proposedLocation) {
+          form.setFieldValue("location", {
+            latitude: station.location.latitude,
+            longitude: station.location.longitude,
+            city: station.location.city ?? "",
+            address: station.location.address ?? "",
+            region_id: station.location.region?.id ?? null,
+          });
+        }
+      });
+    } else {
+      form.setFieldValue("cells", proposedCells);
+      if (isNew) form.setFieldValue("originalCells", []);
+      form.setFieldValue("selectedRats", [...new Set(proposedCells.map((c) => c.rat))]);
+    }
 
     return () => {
       ignore = true;
     };
-  }, [editSubmission, form, loadStation]);
+  }, [editSubmission, form]);
 
   const handleRatsChange = (rats: RatType[]) => {
     form.setFieldValue("selectedRats", rats);

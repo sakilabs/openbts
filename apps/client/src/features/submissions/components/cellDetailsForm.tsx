@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { RAT_ICONS } from "@/features/shared/rat";
 import { bandsQueryOptions } from "@/features/shared/queries";
@@ -58,9 +59,16 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
     return map;
   }, [allBands]);
 
+  const mergedCells = useMemo(() => {
+    if (isNewStation) return cells;
+    const currentExistingIds = new Set(cells.filter((c) => c.existingCellId !== undefined).map((c) => c.existingCellId));
+    const deletedCells = originalCells.filter((c) => c.rat === rat && c.existingCellId !== undefined && !currentExistingIds.has(c.existingCellId));
+    return [...cells, ...deletedCells];
+  }, [cells, originalCells, isNewStation, rat]);
+
   const sortedCells = useMemo(() => {
     const clidKey = rat === "GSM" || rat === "UMTS" ? "cid" : "clid";
-    return [...cells].sort((a, b) => {
+    return [...mergedCells].sort((a, b) => {
       const bandA = a.band_id !== null ? (bandValueMap.get(a.band_id) ?? 0) : 0;
       const bandB = b.band_id !== null ? (bandValueMap.get(b.band_id) ?? 0) : 0;
       if (bandA !== bandB) return bandA - bandB;
@@ -70,7 +78,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
       const clidB = (e[clidKey] as number) ?? 0;
       return clidA - clidB;
     });
-  }, [cells, bandValueMap, rat]);
+  }, [mergedCells, bandValueMap, rat]);
 
   const originalsMap = useMemo(() => buildOriginalCellsMap(originalCells), [originalCells]);
 
@@ -103,6 +111,10 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
       rat,
       cells.filter((cell) => cell.id !== id),
     );
+  };
+
+  const handleRestoreCell = (cell: ProposedCellForm) => {
+    onCellsChange(rat, [...cells, cell]);
   };
 
   const handleCellUpdate = useCallback(
@@ -191,7 +203,9 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
                 </thead>
                 <tbody>
                   {sortedCells.map((cell) => {
-                    const diffStatus: CellDiffStatus = isNewStation ? "added" : getCellDiffStatus(cell, originalsMap);
+                    const isDeleted =
+                      !isNewStation && cell.existingCellId !== undefined && !cells.some((c) => c.existingCellId === cell.existingCellId);
+                    const diffStatus: CellDiffStatus = isDeleted ? "deleted" : isNewStation ? "added" : getCellDiffStatus(cell, originalsMap);
 
                     return (
                       <CellRow
@@ -205,6 +219,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
                         onDetailsChange={handleDetailsChange}
                         onNotesChange={handleNotesChange}
                         onRemove={handleRemoveCell}
+                        onRestore={isDeleted ? () => handleRestoreCell(cell) : undefined}
                       />
                     );
                   })}
@@ -228,10 +243,22 @@ type CellRowProps = {
   onDetailsChange: (id: string, field: string, value: number | boolean | undefined) => void;
   onNotesChange: (id: string, notes: string) => void;
   onRemove: (id: string) => void;
+  onRestore?: () => void;
 };
 
-const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onUpdate, onDetailsChange, onNotesChange, onRemove }: CellRowProps) {
-  const { t } = useTranslation("submissions");
+const CellRow = memo(function CellRow({
+  rat,
+  cell,
+  diffStatus,
+  error,
+  bands,
+  onUpdate,
+  onDetailsChange,
+  onNotesChange,
+  onRemove,
+  onRestore,
+}: CellRowProps) {
+  const { t } = useTranslation(["submissions", "common"]);
 
   const { uniqueBandValues, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, bandsForRat } = useBandSelection(
     bands,
@@ -257,13 +284,21 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
   const firstCellBorderClass = {
     added: "border-l-2 border-l-green-500",
     modified: "border-l-2 border-l-amber-500",
+    deleted: "border-l-2 border-l-red-500",
     unchanged: "",
   }[diffStatus];
 
+  const isDeleted = diffStatus === "deleted";
+  const deletedCellClass = isDeleted ? "opacity-50" : "";
+
   return (
-    <tr className="border-b last:border-0 hover:bg-muted/20">
-      <td className={cn("px-3 py-1", firstCellBorderClass)}>
-        <Select value={bandValue?.toString() ?? ""} onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}>
+    <tr className={cn("border-b last:border-0 hover:bg-muted/20", isDeleted && "bg-muted/10")}>
+      <td className={cn("px-3 py-1", firstCellBorderClass, deletedCellClass)}>
+        <Select
+          disabled={diffStatus === "deleted"}
+          value={bandValue?.toString() ?? ""}
+          onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}
+        >
           <SelectTrigger className={`h-7 w-24 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
             <SelectValue>{bandValue ? `${bandValue} MHz` : t("common:placeholder.selectBand")}</SelectValue>
           </SelectTrigger>
@@ -277,9 +312,13 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
         </Select>
       </td>
       {rat !== "GSM" && (
-        <td className="px-3 py-1">
+        <td className={cn("px-3 py-1", deletedCellClass)}>
           {hasDuplexChoice ? (
-            <Select value={duplex ?? "_none"} onValueChange={(value) => handleDuplexChange(value === "_none" ? null : value)}>
+            <Select
+              disabled={diffStatus === "deleted"}
+              value={duplex ?? "_none"}
+              onValueChange={(value) => handleDuplexChange(value === "_none" ? null : value)}
+            >
               <SelectTrigger className="h-7 w-20 text-sm">
                 <SelectValue>{duplex ?? "-"}</SelectValue>
               </SelectTrigger>
@@ -304,27 +343,42 @@ const CellRow = memo(function CellRow({ rat, cell, diffStatus, error, bands, onU
         bandValue={bandValue}
         details={cell.details as Record<string, unknown>}
         detailErrors={error?.details}
+        disabled={diffStatus === "deleted"}
         onDetailChange={(field, value) => onDetailsChange(cell.id, field, value)}
       />
-      <td className="px-3 py-1">
+      <td className={cn("px-3 py-1", deletedCellClass)}>
         <Input
           type="text"
           placeholder={t("stations:cells.notesPlaceholder")}
           value={cell.notes ?? ""}
           onChange={(e) => onNotesChange(cell.id, e.target.value)}
           className="h-7 w-28 text-sm"
+          disabled={isDeleted}
         />
       </td>
       <td className="px-3 py-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onRemove(cell.id)}
-          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-        >
-          <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              onRestore ? (
+                <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-green-600 hover:text-green-500">
+                  <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemove(cell.id)}
+                  className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                >
+                  <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                </Button>
+              )
+            }
+          />
+          <TooltipContent>{onRestore ? t("common:actions.restore") : t("common:actions.delete")}</TooltipContent>
+        </Tooltip>
       </td>
     </tr>
   );

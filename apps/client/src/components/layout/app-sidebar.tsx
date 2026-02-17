@@ -73,6 +73,7 @@ const adminNavConfig = [
       { titleKey: "items.locations", url: "/admin/locations" },
       { titleKey: "items.submissions", url: "/admin/submissions" },
       { titleKey: "items.ukeImport", url: "/admin/uke-import" },
+      { titleKey: "items.auditLogs", url: "/admin/audit-logs" },
       { titleKey: "items.settings", url: "/admin/settings" },
     ],
   },
@@ -84,32 +85,32 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const { data: session } = authClient.useSession();
   const { data: settings } = useSettings();
 
-  const mapConfig = (config: typeof navMainConfig) =>
-    config.map((section) => ({
-      title: t(section.titleKey),
-      key: section.key,
-      url: section.url,
-      icon: section.icon,
-      items: section.items.map((item) => ({
-        title: t(item.titleKey),
-        url: item.url,
+  const mapConfig = useMemo(
+    () => (config: typeof navMainConfig) =>
+      config.map((section) => ({
+        title: t(section.titleKey),
+        key: section.key,
+        url: section.url,
+        icon: section.icon,
+        items: section.items.map((item) => ({
+          title: t(item.titleKey),
+          url: item.url,
+        })),
       })),
-    }));
+    [t],
+  );
 
-  const navItems = useMemo(() => mapConfig(navMainConfig), [t]);
+  const navItems = useMemo(() => mapConfig(navMainConfig), [mapConfig]);
   const showAuth = !!(session?.user && settings?.submissionsEnabled);
-  const authNavItems = useMemo(() => (showAuth ? mapConfig(authNavConfig) : []), [t, showAuth]);
+  const authNavItems = useMemo(() => (showAuth ? mapConfig(authNavConfig) : []), [mapConfig, showAuth]);
   const userRole = session?.user?.role as string | undefined;
   const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
-  const adminNavItems = useMemo(() => (isAdmin ? mapConfig(adminNavConfig) : []), [t, isAdmin]);
+  const adminNavItems = useMemo(() => (isAdmin ? mapConfig(adminNavConfig) : []), [mapConfig, isAdmin]);
 
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(location.pathname.startsWith("/account/") || location.pathname === "/preferences");
 
-  const settingsSubItems = [
-    { title: t("items.preferences"), url: "/preferences" },
-    ...(session?.user ? [{ title: t("items.accountSettings"), url: "/account/settings" }] : []),
-  ];
+  const settingsSubItems = [{ title: t("items.preferences"), url: "/preferences" }];
 
   return (
     <Sidebar variant="inset" {...props}>

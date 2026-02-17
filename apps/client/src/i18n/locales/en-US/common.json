@@ -35,7 +35,8 @@
     "share": "Share",
     "view": "View",
     "update": "Update",
-    "updating": "Updating..."
+    "updating": "Updating...",
+    "restore": "Restore"
   },
   "labels": {
     "id": "ID",

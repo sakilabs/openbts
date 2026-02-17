@@ -80,5 +80,42 @@
     },
     "startedAt": "Started at",
     "finishedAt": "Finished at"
+  },
+  "auditLogs": {
+    "title": "Audit Logs",
+    "subtitle": "View system activity and changes",
+    "columns": {
+      "timestamp": "Timestamp",
+      "actor": "Actor",
+      "action": "Action",
+      "entity": "Table",
+      "record": "Record",
+      "source": "Source"
+    },
+    "actor": {
+      "system": "System"
+    },
+    "filters": {
+      "allEntities": "All Tables",
+      "allActions": "All Actions",
+      "dateFrom": "From",
+      "dateTo": "To"
+    },
+    "empty": {
+      "title": "No logs found",
+      "subtitle": "Try adjusting your filters"
+    },
+    "detail": {
+      "title": "Audit Log Detail",
+      "overview": "Overview",
+      "changes": "Changes",
+      "field": "Field",
+      "oldValues": "Old Value",
+      "newValues": "New Value",
+      "noChanges": "No changes recorded",
+      "metadata": "Metadata",
+      "ipAddress": "IP Address",
+      "userAgent": "User Agent"
+    }
   }
 }

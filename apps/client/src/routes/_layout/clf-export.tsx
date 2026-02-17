@@ -79,8 +79,7 @@ function ClfExportPage() {
   });
 
   const uniqueBandValues = [...new Set(bands.map((b) => b.value))].sort((a, b) => a - b);
-  const sortedOperators = useMemo(() =>
-    operators.filter((op) => TOP4_MNCS.includes(op.mnc) || op.mnc === 26034).sort((a, b) => a.mnc - b.mnc), [operators]);
+  const sortedOperators = useMemo(() => operators.filter((op) => TOP4_MNCS.includes(op.mnc)), [operators]);
 
   const operatorChipsRef = useRef<HTMLDivElement>(null);
 

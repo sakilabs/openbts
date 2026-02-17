@@ -4,7 +4,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
 import db from "../../../database/psql.js";
-import { ukeImportMetadata, stations, cells, ukePermits, ukeLocations, locations } from "@openbts/drizzle";
+import { ukeImportMetadata, stations, cells, ukePermits, ukeLocations, locations, ukeRadiolines } from "@openbts/drizzle";
 
 interface Response {
   lastUpdated: {
@@ -18,6 +18,7 @@ interface Response {
     cells: number;
     uke_locations: number;
     uke_permits: number;
+    uke_radiolines?: number;
   };
 }
 
@@ -36,6 +37,7 @@ const schemaRoute = {
           cells: z.number(),
           uke_locations: z.number(),
           uke_permits: z.number(),
+          uke_radiolines: z.number().optional(),
         }),
       }),
     }),
@@ -60,6 +62,7 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
     db.select({ value: count() }).from(cells),
     db.select({ value: count() }).from(ukeLocations),
     db.select({ value: count() }).from(ukePermits),
+    db.select({ value: count() }).from(ukeRadiolines),
   ]);
 
   const lastUpdated: Response["lastUpdated"] = {
@@ -77,7 +80,7 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
     else if (row.import_type === "radiolines") lastUpdated.radiolines = row.last_import_date.toISOString();
   }
 
-  const [locationsCount, stationsCount, cellsCount, ukeLocationsCount, ukePermitsCount] = countResults;
+  const [locationsCount, stationsCount, cellsCount, ukeLocationsCount, ukePermitsCount, ukeRadiolinesCount] = countResults;
 
   res.send({
     data: {
@@ -88,6 +91,7 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
         cells: cellsCount[0]?.value ?? 0,
         uke_locations: ukeLocationsCount[0]?.value ?? 0,
         uke_permits: ukePermitsCount[0]?.value ?? 0,
+        uke_radiolines: ukeRadiolinesCount[0]?.value ?? 0,
       },
     },
   });

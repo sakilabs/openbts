@@ -127,7 +127,7 @@ export function MySubmissions() {
               <div className="ml-auto flex items-center gap-3">
                 {submission.status === "pending" && (
                   <div className="flex items-center gap-1">
-                    <Button size="icon-sm" variant="ghost" render={<Link to="/submission" search={{ edit: submission.id }} />}>
+                    <Button size="icon-sm" variant="ghost" nativeButton={false} render={<Link to="/submission" search={{ edit: submission.id }} />}>
                       <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
                     </Button>
                     <AlertDialog>

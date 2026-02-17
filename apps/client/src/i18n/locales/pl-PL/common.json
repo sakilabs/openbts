@@ -35,7 +35,8 @@
     "share": "Udostępnij",
     "view": "Zobacz",
     "update": "Zaktualizuj",
-    "updating": "Aktualizowanie..."
+    "updating": "Aktualizowanie...",
+    "restore": "Przywróć"
   },
   "labels": {
     "id": "ID",

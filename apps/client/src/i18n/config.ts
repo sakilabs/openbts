@@ -52,8 +52,8 @@ export const resources = {
 } as const;
 
 export const supportedLanguages = [
-  { code: "en-US", name: "English", nativeName: "English" },
-  { code: "pl-PL", name: "Polish", nativeName: "Polski" },
+  { code: "en-US", name: "English", nativeName: "English", countryCode: "US" },
+  { code: "pl-PL", name: "Polish", nativeName: "Polski", countryCode: "PL" },
 ] as const;
 
 export type SupportedLanguage = (typeof supportedLanguages)[number]["code"];
