@@ -154,7 +154,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
           <span className="font-bold text-sm tracking-tight truncate">{location.city || location.address || `#${location.id}`}</span>
           <div className="w-px h-3.5 bg-border/60 shrink-0" />
           <span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20">
-            #{location.id}
+            {location.id}
           </span>
         </div>
 

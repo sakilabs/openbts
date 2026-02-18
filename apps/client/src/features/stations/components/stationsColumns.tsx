@@ -74,7 +74,7 @@ export function createStationsColumns({ t, locale, isSearchActive = false, sort,
       accessorKey: "station_id",
       header: () => <SortableHeader label={t("labels.stationId")} column="station_id" sort={sort} sortBy={sortBy} onSort={onSort} />,
       size: 80,
-      cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">#{getValue<string>()}</span>,
+      cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">{getValue<string>()}</span>,
     },
     {
       accessorKey: "operator",

@@ -48,7 +48,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
       accessorKey: "id",
       header: () => <SortableHeader label={t("common:labels.id")} column="id" sort={sort} sortBy={sortBy} onSort={onSort} />,
       size: 70,
-      cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">#{getValue<number>()}</span>,
+      cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">{getValue<number>()}</span>,
     },
     {
       accessorKey: "city",

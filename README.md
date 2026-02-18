@@ -50,7 +50,7 @@ Before running the server, apply the database schema:
 
 ```bash
 cd packages/drizzle
-export DATABASE_URL="postgres://user:password@localhost:5432/openbts"
+export DATABASE_URL="postgres://user:password@localhost:6432/openbts"
 bun run db:migrate
 ```
 

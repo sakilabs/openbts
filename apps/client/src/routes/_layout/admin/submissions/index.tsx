@@ -74,7 +74,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => {
           const id = getValue();
           const lastPart = id.slice(-8);
-          return <span className="font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors">#{lastPart}</span>;
+          return <span className="font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors">{lastPart}</span>;
         },
       }),
       columnHelper.accessor("type", {

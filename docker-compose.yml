@@ -33,7 +33,7 @@ services:
       - BASE_URL=http://localhost:3030
       # App configuration
       - APP_NAME=OpenBTS
-      - WORKERS=4
+      - WORKERS=4 # Number of server workers, since javascript is single-threaded, this will improve performance of the server
       # AXIOM HQ logging
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts
