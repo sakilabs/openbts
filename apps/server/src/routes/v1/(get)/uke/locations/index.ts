@@ -252,7 +252,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         },
         limit,
         offset,
-        orderBy: { id: "desc" },
+        orderBy: { updatedAt: "desc" },
       }),
     ]);
 
