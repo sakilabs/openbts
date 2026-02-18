@@ -20,7 +20,7 @@ const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: tru
 const permitResponseSchema = ukePermitsSchema.extend({
   band: bandsSchema.nullable(),
   operator: operatorsSchema.nullable(),
-  sectors: z.array(sectorsSchema),
+  sectors: z.array(sectorsSchema).optional(),
 });
 
 const schemaRoute = {

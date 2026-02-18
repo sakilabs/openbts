@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
-import { ukePermits, bands, operators } from "@openbts/drizzle";
+import { ukePermits, bands, operators, ukePermitSectors } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
@@ -13,6 +13,7 @@ const permitsSchema = createSelectSchema(ukePermits);
 const bandsSchema = createSelectSchema(bands);
 const ukePermitsSchema = createSelectSchema(ukePermits);
 const operatorsSchema = createSelectSchema(operators);
+const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 type Permit = z.infer<typeof ukePermitsSchema> & {
   band: z.infer<typeof bandsSchema>;
   operator: z.infer<typeof operatorsSchema>;
@@ -28,6 +29,7 @@ const schemaRoute = {
       data: permitsSchema.extend({
         band: bandsSchema,
         operator: operatorsSchema,
+        sectors: z.array(sectorsSchema).optional(),
       }),
     }),
   },
@@ -55,6 +57,11 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
           with: {
             band: true,
             operator: true,
+            sectors: {
+              columns: {
+                permit_id: false,
+              },
+            },
           },
         },
       },

@@ -24,7 +24,7 @@ const schemaRoute = {
         band: bandsSchema,
         operator: operatorsSchema,
         location: ukeLocationsSchema,
-        sectors: z.array(sectorsSchema),
+        sectors: z.array(sectorsSchema).optional(),
       }),
     }),
   },
