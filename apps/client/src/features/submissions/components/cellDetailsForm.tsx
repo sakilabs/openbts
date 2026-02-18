@@ -2,7 +2,7 @@ import { useMemo, useCallback, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Delete02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Delete02Icon, ArrowDown01Icon, DeletePutBackIcon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -361,8 +361,8 @@ const CellRow = memo(function CellRow({
           <TooltipTrigger
             render={
               onRestore ? (
-                <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-green-600 hover:text-green-500">
-                  <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
+                <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-yellow-600 hover:text-yellow-500">
+                  <HugeiconsIcon icon={DeletePutBackIcon} className="size-3.5" />
                 </Button>
               ) : (
                 <Button
