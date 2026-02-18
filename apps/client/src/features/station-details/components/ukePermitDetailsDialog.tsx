@@ -63,6 +63,8 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
     return groupPermitsByRat(station.permits);
   }, [station]);
 
+  const hasDeviceRegistryData = useMemo(() => station?.permits.some((p) => p.source === "device_registry") ?? false, [station]);
+
   if (!station) return null;
 
   const operatorColor = station.operator?.mnc ? getOperatorColor(station.operator.mnc) : "#3b82f6";
@@ -200,6 +202,11 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                             <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                               {t("permits.decisionNumber")}
                             </th>
+                            {hasDeviceRegistryData && (
+                              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                {t("permits.sectors")}
+                              </th>
+                            )}
                             <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                               {t("permits.expiryDate")}
                             </th>
@@ -249,6 +256,31 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                                     </Tooltip>
                                   </div>
                                 </td>
+                                {hasDeviceRegistryData && (
+                                  <td className="px-4 py-2.5">
+                                    {permit.sectors && permit.sectors.length > 0 ? (
+                                      <div className="flex flex-col gap-1">
+                                        {permit.sectors.map((sector) => (
+                                          <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
+                                            <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
+                                            <span className="text-muted-foreground">/</span>
+                                            <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
+                                            {sector.antenna_type && (
+                                              <Tooltip>
+                                                <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                                  {t(`permits.antennaType.${sector.antenna_type}Short`)}
+                                                </TooltipTrigger>
+                                                <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
+                                              </Tooltip>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      "-"
+                                    )}
+                                  </td>
+                                )}
                                 <td className="px-4 py-2.5">
                                   {isExpired ? (
                                     <div className="flex items-center gap-2">

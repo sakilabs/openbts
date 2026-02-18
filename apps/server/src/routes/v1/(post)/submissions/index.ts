@@ -125,7 +125,7 @@ async function processSubmission(
     .returning();
   if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
 
-  if (stationData) await tx.insert(proposedStations).values({ ...stationData, submission_id: submission.id , status: "pending", is_confirmed: false });
+  if (stationData) await tx.insert(proposedStations).values({ ...stationData, submission_id: submission.id, status: "pending", is_confirmed: false });
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
   if (proposedCellsInput && proposedCellsInput.length > 0) {

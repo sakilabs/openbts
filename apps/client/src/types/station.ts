@@ -195,6 +195,13 @@ export type UkeLocation = {
   createdAt: string;
 };
 
+export type UkePermitSector = {
+  id: number;
+  azimuth: number | null;
+  elevation: number | null;
+  antenna_type: "indoor" | "outdoor" | null;
+};
+
 export type UkePermit = {
   id: number;
   station_id: string;
@@ -204,6 +211,8 @@ export type UkePermit = {
   decision_type: "zmP" | "P";
   expiry_date: string;
   band_id: number;
+  source?: "permits" | "device_registry";
+  sectors?: UkePermitSector[];
   updatedAt: string;
   createdAt: string;
   band?: Band | null;

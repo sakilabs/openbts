@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { ukePermits, bands, ukeLocations, operators } from "@openbts/drizzle";
+import { ukePermits, ukePermitSectors, bands, ukeLocations, operators } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -13,6 +13,7 @@ const permitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, opera
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
 const ukeLocationsSchema = createSelectSchema(ukeLocations);
+const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 const schemaRoute = {
   params: z.object({
     id: z.coerce.number<number>(),
@@ -23,6 +24,7 @@ const schemaRoute = {
         band: bandsSchema,
         operator: operatorsSchema,
         location: ukeLocationsSchema,
+        sectors: z.array(sectorsSchema),
       }),
     }),
   },
@@ -31,6 +33,7 @@ type Permit = z.infer<typeof permitsSchema> & {
   band: z.infer<typeof bandsSchema>;
   operator: z.infer<typeof operatorsSchema>;
   location: z.infer<typeof ukeLocationsSchema>;
+  sectors: z.infer<typeof sectorsSchema>[];
 };
 
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<Permit>>) {
@@ -47,6 +50,11 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
         band: true,
         operator: true,
         location: true,
+        sectors: {
+          columns: {
+            permit_id: false,
+          },
+        },
       },
       where: {
         id: id,

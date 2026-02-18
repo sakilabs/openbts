@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import debug from "debug";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
+import { serializerCompiler, validatorCompiler, hasZodFastifySchemaValidationErrors, type ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { dlogger } from "./config.js";
 import { APIv1Controller } from "./controllers/v1.controller.js";
@@ -72,14 +72,26 @@ export default class App {
     this.fastify.addHook("preHandler", PreHandlerHook);
     this.fastify.addHook("onSend", OnSendHook);
     registerRateLimit(this.fastify);
-    this.fastify.setErrorHandler((error: ErrorResponse | ValidationError, req, res) => {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || "An internal server error occurred.";
-      const code = error.code || "INTERNAL_SERVER_ERROR";
+    this.fastify.setErrorHandler((error, req, res) => {
+      if (hasZodFastifySchemaValidationErrors(error)) {
+        const details = error.validation.map((issue: { instancePath: string; message: string }) => ({
+          field: issue.instancePath.replace(/^\//, "") || "unknown",
+          validationMessage: issue.message,
+        }));
+
+        return res.status(400).send({
+          errors: [{ code: "VALIDATION_ERROR", message: "Validation error", details }],
+        });
+      }
+
+      const err = error as ErrorResponse | ValidationError;
+      const statusCode = err.statusCode || 500;
+      const message = err.message || "An internal server error occurred.";
+      const code = err.code || "INTERNAL_SERVER_ERROR";
 
       if (statusCode !== 404) {
-        logger.error(error.code, {
-          ...serializeError(error),
+        logger.error(err.code, {
+          ...serializeError(err),
           statusCode,
           code,
           method: req?.method,
@@ -108,8 +120,8 @@ export default class App {
           },
         ],
       };
-      if (error instanceof ValidationError && errorResponse.errors[0]) {
-        errorResponse.errors[0].details = (error as ValidationError)?.details || [];
+      if (err instanceof ValidationError && errorResponse.errors[0]) {
+        errorResponse.errors[0].details = (err as ValidationError)?.details || [];
       }
 
       return res.status(statusCode).send(errorResponse);

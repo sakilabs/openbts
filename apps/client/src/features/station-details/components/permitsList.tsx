@@ -72,6 +72,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
   });
 
   const permitsByRat = useMemo(() => groupPermitsByRat(permits), [permits]);
+  const hasDeviceRegistryData = useMemo(() => permits.some((p) => p.source === "device_registry"), [permits]);
 
   if (isLoading) {
     return (
@@ -128,7 +129,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
   return (
     <div className="space-y-4">
       {Array.from(permitsByRat.entries()).map(([rat, ratPermits]) => (
-        <CollapsiblePermitGroup key={rat} rat={rat} ratPermits={ratPermits} t={t} i18n={i18n} />
+        <CollapsiblePermitGroup key={rat} rat={rat} ratPermits={ratPermits} t={t} i18n={i18n} showAntennaData={hasDeviceRegistryData} />
       ))}
     </div>
   );
@@ -139,9 +140,10 @@ type CollapsiblePermitGroupProps = {
   ratPermits: UkePermit[];
   t: ReturnType<typeof useTranslation<"stationDetails">>["t"];
   i18n: ReturnType<typeof useTranslation>["i18n"];
+  showAntennaData?: boolean;
 };
 
-function CollapsiblePermitGroup({ rat, ratPermits, t, i18n }: CollapsiblePermitGroupProps) {
+function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: CollapsiblePermitGroupProps) {
   return (
     <Collapsible defaultOpen className="rounded-xl border overflow-hidden">
       <CollapsibleTrigger className="w-full px-4 py-2.5 bg-muted/30 border-b flex items-center gap-2 cursor-pointer">
@@ -160,6 +162,9 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n }: CollapsiblePermitG
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {t("permits.decisionNumber")}
                 </th>
+                {showAntennaData && (
+                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("permits.sectors")}</th>
+                )}
                 <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("permits.expiryDate")}</th>
               </tr>
             </thead>
@@ -207,6 +212,31 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n }: CollapsiblePermitG
                         </Tooltip>
                       </div>
                     </td>
+                    {showAntennaData && (
+                      <td className="px-4 py-2.5">
+                        {permit.sectors && permit.sectors.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {permit.sectors.map((sector) => (
+                              <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
+                                <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
+                                <span className="text-muted-foreground">/</span>
+                                <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
+                                {sector.antenna_type && (
+                                  <Tooltip>
+                                    <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                      {t(`permits.antennaType.${sector.antenna_type}Short`)}
+                                    </TooltipTrigger>
+                                    <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    )}
                     <td className="px-4 py-2.5">
                       {isExpired ? (
                         <div className="flex items-center gap-2">

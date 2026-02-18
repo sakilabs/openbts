@@ -42,7 +42,7 @@ function AdminAuditLogsPage() {
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
 
   const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 48,
+    rowHeight: 64,
     headerHeight: 40,
     paginationHeight: 45,
   });

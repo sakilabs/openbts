@@ -22,7 +22,14 @@
     "sourceUke": "Źródło: Urząd Komunikacji Elektronicznej (UKE)",
     "noPermits": "Brak pozwoleń UKE dla tej stacji",
     "decisionTypeP": "Pozwolenie",
-    "decisionTypeZmP": "Zmiana Pozwolenia"
+    "decisionTypeZmP": "Zmiana Pozwolenia",
+    "sectors": "Sektory",
+    "antennaType": {
+      "indoor": "Wewnętrzna",
+      "indoorShort": "W",
+      "outdoor": "Zewnętrzna",
+      "outdoorShort": "Z"
+    }
   },
   "dialog": {
     "hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",

@@ -12,7 +12,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
-const stationsSchema = createSelectSchema(stations).omit({ status: true, location_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorSchema = createSelectSchema(operators);
@@ -170,7 +170,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     with: {
       region: true,
       stations: {
-        columns: { status: false, location_id: false },
+        columns: { status: false, location_id: false, operator_id: false },
         where: hasStationFilters ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
         with: {
           cells: {

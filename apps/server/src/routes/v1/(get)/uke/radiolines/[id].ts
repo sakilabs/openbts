@@ -75,6 +75,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
   try {
     const radioLine = await db.query.ukeRadiolines.findFirst({
+      columns: {
+        operator_id: false,
+      },
       where: {
         id: id,
       },

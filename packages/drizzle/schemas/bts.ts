@@ -222,6 +222,25 @@ export const ukePermits = pgTable(
   ],
 );
 
+export const AntennaType = pgEnum("antenna_type", ["indoor", "outdoor"]);
+
+export const ukePermitSectors = pgTable(
+  "uke_permit_sectors",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    permit_id: integer("permit_id")
+      .references(() => ukePermits.id, { onDelete: "cascade", onUpdate: "cascade" })
+      .notNull(),
+    azimuth: integer("azimuth"),
+    elevation: integer("elevation"),
+    antenna_type: AntennaType("antenna_type"),
+  },
+  (t) => [
+    unique("uke_permit_sectors_unique").on(t.permit_id, t.azimuth, t.elevation, t.antenna_type),
+    index("uke_permit_sectors_permit_id_idx").on(t.permit_id),
+  ],
+);
+
 /**
  * Cells table
  * @example

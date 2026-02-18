@@ -10,7 +10,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { locations, stations, cells, bands, operators, regions, networksIds, lteCells, nrCells } from "@openbts/drizzle";
 
-const stationsSchema = createSelectSchema(stations).omit({ status: true });
+const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
@@ -204,6 +204,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       db.query.stations.findMany({
         columns: {
           status: false,
+          operator_id: false,
+          location_id: false,
         },
         with: {
           cells: {

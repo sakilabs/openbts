@@ -1771,12 +1771,12 @@ components:
       properties:
         id: { type: integer }
         station_id: { type: string }
-        location_id: { type: integer, nullable: true }
-        operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
         updatedAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
         is_confirmed: { type: boolean, nullable: true }
+        operator: { $ref: "#/components/schemas/Operator", nullable: true }
+        location: { $ref: "#/components/schemas/Location", nullable: true }
     StationWithOperator:
       allOf:
         - $ref: "#/components/schemas/Station"
@@ -2188,6 +2188,7 @@ components:
             band: { $ref: "#/components/schemas/Band" }
             operator: { $ref: "#/components/schemas/Operator" }
             location: { $ref: "#/components/schemas/UkeLocation" }
+            sectors: { type: array, items: { $ref: "#/components/schemas/UkePermitSector" } }
     UkePermitBase:
       type: object
       properties:
@@ -2199,6 +2200,14 @@ components:
         source: { type: string, enum: [permits, device_registry] }
         updatedAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
+    UkePermitSector:
+      type: object
+      description: Available only for `device_registry` source
+      properties:
+        id: { type: integer }
+        azimuth: { type: integer, nullable: true }
+        elevation: { type: integer, nullable: true }
+        antenna_type: { type: string, enum: [indoor, outdoor], nullable: true }
     UkeLocation:
       type: object
       properties:

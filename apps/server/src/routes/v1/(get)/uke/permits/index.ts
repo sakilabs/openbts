@@ -2,7 +2,7 @@ import { and, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
-import { bands, operators, ukePermits, ukeLocations } from "@openbts/drizzle";
+import { bands, operators, ukePermits, ukePermitSectors, ukeLocations } from "@openbts/drizzle";
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 
@@ -14,6 +14,7 @@ const ukePermitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, op
 const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
+const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 const schemaRoute = {
   querystring: z.object({
     bounds: z
@@ -63,6 +64,7 @@ const schemaRoute = {
           band: bandsSchema,
           operator: operatorsSchema,
           location: ukeLocationsSchema,
+          sectors: z.array(sectorsSchema),
         }),
       ),
     }),
@@ -75,6 +77,7 @@ type Permit = z.infer<typeof ukePermitsSchema> & {
   band?: z.infer<typeof bandsSchema>;
   operator?: z.infer<typeof operatorsSchema>;
   location?: z.infer<typeof ukeLocationsSchema>;
+  sectors?: z.infer<typeof sectorsSchema>[];
 };
 
 const SIMILARITY_THRESHOLD = 0.6;
@@ -82,17 +85,6 @@ const SIMILARITY_THRESHOLD = 0.6;
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
   const { limit = undefined, page = 1, bounds, rat, bands: bandValues, decisionType, decision_number, station_id } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
-
-  let bandIds: number[] | undefined;
-  if (bandValues) {
-    const validBands = await db.query.bands.findMany({
-      columns: { id: true },
-      where: { value: { in: bandValues } },
-    });
-
-    bandIds = validBands.map((band) => band.id);
-    if (bandIds.length === 0) return res.send({ data: [] });
-  }
 
   try {
     let envelope: ReturnType<typeof sql> | undefined;
@@ -103,16 +95,26 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
     }
 
-    let locationIds: number[] | undefined;
-    if (envelope) {
-      const boundaryLocations = await db
-        .select({ id: ukeLocations.id })
-        .from(ukeLocations)
-        .where(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`);
+    const [bandRows, boundaryLocations] = await Promise.all([
+      bandValues
+        ? db.query.bands.findMany({
+            columns: { id: true },
+            where: { value: { in: bandValues } },
+          })
+        : [],
+      envelope
+        ? db
+            .select({ id: ukeLocations.id })
+            .from(ukeLocations)
+            .where(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`)
+        : undefined,
+    ]);
 
-      locationIds = boundaryLocations.map((loc) => loc.id);
-      if (!locationIds.length) return res.send({ data: [] });
-    }
+    const bandIds = bandRows.length ? bandRows.map((band) => band.id) : undefined;
+    if (bandValues && !bandIds?.length) return res.send({ data: [] });
+
+    const locationIds = boundaryLocations?.map((loc) => loc.id);
+    if (boundaryLocations && !locationIds?.length) return res.send({ data: [] });
 
     const ukePermitsRes = await db.query.ukePermits.findMany({
       columns: {
@@ -126,6 +128,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         location: {
           columns: {
             point: false,
+          },
+        },
+        sectors: {
+          columns: {
+            permit_id: false,
           },
         },
       },
@@ -145,6 +152,29 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             const like = `%${station_id}%`;
             conditions.push(or(ilike(fields.station_id, like), sql`similarity(${fields.station_id}, ${station_id}) > ${SIMILARITY_THRESHOLD}`));
           }
+          if (rat) {
+            const ratMap: Record<string, string> = { gsm: "GSM", "gsm-r": "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" };
+            const wantsGsmR = rat.includes("gsm-r");
+            const wantsGsm = rat.includes("gsm");
+            const standardRats = rat.filter((r) => r !== "gsm" && r !== "gsm-r");
+            const mappedRats = standardRats.map((r) => ratMap[r]).filter((r): r is string => r !== undefined);
+
+            const ratConditions: SQL<unknown>[] = [];
+            if (mappedRats.length) {
+              ratConditions.push(
+                sql`(${bands.rat} IN (${sql.join(
+                  mappedRats.map((r) => sql`${r}`),
+                  sql`,`,
+                )}))`,
+              );
+            }
+            if (wantsGsm) ratConditions.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'commercial')`);
+            if (wantsGsmR) ratConditions.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'railway')`);
+
+            if (ratConditions.length) {
+              conditions.push(sql`EXISTS (SELECT 1 FROM ${bands} WHERE ${bands.id} = ${fields.band_id} AND (${sql.join(ratConditions, sql` OR `)}))`);
+            }
+          }
           return conditions.length > 0 ? (and(...conditions) ?? sql`true`) : sql`true`;
         },
       },
@@ -152,36 +182,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       offset: offset,
     });
 
-    let data = ukePermitsRes;
-    if (rat) {
-      const ratMap: Record<string, string> = {
-        gsm: "gsm",
-        "gsm-r": "gsm-r",
-        umts: "umts",
-        lte: "lte",
-        "5g": "nr",
-        cdma: "cdma",
-        iot: "iot",
-      } as const;
-      const allowedRats = rat.map((t) => ratMap[t]).filter((t): t is string => t !== undefined);
-      const wantsGsmR = allowedRats.includes("gsm-r");
-      const wantsGsm = allowedRats.includes("gsm");
-      const otherRats = allowedRats.filter((r) => r !== "gsm" && r !== "gsm-r");
-
-      data = data.filter((permit) => {
-        if (!permit.band?.rat) return false;
-        const bandRat = permit.band.rat.toLowerCase();
-        const isRailway = permit.band.variant === "railway";
-
-        if (bandRat === "gsm") {
-          if (isRailway) return wantsGsmR;
-          return wantsGsm;
-        }
-        return otherRats.includes(bandRat);
-      });
-    }
-
-    res.send({ data });
+    res.send({ data: ukePermitsRes });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("INTERNAL_SERVER_ERROR", {

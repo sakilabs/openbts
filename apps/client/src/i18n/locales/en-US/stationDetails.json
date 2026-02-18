@@ -23,7 +23,14 @@
     "sourceUke": "Source: Office of Electronic Communications (UKE)",
     "noPermits": "No UKE permits for this station",
     "decisionTypeP": "Permit",
-    "decisionTypeZmP": "Permit Change"
+    "decisionTypeZmP": "Permit Change",
+    "sectors": "Sectors",
+    "antennaType": {
+      "indoor": "Indoor",
+      "indoorShort": "IN",
+      "outdoor": "Outdoor",
+      "outdoorShort": "OUT"
+    }
   },
   "dialog": {
     "hardwareLease": "Hardware lease from {{operator}} (virtual station)",

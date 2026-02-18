@@ -8,6 +8,7 @@ import {
   regions,
   stations,
   ukePermits,
+  ukePermitSectors,
   radioLinesManufacturers,
   radiolinesAntennaTypes,
   radiolinesTransmitterTypes,
@@ -43,6 +44,7 @@ export const relations = defineRelations(
     regions,
     stations,
     ukePermits,
+    ukePermitSectors,
     radioLinesManufacturers,
     radiolinesAntennaTypes,
     radiolinesTransmitterTypes,
@@ -294,6 +296,14 @@ export const relations = defineRelations(
       location: helpers.one.ukeLocations({
         from: helpers.ukePermits.location_id,
         to: helpers.ukeLocations.id,
+        optional: false,
+      }),
+      sectors: helpers.many.ukePermitSectors(),
+    },
+    ukePermitSectors: {
+      permit: helpers.one.ukePermits({
+        from: helpers.ukePermitSectors.permit_id,
+        to: helpers.ukePermits.id,
         optional: false,
       }),
     },

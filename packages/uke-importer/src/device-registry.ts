@@ -4,7 +4,7 @@ import { unlinkSync } from "node:fs";
 import readline from "node:readline";
 import XLSX from "xlsx";
 
-import { ukePermits, type ratEnum } from "@openbts/drizzle";
+import { ukePermits, ukePermitSectors, type ratEnum } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP } from "./config.ts";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
 
@@ -70,6 +70,9 @@ interface ColumnIndices {
   szerGeogr: number;
   kodGUS: number;
   rodzajSystemuKomorki: number;
+  azymut: number;
+  elewacja: number;
+  typKomorki: number;
 }
 
 function findColumnIndices(headerCells: string[]): ColumnIndices | null {
@@ -118,6 +121,16 @@ function findColumnIndices(headerCells: string[]): ColumnIndices | null {
       case "rodzaj systemu komórki":
       case "rodzaj systemu komorki":
         indices.rodzajSystemuKomorki = i;
+        break;
+      case "azymut":
+        indices.azymut = i;
+        break;
+      case "elewacja":
+        indices.elewacja = i;
+        break;
+      case "typ komórki":
+      case "typ komorki":
+        indices.typKomorki = i;
         break;
     }
   }
@@ -173,6 +186,9 @@ interface ParsedRow {
   decisionType: "P" | "zmP";
   bandKey: string;
   bandInfo: { rat: (typeof ratEnum.enumValues)[number]; value: number };
+  azimuth: number | null;
+  elevation: number | null;
+  antennaType: "indoor" | "outdoor" | null;
 }
 
 async function processOperatorFile(
@@ -265,6 +281,14 @@ async function processOperatorFile(
     if (nrDomu) addressParts.push(nrDomu.trim());
     if (dodatkowyOpis) addressParts.push(dodatkowyOpis.trim());
 
+    const rawAzimuth = cols.azymut !== undefined ? cells[cols.azymut] : null;
+    const rawElevation = cols.elewacja !== undefined ? cells[cols.elewacja] : null;
+    const azimuth = rawAzimuth ? Number(rawAzimuth) : null;
+    const elevation = rawElevation ? Number(rawElevation) : null;
+
+    const rawTypKomorki = cols.typKomorki !== undefined ? (cells[cols.typKomorki] ?? "").trim().toLowerCase() : null;
+    const antennaType = rawTypKomorki === "w" ? ("indoor" as const) : rawTypKomorki === "z" ? ("outdoor" as const) : null;
+
     chunkRows.push({
       stationId,
       lon,
@@ -276,6 +300,9 @@ async function processOperatorFile(
       decisionType: (cells[cols.rodzajWniosku] ?? "").trim().toUpperCase() === "M" ? "zmP" : "P",
       bandKey,
       bandInfo,
+      azimuth: Number.isFinite(azimuth) ? azimuth : null,
+      elevation: Number.isFinite(elevation) ? elevation : null,
+      antennaType,
     });
 
     if (chunkRows.length >= CHUNK_SIZE) {
@@ -329,33 +356,45 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
       }
 
       return {
-        station_id: r.stationId,
-        operator_id: operatorId,
-        location_id,
-        decision_number: r.decisionNumber,
-        decision_type: r.decisionType,
-        expiry_date: new Date("2099-12-31T23:59:59Z"),
-        band_id: bandId,
-        source: "device_registry" as const,
+        permit: {
+          station_id: r.stationId,
+          operator_id: operatorId,
+          location_id,
+          decision_number: r.decisionNumber,
+          decision_type: r.decisionType,
+          expiry_date: new Date("2099-12-31T23:59:59Z"),
+          band_id: bandId,
+          source: "device_registry" as const,
+        },
+        sector: {
+          azimuth: r.azimuth,
+          elevation: r.elevation,
+          antenna_type: r.antennaType,
+        },
       };
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
 
-  const deduplicatedMap = new Map<string, (typeof values)[number]>();
+  const deduplicatedPermitsMap = new Map<string, (typeof values)[number]["permit"]>();
+  const sectorsByPermitKey = new Map<string, Array<(typeof values)[number]["sector"]>>();
   for (const row of values) {
-    const uniqueKey = `${row.station_id}|${row.operator_id}|${row.location_id}|${row.band_id}|${row.decision_number}|${row.decision_type}|${row.expiry_date.toISOString()}`;
-    deduplicatedMap.set(uniqueKey, row);
+    const uniqueKey = `${row.permit.station_id}|${row.permit.operator_id}|${row.permit.location_id}|${row.permit.band_id}|${row.permit.decision_number}|${row.permit.decision_type}|${row.permit.expiry_date.toISOString()}`;
+    deduplicatedPermitsMap.set(uniqueKey, row.permit);
+    const sectors = sectorsByPermitKey.get(uniqueKey) ?? [];
+    sectors.push(row.sector);
+    sectorsByPermitKey.set(uniqueKey, sectors);
   }
 
-  const uniqueValues = Array.from(deduplicatedMap.values());
+  const uniquePermits = Array.from(deduplicatedPermitsMap.entries());
 
   let insertedCount = 0;
   const date = new Date();
-  for (const group of chunk(uniqueValues, BATCH_SIZE)) {
+  for (const group of chunk(uniquePermits, BATCH_SIZE)) {
     if (group.length) {
-      await db
+      const permitRows = group.map(([, permit]) => permit);
+      const inserted = await db
         .insert(ukePermits)
-        .values(group)
+        .values(permitRows)
         .onConflictDoUpdate({
           target: [
             ukePermits.station_id,
@@ -367,7 +406,34 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
             ukePermits.expiry_date,
           ],
           set: { updatedAt: date, source: "device_registry" },
+        })
+        .returning({
+          id: ukePermits.id,
+          station_id: ukePermits.station_id,
+          operator_id: ukePermits.operator_id,
+          location_id: ukePermits.location_id,
+          band_id: ukePermits.band_id,
+          decision_number: ukePermits.decision_number,
+          decision_type: ukePermits.decision_type,
+          expiry_date: ukePermits.expiry_date,
         });
+
+      const sectorValues: Array<{ permit_id: number; azimuth: number | null; elevation: number | null; antenna_type: "indoor" | "outdoor" | null }> =
+        [];
+      for (const permit of inserted) {
+        const key = `${permit.station_id}|${permit.operator_id}|${permit.location_id}|${permit.band_id}|${permit.decision_number}|${permit.decision_type}|${permit.expiry_date.toISOString()}`;
+        const sectors = sectorsByPermitKey.get(key) ?? [];
+        for (const sector of sectors) {
+          sectorValues.push({ permit_id: permit.id, ...sector });
+        }
+      }
+
+      if (sectorValues.length) {
+        for (const sectorGroup of chunk(sectorValues, BATCH_SIZE)) {
+          await db.insert(ukePermitSectors).values(sectorGroup).onConflictDoNothing();
+        }
+      }
+
       insertedCount += group.length;
     }
   }

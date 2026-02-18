@@ -122,9 +122,7 @@ export const proposedStations = SubmissionsSchema.table(
     is_confirmed: boolean("is_confirmed").default(false),
     status: StationStatus("status").notNull().default("pending"),
   },
-  (t) => [
-    unique("proposed_stations_submission_station_unique").on(t.submission_id, t.station_id),
-  ],
+  (t) => [unique("proposed_stations_submission_station_unique").on(t.submission_id, t.station_id)],
 );
 
 export const proposedLocations = SubmissionsSchema.table("proposed_locations", {

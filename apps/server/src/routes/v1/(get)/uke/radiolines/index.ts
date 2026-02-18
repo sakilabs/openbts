@@ -107,15 +107,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const offset = limit ? (page - 1) * limit : undefined;
 
   try {
-    let operatorIds: number[] | undefined;
-    if (operators) {
-      const res = await db.query.ukeOperators.findMany({
-        columns: { id: true },
-        where: { id: { in: operators } },
-      });
-      operatorIds = res.map((r) => r.id);
-    }
-
     function buildConditions(f: typeof ukeRadiolines) {
       const conditions: (SQL<unknown> | undefined)[] = [];
 
@@ -134,7 +125,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         conditions.push(sql`(${f.permit_number} ILIKE ${like} OR similarity(${f.permit_number}, ${permit_number}) > ${SIMILARITY_THRESHOLD})`);
       }
       if (decision_type) conditions.push(eq(f.decision_type, decision_type));
-      if (operatorIds) conditions.push(inArray(f.operator_id, operatorIds));
+      if (operators) conditions.push(inArray(f.operator_id, operators));
 
       return conditions;
     }
@@ -147,6 +138,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       db.query.ukeRadiolines.findMany({
         where: {
           RAW: (fields) => and(...buildConditions(fields)) ?? sql`true`,
+        },
+        columns: {
+          operator_id: false,
         },
         with: {
           operator: true,

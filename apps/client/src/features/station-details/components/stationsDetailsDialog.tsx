@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, PencilEdit02Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import { Link } from "@tanstack/react-router";
+import { authClient } from "@/lib/authClient";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { getHardwareLeaseOperator } from "@/lib/stationUtils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -28,6 +29,9 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
   const { t } = useTranslation(["stationDetails", "common"]);
   const [activeTab, setActiveTab] = useState<TabId>(() => getDefaultTab(source));
   const { data: settings } = useSettings();
+  const { data: session } = authClient.useSession();
+  const userRole = session?.user?.role as string | undefined;
+  const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
 
   const {
     data: station,
@@ -96,16 +100,28 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?station=${station.id}`}
                         size="md"
                       />
-                      {settings?.submissionsEnabled && (
+                      {isAdmin ? (
                         <Link
-                          to="/submission"
-                          search={{ station: String(station.id) }}
+                          to="/admin/stations/$id"
+                          params={{ id: String(station.id) }}
                           className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
                           onClick={onClose}
                         >
                           <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
                           <span className="hidden sm:inline">{t("common:actions.edit")}</span>
                         </Link>
+                      ) : (
+                        settings?.submissionsEnabled && (
+                          <Link
+                            to="/submission"
+                            search={{ station: String(station.id) }}
+                            className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+                            onClick={onClose}
+                          >
+                            <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                            <span className="hidden sm:inline">{t("common:actions.edit")}</span>
+                          </Link>
+                        )
                       )}
                       {station.is_confirmed && (
                         <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-sm">

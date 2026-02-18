@@ -187,7 +187,16 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             >
               <HugeiconsIcon icon={GitBranchIcon} className="size-3 shrink-0" />
               <span className="truncate">
-                {import.meta.env.VITE_GIT_COMMIT && <span className="font-mono text-chart-1">{import.meta.env.VITE_GIT_COMMIT}</span>}
+                {import.meta.env.VITE_GIT_COMMIT && (
+                  <a
+                    href={`https://github.com/sakilabs/openbts/commit/${import.meta.env.VITE_GIT_COMMIT}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-chart-1 hover:underline"
+                  >
+                    {import.meta.env.VITE_GIT_COMMIT}
+                  </a>
+                )}
                 {import.meta.env.VITE_APP_VERSION && (
                   <span className="text-muted-foreground">
                     {import.meta.env.VITE_GIT_COMMIT ? " " : ""}(v{import.meta.env.VITE_APP_VERSION})

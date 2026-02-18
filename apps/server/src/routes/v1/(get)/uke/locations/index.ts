@@ -210,46 +210,46 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   };
 
   try {
-    const countWhereClause = and(...buildLocationConditions(ukeLocations));
-    const countResult = await db.select({ count: count() }).from(ukeLocations).where(countWhereClause);
-    const totalCount = countResult[0]?.count ?? 0;
-
-    if (totalCount === 0) {
-      return res.send({ data: [], totalCount: 0 });
-    }
-
-    const locationRows = await db.query.ukeLocations.findMany({
-      with: {
-        region: true,
-        permits: {
-          columns: { location_id: false, operator_id: false, band_id: false },
-          with: {
-            band: true,
-            operator: true,
-          },
-          ...(hasPermitFilters
-            ? {
-                where: {
-                  RAW: (fields) => {
-                    const conditions = buildPermitConditions(fields.operator_id, fields.band_id);
-                    return and(...conditions) ?? sql`true`;
+    const [countResult, locationRows] = await Promise.all([
+      db
+        .select({ count: count() })
+        .from(ukeLocations)
+        .where(and(...buildLocationConditions(ukeLocations))),
+      db.query.ukeLocations.findMany({
+        with: {
+          region: true,
+          permits: {
+            columns: { location_id: false, operator_id: false, band_id: false },
+            with: {
+              band: true,
+              operator: true,
+            },
+            ...(hasPermitFilters
+              ? {
+                  where: {
+                    RAW: (fields) => {
+                      const conditions = buildPermitConditions(fields.operator_id, fields.band_id);
+                      return and(...conditions) ?? sql`true`;
+                    },
                   },
-                },
-              }
-            : {}),
+                }
+              : {}),
+          },
         },
-      },
-      columns: {
-        point: false,
-        region_id: false,
-      },
-      where: {
-        RAW: (fields) => and(...buildLocationConditions(fields)) ?? sql`true`,
-      },
-      limit,
-      offset,
-      orderBy: { id: "desc" },
-    });
+        columns: {
+          point: false,
+          region_id: false,
+        },
+        where: {
+          RAW: (fields) => and(...buildLocationConditions(fields)) ?? sql`true`,
+        },
+        limit,
+        offset,
+        orderBy: { id: "desc" },
+      }),
+    ]);
+
+    const totalCount = countResult[0]?.count ?? 0;
 
     return res.send({ data: locationRows, totalCount });
   } catch (error) {

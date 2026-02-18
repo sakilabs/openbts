@@ -9,7 +9,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const stationSchema = createSelectSchema(stations).omit({ status: true });
+const stationSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true });
 const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
@@ -66,7 +66,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
       operator: true,
       networks: { columns: { station_id: false } },
     },
-    columns: { status: false },
+    columns: { status: false, operator_id: false, location_id: false },
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
