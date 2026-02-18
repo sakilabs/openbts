@@ -114,6 +114,8 @@ export const ukeLocations = pgTable(
     check("uke_locations_longitude_range", sql`${t.longitude} BETWEEN -180 AND 180`),
     index("uke_locations_region_id_idx").on(t.region_id),
     index("uke_locations_point_gist").using("gist", t.point),
+    index("uke_locations_created_at_idx").on(t.createdAt),
+    index("uke_locations_updated_at_idx").on(t.updatedAt),
     unique("uke_locations_lonlat_unique").on(t.longitude, t.latitude),
   ],
 );
