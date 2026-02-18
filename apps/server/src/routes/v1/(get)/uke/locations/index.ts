@@ -2,7 +2,7 @@ import { sql, count, type SQL, type Column, inArray, and } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
-import { bands, operators, ukePermits, ukeLocations, regions } from "@openbts/drizzle";
+import { bands, operators, ukePermits, ukeLocations, regions, ukePermitSectors } from "@openbts/drizzle";
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 
@@ -15,10 +15,12 @@ const ukePermitsSchema = createSelectSchema(ukePermits).omit({ location_id: true
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
 const regionsSchema = createSelectSchema(regions);
+const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 
 const permitResponseSchema = ukePermitsSchema.extend({
   band: bandsSchema.nullable(),
   operator: operatorsSchema.nullable(),
+  sectors: z.array(sectorsSchema),
 });
 
 const schemaRoute = {
@@ -223,6 +225,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             with: {
               band: true,
               operator: true,
+              sectors: {
+                columns: {
+                  permit_id: false,
+                },
+              },
             },
             ...(hasPermitFilters
               ? {
