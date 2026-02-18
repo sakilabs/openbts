@@ -127,7 +127,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             .insert(stations)
             .values({
               station_id: proposedStation.station_id ?? "",
-              location_id: locationId ?? proposedStation.location_id,
+              location_id: locationId,
               operator_id: proposedStation.operator_id,
               notes: proposedStation.notes,
               is_confirmed: true,

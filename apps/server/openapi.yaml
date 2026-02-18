@@ -143,6 +143,7 @@ paths:
     post:
       tags: [Cells]
       summary: Create cell
+      description: In `details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
       requestBody:
         required: true
         content:
@@ -187,13 +188,13 @@ paths:
           schema: { type: string }
         - name: bands
           in: query
-          description: Comma-separated band IDs
+          description: Comma-separated band values (e.g. 900, 1800, 2100)
           schema: { type: string }
       responses:
         "200":
-          description: Plain text export (CLF, NTM, or CSV depending on format)
+          description: Plain text export as a file (CLF, NTM, or CSV depending on format)
           content:
-            text/plain: { schema: { type: string } }
+            text/plain: { schema: { type: string, format: binary } }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -525,7 +526,7 @@ paths:
               required: [content]
               properties:
                 content: { type: string }
-                file: { type: string, format: binary, description: "Optional image/video/PDF attachment" }
+                file: { type: string, format: binary, description: "Optional image attachment" }
       responses:
         "201":
           description: Created
@@ -1041,6 +1042,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Create submission(s) (single object or array of 1-10)
+      description: In each item's `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
       requestBody:
         required: true
         content:
@@ -1061,7 +1063,7 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/Submission" } }
+                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionCreateResponse" } }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1096,6 +1098,7 @@ paths:
     patch:
       tags: [Submissions]
       summary: Update submission
+      description: In `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
       parameters:
         - name: id
           in: path
@@ -1872,6 +1875,39 @@ components:
         nci: { type: integer, nullable: true }
         pci: { type: integer, nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
+    UmtsCellDetailsInsert:
+      description: UMTS cell details for create/update. Do not send cid_long; it is computed server-side from rnc and cid.
+      type: object
+      properties:
+        lac: { type: integer, nullable: true }
+        carrier: { type: integer, nullable: true }
+        rnc: { type: integer }
+        cid: { type: integer }
+    LteCellDetailsInsert:
+      description: LTE cell details for create/update. Do not send ecid; it is computed server-side from enbid and clid.
+      type: object
+      properties:
+        tac: { type: integer, nullable: true }
+        enbid: { type: integer }
+        clid: { type: integer }
+        supports_nb_iot: { type: boolean, nullable: true }
+    NrCellDetailsInsert:
+      description: NR cell details for create/update. Do not send nci; it is computed server-side from gnbid, gnbid_length and clid.
+      type: object
+      properties:
+        nrtac: { type: integer, nullable: true }
+        gnbid: { type: integer, nullable: true }
+        gnbid_length: { type: integer, nullable: true }
+        clid: { type: integer, nullable: true }
+        pci: { type: integer, nullable: true }
+        supports_nr_redcap: { type: boolean, nullable: true }
+    CellDetailsInsert:
+      description: Cell RAT-specific payload for create/update. Omit server-calculated fields (cid_long for UMTS, ecid for LTE, nci for NR).
+      oneOf:
+        - $ref: "#/components/schemas/GsmCellDetails"
+        - $ref: "#/components/schemas/UmtsCellDetailsInsert"
+        - $ref: "#/components/schemas/LteCellDetailsInsert"
+        - $ref: "#/components/schemas/NrCellDetailsInsert"
     CellDetails:
       oneOf:
         - $ref: "#/components/schemas/GsmCellDetails"
@@ -1901,6 +1937,7 @@ components:
             band: { $ref: "#/components/schemas/Band" }
             details: { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellCreate:
+      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
       type: object
       required: [station_id, band_id, rat]
       properties:
@@ -1909,15 +1946,16 @@ components:
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
-        details: { $ref: "#/components/schemas/CellDetails" }
+        details: { $ref: "#/components/schemas/CellDetailsInsert" }
     CellUpdate:
+      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
       type: object
       properties:
         band_id: { type: integer }
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
-        details: { $ref: "#/components/schemas/CellDetails" }
+        details: { $ref: "#/components/schemas/CellDetailsInsert" }
 
     StationComment:
       type: object
@@ -1945,6 +1983,7 @@ components:
         updatedAt: { type: string, format: date-time }
         reviewed_at: { type: string, format: date-time, nullable: true }
     SubmissionCreateSingle:
+      description: In `cells[].details`, do not send cid_long (UMTS), ecid (LTE) or nci (NR); they are computed on the server.
       type: object
       properties:
         station_id: { type: integer, nullable: true }
@@ -1956,12 +1995,11 @@ components:
     ProposedStationInsert:
       type: object
       properties:
-        station_id: { type: string }
-        location_id: { type: integer, nullable: true }
+        operation: { type: string, enum: [add, update, delete], default: add }
+        target_station_id: { type: integer, nullable: true }
+        station_id: { type: string, nullable: true }
         operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
-        is_confirmed: { type: boolean, nullable: true }
-        status: { type: string, enum: [published, inactive, pending] }
     ProposedLocationInsert:
       type: object
       required: [region_id, longitude, latitude]
@@ -1972,6 +2010,7 @@ components:
         longitude: { type: number }
         latitude: { type: number }
     ProposedCellInsert:
+      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
       type: object
       properties:
         target_cell_id: { type: integer, nullable: true }
@@ -1980,7 +2019,7 @@ components:
         rat: { type: string, enum: [GSM, UMTS, LTE, NR], nullable: true }
         notes: { type: string, nullable: true }
         operation: { type: string, enum: [added, updated, removed] }
-        details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+        details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
     SubmissionWithRelations:
       allOf:
         - $ref: "#/components/schemas/Submission"
@@ -2008,7 +2047,16 @@ components:
         - type: object
           properties:
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+    SubmissionCreateResponse:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
+            proposedLocation: { $ref: "#/components/schemas/ProposedLocation", nullable: true }
+            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" }, nullable: true }
     SubmissionUpdate:
+      description: In `cells[].details`, do not send cid_long (UMTS), ecid (LTE) or nci (NR); they are computed on the server.
       type: object
       properties:
         review_notes: { type: string, nullable: true }
@@ -2036,25 +2084,28 @@ components:
       type: object
       properties:
         id: { type: integer }
-        submission_id: { type: string, format: uuid }
+        submission_id: { type: string, format: uuid, nullable: true }
         operation: { type: string, enum: [add, update, delete] }
         target_station_id: { type: integer, nullable: true }
         station_id: { type: string, nullable: true }
-        location_id: { type: integer, nullable: true }
         operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
         status: { type: string, enum: [published, inactive, pending] }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
     ProposedLocation:
       type: object
       properties:
         id: { type: integer }
-        submission_id: { type: string, format: uuid }
+        submission_id: { type: string, format: uuid, nullable: true }
         region_id: { type: integer }
         city: { type: string, nullable: true }
         address: { type: string, nullable: true }
         longitude: { type: number }
         latitude: { type: number }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
     UserPublic:
       type: object
       properties:

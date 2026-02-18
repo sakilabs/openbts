@@ -1,6 +1,6 @@
 import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./auth.ts";
-import { bands, cells, locations, operators, ratEnum, regions, stations, StationStatus } from "./bts.ts";
+import { bands, cells, operators, ratEnum, regions, stations, StationStatus } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
@@ -115,7 +115,6 @@ export const proposedStations = SubmissionsSchema.table(
     operation: StationOperationEnum("operation").notNull().default("add"),
     target_station_id: integer("target_station_id").references(() => stations.id, { onDelete: "set null", onUpdate: "cascade" }),
     station_id: varchar("station_id", { length: 16 }),
-    location_id: integer("location_id").references(() => locations.id, { onDelete: "set null", onUpdate: "cascade" }),
     operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
     notes: text("notes"),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -124,7 +123,6 @@ export const proposedStations = SubmissionsSchema.table(
     status: StationStatus("status").notNull().default("pending"),
   },
   (t) => [
-    index("station_location_id_idx").on(t.location_id),
     unique("proposed_stations_submission_station_unique").on(t.submission_id, t.station_id),
   ],
 );
