@@ -1,2636 +1,2233 @@
 openapi: 3.0.3
 info:
   title: OpenBTS API
-  description: API documentation for OpenBTS server
+  description: API for OpenBTS Backend
   version: 1.0.0
+
 servers:
   - url: https://openbts.sakilabs.com/api/v1
-    description: Main API version
+    description: API v1 base path
+
+tags:
+  - name: Health
+  - name: Settings
+  - name: Stats
+  - name: Cells
+  - name: Stations
+  - name: Operators
+  - name: Bands
+  - name: Regions
+  - name: Locations
+  - name: Submissions
+  - name: Search
+  - name: Audit Logs
+  - name: UKE
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [status, timestamp]
+                    properties:
+                      status: { type: string, example: ok }
+                      timestamp: { type: string, format: date-time }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Get runtime settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/RuntimeSettings"
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Settings]
+      summary: Update runtime settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuntimeSettingsPatch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/RuntimeSettings" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stats:
+    get:
+      tags: [Stats]
+      summary: Get database and import statistics
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [lastUpdated, counts]
+                    properties:
+                      lastUpdated:
+                        type: object
+                        properties:
+                          stations: { type: string, format: date-time, nullable: true }
+                          stations_permits: { type: string, format: date-time, nullable: true }
+                          radiolines: { type: string, format: date-time, nullable: true }
+                      counts:
+                        type: object
+                        properties:
+                          locations: { type: integer }
+                          stations: { type: integer }
+                          cells: { type: integer }
+                          uke_locations: { type: integer }
+                          uke_permits: { type: integer }
+                          uke_radiolines: { type: integer }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /cells:
+    get:
+      tags: [Cells]
+      summary: List cells
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 150 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Cells]
+      summary: Create cell
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CellCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CellWithDetails" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /cells/export:
+    get:
+      tags: [Cells]
+      summary: Export cells in CLF/NTM/NetMonitor format
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: ["2.0", "2.1", "3.0-dec", "3.0-hex", "4.0", "ntm", "netmonitor"]
+            default: "4.0"
+        - name: operators
+          in: query
+          description: Comma-separated MNC numbers
+          schema: { type: string }
+        - name: regions
+          in: query
+          description: Comma-separated 3-letter region codes
+          schema: { type: string }
+        - name: rat
+          in: query
+          description: Comma-separated RATs (GSM, UMTS, LTE, NR, IOT)
+          schema: { type: string }
+        - name: bands
+          in: query
+          description: Comma-separated band IDs
+          schema: { type: string }
+      responses:
+        "200":
+          description: Plain text export (CLF, NTM, or CSV depending on format)
+          content:
+            text/plain: { schema: { type: string } }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /cells/{id}:
+    get:
+      tags: [Cells]
+      summary: Get cell by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CellWithDetails" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Cells]
+      summary: Update cell
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CellUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CellWithDetails" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Cells]
+      summary: Delete cell
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204": { description: No Content }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations:
+    get:
+      tags: [Stations]
+      summary: List stations
+      parameters:
+        - name: bounds
+          in: query
+          description: "bbox as lat1,lon1,lat2,lon2"
+          schema: { type: string, pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 150 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: rat
+          in: query
+          description: Comma-separated (cdma, umts, gsm, lte, 5g, iot)
+          schema: { type: string }
+        - name: operators
+          in: query
+          description: Comma-separated MNC numbers
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: bands
+          in: query
+          description: Comma-separated band IDs
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: regions
+          in: query
+          description: Comma-separated 3-letter region codes
+          schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [station_id, updatedAt, createdAt] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationWithCells" } }
+                  totalCount: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Stations]
+      summary: Create station with optional cells
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StationCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/StationWithCells" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{id}:
+    get:
+      tags: [Stations]
+      summary: Get station by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/StationWithCells" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Stations]
+      summary: Update station
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StationUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Station" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Stations]
+      summary: Delete station
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204": { description: No Content }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/cells:
+    get:
+      tags: [Stations]
+      summary: List cells for a station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetailsAndBand" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Stations]
+      summary: Add cells to station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cells]
+              properties:
+                cells: { type: array, items: { $ref: "#/components/schemas/CellCreate" } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/cells/{cell_id}:
+    get:
+      tags: [Stations]
+      summary: Get cell by ID for a station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: cell_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CellWithDetailsAndBand" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Stations]
+      summary: Update cell on station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: cell_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CellUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/CellWithDetails" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Stations]
+      summary: Delete cell from station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: cell_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: No Content }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/comments:
+    get:
+      tags: [Stations]
+      summary: List comments for a station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationComment" } }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Stations]
+      summary: Create comment (multipart/form-data with content and optional files)
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string }
+                file: { type: string, format: binary, description: "Optional image/video/PDF attachment" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/StationComment" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/comments/{comment_id}:
+    delete:
+      tags: [Stations]
+      summary: Delete comment
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: No Content }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/permits:
+    get:
+      tags: [Stations]
+      summary: List UKE permits linked to station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperator" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/permits/{permit_id}:
+    get:
+      tags: [Stations]
+      summary: Get UKE permit by ID for station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: permit_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UkePermitWithBandOperator" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /operators:
+    get:
+      tags: [Operators]
+      summary: List operators
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Operator" } }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Operators]
+      summary: Create operator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OperatorCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Operator" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /operators/{id}:
+    get:
+      tags: [Operators]
+      summary: Get operator by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Operator" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Operators]
+      summary: Update operator
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OperatorUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Operator" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Operators]
+      summary: Delete operator
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204": { description: No Content }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /bands:
+    get:
+      tags: [Bands]
+      summary: List bands
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Band" } }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Bands]
+      summary: Create band
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BandCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Band" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /bands/{id}:
+    get:
+      tags: [Bands]
+      summary: Get band by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Band" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Bands]
+      summary: Update band
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BandUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Band" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Bands]
+      summary: Delete band
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204": { description: No Content }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /regions:
+    get:
+      tags: [Regions]
+      summary: List regions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Region" } }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Regions]
+      summary: Create region
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegionCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Region" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /regions/{id}:
+    get:
+      tags: [Regions]
+      summary: Get region by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Region" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Regions]
+      summary: Update region
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegionUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Region" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Regions]
+      summary: Delete region
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204": { description: No Content }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /locations:
+    get:
+      tags: [Locations]
+      summary: List locations
+      parameters:
+        - name: bounds
+          in: query
+          schema: { type: string, pattern: "^-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*$" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 500 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: rat
+          in: query
+          schema: { type: string }
+        - name: operators
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: bands
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: regions
+          in: query
+          schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
+        - name: new
+          in: query
+          schema: { type: boolean, default: false }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [id, updatedAt, createdAt] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/LocationWithRegionStations" } }
+                  totalCount: { type: integer }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Locations]
+      summary: Create location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocationCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Location" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /locations/{id}:
+    get:
+      tags: [Locations]
+      summary: Get location by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+        - name: rat
+          in: query
+          schema: { type: string }
+        - name: operators
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: bands
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/LocationWithRegionStations" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Locations]
+      summary: Update location
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocationUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Location" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Locations]
+      summary: Delete location
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "204": { description: No Content }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions:
+    get:
+      tags: [Submissions]
+      summary: List submissions
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, approved, rejected] }
+        - name: type
+          in: query
+          schema: { type: string, enum: [new, update, delete] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionWithRelations" } }
+                  totalCount: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Submissions]
+      summary: Create submission(s) (single object or array of 1-10)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/SubmissionCreateSingle"
+                - type: array
+                  minItems: 1
+                  maxItems: 10
+                  items: { $ref: "#/components/schemas/SubmissionCreateSingle" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Submission" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions/{id}:
+    get:
+      tags: [Submissions]
+      summary: Get submission by ID (UUID)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/SubmissionFull" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Submissions]
+      summary: Update submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmissionUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/SubmissionWithCells" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Submissions]
+      summary: Delete submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: No Content }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions/{id}/approve:
+    post:
+      tags: [Submissions]
+      summary: Approve submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review_notes: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Submission" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions/{id}/reject:
+    post:
+      tags: [Submissions]
+      summary: Reject submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review_notes: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Submission" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /search:
+    post:
+      tags: [Search]
+      summary: Search stations by query string or filters
+      description: |
+        Search by free text (station_id, numeric cell IDs, or network IDs) or use filter syntax in the query string.
+        Filter format: `key: value` or `key: 'value'` or `key: 123` or `key: value1, value2`. Supported filter keys:
+        - **stations**: bts_id, mnc
+        - **cells**: band, rat, is_confirmed
+        - **gsmCells**: lac, cid
+        - **umtsCells**: rnc, umts_cid, cid_long, umts_lac
+        - **lteCells**: enbid, ecid, lte_clid, tac, supports_nb_iot
+        - **nrCells**: gnbid, nci, nr_clid, nrtac, supports_nr_redcap
+        - **locations**: region (3-letter codes)
+        - **networksIds**: networks_id, networks_name, mno_name
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationSearchResult" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /audit-logs:
+    get:
+      tags: [Audit Logs]
+      summary: List audit logs
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: table_name
+          in: query
+          schema: { type: string }
+        - name: record_id
+          in: query
+          schema: { type: integer }
+        - name: action
+          in: query
+          schema: { $ref: "#/components/schemas/AuditAction" }
+        - name: invoked_by
+          in: query
+          schema: { type: string, format: uuid }
+        - name: from
+          in: query
+          description: ISO date for createdAt >=
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          description: ISO date for createdAt <=
+          schema: { type: string, format: date-time }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/AuditLogWithUser" } }
+                  totalCount: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /audit-logs/{id}:
+    get:
+      tags: [Audit Logs]
+      summary: Get audit log by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/AuditLogWithUser" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/locations:
+    get:
+      tags: [UKE]
+      summary: List UKE locations with permits
+      parameters:
+        - name: bounds
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 500 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: rat
+          in: query
+          schema: { type: string }
+        - name: operators
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: bands
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: regions
+          in: query
+          schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
+        - name: new
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UkeLocationWithPermits" } }
+                  totalCount: { type: integer }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/permits:
+    get:
+      tags: [UKE]
+      summary: List UKE permits
+      parameters:
+        - name: bounds
+          in: query
+          schema: { type: string, pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, default: 150 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: rat
+          in: query
+          schema: { type: string }
+        - name: operators
+          in: query
+          schema: { type: string }
+        - name: bands
+          in: query
+          schema: { type: string }
+        - name: decisionType
+          in: query
+          schema: { type: string, enum: [zmP, P] }
+        - name: decision_number
+          in: query
+          schema: { type: string }
+        - name: station_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperatorLocation" } }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/permits/{id}:
+    get:
+      tags: [UKE]
+      summary: Get UKE permit by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UkePermitWithBandOperatorLocation" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/radiolines:
+    get:
+      tags: [UKE]
+      summary: List UKE radiolines
+      parameters:
+        - name: bounds
+          in: query
+          schema: { type: string, pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 150 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: operators
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: permit_number
+          in: query
+          schema: { type: string }
+        - name: decision_type
+          in: query
+          schema: { type: string, enum: [zmP, P] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UkeRadiolineResponse" } }
+                  totalCount: { type: integer }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/radiolines/operators:
+    get:
+      tags: [UKE]
+      summary: List UKE radioline operators
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UkeOperator" } }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/radiolines/{id}:
+    get:
+      tags: [UKE]
+      summary: Get UKE radioline by ID
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UkeRadiolineResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/import:
+    post:
+      tags: [UKE]
+      summary: Start UKE import job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                importStations: { type: boolean, default: true }
+                importRadiolines: { type: boolean, default: true }
+                importPermits: { type: boolean, default: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UkeImportJobStatus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/import/status:
+    get:
+      tags: [UKE]
+      summary: Get UKE import job status
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UkeImportJobStatus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
 
 components:
-  securitySchemes:
-    webLogin:
-      type: apiKey
-      in: cookie
-      name: openbts.session_token
-    apiKey:
-      type: apiKey
-      in: header
-      name: X-API-Key
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    StationIdPath:
+      name: station_id
+      in: path
+      required: true
+      schema: { type: integer }
+
+  responses:
+    BadRequest:
+      description: Bad request (invalid parameters, validation error, or invalid query)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Forbidden:
+      description: Forbidden or insufficient permissions
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    InternalServerError:
+      description: Internal server error (e.g. failed to create/update/delete)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
 
   schemas:
-    ErrorResponse:
+    ApiError:
       type: object
+      required: [errors]
       properties:
         errors:
           type: array
+          minItems: 1
           items:
             type: object
+            required: [code, message]
             properties:
               code:
                 type: string
-                example: This property will have a code for this error e.g. BAD_REQUEST
-              message:
-                type: string
-                example: This property will have detailed error information
+                enum:
+                  - INTERNAL_SERVER_ERROR
+                  - BAD_REQUEST
+                  - NOT_FOUND
+                  - UNAUTHORIZED
+                  - FORBIDDEN
+                  - FAILED_TO_DELETE
+                  - INVALID_QUERY
+                  - FAILED_TO_UPDATE
+                  - FAILED_TO_CREATE
+                  - AUTH_FAILURE
+                  - VALIDATION_ERROR
+                  - ALREADY_LOGGED_IN
+                  - INSUFFICIENT_PERMISSIONS
+                  - TOO_MANY_REQUESTS
+              message: { type: string }
+              details:
+                type: array
+                description: Only present for VALIDATION_ERROR
+                items:
+                  type: object
+                  properties:
+                    field: { type: string }
+                    validationMessage: { type: string, nullable: true }
+
+    RuntimeSettings:
+      type: object
+      required: [enforceAuthForAllRoutes, allowedUnauthenticatedRoutes, disabledRoutes, enableStationComments, submissionsEnabled]
+      properties:
+        enforceAuthForAllRoutes: { type: boolean }
+        allowedUnauthenticatedRoutes: { type: array, items: { type: string } }
+        disabledRoutes: { type: array, items: { type: string } }
+        enableStationComments: { type: boolean }
+        submissionsEnabled: { type: boolean }
+    RuntimeSettingsPatch:
+      type: object
+      properties:
+        enforceAuthForAllRoutes: { type: boolean }
+        allowedUnauthenticatedRoutes: { type: array, items: { type: string } }
+        disabledRoutes: { type: array, items: { type: string } }
+        enableStationComments: { type: boolean }
+        submissionsEnabled: { type: boolean }
 
     Band:
       type: object
       properties:
-        id:
-          type: integer
-        name:
-          type: string
-        frequency:
-          type: number
-        rat:
-          type: string
-          enum: [GSM, UMTS, LTE, NR]
-      required: [id, name, frequency, rat]
+        id: { type: integer }
+        value: { type: integer, nullable: true }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        name: { type: string }
+        duplex: { type: string, enum: [FDD, TDD], nullable: true }
+        variant: { type: string, enum: [commercial, railway] }
+    BandCreate:
+      type: object
+      required: [rat, name]
+      properties:
+        value: { type: integer, nullable: true }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        name: { type: string }
+        duplex: { type: string, enum: [FDD, TDD], nullable: true }
+        variant: { type: string, enum: [commercial, railway] }
+    BandUpdate:
+      type: object
+      properties:
+        value: { type: integer, nullable: true }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        name: { type: string }
+        duplex: { type: string, enum: [FDD, TDD], nullable: true }
+        variant: { type: string, enum: [commercial, railway] }
 
     Operator:
       type: object
       properties:
-        id:
-          type: integer
-        mnc:
-          type: integer
-        name:
-          type: string
-        short_name:
-          type: string
-        parent_id:
-          type: integer
-      required: [id, mnc, name]
+        id: { type: integer }
+        name: { type: string }
+        full_name: { type: string }
+        parent_id: { type: integer, nullable: true }
+        mnc: { type: integer, nullable: true }
+    OperatorCreate:
+      type: object
+      required: [name, full_name]
+      properties:
+        name: { type: string }
+        full_name: { type: string }
+        parent_id: { type: integer, nullable: true }
+        mnc: { type: integer, nullable: true }
+    OperatorUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        full_name: { type: string }
+        parent_id: { type: integer, nullable: true }
+        mnc: { type: integer, nullable: true }
 
     Region:
       type: object
       properties:
-        id:
-          type: integer
-        name:
-          type: string
-        code:
-          type: string
-      required: [id, name, code]
+        id: { type: integer }
+        name: { type: string }
+        code: { type: string }
+    RegionCreate:
+      type: object
+      required: [name, code]
+      properties:
+        name: { type: string }
+        code: { type: string }
+    RegionUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        code: { type: string }
 
     Location:
       type: object
       properties:
-        id:
-          type: integer
-        latitude:
-          type: number
-          format: double
-        longitude:
-          type: number
-          format: double
-        address:
-          type: string
-          nullable: true
-        city:
-          type: string
-          nullable: true
-        region:
-          $ref: "#/components/schemas/Region"
-      required: [id, latitude, longitude, region]
-
-    LocationWithStations:
+        id: { type: integer }
+        city: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        longitude: { type: number }
+        latitude: { type: number }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    LocationCreate:
+      type: object
+      required: [region_id, longitude, latitude]
+      properties:
+        region_id: { type: integer }
+        city: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        longitude: { type: number }
+        latitude: { type: number }
+    LocationUpdate:
+      type: object
+      properties:
+        region_id: { type: integer }
+        city: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        longitude: { type: number }
+        latitude: { type: number }
+    LocationWithRegionStations:
       allOf:
         - $ref: "#/components/schemas/Location"
         - type: object
           properties:
-            stations:
-              type: array
-              items:
-                $ref: "#/components/schemas/StationAtLocation"
+            region: { $ref: "#/components/schemas/Region" }
+            stations: { type: array, items: { $ref: "#/components/schemas/StationWithCellsAndOperator" } }
 
-    LocationToInsert:
-      type: object
-      properties:
-        latitude:
-          type: number
-          format: double
-        longitude:
-          type: number
-          format: double
-        address:
-          type: string
-          nullable: true
-        city:
-          type: string
-          nullable: true
-        region_id:
-          type: integer
-      required: [latitude, longitude, region_id]
-
-    CellDetails:
-      description: RAT-specific details (GSM, UMTS, LTE, NR)
-      oneOf:
-        - $ref: "#/components/schemas/GSMDetails"
-        - $ref: "#/components/schemas/UMTSDetails"
-        - $ref: "#/components/schemas/LTEDetails"
-        - $ref: "#/components/schemas/NRDetails"
-
-    CellDetailsToInsert:
-      description: RAT-specific details for cell creation (GSM, UMTS, LTE, NR)
-      oneOf:
-        - $ref: "#/components/schemas/GSMDetailsToInsert"
-        - $ref: "#/components/schemas/UMTSDetailsToInsert"
-        - $ref: "#/components/schemas/LTEDetailsToInsert"
-        - $ref: "#/components/schemas/NRDetailsToInsert"
-
-    GSMDetails:
-      type: object
-      properties:
-        lac:
-          type: integer
-        cid:
-          type: integer
-        e_gsm:
-          type: boolean
-      required: [lac, cid]
-
-    GSMDetailsToInsert:
-      type: object
-      properties:
-        lac:
-          type: integer
-        cid:
-          type: integer
-        e_gsm:
-          type: boolean
-      required: [lac, cid]
-
-    UMTSDetails:
-      type: object
-      properties:
-        lac:
-          type: integer
-          nullable: true
-        carrier:
-          type: integer
-          nullable: true
-        rnc:
-          type: integer
-        cid:
-          type: integer
-        cid_long:
-          type: integer
-          format: int64
-      required: [rnc, cid]
-
-    UMTSDetailsToInsert:
-      type: object
-      properties:
-        lac:
-          type: integer
-          nullable: true
-        carrier:
-          type: integer
-          nullable: true
-        rnc:
-          type: integer
-        cid:
-          type: integer
-      required: [rnc, cid]
-
-    LTEDetails:
-      type: object
-      properties:
-        tac:
-          type: integer
-          nullable: true
-        enbid:
-          type: integer
-        clid:
-          type: integer
-        ecid:
-          type: integer
-          format: int64
-        supports_nb_iot:
-          type: boolean
-      required: [enbid, clid]
-
-    LTEDetailsToInsert:
-      type: object
-      properties:
-        tac:
-          type: integer
-          nullable: true
-        enbid:
-          type: integer
-        clid:
-          type: integer
-        supports_nb_iot:
-          type: boolean
-      required: [enbid, clid]
-
-    NRDetails:
-      type: object
-      properties:
-        nrtac:
-          type: integer
-          nullable: true
-        gnbid:
-          type: integer
-          nullable: true
-        gnbid_length:
-          type: integer
-          default: 24
-        clid:
-          type: integer
-          nullable: true
-        nci:
-          type: integer
-          format: int64
-        pci:
-          type: integer
-          nullable: true
-        supports_nr_redcap:
-          type: boolean
-
-    NRDetailsToInsert:
-      type: object
-      properties:
-        nrtac:
-          type: integer
-          nullable: true
-        gnbid:
-          type: integer
-          nullable: true
-        gnbid_length:
-          type: integer
-          default: 24
-        clid:
-          type: integer
-          nullable: true
-        pci:
-          type: integer
-          nullable: true
-        supports_nr_redcap:
-          type: boolean
-
-    Cell:
-      type: object
-      properties:
-        id:
-          type: integer
-        station_id:
-          type: integer
-        band_id:
-          type: integer
-        rat:
-          type: string
-          enum: [GSM, UMTS, LTE, NR]
-        band:
-          $ref: "#/components/schemas/Band"
-        details:
-          $ref: "#/components/schemas/CellDetails"
-      required: [id, station_id, band_id, rat]
-
-    CellToInsert:
-      type: object
-      properties:
-        band_id:
-          type: integer
-        station_id:
-          type: integer
-          description: "Must be provided on /cells endpoint and submissions if target_cell_id is not provided"
-        rat:
-          type: string
-          enum: [GSM, UMTS, LTE, NR]
-        details:
-          $ref: "#/components/schemas/CellDetailsToInsert"
-      required: [band_id, rat]
+    CellWithBand:
+      allOf:
+        - $ref: "#/components/schemas/CellBase"
+        - type: object
+          properties:
+            band: { $ref: "#/components/schemas/Band" }
+    StationWithCellsAndOperator:
+      allOf:
+        - $ref: "#/components/schemas/Station"
+        - type: object
+          properties:
+            cells: { type: array, items: { $ref: "#/components/schemas/CellWithBand" } }
+            operator: { $ref: "#/components/schemas/Operator", nullable: true }
+            networks: { $ref: "#/components/schemas/NetworksId", nullable: true }
 
     Station:
       type: object
-      description: Station object (without cells, for embedding)
       properties:
-        id:
-          type: integer
-        location_id:
-          type: integer
-        operator_id:
-          type: integer
-        status:
-          type: string
-          nullable: true
-        location:
-          $ref: "#/components/schemas/Location"
-        operator:
-          $ref: "#/components/schemas/Operator"
-        is_confirmed:
-          type: boolean
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required: [id, location_id, operator_id]
-
-    StationAtLocation:
+        id: { type: integer }
+        station_id: { type: string }
+        location_id: { type: integer, nullable: true }
+        operator_id: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        is_confirmed: { type: boolean, nullable: true }
+    StationWithOperator:
+      allOf:
+        - $ref: "#/components/schemas/Station"
+        - type: object
+          properties:
+            operator: { $ref: "#/components/schemas/Operator", nullable: true }
+    StationUpdate:
       type: object
-      description: Station as embedded under a Location, with operator object but no nested location.
       properties:
-        id:
-          type: integer
-        station_id:
-          type: string
-        location_id:
-          type: integer
-        operator_id:
-          type: integer
-        notes:
-          type: string
-          nullable: true
-        is_confirmed:
-          type: boolean
-        operator:
-          $ref: "#/components/schemas/Operator"
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required: [id]
-
-    StationFlat:
+        station_id: { type: string }
+        location_id: { type: integer, nullable: true }
+        operator_id: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+    StationCreate:
       type: object
-      description: Station as returned inside a Submission (no nested location/operator)
+      required: [cells]
       properties:
-        id:
-          type: integer
-        station_id:
-          type: string
-        location_id:
-          type: integer
-        operator_id:
-          type: integer
-        notes:
-          type: string
-          nullable: true
-        is_confirmed:
-          type: boolean
-        updatedAt:
-          type: string
-          format: date-time
-        createdAt:
-         type: string
-         format: date-time
-      required: [id, updatedAt, createdAt]
-
-    ProposedLocationRow:
-      type: object
-      description: Full proposed_locations DB row as returned inside a Submission
-      properties:
-        id:
-          type: integer
-        submission_id:
-          type: string
-          format: uuid
-          nullable: true
-        region_id:
-          type: integer
-        city:
-          type: string
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        longitude:
-          type: number
-          format: double
-        latitude:
-          type: number
-          format: double
-        updatedAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-      required: [id, region_id, latitude, longitude, updatedAt, createdAt]
-
-
+        station_id: { type: string }
+        location_id: { type: integer, nullable: true }
+        operator_id: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        cells: { type: array, items: { $ref: "#/components/schemas/CellCreate" } }
     StationWithCells:
       allOf:
         - $ref: "#/components/schemas/Station"
         - type: object
           properties:
-            cells:
-              type: array
-              items:
-                $ref: "#/components/schemas/Cell"
-
-    StationListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/StationWithCells"
-        totalCount:
-          type: integer
-      required: [data, totalCount]
-
-    UkePermit:
-      type: object
-      properties:
-        id:
-          type: integer
-        number:
-          type: string
-        decision_type:
-          type: string
-        expiry_date:
-          type: string
-          format: date-time
-        band:
-          $ref: "#/components/schemas/Band"
-        operator:
-          $ref: "#/components/schemas/Operator"
-        location:
-          $ref: "#/components/schemas/Location"
-      required: [id, number]
-
-    RadioLineManufacturer:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-      required: [id, name]
-
-    RadioLineEquipmentType:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        manufacturer:
-          $ref: "#/components/schemas/RadioLineManufacturer"
-      required: [id, name]
-
-    RadioLineTx:
-      type: object
-      properties:
-        longitude:
-          type: number
-          format: double
-        latitude:
-          type: number
-          format: double
-        height:
-          type: number
-        eirp:
-          type: number
-          nullable: true
-        antenna_attenuation:
-          type: number
-          nullable: true
-        transmitter:
-          type: object
+            cells: { type: array, items: { $ref: "#/components/schemas/CellWithBandAndDetails" } }
+            location: { $ref: "#/components/schemas/LocationWithRegion" }
+            operator: { $ref: "#/components/schemas/Operator", nullable: true }
+            networks: { $ref: "#/components/schemas/NetworksId", nullable: true }
+    StationSearchResult:
+      allOf:
+        - $ref: "#/components/schemas/Station"
+        - type: object
           properties:
-            type:
-              $ref: "#/components/schemas/RadioLineEquipmentType"
-        antenna:
-          type: object
+            cells: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+            location: { $ref: "#/components/schemas/LocationWithRegion", nullable: true }
+            operator: { $ref: "#/components/schemas/Operator", nullable: true }
+            networks: { $ref: "#/components/schemas/NetworksId", nullable: true }
+    LocationWithRegion:
+      allOf:
+        - $ref: "#/components/schemas/Location"
+        - type: object
           properties:
-            type:
-              $ref: "#/components/schemas/RadioLineEquipmentType"
-            gain:
-              type: number
-              nullable: true
-            height:
-              type: number
-              nullable: true
-      required: [longitude, latitude, height]
-
-    RadioLineRx:
+            region: { $ref: "#/components/schemas/Region" }
+    NetworksId:
       type: object
       properties:
-        longitude:
-          type: number
-          format: double
-        latitude:
-          type: number
-          format: double
-        height:
-          type: number
-        type:
-          $ref: "#/components/schemas/RadioLineEquipmentType"
-        gain:
-          type: number
-          nullable: true
-        height_antenna:
-          type: number
-          nullable: true
-        noise_figure:
-          type: number
-          nullable: true
-        atpc_attenuation:
-          type: number
-          nullable: true
-      required: [longitude, latitude, height]
+        networks_id: { type: string }
+        networks_name: { type: string, nullable: true }
+        mno_name: { type: string, nullable: true }
 
-    RadioLineLink:
+    CellBase:
       type: object
       properties:
-        freq:
-          type: number
-        ch_num:
-          type: number
-          nullable: true
-        plan_symbol:
-          type: string
-          nullable: true
-        ch_width:
-          type: number
-          nullable: true
-        polarization:
-          type: string
-          nullable: true
-        modulation_type:
-          type: string
-          nullable: true
-        bandwidth:
-          type: string
-          nullable: true
-      required: [freq]
-
-    RadioLinePermit:
+        id: { type: integer }
+        station_id: { type: integer }
+        band_id: { type: integer }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    GsmCellDetails:
       type: object
       properties:
-        number:
-          type: string
-          nullable: true
-        decision_type:
-          type: string
-          nullable: true
-        expiry_date:
-          type: string
-          format: date-time
-      required: [expiry_date]
-
-    RadioLine:
+        lac: { type: integer }
+        cid: { type: integer }
+        e_gsm: { type: boolean, nullable: true }
+    UmtsCellDetails:
       type: object
       properties:
-        id:
-          type: integer
-        tx:
-          $ref: "#/components/schemas/RadioLineTx"
-        rx:
-          $ref: "#/components/schemas/RadioLineRx"
-        link:
-          $ref: "#/components/schemas/RadioLineLink"
-        operator:
-          $ref: "#/components/schemas/Operator"
-        permit:
-          $ref: "#/components/schemas/RadioLinePermit"
-        updatedAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-      required: [id, tx, rx, link, permit, updatedAt, createdAt]
-
-    User:
+        lac: { type: integer, nullable: true }
+        carrier: { type: integer, nullable: true }
+        rnc: { type: integer }
+        cid: { type: integer }
+        cid_long: { type: integer }
+    LteCellDetails:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          nullable: true
-        image:
-          type: string
-          nullable: true
-        displayUsername:
-          type: string
-      required: [id, displayUsername]
-
-    ProposedCellInsert:
+        tac: { type: integer, nullable: true }
+        enbid: { type: integer }
+        clid: { type: integer }
+        ecid: { type: integer }
+        supports_nb_iot: { type: boolean, nullable: true }
+    NrCellDetails:
       type: object
       properties:
-        target_cell_id:
-          type: integer
-          nullable: true
-        station_id:
-          type: integer
-          nullable: true
-        band_id:
-          type: integer
-          nullable: true
-        rat:
-          type: string
-          enum: [GSM, UMTS, LTE, NR]
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        operation:
-          type: string
-          enum: [added, updated, removed]
-        details:
-          $ref: "#/components/schemas/CellDetailsToInsert"
-
-    ProposedStationInsert:
+        nrtac: { type: integer, nullable: true }
+        gnbid: { type: integer, nullable: true }
+        gnbid_length: { type: integer, nullable: true }
+        clid: { type: integer, nullable: true }
+        nci: { type: integer, nullable: true }
+        pci: { type: integer, nullable: true }
+        supports_nr_redcap: { type: boolean, nullable: true }
+    CellDetails:
+      oneOf:
+        - $ref: "#/components/schemas/GsmCellDetails"
+        - $ref: "#/components/schemas/UmtsCellDetails"
+        - $ref: "#/components/schemas/LteCellDetails"
+        - $ref: "#/components/schemas/NrCellDetails"
+    CellWithDetails:
+      allOf:
+        - $ref: "#/components/schemas/CellBase"
+        - type: object
+          properties:
+            station: { $ref: "#/components/schemas/Station", nullable: true }
+            band: { $ref: "#/components/schemas/Band", nullable: true }
+            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+    CellWithDetailsAndBand:
+      allOf:
+        - $ref: "#/components/schemas/CellBase"
+        - type: object
+          properties:
+            band: { $ref: "#/components/schemas/Band" }
+            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+    CellWithBandAndDetails:
+      allOf:
+        - $ref: "#/components/schemas/CellBase"
+        - type: object
+          properties:
+            band: { $ref: "#/components/schemas/Band" }
+            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+    CellCreate:
+      type: object
+      required: [station_id, band_id, rat]
+      properties:
+        station_id: { type: integer }
+        band_id: { type: integer }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        details: { $ref: "#/components/schemas/CellDetails" }
+    CellUpdate:
       type: object
       properties:
-        operation:
-          type: string
-          enum: [add, update, delete]
-          default: add
-        target_station_id:
-          type: integer
-          nullable: true
-        station_id:
-          type: string
-          maxLength: 16
-          nullable: true
-        location_id:
-          type: integer
-          nullable: true
-        operator_id:
-          type: integer
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        is_confirmed:
-          type: boolean
-          default: false
-        status:
-          type: string
-          enum: [pending, approved, rejected]
-          default: pending
+        band_id: { type: integer }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        details: { $ref: "#/components/schemas/CellDetails" }
 
-    ProposedLocationInsert:
+    StationComment:
       type: object
       properties:
-        region_id:
-          type: integer
-        city:
-          type: string
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        longitude:
-          type: number
-          format: double
-        latitude:
-          type: number
-          format: double
-      required: [latitude, longitude, region_id]
-
-    ProposedCellWithDetails:
-      type: object
-      properties:
-        id:
-          type: integer
-        submission_id:
-          type: string
-          format: uuid
-          nullable: true
-        operation:
-          type: string
-          enum: [add, update, delete]
-        target_cell_id:
-          type: integer
-          nullable: true
-        station_id:
-          type: integer
-          nullable: true
-        band_id:
-          type: integer
-          nullable: true
-        rat:
-          type: string
-          enum: [GSM, UMTS, LTE, NR]
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        is_confirmed:
-          type: boolean
-        updatedAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        details:
-          $ref: "#/components/schemas/CellDetails"
-          nullable: true
-      required: [id, operation, is_confirmed, updatedAt, createdAt]
-
-    ProposedStation:
-      type: object
-      properties:
-        id:
-          type: integer
-        submission_id:
-          type: string
-          format: uuid
-          nullable: true
-        operation:
-          type: string
-          enum: [add, update, delete]
-        target_station_id:
-          type: integer
-          nullable: true
-        station_id:
-          type: string
-          maxLength: 16
-          nullable: true
-        location_id:
-          type: integer
-          nullable: true
-        operator_id:
-          type: integer
-          nullable: true
-        notes:
-          type: string
-          nullable: true
-        updatedAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        is_confirmed:
-          type: boolean
-        status:
-          type: string
-          enum: [pending, approved, rejected]
-      required: [id, operation, is_confirmed, status, updatedAt, createdAt]
+        id: { type: integer }
+        station_id: { type: integer }
+        user_id: { type: string, format: uuid }
+        content: { type: string }
+        attachments: { type: array, items: { type: object, properties: { uuid: { type: string }, type: { type: string } } }, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
 
     Submission:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        station_id:
-          type: integer
-          nullable: true
-        submitter_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [pending, approved, rejected]
-        type:
-          type: string
-          enum: [new, update, delete]
-        reviewer_id:
-          type: string
-          format: uuid
-          nullable: true
-        review_notes:
-          type: string
-          nullable: true
-        submitter_note:
-          type: string
-          nullable: true
-        reviewed_at:
-          type: string
-          format: date-time
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        station:
-          $ref: "#/components/schemas/StationFlat"
-          nullable: true
-        submitter:
-          $ref: "#/components/schemas/User"
-        reviewer:
-          $ref: "#/components/schemas/User"
-          nullable: true
-        proposedStation:
-          $ref: "#/components/schemas/ProposedStation"
-          nullable: true
-        proposedLocation:
-          $ref: "#/components/schemas/ProposedLocationRow"
-          nullable: true
-        cells:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProposedCellWithDetails"
-      required: [id, submitter_id, status, type, createdAt, updatedAt, submitter, cells]
-
-
-    SubmissionCreated:
+        id: { type: string, format: uuid }
+        station_id: { type: integer, nullable: true }
+        submitter_id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, approved, rejected] }
+        type: { type: string, enum: [new, update, delete] }
+        reviewer_id: { type: string, format: uuid, nullable: true }
+        review_notes: { type: string, nullable: true }
+        submitter_note: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        reviewed_at: { type: string, format: date-time, nullable: true }
+    SubmissionCreateSingle:
+      type: object
+      properties:
+        station_id: { type: integer, nullable: true }
+        type: { type: string, enum: [new, update, delete] }
+        submitter_note: { type: string, nullable: true }
+        station: { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
+        location: { $ref: "#/components/schemas/ProposedLocationInsert", nullable: true }
+        cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellInsert" }, nullable: true }
+    ProposedStationInsert:
+      type: object
+      properties:
+        station_id: { type: string }
+        location_id: { type: integer, nullable: true }
+        operator_id: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        status: { type: string, enum: [published, inactive, pending] }
+    ProposedLocationInsert:
+      type: object
+      required: [region_id, longitude, latitude]
+      properties:
+        region_id: { type: integer }
+        city: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        longitude: { type: number }
+        latitude: { type: number }
+    ProposedCellInsert:
+      type: object
+      properties:
+        target_cell_id: { type: integer, nullable: true }
+        station_id: { type: integer, nullable: true }
+        band_id: { type: integer, nullable: true }
+        rat: { type: string, enum: [GSM, UMTS, LTE, NR], nullable: true }
+        notes: { type: string, nullable: true }
+        operation: { type: string, enum: [added, updated, removed] }
+        details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+    SubmissionWithRelations:
       allOf:
         - $ref: "#/components/schemas/Submission"
         - type: object
-          description: >
-            Returned by POST /submissions. cells and proposedLocation reflect the
-            input shapes echoed back (no id/timestamps on nested objects).
           properties:
-            proposedLocation:
-              $ref: "#/components/schemas/ProposedLocationInsert"
-              nullable: true
-            cells:
-              type: array
-              items:
-                $ref: "#/components/schemas/ProposedCellInsert"
-
-    CreateSubmissionRequest:
-      oneOf:
-        - $ref: "#/components/schemas/SingleSubmission"
-        - type: array
-          items:
-            $ref: "#/components/schemas/SingleSubmission"
-          minItems: 1
-          maxItems: 10
-
-    SingleSubmission:
+            station: { $ref: "#/components/schemas/Station", nullable: true }
+            submitter: { $ref: "#/components/schemas/UserPublic" }
+            reviewer: { $ref: "#/components/schemas/UserPublic", nullable: true }
+            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+            proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
+    SubmissionFull:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            station: { $ref: "#/components/schemas/Station", nullable: true }
+            submitter: { $ref: "#/components/schemas/UserFull" }
+            reviewer: { $ref: "#/components/schemas/UserPublic", nullable: true }
+            proposedLocation: { $ref: "#/components/schemas/ProposedLocation", nullable: true }
+            proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
+            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+    SubmissionWithCells:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+    SubmissionUpdate:
       type: object
       properties:
-        station_id:
-          type: integer
-          description: "Required for type=update and type=delete"
-        type:
-          type: string
-          enum: [new, update, delete]
-        submitter_note:
-          type: string
-          nullable: true
-        station:
-          $ref: "#/components/schemas/ProposedStationInsert"
-        location:
-          $ref: "#/components/schemas/ProposedLocationInsert"
-        cells:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProposedCellInsert"
-
-    UpdateSubmissionRequest:
+        review_notes: { type: string, nullable: true }
+        submitter_note: { type: string, nullable: true }
+        station: { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
+        location: { $ref: "#/components/schemas/ProposedLocationInsert", nullable: true }
+        cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellUpdate" }, nullable: true }
+    ProposedCellWithDetails:
       type: object
       properties:
-        review_notes:
-          type: string
-          nullable: true
-        submitter_note:
-          type: string
-          nullable: true
-        station:
-          $ref: "#/components/schemas/ProposedStationInsert"
-        location:
-          $ref: "#/components/schemas/ProposedLocationInsert"
-        cells:
+        id: { type: integer }
+        submission_id: { type: string, format: uuid }
+        operation: { type: string, enum: [add, update, delete] }
+        target_cell_id: { type: integer, nullable: true }
+        station_id: { type: integer, nullable: true }
+        band_id: { type: integer, nullable: true }
+        rat: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+    ProposedCellUpdate:
+      allOf:
+        - $ref: "#/components/schemas/ProposedCellInsert"
+    ProposedStation:
+      type: object
+      properties:
+        id: { type: integer }
+        submission_id: { type: string, format: uuid }
+        operation: { type: string, enum: [add, update, delete] }
+        target_station_id: { type: integer, nullable: true }
+        station_id: { type: string, nullable: true }
+        location_id: { type: integer, nullable: true }
+        operator_id: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        status: { type: string, enum: [published, inactive, pending] }
+    ProposedLocation:
+      type: object
+      properties:
+        id: { type: integer }
+        submission_id: { type: string, format: uuid }
+        region_id: { type: integer }
+        city: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        longitude: { type: number }
+        latitude: { type: number }
+    UserPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, nullable: true }
+        image: { type: string, nullable: true }
+        displayUsername: { type: string, nullable: true }
+    UserFull:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string, nullable: true }
+        displayUsername: { type: string, nullable: true }
+        email: { type: string }
+        image: { type: string, nullable: true }
+        name: { type: string }
+
+    AuditAction:
+      type: string
+      enum:
+        - stations.create
+        - stations.update
+        - stations.delete
+        - cells.create
+        - cells.update
+        - cells.delete
+        - locations.create
+        - locations.update
+        - locations.delete
+        - operators.create
+        - operators.update
+        - operators.delete
+        - bands.create
+        - bands.update
+        - bands.delete
+        - regions.create
+        - regions.update
+        - regions.delete
+        - submissions.create
+        - submissions.update
+        - submissions.delete
+        - submissions.approve
+        - submissions.reject
+        - settings.update
+        - station_comments.create
+        - station_comments.delete
+        - user_lists.create
+        - user_lists.update
+        - user_lists.delete
+        - uke_import.start
+    AuditLogWithUser:
+      type: object
+      properties:
+        id: { type: integer }
+        action: { $ref: "#/components/schemas/AuditAction" }
+        table_name: { type: string }
+        record_id: { type: integer, nullable: true }
+        old_values: { type: object, nullable: true }
+        new_values: { type: object, nullable: true }
+        metadata: { type: object, nullable: true }
+        source: { type: string, enum: [api, import, system], nullable: true }
+        ip_address: { type: string, nullable: true }
+        user_agent: { type: string, nullable: true }
+        invoked_by: { type: string, format: uuid, nullable: true }
+        createdAt: { type: string, format: date-time }
+        user: { $ref: "#/components/schemas/UserPublic", nullable: true }
+
+    UkePermitWithBandOperator:
+      allOf:
+        - $ref: "#/components/schemas/UkePermitBase"
+        - type: object
+          properties:
+            band: { $ref: "#/components/schemas/Band", nullable: true }
+            operator: { $ref: "#/components/schemas/Operator", nullable: true }
+    UkePermitWithBandOperatorLocation:
+      allOf:
+        - $ref: "#/components/schemas/UkePermitBase"
+        - type: object
+          properties:
+            band: { $ref: "#/components/schemas/Band" }
+            operator: { $ref: "#/components/schemas/Operator" }
+            location: { $ref: "#/components/schemas/UkeLocation" }
+    UkePermitBase:
+      type: object
+      properties:
+        id: { type: integer }
+        station_id: { type: string }
+        decision_number: { type: string }
+        decision_type: { type: string, enum: [zmP, P] }
+        expiry_date: { type: string, format: date-time }
+        source: { type: string, enum: [permits, device_registry] }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    UkeLocation:
+      type: object
+      properties:
+        id: { type: integer }
+        city: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        longitude: { type: number }
+        latitude: { type: number }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    UkeLocationWithPermits:
+      allOf:
+        - $ref: "#/components/schemas/UkeLocation"
+        - type: object
+          properties:
+            region: { $ref: "#/components/schemas/Region" }
+            permits: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperator" } }
+    UkeOperator:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        full_name: { type: string }
+    UkeRadiolineResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        tx:
+          type: object
+          properties:
+            longitude: { type: number }
+            latitude: { type: number }
+            height: { type: number }
+            eirp: { type: number, nullable: true }
+            antenna_attenuation: { type: number, nullable: true }
+            transmitter: { type: object, nullable: true }
+            antenna: { type: object, nullable: true }
+        rx:
+          type: object
+          properties:
+            longitude: { type: number }
+            latitude: { type: number }
+            height: { type: number }
+            type: { type: object, nullable: true }
+            gain: { type: number, nullable: true }
+            height_antenna: { type: number, nullable: true }
+            noise_figure: { type: number, nullable: true }
+            atpc_attenuation: { type: number, nullable: true }
+        link:
+          type: object
+          properties:
+            freq: { type: integer }
+            ch_num: { type: integer, nullable: true }
+            plan_symbol: { type: string, nullable: true }
+            ch_width: { type: number, nullable: true }
+            polarization: { type: string, nullable: true }
+            modulation_type: { type: string, nullable: true }
+            bandwidth: { type: string, nullable: true }
+        operator: { $ref: "#/components/schemas/UkeOperator", nullable: true }
+        permit:
+          type: object
+          properties:
+            number: { type: string, nullable: true }
+            decision_type: { type: string, nullable: true }
+            expiry_date: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    UkeImportJobStatus:
+      type: object
+      properties:
+        state: { type: string, enum: [idle, running, success, error] }
+        startedAt: { type: string, nullable: true }
+        finishedAt: { type: string, nullable: true }
+        steps:
           type: array
           items:
-            $ref: "#/components/schemas/ProposedCellInsert"
-
-paths:
-  /auth/*:
-    post:
-      summary: Authentication endpoints (Better Auth Proxy)
-      description: Handles login, registration, and session management via Better Auth.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        "200":
-          description: Successful authentication operation
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Authentication failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /bands:
-    get:
-      summary: List all bands
-      tags: [Bands]
-      responses:
-        "200":
-          description: List of bands
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Band"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create a new band
-      tags: [Bands]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                frequency:
-                  type: number
-                rat:
-                  type: string
-                  enum: [GSM, UMTS, LTE, NR]
-              required: [name, frequency, rat]
-      responses:
-        "200":
-          description: Band created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Band"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /bands/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get band details
-      tags: [Bands]
-      responses:
-        "200":
-          description: Band details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Band"
-        "404":
-          description: Band not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a band
-      tags: [Bands]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Band deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Band Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stations:
-    get:
-      summary: List stations with filtering
-      tags: [Stations]
-      parameters:
-        - name: bounds
-          in: query
-          description: Bounding box (lat1,lon1,lat2,lon2)
-          schema:
-            type: string
-            pattern: '^-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+,-?\d+\.\d+$'
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 150
-            minimum: 1
-            maximum: 1000
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-            minimum: 1
-        - name: rat
-          in: query
-          description: Comma-separated RATs (gsm,umts,lte,5g,iot)
-          schema:
-            type: string
-        - name: operators
-          in: query
-          description: Comma-separated MNCs
-          schema:
-            type: string
-        - name: bands
-          in: query
-          description: Comma-separated Band IDs
-          schema:
-            type: string
-        - name: regions
-          in: query
-          description: Comma-separated Region Codes
-          schema:
-            type: string
-        - name: sort
-          in: query
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
-        - name: sortBy
-          in: query
-          schema:
-            type: string
-            enum: [station_id, updatedAt, createdAt]
-      responses:
-        "200":
-          description: List of stations
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StationListResponse"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create a new station
-      tags: [Stations]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              allOf:
-                - $ref: "#/components/schemas/Station"
-                - type: object
-                  properties:
-                    cells:
-                      type: array
-                      items:
-                        allOf:
-                          - $ref: "#/components/schemas/Cell"
-      responses:
-        "200":
-          description: Station created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/StationWithCells"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to create
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stations/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get station details
-      tags: [Stations]
-      responses:
-        "200":
-          description: Station details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/StationWithCells"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Station not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a station
-      tags: [Stations]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Station deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Station not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stations/{station_id}/cells:
-    parameters:
-      - name: station_id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: List cells for a station
-      tags: [Stations, Cells]
-      responses:
-        "200":
-          description: List of cells
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Cell"
-        "404":
-          description: Cells not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Bulk create cells for a station
-      tags: [Stations, Cells]
-      security:
-        - webLogin: []
-        - apiKey: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                cells:
-                  type: array
-                  items:
-                    allOf:
-                      - $ref: "#/components/schemas/CellToInsert"
-      responses:
-        "200":
-          description: Cells created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to create
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stations/{station_id}/cells/{cell_id}:
-    parameters:
-      - name: station_id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: cell_id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get a specific cell from a station
-      tags: [Stations, Cells]
-      responses:
-        "200":
-          description: Cell details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Cell not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    patch:
-      summary: Update a cell
-      tags: [Stations, Cells]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/Cell"
-      responses:
-        "200":
-          description: Cell updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Cell not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to update
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a cell
-      tags: [Stations, Cells]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Cell deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Cell not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stations/{station_id}/permits:
-    parameters:
-      - name: station_id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: List UKE permits for a station
-      tags: [Stations, Permits]
-      responses:
-        "200":
-          description: List of permits
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/UkePermit"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Station not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stations/{station_id}/comments:
-    parameters:
-      - name: station_id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get comments for a station
-      tags: [Stations]
-      responses:
-        "200":
-          description: List of comments
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        content:
-                          type: string
-                        author:
-                          type: object
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Station not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /cells:
-    get:
-      summary: List cells
-      tags: [Cells]
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 150
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-      responses:
-        "200":
-          description: List of cells
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create a new cell
-      tags: [Cells]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/CellToInsert"
-      responses:
-        "200":
-          description: Cell created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /cells/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get cell details
-      tags: [Cells]
-      responses:
-        "200":
-          description: Cell details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Cell not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Add a new cell
-      tags: [Cells]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/CellToInsert"
-      responses:
-        "200":
-          description: Cell updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Cell"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Cell not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to update
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a cell
-      tags: [Cells]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Cell deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Cell not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /regions:
-    get:
-      summary: List regions
-      tags: [Regions]
-      responses:
-        "200":
-          description: List of regions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Region"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create a new region
-      tags: [Regions]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                code:
-                  type: string
-              required: [name, code]
-      responses:
-        "200":
-          description: Region created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Region"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /regions/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get region details
-      tags: [Regions]
-      responses:
-        "200":
-          description: Region details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Region"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Region not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a region
-      tags: [Regions]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Region deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Region not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /operators:
-    get:
-      summary: List operators
-      tags: [Operators]
-      responses:
-        "200":
-          description: List of operators
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Operator"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create a new operator
-      tags: [Operators]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                full_name:
-                  type: string
-                parent_id:
-                  type: integer
-                mnc:
-                  type: string
-              required: [name, full_name, mnc, parent_id]
-      responses:
-        "200":
-          description: Operator created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Operator"
-
-  /operators/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get operator details
-      tags: [Operators]
-      responses:
-        "200":
-          description: Operator details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Operator"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Operator not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete an operator
-      tags: [Operators]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Operator deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Operator not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /locations:
-    get:
-      summary: List locations
-      tags: [Locations]
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 500
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-        - name: bounds
-          in: query
-          schema:
-            type: string
-        - name: rat
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: List of locations
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/LocationWithStations"
-                  totalCount:
-                    type: integer
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create a new location
-      tags: [Locations]
-      security:
-        - webLogin: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/LocationToInsert"
-      responses:
-        "200":
-          description: Location created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Location"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /locations/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get location details
-      tags: [Locations]
-      responses:
-        "200":
-          description: Location details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Location"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Location not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a location
-      tags: [Locations]
-      security:
-        - webLogin: []
-      responses:
-        "204":
-          description: Location deleted
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Location not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /uke/radiolines:
-    get:
-      summary: List UKE radiolines
-      tags: [UKE]
-      parameters:
-        - name: bounds
-          in: query
-          schema:
-            type: string
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 150
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-      responses:
-        "200":
-          description: List of radiolines
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/RadioLine"
-                  totalCount:
-                    type: integer
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /uke/radiolines/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get radioline details
-      tags: [UKE]
-      responses:
-        "200":
-          description: Radioline details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/RadioLine"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Radioline not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /uke/permits:
-    get:
-      summary: List UKE permits
-      tags: [UKE, Permits]
-      parameters:
-        - name: bounds
-          in: query
-          schema:
-            type: string
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 150
-      responses:
-        "200":
-          description: List of permits
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/UkePermit"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /uke/permits/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-    get:
-      summary: Get permit details
-      tags: [UKE, Permits]
-      responses:
-        "200":
-          description: Permit details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/UkePermit"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Permit not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /search:
-    post:
-      summary: Advanced search
-      tags: [Search]
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 100
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                query:
-                  type: string
-                  minLength: 1
-              required: [query]
-      responses:
-        "200":
-          description: Search results
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Station"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /submissions:
-    get:
-      summary: List submissions
-      tags: [Submissions]
-      security:
-        - webLogin: []
-        - apiKey: []
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 10
-            minimum: 1
-            maximum: 100
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [pending, approved, rejected]
-        - name: type
-          in: query
-          schema:
-            type: string
-            enum: [new, update, delete]
-      responses:
-        "200":
-          description: List of submissions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Submission"
-                  totalCount:
-                    type: integer
-                required: [data, totalCount]
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Forbidden (submissions disabled)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    post:
-      summary: Create one or multiple submissions
-      description: |
-        Accepts either a single submission object or an array of up to 10.
-        Requires `write:submissions` permission.
-        - `station_id` is required when `type` is `update` or `delete`.
-        - For `type: new`, providing a `station` with an already-existing `station_id` + `operator_id` pair will return a 400 error.
-        - All submissions in a batch are processed in a single transaction.
-      tags: [Submissions]
-      security:
-        - webLogin: []
-        - apiKey: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateSubmissionRequest"
-      responses:
-        "200":
-          description: Submission(s) created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/SubmissionCreated"
-                required: [data]
-        "400":
-          description: Bad Request (e.g. validation error or duplicate station)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Forbidden (submissions disabled)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Referenced station not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to create submission
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /submissions/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      summary: Get submission details
-      tags: [Submissions]
-      security:
-        - webLogin: []
-        - apiKey: []
-      responses:
-        "200":
-          description: Submission details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Submission"
-        "400":
-          description: Bad Request (e.g. Validation error)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Submission not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    patch:
-      summary: Update a submission
-      tags: [Submissions]
-      security:
-        - webLogin: []
-        - apiKey: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateSubmissionRequest"
-      responses:
-        "200":
-          description: Submission updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/Submission"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Submission not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to update submission
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-    delete:
-      summary: Delete a submission
-      tags: [Submissions]
-      security:
-        - webLogin: []
-        - apiKey: []
-      responses:
-        "204":
-          description: Submission deleted
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Submission not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Failed to delete submission
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stats:
-    get:
-      summary: Get system statistics
-      tags: [System]
-      responses:
-        "200":
-          description: System stats
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      lastUpdated:
-                        type: object
-                      counts:
-                        type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /settings:
-    get:
-      summary: Get public settings
-      tags: [System]
-      responses:
-        "200":
-          description: Public settings
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      enforceAuthForAllRoutes:
-                        type: boolean
-                      submissionsEnabled:
-                        type: boolean
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /health:
-    get:
-      summary: Health check
-      tags: [System]
-      responses:
-        "200":
-          description: Service healthy
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                        example: ok
-                      timestamp:
-                        type: string
-                        format: date-time
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+            type: object
+            properties:
+              key: { type: string, enum: [stations, radiolines, permits, prune_associations, cleanup_orphaned_uke_locations, associate, cleanup] }
+              status: { type: string, enum: [pending, running, success, skipped, error] }
+              startedAt: { type: string, nullable: true }
+              finishedAt: { type: string, nullable: true }
+        error: { type: string, nullable: true }
