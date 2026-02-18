@@ -216,7 +216,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                       <td className="px-4 py-2.5">
                         {permit.sectors && permit.sectors.length > 0 ? (
                           <Collapsible>
-                            <CollapsibleTrigger className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                            <CollapsibleTrigger className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex">
                               {t("permits.sectorsCount", { count: permit.sectors.length })}{" "}
                               <HugeiconsIcon
                                 icon={ArrowDown01Icon}
