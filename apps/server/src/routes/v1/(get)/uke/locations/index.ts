@@ -2,7 +2,7 @@ import { sql, count, type SQL, type Column, inArray, and } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
-import { bands, operators, ukePermits, ukeLocations, regions, ukePermitSectors } from "@openbts/drizzle";
+import { bands, operators, ukePermits, ukeLocations, regions } from "@openbts/drizzle";
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 
@@ -15,12 +15,10 @@ const ukePermitsSchema = createSelectSchema(ukePermits).omit({ location_id: true
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
 const regionsSchema = createSelectSchema(regions);
-const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 
 const permitResponseSchema = ukePermitsSchema.extend({
   band: bandsSchema.nullable(),
   operator: operatorsSchema.nullable(),
-  sectors: z.array(sectorsSchema).optional(),
 });
 
 const schemaRoute = {
@@ -30,7 +28,7 @@ const schemaRoute = {
       .regex(/^-?\d+\.?\d*,-?\d+\.?\d*,-?\d+\.?\d*,-?\d+\.?\d*$/)
       .optional()
       .transform((val): number[] | undefined => (val ? val.split(",").map(Number) : undefined)),
-    limit: z.coerce.number().min(1).max(1000).optional().default(500),
+    limit: z.coerce.number().min(1).max(500).optional().default(500),
     page: z.coerce.number().min(1).default(1),
     rat: z
       .string()
@@ -225,11 +223,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             with: {
               band: true,
               operator: true,
-              sectors: {
-                columns: {
-                  permit_id: false,
-                },
-              },
             },
             ...(hasPermitFilters
               ? {

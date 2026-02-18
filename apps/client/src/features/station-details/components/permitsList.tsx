@@ -215,23 +215,34 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                     {showAntennaData && (
                       <td className="px-4 py-2.5">
                         {permit.sectors && permit.sectors.length > 0 ? (
-                          <div className="flex flex-col gap-1">
-                            {permit.sectors.map((sector) => (
-                              <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
-                                <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
-                                <span className="text-muted-foreground">/</span>
-                                <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
-                                {sector.antenna_type && (
-                                  <Tooltip>
-                                    <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
-                                      {t(`permits.antennaType.${sector.antenna_type}Short`)}
-                                    </TooltipTrigger>
-                                    <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
-                                  </Tooltip>
-                                )}
+                          <Collapsible>
+                            <CollapsibleTrigger className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                              {t("permits.sectorsCount", { count: permit.sectors.length })}{" "}
+                              <HugeiconsIcon
+                                icon={ArrowDown01Icon}
+                                className="size-3.5 ml-1 text-muted-foreground transition-transform in-data-panel-open:rotate-180"
+                              />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="flex flex-col gap-1 mt-1">
+                                {permit.sectors.map((sector) => (
+                                  <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
+                                    <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
+                                    <span className="text-muted-foreground">/</span>
+                                    <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
+                                    {sector.antenna_type && (
+                                      <Tooltip>
+                                        <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                          {t(`permits.antennaType.${sector.antenna_type}Short`)}
+                                        </TooltipTrigger>
+                                        <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </CollapsibleContent>
+                          </Collapsible>
                         ) : (
                           "-"
                         )}

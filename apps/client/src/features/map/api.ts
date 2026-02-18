@@ -1,4 +1,4 @@
-import type { StationFilters, LocationWithStations, UkeLocationWithPermits, RadioLine } from "@/types/station";
+import type { StationFilters, LocationWithStations, UkeLocationWithPermits, RadioLine, UkePermit } from "@/types/station";
 import { API_BASE, fetchJson } from "@/lib/api";
 
 export type LocationsResponse = {
@@ -26,7 +26,7 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
 export async function fetchLocations(bounds: string, filters: StationFilters, limit = 1000): Promise<LocationsResponse> {
   if (filters.source === "uke") {
     const params = buildFilterParams(filters);
-    params.set("limit", String(limit));
+    params.set("limit", "500");
     params.set("bounds", bounds);
     const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
     return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
@@ -44,6 +44,13 @@ export async function fetchLocationWithStations(locationId: number, filters: Sta
   const params = buildFilterParams(filters);
   const filter = params.toString() === "" ? "" : `?${decodeURIComponent(params.toString())}`;
   const result = await fetchJson<{ data: LocationWithStations }>(`${API_BASE}/locations/${locationId}${filter}`);
+  return result.data;
+}
+
+export async function fetchUkePermitsByStationId(stationId: string): Promise<UkePermit[]> {
+  const params = new URLSearchParams();
+  params.set("station_id", stationId);
+  const result = await fetchJson<{ data: UkePermit[] }>(`${API_BASE}/uke/permits?${decodeURIComponent(params.toString())}`);
   return result.data;
 }
 

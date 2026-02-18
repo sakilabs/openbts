@@ -148,10 +148,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
               or(ilike(fields.decision_number, like), sql`similarity(${fields.decision_number}, ${decision_number}) > ${SIMILARITY_THRESHOLD}`),
             );
           }
-          if (station_id) {
-            const like = `%${station_id}%`;
-            conditions.push(or(ilike(fields.station_id, like), sql`similarity(${fields.station_id}, ${station_id}) > ${SIMILARITY_THRESHOLD}`));
-          }
+          if (station_id) conditions.push(eq(fields.station_id, station_id));
           if (rat) {
             const ratMap: Record<string, string> = { gsm: "GSM", "gsm-r": "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" };
             const wantsGsmR = rat.includes("gsm-r");

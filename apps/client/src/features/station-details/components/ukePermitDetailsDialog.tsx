@@ -24,6 +24,8 @@ import type { UkeStation, UkePermit } from "@/types/station";
 import { RAT_ICONS } from "../utils";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import { useQuery } from "@tanstack/react-query";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
 
 type UkeStationDetailsDialogProps = {
   station: UkeStation | null;
@@ -58,12 +60,21 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
   useEscapeKey(onClose, !!station);
 
+  const { data: fetchedPermits } = useQuery({
+    queryKey: ["uke-permits-by-station", station?.station_id],
+    queryFn: () => fetchUkePermitsByStationId(station!.station_id),
+    enabled: !!station,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const permits = fetchedPermits ?? [];
+
   const permitsByRat = useMemo((): Map<string, UkePermit[]> => {
     if (!station) return new Map<string, UkePermit[]>();
-    return groupPermitsByRat(station.permits);
-  }, [station]);
+    return groupPermitsByRat(permits);
+  }, [station, permits]);
 
-  const hasDeviceRegistryData = useMemo(() => station?.permits.some((p) => p.source === "device_registry") ?? false, [station]);
+  const hasDeviceRegistryData = useMemo(() => permits.some((p) => p.source === "device_registry") ?? false, [permits]);
 
   if (!station) return null;
 
@@ -259,23 +270,34 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                                 {hasDeviceRegistryData && (
                                   <td className="px-4 py-2.5">
                                     {permit.sectors && permit.sectors.length > 0 ? (
-                                      <div className="flex flex-col gap-1">
-                                        {permit.sectors.map((sector) => (
-                                          <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
-                                            <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
-                                            <span className="text-muted-foreground">/</span>
-                                            <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
-                                            {sector.antenna_type && (
-                                              <Tooltip>
-                                                <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
-                                                  {t(`permits.antennaType.${sector.antenna_type}Short`)}
-                                                </TooltipTrigger>
-                                                <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
-                                              </Tooltip>
-                                            )}
+                                      <Collapsible>
+                                        <CollapsibleTrigger className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex">
+                                          {t("permits.sectorsCount", { count: permit.sectors.length })}{" "}
+                                          <HugeiconsIcon
+                                            icon={ArrowDown01Icon}
+                                            className="size-3.5 ml-1 text-muted-foreground transition-transform in-data-panel-open:rotate-180"
+                                          />
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent>
+                                          <div className="flex flex-col gap-1 mt-1">
+                                            {permit.sectors.map((sector) => (
+                                              <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
+                                                <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
+                                                <span className="text-muted-foreground">/</span>
+                                                <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
+                                                {sector.antenna_type && (
+                                                  <Tooltip>
+                                                    <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                                      {t(`permits.antennaType.${sector.antenna_type}Short`)}
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
+                                                  </Tooltip>
+                                                )}
+                                              </div>
+                                            ))}
                                           </div>
-                                        ))}
-                                      </div>
+                                        </CollapsibleContent>
+                                      </Collapsible>
                                     ) : (
                                       "-"
                                     )}
