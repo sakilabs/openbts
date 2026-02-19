@@ -1,4 +1,4 @@
-export const RECENT_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+export const RECENT_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function isRecent(date: string | Date): boolean {
   const d = typeof date === "string" ? new Date(date) : date;

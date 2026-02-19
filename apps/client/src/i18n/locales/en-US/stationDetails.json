@@ -9,7 +9,7 @@
     "networkName": "Network Name:",
     "mnoName": "MNO:",
     "internalNotes": "Internal Notes",
-    "newCellTooltip": "This cell was added in the last 7 days"
+    "newCellTooltip": "This cell was added in the last 30 days"
   },
   "permits": {
     "permitsCount_one": "{{count}} permit",
@@ -29,7 +29,7 @@
     "noPermits": "No UKE permits for this station",
     "decisionTypeP": "Permit",
     "decisionTypeZmP": "Permit Change",
-    "newPermitTooltip": "This permit was added in the last 7 days",
+    "newPermitTooltip": "This permit was added in the last 30 days",
     "sectors": "Sectors",
     "sectorsAzimuth": "Azimuth",
     "sectorsElevation": "Elevation",
