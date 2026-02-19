@@ -124,19 +124,27 @@ export const proposedStations = SubmissionsSchema.table(
     is_confirmed: boolean("is_confirmed").default(false),
     status: StationStatus("status").notNull().default("pending"),
   },
-  (t) => [unique("proposed_stations_submission_station_unique").on(t.submission_id, t.station_id)],
+  (t) => [
+    index("proposed_stations_submission_id_idx").on(t.submission_id),
+    index("proposed_stations_target_station_id_idx").on(t.target_station_id),
+    unique("proposed_stations_submission_station_unique").on(t.submission_id, t.station_id),
+  ],
 );
 
-export const proposedLocations = SubmissionsSchema.table("proposed_locations", {
-  id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-  submission_id: uuid("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
-  region_id: integer("region_id")
-    .references(() => regions.id, { onDelete: "cascade", onUpdate: "cascade" })
-    .notNull(),
-  city: varchar("city", { length: 100 }),
-  address: text("address"),
-  longitude: doublePrecision("longitude").notNull(),
-  latitude: doublePrecision("latitude").notNull(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const proposedLocations = SubmissionsSchema.table(
+  "proposed_locations",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    submission_id: uuid("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    region_id: integer("region_id")
+      .references(() => regions.id, { onDelete: "cascade", onUpdate: "cascade" })
+      .notNull(),
+    city: varchar("city", { length: 100 }),
+    address: text("address"),
+    longitude: doublePrecision("longitude").notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("proposed_locations_submission_id_idx").on(t.submission_id)],
+);

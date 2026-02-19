@@ -163,7 +163,11 @@ export const stationsPermits = pgTable(
     permit_id: integer("permit_id").references(() => ukePermits.id, { onDelete: "cascade", onUpdate: "cascade" }),
     station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
   },
-  (t) => [index("stations_permits_station_id_idx").on(t.station_id), unique("stations_permits_pair_unique").on(t.station_id, t.permit_id)],
+  (t) => [
+    index("stations_permits_station_id_idx").on(t.station_id),
+    index("stations_permits_permit_id_idx").on(t.permit_id),
+    unique("stations_permits_pair_unique").on(t.station_id, t.permit_id),
+  ],
 );
 
 export const networksIds = pgTable(
@@ -180,7 +184,12 @@ export const networksIds = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("networks_ids_station_idx").on(t.station_id), unique("networks_ids_networks_id_unique").on(t.station_id, t.networks_id)],
+  (t) => [
+    index("networks_ids_station_idx").on(t.station_id),
+    index("networks_ids_networks_id_trgm_idx").using("gin", sql`(${t.networks_id}) gin_trgm_ops`),
+    index("networks_ids_networks_name_trgm_idx").using("gin", sql`(${t.networks_name}) gin_trgm_ops`),
+    unique("networks_ids_networks_id_unique").on(t.station_id, t.networks_id),
+  ],
 );
 
 /**
@@ -389,6 +398,7 @@ export const bands = pgTable(
     unique("bands_rat_value_unique").on(t.rat, t.value, t.duplex, t.variant).nullsNotDistinct(),
     unique("bands_name_unique").on(t.name),
     index("bands_value_idx").on(t.value),
+    index("bands_rat_idx").on(t.rat),
   ],
 );
 
@@ -487,6 +497,7 @@ export const ukeRadiolines = pgTable(
     index("uke_radiolines_permit_number_trgm_idx").using("gin", sql`(${t.permit_number}) gin_trgm_ops`),
     index("uke_radiolines_tx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${t.tx_longitude}, ${t.tx_latitude}), 4326))`),
     index("uke_radiolines_rx_point_gist").using("gist", sql`(ST_SetSRID(ST_MakePoint(${t.rx_longitude}, ${t.rx_latitude}), 4326))`),
+    index("uke_radiolines_freq_idx").on(t.freq),
   ],
 );
 

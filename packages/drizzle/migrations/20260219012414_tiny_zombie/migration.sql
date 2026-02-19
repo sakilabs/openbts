@@ -492,6 +492,7 @@ CREATE TABLE "submissions"."submissions" (
 );
 --> statement-breakpoint
 CREATE INDEX "bands_value_idx" ON "bands" ("value");--> statement-breakpoint
+CREATE INDEX "bands_rat_idx" ON "bands" ("rat");--> statement-breakpoint
 CREATE INDEX "cells_station_band_rat_idx" ON "cells" ("station_id","band_id","rat");--> statement-breakpoint
 CREATE INDEX "cells_station_rat_idx" ON "cells" ("station_id","rat");--> statement-breakpoint
 CREATE INDEX "gsm_cells_cid_idx" ON "gsm_cells" ("cid");--> statement-breakpoint
@@ -505,6 +506,8 @@ CREATE INDEX "lte_cells_nb_iot_true_idx" ON "lte_cells" ("enbid","clid") WHERE "
 CREATE INDEX "lte_cells_enbid_trgm_idx" ON "lte_cells" USING gin (("enbid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "lte_cells_ecid_trgm_idx" ON "lte_cells" USING gin (("ecid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "networks_ids_station_idx" ON "networks_ids" ("station_id");--> statement-breakpoint
+CREATE INDEX "networks_ids_networks_id_trgm_idx" ON "networks_ids" USING gin (("networks_id") gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "networks_ids_networks_name_trgm_idx" ON "networks_ids" USING gin (("networks_name") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "nr_cells_redcap_true_idx" ON "nr_cells" ("gnbid","clid") WHERE "supports_nr_redcap" = true;--> statement-breakpoint
 CREATE INDEX "nr_cells_gnbid_trgm_idx" ON "nr_cells" USING gin (("gnbid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "nr_cells_nci_trgm_idx" ON "nr_cells" USING gin (("nci"::text) gin_trgm_ops);--> statement-breakpoint
@@ -517,6 +520,7 @@ CREATE INDEX "stations_station_id_idx" ON "stations" ("station_id");--> statemen
 CREATE INDEX "stations_updated_at_idx" ON "stations" ("updatedAt");--> statement-breakpoint
 CREATE INDEX "stations_created_at_idx" ON "stations" ("createdAt");--> statement-breakpoint
 CREATE INDEX "stations_permits_station_id_idx" ON "stations_permits" ("station_id");--> statement-breakpoint
+CREATE INDEX "stations_permits_permit_id_idx" ON "stations_permits" ("permit_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_region_id_idx" ON "uke_locations" ("region_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_point_gist" ON "uke_locations" USING gist ("point");--> statement-breakpoint
 CREATE INDEX "uke_locations_created_at_idx" ON "uke_locations" ("createdAt");--> statement-breakpoint
@@ -539,6 +543,7 @@ CREATE INDEX "uke_radiolines_permit_number_idx" ON "uke_radiolines" ("permit_num
 CREATE INDEX "uke_radiolines_permit_number_trgm_idx" ON "uke_radiolines" USING gin (("permit_number") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "uke_radiolines_tx_point_gist" ON "uke_radiolines" USING gist ((ST_SetSRID(ST_MakePoint("tx_longitude", "tx_latitude"), 4326)));--> statement-breakpoint
 CREATE INDEX "uke_radiolines_rx_point_gist" ON "uke_radiolines" USING gist ((ST_SetSRID(ST_MakePoint("rx_longitude", "rx_latitude"), 4326)));--> statement-breakpoint
+CREATE INDEX "uke_radiolines_freq_idx" ON "uke_radiolines" ("freq");--> statement-breakpoint
 CREATE INDEX "umts_cells_cid_idx" ON "umts_cells" ("cid");--> statement-breakpoint
 CREATE INDEX "umts_cells_cid_trgm_idx" ON "umts_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "umts_cells_cid_long_trgm_idx" ON "umts_cells" USING gin (("cid_long"::text) gin_trgm_ops);--> statement-breakpoint
@@ -552,6 +557,9 @@ CREATE INDEX "audit_logs_invoked_by_idx" ON "audit_logs" ("invoked_by");--> stat
 CREATE INDEX "audit_logs_table_name_idx" ON "audit_logs" ("table_name");--> statement-breakpoint
 CREATE INDEX "audit_logs_date_created_idx" ON "audit_logs" ("createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_action_idx" ON "audit_logs" ("action");--> statement-breakpoint
+CREATE INDEX "audit_logs_table_name_created_idx" ON "audit_logs" ("table_name","createdAt");--> statement-breakpoint
+CREATE INDEX "audit_logs_action_created_idx" ON "audit_logs" ("action","createdAt");--> statement-breakpoint
+CREATE INDEX "audit_logs_invoked_by_created_idx" ON "audit_logs" ("invoked_by","createdAt");--> statement-breakpoint
 CREATE INDEX "passkeys_userId_idx" ON "auth"."passkeys" ("user_id");--> statement-breakpoint
 CREATE INDEX "passkeys_credentialID_idx" ON "auth"."passkeys" ("credential_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_id_idx" ON "station_comments" ("station_id");--> statement-breakpoint
@@ -559,12 +567,13 @@ CREATE INDEX "station_comments_user_id_idx" ON "station_comments" ("user_id");--
 CREATE INDEX "station_comments_station_created_idx" ON "station_comments" ("station_id","createdAt");--> statement-breakpoint
 CREATE INDEX "twoFactors_secret_idx" ON "auth"."two_factors" ("secret");--> statement-breakpoint
 CREATE INDEX "twoFactors_userId_idx" ON "auth"."two_factors" ("user_id");--> statement-breakpoint
-CREATE INDEX "user_lists_id_idx" ON "user_lists" ("id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" ("created_by");--> statement-breakpoint
 CREATE INDEX "user_lists_stations_gin" ON "user_lists" USING gin ("stations");--> statement-breakpoint
-CREATE INDEX "users_id_idx" ON "auth"."users" ("id");--> statement-breakpoint
 CREATE INDEX "users_email_idx" ON "auth"."users" ("email");--> statement-breakpoint
 CREATE INDEX "proposed_cells_submission_id_idx" ON "submissions"."proposed_cells" ("submission_id");--> statement-breakpoint
+CREATE INDEX "proposed_locations_submission_id_idx" ON "submissions"."proposed_locations" ("submission_id");--> statement-breakpoint
+CREATE INDEX "proposed_stations_submission_id_idx" ON "submissions"."proposed_stations" ("submission_id");--> statement-breakpoint
+CREATE INDEX "proposed_stations_target_station_id_idx" ON "submissions"."proposed_stations" ("target_station_id");--> statement-breakpoint
 CREATE INDEX "submission_station_id_idx" ON "submissions"."submissions" ("station_id");--> statement-breakpoint
 CREATE INDEX "submission_submitter_id_idx" ON "submissions"."submissions" ("submitter_id");--> statement-breakpoint
 CREATE INDEX "submission_reviewer_id_idx" ON "submissions"."submissions" ("reviewer_id");--> statement-breakpoint

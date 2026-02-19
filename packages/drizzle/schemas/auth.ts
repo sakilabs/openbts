@@ -61,7 +61,7 @@ export const users = AuthSchema.table(
     banExpires: timestamp({ withTimezone: true }),
     twoFactorEnabled: boolean("two_factor_enabled").default(false),
   },
-  (table) => [index("users_id_idx").on(table.id), index("users_email_idx").on(table.email)],
+  (table) => [index("users_email_idx").on(table.email)],
 );
 
 // export const sessions = pgTable("sessions", {
@@ -239,7 +239,6 @@ export const userLists = pgTable(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("user_lists_id_idx").on(t.id),
     index("user_lists_created_by_idx").on(t.created_by),
     index("user_lists_stations_gin").using("gin", t.stations),
     unique("user_lists_creator_name_unique").on(t.created_by, t.name),
@@ -302,5 +301,8 @@ export const auditLogs = pgTable(
     index("audit_logs_table_name_idx").on(table.table_name),
     index("audit_logs_date_created_idx").on(table.createdAt),
     index("audit_logs_action_idx").on(table.action),
+    index("audit_logs_table_name_created_idx").on(table.table_name, table.createdAt),
+    index("audit_logs_action_created_idx").on(table.action, table.createdAt),
+    index("audit_logs_invoked_by_created_idx").on(table.invoked_by, table.createdAt),
   ],
 );

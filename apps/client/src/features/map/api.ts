@@ -26,7 +26,7 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
 export async function fetchLocations(bounds: string, filters: StationFilters, limit = 1000): Promise<LocationsResponse> {
   if (filters.source === "uke") {
     const params = buildFilterParams(filters);
-    params.set("limit", "500");
+    params.set("limit", String(limit));
     params.set("bounds", bounds);
     const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
     return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };

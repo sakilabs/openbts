@@ -91,8 +91,8 @@ function mapCellOperation(op: string): "add" | "update" | "delete" {
 function isNonEmpty(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === "string") return value.trim().length > 0;
-  if (typeof value === "number") return true; // 0 is a valid coordinate/id
-  if (typeof value === "boolean") return true; // false is an intentional value
+  if (typeof value === "number") return true;
+  if (typeof value === "boolean") return true;
   if (Array.isArray(value)) return value.length > 0 && value.some(isNonEmpty);
   if (typeof value === "object") return Object.values(value as object).some(isNonEmpty);
   return false;

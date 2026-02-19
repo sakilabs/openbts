@@ -143,8 +143,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
   const mutation = useMutation({
     mutationFn: isEditMode
       ? (data: Parameters<typeof updateSubmission>[1]) => {
-          if (!editSubmissionId)
-            throw new Error("editSubmissionId is required for updateSubmission");
+          if (!editSubmissionId) throw new Error("editSubmissionId is required for updateSubmission");
           return updateSubmission(editSubmissionId, data);
         }
       : createSubmission,

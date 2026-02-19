@@ -62,7 +62,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
   const { data: fetchedPermits } = useQuery({
     queryKey: ["uke-permits-by-station", station?.station_id],
-    queryFn: () => station ? fetchUkePermitsByStationId(station.station_id) : Promise.resolve([]),
+    queryFn: () => (station ? fetchUkePermitsByStationId(station.station_id) : Promise.resolve([])),
     enabled: !!station,
     staleTime: 1000 * 60 * 5,
   });
