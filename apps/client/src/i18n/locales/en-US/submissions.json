@@ -85,6 +85,8 @@
     "enbidRequired": "eNBID is required",
     "clidRequired": "CLID is required",
     "clidRangeInvalid": "CLID must be between 0 and 255",
+    "pciRequired": "PCI is required",
+    "pciRangeInvalid": "PCI must be between 0 and 503",
     "nciRequired": "NCI is required",
     "gnbidRequired": "gNBID is required",
     "mustBePositive": "Value cannot be negative"

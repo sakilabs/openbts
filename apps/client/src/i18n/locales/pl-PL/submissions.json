@@ -84,6 +84,8 @@
     "rncRequired": "RNC jest wymagany",
     "enbidRequired": "eNBID jest wymagany",
     "clidRequired": "CLID jest wymagany",
+    "pciRequired": "PCI jest wymagany",
+    "pciRangeInvalid": "PCI musi być między 0 a 503",
     "clidRangeInvalid": "CLID musi być między 0 a 255",
     "nciRequired": "NCI jest wymagany",
     "gnbidRequired": "gNBID jest wymagany",

@@ -69,11 +69,13 @@ CREATE TABLE "lte_cells" (
 	"enbid" integer NOT NULL,
 	"clid" integer NOT NULL,
 	"ecid" integer GENERATED ALWAYS AS (("lte_cells"."enbid" * 256) + "lte_cells"."clid") STORED NOT NULL,
+	"pci" integer,
 	"supports_nb_iot" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "lte_cells_enbid_clid_unique" UNIQUE("cell_id","enbid","clid"),
-	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255)
+	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
+	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
 );
 --> statement-breakpoint
 CREATE TABLE "networks_ids" (

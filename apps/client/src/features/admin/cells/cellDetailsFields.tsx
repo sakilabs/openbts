@@ -110,6 +110,14 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             onDetailChange={onDetailChange}
           />
           <DetailComputedCell value={eCid} />
+          <DetailInputCell
+            field="pci"
+            placeholder="PCI"
+            value={(d.pci as number) ?? ""}
+            error={!!detailErrors?.pci}
+            disabled={disabled}
+            onDetailChange={onDetailChange}
+          />
           <td className="px-2 py-1">
             <Checkbox
               checked={(d.supports_nb_iot as boolean) ?? false}

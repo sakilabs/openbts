@@ -90,9 +90,10 @@ export const proposedLTECells = SubmissionsSchema.table(
     tac: integer("tac"),
     enbid: integer("enbid").notNull(),
     clid: integer("clid").notNull(),
+    pci: integer("pci"),
     supports_nb_iot: boolean("supports_nb_iot").default(false),
   },
-  (t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`)],
+  (t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`), check("pci_check", sql`${t.pci} BETWEEN 0 AND 503`)],
 );
 
 export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {

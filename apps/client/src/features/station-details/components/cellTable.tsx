@@ -54,6 +54,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">eNBID</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">CLID</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">E-CID</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">PCI</th>
                   </>
                 )}
                 {rat === "NR" && (

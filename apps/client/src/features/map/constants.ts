@@ -71,6 +71,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "ecid:", description: "LTE E-UTRAN Cell ID", availableOn: ["map", "stations"] },
   { key: "lte_clid:", description: "LTE Cell Local ID", availableOn: ["map", "stations"] },
   { key: "tac:", description: "LTE Tracking Area Code", availableOn: ["map", "stations"] },
+  { key: "lte_pci:", description: "LTE PCI", availableOn: ["map", "stations"] },
   { key: "supports_nb_iot:", description: "Supports NB-IoT (true, false)", availableOn: ["map", "stations"] },
 
   // NR (5G) cell filters
@@ -78,6 +79,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "nci:", description: "5G NR Cell Identity", availableOn: ["map", "stations"] },
   { key: "nr_clid:", description: "5G Cell Local ID", availableOn: ["map", "stations"] },
   { key: "nrtac:", description: "5G Tracking Area Code", availableOn: ["map", "stations"] },
+  { key: "nr_pci:", description: "5G PCI", availableOn: ["map", "stations"] },
   { key: "supports_nr_redcap:", description: "Supports NR RedCap (true, false)", availableOn: ["map", "stations"] },
 
   // NetWorkS filters

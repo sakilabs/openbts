@@ -20,6 +20,7 @@ export type LTECellDetails = {
   tac?: number;
   enbid: number;
   clid: number;
+  pci?: number;
   supports_nb_iot?: boolean;
 };
 

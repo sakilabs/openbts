@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "ec625ec2-e4be-4b4f-8352-7c846685f8c3",
+  "id": "2184f653-c0d5-4b45-bfbc-10bdf8242c5e",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -838,6 +838,19 @@
       },
       "identity": null,
       "name": "ecid",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lte_cells"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "pci",
       "entityType": "columns",
       "schema": "public",
       "table": "lte_cells"
@@ -8099,6 +8112,13 @@
     {
       "value": "\"clid\" BETWEEN 0 AND 255",
       "name": "clid_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "lte_cells"
+    },
+    {
+      "value": "\"pci\" BETWEEN 0 AND 503",
+      "name": "pci_check",
       "entityType": "checks",
       "schema": "public",
       "table": "lte_cells"

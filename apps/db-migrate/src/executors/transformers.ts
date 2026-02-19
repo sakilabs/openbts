@@ -76,12 +76,14 @@ export interface PreparedLTEDetails {
   tac: number | null;
   enbid: number;
   clid: number;
+  pci: number | null;
   supports_nb_iot: boolean;
 }
 export interface PreparedNRDetails {
   nrtac: number | null;
   gnbid: number | null;
   clid: number | null;
+  pci: number | null;
   supports_nr_redcap: boolean;
 }
 
@@ -261,15 +263,16 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
           if (clid < 0) clid = 0;
           if (clid > 255) clid = clid % 256;
           if (enbid === null || clid === null) logger.warn(`[WARN] Skipping LTE cell id=${cell.id}: enbid=${enbid}, clid=${clid} (both required)`);
-          out.push({ ...base, rat, lte: { tac, enbid, clid, supports_nb_iot: false } });
+          out.push({ ...base, rat, lte: { tac, enbid, clid, pci: null, supports_nb_iot: false } });
         }
         break;
       case "NR":
         {
-          const gnbid = toInt(station.enbi) ?? null;
-          const clid = toInt(cell.cid) ?? null;
-          if (gnbid === null || clid === null) logger.warn(`[WARN] Skipping NR cell id=${cell.id}: gnbid=${gnbid}, clid=${clid} (both required)`);
-          out.push({ ...base, rat, nr: { nrtac: null, gnbid, clid, supports_nr_redcap: false } });
+          const gnbid = null;
+          const clid = null;
+          const nrtac = null;
+          const pci = null;
+          out.push({ ...base, rat, nr: { nrtac, gnbid, clid, pci, supports_nr_redcap: false } });
         }
         break;
     }

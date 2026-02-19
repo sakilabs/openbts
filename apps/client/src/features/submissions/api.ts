@@ -112,7 +112,7 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
 const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
   GSM: ["lac", "cid", "is_egsm"],
   UMTS: ["lac", "carrier", "rnc", "cid"],
-  LTE: ["tac", "enbid", "clid", "supports_nb_iot"],
+  LTE: ["tac", "enbid", "clid", "pci", "supports_nb_iot"],
   NR: ["nrtac", "gnbid", "gnbid_length", "clid", "pci", "supports_nr_redcap"],
 };
 

@@ -142,6 +142,10 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     table: "lteCells",
     buildCondition: buildInArray(lteCells.tac, parseNumbers),
   },
+  lte_pci: {
+    table: "lteCells",
+    buildCondition: buildInArray(lteCells.pci, parseNumbers),
+  },
   supports_nb_iot: {
     table: "lteCells",
     buildCondition: buildBooleanEq(lteCells.supports_nb_iot),
@@ -163,6 +167,10 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   nrtac: {
     table: "nrCells",
     buildCondition: buildInArray(nrCells.nrtac, parseNumbers),
+  },
+  nr_pci: {
+    table: "nrCells",
+    buildCondition: buildInArray(nrCells.pci, parseNumbers),
   },
   supports_nr_redcap: {
     table: "nrCells",

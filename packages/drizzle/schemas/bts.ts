@@ -336,12 +336,14 @@ export const lteCells = pgTable(
     ecid: integer("ecid")
       .notNull()
       .generatedAlwaysAs((): SQL => sql`(${lteCells.enbid} * 256) + ${lteCells.clid}`),
+    pci: integer("pci"),
     supports_nb_iot: boolean("supports_nb_iot").default(false),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`),
+    check("pci_check", sql`${t.pci} BETWEEN 0 AND 503`),
     unique("lte_cells_enbid_clid_unique").on(t.cell_id, t.enbid, t.clid),
     index("lte_cells_nb_iot_true_idx")
       .on(t.enbid, t.clid)

@@ -16,7 +16,7 @@ export function getTableHeaders(rat: string, t: TFunction, options?: { showConfi
       return headers;
     }
     case "LTE": {
-      const headers = [t("common:labels.band"), "Duplex", "TAC", "eNBID", "CLID", "E-CID", "NB-IoT", t("common:labels.notes")];
+      const headers = [t("common:labels.band"), "Duplex", "TAC", "eNBID", "CLID", "E-CID", "PCI", "NB-IoT", t("common:labels.notes")];
       if (showConfirmed) headers.push(t("common:labels.confirmed"));
       headers.push("");
       return headers;

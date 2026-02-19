@@ -141,6 +141,8 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       requireNonNegative("enbid", d.enbid);
       requireNonNegative("clid", d.clid);
       if (d.clid !== undefined && d.clid > 255) errors.clid = "validation.clidRangeInvalid";
+      optionalNonNegative("pci", d.pci);
+      if (d.pci !== undefined && d.pci > 503) errors.pci = "validation.pciRangeInvalid";
       break;
     }
     case "NR": {
