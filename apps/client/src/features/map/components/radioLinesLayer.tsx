@@ -6,6 +6,8 @@ import { useRadioLinesLayer } from "../hooks/useRadioLinesLayer";
 import { radioLinesToGeoJSON } from "../geojson";
 import { RadioLinePopupContent } from "./radioLinePopupContent";
 import type { RadioLine } from "@/types/station";
+import type { DuplexRadioLink } from "../utils";
+import { groupRadioLinesIntoLinks } from "../utils";
 import { usePreferences } from "@/hooks/usePreferences";
 
 const RadioLineDetailsDialog = lazy(() =>
@@ -22,10 +24,12 @@ type RadioLinesLayerProps = {
 export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
-  const [selectedRadioLine, setSelectedRadioLine] = useState<RadioLine | null>(null);
+  const [selectedLink, setSelectedLink] = useState<DuplexRadioLink | null>(null);
 
   const popupRef = useRef<MapLibreGL.Popup | null>(null);
   const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
+
+  const duplexLinks = useMemo(() => groupRadioLinesIntoLinks(radioLines), [radioLines]);
 
   const { lines, endpoints } = useMemo(() => {
     if (!radioLines.length) return { lines: EMPTY_LINES, endpoints: EMPTY_ENDPOINTS };
@@ -40,15 +44,15 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
   }, []);
 
   const handleOpenDetails = useCallback(
-    (radioLine: RadioLine) => {
-      setSelectedRadioLine(radioLine);
+    (link: DuplexRadioLink) => {
+      setSelectedLink(link);
       cleanupPopup();
     },
     [cleanupPopup],
   );
 
   const handleFeatureClick = useCallback(
-    (radioLines: RadioLine[], coordinates: [number, number]) => {
+    (link: DuplexRadioLink, coordinates: [number, number]) => {
       if (!map) return;
 
       cleanupPopup();
@@ -59,7 +63,7 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
       const root = createRoot(container);
       popupRootRef.current = root;
 
-      root.render(<RadioLinePopupContent radioLines={radioLines} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
+      root.render(<RadioLinePopupContent link={link} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
 
       const popup = new MapLibreGL.Popup({
         closeButton: true,
@@ -81,16 +85,16 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
     isLoaded,
     linesGeoJSON: lines,
     endpointsGeoJSON: endpoints,
-    radioLines,
+    duplexLinks,
     minZoom: preferences.radiolinesMinZoom,
     onFeatureClick: handleFeatureClick,
   });
 
-  const handleCloseDetails = useCallback(() => setSelectedRadioLine(null), []);
+  const handleCloseDetails = useCallback(() => setSelectedLink(null), []);
 
   return (
     <Suspense fallback={null}>
-      {selectedRadioLine && <RadioLineDetailsDialog key={selectedRadioLine.id} radioLine={selectedRadioLine} onClose={handleCloseDetails} />}
+      {selectedLink && <RadioLineDetailsDialog key={selectedLink.groupId} link={selectedLink} onClose={handleCloseDetails} />}
     </Suspense>
   );
 }

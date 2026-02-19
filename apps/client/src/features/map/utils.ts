@@ -1,5 +1,6 @@
 import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { RAT_ORDER } from "./constants";
+import { isPermitExpired } from "@/lib/dateUtils";
 
 export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLocationWithPermits): UkeStation[] {
   const stationMap = new Map<string, UkeStation>();
@@ -114,38 +115,69 @@ export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2:
   return ((theta * 180) / Math.PI + 360) % 360;
 }
 
-export function findColocatedRadioLines(target: RadioLine, all: RadioLine[]): RadioLine[] {
-  const txLat = target.tx.latitude;
-  const txLng = target.tx.longitude;
-  const rxLat = target.rx.latitude;
-  const rxLng = target.rx.longitude;
+export type DuplexRadioLink = {
+  groupId: string;
+  a: { latitude: number; longitude: number };
+  b: { latitude: number; longitude: number };
+  directions: RadioLine[];
+  isExpired: boolean;
+};
 
-  const operatorId = target.operator?.id;
-
-  return all.filter((rl) => {
-    if (rl.operator?.id !== operatorId) return false;
-    const matchForward = rl.tx.latitude === txLat && rl.tx.longitude === txLng && rl.rx.latitude === rxLat && rl.rx.longitude === rxLng;
-    const matchReverse = rl.tx.latitude === rxLat && rl.tx.longitude === rxLng && rl.rx.latitude === txLat && rl.rx.longitude === txLng;
-    return matchForward || matchReverse;
-  });
+function endpointPairKey(rl: RadioLine): string {
+  const a = `${rl.tx.latitude},${rl.tx.longitude}`;
+  const b = `${rl.rx.latitude},${rl.rx.longitude}`;
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
 
-export function findLinkPartnerRadioLine(target: RadioLine, all: RadioLine[]): RadioLine | undefined {
-  const operatorId = target.operator?.id;
-  const txLat = target.tx.latitude;
-  const txLng = target.tx.longitude;
-  const rxLat = target.rx.latitude;
-  const rxLng = target.rx.longitude;
+export function groupRadioLinesIntoLinks(radioLines: RadioLine[]): DuplexRadioLink[] {
+  const groups = new Map<string, RadioLine[]>();
 
-  return all.find(
-    (rl) =>
-      rl.id !== target.id &&
-      rl.operator?.id === operatorId &&
-      rl.tx.latitude === rxLat &&
-      rl.tx.longitude === rxLng &&
-      rl.rx.latitude === txLat &&
-      rl.rx.longitude === txLng,
-  );
+  for (const rl of radioLines) {
+    const opId = rl.operator?.id ?? "unknown";
+    const key = rl.permit.number ? `permit:${opId}::${rl.permit.number}` : `coords:${opId}::${endpointPairKey(rl)}`;
+
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(rl);
+    } else {
+      groups.set(key, [rl]);
+    }
+  }
+
+  const links: DuplexRadioLink[] = [];
+  for (const [key, directions] of groups) {
+    const first = directions[0];
+    const p1 = { latitude: first.tx.latitude, longitude: first.tx.longitude };
+    const p2 = { latitude: first.rx.latitude, longitude: first.rx.longitude };
+
+    const p1Key = `${p1.latitude},${p1.longitude}`;
+    const p2Key = `${p2.latitude},${p2.longitude}`;
+    const [a, b] = p1Key <= p2Key ? [p1, p2] : [p2, p1];
+
+    const aKey = `${a.latitude},${a.longitude}`;
+    const forward = directions.filter((d) => `${d.tx.latitude},${d.tx.longitude}` === aKey);
+    const reverse = directions.filter((d) => `${d.tx.latitude},${d.tx.longitude}` !== aKey);
+    const sorted: RadioLine[] = [];
+    const len = Math.max(forward.length, reverse.length);
+    for (let i = 0; i < len; i++) {
+      if (i < forward.length) sorted.push(forward[i]);
+      if (i < reverse.length) sorted.push(reverse[i]);
+    }
+
+    links.push({
+      groupId: key,
+      a,
+      b,
+      directions: sorted,
+      isExpired: directions.some((d) => isPermitExpired(d.permit.expiry_date)),
+    });
+  }
+
+  return links;
+}
+
+export function findDuplexLinkByRadioLineId(radioLineId: number, links: DuplexRadioLink[]): DuplexRadioLink | undefined {
+  return links.find((link) => link.directions.some((d) => d.id === radioLineId));
 }
 
 export function calculateTA(distanceMeters: number) {

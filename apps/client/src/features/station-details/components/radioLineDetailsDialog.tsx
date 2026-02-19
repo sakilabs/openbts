@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -29,10 +30,10 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { CopyButton } from "./copyButton";
 import { calculateDistance, formatDistance, formatBandwidth, formatFrequency } from "@/features/map/utils";
-import type { RadioLine } from "@/types/station";
+import type { DuplexRadioLink } from "@/features/map/utils";
 
 type RadioLineDetailsDialogProps = {
-  radioLine: RadioLine;
+  link: DuplexRadioLink;
   onClose: () => void;
 };
 
@@ -47,18 +48,19 @@ function InfoRow({ icon, label, value, mono }: { icon?: typeof Cancel01Icon; lab
   );
 }
 
-export function RadioLineDetailsDialog({ radioLine, onClose }: RadioLineDetailsDialogProps) {
+export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialogProps) {
   const { t, i18n } = useTranslation(["main", "stationDetails", "common"]);
   const { preferences } = usePreferences();
+  const [selectedDirIndex, setSelectedDirIndex] = useState(0);
 
   useEscapeKey(onClose, true);
 
+  const radioLine = link.directions[selectedDirIndex] ?? link.directions[0];
   const mnc = resolveOperatorMnc(radioLine.operator?.mnc, radioLine.operator?.name);
   const operatorColor = mnc ? getOperatorColor(mnc) : "#3b82f6";
   const operatorName = radioLine.operator?.name ? normalizeOperatorName(radioLine.operator.name) : t("unknownOperator");
-  const isExpired = radioLine.permit.expiry_date ? isPermitExpired(radioLine.permit.expiry_date) : false;
 
-  const distance = calculateDistance(radioLine.tx.latitude, radioLine.tx.longitude, radioLine.rx.latitude, radioLine.rx.longitude);
+  const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -85,14 +87,19 @@ export function RadioLineDetailsDialog({ radioLine, onClose }: RadioLineDetailsD
                   <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
                     {normalizeOperatorName(operatorName)}
                   </h2>
-                  <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">#{radioLine.id}</span>
+                  {link.directions.length > 1 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-[9px] font-bold uppercase text-blue-500 border border-blue-500/20">
+                      FDD
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <HugeiconsIcon icon={Radio01Icon} className="size-3.5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
-                  <span className="text-sm text-muted-foreground">·</span>
                   <HugeiconsIcon icon={RulerIcon} className="size-3.5 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground/90">{formatDistance(distance)}</span>
+                  <span className="text-sm text-muted-foreground">·</span>
+                  <HugeiconsIcon icon={Radio01Icon} className="size-3.5 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
+                  {link.directions.length > 1 && <span className="text-xs text-muted-foreground">+{link.directions.length - 1}</span>}
                 </div>
               </div>
             </div>
@@ -105,6 +112,30 @@ export function RadioLineDetailsDialog({ radioLine, onClose }: RadioLineDetailsD
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {link.directions.length > 1 && (
+            <div className="px-6 pt-4 flex items-center gap-3">
+              <div className="flex gap-1 p-1 bg-muted/30 rounded-lg overflow-x-auto max-w-full custom-scrollbar">
+                {link.directions.map((dir, idx) => (
+                  <button
+                    key={dir.id}
+                    type="button"
+                    className={cn(
+                      "px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0",
+                      selectedDirIndex === idx ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+                    )}
+                    onClick={() => setSelectedDirIndex(idx)}
+                  >
+                    {formatFrequency(dir.link.freq)}
+                    <span className="ml-1.5 text-[9px] text-muted-foreground">#{dir.id}</span>
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+                {selectedDirIndex + 1} / {link.directions.length}
+              </span>
+            </div>
+          )}
+
           <div className="px-6 py-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -220,40 +251,46 @@ export function RadioLineDetailsDialog({ radioLine, onClose }: RadioLineDetailsD
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs">{radioLine.permit.number || "-"}</span>
-                          {radioLine.permit.decision_type && (
-                            <Tooltip>
-                              <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
-                                {radioLine.permit.decision_type}
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {radioLine.permit.decision_type === "zmP"
-                                  ? t("stationDetails:permits.decisionTypeZmP")
-                                  : t("stationDetails:permits.decisionTypeP")}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        {isExpired ? (
-                          <div className="flex items-center gap-2">
-                            <HugeiconsIcon icon={Calendar03Icon} className="size-3.5 text-destructive" />
-                            <span className="text-destructive font-medium">
-                              {new Date(radioLine.permit.expiry_date).toLocaleDateString(i18n.language)}
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
-                              {t("common:status.expired")}
-                            </span>
-                          </div>
-                        ) : (
-                          <span>{new Date(radioLine.permit.expiry_date).toLocaleDateString(i18n.language)}</span>
-                        )}
-                      </td>
-                    </tr>
+                    {link.directions.map((dir) => {
+                      const dirExpired = dir.permit.expiry_date ? isPermitExpired(dir.permit.expiry_date) : false;
+                      return (
+                        <tr key={dir.id} className="hover:bg-muted/20 transition-colors border-b last:border-b-0">
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs">{dir.permit.number || "-"}</span>
+                              {dir.permit.decision_type && (
+                                <Tooltip>
+                                  <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                    {dir.permit.decision_type}
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {dir.permit.decision_type === "zmP"
+                                      ? t("stationDetails:permits.decisionTypeZmP")
+                                      : t("stationDetails:permits.decisionTypeP")}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                              <span className="text-[10px] text-muted-foreground font-mono">{formatFrequency(dir.link.freq)}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            {dirExpired ? (
+                              <div className="flex items-center gap-2">
+                                <HugeiconsIcon icon={Calendar03Icon} className="size-3.5 text-destructive" />
+                                <span className="text-destructive font-medium">
+                                  {new Date(dir.permit.expiry_date).toLocaleDateString(i18n.language)}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
+                                  {t("common:status.expired")}
+                                </span>
+                              </div>
+                            ) : (
+                              <span>{new Date(dir.permit.expiry_date).toLocaleDateString(i18n.language)}</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

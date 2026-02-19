@@ -1,7 +1,6 @@
 import type { StationSource, LocationWithStations, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { getOperatorColor, resolveOperatorMnc } from "@/lib/operatorUtils";
-import { calculateDistance, formatDistance, formatFrequency, findLinkPartnerRadioLine, formatBandwidth } from "./utils";
-import { isPermitExpired } from "@/lib/dateUtils";
+import { calculateDistance, formatDistance, formatFrequency, formatBandwidth, groupRadioLinesIntoLinks } from "./utils";
 
 export const DEFAULT_COLOR = "#3b82f6";
 
@@ -85,54 +84,56 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
   lines: GeoJSON.FeatureCollection;
   endpoints: GeoJSON.FeatureCollection;
 } {
+  const links = groupRadioLinesIntoLinks(radioLines);
   const lineFeatures: GeoJSON.Feature[] = [];
   const endpointFeatures: GeoJSON.Feature[] = [];
 
-  for (const rl of radioLines) {
-    const mnc = resolveOperatorMnc(rl.operator?.mnc, rl.operator?.name);
+  for (const link of links) {
+    const first = link.directions[0];
+    const mnc = resolveOperatorMnc(first.operator?.mnc, first.operator?.name);
     const color = mnc ? getOperatorColor(mnc) : DEFAULT_COLOR;
-    const isExpired = isPermitExpired(rl.permit.expiry_date);
-    const distance = calculateDistance(rl.tx.latitude, rl.tx.longitude, rl.rx.latitude, rl.rx.longitude);
+    const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
     const distanceFormatted = formatDistance(distance);
 
-    const partner = findLinkPartnerRadioLine(rl, radioLines);
-    const totalSpeedMb = (Number(rl.link.bandwidth) || 0) + (partner ? Number(partner.link.bandwidth) || 0 : 0);
-    const totalSpeedFormatted = totalSpeedMb > 0 ? formatBandwidth(String(totalSpeedMb)) : "";
+    const directionsJson = JSON.stringify(
+      link.directions.map((d) => ({
+        freq: formatFrequency(d.link.freq),
+        bandwidth: d.link.bandwidth ? formatBandwidth(d.link.bandwidth) : null,
+        forward: d.tx.latitude === link.a.latitude && d.tx.longitude === link.a.longitude,
+      })),
+    );
 
     lineFeatures.push({
       type: "Feature",
       geometry: {
         type: "LineString",
         coordinates: [
-          [rl.tx.longitude, rl.tx.latitude],
-          [rl.rx.longitude, rl.rx.latitude],
+          [link.a.longitude, link.a.latitude],
+          [link.b.longitude, link.b.latitude],
         ],
       },
       properties: {
-        radioLineId: rl.id,
-        freq: rl.link.freq,
-        freqFormatted: formatFrequency(rl.link.freq),
-        operatorName: rl.operator?.name ?? "",
-        operatorMnc: rl.operator?.mnc ?? null,
+        groupId: link.groupId,
+        radioLineId: first.id,
+        operatorName: first.operator?.name ?? "",
+        operatorMnc: first.operator?.mnc ?? null,
         color,
-        bandwidth: rl.link.bandwidth ?? "",
-        ch_width: rl.link.ch_width ?? null,
-        polarization: rl.link.polarization ?? "",
-        isExpired,
+        isExpired: link.isExpired,
         distanceFormatted,
-        totalSpeedFormatted,
+        directionsJson,
+        directionCount: link.directions.length,
       },
     });
 
     endpointFeatures.push(
-      createPointFeature(rl.tx.longitude, rl.tx.latitude, {
-        radioLineId: rl.id,
-        role: "tx",
+      createPointFeature(link.a.longitude, link.a.latitude, {
+        groupId: link.groupId,
+        radioLineId: first.id,
         color,
       }),
-      createPointFeature(rl.rx.longitude, rl.rx.latitude, {
-        radioLineId: rl.id,
-        role: "rx",
+      createPointFeature(link.b.longitude, link.b.latitude, {
+        groupId: link.groupId,
+        radioLineId: first.id,
         color,
       }),
     );

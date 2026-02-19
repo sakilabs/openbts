@@ -9,19 +9,19 @@ import {
   RADIOLINES_ENDPOINT_LAYER_ID,
   POINT_LAYER_ID,
 } from "../constants";
-import type { RadioLine } from "@/types/station";
 import { normalizeOperatorName } from "@/lib/operatorUtils";
 import { RadioLineTooltipContent } from "../components/radioLineTooltipContent";
-import { findColocatedRadioLines } from "../utils";
+import type { DuplexRadioLink } from "../utils";
+import { findDuplexLinkByRadioLineId } from "../utils";
 
 type UseRadioLinesLayerArgs = {
   map: maplibregl.Map | null;
   isLoaded: boolean;
   linesGeoJSON: GeoJSON.FeatureCollection;
   endpointsGeoJSON: GeoJSON.FeatureCollection;
-  radioLines: RadioLine[];
+  duplexLinks: DuplexRadioLink[];
   minZoom: number;
-  onFeatureClick: (radioLines: RadioLine[], coordinates: [number, number]) => void;
+  onFeatureClick: (link: DuplexRadioLink, coordinates: [number, number]) => void;
 };
 
 function createLineLayerConfig(minzoom: number): maplibregl.LayerSpecification {
@@ -70,18 +70,18 @@ function createEndpointLayerConfig(minzoom: number): maplibregl.LayerSpecificati
 const HITBOX_LAYERS = [RADIOLINES_HITBOX_LAYER_ID, RADIOLINES_ENDPOINT_LAYER_ID] as const;
 const ALL_LAYERS = [RADIOLINES_LINE_LAYER_ID, RADIOLINES_HITBOX_LAYER_ID, RADIOLINES_ENDPOINT_LAYER_ID] as const;
 
-export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJSON, radioLines, minZoom, onFeatureClick }: UseRadioLinesLayerArgs) {
+export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJSON, duplexLinks, minZoom, onFeatureClick }: UseRadioLinesLayerArgs) {
   const callbackRefs = useRef({ onFeatureClick });
   const linesRef = useRef(linesGeoJSON);
   const endpointsRef = useRef(endpointsGeoJSON);
-  const radioLinesRef = useRef(radioLines);
+  const duplexLinksRef = useRef(duplexLinks);
 
   useEffect(() => {
     callbackRefs.current = { onFeatureClick };
     linesRef.current = linesGeoJSON;
     endpointsRef.current = endpointsGeoJSON;
-    radioLinesRef.current = radioLines;
-  }, [onFeatureClick, linesGeoJSON, endpointsGeoJSON, radioLines]);
+    duplexLinksRef.current = duplexLinks;
+  }, [onFeatureClick, linesGeoJSON, endpointsGeoJSON, duplexLinks]);
 
   const tooltipRef = useRef<maplibregl.Popup | null>(null);
   const tooltipContainerRef = useRef<HTMLDivElement | null>(null);
@@ -122,19 +122,16 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       const radioLineId = feature?.properties?.radioLineId;
       if (!radioLineId) return;
 
-      const rl = radioLinesRef.current.find((r) => r.id === radioLineId);
-      if (!rl) return;
-
-      const colocated = findColocatedRadioLines(rl, radioLinesRef.current);
+      const link = findDuplexLinkByRadioLineId(radioLineId, duplexLinksRef.current);
+      if (!link) return;
 
       tooltipRef.current?.remove();
       tooltipRef.current = null;
 
-      callbackRefs.current.onFeatureClick(colocated, [e.lngLat.lng, e.lngLat.lat]);
+      callbackRefs.current.onFeatureClick(link, [e.lngLat.lng, e.lngLat.lat]);
     };
 
-    const handleMouseEnter = (e: maplibregl.MapLayerMouseEvent) => {
-      if (isNearStation(e.point)) return;
+    const handleMouseEnter = () => {
       map.getCanvas().style.cursor = "pointer";
     };
 
@@ -142,7 +139,6 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       if (isNearStation(e.point)) {
         tooltipRef.current?.remove();
         tooltipRef.current = null;
-        map.getCanvas().style.cursor = "";
         return;
       }
 
@@ -154,11 +150,17 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       }
 
       const color = props.color || "#3b82f6";
-      const freq = props.freqFormatted || "";
       const operator = props.operatorName || "";
       const distance = props.distanceFormatted || "";
-      const totalSpeedFormatted = props.totalSpeedFormatted || "";
-      if (!freq && !operator) return;
+      const directionCount = props.directionCount ?? 1;
+      if (!operator) return;
+
+      let directions: { freq: string; bandwidth: string | null; forward: boolean }[] = [];
+      try {
+        directions = JSON.parse(props.directionsJson || "[]");
+      } catch {
+        // ignore
+      }
 
       if (!tooltipRef?.current) {
         const container = document.createElement("div");
@@ -176,10 +178,10 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       tooltipRootRef.current?.render(
         <RadioLineTooltipContent
           color={color}
-          freqFormatted={freq}
           operatorName={normalizeOperatorName(operator)}
           distanceFormatted={distance}
-          totalSpeedFormatted={totalSpeedFormatted || undefined}
+          directions={directions}
+          directionCount={directionCount}
         />,
       );
       tooltipRef.current.setLngLat(e.lngLat).addTo(map);
