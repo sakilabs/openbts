@@ -26,11 +26,21 @@ type StationDetailHeaderProps = {
   isCreateMode: boolean;
   selectedOperator?: Operator;
   isSaving: boolean;
+  hasChanges: boolean;
   onSave: () => void;
   onRevert: () => void;
 };
 
-export function StationDetailHeader({ station, stationId, isCreateMode, selectedOperator, isSaving, onSave, onRevert }: StationDetailHeaderProps) {
+export function StationDetailHeader({
+  station,
+  stationId,
+  isCreateMode,
+  selectedOperator,
+  isSaving,
+  hasChanges,
+  onSave,
+  onRevert,
+}: StationDetailHeaderProps) {
   const { t } = useTranslation(["stations", "common"]);
   const navigate = useNavigate();
   const deleteMutation = useDeleteStationMutation();
@@ -111,11 +121,12 @@ export function StationDetailHeader({ station, stationId, isCreateMode, selected
           variant="ghost"
           size="sm"
           onClick={onRevert}
+          disabled={!hasChanges}
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
         >
           {isCreateMode ? t("common:actions.clear") : t("common:actions.revert")}
         </Button>
-        <Button size="sm" onClick={onSave} disabled={isSaving} className="shadow-sm font-medium px-4 min-w-25">
+        <Button size="sm" onClick={onSave} disabled={isSaving || !hasChanges} className="shadow-sm font-medium px-4 min-w-25">
           {isSaving ? <Spinner /> : isCreateMode ? t("header.createStation") : t("common:actions.saveChanges")}
         </Button>
       </div>

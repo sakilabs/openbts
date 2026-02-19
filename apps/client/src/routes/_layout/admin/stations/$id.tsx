@@ -33,7 +33,7 @@ function cellToLocal(cell: Cell): LocalCell {
     band_id: cell.band.id,
     is_confirmed: cell.is_confirmed,
     notes: cell.notes ?? "",
-    details: { ...(cell.details ?? {}) },
+    details: { ...cell.details },
   };
 }
 
@@ -130,7 +130,7 @@ function getInitialFormState(station: Station | undefined): {
 } {
   return {
     stationId: station?.station_id ?? "",
-    operatorId: station?.operator_id ?? null,
+    operatorId: station?.operator?.id ?? null,
     notes: station?.notes ?? "",
     isConfirmed: station?.is_confirmed ?? false,
     location: station?.location
@@ -341,6 +341,24 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 
   const originalCells = station?.cells ?? [];
 
+  const hasChanges = useMemo(() => {
+    if (isCreateMode) return true;
+    if (!station) return false;
+
+    const initial = getInitialFormState(station);
+    if (stationId !== initial.stationId) return true;
+    if (operatorId !== initial.operatorId) return true;
+    if (notes !== initial.notes) return true;
+    if (isConfirmed !== initial.isConfirmed) return true;
+    if (!shallowEqual(location as unknown as Record<string, unknown>, initial.location as unknown as Record<string, unknown>)) return true;
+    if (deletedServerCellIds.length > 0) return true;
+    if (localCells.length !== originalCells.length) return true;
+    for (const lc of localCells) {
+      if (getLocalCellDiffStatus(lc, originalCells) !== "unchanged") return true;
+    }
+    return false;
+  }, [isCreateMode, station, stationId, operatorId, notes, isConfirmed, location, deletedServerCellIds, localCells, originalCells]);
+
   const getStationDiffBadges = useCallback(
     (rat: string, cellsForRat: LocalCell[]): DiffBadges => {
       let added = 0;
@@ -374,6 +392,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
         isCreateMode={isCreateMode}
         selectedOperator={selectedOperator}
         isSaving={saveMutation.isPending}
+        hasChanges={hasChanges}
         onSave={handleSaveStation}
         onRevert={handleRevert}
       />
