@@ -6,8 +6,9 @@ import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/l
 import { isPermitExpired } from "@/lib/dateUtils";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
-import { calculateDistance, formatDistance, formatFrequency, formatBandwidth } from "../utils";
+import { calculateDistance, formatDistance, formatFrequency, formatBandwidth, getLinkTypeStyle } from "../utils";
 import type { DuplexRadioLink } from "../utils";
+import { cn } from "@/lib/utils";
 
 type RadioLinePopupContentProps = {
   link: DuplexRadioLink;
@@ -25,6 +26,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
   const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
   const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
   const permitNumber = first.permit.number;
+  const linkTypeStyle = getLinkTypeStyle(link.linkType);
 
   return (
     <div className="w-72 text-sm">
@@ -41,11 +43,18 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
           <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
             {formatDistance(distance)}
           </span>
-          {link.directions.length > 1 && (
-            <span className="px-1 py-px rounded-md bg-blue-500/10 text-[8px] font-semibold uppercase tracking-wider text-blue-500 border border-blue-500/20">
-              FDD
+          {linkTypeStyle ? (
+            <span
+              className={cn(
+                "px-1 py-px rounded-md text-[8px] font-semibold uppercase tracking-wider border",
+                linkTypeStyle.bg,
+                linkTypeStyle.text,
+                linkTypeStyle.border,
+              )}
+            >
+              {link.linkType}
             </span>
-          )}
+          ) : null}
           {link.isExpired && (
             <span className="px-1 py-px rounded-md bg-destructive/10 text-[8px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
               {t("common:status.expired")}
@@ -59,15 +68,22 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
             const isForward = dir.tx.latitude === link.a.latitude && dir.tx.longitude === link.a.longitude;
             return (
               <div key={dir.id} className="flex items-start gap-1.5">
-                <span className="flex items-center gap-px text-[9px] font-bold text-muted-foreground shrink-0 leading-[18px]">
-                  {isForward ? "A" : "B"}
-                  <HugeiconsIcon icon={ArrowRight02Icon} className="size-2.5" />
-                  {isForward ? "B" : "A"}
-                </span>
+                {link.directions.length > 1 && (
+                  <span className="flex items-center gap-px text-[9px] font-bold text-muted-foreground shrink-0 leading-[18px]">
+                    {isForward ? "A" : "B"}
+                    <HugeiconsIcon icon={ArrowRight02Icon} className="size-2.5" />
+                    {isForward ? "B" : "A"}
+                  </span>
+                )}
                 <div className="flex flex-wrap gap-1">
                   <span className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold tracking-wider text-muted-foreground border border-border/50">
                     {formatFrequency(dir.link.freq)}
                   </span>
+                  {dir.link.polarization && (
+                    <span className="px-1 py-px rounded-md bg-muted text-[8px] font-bold text-muted-foreground border border-border/50">
+                      {dir.link.polarization}
+                    </span>
+                  )}
                   {dir.link.ch_width && (
                     <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
                       {dir.link.ch_width} MHz

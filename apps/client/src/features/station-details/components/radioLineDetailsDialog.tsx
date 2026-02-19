@@ -20,6 +20,8 @@ import {
   HorizontalResizeIcon,
   Rotate01Icon,
   DashboardSpeed01Icon,
+  ArrowRight02Icon,
+  HashtagIcon,
 } from "@hugeicons/core-free-icons";
 import { getOperatorColor, resolveOperatorMnc, normalizeOperatorName } from "@/lib/operatorUtils";
 import { isPermitExpired } from "@/lib/dateUtils";
@@ -29,7 +31,7 @@ import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { CopyButton } from "./copyButton";
-import { calculateDistance, formatDistance, formatBandwidth, formatFrequency } from "@/features/map/utils";
+import { calculateDistance, formatDistance, formatBandwidth, formatFrequency, getLinkTypeStyle } from "@/features/map/utils";
 import type { DuplexRadioLink } from "@/features/map/utils";
 
 type RadioLineDetailsDialogProps = {
@@ -48,6 +50,54 @@ function InfoRow({ icon, label, value, mono }: { icon?: typeof Cancel01Icon; lab
   );
 }
 
+function DirectionButtonsRow({
+  link,
+  selectedDirIndex,
+  onSelectDir,
+  formatFrequency,
+}: {
+  link: DuplexRadioLink;
+  selectedDirIndex: number;
+  onSelectDir: (idx: number) => void;
+  formatFrequency: (freq: number) => string;
+}) {
+  const aKey = `${link.a.latitude},${link.a.longitude}`;
+  return (
+    <div className="px-6 pt-4 flex items-center gap-3">
+      <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg overflow-x-auto max-w-full custom-scrollbar">
+        {link.directions.map((dir, idx) => {
+          const isForward = `${dir.tx.latitude},${dir.tx.longitude}` === aKey;
+          return (
+            <div key={dir.id} className="flex items-center gap-1 shrink-0">
+              {idx > 0 && idx % 2 === 0 && <span className="w-px h-5 bg-border shrink-0" aria-hidden />}
+              <button
+                type="button"
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5",
+                  selectedDirIndex === idx ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => onSelectDir(idx)}
+              >
+                <span className="flex items-center gap-px text-[9px] font-bold text-muted-foreground">
+                  {isForward ? "A" : "B"}
+                  <HugeiconsIcon icon={ArrowRight02Icon} className="size-2.5" />
+                  {isForward ? "B" : "A"}
+                </span>
+                <span className="font-mono">{formatFrequency(dir.link.freq)}</span>
+                {dir.link.polarization && <span className="text-[9px] font-bold text-muted-foreground">{dir.link.polarization}</span>}
+                <span className="text-[9px] text-muted-foreground">#{dir.id}</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+        {selectedDirIndex + 1} / {link.directions.length}
+      </span>
+    </div>
+  );
+}
+
 export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialogProps) {
   const { t, i18n } = useTranslation(["main", "stationDetails", "common"]);
   const { preferences } = usePreferences();
@@ -59,6 +109,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
   const mnc = resolveOperatorMnc(radioLine.operator?.mnc, radioLine.operator?.name);
   const operatorColor = mnc ? getOperatorColor(mnc) : "#3b82f6";
   const operatorName = radioLine.operator?.name ? normalizeOperatorName(radioLine.operator.name) : t("unknownOperator");
+  const linkTypeStyle = getLinkTypeStyle(link.linkType);
 
   const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
 
@@ -87,11 +138,18 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
                     {normalizeOperatorName(operatorName)}
                   </h2>
-                  {link.directions.length > 1 && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-blue-500/10 text-[9px] font-bold uppercase text-blue-500 border border-blue-500/20">
-                      FDD
+                  {linkTypeStyle ? (
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border",
+                        linkTypeStyle.bg,
+                        linkTypeStyle.text,
+                        linkTypeStyle.border,
+                      )}
+                    >
+                      {link.linkType}
                     </span>
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2">
                   <HugeiconsIcon icon={RulerIcon} className="size-3.5 text-muted-foreground" />
@@ -99,7 +157,9 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   <span className="text-sm text-muted-foreground">·</span>
                   <HugeiconsIcon icon={Radio01Icon} className="size-3.5 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
-                  {link.directions.length > 1 && <span className="text-xs text-muted-foreground">+{link.directions.length - 1}</span>}
+                  {(link.linkType === "FDD" || link.linkType === "2+0 FDD" || link.linkType === "XPIC" || link.linkType === "SD") && (
+                    <span className="text-xs text-muted-foreground">+{link.directions.length - 1}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -113,27 +173,12 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {link.directions.length > 1 && (
-            <div className="px-6 pt-4 flex items-center gap-3">
-              <div className="flex gap-1 p-1 bg-muted/30 rounded-lg overflow-x-auto max-w-full custom-scrollbar">
-                {link.directions.map((dir, idx) => (
-                  <button
-                    key={dir.id}
-                    type="button"
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0",
-                      selectedDirIndex === idx ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
-                    )}
-                    onClick={() => setSelectedDirIndex(idx)}
-                  >
-                    {formatFrequency(dir.link.freq)}
-                    <span className="ml-1.5 text-[9px] text-muted-foreground">#{dir.id}</span>
-                  </button>
-                ))}
-              </div>
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
-                {selectedDirIndex + 1} / {link.directions.length}
-              </span>
-            </div>
+            <DirectionButtonsRow
+              link={link}
+              selectedDirIndex={selectedDirIndex}
+              onSelectDir={setSelectedDirIndex}
+              formatFrequency={formatFrequency}
+            />
           )}
 
           <div className="px-6 py-5">
@@ -216,6 +261,9 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   value={`${radioLine.link.freq} MHz (${formatFrequency(radioLine.link.freq)})`}
                   mono
                 />
+                {radioLine.link.ch_num != null && (
+                  <InfoRow icon={HashtagIcon} label={t("radiolines.chNum")} value={String(radioLine.link.ch_num)} mono />
+                )}
                 {radioLine.link.ch_width !== null && (
                   <InfoRow icon={HorizontalResizeIcon} label={t("radiolines.channelWidth")} value={`${radioLine.link.ch_width} MHz`} mono />
                 )}

@@ -65,6 +65,7 @@
     "linkParams": "Link Parameters",
     "frequency": "Frequency",
     "channel": "Channel",
+    "chNum": "Channel number",
     "channelWidth": "Channel Width",
     "polarization": "Polarization",
     "modulation": "Modulation",

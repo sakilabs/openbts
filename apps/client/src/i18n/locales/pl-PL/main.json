@@ -70,6 +70,7 @@
     "linkParams": "Parametry łącza",
     "frequency": "Częstotliwość",
     "channel": "Kanał",
+    "chNum": "Numer kanału",
     "channelWidth": "Szerokość kanału",
     "polarization": "Polaryzacja",
     "modulation": "Modulacja",

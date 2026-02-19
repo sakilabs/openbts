@@ -2,10 +2,31 @@ import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine } f
 import { RAT_ORDER } from "./constants";
 import { isPermitExpired } from "@/lib/dateUtils";
 
+const DEG_TO_RAD = Math.PI / 180;
+const EARTH_RADIUS_M = 6_371_000;
+
+const TA_STEP = {
+  GSM: 554, // ~554 m per step
+  UMTS: 78.125, // ~78.12 m per chip (one-way)
+  LTE: 78.125, // ~78.12 m per step
+  NR_30KHZ: 39.0625, // ~39.06 m per step (SCS 30 kHz)
+} as const;
+
+export type RadioLinkType = "FDD" | "2+0 FDD" | "XPIC" | "SD" | "UNKNOWN";
+
+export type DuplexRadioLink = {
+  groupId: string;
+  a: { latitude: number; longitude: number };
+  b: { latitude: number; longitude: number };
+  directions: RadioLine[];
+  linkType: RadioLinkType;
+  isExpired: boolean;
+};
+
 export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLocationWithPermits): UkeStation[] {
   const stationMap = new Map<string, UkeStation>();
 
-  const location = ukeLocation
+  const overrideLocation = ukeLocation
     ? {
         city: ukeLocation.city,
         address: ukeLocation.address,
@@ -24,12 +45,17 @@ export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLoc
         station_id: permit.station_id,
         operator: permit.operator ?? null,
         permits: [permit],
-        location: !location ? (permit.location ?? null) : location,
+        location: overrideLocation ?? permit.location ?? null,
       });
     }
   }
 
   return Array.from(stationMap.values());
+}
+
+function ratOrder(rat: string): number {
+  const index = RAT_ORDER.indexOf(rat.toUpperCase() as (typeof RAT_ORDER)[number]);
+  return index === -1 ? 999 : index;
 }
 
 function sortBands(bands: string[]): string[] {
@@ -39,94 +65,119 @@ function sortBands(bands: string[]): string[] {
 
     if (!matchA || !matchB) return a.localeCompare(b);
 
-    const [, ratA, freqA] = matchA;
-    const [, ratB, freqB] = matchB;
+    const orderDiff = ratOrder(matchA[1]) - ratOrder(matchB[1]);
+    if (orderDiff !== 0) return orderDiff;
 
-    const indexA = RAT_ORDER.indexOf(ratA.toUpperCase() as (typeof RAT_ORDER)[number]);
-    const indexB = RAT_ORDER.indexOf(ratB.toUpperCase() as (typeof RAT_ORDER)[number]);
-
-    if (indexA !== indexB) return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
-
-    return Number.parseInt(freqA, 10) - Number.parseInt(freqB, 10);
+    return Number.parseInt(matchA[2], 10) - Number.parseInt(matchB[2], 10);
   });
 }
 
 export function getStationBands(cells: Cell[]): string[] {
-  const bands = [...new Set(cells.map((c) => `${c.rat}${c.band.value}`))];
-  return sortBands(bands);
+  return sortBands([...new Set(cells.map((c) => `${c.rat}${c.band.value}`))]);
 }
 
 export function getPermitBands(permits: UkePermit[]): string[] {
-  const bands = [
-    ...new Set(
-      permits
-        .filter((p) => p.band !== null)
-        .map((p) => {
-          const rat = p.band?.rat === "GSM" && p.band?.variant === "railway" ? "GSM-R" : p.band?.rat;
-          return `${rat}${p.band?.value}`;
-        }),
-    ),
-  ];
-  return sortBands(bands);
+  const bands = permits.reduce<string[]>((acc, p) => {
+    if (!p.band) return acc;
+    const rat = p.band.rat === "GSM" && p.band.variant === "railway" ? "GSM-R" : p.band.rat;
+    acc.push(`${rat}${p.band.value}`);
+    return acc;
+  }, []);
+  return sortBands([...new Set(bands)]);
 }
 
 export function formatBandwidth(bandwidth: string): string {
   const num = Number(bandwidth);
   if (Number.isNaN(num)) return bandwidth;
-  if (num >= 1000) return `${(num / 1000).toFixed(2)} Gb/s`;
-  return `${num} Mb/s`;
+  return num >= 1000 ? `${(num / 1000).toFixed(2)} Gb/s` : `${num} Mb/s`;
 }
 
 export function formatDistance(meters: number): string {
-  if (meters >= 1000) return `${(meters / 1000).toFixed(2)} km`;
-  return `${Math.round(meters)} m`;
+  return meters >= 1000 ? `${(meters / 1000).toFixed(2)} km` : `${Math.round(meters)} m`;
 }
 
 export function formatFrequency(freqMhz: number): string {
-  if (freqMhz >= 1000) {
-    const ghz = freqMhz / 1000;
-    return `${Number.isInteger(ghz) ? ghz : ghz.toFixed(1)} GHz`;
-  }
-  return `${freqMhz} MHz`;
+  if (freqMhz < 1000) return `${freqMhz} MHz`;
+  const ghz = freqMhz / 1000;
+  return `${Number.isInteger(ghz) ? ghz : ghz.toFixed(1)} GHz`;
+}
+
+function toRad(deg: number): number {
+  return deg * DEG_TO_RAD;
 }
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371e3; // Earth radius
-  const radLat1 = (lat1 * Math.PI) / 180;
-  const radLat2 = (lat2 * Math.PI) / 180;
-  const deltaLat = ((lat2 - lat1) * Math.PI) / 180;
-  const deltaLon = ((lon2 - lon1) * Math.PI) / 180;
+  const φ1 = toRad(lat1);
+  const φ2 = toRad(lat2);
+  const Δφ = toRad(lat2 - lat1);
+  const Δλ = toRad(lon2 - lon1);
 
-  const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) + Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c;
+  return EARTH_RADIUS_M * c;
 }
 
 export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const radLat1 = (lat1 * Math.PI) / 180;
-  const radLat2 = (lat2 * Math.PI) / 180;
-  const deltaLon = ((lon2 - lon1) * Math.PI) / 180;
+  const φ1 = toRad(lat1);
+  const φ2 = toRad(lat2);
+  const Δλ = toRad(lon2 - lon1);
 
-  const y = Math.sin(deltaLon) * Math.cos(radLat2);
-  const x = Math.cos(radLat1) * Math.sin(radLat2) - Math.sin(radLat1) * Math.cos(radLat2) * Math.cos(deltaLon);
-  const theta = Math.atan2(y, x);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
 
-  return ((theta * 180) / Math.PI + 360) % 360;
+  return (Math.atan2(y, x) * (180 / Math.PI) + 360) % 360;
 }
 
-export type DuplexRadioLink = {
-  groupId: string;
-  a: { latitude: number; longitude: number };
-  b: { latitude: number; longitude: number };
-  directions: RadioLine[];
-  isExpired: boolean;
+const LINK_TYPE_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  FDD: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" },
+  "2+0 FDD": { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" },
+  XPIC: { bg: "bg-amber-500/10", text: "text-amber-600", border: "border-amber-500/20" },
+  SD: { bg: "bg-muted", text: "text-muted-foreground", border: "border-border/50" },
 };
+
+export function getLinkTypeStyle(linkType: RadioLinkType): { bg: string; text: string; border: string } | null {
+  return LINK_TYPE_STYLES[linkType] ?? null;
+}
 
 function endpointPairKey(rl: RadioLine): string {
   const a = `${rl.tx.latitude},${rl.tx.longitude}`;
   const b = `${rl.rx.latitude},${rl.rx.longitude}`;
   return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+function txRxDirectionKey(rl: RadioLine): string {
+  return `${rl.tx.latitude},${rl.tx.longitude}→${rl.rx.latitude},${rl.rx.longitude}`;
+}
+
+function classifyLinkType(entries: RadioLine[]): RadioLinkType {
+  const byDirection = new Map<string, RadioLine[]>();
+  for (const e of entries) {
+    const key = txRxDirectionKey(e);
+    const group = byDirection.get(key);
+    if (group) group.push(e);
+    else byDirection.set(key, [e]);
+  }
+
+  const ref = [...byDirection.values()].reduce((a, b) => (a.length >= b.length ? a : b));
+  if (ref.length === 1) return "FDD";
+
+  const freqs = new Set(ref.map((e) => e.link.freq));
+  const pols = new Set(ref.map((e) => e.link.polarization));
+
+  if (freqs.size === 1 && pols.size > 1) return "XPIC";
+  if (freqs.size > 1 && pols.size === 1) return "2+0 FDD";
+  if (freqs.size === 1 && pols.size === 1) return "SD";
+  return "UNKNOWN";
+}
+
+function interleave<T>(a: T[], b: T[]): T[] {
+  const result: T[] = [];
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (i < a.length) result.push(a[i]);
+    if (i < b.length) result.push(b[i]);
+  }
+  return result;
 }
 
 export function groupRadioLinesIntoLinks(radioLines: RadioLine[]): DuplexRadioLink[] {
@@ -136,44 +187,38 @@ export function groupRadioLinesIntoLinks(radioLines: RadioLine[]): DuplexRadioLi
     const opId = rl.operator?.id ?? "unknown";
     const key = rl.permit.number ? `permit:${opId}::${rl.permit.number}` : `coords:${opId}::${endpointPairKey(rl)}`;
 
-    const existing = groups.get(key);
-    if (existing) {
-      existing.push(rl);
-    } else {
-      groups.set(key, [rl]);
-    }
+    const group = groups.get(key);
+    if (group) group.push(rl);
+    else groups.set(key, [rl]);
   }
 
-  const links: DuplexRadioLink[] = [];
-  for (const [key, directions] of groups) {
-    const first = directions[0];
+  return [...groups.entries()].map(([key, entries]) => {
+    const linkType = classifyLinkType(entries);
+
+    const first = entries[0];
     const p1 = { latitude: first.tx.latitude, longitude: first.tx.longitude };
     const p2 = { latitude: first.rx.latitude, longitude: first.rx.longitude };
 
     const p1Key = `${p1.latitude},${p1.longitude}`;
     const p2Key = `${p2.latitude},${p2.longitude}`;
     const [a, b] = p1Key <= p2Key ? [p1, p2] : [p2, p1];
-
     const aKey = `${a.latitude},${a.longitude}`;
-    const forward = directions.filter((d) => `${d.tx.latitude},${d.tx.longitude}` === aKey);
-    const reverse = directions.filter((d) => `${d.tx.latitude},${d.tx.longitude}` !== aKey);
-    const sorted: RadioLine[] = [];
-    const len = Math.max(forward.length, reverse.length);
-    for (let i = 0; i < len; i++) {
-      if (i < forward.length) sorted.push(forward[i]);
-      if (i < reverse.length) sorted.push(reverse[i]);
-    }
 
-    links.push({
+    const pairSortKey = (e: RadioLine) => `${e.link.polarization ?? ""}:${e.link.freq}`;
+    const sorted = (lines: RadioLine[]) => lines.sort((x, y) => pairSortKey(x).localeCompare(pairSortKey(y)));
+
+    const forward = sorted(entries.filter((e) => `${e.tx.latitude},${e.tx.longitude}` === aKey));
+    const reverse = sorted(entries.filter((e) => `${e.tx.latitude},${e.tx.longitude}` !== aKey));
+
+    return {
       groupId: key,
       a,
       b,
-      directions: sorted,
-      isExpired: directions.some((d) => isPermitExpired(d.permit.expiry_date)),
-    });
-  }
-
-  return links;
+      directions: interleave(forward, reverse),
+      linkType,
+      isExpired: entries.some((d) => isPermitExpired(d.permit.expiry_date)),
+    };
+  });
 }
 
 export function findDuplexLinkByRadioLineId(radioLineId: number, links: DuplexRadioLink[]): DuplexRadioLink | undefined {
@@ -181,14 +226,10 @@ export function findDuplexLinkByRadioLineId(radioLineId: number, links: DuplexRa
 }
 
 export function calculateTA(distanceMeters: number) {
-  // GSM TA: ~554m per step
-  const gsm = Math.max(0, Math.round(distanceMeters / 554));
-  // UMTS (Chips): ~78.12m per chip (One way)
-  const umts = Math.max(0, Math.round(distanceMeters / 78.125));
-  // LTE TA: ~78.12m per step
-  const lte = Math.max(0, Math.round(distanceMeters / 78.125));
-  // NR TA (SCS 30kHz): ~39.06m per step
-  const nr = Math.max(0, Math.round(distanceMeters / 39.0625));
-
-  return { gsm, umts, lte, nr };
+  return {
+    gsm: Math.max(0, Math.round(distanceMeters / TA_STEP.GSM)),
+    umts: Math.max(0, Math.round(distanceMeters / TA_STEP.UMTS)),
+    lte: Math.max(0, Math.round(distanceMeters / TA_STEP.LTE)),
+    nr: Math.max(0, Math.round(distanceMeters / TA_STEP.NR_30KHZ)),
+  };
 }

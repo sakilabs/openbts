@@ -99,6 +99,7 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
       link.directions.map((d) => ({
         freq: formatFrequency(d.link.freq),
         bandwidth: d.link.bandwidth ? formatBandwidth(d.link.bandwidth) : null,
+        polarization: d.link.polarization ?? null,
         forward: d.tx.latitude === link.a.latitude && d.tx.longitude === link.a.longitude,
       })),
     );
@@ -122,6 +123,7 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
         distanceFormatted,
         directionsJson,
         directionCount: link.directions.length,
+        linkType: link.linkType,
       },
     });
 

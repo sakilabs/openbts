@@ -99,7 +99,7 @@ function buildTooltip(state: ActiveTooltip | null, radioLineId: number): ActiveT
   return { popup, container, root, activeRadioLineId: radioLineId };
 }
 
-type Direction = { freq: string; bandwidth: string | null; forward: boolean };
+type Direction = { freq: string; bandwidth: string | null; polarization: string | null; forward: boolean };
 
 function parseDirections(raw: string | undefined): Direction[] {
   try {
@@ -168,7 +168,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
         return;
       }
 
-      const { radioLineId, color = "#3b82f6", operatorName, distanceFormatted: distance = "", directionCount = 1, directionsJson } = props;
+      const { radioLineId, color = "#3b82f6", operatorName, distanceFormatted: distance = "", directionCount = 1, directionsJson, linkType } = props;
 
       const tooltip = buildTooltip(tooltipRef.current, radioLineId);
       tooltipRef.current = tooltip;
@@ -180,6 +180,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
           distanceFormatted={distance}
           directions={parseDirections(directionsJson)}
           directionCount={directionCount}
+          linkType={linkType}
         />,
       );
       tooltip.popup.setLngLat(e.lngLat).addTo(map);
