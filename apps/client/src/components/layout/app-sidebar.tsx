@@ -21,6 +21,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -108,7 +109,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const adminNavItems = useMemo(() => (isAdmin ? mapConfig(adminNavConfig) : []), [mapConfig, isAdmin]);
 
   const location = useLocation();
-  const [settingsOpen, setSettingsOpen] = useState(location.pathname.startsWith("/account/") || location.pathname === "/preferences");
+  const [settingsOpen, setSettingsOpen] = useState(location.pathname === "/preferences");
 
   const settingsSubItems = [{ title: t("items.preferences"), url: "/preferences" }];
 
@@ -132,6 +133,15 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         <NavMain items={navItems} />
         {authNavItems.length > 0 && <NavMain items={authNavItems} />}
         {adminNavItems.length > 0 && <NavMain items={adminNavItems} />}
+        <SidebarMenuItem>
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuButton render={<Link to="/changelog" />} isActive={location.pathname === "/changelog"}>
+                <span>{t("items.changelog")}</span>
+              </SidebarMenuButton>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarMenuItem>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
@@ -148,7 +158,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {settingsSubItems.map((item) => (
-                    <SidebarMenuSubItem key={item.title}>
+                    <SidebarMenuSubItem key={item.url}>
                       <SidebarMenuSubButton render={<Link to={item.url} />} isActive={location.pathname === item.url}>
                         <span>{item.title}</span>
                       </SidebarMenuSubButton>

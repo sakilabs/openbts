@@ -15,6 +15,7 @@ import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submissio
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
 import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferences'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
+import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
 import { Route as LayoutAdminUkeImportRouteImport } from './routes/_layout/admin/uke-import'
 import { Route as LayoutAdminSettingsRouteImport } from './routes/_layout/admin/settings'
 import { Route as LayoutAdminAuditLogsRouteImport } from './routes/_layout/admin/audit-logs'
@@ -57,6 +58,11 @@ const LayoutPreferencesRoute = LayoutPreferencesRouteImport.update({
 const LayoutClfExportRoute = LayoutClfExportRouteImport.update({
   id: '/clf-export',
   path: '/clf-export',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutChangelogRoute = LayoutChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminUkeImportRoute = LayoutAdminUkeImportRouteImport.update({
@@ -137,6 +143,7 @@ const LayoutAdminLocationsIdRoute = LayoutAdminLocationsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
+  '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof LayoutAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
@@ -180,6 +188,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/changelog': typeof LayoutChangelogRoute
   '/_layout/clf-export': typeof LayoutClfExportRoute
   '/_layout/preferences': typeof LayoutPreferencesRoute
   '/_layout/stations': typeof LayoutStationsRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/changelog'
     | '/clf-export'
     | '/preferences'
     | '/stations'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/changelog'
     | '/clf-export'
     | '/preferences'
     | '/stations'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/_layout/changelog'
     | '/_layout/clf-export'
     | '/_layout/preferences'
     | '/_layout/stations'
@@ -313,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/clf-export'
       fullPath: '/clf-export'
       preLoaderRoute: typeof LayoutClfExportRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/changelog': {
+      id: '/_layout/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof LayoutChangelogRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin/uke-import': {
@@ -417,6 +436,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface LayoutRouteChildren {
+  LayoutChangelogRoute: typeof LayoutChangelogRoute
   LayoutClfExportRoute: typeof LayoutClfExportRoute
   LayoutPreferencesRoute: typeof LayoutPreferencesRoute
   LayoutStationsRoute: typeof LayoutStationsRoute
@@ -439,6 +459,7 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutChangelogRoute: LayoutChangelogRoute,
   LayoutClfExportRoute: LayoutClfExportRoute,
   LayoutPreferencesRoute: LayoutPreferencesRoute,
   LayoutStationsRoute: LayoutStationsRoute,
