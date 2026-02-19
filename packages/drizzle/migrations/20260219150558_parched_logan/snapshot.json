@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "2184f653-c0d5-4b45-bfbc-10bdf8242c5e",
+  "id": "e059e0b2-2358-4fa6-b38a-9569cac2a422",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -1862,6 +1862,19 @@
       "generated": null,
       "identity": null,
       "name": "elevation",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "uke_permit_sectors"
+    },
+    {
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "antenna_height",
       "entityType": "columns",
       "schema": "public",
       "table": "uke_permit_sectors"
@@ -4333,6 +4346,19 @@
       "generated": null,
       "identity": null,
       "name": "clid",
+      "entityType": "columns",
+      "schema": "submissions",
+      "table": "proposed_lte_cells"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "pci",
       "entityType": "columns",
       "schema": "submissions",
       "table": "proposed_lte_cells"
@@ -7926,7 +7952,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["permit_id", "azimuth", "elevation", "antenna_type"],
+      "columns": ["permit_id", "azimuth", "elevation", "antenna_height", "antenna_type"],
       "nullsNotDistinct": false,
       "name": "uke_permit_sectors_unique",
       "entityType": "uniques",
@@ -8175,6 +8201,13 @@
     {
       "value": "\"clid\" BETWEEN 0 AND 255",
       "name": "clid_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_lte_cells"
+    },
+    {
+      "value": "\"pci\" BETWEEN 0 AND 503",
+      "name": "pci_check",
       "entityType": "checks",
       "schema": "submissions",
       "table": "proposed_lte_cells"

@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { WifiConnected01Icon, BatteryLowIcon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import type { Cell } from "@/types/station";
+import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { isRecent } from "@/lib/dateUtils";
 import { RAT_ICONS } from "../utils";
 
 type CellTableProps = {
@@ -70,73 +72,93 @@ export function CellTable({ rat, cells }: CellTableProps) {
               </tr>
             </thead>
             <tbody>
-              {cells.map((cell) => (
-                <tr key={cell.id} className="border-b last:border-0 hover:bg-muted/20">
-                  <td className="px-4 py-2 font-mono">
-                    <div className="flex items-center gap-1.5">
-                      <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : `${cell.band.value} MHz`}</span>
-                      {rat === "GSM" && cell.details?.e_gsm && (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
-                              E
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>E-GSM</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {!cell.is_confirmed && (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <span className="inline-flex items-center justify-center size-5 rounded-md bg-destructive/10 text-destructive cursor-help">
-                              <HugeiconsIcon icon={AlertCircleIcon} className="size-3.5" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>{t("stations:cells.cellNotConfirmed")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </td>
-                  {rat !== "GSM" && <td className="px-4 py-2">{cell.band.duplex || "-"}</td>}
-                  {rat === "GSM" && (
-                    <>
-                      <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
-                    </>
-                  )}
-                  {rat === "UMTS" && (
-                    <>
-                      <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.rnc ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.cid_long ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.carrier ?? "-"}</td>
-                    </>
-                  )}
-                  {rat === "LTE" && (
-                    <>
-                      <td className="px-4 py-2 font-mono">{cell.details?.tac ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.enbid ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.ecid ?? "-"}</td>
-                    </>
-                  )}
-                  {rat === "NR" && (
-                    <>
-                      <td className="px-4 py-2 font-mono">{cell.details?.nrtac ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
-                      <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
-                    </>
-                  )}
-                  <td className="px-4 py-2 text-muted-foreground">{cell.notes || "-"}</td>
-                </tr>
-              ))}
+              {cells.map((cell) => {
+                const isNew = isRecent(cell.createdAt);
+                return (
+                  <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20", isNew && "border-l-2 border-l-green-500")}>
+                    <td className="px-4 py-2 font-mono">
+                      <div className="flex items-center gap-1.5">
+                        <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : `${cell.band.value} MHz`}</span>
+                        {rat === "GSM" && cell.details?.e_gsm && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
+                                E
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>E-GSM</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {!cell.is_confirmed && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span className="inline-flex items-center justify-center size-5 rounded-md bg-destructive/10 text-destructive cursor-help">
+                                <HugeiconsIcon icon={AlertCircleIcon} className="size-3.5" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{t("stations:cells.cellNotConfirmed")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </td>
+                    {rat !== "GSM" && <td className="px-4 py-2">{cell.band.duplex || "-"}</td>}
+                    {rat === "GSM" && (
+                      <>
+                        <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
+                      </>
+                    )}
+                    {rat === "UMTS" && (
+                      <>
+                        <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.rnc ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.cid_long ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.carrier ?? "-"}</td>
+                      </>
+                    )}
+                    {rat === "LTE" && (
+                      <>
+                        <td className="px-4 py-2 font-mono">{cell.details?.tac ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.enbid ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.ecid ?? "-"}</td>
+                      </>
+                    )}
+                    {rat === "NR" && (
+                      <>
+                        <td className="px-4 py-2 font-mono">{cell.details?.nrtac ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
+                      </>
+                    )}
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{cell.notes || "-"}</span>
+                        {isNew && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-1.5 py-0 cursor-help"
+                              >
+                                {t("common:submissionType.new")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>{t("specs.newCellTooltip")}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

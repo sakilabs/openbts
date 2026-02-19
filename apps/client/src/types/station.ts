@@ -199,6 +199,7 @@ export type UkePermitSector = {
   id: number;
   azimuth: number | null;
   elevation: number | null;
+  antenna_height: number | null;
   antenna_type: "indoor" | "outdoor" | null;
 };
 

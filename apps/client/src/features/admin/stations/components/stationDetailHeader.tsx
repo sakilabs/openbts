@@ -5,6 +5,7 @@ import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,18 +118,28 @@ export function StationDetailHeader({
             </AlertDialogContent>
           </AlertDialog>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRevert}
-          disabled={!hasChanges}
-          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-        >
-          {isCreateMode ? t("common:actions.clear") : t("common:actions.revert")}
-        </Button>
-        <Button size="sm" onClick={onSave} disabled={isSaving || !hasChanges} className="shadow-sm font-medium px-4 min-w-25">
-          {isSaving ? <Spinner /> : isCreateMode ? t("header.createStation") : t("common:actions.saveChanges")}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger render={<span />}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRevert}
+              disabled={!hasChanges}
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              {isCreateMode ? t("common:actions.clear") : t("common:actions.revert")}
+            </Button>
+          </TooltipTrigger>
+          {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger render={<span />}>
+            <Button size="sm" onClick={onSave} disabled={isSaving || !hasChanges} className="shadow-sm font-medium px-4 min-w-25">
+              {isSaving ? <Spinner /> : isCreateMode ? t("header.createStation") : t("common:actions.saveChanges")}
+            </Button>
+          </TooltipTrigger>
+          {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
+        </Tooltip>
       </div>
     </div>
   );

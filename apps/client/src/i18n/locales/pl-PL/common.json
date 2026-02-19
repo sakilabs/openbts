@@ -36,7 +36,8 @@
     "view": "Zobacz",
     "update": "Zaktualizuj",
     "updating": "Aktualizowanie...",
-    "restore": "Przywróć"
+    "restore": "Przywróć",
+    "noChanges": "Brak zmian do zapisania"
   },
   "labels": {
     "id": "ID",

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -6,9 +6,11 @@ import { DocumentCodeIcon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/c
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import type { UkePermit } from "@/types/station";
 import { fetchApiData } from "@/lib/api";
-import { isPermitExpired } from "@/lib/dateUtils";
+import { isPermitExpired, isRecent } from "@/lib/dateUtils";
+import { cn } from "@/lib/utils";
 import { RAT_ICONS } from "../utils";
 
 async function fetchPermits(stationId: number, isUkeSource: boolean): Promise<UkePermit[]> {
@@ -54,27 +56,29 @@ function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
 }
 
 type PermitsListProps = {
-  stationId: number;
+  stationId?: number;
   isUkeSource?: boolean;
+  permits?: UkePermit[];
 };
 
-export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps) {
+export function PermitsList({ stationId, isUkeSource = false, permits: externalPermits }: PermitsListProps) {
   const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const {
-    data: permits = [],
+    data: fetchedPermits = [],
     isLoading,
     error,
   } = useQuery({
     queryKey: ["station-permits", stationId, isUkeSource],
-    queryFn: () => fetchPermits(stationId, isUkeSource),
-    enabled: !!stationId,
+    queryFn: () => fetchPermits(stationId!, isUkeSource),
+    enabled: !!stationId && !externalPermits,
     staleTime: 1000 * 60 * 10,
   });
 
+  const permits = externalPermits ?? fetchedPermits;
   const permitsByRat = useMemo(() => groupPermitsByRat(permits), [permits]);
   const hasDeviceRegistryData = useMemo(() => permits.some((p) => p.source === "device_registry"), [permits]);
 
-  if (isLoading) {
+  if (!externalPermits && isLoading) {
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
@@ -106,7 +110,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
     );
   }
 
-  if (error) {
+  if (!externalPermits && error) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground px-4">
         <div className="size-10 rounded-full bg-destructive/5 flex items-center justify-center text-destructive/50 mb-3">
@@ -143,6 +147,20 @@ type CollapsiblePermitGroupProps = {
   showAntennaData?: boolean;
 };
 
+type SectorValueTooltipProps = {
+  label: string;
+  children: ReactNode;
+};
+
+function SectorValueTooltip({ label, children }: SectorValueTooltipProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: CollapsiblePermitGroupProps) {
   return (
     <Collapsible defaultOpen className="rounded-xl border overflow-hidden">
@@ -173,9 +191,10 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                 const expiryDate = new Date(permit.expiry_date);
                 const isExpired = isPermitExpired(permit.expiry_date);
                 const neverExpires = expiryDate.getFullYear() >= 2099;
+                const isNew = isRecent(permit.createdAt);
 
                 return (
-                  <tr key={permit.id} className="hover:bg-muted/20 transition-colors">
+                  <tr key={permit.id} className={cn("hover:bg-muted/20 transition-colors", isNew && "border-l-2 border-l-green-500")}>
                     <td className="px-4 py-2.5 font-mono font-medium">
                       <div className="flex items-center gap-1.5">
                         <span>
@@ -227,9 +246,17 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                               <div className="flex flex-col gap-1 mt-1">
                                 {permit.sectors.map((sector) => (
                                   <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
-                                    <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
+                                    <SectorValueTooltip label={t("permits.sectorsAzimuth")}>
+                                      <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
+                                    </SectorValueTooltip>
                                     <span className="text-muted-foreground">/</span>
-                                    <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
+                                    <SectorValueTooltip label={t("permits.sectorsElevation")}>
+                                      <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
+                                    </SectorValueTooltip>
+                                    <span className="text-muted-foreground">/</span>
+                                    <SectorValueTooltip label={t("permits.sectorsAntennaHeight")}>
+                                      <span>{sector.antenna_height !== null ? `${sector.antenna_height}°` : "-"}</span>
+                                    </SectorValueTooltip>
                                     {sector.antenna_type && (
                                       <Tooltip>
                                         <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
@@ -249,16 +276,31 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                       </td>
                     )}
                     <td className="px-4 py-2.5">
-                      {isExpired ? (
-                        <div className="flex items-center gap-2">
-                          <span className="text-destructive font-medium">{expiryDate.toLocaleDateString(i18n.language)}</span>
-                          <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
-                            {t("common:status.expired")}
-                          </span>
-                        </div>
-                      ) : (
-                        <span>{neverExpires ? t("permits.neverExpires") : expiryDate.toLocaleDateString(i18n.language)}</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isExpired ? (
+                          <>
+                            <span className="text-destructive font-medium">{expiryDate.toLocaleDateString(i18n.language)}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
+                              {t("common:status.expired")}
+                            </span>
+                          </>
+                        ) : (
+                          <span>{neverExpires ? t("permits.neverExpires") : expiryDate.toLocaleDateString(i18n.language)}</span>
+                        )}
+                        {isNew && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-1.5 py-0 ml-auto cursor-help"
+                              >
+                                {t("common:submissionType.new")}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>{t("permits.newPermitTooltip")}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

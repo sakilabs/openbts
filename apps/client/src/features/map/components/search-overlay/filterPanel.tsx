@@ -32,6 +32,8 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 
+const PRIORITY_RADIOLINE_OPERATORS = ["T-Mobile Polska", "Towerlink Poland", "P4", "ORANGE POLSKA"];
+
 type FilterPanelProps = {
   filters: StationFilters;
   operators: Operator[];
@@ -76,12 +78,23 @@ export function FilterPanel({
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: radiolineOperatorsList = [] } = useQuery({
+  const { data: rawRadiolineOperators = [] } = useQuery({
     queryKey: ["uke", "radiolines", "operators"],
     queryFn: fetchUkeRadioLineOperators,
     staleTime: 1000 * 60 * 30,
     enabled: filters.showRadiolines,
   });
+
+  const radiolineOperatorsList = useMemo(() => {
+    return [...rawRadiolineOperators].sort((a, b) => {
+      const ai = PRIORITY_RADIOLINE_OPERATORS.indexOf(a.name);
+      const bi = PRIORITY_RADIOLINE_OPERATORS.indexOf(b.name);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [rawRadiolineOperators]);
 
   const radiolineOperatorsChipsRef = useRef<HTMLDivElement>(null);
 

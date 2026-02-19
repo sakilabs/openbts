@@ -72,6 +72,7 @@ interface ColumnIndices {
   rodzajSystemuKomorki: number;
   azymut: number;
   elewacja: number;
+  Hanteny: number;
   typKomorki: number;
 }
 
@@ -127,6 +128,10 @@ function findColumnIndices(headerCells: string[]): ColumnIndices | null {
         break;
       case "elewacja":
         indices.elewacja = i;
+        break;
+      case "H anteny":
+      case "h anteny":
+        indices.Hanteny = i;
         break;
       case "typ komórki":
       case "typ komorki":
@@ -189,6 +194,7 @@ interface ParsedRow {
   azimuth: number | null;
   elevation: number | null;
   antennaType: "indoor" | "outdoor" | null;
+  antennaHeight: number | null;
 }
 
 async function processOperatorFile(
@@ -285,6 +291,7 @@ async function processOperatorFile(
     const rawElevation = cols.elewacja !== undefined ? cells[cols.elewacja] : null;
     const azimuth = rawAzimuth ? Number(rawAzimuth) : null;
     const elevation = rawElevation ? Number(rawElevation) : null;
+    const antennaHeight = cols.Hanteny !== undefined ? Number(cells[cols.Hanteny]) : null;
 
     const rawTypKomorki = cols.typKomorki !== undefined ? (cells[cols.typKomorki] ?? "").trim().toLowerCase() : null;
     const antennaType = rawTypKomorki === "w" ? ("indoor" as const) : rawTypKomorki === "z" ? ("outdoor" as const) : null;
@@ -302,6 +309,7 @@ async function processOperatorFile(
       bandInfo,
       azimuth: Number.isFinite(azimuth) ? azimuth : null,
       elevation: Number.isFinite(elevation) ? elevation : null,
+      antennaHeight,
       antennaType,
     });
 
@@ -369,6 +377,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
         sector: {
           azimuth: r.azimuth,
           elevation: r.elevation,
+          antenna_height: r.antennaHeight,
           antenna_type: r.antennaType,
         },
       };

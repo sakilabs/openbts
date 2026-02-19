@@ -246,10 +246,11 @@ export const ukePermitSectors = pgTable(
       .notNull(),
     azimuth: integer("azimuth"),
     elevation: integer("elevation"),
+    antenna_height: doublePrecision("antenna_height"),
     antenna_type: AntennaType("antenna_type"),
   },
   (t) => [
-    unique("uke_permit_sectors_unique").on(t.permit_id, t.azimuth, t.elevation, t.antenna_type),
+    unique("uke_permit_sectors_unique").on(t.permit_id, t.azimuth, t.elevation, t.antenna_height, t.antenna_type),
     index("uke_permit_sectors_permit_id_idx").on(t.permit_id),
   ],
 );

@@ -8,6 +8,7 @@ import { ArrowLeft01Icon, Location01Icon, AirportTowerIcon, ArrowRight01Icon } f
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import { fetchLocationDetail } from "@/features/admin/locations/api";
@@ -110,6 +111,15 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
     });
   };
 
+  const hasChanges = useMemo(() => {
+    if (locationForm.region_id !== (location.region?.id ?? null)) return true;
+    if (locationForm.city !== (location.city ?? "")) return true;
+    if (locationForm.address !== (location.address ?? "")) return true;
+    if (locationForm.longitude !== (location.longitude ?? null)) return true;
+    if (locationForm.latitude !== (location.latitude ?? null)) return true;
+    return false;
+  }, [locationForm, location]);
+
   const stations = location.stations ?? [];
 
   const operatorColors = useMemo(() => {
@@ -159,12 +169,33 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleRevert} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-            {t("common:actions.revert")}
-          </Button>
-          <Button size="sm" onClick={handleSave} disabled={patchMutation.isPending} className="shadow-sm font-medium px-4 min-w-25">
-            {patchMutation.isPending ? <Spinner /> : t("common:actions.saveChanges")}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger render={<span />}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRevert}
+                disabled={!hasChanges}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                {t("common:actions.revert")}
+              </Button>
+            </TooltipTrigger>
+            {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger render={<span />}>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!hasChanges || patchMutation.isPending}
+                className="shadow-sm font-medium px-4 min-w-25"
+              >
+                {patchMutation.isPending ? <Spinner /> : t("common:actions.saveChanges")}
+              </Button>
+            </TooltipTrigger>
+            {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
+          </Tooltip>
         </div>
       </div>
 

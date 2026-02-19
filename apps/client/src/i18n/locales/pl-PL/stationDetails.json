@@ -8,7 +8,8 @@
     "cellDetails": "Szczegóły komórek",
     "networkName": "Nazwa N!:",
     "mnoName": "MNO:",
-    "internalNotes": "Notatki wewnętrzne"
+    "internalNotes": "Notatki wewnętrzne",
+    "newCellTooltip": "Ta komórka została dodana w ciągu ostatnich 7 dni"
   },
   "permits": {
     "permitsCount_one": "{{count}} pozwolenie",
@@ -28,7 +29,11 @@
     "noPermits": "Brak pozwoleń UKE dla tej stacji",
     "decisionTypeP": "Pozwolenie",
     "decisionTypeZmP": "Zmiana Pozwolenia",
+    "newPermitTooltip": "To pozwolenie zostało dodane w ciągu ostatnich 7 dni",
     "sectors": "Sektory",
+    "sectorsAzimuth": "Azymut",
+    "sectorsElevation": "Elewacja",
+    "sectorsAntennaHeight": "Wysokość anteny",
     "antennaType": {
       "indoor": "Wewnętrzna",
       "indoorShort": "W",

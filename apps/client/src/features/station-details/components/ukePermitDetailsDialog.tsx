@@ -1,27 +1,13 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ArrowDown01Icon,
-  Cancel01Icon,
-  Globe02Icon,
-  Wifi01Icon,
-  Calendar03Icon,
-  Location01Icon,
-  Building02Icon,
-  Tag01Icon,
-} from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Globe02Icon, Wifi01Icon, Location01Icon, Building02Icon, Tag01Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor } from "@/lib/operatorUtils";
-import { isPermitExpired } from "@/lib/dateUtils";
-import { cn } from "@/lib/utils";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { CopyButton } from "./copyButton";
 import { ShareButton } from "./shareButton";
 import { NavigationLinks } from "./navLinks";
-import type { UkeStation, UkePermit } from "@/types/station";
-import { RAT_ICONS } from "../utils";
+import { PermitsList } from "./permitsList";
+import type { UkeStation } from "@/types/station";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { useQuery } from "@tanstack/react-query";
@@ -32,49 +18,18 @@ type UkeStationDetailsDialogProps = {
   onClose: () => void;
 };
 
-function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
-  const groups = new Map<string, UkePermit[]>();
-
-  for (const permit of permits) {
-    const rat = permit.band?.rat?.toUpperCase() || "OTHER";
-    const existing = groups.get(rat) ?? [];
-    existing.push(permit);
-    groups.set(rat, existing);
-  }
-
-  const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "IOT", "OTHER"];
-  const sorted = new Map<string, UkePermit[]>();
-  for (const rat of ratOrder) {
-    if (groups.has(rat)) {
-      const getGroup = groups.get(rat);
-      if (getGroup) sorted.set(rat, getGroup);
-    }
-  }
-
-  return sorted;
-}
-
 export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDialogProps) {
-  const { t, i18n } = useTranslation(["stationDetails", "common"]);
+  const { t } = useTranslation(["stationDetails", "common"]);
   const { preferences } = usePreferences();
 
   useEscapeKey(onClose, !!station);
 
-  const { data: fetchedPermits } = useQuery({
+  const { data: permits } = useQuery({
     queryKey: ["uke-permits-by-station", station?.station_id],
     queryFn: () => (station ? fetchUkePermitsByStationId(station.station_id) : Promise.resolve([])),
     enabled: !!station,
     staleTime: 1000 * 60 * 5,
   });
-
-  const permits = fetchedPermits ?? [];
-
-  const permitsByRat = useMemo((): Map<string, UkePermit[]> => {
-    if (!station) return new Map<string, UkePermit[]>();
-    return groupPermitsByRat(permits);
-  }, [station, permits]);
-
-  const hasDeviceRegistryData = useMemo(() => permits.some((p) => p.source === "device_registry") ?? false, [permits]);
 
   if (!station) return null;
 
@@ -188,144 +143,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
           <div className="px-6 pb-5">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t("tabs.permits")}</h3>
-
-            <div className="space-y-4">
-              {Array.from(permitsByRat.entries()).map(([rat, permits]) => (
-                <Collapsible key={rat} defaultOpen className="rounded-xl border overflow-hidden">
-                  <CollapsibleTrigger className="w-full px-4 py-2.5 bg-muted/30 border-b flex items-center gap-2 cursor-pointer">
-                    <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
-                    <span className="font-bold text-sm">{rat}</span>
-                    <span className="text-xs text-muted-foreground">({t("permits.permitsCount", { count: permits.length })})</span>
-                    <HugeiconsIcon
-                      icon={ArrowDown01Icon}
-                      className={cn("size-3.5 ml-auto text-muted-foreground transition-transform in-data-open:rotate-180")}
-                    />
-                  </CollapsibleTrigger>
-
-                  <CollapsibleContent>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-muted/10">
-                            <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              {t("common:labels.band")}
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              {t("permits.decisionNumber")}
-                            </th>
-                            {hasDeviceRegistryData && (
-                              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                {t("permits.sectors")}
-                              </th>
-                            )}
-                            <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              {t("permits.expiryDate")}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/50">
-                          {permits.map((permit) => {
-                            const expiryDate = new Date(permit.expiry_date);
-                            const isExpired = isPermitExpired(permit.expiry_date);
-                            const neverExpires = expiryDate.getFullYear() >= 2099;
-
-                            return (
-                              <tr key={permit.id} className="hover:bg-muted/20 transition-colors">
-                                <td className="px-4 py-2.5 font-mono font-medium">
-                                  <div className="flex items-center gap-1.5">
-                                    <span>
-                                      {permit.band?.value
-                                        ? Number(permit.band.value) === 0
-                                          ? t("stations:cells.unknownBand")
-                                          : `${permit.band.value} MHz`
-                                        : "-"}
-                                    </span>
-                                    {permit.band?.variant === "railway" && (
-                                      <Tooltip>
-                                        <TooltipTrigger>
-                                          <span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 cursor-help text-xs font-bold">
-                                            R
-                                          </span>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top">
-                                          <p>GSM-R</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-xs">{permit.decision_number}</span>
-                                    <Tooltip>
-                                      <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
-                                        {permit.decision_type}
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {permit.decision_type === "zmP" ? t("permits.decisionTypeZmP") : t("permits.decisionTypeP")}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </div>
-                                </td>
-                                {hasDeviceRegistryData && (
-                                  <td className="px-4 py-2.5">
-                                    {permit.sectors && permit.sectors.length > 0 ? (
-                                      <Collapsible>
-                                        <CollapsibleTrigger className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex">
-                                          {t("permits.sectorsCount", { count: permit.sectors.length })}{" "}
-                                          <HugeiconsIcon
-                                            icon={ArrowDown01Icon}
-                                            className="size-3.5 ml-1 text-muted-foreground transition-transform in-data-panel-open:rotate-180"
-                                          />
-                                        </CollapsibleTrigger>
-                                        <CollapsibleContent>
-                                          <div className="flex flex-col gap-1 mt-1">
-                                            {permit.sectors.map((sector) => (
-                                              <div key={sector.id} className="flex items-center gap-2 font-mono text-xs">
-                                                <span>{sector.azimuth !== null ? `${sector.azimuth}°` : "-"}</span>
-                                                <span className="text-muted-foreground">/</span>
-                                                <span>{sector.elevation !== null ? `${sector.elevation}°` : "-"}</span>
-                                                {sector.antenna_type && (
-                                                  <Tooltip>
-                                                    <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
-                                                      {t(`permits.antennaType.${sector.antenna_type}Short`)}
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
-                                                  </Tooltip>
-                                                )}
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </CollapsibleContent>
-                                      </Collapsible>
-                                    ) : (
-                                      "-"
-                                    )}
-                                  </td>
-                                )}
-                                <td className="px-4 py-2.5">
-                                  {isExpired ? (
-                                    <div className="flex items-center gap-2">
-                                      <HugeiconsIcon icon={Calendar03Icon} className="size-3.5 text-destructive" />
-                                      <span className="text-destructive font-medium">{expiryDate.toLocaleDateString(i18n.language)}</span>
-                                      <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
-                                        {t("common:status.expired")}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span>{neverExpires ? t("permits.neverExpires") : expiryDate.toLocaleDateString(i18n.language)}</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </div>
+            <PermitsList permits={permits} />
           </div>
         </div>
 

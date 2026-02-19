@@ -188,8 +188,9 @@ CREATE TABLE "uke_permit_sectors" (
 	"permit_id" integer NOT NULL,
 	"azimuth" integer,
 	"elevation" integer,
+	"antenna_height" double precision,
 	"antenna_type" "antenna_type",
-	CONSTRAINT "uke_permit_sectors_unique" UNIQUE("permit_id","azimuth","elevation","antenna_type")
+	CONSTRAINT "uke_permit_sectors_unique" UNIQUE("permit_id","azimuth","elevation","antenna_height","antenna_type")
 );
 --> statement-breakpoint
 CREATE TABLE "uke_permits" (
@@ -430,8 +431,10 @@ CREATE TABLE "submissions"."proposed_lte_cells" (
 	"tac" integer,
 	"enbid" integer NOT NULL,
 	"clid" integer NOT NULL,
+	"pci" integer,
 	"supports_nb_iot" boolean DEFAULT false,
-	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255)
+	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
+	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_locations" (

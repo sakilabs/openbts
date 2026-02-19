@@ -36,7 +36,8 @@
     "view": "View",
     "update": "Update",
     "updating": "Updating...",
-    "restore": "Restore"
+    "restore": "Restore",
+    "noChanges": "No changes to save"
   },
   "labels": {
     "id": "ID",

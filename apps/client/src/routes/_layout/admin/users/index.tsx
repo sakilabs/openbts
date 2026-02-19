@@ -73,7 +73,7 @@ function AdminUsersPage() {
   const { t } = useTranslation("admin");
   const columns = useColumns();
   const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 48,
+    rowHeight: 64,
     headerHeight: 36,
     paginationHeight: 40,
   });
