@@ -148,7 +148,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
     case "NR": {
       const d = details as Partial<NRCellDetails>;
       optionalNonNegative("nrtac", d.nrtac);
-      requireNonNegative("gnbid", d.gnbid);
+      optionalNonNegative("gnbid", d.gnbid);
       optionalNonNegative("clid", d.clid);
       optionalNonNegative("pci", d.pci);
       break;

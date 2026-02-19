@@ -113,10 +113,12 @@ const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
   GSM: ["lac", "cid", "is_egsm"],
   UMTS: ["lac", "carrier", "rnc", "cid"],
   LTE: ["tac", "enbid", "clid", "pci", "supports_nb_iot"],
-  NR: ["nrtac", "gnbid", "gnbid_length", "clid", "pci", "supports_nr_redcap"],
+  NR: ["nrtac", "gnbid", "clid", "pci", "supports_nr_redcap"],
 };
 
-function pickCellDetails(rat: RatType | undefined, details: Partial<CellFormDetails> | undefined): Partial<CellFormDetails> | undefined {
+const BOOLEAN_DETAIL_KEYS = new Set(["is_egsm", "supports_nb_iot", "supports_nr_redcap"]);
+
+export function pickCellDetails(rat: RatType | undefined, details: Partial<CellFormDetails> | undefined): Partial<CellFormDetails> | undefined {
   if (!details) return undefined;
   const allowedKeys = rat ? ALLOWED_DETAIL_KEYS[rat] : undefined;
   if (!allowedKeys) return details;
@@ -124,7 +126,9 @@ function pickCellDetails(rat: RatType | undefined, details: Partial<CellFormDeta
   const picked: Record<string, unknown> = {};
   for (const key of allowedKeys) {
     if (key in details) picked[key] = (details as Record<string, unknown>)[key];
+    else picked[key] = BOOLEAN_DETAIL_KEYS.has(key) ? false : null;
   }
+
   return picked as Partial<CellFormDetails>;
 }
 

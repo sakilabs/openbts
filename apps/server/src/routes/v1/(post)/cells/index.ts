@@ -11,10 +11,10 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const cellsSelectSchema = createSelectSchema(cells);
-const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
-const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
-const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
-const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
+const gsmCellsSchema = createSelectSchema(gsmCells);
+const umtsCellsSchema = createSelectSchema(umtsCells);
+const lteCellsSchema = createSelectSchema(lteCells);
+const nrCellsSchema = createSelectSchema(nrCells);
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const cellsInsertSchema = createInsertSchema(cells)
   .omit({
@@ -22,10 +22,10 @@ const cellsInsertSchema = createInsertSchema(cells)
     updatedAt: true,
   })
   .strict();
-const gsmInsertSchema = createInsertSchema(gsmCells).omit({ createdAt: true, updatedAt: true }).strict();
-const umtsInsertSchema = createInsertSchema(umtsCells).omit({ createdAt: true, updatedAt: true }).strict();
-const lteInsertSchema = createInsertSchema(lteCells).omit({ createdAt: true, updatedAt: true }).strict();
-const nrInsertSchema = createInsertSchema(nrCells).omit({ createdAt: true, updatedAt: true }).strict();
+const gsmInsertSchema = createInsertSchema(gsmCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
+const umtsInsertSchema = createInsertSchema(umtsCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
+const lteInsertSchema = createInsertSchema(lteCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
+const nrInsertSchema = createInsertSchema(nrCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
 
 const requestSchema = cellsInsertSchema.extend({
   details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),

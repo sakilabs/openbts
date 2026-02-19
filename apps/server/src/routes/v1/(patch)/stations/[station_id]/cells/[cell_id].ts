@@ -21,7 +21,7 @@ const gsmCellsSelectSchema = createSelectSchema(gsmCells).omit({ cell_id: true }
 const umtsCellsSelectSchema = createSelectSchema(umtsCells).omit({ cell_id: true }).strict();
 const lteCellsSelectSchema = createSelectSchema(lteCells).omit({ cell_id: true }).strict();
 const nrCellsSelectSchema = createSelectSchema(nrCells).omit({ cell_id: true }).strict();
-const cellDetailsSchema = z.union([gsmCellsSelectSchema, umtsCellsSelectSchema, lteCellsSelectSchema, nrCellsSelectSchema]).nullable();
+const cellDetailsSchema = z.union([gsmCellsSelectSchema, umtsCellsSelectSchema, lteCellsSelectSchema, nrCellsSelectSchema]).optional();
 const gsmCellsUpdateSchema = createUpdateSchema(gsmCells).strict();
 const umtsCellsUpdateSchema = createUpdateSchema(umtsCells).strict();
 const lteCellsUpdateSchema = createUpdateSchema(lteCells).strict();
@@ -128,7 +128,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       where: {
         id: cell_id,
       },
-      with: { gsm: true, umts: true, lte: true, nr: true },
+      with: {
+        gsm: { columns: { cell_id: false } },
+        umts: { columns: { cell_id: false } },
+        lte: { columns: { cell_id: false } },
+        nr: { columns: { cell_id: false } },
+      },
     });
     if (!full) throw new ErrorResponse("FAILED_TO_UPDATE");
     const details = full?.gsm ?? full?.umts ?? full?.lte ?? full?.nr ?? null;

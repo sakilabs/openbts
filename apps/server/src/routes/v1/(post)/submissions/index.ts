@@ -124,12 +124,12 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
         })
       : null,
 
-    stationId !== null && locationData?.latitude !== undefined && locationData?.longitude !== undefined
+    type === "new" && stationData?.station_id && locationData?.latitude !== undefined && locationData?.longitude !== undefined
       ? db.query.locations.findFirst({
           with: {
             stations: {
               where: {
-                id: stationId,
+                station_id: stationData.station_id,
               },
             },
           },
@@ -148,7 +148,8 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
       message: "A station with the provided station_id and operator already exists. Use `existing` mode",
     });
 
-  if (existingLocation) throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
+  if (type === "new" && existingLocation && existingLocation.stations && existingLocation.stations.length > 0)
+    throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
 }
 
 async function processSubmission(

@@ -45,10 +45,7 @@ function createHitboxLayerConfig(minzoom: number): maplibregl.LayerSpecification
     type: "line",
     source: RADIOLINES_SOURCE_ID,
     minzoom,
-    paint: {
-      "line-width": 16,
-      "line-opacity": 0,
-    },
+    paint: { "line-width": 16, "line-opacity": 0 },
   };
 }
 
@@ -70,65 +67,93 @@ function createEndpointLayerConfig(minzoom: number): maplibregl.LayerSpecificati
 const HITBOX_LAYERS = [RADIOLINES_HITBOX_LAYER_ID, RADIOLINES_ENDPOINT_LAYER_ID] as const;
 const ALL_LAYERS = [RADIOLINES_LINE_LAYER_ID, RADIOLINES_HITBOX_LAYER_ID, RADIOLINES_ENDPOINT_LAYER_ID] as const;
 
+type ActiveTooltip = {
+  popup: maplibregl.Popup;
+  container: HTMLDivElement;
+  root: ReturnType<typeof createRoot>;
+  activeRadioLineId: number;
+};
+
+function destroyTooltip(state: ActiveTooltip | null): null {
+  state?.root.unmount();
+  state?.popup.remove();
+  return null;
+}
+
+function buildTooltip(state: ActiveTooltip | null, radioLineId: number): ActiveTooltip {
+  if (state?.activeRadioLineId === radioLineId) return state;
+
+  state?.root.unmount();
+  state?.popup.remove();
+
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  const popup = new MapLibreGL.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    className: "radioline-tooltip",
+    maxWidth: "20rem",
+    offset: 10,
+  }).setDOMContent(container);
+
+  return { popup, container, root, activeRadioLineId: radioLineId };
+}
+
+type Direction = { freq: string; bandwidth: string | null; forward: boolean };
+
+function parseDirections(raw: string | undefined): Direction[] {
+  try {
+    return JSON.parse(raw ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
 export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJSON, duplexLinks, minZoom, onFeatureClick }: UseRadioLinesLayerArgs) {
-  const callbackRefs = useRef({ onFeatureClick });
-  const linesRef = useRef(linesGeoJSON);
-  const endpointsRef = useRef(endpointsGeoJSON);
-  const duplexLinksRef = useRef(duplexLinks);
+  const stableRefs = useRef({ onFeatureClick, duplexLinks, linesGeoJSON, endpointsGeoJSON });
+  const tooltipRef = useRef<ActiveTooltip | null>(null);
 
   useEffect(() => {
-    callbackRefs.current = { onFeatureClick };
-    linesRef.current = linesGeoJSON;
-    endpointsRef.current = endpointsGeoJSON;
-    duplexLinksRef.current = duplexLinks;
-  }, [onFeatureClick, linesGeoJSON, endpointsGeoJSON, duplexLinks]);
-
-  const tooltipRef = useRef<maplibregl.Popup | null>(null);
-  const tooltipContainerRef = useRef<HTMLDivElement | null>(null);
-  const tooltipRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
+    stableRefs.current = { onFeatureClick, duplexLinks, linesGeoJSON, endpointsGeoJSON };
+  }, [onFeatureClick, duplexLinks, linesGeoJSON, endpointsGeoJSON]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
 
     const ensureLayersExist = () => {
-      if (!map) return;
-
+      const { linesGeoJSON, endpointsGeoJSON } = stableRefs.current;
       const beforeLayer = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
 
-      if (!map.getSource(RADIOLINES_SOURCE_ID)) map.addSource(RADIOLINES_SOURCE_ID, { type: "geojson", data: linesRef.current });
-      if (!map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID))
-        map.addSource(RADIOLINES_ENDPOINTS_SOURCE_ID, { type: "geojson", data: endpointsRef.current });
+      if (!map.getSource(RADIOLINES_SOURCE_ID)) map.addSource(RADIOLINES_SOURCE_ID, { type: "geojson", data: linesGeoJSON });
+      if (!map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID)) map.addSource(RADIOLINES_ENDPOINTS_SOURCE_ID, { type: "geojson", data: endpointsGeoJSON });
 
       if (!map.getLayer(RADIOLINES_LINE_LAYER_ID)) map.addLayer(createLineLayerConfig(minZoom), beforeLayer);
       if (!map.getLayer(RADIOLINES_HITBOX_LAYER_ID)) map.addLayer(createHitboxLayerConfig(minZoom), beforeLayer);
       if (!map.getLayer(RADIOLINES_ENDPOINT_LAYER_ID)) map.addLayer(createEndpointLayerConfig(minZoom), beforeLayer);
     };
 
-    const isNearStation = (point: maplibregl.Point) => {
-      const stationLayers = [POINT_LAYER_ID, `${POINT_LAYER_ID}-symbol`].filter((id) => map.getLayer(id));
-      if (stationLayers.length === 0) return false;
-      const tolerance = 12;
+    const isNearStation = (point: maplibregl.Point): boolean => {
+      const layers = [POINT_LAYER_ID, `${POINT_LAYER_ID}-symbol`].filter((id) => map.getLayer(id));
+      if (!layers.length) return false;
+      const t = 12;
       const bbox: [maplibregl.PointLike, maplibregl.PointLike] = [
-        [point.x - tolerance, point.y - tolerance],
-        [point.x + tolerance, point.y + tolerance],
+        [point.x - t, point.y - t],
+        [point.x + t, point.y + t],
       ];
-      return map.queryRenderedFeatures(bbox, { layers: stationLayers }).length > 0;
+      return map.queryRenderedFeatures(bbox, { layers }).length > 0;
     };
 
     const handleClick = (e: maplibregl.MapLayerMouseEvent) => {
       if (isNearStation(e.point)) return;
 
-      const feature = e.features?.[0];
-      const radioLineId = feature?.properties?.radioLineId;
+      const radioLineId = e.features?.[0]?.properties?.radioLineId;
       if (!radioLineId) return;
 
-      const link = findDuplexLinkByRadioLineId(radioLineId, duplexLinksRef.current);
+      const link = findDuplexLinkByRadioLineId(radioLineId, stableRefs.current.duplexLinks);
       if (!link) return;
 
-      tooltipRef.current?.remove();
-      tooltipRef.current = null;
-
-      callbackRefs.current.onFeatureClick(link, [e.lngLat.lng, e.lngLat.lat]);
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
+      stableRefs.current.onFeatureClick(link, [e.lngLat.lng, e.lngLat.lat]);
     };
 
     const handleMouseEnter = () => {
@@ -136,61 +161,33 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     };
 
     const handleMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
-      if (isNearStation(e.point)) {
-        tooltipRef.current?.remove();
-        tooltipRef.current = null;
-        return;
-      }
-
       const props = e.features?.[0]?.properties;
-      if (!props) {
-        tooltipRef.current?.remove();
-        tooltipRef.current = null;
+
+      if (isNearStation(e.point) || !props?.operatorName) {
+        tooltipRef.current = destroyTooltip(tooltipRef.current);
         return;
       }
 
-      const color = props.color || "#3b82f6";
-      const operator = props.operatorName || "";
-      const distance = props.distanceFormatted || "";
-      const directionCount = props.directionCount ?? 1;
-      if (!operator) return;
+      const { radioLineId, color = "#3b82f6", operatorName, distanceFormatted: distance = "", directionCount = 1, directionsJson } = props;
 
-      let directions: { freq: string; bandwidth: string | null; forward: boolean }[] = [];
-      try {
-        directions = JSON.parse(props.directionsJson || "[]");
-      } catch {
-        // ignore
-      }
+      const tooltip = buildTooltip(tooltipRef.current, radioLineId);
+      tooltipRef.current = tooltip;
 
-      if (!tooltipRef?.current) {
-        const container = document.createElement("div");
-        tooltipContainerRef.current = container as HTMLDivElement;
-        tooltipRootRef.current = createRoot(container);
-        tooltipRef.current = new MapLibreGL.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          className: "radioline-tooltip",
-          maxWidth: "20rem",
-          offset: 10,
-        }).setDOMContent(container);
-      }
-
-      tooltipRootRef.current?.render(
+      tooltip.root.render(
         <RadioLineTooltipContent
           color={color}
-          operatorName={normalizeOperatorName(operator)}
+          operatorName={normalizeOperatorName(operatorName)}
           distanceFormatted={distance}
-          directions={directions}
+          directions={parseDirections(directionsJson)}
           directionCount={directionCount}
         />,
       );
-      tooltipRef.current.setLngLat(e.lngLat).addTo(map);
+      tooltip.popup.setLngLat(e.lngLat).addTo(map);
     };
 
     const handleMouseLeave = () => {
       map.getCanvas().style.cursor = "";
-      tooltipRef.current?.remove();
-      tooltipRef.current = null;
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
 
     ensureLayersExist();
@@ -204,15 +201,9 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     }
 
     return () => {
-      const isMapValid = map.getStyle() !== undefined;
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
 
-      tooltipRef.current?.remove();
-      tooltipRef.current = null;
-      tooltipRootRef.current?.unmount();
-      tooltipRootRef.current = null;
-      tooltipContainerRef.current = null;
-
-      if (isMapValid) {
+      try {
         map.off("styledata", ensureLayersExist);
 
         for (const layerId of HITBOX_LAYERS) {
@@ -223,30 +214,20 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
         }
 
         for (const layerId of ALL_LAYERS) {
-          try {
-            map.removeLayer(layerId);
-          } catch (_) {
-            // layer may already be removed
-          }
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
         }
         for (const sourceId of [RADIOLINES_SOURCE_ID, RADIOLINES_ENDPOINTS_SOURCE_ID]) {
-          try {
-            map.removeSource(sourceId);
-          } catch (_) {
-            // source may already be removed
-          }
+          if (map.getSource(sourceId)) map.removeSource(sourceId);
         }
+      } catch {
+        // map was destroyed before cleanup ran
       }
     };
   }, [map, isLoaded, minZoom]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
-
-    const linesSource = map.getSource(RADIOLINES_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
-    if (linesSource) linesSource.setData(linesGeoJSON);
-
-    const endpointsSource = map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
-    if (endpointsSource) endpointsSource.setData(endpointsGeoJSON);
+    (map.getSource(RADIOLINES_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined)?.setData(linesGeoJSON);
+    (map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined)?.setData(endpointsGeoJSON);
   }, [map, isLoaded, linesGeoJSON, endpointsGeoJSON]);
 }

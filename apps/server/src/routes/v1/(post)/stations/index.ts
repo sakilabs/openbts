@@ -24,10 +24,10 @@ const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSche
 const locationSchema = createSelectSchema(locations).omit({ point: true });
 const operatorSchema = createSelectSchema(operators);
 const baseCellsInsertSchema = createInsertSchema(cells).omit({ createdAt: true, updatedAt: true }).strict();
-const gsmInsertSchema = createInsertSchema(gsmCells).omit({ createdAt: true, updatedAt: true });
-const umtsInsertSchema = createInsertSchema(umtsCells).omit({ createdAt: true, updatedAt: true });
-const lteInsertSchema = createInsertSchema(lteCells).omit({ createdAt: true, updatedAt: true });
-const nrInsertSchema = createInsertSchema(nrCells).omit({ createdAt: true, updatedAt: true });
+const gsmInsertSchema = createInsertSchema(gsmCells).omit({ cell_id: true, createdAt: true, updatedAt: true });
+const umtsInsertSchema = createInsertSchema(umtsCells).omit({ cell_id: true, createdAt: true, updatedAt: true });
+const lteInsertSchema = createInsertSchema(lteCells).omit({ cell_id: true, createdAt: true, updatedAt: true });
+const nrInsertSchema = createInsertSchema(nrCells).omit({ cell_id: true, createdAt: true, updatedAt: true });
 const cellWithDetailsInsert = baseCellsInsertSchema.extend({
   details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
 });

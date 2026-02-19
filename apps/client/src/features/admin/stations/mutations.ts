@@ -3,6 +3,7 @@ import { patchStation, patchCell, createCells, deleteCell, createLocation, creat
 import type { Station, Cell } from "@/types/station";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { shallowEqual } from "@/lib/shallowEqual";
+import { pickCellDetails } from "@/features/submissions/api";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -118,7 +119,7 @@ export function useSaveStationMutation() {
           rat: lc.rat,
           is_confirmed: lc.is_confirmed,
           notes: lc.notes || null,
-          details: Object.keys(lc.details).length > 0 ? lc.details : undefined,
+          details: pickCellDetails(lc.rat, lc.details),
         }));
 
         const res = await createStationMutation.mutateAsync({
@@ -159,7 +160,7 @@ export function useSaveStationMutation() {
               band_id: lc.band_id,
               notes: lc.notes || null,
               is_confirmed: lc.is_confirmed,
-              details: lc.details,
+              details: pickCellDetails(lc.rat, lc.details),
             }),
           ),
         );
@@ -175,7 +176,7 @@ export function useSaveStationMutation() {
             rat: lc.rat,
             is_confirmed: lc.is_confirmed,
             notes: lc.notes || null,
-            details: lc.details,
+            details: pickCellDetails(lc.rat, lc.details),
           })),
         );
       }
