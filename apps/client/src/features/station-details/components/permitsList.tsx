@@ -255,7 +255,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                                     </SectorValueTooltip>
                                     <span className="text-muted-foreground">/</span>
                                     <SectorValueTooltip label={t("permits.sectorsAntennaHeight")}>
-                                      <span>{sector.antenna_height !== null ? `${sector.antenna_height}°` : "-"}</span>
+                                      <span>{sector.antenna_height !== null ? `${sector.antenna_height}m` : "-"}</span>
                                     </SectorValueTooltip>
                                     {sector.antenna_type && (
                                       <Tooltip>
