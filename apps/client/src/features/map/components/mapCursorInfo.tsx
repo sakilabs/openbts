@@ -51,7 +51,7 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
   }, [map, isLoaded]);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !isLoaded) return;
 
     const onMouseMove = (e: maplibregl.MapMouseEvent) => {
       setCursor(e.lngLat);
@@ -63,10 +63,10 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
     return () => {
       map.off("mousemove", onMouseMove);
     };
-  }, [map]);
+  }, [map, isLoaded]);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !isLoaded) return;
 
     const source = map.getSource("cursor-measure-line") as maplibregl.GeoJSONSource;
     if (!source) return;
@@ -86,7 +86,7 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
     } else {
       source.setData({ type: "FeatureCollection", features: [] });
     }
-  }, [map, activeMarker, cursor]);
+  }, [map, isLoaded, activeMarker, cursor]);
 
   let metrics = null;
   if (activeMarker && cursor) {
