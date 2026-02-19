@@ -92,7 +92,8 @@
   "form": {
     "summary": "Leave a note if needed",
     "summaryPlaceholder": "Add a note explaining changes (optional)...",
-    "editingBanner": "You are editing submission"
+    "editingBanner": "You are editing submission",
+    "noChanges": "No changes to submit. Modify data or add a note to continue."
   },
   "table": {
     "cells": "Cell Count",

@@ -17,27 +17,30 @@ export function ShareButton({ title, text, url, size = "sm", className }: ShareB
   const [copied, setCopied] = useState(false);
   const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
 
-  const handleShare = useCallback(async () => {
+  const handleShare = useCallback(() => {
     if (navigator.share) {
-      try {
-        await navigator.share({
+      void navigator
+        .share({
           title: title ?? document.title,
           text,
           url: shareUrl,
+        })
+        .then(() => {})
+        .catch((error: unknown) => {
+          if ((error as Error).name === "AbortError") return;
         });
-        return;
-      } catch (error) {
-        if ((error as Error).name === "AbortError") return;
-      }
+      return;
     }
 
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-    }
+    void navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((error) => {
+        console.error("Failed to copy to clipboard:", error);
+      });
   }, [title, text, shareUrl]);
 
   const iconSize = size === "sm" ? "size-3.5" : "size-4";

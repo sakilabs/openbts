@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -10,15 +10,20 @@ import { LocationsResponsiveFilters } from "@/features/admin/locations/component
 import { useLocationsData } from "@/features/admin/locations/hooks/useLocationsData";
 import type { LocationWithStations, LocationSortBy } from "@/types/station";
 
+function subscribeToHeaderActions(callback: () => void) {
+  const id = requestAnimationFrame(callback);
+  return () => cancelAnimationFrame(id);
+}
+
 function AdminLocationsPage() {
   const { t } = useTranslation("admin");
   const navigate = useNavigate();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [headerActionsEl, setHeaderActionsEl] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setHeaderActionsEl(document.getElementById("header-actions"));
-  }, []);
+  const headerActionsEl = useSyncExternalStore(
+    subscribeToHeaderActions,
+    () => document.getElementById("header-actions"),
+    () => null,
+  );
 
   const data = useLocationsData();
 

@@ -14,6 +14,7 @@
     "cellsCount_many": "{{count}} komórek",
     "notesPlaceholder": "np. pikokomórka",
     "addCell": "Dodaj komórkę",
+    "confirmCells": "Potwierdź komórki",
     "noRats": "Nie znaleziono komórek dla tej stacji. Dodaj RATy, aby dodać komórki",
     "noStationCells": "Nie znaleziono komórek dla tej stacji",
     "noCells": "Brak komórek. Kliknij \"Dodaj komórkę\", aby utworzyć",

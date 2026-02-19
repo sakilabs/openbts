@@ -145,7 +145,7 @@ export function StationsFilters({
               <div className="flex items-center gap-1 flex-1 flex-wrap">
                 {parsedFilters.map((filter, index) => (
                   <div
-                    key={`${filter.key}-${index}`}
+                    key={`${filter.key}-${String(filter.value)}-${index}`}
                     className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium border border-primary/20 shrink-0"
                   >
                     <span className="font-mono text-[10px]">{filter.key}:</span>

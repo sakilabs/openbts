@@ -92,7 +92,8 @@
   "form": {
     "summary": "Pozostaw po sobie notatkę jeżeli jest taka potrzeba",
     "summaryPlaceholder": "Dodaj notatkę wyjaśniającą zmiany (opcjonalnie)...",
-    "editingBanner": "Edytujesz zgłoszenie"
+    "editingBanner": "Edytujesz zgłoszenie",
+    "noChanges": "Brak zmian do przesłania. Zmodyfikuj dane lub dodaj notatkę, aby kontynuować."
   },
   "table": {
     "cells": "Ilość komórek",

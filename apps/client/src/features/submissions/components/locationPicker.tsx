@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, useReducer } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -140,21 +140,19 @@ export function LocationPicker({ location, errors, onLocationChange, onUkeStatio
   const handleFetchAddress = async () => {
     if (location.latitude === null || location.longitude === null) return;
     setIsFetchingAddress(true);
-    try {
-      const result = await reverseGeocode(location.latitude, location.longitude);
-      if (result) applyGeocodeResult(result, regions, onLocationChange);
-    } finally {
-      setIsFetchingAddress(false);
-    }
+    const result = await reverseGeocode(location.latitude, location.longitude).catch(() => null);
+    if (result) applyGeocodeResult(result, regions, onLocationChange);
+    setIsFetchingAddress(false);
   };
 
   const handleMapCoordinatesSet = useCallback(
-    async (lat: number, lon: number) => {
+    (lat: number, lon: number) => {
       onLocationChange({ latitude: roundCoord(lat), longitude: roundCoord(lon) });
-      try {
-        const result = await reverseGeocode(lat, lon);
-        if (result) applyGeocodeResult(result, regions, onLocationChange);
-      } catch {}
+      reverseGeocode(lat, lon)
+        .then((result) => {
+          if (result) applyGeocodeResult(result, regions, onLocationChange);
+        })
+        .catch(() => {});
     },
     [regions, onLocationChange],
   );
@@ -341,6 +339,34 @@ type UkeStationPanel = {
   stations: UkeStation[];
 };
 
+type PanelState = { nearbyPanel: NearbyPanel | null; ukeStationPanel: UkeStationPanel | null };
+type PanelAction =
+  | { type: "select_location" }
+  | { type: "select_uke"; location: UkeLocationWithPermits; stations: UkeStation[] }
+  | { type: "nearby"; coords: { lat: number; lng: number }; locations: (LocationWithStations & { distance: number })[] }
+  | { type: "clear_nearby" }
+  | { type: "clear_uke" }
+  | { type: "clear_both" };
+
+function panelReducer(state: PanelState, action: PanelAction): PanelState {
+  switch (action.type) {
+    case "select_location":
+      return { nearbyPanel: null, ukeStationPanel: null };
+    case "select_uke":
+      return { nearbyPanel: null, ukeStationPanel: { location: action.location, stations: action.stations } };
+    case "nearby":
+      return { nearbyPanel: { coords: action.coords, locations: action.locations }, ukeStationPanel: null };
+    case "clear_nearby":
+      return { ...state, nearbyPanel: null };
+    case "clear_uke":
+      return { ...state, ukeStationPanel: null };
+    case "clear_both":
+      return { nearbyPanel: null, ukeStationPanel: null };
+    default:
+      return state;
+  }
+}
+
 type PickerMapInnerProps = {
   location: ProposedLocationForm;
   onCoordinatesSet: (lat: number, lon: number) => void;
@@ -353,8 +379,8 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
   const { t } = useTranslation("submissions");
   const { map, isLoaded } = useMap();
   const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
-  const [nearbyPanel, setNearbyPanel] = useState<NearbyPanel | null>(null);
-  const [ukeStationPanel, setUkeStationPanel] = useState<UkeStationPanel | null>(null);
+  const [panelState, dispatchPanel] = useReducer(panelReducer, { nearbyPanel: null, ukeStationPanel: null });
+  const { nearbyPanel, ukeStationPanel } = panelState;
 
   const lastInternalCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const addedImagesRef = useRef(new Set<string>());
@@ -380,13 +406,16 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
   const ukeGeoJSON = useMemo(() => ukeLocationsToPickerGeoJSON(viewportUkeLocations), [viewportUkeLocations]);
 
   const viewportLocationsRef = useRef(viewportLocations);
-  viewportLocationsRef.current = viewportLocations;
   const viewportUkeLocationsRef = useRef(viewportUkeLocations);
-  viewportUkeLocationsRef.current = viewportUkeLocations;
   const showUkeLocationsRef = useRef(showUkeLocations);
-  showUkeLocationsRef.current = showUkeLocations;
   const callbackRefs = useRef({ onCoordinatesSet, onExistingLocationSelect });
-  callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
+
+  useEffect(() => {
+    viewportLocationsRef.current = viewportLocations;
+    viewportUkeLocationsRef.current = viewportUkeLocations;
+    showUkeLocationsRef.current = showUkeLocations;
+    callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
+  }, [viewportLocations, viewportUkeLocations, showUkeLocations, onCoordinatesSet, onExistingLocationSelect]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -444,16 +473,22 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     }
 
     return () => {
-      try {
-        map.off("styledata", ensureLayersExist);
+      map.off("styledata", ensureLayersExist);
 
-        for (const layerId of PICKER_LAYER_IDS) {
-          map.off("mouseenter", layerId, handleMouseEnter);
-          map.off("mouseleave", layerId, handleMouseLeave);
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
+      for (const layerId of PICKER_LAYER_IDS) {
+        map.off("mouseenter", layerId, handleMouseEnter);
+        map.off("mouseleave", layerId, handleMouseLeave);
+        try {
+          map.removeLayer(layerId);
+        } catch (_) {
+          // layer may already be removed
         }
-        if (map.getSource(PICKER_SOURCE_ID)) map.removeSource(PICKER_SOURCE_ID);
-      } catch {}
+      }
+      try {
+        map.removeSource(PICKER_SOURCE_ID);
+      } catch (_) {
+        // source may already be removed
+      }
 
       addedImagesRef.current.clear();
     };
@@ -528,16 +563,22 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     }
 
     return () => {
-      try {
-        map.off("styledata", ensureUkeLayersExist);
+      map.off("styledata", ensureUkeLayersExist);
 
-        for (const layerId of PICKER_UKE_LAYER_IDS) {
-          map.off("mouseenter", layerId, handleMouseEnter);
-          map.off("mouseleave", layerId, handleMouseLeave);
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
+      for (const layerId of PICKER_UKE_LAYER_IDS) {
+        map.off("mouseenter", layerId, handleMouseEnter);
+        map.off("mouseleave", layerId, handleMouseLeave);
+        try {
+          map.removeLayer(layerId);
+        } catch (_) {
+          // layer may already be removed
         }
-        if (map.getSource(PICKER_UKE_SOURCE_ID)) map.removeSource(PICKER_UKE_SOURCE_ID);
-      } catch {}
+      }
+      try {
+        map.removeSource(PICKER_UKE_SOURCE_ID);
+      } catch (_) {
+        // source may already be removed
+      }
 
       addedUkeImagesRef.current.clear();
     };
@@ -564,8 +605,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
         if (loc) {
           lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
           callbackRefs.current.onExistingLocationSelect(loc);
-          setNearbyPanel(null);
-          setUkeStationPanel(null);
+          dispatchPanel({ type: "select_location" });
         }
         return;
       }
@@ -577,8 +617,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
           const ukeLoc = viewportUkeLocationsRef.current.find((l) => l.id === locationId);
           if (ukeLoc) {
             const stations = groupPermitsByStation(ukeLoc.permits ?? [], ukeLoc);
-            setUkeStationPanel({ location: ukeLoc, stations });
-            setNearbyPanel(null);
+            dispatchPanel({ type: "select_uke", location: ukeLoc, stations });
           }
           return;
         }
@@ -588,13 +627,12 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
       const nearby = computeNearby({ lat, lng }, viewportLocationsRef.current);
 
       if (nearby.length > 0) {
-        setNearbyPanel({ coords: { lat, lng }, locations: nearby });
+        dispatchPanel({ type: "nearby", coords: { lat, lng }, locations: nearby });
       } else {
-        setNearbyPanel(null);
         lastInternalCoordsRef.current = { lat, lng };
         callbackRefs.current.onCoordinatesSet(lat, lng);
+        dispatchPanel({ type: "clear_both" });
       }
-      setUkeStationPanel(null);
     };
 
     map.on("click", handleMapClick);
@@ -633,7 +671,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     (loc: LocationWithStations) => {
       lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
       onExistingLocationSelect(loc);
-      setNearbyPanel(null);
+      dispatchPanel({ type: "clear_nearby" });
     },
     [onExistingLocationSelect],
   );
@@ -642,13 +680,13 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     if (!nearbyPanel) return;
     lastInternalCoordsRef.current = nearbyPanel.coords;
     onCoordinatesSet(nearbyPanel.coords.lat, nearbyPanel.coords.lng);
-    setNearbyPanel(null);
+    dispatchPanel({ type: "clear_nearby" });
   }, [nearbyPanel, onCoordinatesSet]);
 
   const handleSelectUkeStation = useCallback(
     (station: UkeStation) => {
       onUkeStationSelect?.(station);
-      setUkeStationPanel(null);
+      dispatchPanel({ type: "clear_uke" });
     },
     [onUkeStationSelect],
   );
@@ -674,7 +712,12 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
             >
               <div className="px-2.5 py-1.5 border-b bg-muted/50 flex items-center justify-between">
                 <span className="text-[11px] font-medium text-muted-foreground">{t("locationPicker.nearbyLocations")}</span>
-                <button type="button" onClick={() => setNearbyPanel(null)} className="text-muted-foreground hover:text-foreground" aria-label="Close">
+                <button
+                  type="button"
+                  onClick={() => dispatchPanel({ type: "clear_nearby" })}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Close"
+                >
                   <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
                 </button>
               </div>

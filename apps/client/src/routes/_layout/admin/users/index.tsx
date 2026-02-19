@@ -14,13 +14,10 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { authClient } from "@/lib/authClient";
 import type { AdminUser } from "@/features/admin/users/types";
-import { i18n } from "@/i18n";
-
 const columnHelper = createColumnHelper<AdminUser>();
 
 function useColumns() {
   const { t } = useTranslation("admin");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Already changes on `i18n.language`
   return useMemo(
     () => [
       columnHelper.accessor("name", {
@@ -67,7 +64,7 @@ function useColumns() {
         cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
       }),
     ],
-    [i18n.language],
+    [t],
   );
 }
 

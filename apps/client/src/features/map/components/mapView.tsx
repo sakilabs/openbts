@@ -68,7 +68,9 @@ function MapViewInner() {
 
   const locations = locationsResponse?.data ?? [];
   const locationsRef = useRef(locations);
-  locationsRef.current = locations;
+  useEffect(() => {
+    locationsRef.current = locations;
+  }, [locations]);
   const locationCount = locations.length;
   const totalCount = locationsResponse?.totalCount ?? 0;
 
@@ -92,7 +94,9 @@ function MapViewInner() {
   );
 
   const filtersRef = useRef(filters);
-  filtersRef.current = filters;
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
   const handleStationSelect = useCallback(
     async (station: Station) => {

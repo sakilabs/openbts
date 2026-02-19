@@ -1,16 +1,8 @@
-import { useState, useEffect, useCallback, type ReactNode, type KeyboardEvent } from "react";
+import { useState, useMemo, useCallback, type ReactNode, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ShieldUserIcon,
-  Message01Icon,
-  SentIcon,
-  Cancel01Icon,
-  ArrowRight01Icon,
-  CheckmarkCircle02Icon,
-  AlertCircleIcon,
-} from "@hugeicons/core-free-icons";
+import { ShieldUserIcon, Message01Icon, SentIcon, Cancel01Icon, CheckmarkCircle02Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -127,16 +119,9 @@ function SettingsCard({ icon, title, description, children }: { icon: ReactNode;
 function AdminSettingsPage() {
   const { t } = useTranslation(["admin", "common"]);
   const queryClient = useQueryClient();
-  const [hasChanges, setHasChanges] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
-  const [formData, setFormData] = useState<RuntimeSettings>({
-    enforceAuthForAllRoutes: false,
-    allowedUnauthenticatedRoutes: [],
-    disabledRoutes: [],
-    enableStationComments: false,
-    submissionsEnabled: true,
-  });
+  const [patch, setPatch] = useState<Partial<RuntimeSettings>>({});
 
   const {
     data: settings,
@@ -147,30 +132,39 @@ function AdminSettingsPage() {
     queryFn: fetchSettings,
   });
 
-  useEffect(() => {
-    if (settings) {
-      setFormData(settings);
-      setHasChanges(false);
-    }
-  }, [settings]);
+  const formData: RuntimeSettings = useMemo(
+    () =>
+      settings
+        ? {
+            ...settings,
+            ...patch,
+          }
+        : {
+            enforceAuthForAllRoutes: false,
+            allowedUnauthenticatedRoutes: [],
+            disabledRoutes: [],
+            enableStationComments: false,
+            submissionsEnabled: true,
+          },
+    [settings, patch],
+  );
 
-  useEffect(() => {
-    if (settings) {
-      const changed =
-        formData.enforceAuthForAllRoutes !== settings.enforceAuthForAllRoutes ||
-        formData.enableStationComments !== settings.enableStationComments ||
-        formData.submissionsEnabled !== settings.submissionsEnabled ||
-        JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes) ||
-        JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes);
-      setHasChanges(changed);
-    }
-  }, [formData, settings]);
+  const hasChanges = useMemo(() => {
+    if (!settings) return false;
+    return (
+      formData.enforceAuthForAllRoutes !== settings.enforceAuthForAllRoutes ||
+      formData.enableStationComments !== settings.enableStationComments ||
+      formData.submissionsEnabled !== settings.submissionsEnabled ||
+      JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes) ||
+      JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes)
+    );
+  }, [settings, formData]);
 
   const mutation = useMutation({
     mutationFn: patchSettings,
     onSuccess: (newSettings) => {
       queryClient.setQueryData(["admin-settings"], newSettings);
-      setHasChanges(false);
+      setPatch({});
       setShowSaveSuccess(true);
       setTimeout(() => setShowSaveSuccess(false), 3000);
     },
@@ -198,11 +192,7 @@ function AdminSettingsPage() {
     mutation.mutate(patch);
   }, [formData, settings, mutation]);
 
-  const handleReset = useCallback(() => {
-    if (settings) {
-      setFormData(settings);
-    }
-  }, [settings]);
+  const handleReset = useCallback(() => setPatch({}), []);
 
   if (isLoading) {
     return (
@@ -273,7 +263,7 @@ function AdminSettingsPage() {
                 </div>
                 <Toggle
                   checked={formData.enforceAuthForAllRoutes}
-                  onChange={(checked) => setFormData((prev: RuntimeSettings) => ({ ...prev, enforceAuthForAllRoutes: checked }))}
+                  onChange={(checked) => setPatch((prev) => ({ ...prev, enforceAuthForAllRoutes: checked }))}
                 />
               </div>
 
@@ -284,7 +274,7 @@ function AdminSettingsPage() {
                 </div>
                 <TagInput
                   tags={formData.allowedUnauthenticatedRoutes}
-                  onChange={(tags) => setFormData((prev: RuntimeSettings) => ({ ...prev, allowedUnauthenticatedRoutes: tags }))}
+                  onChange={(tags) => setPatch((prev) => ({ ...prev, allowedUnauthenticatedRoutes: tags }))}
                   placeholder="e.g., /api/v1/public"
                 />
               </div>
@@ -296,7 +286,7 @@ function AdminSettingsPage() {
                 </div>
                 <TagInput
                   tags={formData.disabledRoutes}
-                  onChange={(tags) => setFormData((prev: RuntimeSettings) => ({ ...prev, disabledRoutes: tags }))}
+                  onChange={(tags) => setPatch((prev) => ({ ...prev, disabledRoutes: tags }))}
                   placeholder="e.g., /api/v1/admin"
                 />
               </div>
@@ -318,7 +308,7 @@ function AdminSettingsPage() {
                 </div>
                 <Toggle
                   checked={formData.enableStationComments}
-                  onChange={(checked) => setFormData((prev: RuntimeSettings) => ({ ...prev, enableStationComments: checked }))}
+                  onChange={(checked) => setPatch((prev) => ({ ...prev, enableStationComments: checked }))}
                 />
               </div>
             </SettingsCard>
@@ -337,7 +327,7 @@ function AdminSettingsPage() {
                 </div>
                 <Toggle
                   checked={formData.submissionsEnabled}
-                  onChange={(checked) => setFormData((prev: RuntimeSettings) => ({ ...prev, submissionsEnabled: checked }))}
+                  onChange={(checked) => setPatch((prev) => ({ ...prev, submissionsEnabled: checked }))}
                 />
               </div>
             </SettingsCard>

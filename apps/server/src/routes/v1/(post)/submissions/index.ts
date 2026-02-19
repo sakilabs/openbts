@@ -70,6 +70,12 @@ const schemaRoute = {
 
 type ResponseData = z.infer<typeof submissionsSelectSchema>[];
 
+type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
+  proposedStation?: z.infer<typeof proposedStationInsert>;
+  proposedLocation?: z.infer<typeof proposedLocationInsert>;
+  cells?: z.infer<typeof proposedCellInsert>[];
+};
+
 function mapCellOperation(op: string): "add" | "update" | "delete" {
   switch (op) {
     case "updated":
@@ -81,11 +87,69 @@ function mapCellOperation(op: string): "add" | "update" | "delete" {
   }
 }
 
-type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
-  proposedStation?: z.infer<typeof proposedStationInsert>;
-  proposedLocation?: z.infer<typeof proposedLocationInsert>;
-  cells?: z.infer<typeof proposedCellInsert>[];
-};
+function isNonEmpty(value: unknown): boolean {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return true;
+  if (typeof value === "boolean") return true;
+  if (Array.isArray(value)) return value.length > 0 && value.some(isNonEmpty);
+  if (typeof value === "object") return Object.values(value as object).some(isNonEmpty);
+  return false;
+}
+
+function hasMeaningfulChanges(input: SingleSubmission): boolean {
+  if (input.type === "delete") return true;
+  const { station_id: _, type: __, ...payload } = input;
+  return isNonEmpty(payload);
+}
+
+async function validateSubmission(input: SingleSubmission): Promise<void> {
+  const { station_id, type, station: stationData, location: locationData } = input;
+
+  if ((type === "update" || type === "delete") && !station_id)
+    throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update and delete submissions" });
+
+  const stationId = station_id !== undefined ? Number(station_id) : null;
+  if (stationId !== null && Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
+
+  const [targetStation, duplicateStation, existingLocation] = await Promise.all([
+    stationId !== null ? db.query.stations.findFirst({ where: { id: stationId } }) : null,
+
+    type === "new" && stationData?.station_id
+      ? db.query.stations.findFirst({
+          where: {
+            station_id: stationData.station_id,
+            operator_id: stationData.operator_id,
+          },
+        })
+      : null,
+
+    stationId !== null && locationData?.latitude !== undefined && locationData?.longitude !== undefined
+      ? db.query.locations.findFirst({
+          with: {
+            stations: {
+              where: {
+                id: stationId,
+              },
+            },
+          },
+          where: {
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+          },
+        })
+      : null,
+  ]);
+
+  if (stationId !== null && !targetStation) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+
+  if (duplicateStation)
+    throw new ErrorResponse("BAD_REQUEST", {
+      message: "A station with the provided station_id and operator already exists. Use `existing` mode",
+    });
+
+  if (existingLocation) throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
+}
 
 async function processSubmission(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
@@ -94,30 +158,8 @@ async function processSubmission(
 ): Promise<SubmissionWithExtras> {
   const { station_id, type, submitter_note, station: stationData, location: locationData, cells: proposedCellsInput } = input;
 
-  if ((type === "update" || type === "delete") && !station_id)
-    throw new ErrorResponse("INVALID_QUERY", { message: "station_id is required for update and delete submissions" });
-
-  if (station_id) {
-    const stationId = Number(station_id);
-    if (Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
-    const station = await tx.query.stations.findFirst({
-      where: {
-        id: stationId,
-      },
-    });
-    if (!station) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
-  }
-
-  if (type === "new" && stationData?.station_id) {
-    const station = await tx.query.stations.findFirst({
-      where: {
-        station_id: stationData?.station_id,
-      },
-    });
-
-    if (station?.station_id === stationData.station_id && station?.operator_id === stationData.operator_id)
-      throw new ErrorResponse("BAD_REQUEST", { message: "A station with the provided station_id and operator already exists. Use `existing` mode" });
-  }
+  if (!hasMeaningfulChanges(input))
+    throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
 
   const [submission] = await tx
     .insert(submissions)
@@ -126,6 +168,7 @@ async function processSubmission(
   if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
 
   if (stationData) await tx.insert(proposedStations).values({ ...stationData, submission_id: submission.id, status: "pending", is_confirmed: false });
+
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
   if (proposedCellsInput && proposedCellsInput.length > 0) {
@@ -148,30 +191,26 @@ async function processSubmission(
 
         if (cell.operation !== "removed") {
           switch (cell.rat) {
-            case "GSM":
-              {
-                const details = cell.details as z.infer<typeof gsmInsertSchema>;
-                await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
-              }
+            case "GSM": {
+              const details = cell.details as z.infer<typeof gsmInsertSchema>;
+              await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
               break;
-            case "UMTS":
-              {
-                const details = cell.details as z.infer<typeof umtsInsertSchema>;
-                await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
-              }
+            }
+            case "UMTS": {
+              const details = cell.details as z.infer<typeof umtsInsertSchema>;
+              await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
               break;
-            case "LTE":
-              {
-                const details = cell.details as z.infer<typeof lteInsertSchema>;
-                await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
-              }
+            }
+            case "LTE": {
+              const details = cell.details as z.infer<typeof lteInsertSchema>;
+              await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
               break;
-            case "NR":
-              {
-                const details = cell.details as z.infer<typeof nrInsertSchema>;
-                await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
-              }
+            }
+            case "NR": {
+              const details = cell.details as z.infer<typeof nrInsertSchema>;
+              await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
               break;
+            }
           }
         }
       } catch (error) {
@@ -196,12 +235,13 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const submissionInputs: SingleSubmission[] = Array.isArray(req.body) ? req.body : [req.body];
 
+  await Promise.all(submissionInputs.map(validateSubmission));
+
   try {
     const results = await db.transaction(async (tx) => {
       const created: SubmissionWithExtras[] = [];
       for (const input of submissionInputs) {
-        const submission = await processSubmission(tx, input, userId);
-        created.push(submission);
+        created.push(await processSubmission(tx, input, userId));
       }
       return created;
     });

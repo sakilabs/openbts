@@ -37,7 +37,19 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
   if (!response.ok) {
     if (allowedErrors?.includes(response.status)) return null as T;
 
-    if (response.status === 500 || response.status === 502) throw new BackendUnavailableError(response.status);
+    if (response.status === 502 || response.status === 503 || response.status === 504) {
+      throw new BackendUnavailableError(response.status);
+    }
+
+    if (response.status === 500) {
+      try {
+        const errorData = await response.json();
+        if (errorData.errors?.length) throw new ApiResponseError(response.status, errorData.errors);
+      } catch (e) {
+        if (e instanceof ApiResponseError) throw e;
+        throw new BackendUnavailableError(response.status);
+      }
+    }
 
     try {
       const errorData = await response.json();

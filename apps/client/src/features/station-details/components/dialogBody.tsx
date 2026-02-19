@@ -61,7 +61,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
         <div className="p-6 space-y-8">
           <div className="flex p-1 bg-muted/50 rounded-xl gap-1">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex-1 flex items-center justify-center gap-2 py-2 px-3">
+              <div key={`skeleton-tab-${i}`} className="flex-1 flex items-center justify-center gap-2 py-2 px-3">
                 <Skeleton className="size-4 rounded" />
                 <Skeleton className="h-4 w-16 rounded hidden sm:block" />
               </div>
@@ -71,7 +71,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
             <Skeleton className="h-4 w-32 rounded" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={`skeleton-field-${i}`} className="flex items-center gap-2">
                   <Skeleton className="size-4 rounded shrink-0" />
                   <Skeleton className="h-3 w-20 rounded" />
                   <Skeleton className="h-3 w-24 rounded ml-auto" />
@@ -82,7 +82,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
           <div className="space-y-4">
             <Skeleton className="h-4 w-24 rounded" />
             {[1, 2].map((i) => (
-              <div key={i} className="rounded-xl border overflow-hidden">
+              <div key={`skeleton-card-${i}`} className="rounded-xl border overflow-hidden">
                 <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
                   <Skeleton className="size-4 rounded" />
                   <Skeleton className="h-4 w-12 rounded" />
@@ -90,7 +90,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                 </div>
                 <div className="p-4 space-y-3">
                   {[1, 2, 3].map((j) => (
-                    <div key={j} className="flex gap-4">
+                    <div key={`skeleton-row-${j}`} className="flex gap-4">
                       <Skeleton className="h-4 w-20 rounded" />
                       <Skeleton className="h-4 w-16 rounded" />
                       <Skeleton className="h-4 w-32 rounded" />

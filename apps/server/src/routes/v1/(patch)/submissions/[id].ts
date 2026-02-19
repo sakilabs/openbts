@@ -71,6 +71,12 @@ const schemaRoute = {
   },
 };
 
+type ReqParams = { Params: { id: string } };
+type ReqBody = { Body: z.infer<typeof requestSchema> };
+type RequestData = ReqParams & ReqBody;
+type ResponseData = z.infer<typeof responseSchema>;
+type ExistingSubmission = NonNullable<Awaited<ReturnType<typeof db.query.submissions.findFirst>>>;
+
 function mapCellOperation(op: string): "add" | "update" | "delete" {
   switch (op) {
     case "updated":
@@ -82,24 +88,39 @@ function mapCellOperation(op: string): "add" | "update" | "delete" {
   }
 }
 
-type ReqParams = { Params: { id: string } };
-type ReqBody = { Body: z.infer<typeof requestSchema> };
-type RequestData = ReqParams & ReqBody;
-type ResponseData = z.infer<typeof responseSchema>;
+function isNonEmpty(value: unknown): boolean {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return true; // 0 is a valid coordinate/id
+  if (typeof value === "boolean") return true; // false is an intentional value
+  if (Array.isArray(value)) return value.length > 0 && value.some(isNonEmpty);
+  if (typeof value === "object") return Object.values(value as object).some(isNonEmpty);
+  return false;
+}
+
+function hasActualChanges(body: z.infer<typeof requestSchema>, existing: ExistingSubmission): boolean {
+  if (body.review_notes !== undefined && body.review_notes !== existing.review_notes) return true;
+  if (body.submitter_note !== undefined && body.submitter_note !== existing.submitter_note) return true;
+
+  if (isNonEmpty(body.station)) return true;
+  if (isNonEmpty(body.location)) return true;
+  if (body.cells?.length && body.cells.some(isNonEmpty)) return true;
+
+  return false;
+}
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
   if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
+
   const { id } = req.params;
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
-  const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["update"] })) || false;
+  const [hasAdminPermission, submission] = await Promise.all([
+    verifyPermissions(session.user.id, { submissions: ["update"] }),
+    db.query.submissions.findFirst({ where: { id } }),
+  ]);
 
-  const submission = await db.query.submissions.findFirst({
-    where: {
-      id: id,
-    },
-  });
   if (!submission) throw new ErrorResponse("NOT_FOUND");
 
   const isOwner = submission.submitter_id === session.user.id;
@@ -110,6 +131,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be modified" });
 
   if (!hasAdminPermission && req.body.review_notes !== undefined) throw new ErrorResponse("FORBIDDEN", { message: "Cannot modify review notes" });
+
+  if (!hasActualChanges(req.body, submission))
+    throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before updating." });
+
   try {
     const result = await db.transaction(async (tx) => {
       const updateFields: Record<string, unknown> = { updatedAt: new Date() };
@@ -120,19 +145,23 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
       if (req.body.station) {
         await tx.delete(proposedStations).where(eq(proposedStations.submission_id, id));
-        await tx.insert(proposedStations).values({ ...req.body.station, submission_id: id } as typeof proposedStations.$inferInsert);
+        await tx.insert(proposedStations).values({
+          ...req.body.station,
+          submission_id: id,
+        } as typeof proposedStations.$inferInsert);
       }
 
       if (req.body.location) {
         await tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, id));
-        await tx.insert(proposedLocations).values({ ...req.body.location, submission_id: id } as typeof proposedLocations.$inferInsert);
+        await tx.insert(proposedLocations).values({
+          ...req.body.location,
+          submission_id: id,
+        } as typeof proposedLocations.$inferInsert);
       }
 
       if (req.body.cells) {
         const existingCells = await tx.query.proposedCells.findMany({
-          where: {
-            submission_id: id,
-          },
+          where: { submission_id: id },
           columns: { id: true },
         });
         const existingIds = existingCells.map((c) => c.id);
@@ -149,6 +178,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
         for (const cell of req.body.cells) {
           const { details, ...cellData } = cell;
+
           const [base] = await tx
             .insert(proposedCells)
             .values({
@@ -179,17 +209,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         }
       }
 
-      const updated = await tx.query.submissions.findFirst({
-        where: {
-          id: id,
-        },
-      });
+      const updated = await tx.query.submissions.findFirst({ where: { id } });
       if (!updated) throw new ErrorResponse("NOT_FOUND");
 
       const rawCells = await tx.query.proposedCells.findMany({
-        where: {
-          submission_id: id,
-        },
+        where: { submission_id: id },
         with: { gsm: true, umts: true, lte: true, nr: true },
       });
 

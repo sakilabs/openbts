@@ -20,7 +20,7 @@ function formatDuration(ms: number): string {
 }
 
 function StepTimer({ startedAt, finishedAt }: { startedAt?: string; finishedAt?: string }) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!startedAt || finishedAt) return;

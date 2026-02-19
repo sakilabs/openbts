@@ -8,7 +8,6 @@ import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { fetchApiData } from "@/lib/api";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Band, Cell, Station } from "@/types/station";
 import { RAT_ORDER } from "@/features/admin/cells/rat";
@@ -21,6 +20,7 @@ import { SubmissionDetailHeader } from "@/features/admin/submissions/components/
 import { SubmitterCard } from "@/features/admin/submissions/components/submitterCard";
 import { SubmissionStationForm } from "@/features/admin/submissions/components/submissionStationForm";
 import { AdminReviewCard } from "@/features/admin/submissions/components/adminReviewCard";
+import { SubmissionDiffDetailCells } from "@/features/admin/submissions/components/submissionDiffRowCells";
 import { useSaveSubmissionMutation, useApproveSubmissionMutation, useRejectSubmissionMutation } from "@/features/admin/submissions/mutations";
 
 type LocalCell = CellDraftBase & {
@@ -189,13 +189,15 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
   useEffect(() => {
     if (isReadOnly && currentStation?.location) {
-      setLocationForm({
-        region_id: currentStation.location.region.id,
-        city: currentStation.location.city ?? "",
-        address: currentStation.location.address ?? "",
-        longitude: currentStation.location.longitude,
-        latitude: currentStation.location.latitude,
-      });
+      queueMicrotask(() =>
+        setLocationForm({
+          region_id: currentStation.location.region.id,
+          city: currentStation.location.city ?? "",
+          address: currentStation.location.address ?? "",
+          longitude: currentStation.location.longitude,
+          latitude: currentStation.location.latitude,
+        }),
+      );
     }
   }, [isReadOnly, currentStation]);
 
@@ -339,6 +341,16 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     [],
   );
 
+  const handleConfirmAllCellsInRat = useCallback(
+    (rat: string) => {
+      const cellsForRat = cellsByRat[rat] ?? [];
+      cellsForRat.forEach((cell) => {
+        if (cell.operation !== "delete") handleCellChange(cell._localId, { is_confirmed: true });
+      });
+    },
+    [cellsByRat, handleCellChange],
+  );
+
   const getSubmissionCellProps = useCallback(
     (cell: LocalCell) => ({
       disabled: isFormDisabled || cell.operation === "delete" || cell.operation === "unchanged",
@@ -354,65 +366,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       const targetCell = cell.operation === "update" && cell.target_cell_id ? currentCellsMap.get(cell.target_cell_id) : null;
       if (!targetCell || cell.operation !== "update") return null;
 
-      const d = (targetCell.details ?? {}) as Record<string, unknown>;
-      const renderOldValue = (value: unknown) => {
-        if (value === undefined || value === null) return <span className="text-muted-foreground/40">-</span>;
-        if (typeof value === "boolean")
-          return <Checkbox checked={value} disabled className="size-3 rounded-[3px] **:data-[slot=checkbox-indicator]:*:size-2.5" />;
-        return String(value);
-      };
-
-      const renderDetailCells = () => {
-        switch (targetCell.rat) {
-          case "GSM":
-            return (
-              <>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.lac)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.cid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.e_gsm)}</td>
-              </>
-            );
-          case "UMTS": {
-            const longCid = d.rnc !== null && d.cid !== null ? (d.rnc as number) * 65536 + (d.cid as number) : null;
-            return (
-              <>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.lac)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.rnc)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.cid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(longCid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.carrier)}</td>
-              </>
-            );
-          }
-          case "LTE": {
-            const eCid = d.enbid !== null && d.clid !== null ? (d.enbid as number) * 256 + (d.clid as number) : null;
-            return (
-              <>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.tac)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.enbid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.clid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(eCid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.supports_nb_iot)}</td>
-              </>
-            );
-          }
-          case "NR": {
-            const nci = d.gnbid !== null && d.clid !== null ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
-            return (
-              <>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.nrtac)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.gnbid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.clid)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(nci)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.pci)}</td>
-                <td className="px-2 py-1 font-mono text-xs text-muted-foreground">{renderOldValue(d.supports_nr_redcap)}</td>
-              </>
-            );
-          }
-          default:
-            return null;
-        }
-      };
+      const details = (targetCell.details ?? {}) as Record<string, unknown>;
 
       return (
         <tr className="bg-amber-50/40 dark:bg-amber-950/15 border-b last:border-0">
@@ -423,7 +377,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value} MHz</span>
           </td>
           {targetCell.rat !== "GSM" && <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>}
-          {renderDetailCells()}
+          <SubmissionDiffDetailCells details={details} rat={targetCell.rat} />
           <td className="px-3 py-1 font-mono text-xs text-muted-foreground truncate max-w-28">{targetCell.notes || "-"}</td>
           <td className="px-3 py-1" />
           <td className="px-3 py-1" />
@@ -492,6 +446,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               onDeleteCell={handleDeleteCell}
               ratPillsDisabled={isRejected}
               showAddButton={!isFormDisabled}
+              showConfirmCellsButton={!isFormDisabled}
+              onConfirmAllCellsInRat={handleConfirmAllCellsInRat}
               getDiffBadges={getSubmissionDiffBadges}
               getCellProps={getSubmissionCellProps}
               renderAfterRow={renderSubmissionAfterRow}

@@ -1,6 +1,6 @@
 import type { StationSource, LocationWithStations, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { getOperatorColor, resolveOperatorMnc } from "@/lib/operatorUtils";
-import { calculateDistance, formatDistance, formatFrequency } from "./utils";
+import { calculateDistance, formatDistance, formatFrequency, findLinkPartnerRadioLine, formatBandwidth } from "./utils";
 import { isPermitExpired } from "@/lib/dateUtils";
 
 export const DEFAULT_COLOR = "#3b82f6";
@@ -95,6 +95,10 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
     const distance = calculateDistance(rl.tx.latitude, rl.tx.longitude, rl.rx.latitude, rl.rx.longitude);
     const distanceFormatted = formatDistance(distance);
 
+    const partner = findLinkPartnerRadioLine(rl, radioLines);
+    const totalSpeedMb = (Number(rl.link.bandwidth) || 0) + (partner ? Number(partner.link.bandwidth) || 0 : 0);
+    const totalSpeedFormatted = totalSpeedMb > 0 ? formatBandwidth(String(totalSpeedMb)) : "";
+
     lineFeatures.push({
       type: "Feature",
       geometry: {
@@ -116,6 +120,7 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
         polarization: rl.link.polarization ?? "",
         isExpired,
         distanceFormatted,
+        totalSpeedFormatted,
       },
     });
 

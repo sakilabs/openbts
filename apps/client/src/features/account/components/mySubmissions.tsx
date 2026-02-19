@@ -61,7 +61,7 @@ export function MySubmissions() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3 rounded-lg border bg-muted/10">
+          <div key={`skeleton-${i}`} className="flex items-center gap-4 px-4 py-3 rounded-lg border bg-muted/10">
             <Skeleton className="h-5 w-14 rounded-full" />
             <Skeleton className="h-4 w-20 rounded" />
             <Skeleton className="h-5 w-16 rounded-full" />

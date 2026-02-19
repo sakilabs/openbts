@@ -221,6 +221,8 @@ export const ukePermits = pgTable(
     index("uke_permits_operator_band_idx").on(t.operator_id, t.band_id),
     index("uke_permits_operator_location_idx").on(t.operator_id, t.location_id),
     index("uke_permits_source_idx").on(t.source),
+    index("uke_permits_location_operator_band_idx").on(t.location_id, t.operator_id, t.band_id),
+    index("uke_permits_operator_band_location_idx").on(t.operator_id, t.band_id, t.location_id),
   ],
 );
 

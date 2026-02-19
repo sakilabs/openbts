@@ -72,16 +72,16 @@ const ALL_LAYERS = [RADIOLINES_LINE_LAYER_ID, RADIOLINES_HITBOX_LAYER_ID, RADIOL
 
 export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJSON, radioLines, minZoom, onFeatureClick }: UseRadioLinesLayerArgs) {
   const callbackRefs = useRef({ onFeatureClick });
-  callbackRefs.current = { onFeatureClick };
-
   const linesRef = useRef(linesGeoJSON);
-  linesRef.current = linesGeoJSON;
-
   const endpointsRef = useRef(endpointsGeoJSON);
-  endpointsRef.current = endpointsGeoJSON;
-
   const radioLinesRef = useRef(radioLines);
-  radioLinesRef.current = radioLines;
+
+  useEffect(() => {
+    callbackRefs.current = { onFeatureClick };
+    linesRef.current = linesGeoJSON;
+    endpointsRef.current = endpointsGeoJSON;
+    radioLinesRef.current = radioLines;
+  }, [onFeatureClick, linesGeoJSON, endpointsGeoJSON, radioLines]);
 
   const tooltipRef = useRef<maplibregl.Popup | null>(null);
   const tooltipContainerRef = useRef<HTMLDivElement | null>(null);
@@ -157,6 +157,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       const freq = props.freqFormatted || "";
       const operator = props.operatorName || "";
       const distance = props.distanceFormatted || "";
+      const totalSpeedFormatted = props.totalSpeedFormatted || "";
       if (!freq && !operator) return;
 
       if (!tooltipRef?.current) {
@@ -173,7 +174,13 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       }
 
       tooltipRootRef.current?.render(
-        <RadioLineTooltipContent color={color} freqFormatted={freq} operatorName={normalizeOperatorName(operator)} distanceFormatted={distance} />,
+        <RadioLineTooltipContent
+          color={color}
+          freqFormatted={freq}
+          operatorName={normalizeOperatorName(operator)}
+          distanceFormatted={distance}
+          totalSpeedFormatted={totalSpeedFormatted || undefined}
+        />,
       );
       tooltipRef.current.setLngLat(e.lngLat).addTo(map);
     };
@@ -213,13 +220,20 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
           map.off("mouseleave", layerId, handleMouseLeave);
         }
 
-        try {
-          for (const layerId of ALL_LAYERS) {
-            if (map.getLayer(layerId)) map.removeLayer(layerId);
+        for (const layerId of ALL_LAYERS) {
+          try {
+            map.removeLayer(layerId);
+          } catch (_) {
+            // layer may already be removed
           }
-          if (map.getSource(RADIOLINES_SOURCE_ID)) map.removeSource(RADIOLINES_SOURCE_ID);
-          if (map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID)) map.removeSource(RADIOLINES_ENDPOINTS_SOURCE_ID);
-        } catch {}
+        }
+        for (const sourceId of [RADIOLINES_SOURCE_ID, RADIOLINES_ENDPOINTS_SOURCE_ID]) {
+          try {
+            map.removeSource(sourceId);
+          } catch (_) {
+            // source may already be removed
+          }
+        }
       }
     };
   }, [map, isLoaded, minZoom]);

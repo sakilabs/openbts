@@ -115,7 +115,9 @@ export const proposedStations = SubmissionsSchema.table(
     operation: StationOperationEnum("operation").notNull().default("add"),
     target_station_id: integer("target_station_id").references(() => stations.id, { onDelete: "set null", onUpdate: "cascade" }),
     station_id: varchar("station_id", { length: 16 }),
-    operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
+    operator_id: integer("operator_id")
+      .references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
+      .notNull(),
     notes: text("notes"),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

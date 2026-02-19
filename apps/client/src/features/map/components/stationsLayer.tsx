@@ -36,7 +36,9 @@ const MAP_FILTERS_STORAGE_KEY = "map:filters";
 export function saveMapFilters(filters: StationFilters) {
   try {
     localStorage.setItem(MAP_FILTERS_STORAGE_KEY, JSON.stringify(filters));
-  } catch {}
+  } catch (_) {
+    // ignore localStorage errors
+  }
 }
 
 export function loadMapFilters(): StationFilters | null {
@@ -126,37 +128,39 @@ export function StationsLayer({
 
       if (stationId && map) {
         pendingStationId.current = stationId;
-        try {
-          if (activeFilters.source === "uke") {
-            const permits = await fetchUkePermit(stationId);
-            const ukeStation = groupPermitsByStation(permits ?? [])[0];
-            if (ukeStation.location?.latitude && ukeStation.location?.longitude) {
-              map.flyTo({
-                center: [ukeStation.location.longitude, ukeStation.location.latitude],
-                zoom: 16,
-                essential: true,
-                speed: 1.5,
+        const stationPromise =
+          activeFilters.source === "uke"
+            ? fetchUkePermit(stationId).then((permits) => {
+                const ukeStation = groupPermitsByStation(permits ?? [])[0];
+                if (ukeStation?.location?.latitude && ukeStation?.location?.longitude) {
+                  map.flyTo({
+                    center: [ukeStation.location.longitude, ukeStation.location.latitude],
+                    zoom: 16,
+                    essential: true,
+                    speed: 1.5,
+                  });
+                  onOpenUkeStationDetails(ukeStation);
+                }
+              })
+            : fetchStation(Number(stationId)).then((station) => {
+                if (station.location?.latitude && station.location?.longitude) {
+                  map.flyTo({
+                    center: [station.location.longitude, station.location.latitude],
+                    zoom: 16,
+                    essential: true,
+                    speed: 1.5,
+                  });
+                  onOpenStationDetails(Number(stationId), "internal");
+                }
               });
-              onOpenUkeStationDetails(ukeStation);
-            }
-          } else {
-            const station = await fetchStation(Number(stationId));
-            if (station.location?.latitude && station.location?.longitude) {
-              map.flyTo({
-                center: [station.location.longitude, station.location.latitude],
-                zoom: 16,
-                essential: true,
-                speed: 1.5,
-              });
-              onOpenStationDetails(Number(stationId), "internal");
-            }
-          }
-        } catch (error) {
-          console.error("Failed to fetch shared station:", error);
-          showApiError(error);
-        } finally {
-          pendingStationId.current = null;
-        }
+        stationPromise
+          .catch((error) => {
+            console.error("Failed to fetch shared station:", error);
+            showApiError(error);
+          })
+          .finally(() => {
+            pendingStationId.current = null;
+          });
       } else if (locationId && map) {
         if (activeFilters.source === "uke") {
           pendingUkeLocationId.current = locationId;
@@ -164,25 +168,28 @@ export function StationsLayer({
         }
 
         pendingLocationId.current = locationId;
-        try {
-          const locationData = await fetchLocationWithStations(locationId, activeFilters);
-          const location = toLocationInfo(locationData);
-
-          map.flyTo({
-            center: [location.longitude, location.latitude],
-            zoom: 16,
-            essential: true,
-            speed: 1.5,
+        fetchLocationWithStations(locationId, activeFilters)
+          .then((locationData) => {
+            const location = toLocationInfo(locationData);
+            map.flyTo({
+              center: [location.longitude, location.latitude],
+              zoom: 16,
+              essential: true,
+              speed: 1.5,
+            });
+            return new Promise<typeof locationData>((resolve) => map.once("moveend", () => resolve(locationData)));
+          })
+          .then((locationData) => {
+            const location = toLocationInfo(locationData);
+            showPopup([location.longitude, location.latitude], location, locationData.stations as StationWithoutCells[], null, activeFilters.source);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch shared location:", error);
+            showApiError(error);
+          })
+          .finally(() => {
+            pendingLocationId.current = null;
           });
-
-          await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
-          showPopup([location.longitude, location.latitude], location, locationData.stations as StationWithoutCells[], null, activeFilters.source);
-        } catch (error) {
-          console.error("Failed to fetch shared location:", error);
-          showApiError(error);
-        } finally {
-          pendingLocationId.current = null;
-        }
       }
     },
     [map, filters, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails],
@@ -196,8 +203,10 @@ export function StationsLayer({
     onInitialize: handleUrlInitialize,
   });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: This has to be "re-created" when filters change
-  const prefetchCache = useMemo<PrefetchCache>(() => new Map(), [filters]);
+  const prefetchCacheRef = useRef<PrefetchCache>(new Map());
+  useEffect(() => {
+    prefetchCacheRef.current = new Map();
+  }, []);
 
   const locations = locationsResponse?.data ?? [];
 
@@ -249,22 +258,25 @@ export function StationsLayer({
 
   const fetchAndUpdatePopup = useCallback(
     async (locationId: number, _location: LocationInfo, source: StationSource) => {
-      const cached = prefetchCache.get(locationId);
-
+      const cache = prefetchCacheRef.current;
+      const cached = cache.get(locationId);
+      const dataPromise =
+        cached?.data !== undefined ? Promise.resolve(cached.data) : cached ? cached.promise : fetchLocationWithStations(locationId, filters);
       try {
-        const data = cached?.data ?? (cached ? await cached.promise : await fetchLocationWithStations(locationId, filters));
+        const data = await dataPromise;
         updatePopupStations(toLocationInfo(data), data.stations, source);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to fetch station cells:", error);
         showApiError(error);
       }
     },
-    [filters, prefetchCache, updatePopupStations],
+    [filters, updatePopupStations],
   );
 
   const handleFeatureMouseDown = useCallback(
     (locationId: number) => {
-      if (filters.source === "uke" || prefetchCache.has(locationId)) return;
+      const cache = prefetchCacheRef.current;
+      if (filters.source === "uke" || cache.has(locationId)) return;
 
       const entry = {
         promise: fetchLocationWithStations(locationId, filters).then((data) => {
@@ -273,9 +285,9 @@ export function StationsLayer({
         }),
         data: undefined as LocationWithStations | undefined,
       };
-      prefetchCache.set(locationId, entry);
+      cache.set(locationId, entry);
     },
-    [filters, prefetchCache],
+    [filters],
   );
 
   const handleFeatureClick = useCallback(

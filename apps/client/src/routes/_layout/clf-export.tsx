@@ -94,24 +94,25 @@ function ClfExportPage() {
       if (value.bands.length > 0) params.set("bands", value.bands.join(","));
 
       const url = `${API_BASE}/cells/export?${params.toString()}`;
+      const fileExtension = value.format === "ntm" ? "ntm" : value.format === "netmonitor" ? "csv" : "clf";
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        toast.error(t("exportError"));
+        console.error("Export error:", response.status);
+        return;
+      }
 
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Export failed: ${response.status}`);
-        }
-
         const blob = await response.blob();
         const downloadUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = downloadUrl;
-        const fileExtension = value.format === "ntm" ? "ntm" : value.format === "netmonitor" ? "csv" : "clf";
         link.download = `cells_export_${value.format}.${fileExtension}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(downloadUrl);
-
         toast.success(t("exportSuccess"));
       } catch (error) {
         toast.error(t("exportError"));

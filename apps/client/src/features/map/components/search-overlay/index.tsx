@@ -93,7 +93,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     staleTime: 1000 * 60 * 30,
   });
 
-  const searchKeyword = useMemo(() => parseFilters(debouncedQuery).remainingText, [debouncedQuery]);
+  const searchKeyword = parseFilters(debouncedQuery).remainingText;
 
   const shouldSearchOsm = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
@@ -229,7 +229,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
             <div className={cn("flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide", !mobileExpanded && !isFocused && "hidden md:flex")}>
               {parsedFilters.map((filter, index) => (
                 <div
-                  key={`${filter.key}-${index}`}
+                  key={`${filter.key}-${String(filter.value)}-${index}`}
                   className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20 shrink-0"
                 >
                   <span className="font-mono text-xs whitespace-nowrap">{filter.key}:</span>

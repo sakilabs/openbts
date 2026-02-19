@@ -78,7 +78,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
-          <div key={i} className="rounded-xl border overflow-hidden">
+          <div key={`skeleton-${i}`} className="rounded-xl border overflow-hidden">
             <div className="px-4 py-2.5 bg-muted/30 border-b flex items-center gap-2">
               <Skeleton className="size-4 rounded" />
               <Skeleton className="h-4 w-12 rounded" />
@@ -92,7 +92,7 @@ export function PermitsList({ stationId, isUkeSource = false }: PermitsListProps
                   <Skeleton className="h-3 w-20 rounded" />
                 </div>
                 {[1, 2, 3].map((j) => (
-                  <div key={j} className="flex px-4 py-2.5 border-b last:border-0">
+                  <div key={`skeleton-row-${j}`} className="flex px-4 py-2.5 border-b last:border-0">
                     <Skeleton className="h-4 w-20 rounded mr-8" />
                     <Skeleton className="h-4 w-32 rounded mr-8" />
                     <Skeleton className="h-4 w-24 rounded" />

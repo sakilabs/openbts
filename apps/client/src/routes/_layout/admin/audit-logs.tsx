@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useReducer, useMemo, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -30,16 +30,60 @@ function formatAuditDate(dateString: string, locale: string): string {
 
 const columnHelper = createColumnHelper<AuditLogEntry>();
 
+type AuditLogsFilterState = {
+  tableFilter: string;
+  actionFilter: string;
+  dateFrom: string;
+  dateTo: string;
+  sort: "asc" | "desc";
+  selectedEntry: AuditLogEntry | null;
+};
+
+function auditLogsFilterReducer(
+  state: AuditLogsFilterState,
+  action:
+    | { type: "SET_TABLE_FILTER"; payload: string }
+    | { type: "SET_ACTION_FILTER"; payload: string }
+    | { type: "SET_DATE_FROM"; payload: string }
+    | { type: "SET_DATE_TO"; payload: string }
+    | { type: "SET_SORT"; payload: "asc" | "desc" }
+    | { type: "SET_SELECTED_ENTRY"; payload: AuditLogEntry | null }
+    | { type: "CLEAR_FILTERS" },
+): AuditLogsFilterState {
+  switch (action.type) {
+    case "SET_TABLE_FILTER":
+      return { ...state, tableFilter: action.payload };
+    case "SET_ACTION_FILTER":
+      return { ...state, actionFilter: action.payload };
+    case "SET_DATE_FROM":
+      return { ...state, dateFrom: action.payload };
+    case "SET_DATE_TO":
+      return { ...state, dateTo: action.payload };
+    case "SET_SORT":
+      return { ...state, sort: action.payload };
+    case "SET_SELECTED_ENTRY":
+      return { ...state, selectedEntry: action.payload };
+    case "CLEAR_FILTERS":
+      return { ...state, tableFilter: "", actionFilter: "", dateFrom: "", dateTo: "" };
+    default:
+      return state;
+  }
+}
+
+const initialFilterState: AuditLogsFilterState = {
+  tableFilter: "",
+  actionFilter: "",
+  dateFrom: "",
+  dateTo: "",
+  sort: "desc",
+  selectedEntry: null,
+};
+
 function AdminAuditLogsPage() {
   const { t, i18n } = useTranslation(["admin", "common"]);
 
-  const [tableFilter, setTableFilter] = useState<string>("");
-  const [actionFilter, setActionFilter] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [sort, setSort] = useState<"asc" | "desc">("desc");
-
-  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
+  const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
+  const { tableFilter, actionFilter, dateFrom, dateTo, sort, selectedEntry } = filterState;
 
   const { containerRef, pagination, setPagination } = useTablePagination({
     rowHeight: 64,
@@ -53,10 +97,7 @@ function AdminAuditLogsPage() {
   const activeFilterCount = [tableFilter, actionFilter, dateFrom, dateTo].filter(Boolean).length;
 
   const clearAllFilters = useCallback(() => {
-    setTableFilter("");
-    setActionFilter("");
-    setDateFrom("");
-    setDateTo("");
+    dispatchFilter({ type: "CLEAR_FILTERS" });
     resetPage();
   }, [resetPage]);
 
@@ -85,7 +126,6 @@ function AdminAuditLogsPage() {
   const logs = data?.data ?? [];
   const total = data?.totalCount ?? 0;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Already changes on `i18n.language`
   const columns = useMemo(
     () => [
       columnHelper.accessor("createdAt", {
@@ -94,7 +134,7 @@ function AdminAuditLogsPage() {
             type="button"
             className="inline-flex items-center gap-1 hover:text-foreground -ml-1 px-1 py-0.5 rounded transition-colors"
             onClick={() => {
-              setSort((s) => (s === "desc" ? "asc" : "desc"));
+              dispatchFilter({ type: "SET_SORT", payload: sort === "desc" ? "asc" : "desc" });
               resetPage();
             }}
           >
@@ -180,7 +220,7 @@ function AdminAuditLogsPage() {
         cell: ({ getValue }) => <span className="text-xs text-muted-foreground uppercase">{getValue() ?? "—"}</span>,
       }),
     ],
-    [i18n.language, sort],
+    [t, sort, i18n.language, resetPage],
   );
 
   const table = useReactTable({
@@ -207,7 +247,7 @@ function AdminAuditLogsPage() {
           <Select
             value={tableFilter}
             onValueChange={(v) => {
-              setTableFilter(v === "__all__" ? "" : (v as string));
+              dispatchFilter({ type: "SET_TABLE_FILTER", payload: v === "__all__" ? "" : (v as string) });
               resetPage();
             }}
           >
@@ -227,7 +267,7 @@ function AdminAuditLogsPage() {
           <Select
             value={actionFilter}
             onValueChange={(v) => {
-              setActionFilter(v === "__all__" ? "" : (v as string));
+              dispatchFilter({ type: "SET_ACTION_FILTER", payload: v === "__all__" ? "" : (v as string) });
               resetPage();
             }}
           >
@@ -253,7 +293,7 @@ function AdminAuditLogsPage() {
           <DatePickerButton
             value={dateFrom}
             onChange={(v) => {
-              setDateFrom(v);
+              dispatchFilter({ type: "SET_DATE_FROM", payload: v });
               resetPage();
             }}
             label={t("auditLogs.filters.dateFrom")}
@@ -262,7 +302,7 @@ function AdminAuditLogsPage() {
           <DatePickerButton
             value={dateTo}
             onChange={(v) => {
-              setDateTo(v);
+              dispatchFilter({ type: "SET_DATE_TO", payload: v });
               resetPage();
             }}
             label={t("auditLogs.filters.dateTo")}
@@ -312,7 +352,7 @@ function AdminAuditLogsPage() {
                 </tr>
               </tbody>
             ) : (
-              <DataTable.Body onRowClick={(row: AuditLogEntry) => setSelectedEntry(row)} />
+              <DataTable.Body onRowClick={(row: AuditLogEntry) => dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: row })} />
             )}
             <DataTable.Footer columns={columns.length}>
               <DataTablePagination table={table} totalItems={total} showRowsPerPage={false} />
@@ -325,7 +365,7 @@ function AdminAuditLogsPage() {
         entry={selectedEntry}
         open={selectedEntry !== null}
         onOpenChange={(open) => {
-          if (!open) setSelectedEntry(null);
+          if (!open) dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: null });
         }}
       />
     </div>

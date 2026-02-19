@@ -69,6 +69,7 @@
     "polarization": "Polarization",
     "modulation": "Modulation",
     "bandwidth": "Bandwidth",
+    "totalSpeed": "Total speed",
     "height": "Height",
     "antennaGain": "Antenna Gain",
     "antennaHeight": "Antenna Height",

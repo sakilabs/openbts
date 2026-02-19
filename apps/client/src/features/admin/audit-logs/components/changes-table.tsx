@@ -33,8 +33,7 @@ function ObjectArrayValue({ items }: { items: Record<string, unknown>[] }) {
   return (
     <div className="flex flex-col gap-2 pl-2 border-l-2 border-muted/50 my-1">
       {items.map((item, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static read-only list with no stable ID
-        <div key={index} className="flex flex-col gap-1">
+        <div key={`object-${item}`} className="flex flex-col gap-1">
           <span className="text-[10px] uppercase text-muted-foreground font-semibold">Item {index + 1}</span>
           <div className="pl-2 border-l border-muted/30">
             {Object.entries(item).map(([k, v]) => (
@@ -56,8 +55,7 @@ function PrimitiveArrayValue({ items }: { items: unknown[] }) {
   return (
     <div className="flex flex-col gap-0.5">
       {items.map((item, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static read-only list with no stable ID
-        <div key={i} className="flex gap-2">
+        <div key={`primitive-${Math.random().toString(20).substring(2, 6)}`} className="flex gap-2">
           <span className="text-muted-foreground text-[10px] select-none w-4 text-right">{i + 1}.</span>
           <span className="break-all">
             <Value value={item} />

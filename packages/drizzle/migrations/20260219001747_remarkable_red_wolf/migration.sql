@@ -460,7 +460,7 @@ CREATE TABLE "submissions"."proposed_stations" (
 	"operation" "station_operation" DEFAULT 'add'::"station_operation" NOT NULL,
 	"target_station_id" integer,
 	"station_id" varchar(16),
-	"operator_id" integer,
+	"operator_id" integer NOT NULL,
 	"notes" text,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -532,6 +532,8 @@ CREATE INDEX "uke_permits_station_id_trgm_idx" ON "uke_permits" USING gin (("sta
 CREATE INDEX "uke_permits_operator_band_idx" ON "uke_permits" ("operator_id","band_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_operator_location_idx" ON "uke_permits" ("operator_id","location_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_source_idx" ON "uke_permits" ("source");--> statement-breakpoint
+CREATE INDEX "uke_permits_location_operator_band_idx" ON "uke_permits" ("location_id","operator_id","band_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_operator_band_location_idx" ON "uke_permits" ("operator_id","band_id","location_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_operator_id_idx" ON "uke_radiolines" ("operator_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_idx" ON "uke_radiolines" ("permit_number");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_trgm_idx" ON "uke_radiolines" USING gin (("permit_number") gin_trgm_ops);--> statement-breakpoint

@@ -8,6 +8,14 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowDownIcon } from "@hugeicons/core-free-icons";
 
+function formatMonthDropdown(date: Date, localeCode: string | undefined): string {
+  try {
+    return date.toLocaleString(localeCode, { month: "short" });
+  } catch (_) {
+    return String(date.getMonth() + 1);
+  }
+}
+
 function Calendar({
   className,
   classNames,
@@ -35,7 +43,7 @@ function Calendar({
       captionLayout={captionLayout}
       locale={locale}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString(locale?.code, { month: "short" }),
+        formatMonthDropdown: (date) => formatMonthDropdown(date, locale?.code),
         ...formatters,
       }}
       classNames={{

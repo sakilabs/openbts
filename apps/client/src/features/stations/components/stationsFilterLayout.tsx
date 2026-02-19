@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -16,14 +16,19 @@ interface StationsListLayoutProps {
   children?: ReactNode;
 }
 
+function subscribeToHeaderActions(callback: () => void) {
+  const id = requestAnimationFrame(callback);
+  return () => cancelAnimationFrame(id);
+}
+
 export function StationsListLayout({ data, onRowClick, headerActions, children }: StationsListLayoutProps) {
   const { t } = useTranslation("stations");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [headerActionsEl, setHeaderActionsEl] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setHeaderActionsEl(document.getElementById("header-actions"));
-  }, []);
+  const headerActionsEl = useSyncExternalStore(
+    subscribeToHeaderActions,
+    () => document.getElementById("header-actions"),
+    () => null,
+  );
 
   const {
     stations,

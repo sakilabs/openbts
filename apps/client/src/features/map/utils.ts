@@ -130,6 +130,24 @@ export function findColocatedRadioLines(target: RadioLine, all: RadioLine[]): Ra
   });
 }
 
+export function findLinkPartnerRadioLine(target: RadioLine, all: RadioLine[]): RadioLine | undefined {
+  const operatorId = target.operator?.id;
+  const txLat = target.tx.latitude;
+  const txLng = target.tx.longitude;
+  const rxLat = target.rx.latitude;
+  const rxLng = target.rx.longitude;
+
+  return all.find(
+    (rl) =>
+      rl.id !== target.id &&
+      rl.operator?.id === operatorId &&
+      rl.tx.latitude === rxLat &&
+      rl.tx.longitude === rxLng &&
+      rl.rx.latitude === txLat &&
+      rl.rx.longitude === txLng,
+  );
+}
+
 export function calculateTA(distanceMeters: number) {
   // GSM TA: ~554m per step
   const gsm = Math.max(0, Math.round(distanceMeters / 554));

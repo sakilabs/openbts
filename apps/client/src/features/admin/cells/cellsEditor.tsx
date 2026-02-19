@@ -34,6 +34,10 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   // Whether to show the "Add cell" button per RAT section. Default: true
   showAddButton?: boolean;
 
+  // Whether to show "Confirm cells" button per RAT (calls onConfirmAllCellsInRat for that RAT)
+  showConfirmCellsButton?: boolean;
+  onConfirmAllCellsInRat?: (rat: string) => void;
+
   // Compute diff badge counts for a RAT section header
   getDiffBadges?: (rat: string, cells: T[]) => DiffBadges;
 
@@ -65,6 +69,8 @@ export function CellsEditor<T extends CellDraftBase>({
   onDeleteCell,
   ratPillsDisabled,
   showAddButton = true,
+  showConfirmCellsButton,
+  onConfirmAllCellsInRat,
   getDiffBadges,
   getCellProps,
   renderAfterRow,
@@ -145,12 +151,19 @@ export function CellsEditor<T extends CellDraftBase>({
                       </span>
                     )}
                   </CollapsibleTrigger>
-                  {showAddButton && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => onAddCell(rat)} className="h-7 text-xs">
-                      <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-                      {t("stations:cells.addCell")}
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {showConfirmCellsButton && onConfirmAllCellsInRat && cellsForRat.length > 0 && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => onConfirmAllCellsInRat(rat)} className="h-7 text-xs">
+                        {t("stations:cells.confirmCells")}
+                      </Button>
+                    )}
+                    {showAddButton && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => onAddCell(rat)} className="h-7 text-xs">
+                        <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
+                        {t("stations:cells.addCell")}
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <CollapsibleContent>
                   {cellsForRat.length === 0 ? (

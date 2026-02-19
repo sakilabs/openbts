@@ -18,6 +18,7 @@ import { createSubmission, updateSubmission, fetchSubmissionForEdit, fetchStatio
 import { cn } from "@/lib/utils";
 import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
+import { hasFormChanges, type OriginalState } from "../utils/equality";
 import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
 import type { UkeStation } from "@/types/station";
 
@@ -78,10 +79,29 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
 
   const { data: editSubmission } = useQuery({
     queryKey: ["submission-edit", editSubmissionId],
-    queryFn: () => fetchSubmissionForEdit(editSubmissionId!),
+    queryFn: () => {
+      if (!editSubmissionId) throw new Error("editSubmissionId is required");
+      return fetchSubmissionForEdit(editSubmissionId);
+    },
     enabled: isEditMode,
     staleTime: 1000 * 60 * 5,
   });
+
+  const [originalState, setOriginalState] = useState<OriginalState>({});
+
+  const computeHasChanges = useCallback(
+    (
+      mode: SubmissionMode,
+      action: StationAction,
+      newStation: ProposedStationForm,
+      location: ProposedLocationForm,
+      cells: ProposedCellForm[],
+      submitterNote: string,
+    ): boolean => {
+      return hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState, isEditMode);
+    },
+    [originalState, isEditMode],
+  );
 
   const form = useForm({
     defaultValues: INITIAL_VALUES,
@@ -121,7 +141,13 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
   });
 
   const mutation = useMutation({
-    mutationFn: isEditMode ? (data: Parameters<typeof updateSubmission>[1]) => updateSubmission(editSubmissionId!, data) : createSubmission,
+    mutationFn: isEditMode
+      ? (data: Parameters<typeof updateSubmission>[1]) => {
+          if (!editSubmissionId)
+            throw new Error("editSubmissionId is required for updateSubmission");
+          return updateSubmission(editSubmissionId, data);
+        }
+      : createSubmission,
     onSuccess: () => {
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
       if (isEditMode) {
@@ -174,19 +200,27 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
         form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
 
         if (station.location) {
-          form.setFieldValue("location", {
+          const location = {
             latitude: station.location.latitude,
             longitude: station.location.longitude,
             city: station.location.city ?? "",
             address: station.location.address ?? "",
             region_id: station.location.region?.id ?? null,
+          };
+          form.setFieldValue("location", location);
+          setOriginalState({
+            location,
+            cells: structuredClone(cells),
           });
+        } else {
+          setOriginalState({ cells: structuredClone(cells) });
         }
       } else {
         form.setFieldValue("cells", []);
         form.setFieldValue("originalCells", []);
         form.setFieldValue("selectedRats", []);
         form.setFieldValue("location", INITIAL_VALUES.location);
+        setOriginalState({});
       }
     },
     [form],
@@ -226,14 +260,17 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
 
   const lastAppliedStationId = useRef<number | null>(null);
 
+  // Sync form state when preloaded station data arrives from query
   useEffect(() => {
     if (preloadedStation) {
       if (preloadedStation.id !== lastAppliedStationId.current) {
         lastAppliedStationId.current = preloadedStation.id;
-
-        form.setFieldValue("mode", "existing");
-        form.setFieldValue("newStation", INITIAL_VALUES.newStation);
-        loadStation(preloadedStation);
+        const station = preloadedStation;
+        queueMicrotask(() => {
+          form.setFieldValue("mode", "existing");
+          form.setFieldValue("newStation", INITIAL_VALUES.newStation);
+          loadStation(station);
+        });
       }
     } else if (!preloadStationId) {
       lastAppliedStationId.current = null;
@@ -249,31 +286,10 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
     lastAppliedEditKey.current = editKey;
 
     let ignore = false;
+    const submission = editSubmission;
 
-    const isNew = editSubmission.type === "new";
-    form.setFieldValue("mode", isNew ? "new" : "existing");
-    form.setFieldValue("action", editSubmission.type === "delete" ? "delete" : "update");
-    form.setFieldValue("submitterNote", editSubmission.submitter_note ?? "");
-
-    if (isNew && editSubmission.proposedStation) {
-      form.setFieldValue("newStation", {
-        station_id: editSubmission.proposedStation.station_id ?? "",
-        operator_id: editSubmission.proposedStation.operator_id,
-        notes: editSubmission.proposedStation.notes ?? "",
-      });
-    }
-
-    if (editSubmission.proposedLocation) {
-      form.setFieldValue("location", {
-        region_id: editSubmission.proposedLocation.region_id,
-        city: editSubmission.proposedLocation.city ?? "",
-        address: editSubmission.proposedLocation.address ?? "",
-        longitude: editSubmission.proposedLocation.longitude,
-        latitude: editSubmission.proposedLocation.latitude,
-      });
-    }
-
-    const proposedCells: ProposedCellForm[] = editSubmission.cells.map((cell) => ({
+    const isNew = submission.type === "new";
+    const proposedCells: ProposedCellForm[] = submission.cells.map((cell) => ({
       id: generateCellId(),
       existingCellId: cell.target_cell_id ?? undefined,
       rat: cell.rat as RatType,
@@ -284,44 +300,67 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
     }));
 
     const deletedTargetIds = new Set(
-      editSubmission.cells.filter((c) => c.operation === "delete" && c.target_cell_id !== null).map((c) => c.target_cell_id),
+      submission.cells.filter((c) => c.operation === "delete" && c.target_cell_id !== null).map((c) => c.target_cell_id),
     );
     const updatedTargetIds = new Set(
-      editSubmission.cells.filter((c) => c.operation === "update" && c.target_cell_id !== null).map((c) => c.target_cell_id),
+      submission.cells.filter((c) => c.operation === "update" && c.target_cell_id !== null).map((c) => c.target_cell_id),
     );
 
-    if (!isNew && editSubmission.station) {
-      fetchStationForSubmission(editSubmission.station.id).then((station) => {
-        if (ignore) return;
-        form.setFieldValue("selectedStation", station);
-        const originals = stationCellsToForm(station);
-        form.setFieldValue("originalCells", originals);
+    queueMicrotask(() => {
+      form.setFieldValue("mode", isNew ? "new" : "existing");
+      form.setFieldValue("action", submission.type === "delete" ? "delete" : "update");
+      form.setFieldValue("submitterNote", submission.submitter_note ?? "");
 
-        // Merge: start with unchanged originals (not updated/deleted), then add proposed changes (added + updated)
-        const unchangedCells = originals.filter(
-          (c) => c.existingCellId !== undefined && !updatedTargetIds.has(c.existingCellId) && !deletedTargetIds.has(c.existingCellId),
-        );
-        const changedCells = proposedCells.filter((c) => c.existingCellId === undefined || updatedTargetIds.has(c.existingCellId));
-        const mergedCells = [...unchangedCells, ...changedCells];
+      if (isNew && submission.proposedStation) {
+        form.setFieldValue("newStation", {
+          station_id: submission.proposedStation.station_id ?? "",
+          operator_id: submission.proposedStation.operator_id,
+          notes: submission.proposedStation.notes ?? "",
+        });
+      }
 
-        form.setFieldValue("cells", mergedCells);
-        form.setFieldValue("selectedRats", [...new Set(mergedCells.map((c) => c.rat))]);
+      if (submission.proposedLocation) {
+        form.setFieldValue("location", {
+          region_id: submission.proposedLocation.region_id,
+          city: submission.proposedLocation.city ?? "",
+          address: submission.proposedLocation.address ?? "",
+          longitude: submission.proposedLocation.longitude,
+          latitude: submission.proposedLocation.latitude,
+        });
+      }
 
-        if (station.location && !editSubmission.proposedLocation) {
-          form.setFieldValue("location", {
-            latitude: station.location.latitude,
-            longitude: station.location.longitude,
-            city: station.location.city ?? "",
-            address: station.location.address ?? "",
-            region_id: station.location.region?.id ?? null,
-          });
-        }
-      });
-    } else {
-      form.setFieldValue("cells", proposedCells);
-      if (isNew) form.setFieldValue("originalCells", []);
-      form.setFieldValue("selectedRats", [...new Set(proposedCells.map((c) => c.rat))]);
-    }
+      if (!isNew && submission.station) {
+        fetchStationForSubmission(submission.station.id).then((station) => {
+          if (ignore) return;
+          form.setFieldValue("selectedStation", station);
+          const originals = stationCellsToForm(station);
+          form.setFieldValue("originalCells", originals);
+
+          const unchangedCells = originals.filter(
+            (c) => c.existingCellId !== undefined && !updatedTargetIds.has(c.existingCellId) && !deletedTargetIds.has(c.existingCellId),
+          );
+          const changedCells = proposedCells.filter((c) => c.existingCellId === undefined || updatedTargetIds.has(c.existingCellId));
+          const mergedCells = [...unchangedCells, ...changedCells];
+
+          form.setFieldValue("cells", mergedCells);
+          form.setFieldValue("selectedRats", [...new Set(mergedCells.map((c) => c.rat))]);
+
+          if (station.location && !submission.proposedLocation) {
+            form.setFieldValue("location", {
+              latitude: station.location.latitude,
+              longitude: station.location.longitude,
+              city: station.location.city ?? "",
+              address: station.location.address ?? "",
+              region_id: station.location.region?.id ?? null,
+            });
+          }
+        });
+      } else {
+        form.setFieldValue("cells", proposedCells);
+        if (isNew) form.setFieldValue("originalCells", []);
+        form.setFieldValue("selectedRats", [...new Set(proposedCells.map((c) => c.rat))]);
+      }
+    });
 
     return () => {
       ignore = true;
@@ -454,28 +493,34 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
             action: s.values.action,
             selectedStation: s.values.selectedStation,
             newStation: s.values.newStation,
+            location: s.values.location,
+            cells: s.values.cells,
             cellsCount: s.values.cells.filter((c) => s.values.selectedRats.includes(c.rat)).length,
             submitterNote: s.values.submitterNote,
             canSubmit: s.canSubmit,
             isSubmitting: s.isSubmitting,
           })}
         >
-          {({ mode, action, selectedStation, newStation, cellsCount, submitterNote, canSubmit, isSubmitting }) => (
-            <SubmitSection
-              mode={mode}
-              action={action}
-              selectedStation={selectedStation}
-              newStation={newStation}
-              cellsCount={cellsCount}
-              submitterNote={submitterNote}
-              onSubmitterNoteChange={(note) => form.setFieldValue("submitterNote", note)}
-              canSubmit={canSubmit}
-              isSubmitting={isSubmitting}
-              isPending={mutation.isPending}
-              isSuccess={mutation.isSuccess}
-              isEditMode={isEditMode}
-            />
-          )}
+          {({ mode, action, selectedStation, newStation, location, cells, submitterNote, canSubmit, isSubmitting }) => {
+            const hasChanges = computeHasChanges(mode, action, newStation, location, cells, submitterNote);
+            return (
+              <SubmitSection
+                mode={mode}
+                action={action}
+                selectedStation={selectedStation}
+                newStation={newStation}
+                cellsCount={cells.filter((c) => form.getFieldValue("selectedRats").includes(c.rat)).length}
+                submitterNote={submitterNote}
+                onSubmitterNoteChange={(note) => form.setFieldValue("submitterNote", note)}
+                canSubmit={canSubmit && hasChanges}
+                isSubmitting={isSubmitting}
+                isPending={mutation.isPending}
+                isSuccess={mutation.isSuccess}
+                isEditMode={isEditMode}
+                hasChanges={hasChanges}
+              />
+            );
+          }}
         </form.Subscribe>
       </div>
 
@@ -530,6 +575,7 @@ type SubmitSectionProps = {
   isPending: boolean;
   isSuccess: boolean;
   isEditMode: boolean;
+  hasChanges: boolean;
 };
 
 function SubmitSection({
@@ -543,6 +589,7 @@ function SubmitSection({
   isPending,
   isSuccess,
   isEditMode,
+  hasChanges,
 }: SubmitSectionProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
@@ -561,11 +608,14 @@ function SubmitSection({
         ? t("common:actions.update")
         : t("common:actions.submit");
 
+  const showNoChangesMessage = !hasChanges && (mode === "new" || selectedStation) && !isDeleteAction;
+
   return (
     <div className="border rounded-xl overflow-hidden">
       <div className="px-4 py-3 bg-muted/30 space-y-3">
         {!isDeleteAction && <div className="text-xs text-muted-foreground">{t("form.summary")}</div>}
         {isDeleteAction && <div className="text-xs text-amber-600 dark:text-amber-500">{t("deleteStation.warning")}</div>}
+        {showNoChangesMessage && <div className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1.5">{t("form.noChanges")}</div>}
         {(mode === "new" || selectedStation) && (
           <Textarea
             placeholder={notePlaceholder}

@@ -53,13 +53,12 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
   useEffect(() => {
     if (!map) return;
 
-    setCursor((prev) => prev || map.getCenter());
-
     const onMouseMove = (e: maplibregl.MapMouseEvent) => {
       setCursor(e.lngLat);
     };
-
     map.on("mousemove", onMouseMove);
+
+    queueMicrotask(() => setCursor((prev) => prev || map.getCenter()));
 
     return () => {
       map.off("mousemove", onMouseMove);

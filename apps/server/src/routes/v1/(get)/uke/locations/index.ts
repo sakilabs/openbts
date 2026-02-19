@@ -1,4 +1,4 @@
-import { sql, count, type SQL, type Column, inArray, and } from "drizzle-orm";
+import { sql, type SQL, type Column, inArray, and, eq } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -102,9 +102,24 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   }
 
   const [bandRows, operatorRows, regionsRows] = await Promise.all([
-    bandValues?.length ? db.select({ id: bands.id }).from(bands).where(inArray(bands.value, bandValues)) : [],
-    expandedOperatorMncs?.length ? db.select({ id: operators.id }).from(operators).where(inArray(operators.mnc, expandedOperatorMncs)) : [],
-    regionNames?.length ? db.select({ id: regions.id }).from(regions).where(inArray(regions.name, regionNames)) : [],
+    bandValues?.length
+      ? db.query.bands.findMany({
+          columns: { id: true },
+          where: { value: { in: bandValues } },
+        })
+      : [],
+    expandedOperatorMncs?.length
+      ? db.query.operators.findMany({
+          columns: { id: true },
+          where: { mnc: { in: expandedOperatorMncs } },
+        })
+      : [],
+    regionNames?.length
+      ? db.query.regions.findMany({
+          columns: { id: true },
+          where: { name: { in: regionNames } },
+        })
+      : [],
   ]);
 
   const bandIds = bandRows.map((b) => b.id);
@@ -179,15 +194,22 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     return conditions;
   };
 
-  const buildLocationConditions = (locFields: typeof ukeLocations): SQL<unknown>[] => {
+  const buildLocationOnlyConditions = (locFields: typeof ukeLocations): SQL<unknown>[] => {
     const conditions: SQL<unknown>[] = [];
-
     if (envelope) conditions.push(sql`ST_Intersects(${locFields.point}, ${envelope})`);
     if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
     if (recentOnly) {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       conditions.push(sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
     }
+    return conditions;
+  };
+
+  const hasLocationFilters = !!envelope || regionIds.length > 0 || recentOnly;
+
+  const buildLocationConditions = (locFields: typeof ukeLocations): SQL<unknown>[] => {
+    const conditions = [...buildLocationOnlyConditions(locFields)];
+
     if (hasPermitFilters) {
       const permitConditions = [sql`ps.location_id = ${locFields.id}`, ...buildPermitConditions(sql`ps.operator_id`, sql`ps.band_id`)];
 
@@ -209,12 +231,22 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     return conditions;
   };
 
+  const runCountQuery = (): Promise<{ count: number }[]> => {
+    if (!hasLocationFilters && !hasPermitFilters) {
+      return db.select({ count: sql<number>`count(DISTINCT ${ukePermits.location_id})` }).from(ukePermits);
+    }
+    const locationOnly = buildLocationOnlyConditions(ukeLocations);
+    const permitConds = buildPermitConditions(ukePermits.operator_id, ukePermits.band_id);
+    return db
+      .select({ count: sql<number>`count(DISTINCT ${ukeLocations.id})` })
+      .from(ukeLocations)
+      .innerJoin(ukePermits, eq(ukePermits.location_id, ukeLocations.id))
+      .where(and(...locationOnly, ...permitConds));
+  };
+
   try {
     const [countResult, locationRows] = await Promise.all([
-      db
-        .select({ count: count() })
-        .from(ukeLocations)
-        .where(and(...buildLocationConditions(ukeLocations))),
+      runCountQuery(),
       db.query.ukeLocations.findMany({
         with: {
           region: true,
@@ -249,7 +281,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       }),
     ]);
 
-    const totalCount = countResult[0]?.count ?? 0;
+    const totalCount = Number(countResult[0]?.count ?? 0);
 
     return res.send({ data: locationRows, totalCount });
   } catch (error) {

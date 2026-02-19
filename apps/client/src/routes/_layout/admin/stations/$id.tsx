@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback, useReducer } from "react";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -112,23 +112,85 @@ function AdminStationDetailPage() {
   return <StationDetailForm key={station?.id ?? "new"} station={station} isCreateMode={isCreateMode} />;
 }
 
+const emptyLocation: ProposedLocationForm = {
+  region_id: null,
+  city: "",
+  address: "",
+  longitude: null,
+  latitude: null,
+};
+
+function getInitialFormState(station: Station | undefined): {
+  stationId: string;
+  operatorId: number | null;
+  notes: string;
+  isConfirmed: boolean;
+  location: ProposedLocationForm;
+  deletedServerCellIds: number[];
+} {
+  return {
+    stationId: station?.station_id ?? "",
+    operatorId: station?.operator_id ?? null,
+    notes: station?.notes ?? "",
+    isConfirmed: station?.is_confirmed ?? false,
+    location: station?.location
+      ? {
+          region_id: station.location.region?.id ?? null,
+          city: station.location.city ?? "",
+          address: station.location.address ?? "",
+          longitude: station.location.longitude ?? null,
+          latitude: station.location.latitude ?? null,
+        }
+      : { ...emptyLocation },
+    deletedServerCellIds: [],
+  };
+}
+
+type FormAction =
+  | { type: "SET_STATION_ID"; payload: string }
+  | { type: "SET_OPERATOR_ID"; payload: number | null }
+  | { type: "SET_NOTES"; payload: string }
+  | { type: "SET_CONFIRMED"; payload: boolean }
+  | { type: "PATCH_LOCATION"; payload: Partial<ProposedLocationForm> }
+  | { type: "SET_LOCATION"; payload: ProposedLocationForm }
+  | { type: "ADD_DELETED_ID"; payload: number }
+  | { type: "CLEAR_DELETED" }
+  | { type: "RESET_CREATE" }
+  | { type: "LOAD_STATION"; payload: Station };
+
+function formReducer(state: ReturnType<typeof getInitialFormState>, action: FormAction): ReturnType<typeof getInitialFormState> {
+  switch (action.type) {
+    case "SET_STATION_ID":
+      return { ...state, stationId: action.payload };
+    case "SET_OPERATOR_ID":
+      return { ...state, operatorId: action.payload };
+    case "SET_NOTES":
+      return { ...state, notes: action.payload };
+    case "SET_CONFIRMED":
+      return { ...state, isConfirmed: action.payload };
+    case "PATCH_LOCATION":
+      return { ...state, location: { ...state.location, ...action.payload } };
+    case "SET_LOCATION":
+      return { ...state, location: action.payload };
+    case "ADD_DELETED_ID":
+      return { ...state, deletedServerCellIds: [...state.deletedServerCellIds, action.payload] };
+    case "CLEAR_DELETED":
+      return { ...state, deletedServerCellIds: [] };
+    case "RESET_CREATE":
+      return { ...getInitialFormState(undefined), location: { ...emptyLocation } };
+    case "LOAD_STATION":
+      return getInitialFormState(action.payload);
+    default:
+      return state;
+  }
+}
+
 function StationDetailForm({ station, isCreateMode }: { station: Station | undefined; isCreateMode: boolean }) {
   const navigate = useNavigate();
   const { t } = useTranslation("stations");
 
-  const [stationId, setStationId] = useState(station?.station_id ?? "");
-  const [operatorId, setOperatorId] = useState<number | null>(station?.operator_id ?? null);
-  const [notes, setNotes] = useState(station?.notes ?? "");
-  const [isConfirmed, setIsConfirmed] = useState(station?.is_confirmed ?? false);
-  const [location, setLocation] = useState<ProposedLocationForm>(() => ({
-    region_id: station?.location.region?.id ?? null,
-    city: station?.location.city ?? "",
-    address: station?.location.address ?? "",
-    longitude: station?.location.longitude ?? null,
-    latitude: station?.location.latitude ?? null,
-  }));
-
-  const [deletedServerCellIds, setDeletedServerCellIds] = useState<number[]>([]);
+  const [formState, dispatch] = useReducer(formReducer, station, getInitialFormState);
+  const { stationId, operatorId, notes, isConfirmed, location, deletedServerCellIds } = formState;
 
   const { data: settings } = useSettings();
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
@@ -137,7 +199,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const saveMutation = useSaveStationMutation();
 
   const handleServerCellDelete = useCallback((cell: LocalCell) => {
-    if (cell._serverId) setDeletedServerCellIds((ids) => [...ids, cell._serverId as number]);
+    if (cell._serverId) dispatch({ type: "ADD_DELETED_ID", payload: cell._serverId });
   }, []);
 
   const createNewStationCell = useCallback(
@@ -171,21 +233,24 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   });
 
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {
-    setLocation((prev) => ({ ...prev, ...patch }));
+    dispatch({ type: "PATCH_LOCATION", payload: patch });
   }, []);
 
   const handleUkeStationSelect = useCallback(
     (ukeStation: UkeStation) => {
-      setStationId(ukeStation.station_id);
-      setOperatorId(ukeStation.operator?.id ?? null);
+      dispatch({ type: "SET_STATION_ID", payload: ukeStation.station_id });
+      dispatch({ type: "SET_OPERATOR_ID", payload: ukeStation.operator?.id ?? null });
 
       if (ukeStation.location) {
-        setLocation({
-          latitude: ukeStation.location.latitude,
-          longitude: ukeStation.location.longitude,
-          city: ukeStation.location.city ?? "",
-          address: ukeStation.location.address ?? "",
-          region_id: ukeStation.location.region?.id ?? null,
+        dispatch({
+          type: "SET_LOCATION",
+          payload: {
+            latitude: ukeStation.location.latitude,
+            longitude: ukeStation.location.longitude,
+            city: ukeStation.location.city ?? "",
+            address: ukeStation.location.address ?? "",
+            region_id: ukeStation.location.region?.id ?? null,
+          },
         });
       }
 
@@ -208,7 +273,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
       newCells.sort((a, b) => RAT_ORDER.indexOf(a.rat) - RAT_ORDER.indexOf(b.rat));
       setLocalCells(newCells);
       setEnabledRats([...new Set(newCells.map((c) => c.rat))]);
-      setDeletedServerCellIds([]);
+      dispatch({ type: "CLEAR_DELETED" });
     },
     [setLocalCells, setEnabledRats],
   );
@@ -248,7 +313,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
             navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
           } else {
             toast.success(t("toast.cellsSaved"));
-            setDeletedServerCellIds([]);
+            dispatch({ type: "CLEAR_DELETED" });
           }
         },
         onError: (_error) => {
@@ -260,32 +325,16 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 
   const handleRevert = () => {
     if (isCreateMode) {
-      setStationId("");
-      setOperatorId(null);
-      setNotes("");
-      setIsConfirmed(false);
+      dispatch({ type: "RESET_CREATE" });
       setEnabledRats([]);
-      setLocation({ region_id: null, city: "", address: "", longitude: null, latitude: null });
       setLocalCells([]);
-      setDeletedServerCellIds([]);
       return;
     }
     if (!station) return;
-    setStationId(station.station_id);
-    setOperatorId(station.operator_id);
-    setNotes(station.notes ?? "");
-    setIsConfirmed(station.is_confirmed);
+    dispatch({ type: "LOAD_STATION", payload: station });
     const existingRats = [...new Set(station.cells.map((c) => c.rat))];
     setEnabledRats(RAT_ORDER.filter((r) => existingRats.includes(r)));
-    setLocation({
-      region_id: station.location.region?.id ?? null,
-      city: station.location.city ?? "",
-      address: station.location.address ?? "",
-      longitude: station.location.longitude,
-      latitude: station.location.latitude,
-    });
     setLocalCells(station.cells.map(cellToLocal));
-    setDeletedServerCellIds([]);
   };
 
   const selectedOperator = useMemo(() => operators.find((o) => o.id === operatorId), [operators, operatorId]);
@@ -334,13 +383,13 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
           <div className="w-full lg:flex-2 space-y-2">
             <StationInfoForm
               stationId={stationId}
-              onStationIdChange={setStationId}
+              onStationIdChange={(v) => dispatch({ type: "SET_STATION_ID", payload: v })}
               operatorId={operatorId}
-              onOperatorIdChange={setOperatorId}
+              onOperatorIdChange={(v) => dispatch({ type: "SET_OPERATOR_ID", payload: v })}
               notes={notes}
-              onNotesChange={setNotes}
+              onNotesChange={(v) => dispatch({ type: "SET_NOTES", payload: v })}
               isConfirmed={isConfirmed}
-              onIsConfirmedChange={setIsConfirmed}
+              onIsConfirmedChange={(v) => dispatch({ type: "SET_CONFIRMED", payload: v })}
               location={location}
               onLocationChange={handleLocationChange}
               operators={operators}

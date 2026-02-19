@@ -48,28 +48,29 @@ function PopupShareButton({ location, source }: { location: LocationInfo; source
 
   const shareUrl = `${window.location.origin}/#map=16/${location.latitude}/${location.longitude}?source=${source}&location=${location.id}`;
 
-  const handleShare = useCallback(async () => {
+  const handleShare = useCallback(() => {
     if (navigator.share) {
-      try {
-        await navigator.share({
+      void navigator
+        .share({
           title: `${location.city}${location.address ? ` - ${location.address}` : ""}`,
           url: shareUrl,
+        })
+        .then(() => {})
+        .catch((error: unknown) => {
+          if ((error as Error).name === "AbortError") return;
         });
-        return;
-      } catch (error) {
-        if ((error as Error).name === "AbortError") {
-          return;
-        }
-      }
+      return;
     }
 
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Failed to copy:", error);
-    }
+    void navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((error) => {
+        console.error("Failed to copy:", error);
+      });
   }, [location, shareUrl]);
 
   return (
@@ -125,10 +126,6 @@ export const PopupContent = memo(function PopupContent({
             const operatorName = station.operator?.name || t("unknownOperator");
             const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
             const bands = getPermitBands(station.permits);
-            const hasExpired = station.permits.some((p) => {
-              const expiryDate = new Date(p.expiry_date);
-              return expiryDate < new Date();
-            });
 
             return (
               <button
@@ -156,11 +153,6 @@ export const PopupContent = memo(function PopupContent({
                   <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
                     {station.permits.length} {station.permits.length === 1 ? t("stationDetails:permits.permit") : t("stationDetails:permits.permits")}
                   </span>
-                  {hasExpired && (
-                    <span className="px-1 py-px rounded-md bg-destructive/10 text-[8px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
-                      {t("common:status.expired")}
-                    </span>
-                  )}
                 </div>
               </button>
             );

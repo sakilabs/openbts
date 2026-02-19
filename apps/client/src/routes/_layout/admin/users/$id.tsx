@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useReducer, type ReactNode } from "react";
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -60,17 +60,66 @@ function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+type UserDetailFormState = {
+  editName: string;
+  newPassword: string;
+  banDialogOpen: boolean;
+  banReason: string;
+  banDuration: number;
+};
+
+function userDetailFormReducer(
+  state: UserDetailFormState,
+  action:
+    | { type: "SET_EDIT_NAME"; payload: string }
+    | { type: "SET_NEW_PASSWORD"; payload: string }
+    | { type: "SET_BAN_DIALOG_OPEN"; payload: boolean }
+    | { type: "SET_BAN_REASON"; payload: string }
+    | { type: "SET_BAN_DURATION"; payload: number }
+    | { type: "RESET_EDIT_NAME" }
+    | { type: "RESET_NEW_PASSWORD" }
+    | { type: "CLOSE_BAN_DIALOG" }
+    | { type: "RESET_BAN_FORM" },
+): UserDetailFormState {
+  switch (action.type) {
+    case "SET_EDIT_NAME":
+      return { ...state, editName: action.payload };
+    case "SET_NEW_PASSWORD":
+      return { ...state, newPassword: action.payload };
+    case "SET_BAN_DIALOG_OPEN":
+      return { ...state, banDialogOpen: action.payload };
+    case "SET_BAN_REASON":
+      return { ...state, banReason: action.payload };
+    case "SET_BAN_DURATION":
+      return { ...state, banDuration: action.payload };
+    case "RESET_EDIT_NAME":
+      return { ...state, editName: "" };
+    case "RESET_NEW_PASSWORD":
+      return { ...state, newPassword: "" };
+    case "CLOSE_BAN_DIALOG":
+      return { ...state, banDialogOpen: false };
+    case "RESET_BAN_FORM":
+      return { ...state, banReason: "", banDuration: 0 };
+    default:
+      return state;
+  }
+}
+
+const initialUserDetailFormState: UserDetailFormState = {
+  editName: "",
+  newPassword: "",
+  banDialogOpen: false,
+  banReason: "",
+  banDuration: 0,
+};
+
 function AdminUserDetailPage() {
   const { id: userId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [editName, setEditName] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-
-  const [banDialogOpen, setBanDialogOpen] = useState(false);
-  const [banReason, setBanReason] = useState("");
-  const [banDuration, setBanDuration] = useState<number>(0);
+  const [formState, dispatchForm] = useReducer(userDetailFormReducer, initialUserDetailFormState);
+  const { editName, newPassword, banDialogOpen, banReason, banDuration } = formState;
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ["admin", "user", userId],
@@ -122,7 +171,7 @@ function AdminUserDetailPage() {
     },
     onSuccess: () => {
       toast.success("Name updated successfully");
-      setEditName("");
+      dispatchForm({ type: "RESET_EDIT_NAME" });
       invalidateAll();
     },
     onError: () => toast.error("Failed to update name"),
@@ -136,7 +185,7 @@ function AdminUserDetailPage() {
     },
     onSuccess: () => {
       toast.success("Password updated successfully");
-      setNewPassword("");
+      dispatchForm({ type: "RESET_NEW_PASSWORD" });
     },
     onError: () => toast.error("Failed to set password"),
   });
@@ -153,9 +202,8 @@ function AdminUserDetailPage() {
     },
     onSuccess: () => {
       toast.success("User banned successfully");
-      setBanDialogOpen(false);
-      setBanReason("");
-      setBanDuration(0);
+      dispatchForm({ type: "CLOSE_BAN_DIALOG" });
+      dispatchForm({ type: "RESET_BAN_FORM" });
       invalidateAll();
     },
     onError: () => toast.error("Failed to ban user"),
@@ -313,7 +361,12 @@ function AdminUserDetailPage() {
               <div className="space-y-2">
                 <Label>Update Name</Label>
                 <div className="flex items-center gap-2">
-                  <Input placeholder={user.name} value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-xs" />
+                  <Input
+                    placeholder={user.name}
+                    value={editName}
+                    onChange={(e) => dispatchForm({ type: "SET_EDIT_NAME", payload: e.target.value })}
+                    className="max-w-xs"
+                  />
                   <Button onClick={() => updateNameMutation.mutate()} disabled={updateNameMutation.isPending || !editName.trim()}>
                     {updateNameMutation.isPending ? <Spinner /> : "Update"}
                   </Button>
@@ -327,7 +380,7 @@ function AdminUserDetailPage() {
                     type="password"
                     placeholder="New password"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={(e) => dispatchForm({ type: "SET_NEW_PASSWORD", payload: e.target.value })}
                     className="max-w-xs"
                   />
                   <Button onClick={() => setPasswordMutation.mutate()} disabled={setPasswordMutation.isPending || !newPassword}>
@@ -395,7 +448,7 @@ function AdminUserDetailPage() {
                     {unbanMutation.isPending ? <Spinner /> : "Unban"}
                   </Button>
                 ) : (
-                  <Button variant="destructive" onClick={() => setBanDialogOpen(true)}>
+                  <Button variant="destructive" onClick={() => dispatchForm({ type: "SET_BAN_DIALOG_OPEN", payload: true })}>
                     Ban User
                   </Button>
                 )}
@@ -429,7 +482,7 @@ function AdminUserDetailPage() {
         </section>
       </div>
 
-      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
+      <Dialog open={banDialogOpen} onOpenChange={(open) => dispatchForm({ type: "SET_BAN_DIALOG_OPEN", payload: open })}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ban {user.name}</DialogTitle>
@@ -437,11 +490,15 @@ function AdminUserDetailPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Reason (optional)</Label>
-              <Input placeholder="e.g. Spamming" value={banReason} onChange={(e) => setBanReason(e.target.value)} />
+              <Input
+                placeholder="e.g. Spamming"
+                value={banReason}
+                onChange={(e) => dispatchForm({ type: "SET_BAN_REASON", payload: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label>Duration</Label>
-              <Select value={banDuration} onValueChange={(v) => setBanDuration(Number(v))}>
+              <Select value={banDuration} onValueChange={(v) => dispatchForm({ type: "SET_BAN_DURATION", payload: Number(v) })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -456,7 +513,7 @@ function AdminUserDetailPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
+            <Button variant="outline" onClick={() => dispatchForm({ type: "CLOSE_BAN_DIALOG" })}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={() => banMutation.mutate()} disabled={banMutation.isPending}>

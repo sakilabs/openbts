@@ -140,13 +140,13 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Reason (optional)</Label>
-              <Input placeholder="e.g. Spamming" value={banReason} onChange={(e) => setBanReason(e.target.value)} />
+              <Label htmlFor="ban-reason">Reason (optional)</Label>
+              <Input id="ban-reason" placeholder="e.g. Spamming" value={banReason} onChange={(e) => setBanReason(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Duration</Label>
+              <Label htmlFor="ban-duration">Duration</Label>
               <Select value={banDuration.toString()} onValueChange={(v) => setBanDuration(Number(v))}>
-                <SelectTrigger>
+                <SelectTrigger id="ban-duration">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
