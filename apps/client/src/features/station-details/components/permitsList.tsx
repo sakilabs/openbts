@@ -69,7 +69,10 @@ export function PermitsList({ stationId, isUkeSource = false, permits: externalP
     error,
   } = useQuery({
     queryKey: ["station-permits", stationId, isUkeSource],
-    queryFn: () => fetchPermits(stationId!, isUkeSource),
+    queryFn: () => {
+      if (stationId === undefined) return Promise.resolve([]);
+      return fetchPermits(stationId, isUkeSource);
+    },
     enabled: !!stationId && !externalPermits,
     staleTime: 1000 * 60 * 10,
   });
@@ -194,8 +197,8 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                 const isNew = isRecent(permit.createdAt);
 
                 return (
-                  <tr key={permit.id} className={cn("hover:bg-muted/20 transition-colors", isNew && "border-l-2 border-l-green-500")}>
-                    <td className="px-4 py-2.5 font-mono font-medium">
+                  <tr key={permit.id} className={cn("hover:bg-muted/20 transition-colors")}>
+                    <td className={cn("px-4 py-2.5 font-mono font-medium", isNew && "border-l-2 border-l-green-500")}>
                       <div className="flex items-center gap-1.5">
                         <span>
                           {permit.band?.value
@@ -255,7 +258,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                                     </SectorValueTooltip>
                                     <span className="text-muted-foreground">/</span>
                                     <SectorValueTooltip label={t("permits.sectorsAntennaHeight")}>
-                                      <span>{sector.antenna_height !== null ? `${sector.antenna_height}m` : "-"}</span>
+                                      <span>{sector.antenna_height !== null ? `${sector.antenna_height} m` : "-"}</span>
                                     </SectorValueTooltip>
                                     {sector.antenna_type && (
                                       <Tooltip>

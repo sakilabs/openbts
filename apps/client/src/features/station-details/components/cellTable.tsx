@@ -75,8 +75,8 @@ export function CellTable({ rat, cells }: CellTableProps) {
               {cells.map((cell) => {
                 const isNew = isRecent(cell.createdAt);
                 return (
-                  <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20", isNew && "border-l-2 border-l-green-500")}>
-                    <td className="px-4 py-2 font-mono">
+                  <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20")}>
+                    <td className={cn("px-4 py-2 font-mono", isNew && "border-l-2 border-l-green-500")}>
                       <div className="flex items-center gap-1.5">
                         <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : `${cell.band.value} MHz`}</span>
                         {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (

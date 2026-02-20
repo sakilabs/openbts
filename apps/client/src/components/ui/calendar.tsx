@@ -11,7 +11,7 @@ import { ArrowLeftIcon, ArrowRightIcon, ArrowDownIcon } from "@hugeicons/core-fr
 function formatMonthDropdown(date: Date, localeCode: string | undefined): string {
   try {
     return date.toLocaleString(localeCode, { month: "short" });
-  } catch (_) {
+  } catch {
     return String(date.getMonth() + 1);
   }
 }

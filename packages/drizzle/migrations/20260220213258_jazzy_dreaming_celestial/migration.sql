@@ -39,6 +39,16 @@ CREATE TABLE "cells" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "deleted_entries" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "deleted_entries_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"source_table" varchar(50) NOT NULL,
+	"source_id" integer NOT NULL,
+	"source_type" varchar(50) NOT NULL,
+	"data" jsonb NOT NULL,
+	"deleted_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"import_id" integer
+);
+--> statement-breakpoint
 CREATE TABLE "gsm_cells" (
 	"cell_id" integer PRIMARY KEY,
 	"lac" integer NOT NULL,
@@ -250,7 +260,8 @@ CREATE TABLE "uke_radiolines" (
 	"issue_date" timestamp with time zone,
 	"expiry_date" timestamp with time zone NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "uke_radiolines_natural_key" UNIQUE("permit_number","operator_id","freq","tx_longitude","tx_latitude","rx_longitude","rx_latitude","polarization","ch_num")
 );
 --> statement-breakpoint
 CREATE TABLE "umts_cells" (
@@ -503,6 +514,11 @@ CREATE INDEX "bands_value_idx" ON "bands" ("value");--> statement-breakpoint
 CREATE INDEX "bands_rat_idx" ON "bands" ("rat");--> statement-breakpoint
 CREATE INDEX "cells_station_band_rat_idx" ON "cells" ("station_id","band_id","rat");--> statement-breakpoint
 CREATE INDEX "cells_station_rat_idx" ON "cells" ("station_id","rat");--> statement-breakpoint
+CREATE INDEX "deleted_entries_source_table_idx" ON "deleted_entries" ("source_table");--> statement-breakpoint
+CREATE INDEX "deleted_entries_source_type_idx" ON "deleted_entries" ("source_type");--> statement-breakpoint
+CREATE INDEX "deleted_entries_deleted_at_idx" ON "deleted_entries" ("deleted_at");--> statement-breakpoint
+CREATE INDEX "deleted_entries_source_table_type_idx" ON "deleted_entries" ("source_table","source_type");--> statement-breakpoint
+CREATE INDEX "deleted_entries_source_table_deleted_at_idx" ON "deleted_entries" ("source_table","deleted_at");--> statement-breakpoint
 CREATE INDEX "gsm_cells_cid_idx" ON "gsm_cells" ("cid");--> statement-breakpoint
 CREATE INDEX "gsm_cells_cid_trgm_idx" ON "gsm_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "locations_region_id_idx" ON "locations" ("region_id");--> statement-breakpoint
@@ -533,6 +549,7 @@ CREATE INDEX "uke_locations_region_id_idx" ON "uke_locations" ("region_id");--> 
 CREATE INDEX "uke_locations_point_gist" ON "uke_locations" USING gist ("point");--> statement-breakpoint
 CREATE INDEX "uke_locations_created_at_idx" ON "uke_locations" ("createdAt");--> statement-breakpoint
 CREATE INDEX "uke_locations_updated_at_idx" ON "uke_locations" ("updatedAt");--> statement-breakpoint
+CREATE INDEX "uke_locations_last_touch_idx" ON "uke_locations" (GREATEST("createdAt", "updatedAt"));--> statement-breakpoint
 CREATE INDEX "uke_permit_sectors_permit_id_idx" ON "uke_permit_sectors" ("permit_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_station_id_idx" ON "uke_permits" ("station_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_location_id_idx" ON "uke_permits" ("location_id");--> statement-breakpoint
@@ -545,6 +562,7 @@ CREATE INDEX "uke_permits_operator_band_idx" ON "uke_permits" ("operator_id","ba
 CREATE INDEX "uke_permits_operator_location_idx" ON "uke_permits" ("operator_id","location_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_source_idx" ON "uke_permits" ("source");--> statement-breakpoint
 CREATE INDEX "uke_permits_location_operator_band_idx" ON "uke_permits" ("location_id","operator_id","band_id");--> statement-breakpoint
+CREATE INDEX "uke_permits_location_band_idx" ON "uke_permits" ("location_id","band_id");--> statement-breakpoint
 CREATE INDEX "uke_permits_operator_band_location_idx" ON "uke_permits" ("operator_id","band_id","location_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_operator_id_idx" ON "uke_radiolines" ("operator_id");--> statement-breakpoint
 CREATE INDEX "uke_radiolines_permit_number_idx" ON "uke_radiolines" ("permit_number");--> statement-breakpoint
@@ -589,6 +607,7 @@ CREATE INDEX "submission_status_idx" ON "submissions"."submissions" ("status");-
 CREATE INDEX "submission_created_at_idx" ON "submissions"."submissions" ("createdAt");--> statement-breakpoint
 ALTER TABLE "cells" ADD CONSTRAINT "cells_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "cells" ADD CONSTRAINT "cells_band_id_bands_id_fkey" FOREIGN KEY ("band_id") REFERENCES "bands"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "deleted_entries" ADD CONSTRAINT "deleted_entries_import_id_uke_import_metadata_id_fkey" FOREIGN KEY ("import_id") REFERENCES "uke_import_metadata"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "gsm_cells" ADD CONSTRAINT "gsm_cells_cell_id_cells_id_fkey" FOREIGN KEY ("cell_id") REFERENCES "cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "locations" ADD CONSTRAINT "locations_region_id_regions_id_fkey" FOREIGN KEY ("region_id") REFERENCES "regions"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "lte_cells" ADD CONSTRAINT "lte_cells_cell_id_cells_id_fkey" FOREIGN KEY ("cell_id") REFERENCES "cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint

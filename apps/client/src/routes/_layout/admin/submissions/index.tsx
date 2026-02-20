@@ -18,6 +18,7 @@ import { formatShortDate } from "@/lib/format";
 const columnHelper = createColumnHelper<SubmissionListItem>();
 
 function AdminSubmissionsListPage() {
+  "use no memo";
   const { t, i18n } = useTranslation(["submissions", "common"]);
   const navigate = useNavigate();
 
@@ -65,7 +66,6 @@ function AdminSubmissionsListPage() {
   const submissions = data?.data ?? [];
   const total = data?.totalCount ?? 0;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Already changes on `i18n.language`
   const columns = useMemo(
     () => [
       columnHelper.accessor("id", {
@@ -151,7 +151,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
     ],
-    [i18n.language],
+    [t, i18n.language],
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);

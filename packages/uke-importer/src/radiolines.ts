@@ -1,13 +1,20 @@
 import path from "node:path";
 import url from "node:url";
 
-import { radiolinesAntennaTypes, radioLinesManufacturers, radiolinesTransmitterTypes, ukeOperators, ukeRadiolines } from "@openbts/drizzle";
+import {
+  radiolinesAntennaTypes,
+  radioLinesManufacturers,
+  radiolinesTransmitterTypes,
+  ukeOperators,
+  ukeRadiolines,
+  deletedEntries,
+} from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, RADIOLINES_URL } from "./config.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertUkeOperators } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
-import { sql } from "drizzle-orm";
+import { lt, sql } from "drizzle-orm";
 import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 
 import type { RawRadioLineData } from "./types.js";
@@ -53,9 +60,11 @@ export async function importRadiolines(): Promise<boolean> {
   }
   console.log(`[radiolines] Found ${manufNames.size} manufacturers, ${antTypeTuples.size} antenna types, ${txTypeTuples.size} transmitter types`);
 
-  console.log("[radiolines] Truncating radiolines tables");
+  const importStartTime = new Date();
+
+  console.log("[radiolines] Truncating reference tables");
   await db.execute(
-    sql`TRUNCATE TABLE ${ukeRadiolines}, ${ukeOperators}, ${radioLinesManufacturers}, ${radiolinesAntennaTypes}, ${radiolinesTransmitterTypes} RESTART IDENTITY CASCADE;`,
+    sql`TRUNCATE TABLE ${ukeOperators}, ${radioLinesManufacturers}, ${radiolinesAntennaTypes}, ${radiolinesTransmitterTypes} RESTART IDENTITY CASCADE;`,
   );
 
   console.log("[radiolines] Upserting manufacturers...");
@@ -177,12 +186,54 @@ export async function importRadiolines(): Promise<boolean> {
     };
   });
 
-  console.log(`[radiolines] Inserting ${values.length} radiolines...`);
+  console.log(`[radiolines] Upserting ${values.length} radiolines...`);
   for (const group of chunk(values, BATCH_SIZE)) {
-    if (group.length) await db.insert(ukeRadiolines).values(group);
+    if (group.length) {
+      await db
+        .insert(ukeRadiolines)
+        .values(group)
+        .onConflictDoUpdate({
+          target: [
+            ukeRadiolines.permit_number,
+            ukeRadiolines.operator_id,
+            ukeRadiolines.freq,
+            ukeRadiolines.tx_longitude,
+            ukeRadiolines.tx_latitude,
+            ukeRadiolines.rx_longitude,
+            ukeRadiolines.rx_latitude,
+            ukeRadiolines.polarization,
+            ukeRadiolines.ch_num,
+          ],
+          set: {
+            updatedAt: new Date(),
+          },
+        });
+    }
   }
 
-  await recordImportMetadata("radiolines", links, "success");
+  const importMetadataId = await recordImportMetadata("radiolines", links, "success");
+
+  console.log("[radiolines] Archiving and deleting stale radiolines...");
+  const staleRadiolines = await db.select().from(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, importStartTime));
+
+  if (staleRadiolines.length > 0) {
+    for (const group of chunk(staleRadiolines, BATCH_SIZE)) {
+      await db.insert(deletedEntries).values(
+        group.map((row) => ({
+          source_table: "uke_radiolines",
+          source_id: row.id,
+          source_type: "radiolines",
+          data: row,
+          import_id: importMetadataId,
+        })),
+      );
+    }
+
+    await db.delete(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, importStartTime));
+  }
+
+  console.log(`[radiolines] Deleted ${staleRadiolines.length} stale radiolines`);
+
   console.log("[radiolines] Import completed successfully");
   return true;
 }

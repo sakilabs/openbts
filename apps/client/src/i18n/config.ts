@@ -11,6 +11,7 @@ import enUSClfExport from "./locales/en-US/clfExport.json";
 import enUSAuth from "./locales/en-US/auth.json";
 import enUSSettings from "./locales/en-US/settings.json";
 import enUSAdmin from "./locales/en-US/admin.json";
+import enUSDeletedEntries from "./locales/en-US/deletedEntries.json";
 
 import plPLCommon from "./locales/pl-PL/common.json";
 import plPLStations from "./locales/pl-PL/stations.json";
@@ -22,6 +23,7 @@ import plPLClfExport from "./locales/pl-PL/clfExport.json";
 import plPLAuth from "./locales/pl-PL/auth.json";
 import plPLSettings from "./locales/pl-PL/settings.json";
 import plPLAdmin from "./locales/pl-PL/admin.json";
+import plPLDeletedEntries from "./locales/pl-PL/deletedEntries.json";
 
 export const defaultNS = "common";
 export const resources = {
@@ -36,6 +38,7 @@ export const resources = {
     auth: enUSAuth,
     settings: enUSSettings,
     admin: enUSAdmin,
+    deletedEntries: enUSDeletedEntries,
   },
   "pl-PL": {
     common: plPLCommon,
@@ -48,6 +51,7 @@ export const resources = {
     auth: plPLAuth,
     settings: plPLSettings,
     admin: plPLAdmin,
+    deletedEntries: plPLDeletedEntries,
   },
 } as const;
 

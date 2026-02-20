@@ -69,6 +69,7 @@ function useColumns() {
 }
 
 function AdminUsersPage() {
+  "use no memo";
   const navigate = useNavigate();
   const { t } = useTranslation("admin");
   const columns = useColumns();

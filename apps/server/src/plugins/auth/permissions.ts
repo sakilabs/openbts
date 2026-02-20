@@ -10,6 +10,7 @@ const statement = {
   bands: ["read", "create", "update", "delete"],
   submissions: ["read", "read_all", "create", "update", "delete"],
   settings: ["read", "update"],
+  deleted_entries: ["read"],
 } as const;
 
 export const accessControl = createAccessControl(statement);
@@ -20,6 +21,9 @@ export const userRole = accessControl.newRole({
   operators: ["read"],
   locations: ["read"],
   bands: ["read"],
+  submissions: ["read", "create"],
+  settings: ["read"],
+  deleted_entries: ["read"],
 });
 
 export const modRole = accessControl.newRole({

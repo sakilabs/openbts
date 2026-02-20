@@ -104,6 +104,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                   updatedAt: new Date(),
                 })
                 .where(eq(locations.id, existingLocation.id));
+              await createAuditLog(
+                {
+                  action: "locations.update",
+                  table_name: "locations",
+                  record_id: existingLocation.id,
+                  old_values: { region_id: existingLocation.region_id, city: existingLocation.city, address: existingLocation.address },
+                  new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
+                  metadata: { submission_id: id },
+                },
+                req,
+                tx,
+              );
             }
             locationId = existingLocation.id;
           } else {
@@ -119,6 +131,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               .returning();
             if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
             locationId = newLocation.id;
+            await createAuditLog(
+              {
+                action: "locations.create",
+                table_name: "locations",
+                record_id: newLocation.id,
+                new_values: newLocation,
+                metadata: { submission_id: id },
+              },
+              req,
+              tx,
+            );
           }
         }
 
@@ -136,6 +159,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             .returning();
           if (!newStation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station" });
           stationId = newStation.id;
+          await createAuditLog(
+            { action: "stations.create", table_name: "stations", record_id: newStation.id, new_values: newStation, metadata: { submission_id: id } },
+            req,
+            tx,
+          );
         }
       }
 
@@ -164,6 +192,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 updatedAt: new Date(),
               })
               .where(eq(locations.id, existingLocation.id));
+            await createAuditLog(
+              {
+                action: "locations.update",
+                table_name: "locations",
+                record_id: existingLocation.id,
+                old_values: { region_id: existingLocation.region_id, city: existingLocation.city, address: existingLocation.address },
+                new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
+                metadata: { submission_id: id },
+              },
+              req,
+              tx,
+            );
           }
           locationId = existingLocation.id;
         } else {
@@ -179,14 +219,47 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             .returning();
           if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
           locationId = newLocation.id;
+          await createAuditLog(
+            {
+              action: "locations.create",
+              table_name: "locations",
+              record_id: newLocation.id,
+              new_values: newLocation,
+              metadata: { submission_id: id },
+            },
+            req,
+            tx,
+          );
         }
 
         await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
+        await createAuditLog(
+          {
+            action: "stations.update",
+            table_name: "stations",
+            record_id: stationId,
+            new_values: { location_id: locationId },
+            metadata: { submission_id: id },
+          },
+          req,
+          tx,
+        );
       }
 
       if (submission.type === "delete") {
         if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete without a station" });
         await tx.update(stations).set({ status: "inactive", updatedAt: new Date() }).where(eq(stations.id, stationId));
+        await createAuditLog(
+          {
+            action: "stations.update",
+            table_name: "stations",
+            record_id: stationId,
+            new_values: { status: "inactive" },
+            metadata: { submission_id: id },
+          },
+          req,
+          tx,
+        );
       }
 
       for (const proposed of proposedCellRows) {
@@ -242,6 +315,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 break;
               }
             }
+            await createAuditLog(
+              {
+                action: "cells.create",
+                table_name: "cells",
+                record_id: newCell.id,
+                new_values: newCell,
+                metadata: { submission_id: id, station_id: stationId },
+              },
+              req,
+              tx,
+            );
             break;
           }
 
@@ -305,6 +389,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 break;
               }
             }
+            await createAuditLog(
+              {
+                action: "cells.update",
+                table_name: "cells",
+                record_id: targetCellId,
+                old_values: targetCell,
+                new_values: cellUpdate,
+                metadata: { submission_id: id },
+              },
+              req,
+              tx,
+            );
             break;
           }
 
@@ -320,6 +416,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 
             await tx.delete(cells).where(eq(cells.id, targetCellId));
+            await createAuditLog(
+              { action: "cells.delete", table_name: "cells", record_id: targetCellId, old_values: targetCell, metadata: { submission_id: id } },
+              req,
+              tx,
+            );
             break;
           }
         }
@@ -350,10 +451,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       {
         action: "submissions.approve",
         table_name: "submissions",
-        record_id: undefined,
-        old_values: submission,
-        new_values: result,
-        metadata: { submission_id: id },
+        record_id: null,
+        old_values: { status: submission.status },
+        new_values: { status: result.status, reviewer_id: result.reviewer_id, reviewed_at: result.reviewed_at },
+        metadata: { submission_id: id, type: submission.type, station_id: submission.station_id },
       },
       req,
     );

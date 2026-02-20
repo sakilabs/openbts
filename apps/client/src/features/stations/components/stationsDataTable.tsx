@@ -34,6 +34,7 @@ export function StationsDataTable({
   sortBy,
   onSort,
 }: StationsDataTableProps) {
+  "use no memo";
   const { t, i18n } = useTranslation("main");
   const { t: tCommon } = useTranslation("common");
 
@@ -43,10 +44,9 @@ export function StationsDataTable({
     paginationHeight: 45,
   });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Already changes on `i18n.language`
   const columns = useMemo(
     () => createStationsColumns({ t: tCommon, locale: i18n.language, isSearchActive, sort, sortBy, onSort }),
-    [i18n.language, isSearchActive, sort, sortBy, onSort],
+    [tCommon, i18n.language, isSearchActive, sort, sortBy, onSort],
   );
 
   const table = useReactTable({

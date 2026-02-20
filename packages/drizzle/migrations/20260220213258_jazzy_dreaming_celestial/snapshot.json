@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "ee5c536c-3d59-4ab0-b7e5-d9bf08bad038",
+  "id": "1c24da1f-8a99-4092-bf65-636f1e12458b",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -148,6 +148,12 @@
     {
       "isRlsEnabled": false,
       "name": "cells",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "deleted_entries",
       "entityType": "tables",
       "schema": "public"
     },
@@ -572,6 +578,106 @@
       "entityType": "columns",
       "schema": "public",
       "table": "cells"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": {
+        "type": "always",
+        "name": "deleted_entries_id_seq",
+        "increment": "1",
+        "startWith": "1",
+        "minValue": "1",
+        "maxValue": "2147483647",
+        "cache": 1,
+        "cycle": false
+      },
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "type": "varchar(50)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_table",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "type": "varchar(50)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "data",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "import_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "deleted_entries"
     },
     {
       "type": "integer",
@@ -5094,6 +5200,125 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "source_table",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "deleted_entries_source_table_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "deleted_entries_source_type_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "deleted_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "deleted_entries_deleted_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_table",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "source_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "deleted_entries_source_table_type_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_table",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "deleted_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "deleted_entries_source_table_deleted_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "cid",
           "isExpression": false,
           "asc": true,
@@ -5752,6 +5977,27 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "GREATEST(\"createdAt\", \"updatedAt\")",
+          "isExpression": true,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uke_locations_last_touch_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "uke_locations"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "permit_id",
           "isExpression": false,
           "asc": true,
@@ -6024,6 +6270,34 @@
       "method": "btree",
       "concurrently": false,
       "name": "uke_permits_location_operator_band_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "uke_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "location_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "band_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uke_permits_location_band_idx",
       "entityType": "indexes",
       "schema": "public",
       "table": "uke_permits"
@@ -6980,6 +7254,19 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["import_id"],
+      "schemaTo": "public",
+      "tableTo": "uke_import_metadata",
+      "columnsTo": ["id"],
+      "onUpdate": "CASCADE",
+      "onDelete": "SET NULL",
+      "name": "deleted_entries_import_id_uke_import_metadata_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "deleted_entries"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["cell_id"],
       "schemaTo": "public",
       "tableTo": "cells",
@@ -7606,6 +7893,14 @@
       "entityType": "pks"
     },
     {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "deleted_entries_pkey",
+      "schema": "public",
+      "table": "deleted_entries",
+      "entityType": "pks"
+    },
+    {
       "columns": ["cell_id"],
       "nameExplicit": false,
       "name": "gsm_cells_pkey",
@@ -7999,6 +8294,15 @@
       "entityType": "uniques",
       "schema": "public",
       "table": "uke_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["permit_number", "operator_id", "freq", "tx_longitude", "tx_latitude", "rx_longitude", "rx_latitude", "polarization", "ch_num"],
+      "nullsNotDistinct": false,
+      "name": "uke_radiolines_natural_key",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "uke_radiolines"
     },
     {
       "nameExplicit": true,

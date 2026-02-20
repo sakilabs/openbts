@@ -360,8 +360,8 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
     }
     if (!station) return;
     dispatch({ type: "LOAD_STATION", payload: station });
-    const existingRats = [...new Set(station.cells.map((c) => c.rat))];
-    setEnabledRats(RAT_ORDER.filter((r) => existingRats.includes(r)));
+    const existingRats = new Set(station.cells.map((c) => c.rat));
+    setEnabledRats(RAT_ORDER.filter((r) => existingRats.has(r)));
     setLocalCells(station.cells.map(cellToLocal));
   };
 

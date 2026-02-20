@@ -32,6 +32,7 @@ export function LocationsDataTable({
   sortBy,
   onSort,
 }: LocationsDataTableProps) {
+  "use no memo";
   const { t, i18n } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
 
@@ -41,10 +42,9 @@ export function LocationsDataTable({
     paginationHeight: 45,
   });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Already changes on `i18n.language`
   const columns = useMemo(
     () => createLocationsColumns({ t, tCommon, locale: i18n.language, sort, sortBy, onSort }),
-    [i18n.language, sort, sortBy, onSort],
+    [t, tCommon, i18n.language, sort, sortBy, onSort],
   );
 
   const table = useReactTable({

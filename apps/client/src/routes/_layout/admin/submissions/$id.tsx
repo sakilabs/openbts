@@ -83,7 +83,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
       band_id: cell.band_id ?? 0,
       is_confirmed: cell.is_confirmed,
       notes: cell.notes ?? "",
-      details: { ...(cell.details ?? {}) },
+      details: { ...cell.details },
     };
   });
 

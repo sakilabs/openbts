@@ -93,12 +93,35 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     const [east, north] = [Math.max(lo1, lo2), Math.max(la1, la2)];
     envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
   }
-  const [bandRows, operatorRows, regionsRows] = await Promise.all([
-    bandValues?.length
-      ? db.query.bands.findMany({
-          columns: { id: true },
-          where: { value: { in: bandValues } },
-        })
+
+  const requestedRats = rat ?? [];
+  type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA" | "IOT";
+  const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" } as const;
+  const wantsGsmR = requestedRats.includes("gsm-r");
+  const standardRats = requestedRats.filter((r) => r !== "gsm-r");
+  const mappedRats: RatType[] = standardRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
+
+  const bandConditions: SQL<unknown>[] = [];
+  if (bandValues?.length) bandConditions.push(inArray(bands.value, bandValues));
+  if (mappedRats.length || wantsGsmR) {
+    const ratConds: SQL<unknown>[] = [];
+    if (mappedRats.length) {
+      const wantsRegularGsm = mappedRats.includes("GSM");
+      const nonGsmRats = mappedRats.filter((r) => r !== "GSM");
+      if (nonGsmRats.length) ratConds.push(inArray(bands.rat, nonGsmRats));
+      if (wantsRegularGsm) ratConds.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'commercial')`);
+    }
+    if (wantsGsmR) ratConds.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'railway')`);
+    if (ratConds.length) bandConditions.push(sql`(${sql.join(ratConds, sql` OR `)})`);
+  }
+  const hasBandFilters = bandConditions.length > 0;
+
+  const [eligibleBandRows, operatorRows, regionsRows] = await Promise.all([
+    hasBandFilters
+      ? db
+          .select({ id: bands.id })
+          .from(bands)
+          .where(and(...bandConditions))
       : [],
     expandedOperatorMncs?.length
       ? db.query.operators.findMany({
@@ -113,24 +136,18 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         })
       : [],
   ]);
-  const bandIds = bandRows.map((b) => b.id);
+  const eligibleBandIds = eligibleBandRows.map((b) => b.id);
   const operatorIds = operatorRows.map((r) => r.id);
   const regionIds = regionsRows.map((r) => r.id);
-  if (bandValues?.length && !bandIds.length) return res.send({ data: [], totalCount: 0 });
-  const requestedRats = rat ?? [];
-  type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA" | "IOT";
-  const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" } as const;
-  const wantsGsmR = requestedRats.includes("gsm-r");
-  const standardRats = requestedRats.filter((r) => r !== "gsm-r");
-  const mappedRats: RatType[] = standardRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);
-  const hasPermitFilters = operatorIds.length || bandIds.length || mappedRats.length || wantsGsmR;
+  if (hasBandFilters && !eligibleBandIds.length) return res.send({ data: [], totalCount: 0 });
+  const hasPermitFilters = operatorIds.length > 0 || eligibleBandIds.length > 0;
   const buildLocationOnlyConditions = (locFields: typeof ukeLocations): SQL<unknown>[] => {
     const conditions: SQL<unknown>[] = [];
-    if (envelope) conditions.push(sql`ST_Intersects(${locFields.point}, ${envelope})`);
+    if (envelope) conditions.push(sql`${locFields.point} && ${envelope}`);
     if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
     if (recentOnly) {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      conditions.push(sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
+      conditions.push(sql`GREATEST(${locFields.createdAt}, ${locFields.updatedAt}) >= ${thirtyDaysAgo.toISOString()}`);
     }
     return conditions;
   };
@@ -138,52 +155,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const buildPermitFilter = (fields: typeof ukePermits): SQL<unknown>[] => {
     const conditions: SQL<unknown>[] = [];
     if (operatorIds.length) conditions.push(inArray(fields.operator_id, operatorIds));
-    if (bandIds.length) conditions.push(inArray(fields.band_id, bandIds));
-    if (mappedRats.length || wantsGsmR) {
-      const ratConditions: SQL<unknown>[] = [];
-      if (mappedRats.length) {
-        const wantsRegularGsm = mappedRats.includes("GSM");
-        const nonGsmRats = mappedRats.filter((r) => r !== "GSM");
-        if (nonGsmRats.length) ratConditions.push(inArray(bands.rat, nonGsmRats));
-        if (wantsRegularGsm) ratConditions.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'commercial')`);
-      }
-      if (wantsGsmR) ratConditions.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'railway')`);
-      if (ratConditions.length) {
-        conditions.push(
-          sql`EXISTS (
-          SELECT 1 FROM ${bands}
-          WHERE ${bands.id} = ${fields.band_id}
-          AND (${sql.join(ratConditions, sql` OR `)})
-        )`,
-        );
-      }
-    }
+    if (eligibleBandIds.length) conditions.push(inArray(fields.band_id, eligibleBandIds));
     return conditions;
   };
 
   const buildPermitExistsCondition = (locationIdCol: typeof ukeLocations.id): SQL => {
     const conditions: SQL<unknown>[] = [sql`${ukePermits.location_id} = ${locationIdCol}`];
     if (operatorIds.length) conditions.push(inArray(ukePermits.operator_id, operatorIds));
-    if (bandIds.length) conditions.push(inArray(ukePermits.band_id, bandIds));
-    if (mappedRats.length || wantsGsmR) {
-      const ratConditions: SQL<unknown>[] = [];
-      if (mappedRats.length) {
-        const wantsRegularGsm = mappedRats.includes("GSM");
-        const nonGsmRats = mappedRats.filter((r) => r !== "GSM");
-        if (nonGsmRats.length) ratConditions.push(inArray(bands.rat, nonGsmRats));
-        if (wantsRegularGsm) ratConditions.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'commercial')`);
-      }
-      if (wantsGsmR) ratConditions.push(sql`(${bands.rat} = 'GSM' AND ${bands.variant} = 'railway')`);
-      if (ratConditions.length) {
-        conditions.push(
-          sql`EXISTS (
-          SELECT 1 FROM ${bands}
-          WHERE ${bands.id} = ${ukePermits.band_id}
-          AND (${sql.join(ratConditions, sql` OR `)})
-        )`,
-        );
-      }
-    }
+    if (eligibleBandIds.length) conditions.push(inArray(ukePermits.band_id, eligibleBandIds));
     return sql`EXISTS (SELECT 1 FROM ${ukePermits} WHERE ${and(...conditions)})`;
   };
 

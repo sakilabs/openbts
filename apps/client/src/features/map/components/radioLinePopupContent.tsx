@@ -1,14 +1,61 @@
-import { memo } from "react";
+import { memo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import { ArrowRight02Icon, Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/lib/operatorUtils";
 import { isPermitExpired } from "@/lib/dateUtils";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
-import { calculateDistance, formatDistance, formatFrequency, formatBandwidth, getLinkTypeStyle } from "../utils";
+import { calculateDistance, formatDistance, formatFrequency, formatBandwidth, getLinkTypeStyle, buildRadiolineShareUrl } from "../utils";
 import type { DuplexRadioLink } from "../utils";
 import { cn } from "@/lib/utils";
+
+function PopupShareButton({ link }: { link: DuplexRadioLink }) {
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = buildRadiolineShareUrl(link);
+
+  const handleShare = useCallback(() => {
+    if (navigator.share) {
+      const operatorName = link.directions[0].operator?.name ?? "";
+      void navigator
+        .share({
+          title: `${operatorName} - ${formatFrequency(link.directions[0].link.freq)}`,
+          url: shareUrl,
+        })
+        .then(() => {})
+        .catch((error: unknown) => {
+          if ((error as Error).name === "AbortError") return;
+        });
+      return;
+    }
+
+    void navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((error) => {
+        console.error("Failed to copy:", error);
+      });
+  }, [link, shareUrl]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      className="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
+      aria-label="Share radio line"
+    >
+      {copied ? (
+        <HugeiconsIcon icon={Tick02Icon} className="size-3 text-emerald-500" />
+      ) : (
+        <HugeiconsIcon icon={Share08Icon} className="size-3 text-muted-foreground" />
+      )}
+    </button>
+  );
+}
 
 type RadioLinePopupContentProps = {
   link: DuplexRadioLink;
@@ -106,6 +153,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
         <span className="text-[10px] text-muted-foreground font-mono">
           GPS: {formatCoordinates(coordinates[1], coordinates[0], preferences.gpsFormat)}
         </span>
+        <PopupShareButton link={link} />
       </div>
     </div>
   );

@@ -227,9 +227,9 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
             </button>
 
             <div className={cn("flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide", !mobileExpanded && !isFocused && "hidden md:flex")}>
-              {parsedFilters.map((filter, index) => (
+              {parsedFilters.map((filter) => (
                 <div
-                  key={`${filter.key}-${String(filter.value)}-${index}`}
+                  key={filter.raw}
                   className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20 shrink-0"
                 >
                   <span className="font-mono text-xs whitespace-nowrap">{filter.key}:</span>

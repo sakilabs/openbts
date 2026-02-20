@@ -7,6 +7,7 @@ import {
   geometry,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -117,6 +118,7 @@ export const ukeLocations = pgTable(
     index("uke_locations_point_gist").using("gist", t.point),
     index("uke_locations_created_at_idx").on(t.createdAt),
     index("uke_locations_updated_at_idx").on(t.updatedAt),
+    index("uke_locations_last_touch_idx").using("btree", sql`GREATEST(${t.createdAt}, ${t.updatedAt})`),
     unique("uke_locations_lonlat_unique").on(t.longitude, t.latitude),
   ],
 );
@@ -232,6 +234,7 @@ export const ukePermits = pgTable(
     index("uke_permits_operator_location_idx").on(t.operator_id, t.location_id),
     index("uke_permits_source_idx").on(t.source),
     index("uke_permits_location_operator_band_idx").on(t.location_id, t.operator_id, t.band_id),
+    index("uke_permits_location_band_idx").on(t.location_id, t.band_id),
     index("uke_permits_operator_band_location_idx").on(t.operator_id, t.band_id, t.location_id),
   ],
 );
@@ -497,6 +500,17 @@ export const ukeRadiolines = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    unique("uke_radiolines_natural_key").on(
+      t.permit_number,
+      t.operator_id,
+      t.freq,
+      t.tx_longitude,
+      t.tx_latitude,
+      t.rx_longitude,
+      t.rx_latitude,
+      t.polarization,
+      t.ch_num,
+    ),
     index("uke_radiolines_operator_id_idx").on(t.operator_id),
     index("uke_radiolines_permit_number_idx").on(t.permit_number),
     index("uke_radiolines_permit_number_trgm_idx").using("gin", sql`(${t.permit_number}) gin_trgm_ops`),
@@ -518,3 +532,23 @@ export const ukeImportMetadata = pgTable("uke_import_metadata", {
   last_import_date: timestamp({ withTimezone: true }).notNull().defaultNow(),
   status: varchar("status", { length: 20 }).notNull(),
 });
+
+export const deletedEntries = pgTable(
+  "deleted_entries",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    source_table: varchar("source_table", { length: 50 }).notNull(),
+    source_id: integer("source_id").notNull(),
+    source_type: varchar("source_type", { length: 50 }).notNull(),
+    data: jsonb("data").notNull(),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }).notNull().defaultNow(),
+    import_id: integer("import_id").references(() => ukeImportMetadata.id, { onDelete: "set null", onUpdate: "cascade" }),
+  },
+  (t) => [
+    index("deleted_entries_source_table_idx").on(t.source_table),
+    index("deleted_entries_source_type_idx").on(t.source_type),
+    index("deleted_entries_deleted_at_idx").on(t.deleted_at),
+    index("deleted_entries_source_table_type_idx").on(t.source_table, t.source_type),
+    index("deleted_entries_source_table_deleted_at_idx").on(t.source_table, t.deleted_at),
+  ],
+);

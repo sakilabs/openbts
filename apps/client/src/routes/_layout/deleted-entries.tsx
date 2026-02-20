@@ -7,17 +7,24 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { AlertCircleIcon, Search01Icon, Cancel01Icon, Sorting05Icon } from "@hugeicons/core-free-icons";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
-import { AuditLogDetailSheet } from "@/features/admin/audit-logs/components/audit-log-detail-sheet";
-import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "../../../features/admin/audit-logs/constants";
 
-function formatAuditDate(dateString: string, locale: string): string {
+interface DeletedEntry {
+  id: number;
+  source_table: string;
+  source_id: number;
+  source_type: string;
+  data: Record<string, unknown>;
+  deleted_at: string;
+  import_id: number | null;
+}
+
+function formatDeletedDate(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
@@ -28,63 +35,77 @@ function formatAuditDate(dateString: string, locale: string): string {
   });
 }
 
-const columnHelper = createColumnHelper<AuditLogEntry>();
+const SOURCE_TABLE_OPTIONS = ["uke_permits", "uke_radiolines"] as const;
+const SOURCE_TYPE_OPTIONS = ["permits", "device_registry", "radiolines"] as const;
 
-type AuditLogsFilterState = {
-  tableFilter: string;
-  actionFilter: string;
-  dateFrom: string;
-  dateTo: string;
-  sort: "asc" | "desc";
-  selectedEntry: AuditLogEntry | null;
+const SOURCE_TABLE_LABELS: Record<string, string> = {
+  uke_permits: "UKE Permits",
+  uke_radiolines: "UKE Radiolines",
 };
 
-function auditLogsFilterReducer(
-  state: AuditLogsFilterState,
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+  permits: "Permits",
+  device_registry: "Device Registry",
+  radiolines: "Radiolines",
+};
+
+const columnHelper = createColumnHelper<DeletedEntry>();
+
+type FilterState = {
+  sourceTable: string;
+  sourceType: string;
+  dateFrom: string;
+  dateTo: string;
+  search: string;
+  sort: "asc" | "desc";
+};
+
+function filterReducer(
+  state: FilterState,
   action:
-    | { type: "SET_TABLE_FILTER"; payload: string }
-    | { type: "SET_ACTION_FILTER"; payload: string }
+    | { type: "SET_SOURCE_TABLE"; payload: string }
+    | { type: "SET_SOURCE_TYPE"; payload: string }
     | { type: "SET_DATE_FROM"; payload: string }
     | { type: "SET_DATE_TO"; payload: string }
+    | { type: "SET_SEARCH"; payload: string }
     | { type: "SET_SORT"; payload: "asc" | "desc" }
-    | { type: "SET_SELECTED_ENTRY"; payload: AuditLogEntry | null }
     | { type: "CLEAR_FILTERS" },
-): AuditLogsFilterState {
+): FilterState {
   switch (action.type) {
-    case "SET_TABLE_FILTER":
-      return { ...state, tableFilter: action.payload };
-    case "SET_ACTION_FILTER":
-      return { ...state, actionFilter: action.payload };
+    case "SET_SOURCE_TABLE":
+      return { ...state, sourceTable: action.payload };
+    case "SET_SOURCE_TYPE":
+      return { ...state, sourceType: action.payload };
     case "SET_DATE_FROM":
       return { ...state, dateFrom: action.payload };
     case "SET_DATE_TO":
       return { ...state, dateTo: action.payload };
+    case "SET_SEARCH":
+      return { ...state, search: action.payload };
     case "SET_SORT":
       return { ...state, sort: action.payload };
-    case "SET_SELECTED_ENTRY":
-      return { ...state, selectedEntry: action.payload };
     case "CLEAR_FILTERS":
-      return { ...state, tableFilter: "", actionFilter: "", dateFrom: "", dateTo: "" };
+      return { ...state, sourceTable: "", sourceType: "", dateFrom: "", dateTo: "", search: "" };
     default:
       return state;
   }
 }
 
-const initialFilterState: AuditLogsFilterState = {
-  tableFilter: "",
-  actionFilter: "",
+const initialFilterState: FilterState = {
+  sourceTable: "",
+  sourceType: "",
   dateFrom: "",
   dateTo: "",
+  search: "",
   sort: "desc",
-  selectedEntry: null,
 };
 
-function AdminAuditLogsPage() {
+function DeletedEntriesPage() {
   "use no memo";
-  const { t, i18n } = useTranslation(["admin", "common"]);
+  const { t, i18n } = useTranslation(["deletedEntries", "common"]);
 
-  const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
-  const { tableFilter, actionFilter, dateFrom, dateTo, sort, selectedEntry } = filterState;
+  const [filterState, dispatchFilter] = useReducer(filterReducer, initialFilterState);
+  const { sourceTable, sourceType, dateFrom, dateTo, search, sort } = filterState;
 
   const { containerRef, pagination, setPagination } = useTablePagination({
     rowHeight: 64,
@@ -94,8 +115,8 @@ function AdminAuditLogsPage() {
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
-  const hasActiveFilters = !!(tableFilter || actionFilter || dateFrom || dateTo);
-  const activeFilterCount = [tableFilter, actionFilter, dateFrom, dateTo].filter(Boolean).length;
+  const hasActiveFilters = !!(sourceTable || sourceType || dateFrom || dateTo || search);
+  const activeFilterCount = [sourceTable, sourceType, dateFrom, dateTo, search].filter(Boolean).length;
 
   const clearAllFilters = useCallback(() => {
     dispatchFilter({ type: "CLEAR_FILTERS" });
@@ -103,33 +124,33 @@ function AdminAuditLogsPage() {
   }, [resetPage]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "audit-logs", pagination.pageIndex, pagination.pageSize, tableFilter, actionFilter, dateFrom, dateTo, sort],
+    queryKey: ["deleted-entries", pagination.pageIndex, pagination.pageSize, sourceTable, sourceType, dateFrom, dateTo, search, sort],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
-      params.set("offset", (pagination.pageIndex * pagination.pageSize).toString());
-      params.set("sort", sort);
-      if (tableFilter) params.set("table_name", tableFilter);
-      if (actionFilter) params.set("action", actionFilter);
+      params.set("page", (pagination.pageIndex + 1).toString());
+      if (sourceTable) params.set("source_table", sourceTable);
+      if (sourceType) params.set("source_type", sourceType);
       if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
       if (dateTo) {
         const to = new Date(dateTo);
         to.setHours(23, 59, 59, 999);
         params.set("to", to.toISOString());
       }
-      return fetchJson<{ data: AuditLogEntry[]; totalCount: number }>(`${API_BASE}/audit-logs?${params.toString()}`);
+      if (search) params.set("search", search);
+      return fetchJson<{ data: DeletedEntry[]; totalCount: number }>(`${API_BASE}/deleted-entries?${params.toString()}`);
     },
     placeholderData: keepPreviousData,
     staleTime: 0,
     refetchOnMount: "always",
   });
 
-  const logs = data?.data ?? [];
+  const entries = data?.data ?? [];
   const total = data?.totalCount ?? 0;
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("createdAt", {
+      columnHelper.accessor("deleted_at", {
         header: () => (
           <button
             type="button"
@@ -139,7 +160,7 @@ function AdminAuditLogsPage() {
               resetPage();
             }}
           >
-            {t("auditLogs.columns.timestamp")}
+            {t("deletedEntries.columns.deletedAt")}
             <HugeiconsIcon
               icon={Sorting05Icon}
               className="size-3.5 text-foreground"
@@ -149,83 +170,75 @@ function AdminAuditLogsPage() {
         ),
         size: 160,
         cell: ({ getValue }) => (
-          <span className="text-muted-foreground tabular-nums text-xs font-mono">{formatAuditDate(getValue(), i18n.language)}</span>
+          <span className="text-muted-foreground tabular-nums text-xs font-mono">{formatDeletedDate(getValue(), i18n.language)}</span>
         ),
       }),
-      columnHelper.accessor("user", {
-        header: t("auditLogs.columns.actor"),
-        size: 180,
-        cell: ({ getValue }) => {
-          const user = getValue();
-          if (!user) {
-            return <span className="text-muted-foreground italic text-xs">{t("auditLogs.actor.system")}</span>;
-          }
-          return (
-            <div className="flex items-center gap-2">
-              <Avatar className="size-6">
-                <AvatarImage src={user.image ?? undefined} />
-                <AvatarFallback className="text-[9px]">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="truncate max-w-28 text-xs font-medium">{user.name}</span>
-                {user.displayUsername && <span className="truncate max-w-28 text-[10px] text-muted-foreground">@{user.displayUsername}</span>}
-              </div>
-            </div>
-          );
-        },
+      columnHelper.accessor("source_table", {
+        header: t("deletedEntries.columns.sourceTable"),
+        size: 140,
+        cell: ({ getValue }) => <span className="text-xs font-medium">{SOURCE_TABLE_LABELS[getValue()] ?? getValue()}</span>,
       }),
-      columnHelper.accessor("action", {
-        header: t("auditLogs.columns.action"),
-        size: 200,
+      columnHelper.accessor("source_type", {
+        header: t("deletedEntries.columns.sourceType"),
+        size: 140,
         cell: ({ getValue }) => {
-          const action = getValue();
-          const style = getActionStyle(action);
+          const value = getValue();
+          const colorMap: Record<string, string> = {
+            permits: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400",
+            device_registry: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+            radiolines: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400",
+          };
           return (
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                style.badgeClass,
+                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                colorMap[value],
               )}
             >
-              <span className={cn("size-1.5 rounded-full", style.dotClass)} />
-              {action}
+              {SOURCE_TYPE_LABELS[value] ?? value}
             </span>
           );
         },
       }),
-      columnHelper.accessor("table_name", {
-        header: t("auditLogs.columns.entity"),
-        size: 120,
-        cell: ({ getValue }) => <span className="text-xs font-medium">{TABLE_LABELS[getValue()] ?? getValue()}</span>,
-      }),
-      columnHelper.accessor("record_id", {
-        header: t("auditLogs.columns.record"),
+      columnHelper.accessor("source_id", {
+        header: t("deletedEntries.columns.sourceId"),
         size: 100,
+        cell: ({ getValue }) => <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#{getValue()}</span>,
+      }),
+      columnHelper.accessor("data", {
+        header: t("deletedEntries.columns.identifier"),
+        size: 200,
         cell: ({ getValue, row }) => {
-          const recordId = getValue();
-          const fallbackId =
-            (row.original.old_values as Record<string, unknown> | null)?.id ??
-            (row.original.new_values as Record<string, unknown> | null)?.id ??
-            null;
-          const displayId = recordId ?? fallbackId;
-          return displayId !== null ? (
-            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#{String(displayId)}</span>
+          const rowData = getValue();
+          const isPermits = row.original.source_table === "uke_permits";
+          const label = isPermits ? ((rowData.station_id as string) ?? (rowData.decision_number as string)) : (rowData.permit_number as string);
+          return label ? (
+            <span className="text-xs truncate max-w-48 block" title={String(label)}>
+              {String(label)}
+            </span>
           ) : (
             <span className="text-muted-foreground text-xs">—</span>
           );
         },
       }),
-      columnHelper.accessor("source", {
-        header: t("auditLogs.columns.source"),
-        size: 80,
-        cell: ({ getValue }) => <span className="text-xs text-muted-foreground uppercase">{getValue() ?? "—"}</span>,
+      columnHelper.accessor("import_id", {
+        header: t("deletedEntries.columns.importId"),
+        size: 100,
+        cell: ({ getValue }) => {
+          const importId = getValue();
+          return importId !== null ? (
+            <span className="text-xs font-mono text-muted-foreground">#{importId}</span>
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          );
+        },
       }),
     ],
     [t, sort, i18n.language, resetPage],
   );
 
   const table = useReactTable({
-    data: logs,
+    data: entries,
     columns,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
@@ -239,54 +252,48 @@ function AdminAuditLogsPage() {
       <div className="flex flex-col gap-3 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("auditLogs.title")}</h1>
-            <p className="text-muted-foreground text-sm">{t("auditLogs.subtitle")}</p>
+            <h1 className="text-2xl font-bold tracking-tight">{t("deletedEntries.title")}</h1>
+            <p className="text-muted-foreground text-sm">{t("deletedEntries.subtitle")}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Select
-            value={tableFilter}
+            value={sourceTable}
             onValueChange={(v) => {
-              dispatchFilter({ type: "SET_TABLE_FILTER", payload: v === "__all__" ? "" : (v as string) });
+              dispatchFilter({ type: "SET_SOURCE_TABLE", payload: v === "__all__" ? "" : (v as string) });
               resetPage();
             }}
           >
             <SelectTrigger className="min-w-35">
-              <SelectValue placeholder={t("auditLogs.filters.allEntities")} />
+              <SelectValue placeholder={t("deletedEntries.filters.allTables")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">{t("auditLogs.filters.allEntities")}</SelectItem>
-              {TABLE_OPTIONS.map((table) => (
+              <SelectItem value="__all__">{t("deletedEntries.filters.allTables")}</SelectItem>
+              {SOURCE_TABLE_OPTIONS.map((table) => (
                 <SelectItem key={table} value={table}>
-                  {TABLE_LABELS[table]}
+                  {SOURCE_TABLE_LABELS[table]}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select
-            value={actionFilter}
+            value={sourceType}
             onValueChange={(v) => {
-              dispatchFilter({ type: "SET_ACTION_FILTER", payload: v === "__all__" ? "" : (v as string) });
+              dispatchFilter({ type: "SET_SOURCE_TYPE", payload: v === "__all__" ? "" : (v as string) });
               resetPage();
             }}
           >
-            <SelectTrigger className="min-w-42.5">
-              <SelectValue placeholder={t("auditLogs.filters.allActions")} />
+            <SelectTrigger className="min-w-40">
+              <SelectValue placeholder={t("deletedEntries.filters.allSources")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">{t("auditLogs.filters.allActions")}</SelectItem>
-              {ACTION_GROUPS.map((group, i) => (
-                <SelectGroup key={group.label}>
-                  {i > 0 && <SelectSeparator />}
-                  <SelectLabel>{group.label}</SelectLabel>
-                  {group.actions.map((action) => (
-                    <SelectItem key={action} value={action}>
-                      <span className="font-mono text-xs">{action.split(".").pop()}</span>
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
+              <SelectItem value="__all__">{t("deletedEntries.filters.allSources")}</SelectItem>
+              {SOURCE_TYPE_OPTIONS.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {SOURCE_TYPE_LABELS[type]}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -297,7 +304,7 @@ function AdminAuditLogsPage() {
               dispatchFilter({ type: "SET_DATE_FROM", payload: v });
               resetPage();
             }}
-            label={t("auditLogs.filters.dateFrom")}
+            label={t("deletedEntries.filters.dateFrom")}
           />
 
           <DatePickerButton
@@ -306,8 +313,25 @@ function AdminAuditLogsPage() {
               dispatchFilter({ type: "SET_DATE_TO", payload: v });
               resetPage();
             }}
-            label={t("auditLogs.filters.dateTo")}
+            label={t("deletedEntries.filters.dateTo")}
           />
+
+          <div className="relative">
+            <HugeiconsIcon
+              icon={Search01Icon}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                dispatchFilter({ type: "SET_SEARCH", payload: e.target.value });
+                resetPage();
+              }}
+              placeholder={t("deletedEntries.filters.searchPlaceholder")}
+              className="h-8 rounded-lg border border-input bg-transparent pl-8 pr-2.5 text-sm transition-colors dark:bg-input/30 dark:hover:bg-input/50 hover:bg-muted min-w-48"
+            />
+          </div>
 
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-muted-foreground">
@@ -340,20 +364,20 @@ function AdminAuditLogsPage() {
                   </td>
                 </tr>
               </tbody>
-            ) : logs.length === 0 ? (
+            ) : entries.length === 0 ? (
               <tbody>
                 <tr>
                   <td colSpan={columns.length} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <HugeiconsIcon icon={Search01Icon} className="size-10 mb-2 opacity-20" />
-                      <p className="font-medium">{t("auditLogs.empty.title")}</p>
-                      <p className="text-sm opacity-70">{t("auditLogs.empty.subtitle")}</p>
+                      <p className="font-medium">{t("deletedEntries.empty.title")}</p>
+                      <p className="text-sm opacity-70">{t("deletedEntries.empty.subtitle")}</p>
                     </div>
                   </td>
                 </tr>
               </tbody>
             ) : (
-              <DataTable.Body onRowClick={(row: AuditLogEntry) => dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: row })} />
+              <DataTable.Body />
             )}
             <DataTable.Footer columns={columns.length}>
               <DataTablePagination table={table} totalItems={total} showRowsPerPage={false} />
@@ -361,24 +385,15 @@ function AdminAuditLogsPage() {
           </DataTable.Table>
         </DataTable.Root>
       </div>
-
-      <AuditLogDetailSheet
-        entry={selectedEntry}
-        open={selectedEntry !== null}
-        onOpenChange={(open) => {
-          if (!open) dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: null });
-        }}
-      />
     </div>
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/audit-logs")({
-  component: AdminAuditLogsPage,
+export const Route = createFileRoute("/_layout/deleted-entries")({
+  component: DeletedEntriesPage,
   staticData: {
-    titleKey: "auditLogs.title",
-    i18nNamespace: "admin",
-    breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
-    allowedRoles: ["admin"],
+    titleKey: "deletedEntries.title",
+    i18nNamespace: "main",
+    breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
   },
 });

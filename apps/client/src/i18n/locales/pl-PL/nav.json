@@ -20,7 +20,8 @@
     "locations": "Lokalizacje",
     "settings": "Ustawienia",
     "ukeImport": "Import UKE",
-    "auditLogs": "Dziennik zdarzeń"
+    "auditLogs": "Dziennik zdarzeń",
+    "deletedEntries": "Usunięte wpisy"
   },
   "secondary": {
     "settings": "Ustawienia",

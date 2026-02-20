@@ -14,6 +14,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submission'
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
 import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferences'
+import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/deleted-entries'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
 import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
 import { Route as LayoutAdminUkeImportRouteImport } from './routes/_layout/admin/uke-import'
@@ -53,6 +54,11 @@ const LayoutStationsRoute = LayoutStationsRouteImport.update({
 const LayoutPreferencesRoute = LayoutPreferencesRouteImport.update({
   id: '/preferences',
   path: '/preferences',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutDeletedEntriesRoute = LayoutDeletedEntriesRouteImport.update({
+  id: '/deleted-entries',
+  path: '/deleted-entries',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutClfExportRoute = LayoutClfExportRouteImport.update({
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
+  '/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
   '/submission': typeof LayoutSubmissionRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
+  '/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
   '/submission': typeof LayoutSubmissionRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRouteWithChildren
   '/_layout/changelog': typeof LayoutChangelogRoute
   '/_layout/clf-export': typeof LayoutClfExportRoute
+  '/_layout/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/_layout/preferences': typeof LayoutPreferencesRoute
   '/_layout/stations': typeof LayoutStationsRoute
   '/_layout/submission': typeof LayoutSubmissionRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/'
     | '/changelog'
     | '/clf-export'
+    | '/deleted-entries'
     | '/preferences'
     | '/stations'
     | '/submission'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
   to:
     | '/changelog'
     | '/clf-export'
+    | '/deleted-entries'
     | '/preferences'
     | '/stations'
     | '/submission'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/_layout'
     | '/_layout/changelog'
     | '/_layout/clf-export'
+    | '/_layout/deleted-entries'
     | '/_layout/preferences'
     | '/_layout/stations'
     | '/_layout/submission'
@@ -318,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/preferences'
       fullPath: '/preferences'
       preLoaderRoute: typeof LayoutPreferencesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/deleted-entries': {
+      id: '/_layout/deleted-entries'
+      path: '/deleted-entries'
+      fullPath: '/deleted-entries'
+      preLoaderRoute: typeof LayoutDeletedEntriesRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/clf-export': {
@@ -438,6 +457,7 @@ declare module '@tanstack/react-router' {
 interface LayoutRouteChildren {
   LayoutChangelogRoute: typeof LayoutChangelogRoute
   LayoutClfExportRoute: typeof LayoutClfExportRoute
+  LayoutDeletedEntriesRoute: typeof LayoutDeletedEntriesRoute
   LayoutPreferencesRoute: typeof LayoutPreferencesRoute
   LayoutStationsRoute: typeof LayoutStationsRoute
   LayoutSubmissionRoute: typeof LayoutSubmissionRoute
@@ -461,6 +481,7 @@ interface LayoutRouteChildren {
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutChangelogRoute: LayoutChangelogRoute,
   LayoutClfExportRoute: LayoutClfExportRoute,
+  LayoutDeletedEntriesRoute: LayoutDeletedEntriesRoute,
   LayoutPreferencesRoute: LayoutPreferencesRoute,
   LayoutStationsRoute: LayoutStationsRoute,
   LayoutSubmissionRoute: LayoutSubmissionRoute,

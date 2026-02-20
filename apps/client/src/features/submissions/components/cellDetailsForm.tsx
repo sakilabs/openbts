@@ -258,13 +258,18 @@ const DebouncedNotesInput = memo(function DebouncedNotesInput({
   onChange: (value: string) => void;
 }) {
   const [local, setLocal] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
 
   useEffect(() => {
+    onChangeRef.current = onChange;
+  });
+
+  if (value !== prevValue) {
+    setPrevValue(value);
     setLocal(value);
-  }, [value]);
+  }
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -312,6 +317,8 @@ const CellRow = memo(function CellRow({
     const newBandId = findBandId(bandValue, dup);
     onUpdate(cell.id, { band_id: newBandId });
   };
+
+  const handleNotesChange = useCallback((value: string) => onNotesChange(cell.id, value), [cell.id, onNotesChange]);
 
   const firstCellBorderClass = {
     added: "border-l-2 border-l-green-500",
@@ -383,7 +390,7 @@ const CellRow = memo(function CellRow({
           value={cell.notes ?? ""}
           placeholder={t("stations:cells.notesPlaceholder")}
           disabled={isDeleted}
-          onChange={(value) => onNotesChange(cell.id, value)}
+          onChange={handleNotesChange}
         />
       </td>
       <td className="px-3 py-1">

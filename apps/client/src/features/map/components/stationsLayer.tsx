@@ -36,7 +36,7 @@ const MAP_FILTERS_STORAGE_KEY = "map:filters";
 export function saveMapFilters(filters: StationFilters) {
   try {
     localStorage.setItem(MAP_FILTERS_STORAGE_KEY, JSON.stringify(filters));
-  } catch (_) {
+  } catch {
     // ignore localStorage errors
   }
 }
@@ -97,6 +97,7 @@ type StationsLayerProps = {
   onActiveMarkerChange: (marker: { latitude: number; longitude: number } | null) => void;
   onOpenStationDetails: (id: number, source: StationSource) => void;
   onOpenUkeStationDetails: (station: UkeStation) => void;
+  onRadiolineIdFromUrl?: (id: number) => void;
   showPopup: ShowPopupFn;
   updatePopupStations: UpdatePopupStationsFn;
   cleanupPopup: () => void;
@@ -110,6 +111,7 @@ export function StationsLayer({
   onActiveMarkerChange,
   onOpenStationDetails,
   onOpenUkeStationDetails,
+  onRadiolineIdFromUrl,
   showPopup,
   updatePopupStations,
   cleanupPopup,
@@ -120,7 +122,17 @@ export function StationsLayer({
   const pendingUkeLocationId = useRef<number | null>(null);
 
   const handleUrlInitialize = useCallback(
-    async ({ filters: urlFilters, stationId, locationId }: { filters?: StationFilters; stationId?: string; locationId?: number }) => {
+    async ({
+      filters: urlFilters,
+      stationId,
+      locationId,
+      radiolineId,
+    }: {
+      filters?: StationFilters;
+      stationId?: string;
+      locationId?: number;
+      radiolineId?: number;
+    }) => {
       if (urlFilters) {
         onFiltersChange(urlFilters);
       }
@@ -161,7 +173,9 @@ export function StationsLayer({
           .finally(() => {
             pendingStationId.current = null;
           });
-      } else if (locationId && map) {
+      } else if (radiolineId)
+        onRadiolineIdFromUrl?.(radiolineId);
+      else if (locationId && map) {
         if (activeFilters.source === "uke") {
           pendingUkeLocationId.current = locationId;
           return;
@@ -192,7 +206,7 @@ export function StationsLayer({
           });
       }
     },
-    [map, filters, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails],
+    [map, filters, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails, onRadiolineIdFromUrl],
   );
 
   useUrlSync({

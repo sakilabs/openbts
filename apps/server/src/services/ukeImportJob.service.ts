@@ -7,8 +7,19 @@ import { cleanupDownloads } from "@openbts/uke-importer/utils";
 import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
 import { logger } from "../utils/logger.js";
 import redis from "../database/redis.js";
+import { deletedEntries } from "@openbts/drizzle";
+import { db } from "../database/psql.js";
+import { lt } from "drizzle-orm";
 
-type ImportStepKey = "stations" | "radiolines" | "permits" | "prune_associations" | "cleanup_orphaned_uke_locations" | "associate" | "cleanup";
+type ImportStepKey =
+  | "stations"
+  | "radiolines"
+  | "permits"
+  | "prune_deleted_entries"
+  | "prune_associations"
+  | "cleanup_orphaned_uke_locations"
+  | "associate"
+  | "cleanup";
 type StepStatus = "pending" | "running" | "success" | "skipped" | "error";
 type JobState = "idle" | "running" | "success" | "error";
 
@@ -31,11 +42,14 @@ const STEP_KEYS: ImportStepKey[] = [
   "stations",
   "radiolines",
   "permits",
+  "prune_deleted_entries",
   "prune_associations",
   "cleanup_orphaned_uke_locations",
   "associate",
   "cleanup",
 ];
+
+const DELETED_ENTRIES_RETENTION_DAYS = Number(process.env.DELETED_ENTRIES_RETENTION_DAYS) || 180;
 const REDIS_KEY = "uke:import:status";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -188,6 +202,20 @@ async function runJob(
     } else {
       markSkipped(job, "permits");
       await saveJob(job);
+    }
+
+    markRunning(job, "prune_deleted_entries");
+    await saveJob(job);
+    try {
+      const cutoff = new Date(Date.now() - DELETED_ENTRIES_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+      const pruned = await db.delete(deletedEntries).where(lt(deletedEntries.deleted_at, cutoff)).returning({ id: deletedEntries.id });
+      logger.info(`Pruned ${pruned.length} deleted entries older than ${DELETED_ENTRIES_RETENTION_DAYS} days`);
+      markSuccess(job, "prune_deleted_entries");
+      await saveJob(job);
+    } catch (e) {
+      markError(job, "prune_deleted_entries");
+      await saveJob(job);
+      throw e;
     }
 
     if (stationsChanged || permitsChanged) {

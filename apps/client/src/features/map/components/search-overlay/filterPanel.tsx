@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
@@ -18,7 +18,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Checkbox } from "./checkbox";
 import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
-import { fetchStats } from "../../statsApi";
+import { fetchStats, type DataStats } from "../../statsApi";
 import { fetchUkeRadioLineOperators } from "@/features/shared/api";
 import type { UkeOperator } from "@/features/shared/api";
 import {
@@ -33,6 +33,189 @@ import {
 } from "@/components/ui/combobox";
 
 const PRIORITY_RADIOLINE_OPERATORS = ["T-Mobile Polska", "Towerlink Poland", "P4", "ORANGE POLSKA"];
+
+type OperatorsSectionProps = {
+  filters: StationFilters;
+  topOperators: Operator[];
+  otherOperators: Operator[];
+  hasSelectedOther: boolean;
+  showOtherOperators: boolean;
+  setShowOtherOperators: (show: boolean) => void;
+  onToggleOperator: (mnc: number) => void;
+  radiolineOperatorsList: UkeOperator[];
+  radiolineOperatorsChipsRef: RefObject<HTMLDivElement | null>;
+  onFiltersChange: (filters: StationFilters) => void;
+};
+
+function OperatorsSection({
+  filters,
+  topOperators,
+  otherOperators,
+  hasSelectedOther,
+  showOtherOperators,
+  setShowOtherOperators,
+  onToggleOperator,
+  radiolineOperatorsList,
+  radiolineOperatorsChipsRef,
+  onFiltersChange,
+}: OperatorsSectionProps) {
+  const { t } = useTranslation(["main", "common"]);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.operator")}</h4>
+      </div>
+      <div className="grid grid-cols-2 gap-1">
+        {topOperators.map((op) => (
+          <Checkbox key={op.mnc} checked={filters.operators.includes(op.mnc)} onChange={() => onToggleOperator(op.mnc)}>
+            <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+            <span className="flex-1 text-left truncate">{op.name}</span>
+          </Checkbox>
+        ))}
+      </div>
+
+      {otherOperators.length > 0 && (
+        <div className="mt-1.5">
+          <button
+            type="button"
+            onClick={() => setShowOtherOperators(!showOtherOperators)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-1.5 py-1 transition-colors w-full"
+          >
+            <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
+            <span>
+              {t("common:labels.otherOperators", { count: otherOperators.length })}
+              {hasSelectedOther &&
+                ` (${t("common:labels.selected", { count: otherOperators.filter((op) => filters.operators.includes(op.mnc)).length })})`}
+            </span>
+          </button>
+
+          {showOtherOperators && (
+            <div className="grid grid-cols-2 gap-1 mt-1.5 pt-1.5 border-t border-border/50">
+              {otherOperators.map((op) => (
+                <Checkbox key={op.mnc} checked={filters.operators.includes(op.mnc)} onChange={() => onToggleOperator(op.mnc)}>
+                  <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                  <span className="flex-1 text-left truncate">{op.name}</span>
+                </Checkbox>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {filters.showRadiolines && radiolineOperatorsList?.length > 0 && (
+        <div className="space-y-2 mt-1 pt-1">
+          <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("filters.radiolineOperator")}</h4>
+          <Combobox
+            multiple
+            value={(filters.radiolineOperators ?? []).map((id) => radiolineOperatorsList.find((op) => op.id === id)).filter(Boolean) as UkeOperator[]}
+            onValueChange={(values) => onFiltersChange({ ...filters, radiolineOperators: values.map((v) => v.id) })}
+            items={radiolineOperatorsList}
+            itemToStringLabel={(op) => op.name}
+            filter={(op, query, itemToString) => {
+              if (!query.trim()) return true;
+              const q = query.toLowerCase().trim();
+              const label = (itemToString?.(op) ?? op.name).toLowerCase();
+              const full = (op.full_name ?? "").toLowerCase();
+              return label.includes(q) || full.includes(q);
+            }}
+          >
+            <ComboboxChips
+              ref={radiolineOperatorsChipsRef}
+              className="min-h-8 max-h-24 overflow-y-auto overflow-x-hidden text-sm overscroll-contain custom-scrollbar"
+            >
+              {(filters.radiolineOperators ?? []).map((id) => {
+                const op = radiolineOperatorsList.find((o) => o.id === id);
+                if (!op) return null;
+                const maxLen = 12;
+                const label = op.name.length > maxLen ? `${op.name.slice(0, maxLen)} ....` : op.name;
+                return (
+                  <ComboboxChip key={id} title={op.name}>
+                    {label}
+                  </ComboboxChip>
+                );
+              })}
+              <ComboboxChipsInput
+                className="text-sm"
+                placeholder={(filters.radiolineOperators ?? []).length === 0 ? t("filters.searchRadiolineOperators") : ""}
+              />
+            </ComboboxChips>
+            <ComboboxContent anchor={radiolineOperatorsChipsRef}>
+              <ComboboxEmpty>{t("common:placeholder.noOperatorsFound")}</ComboboxEmpty>
+              <ComboboxList>
+                {(op: UkeOperator) => (
+                  <ComboboxItem key={op.id} value={op}>
+                    <span>{op.name}</span>
+                    {op.full_name && op.full_name !== op.name && (
+                      <span className="text-muted-foreground text-xs ml-auto truncate max-w-48" title={op.full_name}>
+                        {op.full_name}
+                      </span>
+                    )}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type StatsSectionProps = {
+  stats: DataStats;
+  locale: string;
+};
+
+function StatsSection({ stats, locale }: StatsSectionProps) {
+  const { t } = useTranslation(["main", "common"]);
+
+  return (
+    <div className="pt-2 border-t">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5 text-muted-foreground" />
+        <h4 className="text-xs font-medium text-muted-foreground">{t("stats.dataInfo")}</h4>
+      </div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("stats.internalData")}:</span>
+          <span className="font-medium tabular-nums">
+            {stats.lastUpdated.stations
+              ? new Date(stats.lastUpdated.stations).toLocaleDateString(locale, {
+                  year: "numeric",
+                  month: "numeric",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : t("common:status.never")}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("stationDetails:tabs.permits")}:</span>
+          <span className="font-medium tabular-nums">
+            {stats.lastUpdated.stations_permits
+              ? new Date(stats.lastUpdated.stations_permits).toLocaleDateString(locale, {
+                  year: "numeric",
+                  month: "numeric",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : t("common:status.never")}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("stats.stations")}:</span>
+          <span className="font-medium tabular-nums">{stats.counts.stations.toLocaleString(locale)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{t("stats.permits")}:</span>
+          <span className="font-medium tabular-nums">{stats.counts.uke_permits.toLocaleString(locale)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type FilterPanelProps = {
   filters: StationFilters;
@@ -143,11 +326,11 @@ export function FilterPanel({
               className="flex-1"
               onClick={() => {
                 const newSource = src.id as StationSource;
-                const targetRatValues = (newSource === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((r) => r.value as string);
+                const targetRatValues = new Set((newSource === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((r) => r.value as string));
                 onFiltersChange({
                   ...filters,
                   source: newSource,
-                  rat: filters.rat.filter((r) => targetRatValues.includes(r)),
+                  rat: filters.rat.filter((r) => targetRatValues.has(r)),
                 });
               }}
             >
@@ -164,104 +347,18 @@ export function FilterPanel({
         </Checkbox>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.operator")}</h4>
-        </div>
-        <div className="grid grid-cols-2 gap-1">
-          {topOperators.map((op) => (
-            <Checkbox key={op.mnc} checked={filters.operators.includes(op.mnc)} onChange={() => onToggleOperator(op.mnc)}>
-              <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
-              <span className="flex-1 text-left truncate">{op.name}</span>
-            </Checkbox>
-          ))}
-        </div>
-
-        {otherOperators.length > 0 && (
-          <div className="mt-1.5">
-            <button
-              type="button"
-              onClick={() => setShowOtherOperators(!showOtherOperators)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-1.5 py-1 transition-colors w-full"
-            >
-              <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
-              <span>
-                {t("common:labels.otherOperators", { count: otherOperators.length })}
-                {hasSelectedOther &&
-                  ` (${t("common:labels.selected", { count: otherOperators.filter((op) => filters.operators.includes(op.mnc)).length })})`}
-              </span>
-            </button>
-
-            {showOtherOperators && (
-              <div className="grid grid-cols-2 gap-1 mt-1.5 pt-1.5 border-t border-border/50">
-                {otherOperators.map((op) => (
-                  <Checkbox key={op.mnc} checked={filters.operators.includes(op.mnc)} onChange={() => onToggleOperator(op.mnc)}>
-                    <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
-                    <span className="flex-1 text-left truncate">{op.name}</span>
-                  </Checkbox>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        {filters.showRadiolines && radiolineOperatorsList?.length > 0 && (
-          <div className="space-y-2 mt-1 pt-1">
-            <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("filters.radiolineOperator")}</h4>
-            <Combobox
-              multiple
-              value={
-                (filters.radiolineOperators ?? []).map((id) => radiolineOperatorsList.find((op) => op.id === id)).filter(Boolean) as UkeOperator[]
-              }
-              onValueChange={(values) => onFiltersChange({ ...filters, radiolineOperators: values.map((v) => v.id) })}
-              items={radiolineOperatorsList}
-              itemToStringLabel={(op) => op.name}
-              filter={(op, query, itemToString) => {
-                if (!query.trim()) return true;
-                const q = query.toLowerCase().trim();
-                const label = (itemToString?.(op) ?? op.name).toLowerCase();
-                const full = (op.full_name ?? "").toLowerCase();
-                return label.includes(q) || full.includes(q);
-              }}
-            >
-              <ComboboxChips
-                ref={radiolineOperatorsChipsRef}
-                className="min-h-8 max-h-24 overflow-y-auto overflow-x-hidden text-sm overscroll-contain custom-scrollbar"
-              >
-                {(filters.radiolineOperators ?? []).map((id) => {
-                  const op = radiolineOperatorsList.find((o) => o.id === id);
-                  if (!op) return null;
-                  const maxLen = 12;
-                  const label = op.name.length > maxLen ? `${op.name.slice(0, maxLen)} ....` : op.name;
-                  return (
-                    <ComboboxChip key={id} title={op.name}>
-                      {label}
-                    </ComboboxChip>
-                  );
-                })}
-                <ComboboxChipsInput
-                  className="text-sm"
-                  placeholder={(filters.radiolineOperators ?? []).length === 0 ? t("filters.searchRadiolineOperators") : ""}
-                />
-              </ComboboxChips>
-              <ComboboxContent anchor={radiolineOperatorsChipsRef}>
-                <ComboboxEmpty>{t("common:placeholder.noOperatorsFound")}</ComboboxEmpty>
-                <ComboboxList>
-                  {(op: UkeOperator) => (
-                    <ComboboxItem key={op.id} value={op}>
-                      <span>{op.name}</span>
-                      {op.full_name && op.full_name !== op.name && (
-                        <span className="text-muted-foreground text-xs ml-auto truncate max-w-48" title={op.full_name}>
-                          {op.full_name}
-                        </span>
-                      )}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
-          </div>
-        )}
-      </div>
+      <OperatorsSection
+        filters={filters}
+        topOperators={topOperators}
+        otherOperators={otherOperators}
+        hasSelectedOther={hasSelectedOther}
+        showOtherOperators={showOtherOperators}
+        setShowOtherOperators={setShowOtherOperators}
+        onToggleOperator={onToggleOperator}
+        radiolineOperatorsList={radiolineOperatorsList}
+        radiolineOperatorsChipsRef={radiolineOperatorsChipsRef}
+        onFiltersChange={onFiltersChange}
+      />
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.standard")}</h4>
@@ -349,52 +446,7 @@ export function FilterPanel({
         </div>
       )}
 
-      {stats && (
-        <div className="pt-2 border-t">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5 text-muted-foreground" />
-            <h4 className="text-xs font-medium text-muted-foreground">{t("stats.dataInfo")}</h4>
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("stats.internalData")}:</span>
-              <span className="font-medium tabular-nums">
-                {stats.lastUpdated.stations
-                  ? new Date(stats.lastUpdated.stations).toLocaleDateString(i18n.language, {
-                      year: "numeric",
-                      month: "numeric",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : t("common:status.never")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("stationDetails:tabs.permits")}:</span>
-              <span className="font-medium tabular-nums">
-                {stats.lastUpdated.stations_permits
-                  ? new Date(stats.lastUpdated.stations_permits).toLocaleDateString(i18n.language, {
-                      year: "numeric",
-                      month: "numeric",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : t("common:status.never")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("stats.stations")}:</span>
-              <span className="font-medium tabular-nums">{stats.counts.stations.toLocaleString(i18n.language)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("stats.permits")}:</span>
-              <span className="font-medium tabular-nums">{stats.counts.uke_permits.toLocaleString(i18n.language)}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {stats && <StatsSection stats={stats} locale={i18n.language} />}
     </div>
   );
 

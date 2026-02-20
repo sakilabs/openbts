@@ -383,47 +383,150 @@ type PickerMapInnerProps = {
   onUkeStationSelect?: (station: UkeStation) => void;
 };
 
-function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, showUkeLocations, onUkeStationSelect }: PickerMapInnerProps) {
+function NearbyLocationsPanel({
+  nearbyPanel,
+  onLocationSelect,
+  onClose,
+  onCreateNew,
+}: {
+  nearbyPanel: NearbyPanel;
+  onLocationSelect: (loc: LocationWithStations) => void;
+  onClose: () => void;
+  onCreateNew: () => void;
+}) {
   const { t } = useTranslation("submissions");
-  const { map, isLoaded } = useMap();
-  const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
-  const [panelState, dispatchPanel] = useReducer(panelReducer, { nearbyPanel: null, ukeStationPanel: null });
-  const { nearbyPanel, ukeStationPanel } = panelState;
 
-  const lastInternalCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  return (
+    <MapMarker longitude={nearbyPanel.coords.lng} latitude={nearbyPanel.coords.lat} anchor="bottom">
+      <MarkerContent className="cursor-default">
+        <div
+          role="dialog"
+          className="w-52 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="px-2.5 py-1.5 border-b bg-muted/50 flex items-center justify-between">
+            <span className="text-[11px] font-medium text-muted-foreground">{t("locationPicker.nearbyLocations")}</span>
+            <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
+              <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
+            </button>
+          </div>
+          <div className="max-h-28 overflow-y-auto">
+            {nearbyPanel.locations.map((loc) => (
+              <button
+                key={loc.id}
+                type="button"
+                onClick={() => onLocationSelect(loc)}
+                className="w-full flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-accent transition-colors text-left border-b last:border-b-0"
+              >
+                <HugeiconsIcon icon={Location01Icon} className="size-3 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium truncate">{loc.address || loc.city || `#${loc.id}`}</div>
+                  <div className="text-[10px] text-muted-foreground leading-tight">
+                    {t("stations:stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)} m
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={onCreateNew}
+            className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors border-t"
+          >
+            <HugeiconsIcon icon={Add01Icon} className="size-3" />
+            {t("locationPicker.createNewLocation")}
+          </button>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
+function UkeStationPanelOverlay({
+  ukeStationPanel,
+  onStationSelect,
+}: {
+  ukeStationPanel: UkeStationPanel;
+  onStationSelect: (station: UkeStation) => void;
+}) {
+  const { t } = useTranslation("submissions");
+
+  return (
+    <MapMarker longitude={ukeStationPanel.location.longitude} latitude={ukeStationPanel.location.latitude} anchor="bottom">
+      <MarkerContent className="cursor-default">
+        <div
+          role="dialog"
+          className="w-72 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden text-sm"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="px-3 py-2 border-b border-border/50">
+            <h3 className="font-medium text-sm leading-tight pr-4">{ukeStationPanel.location.city}</h3>
+            {ukeStationPanel.location.address && <p className="text-[11px] text-muted-foreground">{ukeStationPanel.location.address}</p>}
+          </div>
+          <div className="max-h-54 overflow-y-auto custom-scrollbar">
+            {ukeStationPanel.stations.map((station) => {
+              const mnc = station.operator?.mnc;
+              const operatorName = station.operator?.name || "Unknown";
+              const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
+              const bands = getPermitBands(station.permits);
+
+              return (
+                <button
+                  key={station.station_id}
+                  type="button"
+                  onClick={() => onStationSelect(station)}
+                  className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span className="font-medium text-xs" style={{ color }}>
+                      {operatorName}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
+                    {bands.map((band) => (
+                      <span
+                        key={band}
+                        className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+                      >
+                        {band}
+                      </span>
+                    ))}
+                    <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
+                      {station.permits.length} {station.permits.length === 1 ? "permit" : "permits"}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="px-3 py-1 border-t border-border/50">
+            <span className="text-[10px] text-muted-foreground">{t("locationPicker.selectStation")}</span>
+          </div>
+        </div>
+      </MarkerContent>
+    </MapMarker>
+  );
+}
+
+function usePickerMapLayers({
+  map,
+  isLoaded,
+  geoJSON,
+  ukeGeoJSON,
+  showUkeLocations,
+}: {
+  map: MapLibreGL.Map | null;
+  isLoaded: boolean;
+  geoJSON: GeoJSON.FeatureCollection;
+  ukeGeoJSON: GeoJSON.FeatureCollection;
+  showUkeLocations: boolean;
+}) {
   const addedImagesRef = useRef(new Set<string>());
   const addedUkeImagesRef = useRef(new Set<string>());
-
-  const { data: viewportLocations = [] } = useQuery({
-    queryKey: ["picker-locations", bounds],
-    queryFn: () => fetchLocationsInViewport(bounds, { orphaned: true }),
-    enabled: !!bounds,
-    staleTime: 1000 * 60 * 2,
-    placeholderData: (prev) => prev,
-  });
-
-  const { data: viewportUkeLocations = [] } = useQuery({
-    queryKey: ["picker-uke-locations", bounds],
-    queryFn: () => fetchUkeLocationsInViewport(bounds),
-    enabled: !!bounds && showUkeLocations,
-    staleTime: 1000 * 60 * 2,
-    placeholderData: (prev) => prev,
-  });
-
-  const geoJSON = useMemo(() => locationsToPickerGeoJSON(viewportLocations), [viewportLocations]);
-  const ukeGeoJSON = useMemo(() => ukeLocationsToPickerGeoJSON(viewportUkeLocations), [viewportUkeLocations]);
-
-  const viewportLocationsRef = useRef(viewportLocations);
-  const viewportUkeLocationsRef = useRef(viewportUkeLocations);
-  const showUkeLocationsRef = useRef(showUkeLocations);
-  const callbackRefs = useRef({ onCoordinatesSet, onExistingLocationSelect });
-
-  useEffect(() => {
-    viewportLocationsRef.current = viewportLocations;
-    viewportUkeLocationsRef.current = viewportUkeLocations;
-    showUkeLocationsRef.current = showUkeLocations;
-    callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
-  }, [viewportLocations, viewportUkeLocations, showUkeLocations, onCoordinatesSet, onExistingLocationSelect]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -488,13 +591,13 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
         map.off("mouseleave", layerId, handleMouseLeave);
         try {
           map.removeLayer(layerId);
-        } catch (_) {
+        } catch {
           // layer may already be removed
         }
       }
       try {
         map.removeSource(PICKER_SOURCE_ID);
-      } catch (_) {
+      } catch {
         // source may already be removed
       }
 
@@ -578,13 +681,13 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
         map.off("mouseleave", layerId, handleMouseLeave);
         try {
           map.removeLayer(layerId);
-        } catch (_) {
+        } catch {
           // layer may already be removed
         }
       }
       try {
         map.removeSource(PICKER_UKE_SOURCE_ID);
-      } catch (_) {
+      } catch {
         // source may already be removed
       }
 
@@ -600,6 +703,48 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     syncPieImages(map, ukeGeoJSON.features, addedUkeImagesRef.current);
     source.setData(ukeGeoJSON);
   }, [map, isLoaded, showUkeLocations, ukeGeoJSON]);
+}
+
+function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, showUkeLocations, onUkeStationSelect }: PickerMapInnerProps) {
+  const { map, isLoaded } = useMap();
+  const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
+  const [panelState, dispatchPanel] = useReducer(panelReducer, { nearbyPanel: null, ukeStationPanel: null });
+  const { nearbyPanel, ukeStationPanel } = panelState;
+
+  const lastInternalCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  const { data: viewportLocations = [] } = useQuery({
+    queryKey: ["picker-locations", bounds],
+    queryFn: () => fetchLocationsInViewport(bounds, { orphaned: true }),
+    enabled: !!bounds,
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: viewportUkeLocations = [] } = useQuery({
+    queryKey: ["picker-uke-locations", bounds],
+    queryFn: () => fetchUkeLocationsInViewport(bounds),
+    enabled: !!bounds && showUkeLocations,
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prev) => prev,
+  });
+
+  const geoJSON = useMemo(() => locationsToPickerGeoJSON(viewportLocations), [viewportLocations]);
+  const ukeGeoJSON = useMemo(() => ukeLocationsToPickerGeoJSON(viewportUkeLocations), [viewportUkeLocations]);
+
+  usePickerMapLayers({ map, isLoaded, geoJSON, ukeGeoJSON, showUkeLocations });
+
+  const viewportLocationsRef = useRef(viewportLocations);
+  const viewportUkeLocationsRef = useRef(viewportUkeLocations);
+  const showUkeLocationsRef = useRef(showUkeLocations);
+  const callbackRefs = useRef({ onCoordinatesSet, onExistingLocationSelect });
+
+  useEffect(() => {
+    viewportLocationsRef.current = viewportLocations;
+    viewportUkeLocationsRef.current = viewportUkeLocations;
+    showUkeLocationsRef.current = showUkeLocations;
+    callbackRefs.current = { onCoordinatesSet, onExistingLocationSelect };
+  }, [viewportLocations, viewportUkeLocations, showUkeLocations, onCoordinatesSet, onExistingLocationSelect]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -710,114 +855,15 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
       )}
 
       {nearbyPanel && nearbyPanel.locations.length > 0 && (
-        <MapMarker longitude={nearbyPanel.coords.lng} latitude={nearbyPanel.coords.lat} anchor="bottom">
-          <MarkerContent className="cursor-default">
-            <div
-              role="dialog"
-              className="w-52 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <div className="px-2.5 py-1.5 border-b bg-muted/50 flex items-center justify-between">
-                <span className="text-[11px] font-medium text-muted-foreground">{t("locationPicker.nearbyLocations")}</span>
-                <button
-                  type="button"
-                  onClick={() => dispatchPanel({ type: "clear_nearby" })}
-                  className="text-muted-foreground hover:text-foreground"
-                  aria-label="Close"
-                >
-                  <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
-                </button>
-              </div>
-              <div className="max-h-28 overflow-y-auto">
-                {nearbyPanel.locations.map((loc) => (
-                  <button
-                    key={loc.id}
-                    type="button"
-                    onClick={() => handleSelectNearby(loc)}
-                    className="w-full flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-accent transition-colors text-left border-b last:border-b-0"
-                  >
-                    <HugeiconsIcon icon={Location01Icon} className="size-3 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium truncate">{loc.address || loc.city || `#${loc.id}`}</div>
-                      <div className="text-[10px] text-muted-foreground leading-tight">
-                        {t("stations:stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)}m
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={handleCreateNewHere}
-                className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors border-t"
-              >
-                <HugeiconsIcon icon={Add01Icon} className="size-3" />
-                {t("locationPicker.createNewLocation")}
-              </button>
-            </div>
-          </MarkerContent>
-        </MapMarker>
+        <NearbyLocationsPanel
+          nearbyPanel={nearbyPanel}
+          onLocationSelect={handleSelectNearby}
+          onClose={() => dispatchPanel({ type: "clear_nearby" })}
+          onCreateNew={handleCreateNewHere}
+        />
       )}
 
-      {ukeStationPanel && (
-        <MapMarker longitude={ukeStationPanel.location.longitude} latitude={ukeStationPanel.location.latitude} anchor="bottom">
-          <MarkerContent className="cursor-default">
-            <div
-              role="dialog"
-              className="w-72 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden text-sm"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <div className="px-3 py-2 border-b border-border/50">
-                <h3 className="font-medium text-sm leading-tight pr-4">{ukeStationPanel.location.city}</h3>
-                {ukeStationPanel.location.address && <p className="text-[11px] text-muted-foreground">{ukeStationPanel.location.address}</p>}
-              </div>
-              <div className="max-h-54 overflow-y-auto custom-scrollbar">
-                {ukeStationPanel.stations.map((station) => {
-                  const mnc = station.operator?.mnc;
-                  const operatorName = station.operator?.name || "Unknown";
-                  const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
-                  const bands = getPermitBands(station.permits);
-
-                  return (
-                    <button
-                      key={station.station_id}
-                      type="button"
-                      onClick={() => handleSelectUkeStation(station)}
-                      className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                        <span className="font-medium text-xs" style={{ color }}>
-                          {operatorName}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-                        {bands.map((band) => (
-                          <span
-                            key={band}
-                            className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
-                          >
-                            {band}
-                          </span>
-                        ))}
-                        <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
-                          {station.permits.length} {station.permits.length === 1 ? "permit" : "permits"}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="px-3 py-1 border-t border-border/50">
-                <span className="text-[10px] text-muted-foreground">{t("locationPicker.selectStation")}</span>
-              </div>
-            </div>
-          </MarkerContent>
-        </MapMarker>
-      )}
+      {ukeStationPanel && <UkeStationPanelOverlay ukeStationPanel={ukeStationPanel} onStationSelect={handleSelectUkeStation} />}
     </>
   );
 }

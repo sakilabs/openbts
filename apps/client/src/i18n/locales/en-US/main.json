@@ -53,7 +53,10 @@
     "layers": "Layers",
     "showStations": "Stations",
     "showRadiolines": "Radiolines",
-    "radiolineOperator": "Radioline Operator"
+    "radiolineOperator": "Radioline Operator",
+    "radiolineOperators_one": "{{count}} radioline operator",
+    "radiolineOperators_others": "{{count}} radioline operators",
+    "searchRadiolineOperators": "Search radioline operators..."
   },
   "unknownOperator": "Unknown Operator",
   "radiolines": {
@@ -80,5 +83,28 @@
     "transmitterType": "Transmitter Type",
     "receiverType": "Receiver Type",
     "manufacturer": "Manufacturer"
+  },
+  "deletedEntries": {
+    "title": "Deleted Entries",
+    "subtitle": "View entries removed during UKE imports",
+    "columns": {
+      "deletedAt": "Deleted At",
+      "sourceTable": "Table",
+      "sourceType": "Source",
+      "sourceId": "Original ID",
+      "identifier": "Identifier",
+      "importId": "Import"
+    },
+    "filters": {
+      "allTables": "All Tables",
+      "allSources": "All Sources",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "searchPlaceholder": "Search by ID or permit..."
+    },
+    "empty": {
+      "title": "No deleted entries found",
+      "subtitle": "Try adjusting your filters"
+    }
   }
 }

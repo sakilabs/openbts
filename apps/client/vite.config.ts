@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 function getGitCommit(): string {
   try {
@@ -46,6 +47,20 @@ export default defineConfig({
             : [],
       },
     },
+    VitePWA({
+      registerType: "autoUpdate",
+      manifest: {
+        name: "OpenBTS",
+        short_name: "OpenBTS",
+        description: "Map and data explorer for BT stations",
+        theme_color: "#0c0c0c",
+      },
+      injectManifest: {
+        globPatterns: ["**/*.{js,css,html,woff2,png,svg}"],
+      },
+      pwaAssets: { disabled: false, config: true },
+      devOptions: { enabled: true },
+    }),
     // babel({
     // 	apply: "build",
     // 	filter: /\.[jt]sx?$/,

@@ -1,7 +1,7 @@
 import path from "node:path";
 import url from "node:url";
 
-import { ukePermits, stationsPermits, type ratEnum, type BandVariant } from "@openbts/drizzle";
+import { ukePermits, stationsPermits, deletedEntries, type ratEnum, type BandVariant } from "@openbts/drizzle";
 import { and, lt, eq } from "drizzle-orm";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import {
@@ -110,7 +110,7 @@ async function insertUkePermits(
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
   for (const group of chunk(values, BATCH_SIZE)) {
-    if (group.length)
+    if (group.length) {
       await db
         .insert(ukePermits)
         .values(group)
@@ -126,6 +126,7 @@ async function insertUkePermits(
           ],
           set: { updatedAt: new Date(), source: "permits" },
         });
+    }
   }
 }
 
@@ -201,14 +202,31 @@ export async function importStations(): Promise<boolean> {
     await insertUkePermits(fr.rows, bandMap, operatorIdByName, locationIdByLonLat, parseBandFromLabel, fr.label);
   }
 
+  const importMetadataId = await recordImportMetadata("stations", links, "success");
+
   logger.log("Deleting stale station permits...");
   const stalePermits = await db
-    .delete(ukePermits)
-    .where(and(eq(ukePermits.source, "permits"), lt(ukePermits.updatedAt, importStartTime)))
-    .returning({ id: ukePermits.id });
+    .select()
+    .from(ukePermits)
+    .where(and(eq(ukePermits.source, "permits"), lt(ukePermits.updatedAt, importStartTime)));
+
+  if (stalePermits.length > 0) {
+    for (const group of chunk(stalePermits, BATCH_SIZE)) {
+      await db.insert(deletedEntries).values(
+        group.map((row) => ({
+          source_table: "uke_permits",
+          source_id: row.id,
+          source_type: "permits",
+          data: row,
+          import_id: importMetadataId,
+        })),
+      );
+    }
+
+    await db.delete(ukePermits).where(and(eq(ukePermits.source, "permits"), lt(ukePermits.updatedAt, importStartTime)));
+  }
   logger.log(`Deleted ${stalePermits.length} stale station permits`);
 
-  await recordImportMetadata("stations", links, "success");
   logger.log("Import completed successfully");
   return true;
 }

@@ -44,6 +44,7 @@ const navMainConfig = [
     items: [
       { titleKey: "items.mapView", url: "/" },
       { titleKey: "items.database", url: "/stations" },
+      { titleKey: "items.deletedEntries", url: "/deleted-entries" },
       { titleKey: "items.clfExport", url: "/clf-export" },
     ],
   },

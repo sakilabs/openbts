@@ -6,7 +6,14 @@ type UseUrlSyncArgs = {
   isLoaded: boolean;
   filters: StationFilters;
   zoom: number;
-  onInitialize: (data: { filters?: StationFilters; center?: [number, number]; zoom?: number; stationId?: string; locationId?: number }) => void;
+  onInitialize: (data: {
+    filters?: StationFilters;
+    center?: [number, number];
+    zoom?: number;
+    stationId?: string;
+    locationId?: number;
+    radiolineId?: number;
+  }) => void;
 };
 
 const FILTER_PARAM_KEYS = ["operators", "bands", "rat", "source", "new", "radiolines", "stations", "rl_operators"];
@@ -17,6 +24,7 @@ function parseUrlHash(): {
   zoom?: number;
   stationId?: string;
   locationId?: number;
+  radiolineId?: number;
 } {
   const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
   if (!hash.startsWith("map=")) {
@@ -64,12 +72,16 @@ function parseUrlHash(): {
   const locationIdStr = params.get("location");
   const locationId = locationIdStr ? Number.parseInt(locationIdStr, 10) : undefined;
 
+  const radiolineIdStr = params.get("radioline");
+  const radiolineId = radiolineIdStr ? Number.parseInt(radiolineIdStr, 10) : undefined;
+
   return {
     filters: hasFilterParams ? { operators, bands, rat, source, recentOnly, showStations, showRadiolines, radiolineOperators } : null,
     center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
     zoom: !Number.isNaN(z) ? z : undefined,
     stationId,
     locationId: locationId && !Number.isNaN(locationId) ? locationId : undefined,
+    radiolineId: radiolineId && !Number.isNaN(radiolineId) ? radiolineId : undefined,
   };
 }
 
@@ -100,7 +112,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
   useEffect(() => {
     if (!isLoaded || !map || isInitialized.current) return;
 
-    const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId } = parseUrlHash();
+    const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId, radiolineId } = parseUrlHash();
 
     if (center || urlZoom !== undefined) {
       map.flyTo({
@@ -128,6 +140,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
       zoom: urlZoom,
       stationId,
       locationId,
+      radiolineId,
     });
 
     isInitialized.current = true;

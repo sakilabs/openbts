@@ -19,11 +19,16 @@ export async function recordImportMetadata(
   importType: ImportType,
   fileLinks: Array<{ href: string; text: string }>,
   status: "success" | "failed",
-): Promise<void> {
+): Promise<number> {
   const fileList = JSON.stringify(fileLinks.map((l) => l.href).sort());
-  await db.insert(ukeImportMetadata).values({
-    import_type: importType,
-    file_list: fileList,
-    status,
-  });
+  const [row] = await db
+    .insert(ukeImportMetadata)
+    .values({
+      import_type: importType,
+      file_list: fileList,
+      status,
+    })
+    .returning({ id: ukeImportMetadata.id });
+  if (!row) throw new Error("Failed to record import metadata");
+  return row.id;
 }

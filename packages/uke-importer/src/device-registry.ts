@@ -4,7 +4,7 @@ import { unlinkSync } from "node:fs";
 import readline from "node:readline";
 import XLSX from "xlsx";
 
-import { ukePermits, ukePermitSectors, type ratEnum } from "@openbts/drizzle";
+import { ukePermits, ukePermitSectors, deletedEntries, type ratEnum } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP } from "./config.ts";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
 
@@ -277,6 +277,7 @@ async function processOperatorFile(
       logger.warn(`Could not find region mapping for teryt code "${terytCode}" for station ${stationId}`);
       continue;
     }
+
     const regionName = regionInfo.name;
 
     const addressParts: string[] = [];
@@ -530,15 +531,31 @@ export async function importPermitDevices(): Promise<boolean> {
     }
   }
 
+  logger.log(`Total: ${totalRows} rows processed, ${totalInserted} records inserted`);
+  const importMetadataId = await recordImportMetadata("permits", linksForCheck, "success");
+
   logger.log("Deleting stale device registry permits...");
   const stalePermits = await db
-    .delete(ukePermits)
-    .where(and(eq(ukePermits.source, "device_registry"), lt(ukePermits.updatedAt, importStartTime)))
-    .returning({ id: ukePermits.id });
+    .select()
+    .from(ukePermits)
+    .where(and(eq(ukePermits.source, "device_registry"), lt(ukePermits.updatedAt, importStartTime)));
+
+  if (stalePermits.length > 0) {
+    for (const group of chunk(stalePermits, BATCH_SIZE)) {
+      await db.insert(deletedEntries).values(
+        group.map((row) => ({
+          source_table: "uke_permits",
+          source_id: row.id,
+          source_type: "device_registry",
+          data: row,
+          import_id: importMetadataId,
+        })),
+      );
+    }
+    await db.delete(ukePermits).where(and(eq(ukePermits.source, "device_registry"), lt(ukePermits.updatedAt, importStartTime)));
+  }
   logger.log(`Deleted ${stalePermits.length} stale device registry permits`);
 
-  logger.log(`Total: ${totalRows} rows processed, ${totalInserted} records inserted`);
-  await recordImportMetadata("permits", linksForCheck, "success");
   logger.log("Import completed successfully");
   return true;
 }

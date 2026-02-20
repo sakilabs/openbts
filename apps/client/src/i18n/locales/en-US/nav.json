@@ -20,7 +20,8 @@
     "locations": "Locations",
     "settings": "Settings",
     "ukeImport": "UKE Import",
-    "auditLogs": "Audit Logs"
+    "auditLogs": "Audit Logs",
+    "deletedEntries": "Deleted Entries"
   },
   "secondary": {
     "settings": "Settings",

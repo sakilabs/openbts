@@ -22,6 +22,7 @@ import {
   ukeLocations,
   ukeOperators,
   ukeImportMetadata,
+  deletedEntries,
 } from "./bts.ts";
 import { accounts, apikeys, attachments, auditLogs, passkeys, stationComments, twoFactors, userLists, users } from "./auth.ts";
 import {
@@ -75,6 +76,7 @@ export const relations = defineRelations(
     proposedStations,
     proposedUMTSCells,
     ukeImportMetadata,
+    deletedEntries,
   },
   (helpers) => ({
     operators: {
@@ -398,6 +400,12 @@ export const relations = defineRelations(
       nr: helpers.one.proposedNRCells({
         from: helpers.proposedCells.id,
         to: helpers.proposedNRCells.proposed_cell_id,
+      }),
+    },
+    deletedEntries: {
+      import: helpers.one.ukeImportMetadata({
+        from: helpers.deletedEntries.import_id,
+        to: helpers.ukeImportMetadata.id,
       }),
     },
   }),

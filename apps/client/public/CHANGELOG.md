@@ -4,8 +4,6 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 What's being worked on:
 
 - [ ] Statistics page
-- [ ] Sharing radioline
-- [ ] Page with deleted records from `device-registry`, `radiolines` & `permits`
 - [ ] Add ability to select a range of new stations (max. 30 days)
 
 # 2026-02-20
@@ -16,11 +14,12 @@ What's being worked on:
 - `PATCH /stations/$id` now deletes old location when it's orphaned (no stations at that location)
 - `/stations`, `/admin/stations` and `/admin/locations` now properly refetches new data on each re-mount (after switching pages back and forth etc.)
 - Notes field on each cell on `/submission` is now properly debounced which fixes lag while typing
-- Only adding `notes` etc. on `/submission` is not a problem anymore since `unique` check on `submissions.proposed_cells` has been simplified from `submission_id`, `station_id`, `band_id`, `rat` to just `submission_id`, `target_cell_id`
+- Making small changes (like adding notes etc.) on `/submission` is not a problem anymore since `unique` check on `submissions.proposed_cells` has been simplified from `submission_id`, `station_id`, `band_id`, `rat` to just `submission_id`, `target_cell_id`
 - The table on `/stations`, `/admin/stations` & `/admin/locations` will no longer reset to page `1` when fetching more stations (after viewing ~80 records)
 - Fixed showing XPIC radiolines in `tooltip`, `popup` & `dialog` (2 with diff polarization TX -> 2 RX)
 - Fixed grouping FDD radiolines in the dialog
 - Reject & Approve route of submissions now properly save old submission value(s)
+- Fixed applying `new` status on new cells/permits
 
 ### 🚀 Enhancements
 
@@ -30,6 +29,11 @@ What's being worked on:
 - Orphaned locations are now included for admins, editors & moderators in LocationPicker and `/admin/locations`
 - Added more checks on `POST /submissions` regarding changed station & location
 - Added support for NR Type (NSA, SA) everywhere
+- Added support for sharing radiolines (opens the dialog)
+- Added page with deleted records from `device-registry`, `radiolines` & `permits`
+- Admin on `/admin/stations/$id` when adding new cell(s) will have it automatically confirmed
+- Added more audit logging to `POST /submissions/$id/approve`
+- **Added PWA support**
 
 ### 🏡 Chore
 

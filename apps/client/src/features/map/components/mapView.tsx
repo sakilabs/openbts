@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
 import { POLAND_CENTER } from "../constants";
@@ -52,6 +52,42 @@ function toLocationInfo(loc: { id: number; city?: string; address?: string; lati
   return { id: loc.id, city: loc.city, address: loc.address, latitude: loc.latitude, longitude: loc.longitude };
 }
 
+type DetailState = {
+  selectedStation: { id: number; source: StationSource } | null;
+  selectedUkeStation: UkeStation | null;
+  pendingRadiolineId: number | null;
+};
+
+type DetailAction =
+  | { type: "open_station"; id: number; source: StationSource }
+  | { type: "close_station" }
+  | { type: "open_uke_station"; station: UkeStation }
+  | { type: "close_uke_station" }
+  | { type: "set_pending_radioline"; id: number | null };
+
+const initialDetailState: DetailState = {
+  selectedStation: null,
+  selectedUkeStation: null,
+  pendingRadiolineId: null,
+};
+
+function detailReducer(state: DetailState, action: DetailAction): DetailState {
+  switch (action.type) {
+    case "open_station":
+      return { ...state, selectedStation: { id: action.id, source: action.source } };
+    case "close_station":
+      return { ...state, selectedStation: null };
+    case "open_uke_station":
+      return { ...state, selectedUkeStation: action.station };
+    case "close_uke_station":
+      return { ...state, selectedUkeStation: null };
+    case "set_pending_radioline":
+      return { ...state, pendingRadiolineId: action.id };
+    default:
+      return state;
+  }
+}
+
 function MapViewInner() {
   const { map, isLoaded } = useMap();
   const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
@@ -75,8 +111,8 @@ function MapViewInner() {
     };
   }, [map, isLoaded]);
 
-  const [selectedStation, setSelectedStation] = useState<{ id: number; source: StationSource } | null>(null);
-  const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
+  const [detailState, dispatchDetail] = useReducer(detailReducer, initialDetailState);
+  const { selectedStation, selectedUkeStation, pendingRadiolineId } = detailState;
 
   const {
     showPopup,
@@ -84,8 +120,8 @@ function MapViewInner() {
     cleanup: cleanupPopup,
   } = useMapPopup({
     map,
-    onOpenStationDetails: useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []),
-    onOpenUkeStationDetails: useCallback((station: UkeStation) => setSelectedUkeStation(station), []),
+    onOpenStationDetails: useCallback((id: number, source: StationSource) => dispatchDetail({ type: "open_station", id, source }), []),
+    onOpenUkeStationDetails: useCallback((station: UkeStation) => dispatchDetail({ type: "open_uke_station", station }), []),
   });
 
   const {
@@ -173,10 +209,11 @@ function MapViewInner() {
     [map, showPopup],
   );
 
-  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => setSelectedStation({ id, source }), []);
-  const handleCloseStationDetails = useCallback(() => setSelectedStation(null), []);
-  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => setSelectedUkeStation(station), []);
-  const handleCloseUkeDetails = useCallback(() => setSelectedUkeStation(null), []);
+  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "open_station", id, source }), []);
+  const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "close_station" }), []);
+  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "open_uke_station", station }), []);
+  const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "close_uke_station" }), []);
+  const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "set_pending_radioline", id }), []);
 
   return (
     <>
@@ -203,13 +240,14 @@ function MapViewInner() {
         onActiveMarkerChange={setActiveMarker}
         onOpenStationDetails={handleOpenStationDetails}
         onOpenUkeStationDetails={handleOpenUkeStationDetails}
+        onRadiolineIdFromUrl={handlePendingRadiolineId}
         showPopup={showPopup}
         updatePopupStations={updatePopupStations}
         cleanupPopup={cleanupPopup}
       />
       {filters.showRadiolines && (
         <Suspense fallback={null}>
-          <RadioLinesLayer radioLines={radioLines} />
+          <RadioLinesLayer radioLines={radioLines} pendingRadiolineId={pendingRadiolineId} onPendingRadiolineConsumed={handlePendingRadiolineId} />
         </Suspense>
       )}
       <MapControls showLocate showCompass showScale />

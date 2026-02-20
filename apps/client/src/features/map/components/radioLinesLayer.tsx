@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";
 import { useMap } from "@/components/ui/map";
@@ -19,9 +19,11 @@ const EMPTY_ENDPOINTS: GeoJSON.FeatureCollection = { type: "FeatureCollection", 
 
 type RadioLinesLayerProps = {
   radioLines: RadioLine[];
+  pendingRadiolineId?: number | null;
+  onPendingRadiolineConsumed?: (id: null) => void;
 };
 
-export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
+export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPendingRadiolineConsumed }: RadioLinesLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
   const [selectedLink, setSelectedLink] = useState<DuplexRadioLink | null>(null);
@@ -89,6 +91,23 @@ export default function RadioLinesLayer({ radioLines }: RadioLinesLayerProps) {
     minZoom: preferences.radiolinesMinZoom,
     onFeatureClick: handleFeatureClick,
   });
+
+  const pendingMatch = useMemo(() => {
+    if (!pendingRadiolineId || !duplexLinks.length) return null;
+    return duplexLinks.find((link) => link.directions.some((d) => d.id === pendingRadiolineId)) ?? null;
+  }, [pendingRadiolineId, duplexLinks]);
+
+  const [lastHandledPendingId, setLastHandledPendingId] = useState<number | null>(null);
+  if (pendingRadiolineId !== lastHandledPendingId) {
+    setLastHandledPendingId(pendingRadiolineId ?? null);
+    if (pendingMatch)
+      setSelectedLink(pendingMatch);
+  }
+
+  useEffect(() => {
+    if (pendingMatch)
+      onPendingRadiolineConsumed?.(null);
+  }, [pendingMatch, onPendingRadiolineConsumed]);
 
   const handleCloseDetails = useCallback(() => setSelectedLink(null), []);
 

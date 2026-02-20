@@ -31,7 +31,8 @@ import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { CopyButton } from "./copyButton";
-import { calculateDistance, formatDistance, formatBandwidth, formatFrequency, getLinkTypeStyle } from "@/features/map/utils";
+import { ShareButton } from "./shareButton";
+import { calculateDistance, formatDistance, formatBandwidth, formatFrequency, getLinkTypeStyle, buildRadiolineShareUrl } from "@/features/map/utils";
 import type { DuplexRadioLink } from "@/features/map/utils";
 
 type RadioLineDetailsDialogProps = {
@@ -166,6 +167,12 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
+              <ShareButton
+                title={`${operatorName} - ${formatFrequency(radioLine.link.freq)}`}
+                text={`${operatorName} ${formatDistance(distance)} - ${formatFrequency(radioLine.link.freq)}`}
+                url={buildRadiolineShareUrl(link)}
+                size="md"
+              />
               <button type="button" onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
                 <HugeiconsIcon icon={Cancel01Icon} className="size-5" />
               </button>

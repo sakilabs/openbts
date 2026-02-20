@@ -118,6 +118,14 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
   return EARTH_RADIUS_M * c;
 }
 
+export function buildRadiolineShareUrl(link: DuplexRadioLink): string {
+  const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
+  const zoom = Math.max(8, Math.min(14, Math.round(14.5 - Math.log2(distance / 1000))));
+  const lat = ((link.a.latitude + link.b.latitude) / 2).toFixed(6);
+  const lng = ((link.a.longitude + link.b.longitude) / 2).toFixed(6);
+  return `${window.location.origin}/#map=${zoom}/${lat}/${lng}?radiolines=1&radioline=${link.directions[0].id}`;
+}
+
 export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const φ1 = toRad(lat1);
   const φ2 = toRad(lat2);
