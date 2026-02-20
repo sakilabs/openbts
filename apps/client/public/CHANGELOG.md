@@ -18,8 +18,9 @@ What's being worked on:
 - Notes field on each cell on `/submission` is now properly debounced which fixes lag while typing
 - Only adding `notes` etc. on `/submission` is not a problem anymore since `unique` check on `submissions.proposed_cells` has been simplified from `submission_id`, `station_id`, `band_id`, `rat` to just `submission_id`, `target_cell_id`
 - The table on `/stations`, `/admin/stations` & `/admin/locations` will no longer reset to page `1` when fetching more stations (after viewing ~80 records)
-- Properly show XPIC radiolines in `tooltip`, `popup` & `dialog` (2 (diff polarization) TX -> 2 RX)
-- Properly group FDD radiolines in the dialog
+- Fixed showing XPIC radiolines in `tooltip`, `popup` & `dialog` (2 with diff polarization TX -> 2 RX)
+- Fixed grouping FDD radiolines in the dialog
+- Reject & Approve route of submissions now properly save old submission value(s)
 
 ### 🚀 Enhancements
 
@@ -28,6 +29,7 @@ What's being worked on:
 - Added ability to remove existing location on `/admin/locations/$id`
 - Orphaned locations are now included for admins, editors & moderators in LocationPicker and `/admin/locations`
 - Added more checks on `POST /submissions` regarding changed station & location
+- Added support for NR Type (NSA, SA) everywhere
 
 ### 🏡 Chore
 

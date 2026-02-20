@@ -89,7 +89,9 @@
     "clidRangeInvalid": "CLID musi być między 0 a 255",
     "nciRequired": "NCI jest wymagany",
     "gnbidRequired": "gNBID jest wymagany",
-    "mustBePositive": "Wartość nie może być ujemna"
+    "mustBePositive": "Wartość nie może być ujemna",
+    "typeRequired": "Typ (NSA/SA) jest wymagany",
+    "typeInvalid": "Typ musi być NSA lub SA"
   },
   "form": {
     "summary": "Pozostaw po sobie notatkę jeżeli jest taka potrzeba",

@@ -89,7 +89,9 @@
     "pciRangeInvalid": "PCI must be between 0 and 503",
     "nciRequired": "NCI is required",
     "gnbidRequired": "gNBID is required",
-    "mustBePositive": "Value cannot be negative"
+    "mustBePositive": "Value cannot be negative",
+    "typeRequired": "Type (NSA/SA) is required",
+    "typeInvalid": "Type must be NSA or SA"
   },
   "form": {
     "summary": "Leave a note if needed",

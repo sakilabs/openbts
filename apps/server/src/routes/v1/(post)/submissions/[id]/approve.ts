@@ -47,16 +47,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   const hasPermission = await verifyPermissions(session.user.id, { submissions: ["update"] });
   if (!hasPermission) throw new ErrorResponse("INSUFFICIENT_PERMISSIONS");
 
+  const submission = await db.query.submissions.findFirst({
+    where: {
+      id: id,
+    },
+  });
+  if (!submission) throw new ErrorResponse("NOT_FOUND");
+  if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
+
   try {
     const result = await db.transaction(async (tx) => {
-      const submission = await tx.query.submissions.findFirst({
-        where: {
-          id: id,
-        },
-      });
-      if (!submission) throw new ErrorResponse("NOT_FOUND");
-      if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
-
       const proposedStation = await tx.query.proposedStations.findFirst({
         where: {
           submission_id: id,
@@ -236,6 +236,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                     gnbid: d.gnbid,
                     clid: d.clid,
                     pci: d.pci,
+                    type: d.type,
                     supports_nr_redcap: d.supports_nr_redcap,
                   });
                 break;
@@ -350,7 +351,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         action: "submissions.approve",
         table_name: "submissions",
         record_id: undefined,
-        old_values: null,
+        old_values: submission,
         new_values: result,
         metadata: { submission_id: id },
       },

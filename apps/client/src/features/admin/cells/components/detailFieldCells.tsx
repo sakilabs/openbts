@@ -12,7 +12,7 @@ export type DetailInputCellProps = {
 
 export function DetailInputCell({ field, placeholder, value, error, disabled, onDetailChange }: DetailInputCellProps) {
   return (
-    <td className="px-2 py-1">
+    <td className="px-1.5 py-1">
       <Input
         type="number"
         min={0}
@@ -28,7 +28,7 @@ export function DetailInputCell({ field, placeholder, value, error, disabled, on
 
 export function DetailComputedCell({ value }: { value: number | null }) {
   return (
-    <td className="px-2 py-1">
+    <td className="px-1.5 py-1">
       <span className="font-mono text-sm text-muted-foreground">{value !== null ? value : "-"}</span>
     </td>
   );

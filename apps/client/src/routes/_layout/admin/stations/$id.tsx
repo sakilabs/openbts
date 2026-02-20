@@ -20,6 +20,7 @@ import { StationDetailHeader } from "@/features/admin/stations/components/statio
 import { StationInfoForm } from "@/features/admin/stations/components/stationInfoForm";
 import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
 import { useSettings } from "@/hooks/useSettings";
+import { authClient } from "@/lib/authClient";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -200,6 +201,8 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const { data: settings } = useSettings();
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
   const { data: allBands = [] } = useQuery(bandsQueryOptions());
+  const { data: session } = authClient.useSession();
+  const isAdmin = session?.user?.role === "admin";
 
   const saveMutation = useSaveStationMutation();
 
@@ -212,11 +215,11 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
       _localId: crypto.randomUUID(),
       rat: rat as (typeof RAT_ORDER)[number],
       band_id: defaultBand.id,
-      is_confirmed: false,
+      is_confirmed: isAdmin ?? false,
       notes: "",
       details: {},
     }),
-    [],
+    [isAdmin],
   );
 
   const {

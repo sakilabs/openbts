@@ -79,6 +79,11 @@ export function CellTable({ rat, cells }: CellTableProps) {
                     <td className="px-4 py-2 font-mono">
                       <div className="flex items-center gap-1.5">
                         <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : `${cell.band.value} MHz`}</span>
+                        {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
+                            {cell.details.type.toUpperCase()}
+                          </Badge>
+                        )}
                         {rat === "GSM" && cell.details?.e_gsm && (
                           <Tooltip>
                             <TooltipTrigger>

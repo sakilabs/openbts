@@ -114,7 +114,7 @@ const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
   GSM: ["lac", "cid", "is_egsm"],
   UMTS: ["lac", "carrier", "rnc", "cid"],
   LTE: ["tac", "enbid", "clid", "pci", "supports_nb_iot"],
-  NR: ["nrtac", "gnbid", "clid", "pci", "supports_nr_redcap"],
+  NR: ["type", "nrtac", "gnbid", "clid", "pci", "supports_nr_redcap"],
 };
 
 const BOOLEAN_DETAIL_KEYS = new Set(["is_egsm", "supports_nb_iot", "supports_nr_redcap"]);
@@ -127,6 +127,7 @@ export function pickCellDetails(rat: RatType | undefined, details: Partial<CellF
   const picked: Record<string, unknown> = {};
   for (const key of allowedKeys) {
     if (key in details) picked[key] = (details as Record<string, unknown>)[key];
+    else if (key === "type" && rat === "NR") picked[key] = "nsa";
     else picked[key] = BOOLEAN_DETAIL_KEYS.has(key) ? false : null;
   }
 

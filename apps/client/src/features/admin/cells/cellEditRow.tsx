@@ -67,7 +67,7 @@ export const CellEditRow = memo(function CellEditRow({
     if (newBandId) onChange(localCell._localId, { band_id: newBandId });
   };
 
-  const handleDetailChange = (field: string, value: number | boolean | undefined) => {
+  const handleDetailChange = (field: string, value: number | boolean | string | undefined) => {
     const next = { ...localCell.details };
     if (value === undefined) delete next[field];
     else next[field] = value;

@@ -1,5 +1,12 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { DetailInputCell, DetailComputedCell } from "@/features/admin/cells/components/detailFieldCells";
+
+const NR_TYPE_OPTIONS = [
+  { value: "nsa", label: "NSA (Non-Standalone)" },
+  { value: "sa", label: "SA (Standalone)" },
+] as const;
 
 type CellDetailsFieldsProps = {
   rat: string;
@@ -7,7 +14,7 @@ type CellDetailsFieldsProps = {
   details: Record<string, unknown>;
   detailErrors?: Record<string, string>;
   disabled?: boolean;
-  onDetailChange: (field: string, value: number | boolean | undefined) => void;
+  onDetailChange: (field: string, value: number | boolean | string | undefined) => void;
 };
 
 export function CellDetailsFields({ rat, bandValue, details, detailErrors, disabled, onDetailChange }: CellDetailsFieldsProps) {
@@ -32,7 +39,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             disabled={disabled}
             onDetailChange={onDetailChange}
           />
-          <td className="px-2 py-1">
+          <td className="px-1.5 py-1">
             <Checkbox
               checked={bandValue === 1800 ? false : ((d.e_gsm as boolean) ?? false)}
               onCheckedChange={(checked) => onDetailChange("e_gsm", checked === true)}
@@ -118,7 +125,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             disabled={disabled}
             onDetailChange={onDetailChange}
           />
-          <td className="px-2 py-1">
+          <td className="px-1.5 py-1">
             <Checkbox
               checked={(d.supports_nb_iot as boolean) ?? false}
               onCheckedChange={(checked) => onDetailChange("supports_nb_iot", checked === true)}
@@ -129,9 +136,25 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
       );
     }
     case "NR": {
+      const nrType = (d.type as "nsa" | "sa") ?? "nsa";
+      const nrTypeLabel = NR_TYPE_OPTIONS.find((opt) => opt.value === nrType)?.label ?? "NSA";
       const nci = d.gnbid !== undefined && d.clid !== undefined ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
       return (
         <>
+          <td className="px-1.5 py-1">
+            <Select value={nrType} onValueChange={(value) => onDetailChange("type", value as "nsa" | "sa")} disabled={disabled}>
+              <SelectTrigger className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")}>
+                <SelectValue>{nrTypeLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent className="min-w-[12rem]">
+                {NR_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </td>
           <DetailInputCell
             field="nrtac"
             placeholder="TAC"
@@ -165,7 +188,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             disabled={disabled}
             onDetailChange={onDetailChange}
           />
-          <td className="px-2 py-1">
+          <td className="px-1.5 py-1">
             <Checkbox
               checked={(d.supports_nr_redcap as boolean) ?? false}
               onCheckedChange={(checked) => onDetailChange("supports_nr_redcap", checked === true)}

@@ -22,6 +22,7 @@ export const ratEnum = pgEnum("rat", ["GSM", "CDMA", "UMTS", "LTE", "NR", "IOT"]
 export const BandVariant = pgEnum("band_variant", ["commercial", "railway"]);
 export const StationStatus = pgEnum("station_status", ["published", "inactive", "pending"]);
 export const PermitsSource = pgEnum("permits_source", ["permits", "device_registry"]);
+export const NRType = pgEnum("nr_type", ["nsa", "sa"]);
 
 /**
  * Operator table
@@ -369,6 +370,7 @@ export const nrCells = pgTable(
       (): SQL => sql`(${nrCells.gnbid}::bigint * power(2, 36 - ${nrCells.gnbid_length})::bigint) + ${nrCells.clid}::bigint`,
     ),
     pci: integer("pci"),
+    type: NRType("type").notNull(),
     supports_nr_redcap: boolean("supports_nr_redcap").default(false),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

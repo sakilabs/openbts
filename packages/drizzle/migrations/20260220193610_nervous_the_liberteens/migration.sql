@@ -5,6 +5,7 @@ CREATE SCHEMA "submissions";
 CREATE TYPE "antenna_type" AS ENUM('indoor', 'outdoor');--> statement-breakpoint
 CREATE TYPE "band_variant" AS ENUM('commercial', 'railway');--> statement-breakpoint
 CREATE TYPE "duplex" AS ENUM('FDD', 'TDD');--> statement-breakpoint
+CREATE TYPE "nr_type" AS ENUM('nsa', 'sa');--> statement-breakpoint
 CREATE TYPE "permits_source" AS ENUM('permits', 'device_registry');--> statement-breakpoint
 CREATE TYPE "station_status" AS ENUM('published', 'inactive', 'pending');--> statement-breakpoint
 CREATE TYPE "uke_permission_type" AS ENUM('zmP', 'P');--> statement-breakpoint
@@ -97,6 +98,7 @@ CREATE TABLE "nr_cells" (
 	"clid" integer,
 	"nci" bigint GENERATED ALWAYS AS (("nr_cells"."gnbid"::bigint * power(2, 36 - "nr_cells"."gnbid_length")::bigint) + "nr_cells"."clid"::bigint) STORED,
 	"pci" integer,
+	"type" "nr_type" NOT NULL,
 	"supports_nr_redcap" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
@@ -456,6 +458,7 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 	"gnbid_length" integer DEFAULT 24,
 	"clid" integer,
 	"pci" integer,
+	"type" "nr_type" NOT NULL,
 	"supports_nr_redcap" boolean DEFAULT false
 );
 --> statement-breakpoint

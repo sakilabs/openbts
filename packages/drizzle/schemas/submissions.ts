@@ -1,6 +1,6 @@
 import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./auth.ts";
-import { bands, cells, operators, ratEnum, regions, stations, StationStatus } from "./bts.ts";
+import { bands, cells, NRType, operators, ratEnum, regions, stations, StationStatus } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
@@ -102,6 +102,7 @@ export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {
   gnbid_length: integer("gnbid_length").default(24),
   clid: integer("clid"),
   pci: integer("pci"),
+  type: NRType("type").notNull(),
   supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 });
 

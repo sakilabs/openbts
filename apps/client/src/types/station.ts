@@ -48,6 +48,7 @@ export type CellDetails = {
   ecid?: number;
   supports_nb_iot?: boolean;
   // NR
+  type?: "nsa" | "sa";
   gnbid?: number;
   nci?: number;
   nrtac?: number;

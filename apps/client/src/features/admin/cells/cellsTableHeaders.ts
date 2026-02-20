@@ -22,7 +22,18 @@ export function getTableHeaders(rat: string, t: TFunction, options?: { showConfi
       return headers;
     }
     case "NR": {
-      const headers = [t("common:labels.band"), "Duplex", "TAC", "CLID", "gNBID", "NCI", "PCI", "RedCap", t("common:labels.notes")];
+      const headers = [
+        t("common:labels.band"),
+        "Duplex",
+        t("common:labels.type"),
+        "TAC",
+        "CLID",
+        "gNBID",
+        "NCI",
+        "PCI",
+        "RedCap",
+        t("common:labels.notes"),
+      ];
       if (showConfirmed) headers.push(t("common:labels.confirmed"));
       headers.push("");
       return headers;

@@ -24,7 +24,10 @@ export type LTECellDetails = {
   supports_nb_iot?: boolean;
 };
 
+export type NRType = "nsa" | "sa";
+
 export type NRCellDetails = {
+  type?: NRType;
   nrtac?: number;
   gnbid?: number;
   clid?: number;

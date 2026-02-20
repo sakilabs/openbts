@@ -39,7 +39,7 @@ function getDefaultCellDetails(rat: RatType): ProposedCellForm["details"] {
     case "LTE":
       return {} as LTECellDetails;
     case "NR":
-      return {} as NRCellDetails;
+      return { type: "nsa" } as NRCellDetails;
   }
 }
 
@@ -128,7 +128,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
   );
 
   const handleDetailsChange = useCallback(
-    (id: string, field: string, value: number | boolean | undefined) => {
+    (id: string, field: string, value: number | boolean | string | undefined) => {
       onCellsChange(
         rat,
         cells.map((cell) => {
@@ -240,7 +240,7 @@ type CellRowProps = {
   error?: CellError;
   bands: Band[];
   onUpdate: (id: string, patch: Partial<ProposedCellForm>) => void;
-  onDetailsChange: (id: string, field: string, value: number | boolean | undefined) => void;
+  onDetailsChange: (id: string, field: string, value: number | boolean | string | undefined) => void;
   onNotesChange: (id: string, notes: string) => void;
   onRemove: (id: string) => void;
   onRestore?: () => void;

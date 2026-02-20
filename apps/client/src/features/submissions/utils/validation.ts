@@ -147,6 +147,9 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
     }
     case "NR": {
       const d = details as Partial<NRCellDetails>;
+      if (d.type !== undefined && d.type !== "nsa" && d.type !== "sa") errors.type = "validation.typeInvalid";
+      else if (d.type === undefined || d?.type === null) errors.type = "validation.typeRequired";
+
       optionalNonNegative("nrtac", d.nrtac);
       optionalNonNegative("gnbid", d.gnbid);
       optionalNonNegative("clid", d.clid);
