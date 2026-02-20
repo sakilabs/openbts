@@ -10,6 +10,7 @@ export async function fetchLocationsList(params: {
   operators?: string;
   sort?: string;
   sortBy?: string;
+  orphaned?: boolean;
 }): Promise<LocationsResponse> {
   const searchParams = new URLSearchParams();
   searchParams.set("page", params.page.toString());
@@ -18,6 +19,7 @@ export async function fetchLocationsList(params: {
   if (params.operators) searchParams.set("operators", params.operators);
   if (params.sort) searchParams.set("sort", params.sort);
   if (params.sortBy) searchParams.set("sortBy", params.sortBy);
+  if (params.orphaned) searchParams.set("orphaned", "true");
   return fetchJson<LocationsResponse>(`${API_BASE}/locations?${searchParams.toString()}`);
 }
 
@@ -31,5 +33,11 @@ export async function patchLocation(id: number, body: Record<string, unknown>) {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+  });
+}
+
+export async function deleteLocation(id: number) {
+  return fetchJson<void>(`${API_BASE}/locations/${id}`, {
+    method: "DELETE",
   });
 }

@@ -204,24 +204,28 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     return () => {
       tooltipRef.current = destroyTooltip(tooltipRef.current);
 
-      try {
-        map.off("styledata", ensureLayersExist);
+      map.off("styledata", ensureLayersExist);
 
-        for (const layerId of HITBOX_LAYERS) {
-          map.off("click", layerId, handleClick);
-          map.off("mouseenter", layerId, handleMouseEnter);
-          map.off("mousemove", layerId, handleMouseMove);
-          map.off("mouseleave", layerId, handleMouseLeave);
-        }
+      for (const layerId of HITBOX_LAYERS) {
+        map.off("click", layerId, handleClick);
+        map.off("mouseenter", layerId, handleMouseEnter);
+        map.off("mousemove", layerId, handleMouseMove);
+        map.off("mouseleave", layerId, handleMouseLeave);
+      }
 
-        for (const layerId of ALL_LAYERS) {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
+      for (const layerId of ALL_LAYERS) {
+        try {
+          map.removeLayer(layerId);
+        } catch {
+          /* already removed or map destroyed */
         }
-        for (const sourceId of [RADIOLINES_SOURCE_ID, RADIOLINES_ENDPOINTS_SOURCE_ID]) {
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
+      }
+      for (const sourceId of [RADIOLINES_SOURCE_ID, RADIOLINES_ENDPOINTS_SOURCE_ID]) {
+        try {
+          map.removeSource(sourceId);
+        } catch {
+          /* already removed or map destroyed */
         }
-      } catch {
-        // map was destroyed before cleanup ran
       }
     };
   }, [map, isLoaded, minZoom]);

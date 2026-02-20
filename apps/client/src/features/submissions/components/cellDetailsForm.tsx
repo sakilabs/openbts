@@ -1,4 +1,4 @@
-import { useMemo, useCallback, memo } from "react";
+import { useMemo, useCallback, memo, useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -246,6 +246,38 @@ type CellRowProps = {
   onRestore?: () => void;
 };
 
+const DebouncedNotesInput = memo(function DebouncedNotesInput({
+  value,
+  placeholder,
+  disabled,
+  onChange,
+}: {
+  value: string;
+  placeholder: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const [local, setLocal] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  useEffect(() => {
+    setLocal(value);
+  }, [value]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    setLocal(v);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onChangeRef.current(v), 300);
+  }, []);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  return <Input type="text" placeholder={placeholder} value={local} onChange={handleChange} className="h-7 w-28 text-sm" disabled={disabled} />;
+});
+
 const CellRow = memo(function CellRow({
   rat,
   cell,
@@ -347,13 +379,11 @@ const CellRow = memo(function CellRow({
         onDetailChange={(field, value) => onDetailsChange(cell.id, field, value)}
       />
       <td className={cn("px-3 py-1", deletedCellClass)}>
-        <Input
-          type="text"
-          placeholder={t("stations:cells.notesPlaceholder")}
+        <DebouncedNotesInput
           value={cell.notes ?? ""}
-          onChange={(e) => onNotesChange(cell.id, e.target.value)}
-          className="h-7 w-28 text-sm"
+          placeholder={t("stations:cells.notesPlaceholder")}
           disabled={isDeleted}
+          onChange={(value) => onNotesChange(cell.id, value)}
         />
       </td>
       <td className="px-3 py-1">

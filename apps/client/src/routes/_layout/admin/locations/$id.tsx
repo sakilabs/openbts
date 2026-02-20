@@ -10,9 +10,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import { fetchLocationDetail } from "@/features/admin/locations/api";
-import { usePatchLocationMutation } from "@/features/admin/locations/mutations";
+import { usePatchLocationMutation, useDeleteLocationMutation } from "@/features/admin/locations/mutations";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 
@@ -70,6 +81,7 @@ function AdminLocationDetailPage() {
 
 function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typeof fetchLocationDetail> extends Promise<infer T> ? T : never> }) {
   const { t } = useTranslation("stations");
+  const navigate = useNavigate();
 
   const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => ({
     region_id: location.region?.id ?? null,
@@ -80,6 +92,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
   }));
 
   const patchMutation = usePatchLocationMutation(location.id);
+  const deleteMutation = useDeleteLocationMutation();
 
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {
     setLocationForm((prev) => ({ ...prev, ...patch }));
@@ -108,6 +121,18 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
       address: location.address ?? "",
       longitude: location.longitude ?? null,
       latitude: location.latitude ?? null,
+    });
+  };
+
+  const handleDelete = () => {
+    deleteMutation.mutate(location.id, {
+      onSuccess: () => {
+        toast.success(t("toast.locationDeleted"));
+        navigate({ to: "/admin/locations" });
+      },
+      onError: () => {
+        toast.error(t("common:error.toast"));
+      },
     });
   };
 
@@ -169,6 +194,27 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
         </div>
 
         <div className="flex items-center gap-2">
+          {stations.length === 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={<Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" />}
+              >
+                {t("header.deleteLocation")}
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("header.confirmDeleteLocation")}</AlertDialogTitle>
+                  <AlertDialogDescription>{t("header.confirmDeleteLocationDesc")}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
+                    {deleteMutation.isPending ? <Spinner /> : t("header.deleteLocation")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Tooltip>
             <TooltipTrigger render={<span />}>
               <Button

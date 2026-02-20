@@ -16,6 +16,9 @@ function formatMonthDropdown(date: Date, localeCode: string | undefined): string
   }
 }
 
+const RTL_BUTTON_NEXT = String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`;
+const RTL_BUTTON_PREVIOUS = String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`;
+
 function Calendar({
   className,
   classNames,
@@ -36,8 +39,8 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn(
         "p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] bg-background group/calendar in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
-        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+        RTL_BUTTON_NEXT,
+        RTL_BUTTON_PREVIOUS,
         className,
       )}
       captionLayout={captionLayout}

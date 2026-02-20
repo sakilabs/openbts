@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchStation, patchCell, createCells, deleteCell, createLocation, createStation, deleteStation } from "./api";
+import { patchLocation } from "../locations/api";
 import type { Station, Cell } from "@/types/station";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { shallowEqual } from "@/lib/shallowEqual";
@@ -88,6 +89,7 @@ export interface SaveStationPayload {
     longitude: number | null;
     latitude: number | null;
   };
+  existingLocationId: number | null;
   localCells: LocalCell[];
   deletedServerCellIds: number[];
   originalStation?: Station;
@@ -105,13 +107,19 @@ export function useSaveStationMutation() {
           throw new Error("Location required");
         }
 
-        const locationRes = await createLocationMutation.mutateAsync({
-          region_id: payload.location.region_id,
-          city: payload.location.city || undefined,
-          address: payload.location.address || undefined,
-          longitude: payload.location.longitude,
-          latitude: payload.location.latitude,
-        });
+        let locationId: number;
+        if (payload.existingLocationId) {
+          locationId = payload.existingLocationId;
+        } else {
+          const locationRes = await createLocationMutation.mutateAsync({
+            region_id: payload.location.region_id,
+            city: payload.location.city || undefined,
+            address: payload.location.address || undefined,
+            longitude: payload.location.longitude,
+            latitude: payload.location.latitude,
+          });
+          locationId = locationRes.data.id;
+        }
 
         const cellsPayload = payload.localCells.map((lc) => ({
           station_id: 0,
@@ -125,7 +133,7 @@ export function useSaveStationMutation() {
         const res = await createStationMutation.mutateAsync({
           station_id: payload.stationId,
           operator_id: payload.operatorId,
-          location_id: locationRes.data.id,
+          location_id: locationId,
           notes: payload.notes || null,
           is_confirmed: payload.isConfirmed,
           cells: cellsPayload,
@@ -141,12 +149,45 @@ export function useSaveStationMutation() {
       const station = payload.originalStation;
       const originalCells = station.cells;
 
-      await patchStation(station.id, {
+      const stationPatch: Record<string, unknown> = {
         station_id: payload.stationId,
         operator_id: payload.operatorId,
         notes: payload.notes || null,
         is_confirmed: payload.isConfirmed,
-      });
+      };
+
+      if (payload.existingLocationId && payload.existingLocationId !== (station.location?.id ?? null)) {
+        stationPatch.location_id = payload.existingLocationId;
+      } else if (!payload.existingLocationId) {
+        const coordsChanged =
+          payload.location.latitude !== (station.location?.latitude ?? null) || payload.location.longitude !== (station.location?.longitude ?? null);
+
+        if (coordsChanged && payload.location.latitude !== null && payload.location.longitude !== null && payload.location.region_id) {
+          const locationRes = await createLocationMutation.mutateAsync({
+            region_id: payload.location.region_id,
+            city: payload.location.city || undefined,
+            address: payload.location.address || undefined,
+            longitude: payload.location.longitude,
+            latitude: payload.location.latitude,
+          });
+          stationPatch.location_id = locationRes.data.id;
+        } else if (!coordsChanged && station.location) {
+          const metadataChanged =
+            payload.location.city !== (station.location.city ?? "") ||
+            payload.location.address !== (station.location.address ?? "") ||
+            payload.location.region_id !== (station.location.region?.id ?? null);
+
+          if (metadataChanged) {
+            const locationPatch: Record<string, unknown> = {};
+            if (payload.location.city !== (station.location.city ?? "")) locationPatch.city = payload.location.city || null;
+            if (payload.location.address !== (station.location.address ?? "")) locationPatch.address = payload.location.address || null;
+            if (payload.location.region_id !== (station.location.region?.id ?? null)) locationPatch.region_id = payload.location.region_id;
+            await patchLocation(station.location.id, locationPatch);
+          }
+        }
+      }
+
+      await patchStation(station.id, stationPatch);
 
       if (payload.deletedServerCellIds.length > 0) {
         await Promise.all(payload.deletedServerCellIds.map((cellId) => deleteCell(station.id, cellId)));

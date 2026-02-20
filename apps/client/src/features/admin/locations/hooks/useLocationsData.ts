@@ -123,12 +123,14 @@ export function useLocationsData() {
         operators: filters.operators.length ? filters.operators.join(",") : undefined,
         sort,
         sortBy,
+        orphaned: true,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.data.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
     },
     staleTime: 1000 * 60 * 5,
+    refetchOnMount: "always",
   });
 
   const allLocations = useMemo(() => {

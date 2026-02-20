@@ -56,10 +56,7 @@ export const proposedCells = SubmissionsSchema.table(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    index("proposed_cells_submission_id_idx").on(t.submission_id),
-    unique("proposed_cells_unique").on(t.submission_id, t.station_id, t.band_id, t.rat),
-  ],
+  (t) => [index("proposed_cells_submission_id_idx").on(t.submission_id), unique("proposed_cells_unique").on(t.submission_id, t.target_cell_id)],
 );
 
 export const proposedGSMCells = SubmissionsSchema.table("proposed_gsm_cells", {

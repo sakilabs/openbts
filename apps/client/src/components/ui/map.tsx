@@ -359,7 +359,9 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
   }, [onViewportChange]);
 
   const propsRef = useRef(props);
-  propsRef.current = props;
+  useEffect(() => {
+    propsRef.current = props;
+  });
 
   const mapStyles = useMemo(() => {
     if (styles?.dark || styles?.light) {

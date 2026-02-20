@@ -113,7 +113,12 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
   if (stationId !== null && Number.isNaN(stationId)) throw new ErrorResponse("INVALID_QUERY");
 
   const [targetStation, duplicateStation, existingLocation] = await Promise.all([
-    stationId !== null ? db.query.stations.findFirst({ where: { id: stationId } }) : null,
+    stationId !== null
+      ? db.query.stations.findFirst({
+          where: { id: stationId },
+          with: { location: true },
+        })
+      : null,
 
     type === "new" && stationData?.station_id
       ? db.query.stations.findFirst({
@@ -150,6 +155,29 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
   if (type === "new" && existingLocation && existingLocation.stations && existingLocation.stations.length > 0)
     throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
+
+  if (type === "update" && targetStation) {
+    const hasStationChanges =
+      stationData &&
+      (stationData.station_id !== targetStation.station_id ||
+        stationData.operator_id !== targetStation.operator_id ||
+        (stationData.notes ?? null) !== (targetStation.notes ?? null));
+
+    const currentLocation = targetStation.location;
+    const hasLocationChanges =
+      locationData &&
+      currentLocation &&
+      (locationData.latitude !== currentLocation.latitude ||
+        locationData.longitude !== currentLocation.longitude ||
+        locationData.region_id !== currentLocation.region_id ||
+        (locationData.city ?? null) !== (currentLocation.city ?? null) ||
+        (locationData.address ?? null) !== (currentLocation.address ?? null));
+
+    const hasCellChanges = input.cells && input.cells.length > 0;
+
+    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges)
+      throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
+  }
 }
 
 async function processSubmission(

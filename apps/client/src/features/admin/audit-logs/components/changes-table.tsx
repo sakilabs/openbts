@@ -55,7 +55,7 @@ function PrimitiveArrayValue({ items }: { items: unknown[] }) {
   return (
     <div className="flex flex-col gap-0.5">
       {items.map((item, i) => (
-        <div key={`primitive-${Math.random().toString(20).substring(2, 6)}`} className="flex gap-2">
+        <div key={`${String(item)}-${i}`} className="flex gap-2">
           <span className="text-muted-foreground text-[10px] select-none w-4 text-right">{i + 1}.</span>
           <span className="break-all">
             <Value value={item} />

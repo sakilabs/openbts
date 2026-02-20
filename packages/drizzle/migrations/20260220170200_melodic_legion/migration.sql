@@ -416,7 +416,7 @@ CREATE TABLE "submissions"."proposed_cells" (
 	"is_confirmed" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "proposed_cells_unique" UNIQUE("submission_id","station_id","band_id","rat")
+	CONSTRAINT "proposed_cells_unique" UNIQUE("submission_id","target_cell_id")
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_gsm_cells" (

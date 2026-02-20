@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { stations } from "@openbts/drizzle";
+import { locations, stations } from "@openbts/drizzle";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -65,6 +65,26 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       },
       req,
     );
+
+    const oldLocationId = station.location_id;
+    if (oldLocationId != null && oldLocationId !== updated.location_id) {
+      try {
+        const count = await db.$count(stations, eq(stations.location_id, oldLocationId));
+        if (count === 0) {
+          await db.delete(locations).where(eq(locations.id, oldLocationId));
+          await createAuditLog(
+            {
+              action: "locations.delete",
+              table_name: "locations",
+              record_id: oldLocationId,
+              old_values: { id: oldLocationId },
+              new_values: null,
+            },
+            req,
+          );
+        }
+      } catch {}
+    }
 
     return res.send({ data: updated });
   } catch (error) {

@@ -125,12 +125,21 @@ type LocationPickerProps = {
   location: ProposedLocationForm;
   errors?: LocationErrors;
   onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
+  onExistingLocationSelect?: (location: LocationWithStations) => void;
   onUkeStationSelect?: (station: UkeStation) => void;
   locationDiffs?: { coords: boolean; city: boolean; address: boolean } | null;
   currentLocation?: Location | null;
 };
 
-export function LocationPicker({ location, errors, onLocationChange, onUkeStationSelect, locationDiffs, currentLocation }: LocationPickerProps) {
+export function LocationPicker({
+  location,
+  errors,
+  onLocationChange,
+  onExistingLocationSelect: onExistingLocationSelectProp,
+  onUkeStationSelect,
+  locationDiffs,
+  currentLocation,
+}: LocationPickerProps) {
   const { t } = useTranslation(["submissions", "common"]);
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
   const [showUkeLocations, setShowUkeLocations] = useState(false);
@@ -148,26 +157,25 @@ export function LocationPicker({ location, errors, onLocationChange, onUkeStatio
   const handleMapCoordinatesSet = useCallback(
     (lat: number, lon: number) => {
       onLocationChange({ latitude: roundCoord(lat), longitude: roundCoord(lon) });
-      reverseGeocode(lat, lon)
-        .then((result) => {
-          if (result) applyGeocodeResult(result, regions, onLocationChange);
-        })
-        .catch(() => {});
     },
-    [regions, onLocationChange],
+    [onLocationChange],
   );
 
   const handleExistingLocationSelect = useCallback(
     (loc: LocationWithStations) => {
-      onLocationChange({
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        city: loc.city ?? undefined,
-        address: loc.address ?? undefined,
-        region_id: loc.region?.id ?? null,
-      });
+      if (onExistingLocationSelectProp) {
+        onExistingLocationSelectProp(loc);
+      } else {
+        onLocationChange({
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          city: loc.city ?? undefined,
+          address: loc.address ?? undefined,
+          region_id: loc.region?.id ?? null,
+        });
+      }
     },
-    [onLocationChange],
+    [onLocationChange, onExistingLocationSelectProp],
   );
 
   const hasCoordinates = location.latitude !== null && location.longitude !== null;
@@ -388,7 +396,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 
   const { data: viewportLocations = [] } = useQuery({
     queryKey: ["picker-locations", bounds],
-    queryFn: () => fetchLocationsInViewport(bounds),
+    queryFn: () => fetchLocationsInViewport(bounds, { orphaned: true }),
     enabled: !!bounds,
     staleTime: 1000 * 60 * 2,
     placeholderData: (prev) => prev,

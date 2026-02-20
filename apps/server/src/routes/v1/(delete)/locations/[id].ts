@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { locations } from "@openbts/drizzle";
+import { locations, stations } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -25,6 +25,9 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
     },
   });
   if (!location) throw new ErrorResponse("NOT_FOUND");
+
+  const stationCount = await db.$count(stations, eq(stations.location_id, id));
+  if (stationCount > 0) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete a location that has stations assigned to it." });
 
   try {
     await db.delete(locations).where(eq(locations.id, id));

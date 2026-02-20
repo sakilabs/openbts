@@ -126,6 +126,7 @@ function getInitialFormState(station: Station | undefined): {
   notes: string;
   isConfirmed: boolean;
   location: ProposedLocationForm;
+  existingLocationId: number | null;
   deletedServerCellIds: number[];
 } {
   return {
@@ -142,6 +143,7 @@ function getInitialFormState(station: Station | undefined): {
           latitude: station.location.latitude ?? null,
         }
       : { ...emptyLocation },
+    existingLocationId: station?.location?.id ?? null,
     deletedServerCellIds: [],
   };
 }
@@ -153,6 +155,7 @@ type FormAction =
   | { type: "SET_CONFIRMED"; payload: boolean }
   | { type: "PATCH_LOCATION"; payload: Partial<ProposedLocationForm> }
   | { type: "SET_LOCATION"; payload: ProposedLocationForm }
+  | { type: "SET_EXISTING_LOCATION"; payload: { id: number; location: ProposedLocationForm } }
   | { type: "ADD_DELETED_ID"; payload: number }
   | { type: "CLEAR_DELETED" }
   | { type: "RESET_CREATE" }
@@ -169,9 +172,11 @@ function formReducer(state: ReturnType<typeof getInitialFormState>, action: Form
     case "SET_CONFIRMED":
       return { ...state, isConfirmed: action.payload };
     case "PATCH_LOCATION":
-      return { ...state, location: { ...state.location, ...action.payload } };
+      return { ...state, location: { ...state.location, ...action.payload }, existingLocationId: null };
     case "SET_LOCATION":
-      return { ...state, location: action.payload };
+      return { ...state, location: action.payload, existingLocationId: null };
+    case "SET_EXISTING_LOCATION":
+      return { ...state, location: action.payload.location, existingLocationId: action.payload.id };
     case "ADD_DELETED_ID":
       return { ...state, deletedServerCellIds: [...state.deletedServerCellIds, action.payload] };
     case "CLEAR_DELETED":
@@ -190,7 +195,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const { t } = useTranslation("stations");
 
   const [formState, dispatch] = useReducer(formReducer, station, getInitialFormState);
-  const { stationId, operatorId, notes, isConfirmed, location, deletedServerCellIds } = formState;
+  const { stationId, operatorId, notes, isConfirmed, location, existingLocationId, deletedServerCellIds } = formState;
 
   const { data: settings } = useSettings();
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
@@ -235,6 +240,25 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {
     dispatch({ type: "PATCH_LOCATION", payload: patch });
   }, []);
+
+  const handleExistingLocationSelect = useCallback(
+    (loc: { id: number; latitude: number; longitude: number; city?: string | null; address?: string | null; region?: { id: number } | null }) => {
+      dispatch({
+        type: "SET_EXISTING_LOCATION",
+        payload: {
+          id: loc.id,
+          location: {
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            city: loc.city ?? "",
+            address: loc.address ?? "",
+            region_id: loc.region?.id ?? null,
+          },
+        },
+      });
+    },
+    [],
+  );
 
   const handleUkeStationSelect = useCallback(
     (ukeStation: UkeStation) => {
@@ -302,6 +326,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
         notes,
         isConfirmed,
         location,
+        existingLocationId,
         localCells,
         deletedServerCellIds,
         originalStation: station,
@@ -312,7 +337,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
             toast.success(t("toast.created"));
             navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
           } else {
-            toast.success(t("toast.cellsSaved"));
+            toast.success(t("toast.saved"));
             dispatch({ type: "CLEAR_DELETED" });
           }
         },
@@ -411,6 +436,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
               onIsConfirmedChange={(v) => dispatch({ type: "SET_CONFIRMED", payload: v })}
               location={location}
               onLocationChange={handleLocationChange}
+              onExistingLocationSelect={handleExistingLocationSelect}
               operators={operators}
               selectedOperator={selectedOperator}
               onUkeStationSelect={handleUkeStationSelect}

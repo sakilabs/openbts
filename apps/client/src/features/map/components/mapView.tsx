@@ -26,6 +26,28 @@ const POLAND_BOUNDS: [[number, number], [number, number]] = [
   [24.2, 55.0],
 ];
 
+const MAP_POSITION_KEY = "map:position";
+
+type SavedMapPosition = { center: [number, number]; zoom: number };
+
+function loadMapPosition(): SavedMapPosition | null {
+  try {
+    const raw = localStorage.getItem(MAP_POSITION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.center) && parsed.center.length === 2 && typeof parsed.zoom === "number") {
+      return parsed as SavedMapPosition;
+    }
+  } catch {}
+  return null;
+}
+
+function saveMapPosition(center: [number, number], zoom: number) {
+  try {
+    localStorage.setItem(MAP_POSITION_KEY, JSON.stringify({ center, zoom }));
+  } catch {}
+}
+
 function toLocationInfo(loc: { id: number; city?: string; address?: string; latitude: number; longitude: number }): LocationInfo {
   return { id: loc.id, city: loc.city, address: loc.address, latitude: loc.latitude, longitude: loc.longitude };
 }
@@ -40,6 +62,18 @@ function MapViewInner() {
   useEffect(() => {
     saveMapFilters(filters);
   }, [filters]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    const handleMoveEnd = () => {
+      const center = map.getCenter();
+      saveMapPosition([center.lng, center.lat], map.getZoom());
+    };
+    map.on("moveend", handleMoveEnd);
+    return () => {
+      map.off("moveend", handleMoveEnd);
+    };
+  }, [map, isLoaded]);
 
   const [selectedStation, setSelectedStation] = useState<{ id: number; source: StationSource } | null>(null);
   const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
@@ -195,8 +229,9 @@ function MapViewInner() {
 }
 
 export default function MapView() {
+  const saved = loadMapPosition();
   return (
-    <LibreMap center={POLAND_CENTER} zoom={7} maxBounds={POLAND_BOUNDS} minZoom={5}>
+    <LibreMap center={saved?.center ?? POLAND_CENTER} zoom={saved?.zoom ?? 7} maxBounds={POLAND_BOUNDS} minZoom={5}>
       <MapViewInner />
     </LibreMap>
   );

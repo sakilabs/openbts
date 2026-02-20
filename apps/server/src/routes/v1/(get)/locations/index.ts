@@ -62,6 +62,7 @@ const schemaRoute = {
       .optional()
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
     new: z.coerce.boolean().optional().default(false),
+    orphaned: z.coerce.boolean().optional().default(false),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
     sortBy: z.enum(["id", "updatedAt", "createdAt"]).optional(),
   }),
@@ -82,9 +83,26 @@ type StationData = z.infer<typeof stationResponseSchema>;
 type ResponseData = z.infer<typeof locationsSchema> & { region: z.infer<typeof regionsSchema>; stations: StationData[] };
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 
+const ORPHANED_ALLOWED_ROLES = new Set(["admin", "editor", "moderator"]);
+
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentOnly, sort, sortBy } = req.query;
+  const {
+    bounds,
+    limit,
+    page,
+    rat,
+    operators: operatorMncs,
+    bands: bandValues,
+    regions: regionNames,
+    new: recentOnly,
+    orphaned,
+    sort,
+    sortBy,
+  } = req.query;
   const offset = (page - 1) * limit;
+
+  const userRole = req.userSession?.user?.role as string | undefined;
+  const showOrphaned = orphaned && userRole !== undefined && ORPHANED_ALLOWED_ROLES.has(userRole);
 
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
@@ -261,7 +279,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					)
 				`);
       }
-    } else {
+    } else if (!showOrphaned) {
       conditions.push(sql`
 				EXISTS (
 					SELECT 1

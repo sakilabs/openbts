@@ -225,6 +225,7 @@ export function useStationsData() {
       return lastPage.data.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
     },
     staleTime: 1000 * 60 * 5,
+    refetchOnMount: "always",
     enabled: searchQuery.trim().length === 0,
   });
 

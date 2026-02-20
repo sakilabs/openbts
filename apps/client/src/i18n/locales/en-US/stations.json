@@ -3,7 +3,10 @@
     "deleteStation": "Delete Station",
     "confirmDelete": "Are you sure you want to delete the station?",
     "confirmDeleteDesc": "After deletion, the station will be marked as 'inactive' and will no longer be visible on the map or in search results",
-    "createStation": "Create Station"
+    "createStation": "Create Station",
+    "deleteLocation": "Delete Location",
+    "confirmDeleteLocation": "Are you sure you want to delete this location?",
+    "confirmDeleteLocationDesc": "This action cannot be undone. The location and its data will be permanently removed."
   },
   "actions": {
     "newStation": "Create New Station"
@@ -32,12 +35,14 @@
   "stationsCount_many": "{{count}} stations",
   "toast": {
     "locationSaved": "Location has been saved",
+    "locationDeleted": "Location has been deleted",
     "deleted": "Station has been deleted",
     "created": "Station has been created",
     "stationIdRquired": "Station ID is required",
     "operatorRequired": "Operator is required",
     "locationRequired": "Location is required",
     "cellsSaved": "Cells have been saved",
+    "saved": "Station has been saved",
     "noBands": "No available bands for {{rat}}"
   }
 }

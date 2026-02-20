@@ -64,8 +64,9 @@ export async function reverseGeocode(lat: number, lon: number): Promise<Nominati
   }
 }
 
-export async function fetchLocationsInViewport(bounds: string): Promise<LocationWithStations[]> {
-  return fetchApiData<LocationWithStations[]>(`locations?bounds=${encodeURIComponent(bounds)}&limit=500`);
+export async function fetchLocationsInViewport(bounds: string, options?: { orphaned?: boolean }): Promise<LocationWithStations[]> {
+  const params = `bounds=${encodeURIComponent(bounds)}&limit=500${options?.orphaned ? "&orphaned=true" : ""}`;
+  return fetchApiData<LocationWithStations[]>(`locations?${params}`);
 }
 
 export async function fetchUkeLocationsInViewport(bounds: string): Promise<UkeLocationWithPermits[]> {

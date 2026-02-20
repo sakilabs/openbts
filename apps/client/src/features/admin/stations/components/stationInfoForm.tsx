@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
-import type { Operator, UkeStation } from "@/types/station";
+import type { Operator, UkeStation, LocationWithStations } from "@/types/station";
 
 type StationInfoFormProps = {
   stationId: string;
@@ -23,6 +23,7 @@ type StationInfoFormProps = {
   onIsConfirmedChange: (checked: boolean) => void;
   location: ProposedLocationForm;
   onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
+  onExistingLocationSelect?: (location: LocationWithStations) => void;
   operators: Operator[];
   selectedOperator?: Operator;
   onUkeStationSelect?: (station: UkeStation) => void;
@@ -39,6 +40,7 @@ export function StationInfoForm({
   onIsConfirmedChange,
   location,
   onLocationChange,
+  onExistingLocationSelect,
   operators,
   selectedOperator,
   onUkeStationSelect,
@@ -117,7 +119,12 @@ export function StationInfoForm({
         </div>
       </div>
 
-      <LocationPicker location={location} onLocationChange={onLocationChange} onUkeStationSelect={onUkeStationSelect} />
+      <LocationPicker
+        location={location}
+        onLocationChange={onLocationChange}
+        onExistingLocationSelect={onExistingLocationSelect}
+        onUkeStationSelect={onUkeStationSelect}
+      />
     </div>
   );
 }
