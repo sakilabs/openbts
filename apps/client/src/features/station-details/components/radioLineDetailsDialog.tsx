@@ -67,9 +67,10 @@ function DirectionButtonsRow({
       <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg overflow-x-auto max-w-full custom-scrollbar">
         {link.directions.map((dir, idx) => {
           const isForward = `${dir.tx.latitude},${dir.tx.longitude}` === aKey;
+          const isLastInPair = link.linkType !== "XPIC" && link.directions.length > 1 && idx % 2 === 1;
+          const isLastDirection = idx === link.directions.length - 1;
           return (
             <div key={dir.id} className="flex items-center gap-1 shrink-0">
-              {idx > 0 && idx % 2 === 0 && <span className="w-px h-5 bg-border shrink-0" aria-hidden />}
               <button
                 type="button"
                 className={cn(
@@ -87,6 +88,7 @@ function DirectionButtonsRow({
                 {dir.link.polarization && <span className="text-[9px] font-bold text-muted-foreground">{dir.link.polarization}</span>}
                 <span className="text-[9px] text-muted-foreground">#{dir.id}</span>
               </button>
+              {isLastInPair && !isLastDirection && <span className="w-px h-5 bg-border shrink-0" aria-hidden />}
             </div>
           );
         })}

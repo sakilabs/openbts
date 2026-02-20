@@ -47,7 +47,7 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
       {directions.length > 0 && (
         <div className="border-t border-border/40 px-2.5 py-1.5 space-y-1">
           {directions.map((dir, index) => {
-            const isLastInPair = directionCount > 1 && index % 2 === 1;
+            const isLastInPair = linkType !== "XPIC" && directionCount > 1 && index % 2 === 1;
             const isLastDirection = index === directions.length - 1;
 
             return (

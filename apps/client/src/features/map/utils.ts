@@ -210,11 +210,13 @@ export function groupRadioLinesIntoLinks(radioLines: RadioLine[]): DuplexRadioLi
     const forward = sorted(entries.filter((e) => `${e.tx.latitude},${e.tx.longitude}` === aKey));
     const reverse = sorted(entries.filter((e) => `${e.tx.latitude},${e.tx.longitude}` !== aKey));
 
+    const directions = linkType === "XPIC" ? [...forward, ...reverse] : interleave(forward, reverse);
+
     return {
       groupId: key,
       a,
       b,
-      directions: interleave(forward, reverse),
+      directions,
       linkType,
       isExpired: entries.some((d) => isPermitExpired(d.permit.expiry_date)),
     };
