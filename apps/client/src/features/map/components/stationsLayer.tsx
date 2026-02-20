@@ -173,8 +173,7 @@ export function StationsLayer({
           .finally(() => {
             pendingStationId.current = null;
           });
-      } else if (radiolineId)
-        onRadiolineIdFromUrl?.(radiolineId);
+      } else if (radiolineId) onRadiolineIdFromUrl?.(radiolineId);
       else if (locationId && map) {
         if (activeFilters.source === "uke") {
           pendingUkeLocationId.current = locationId;

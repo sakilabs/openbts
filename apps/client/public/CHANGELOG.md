@@ -6,6 +6,12 @@ What's being worked on:
 - [ ] Statistics page
 - [ ] Add ability to select a range of new stations (max. 30 days)
 
+# 2026-02-21
+
+### 🩹 Fixes
+
+- Fixed calculating preview `eCID`, `LongCID` & `NCI` on `/submission`, `/admin/submissions/$id` & `/admin/stations/$id`
+
 # 2026-02-20
 
 ### 🩹 Fixes

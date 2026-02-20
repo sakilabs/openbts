@@ -42,7 +42,7 @@
   "labels": {
     "id": "ID",
     "stationId": "Station ID",
-    "operator": "Operator",
+    "operator": "BTS Operator",
     "region": "Region",
     "filters": "Filters",
     "latitude": "Latitude",

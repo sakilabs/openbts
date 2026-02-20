@@ -100,13 +100,11 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPend
   const [lastHandledPendingId, setLastHandledPendingId] = useState<number | null>(null);
   if (pendingRadiolineId !== lastHandledPendingId) {
     setLastHandledPendingId(pendingRadiolineId ?? null);
-    if (pendingMatch)
-      setSelectedLink(pendingMatch);
+    if (pendingMatch) setSelectedLink(pendingMatch);
   }
 
   useEffect(() => {
-    if (pendingMatch)
-      onPendingRadiolineConsumed?.(null);
+    if (pendingMatch) onPendingRadiolineConsumed?.(null);
   }, [pendingMatch, onPendingRadiolineConsumed]);
 
   const handleCloseDetails = useCallback(() => setSelectedLink(null), []);

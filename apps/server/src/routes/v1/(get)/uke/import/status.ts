@@ -7,7 +7,16 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const importStepSchema = z.object({
-  key: z.enum(["stations", "radiolines", "permits", "prune_deleted_entries", "prune_associations", "cleanup_orphaned_uke_locations", "associate", "cleanup"]),
+  key: z.enum([
+    "stations",
+    "radiolines",
+    "permits",
+    "prune_deleted_entries",
+    "prune_associations",
+    "cleanup_orphaned_uke_locations",
+    "associate",
+    "cleanup",
+  ]),
   status: z.enum(["pending", "running", "success", "skipped", "error"]),
   startedAt: z.string().optional(),
   finishedAt: z.string().optional(),
