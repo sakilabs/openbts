@@ -146,7 +146,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
               <SelectTrigger className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")}>
                 <SelectValue>{nrTypeLabel}</SelectValue>
               </SelectTrigger>
-              <SelectContent className="min-w-[12rem]">
+              <SelectContent className="min-w-48">
                 {NR_TYPE_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}

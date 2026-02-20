@@ -34,6 +34,7 @@ What's being worked on:
 ### 🏡 Chore
 
 - Changes to existing components to satisfy React Compiler rules
+- Removed `ml-1` from cellTable's cells count (station dialog)
 
 # 2026-02-19
 

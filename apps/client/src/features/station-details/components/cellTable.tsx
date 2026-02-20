@@ -24,7 +24,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
       <CollapsibleTrigger className={cn("w-full px-4 py-2.5 bg-muted/50 flex items-center gap-2 cursor-pointer", open && "border-b")}>
         <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
         <span className="font-semibold text-sm">{rat}</span>
-        <span className="text-xs text-muted-foreground ml-1">({t("stations:cells.cellsCount", { count: cells.length })})</span>
+        <span className="text-xs text-muted-foreground">({t("stations:cells.cellsCount", { count: cells.length })})</span>
         <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 ml-auto text-muted-foreground transition-transform", open && "rotate-180")} />
       </CollapsibleTrigger>
 
