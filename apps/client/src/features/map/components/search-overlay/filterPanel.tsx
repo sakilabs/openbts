@@ -64,7 +64,7 @@ function OperatorsSection({
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.operator")}</h4>
+        <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("main:filters.operator")}</h4>
       </div>
       <div className="grid grid-cols-2 gap-1">
         {topOperators.map((op) => (

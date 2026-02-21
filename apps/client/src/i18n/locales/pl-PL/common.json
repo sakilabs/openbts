@@ -42,7 +42,7 @@
   "labels": {
     "id": "ID",
     "stationId": "ID Stacji",
-    "operator": "Operator stacji bazowej",
+    "operator": "Operator",
     "region": "Województwo",
     "filters": "Filtry",
     "latitude": "Szerokość geograficzna",

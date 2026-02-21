@@ -52,6 +52,7 @@
     "showingStations": "Fetched {{count}} stations",
     "layers": "Layers",
     "showStations": "Stations",
+    "operator": "BTS Operator",
     "showRadiolines": "Radiolines",
     "radiolineOperator": "Radioline Operator",
     "radiolineOperators_one": "{{count}} radioline operator",

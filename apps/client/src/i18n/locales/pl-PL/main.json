@@ -52,6 +52,7 @@
     "showingStations": "Pobrano {{count}} stacji",
     "layers": "Warstwy",
     "showStations": "Stacje",
+    "operator": "Operator stacji bazowej",
     "showRadiolines": "Radiolinie",
     "radiolineOperator": "Operator radiolinii",
     "radiolineOperators_one": "{{count}} operator radiolinii",
