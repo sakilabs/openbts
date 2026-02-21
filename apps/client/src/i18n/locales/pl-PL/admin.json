@@ -53,7 +53,9 @@
     "title": "Nieprzypisane pozwolenia UKE",
     "permits": "Pozwolenia",
     "showingStations": "Wyświetlono {{count}} stacji",
-    "showingStationsOfTotal": "Wyświetlono {{count}} z {{total}} stacji"
+    "showingStationsOfTotal": "Wyświetlono {{count}} z {{total}} stacji",
+    "openDetails": "Otwórz szczegóły",
+    "viewOnMap": "Pokaż na mapie"
   },
   "ukeImport": {
     "title": "Import UKE",

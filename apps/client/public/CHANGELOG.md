@@ -15,6 +15,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added new `/statistics` page with all data from UKE & internal db
 - Added ability to select a range of new stations (max. 30 days) by a slider
 - Added a new page with orphaned UKE permits to see which stations still need to be added etc.
+- Change the NTM format to match the old exports
 
 ### 🏡 Chore
 

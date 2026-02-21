@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, or, inArray, sql } from "drizzle-orm";
+import { and, or, inArray, eq, sql } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
 import { bands, type cells, locations, lteCells, nrCells, regions, stations } from "@openbts/drizzle";
@@ -42,8 +42,8 @@ const schemaRoute = {
       .optional()
       .transform((val) => {
         if (!val) return undefined;
-        const validRats = ["GSM", "UMTS", "LTE", "NR", "IOT"];
-        const rats = val.split(",").filter((r) => validRats.includes(r.toUpperCase()));
+        const validRats = new Set(["GSM", "UMTS", "LTE", "NR", "IOT"]);
+        const rats = val.split(",").filter((r) => validRats.has(r.toUpperCase()));
         return rats.length > 0 ? (rats.map((r) => r.toUpperCase()) as ("GSM" | "UMTS" | "LTE" | "NR" | "IOT")[]) : undefined;
       }),
     bands: z
@@ -162,6 +162,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
         columns: {
           value: true,
           name: true,
+          duplex: true,
         },
         where: {
           variant: "commercial",
@@ -173,6 +174,33 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       nr: true,
     },
   });
+
+  // For NTM format, fetch NR bands per LTE station so we can show [5G: n1|n78|...] in LTE rows
+  const stationNrBandsMap = new Map<number, Array<{ value: number; duplex: "FDD" | "TDD" | null }>>();
+  if (format === "ntm") {
+    const lteStationIds = [...new Set(rows.filter((r) => r.rat === "LTE").map((r) => r.station.id))];
+
+    if (lteStationIds.length > 0) {
+      const nrBandRows = await db.query.cells.findMany({
+        where: {
+          RAW: (fields) => and(inArray(fields.station_id, lteStationIds), eq(fields.rat, "NR")) ?? sql`true`,
+        },
+        with: {
+          band: {
+            columns: { value: true, duplex: true },
+            where: { variant: "commercial" },
+          },
+        },
+      });
+
+      for (const nrRow of nrBandRows) {
+        if (!nrRow.band?.value) continue;
+        const list = stationNrBandsMap.get(nrRow.station_id) ?? [];
+        list.push({ value: nrRow.band.value, duplex: nrRow.band.duplex ?? null });
+        stationNrBandsMap.set(nrRow.station_id, list);
+      }
+    }
+  }
 
   const clfLines: string[] = [];
 
@@ -192,11 +220,16 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       rat: row.rat as "GSM" | "CDMA" | "UMTS" | "LTE" | "NR",
       band_value: row.band?.value,
       band_name: row.band?.name as string,
+      band_duplex: row.band?.duplex ?? null,
       station_id: row.station.station_id,
       operator_mnc: row.station.operator?.mnc,
       latitude: row.station.location?.latitude,
       longitude: row.station.location?.longitude,
       notes: row.notes,
+      city: row.station.location?.city ?? null,
+      address: row.station.location?.address ?? null,
+      arfcn: row.umts?.arfcn ?? null,
+      nr_bands: row.rat === "LTE" ? stationNrBandsMap.get(row.station.id) : undefined,
     };
 
     const clfLine = convertToCLF(cellData, format as ClfFormat);

@@ -47,7 +47,13 @@ function AdminUkePermitsPage() {
     loadMore,
   } = data;
 
-  const handleRowClick = useCallback((station: UkeStation) => setSelectedStation(station), []);
+  const handleOpenDetails = useCallback((station: UkeStation) => setSelectedStation(station), []);
+
+  const handleViewOnMap = useCallback((station: UkeStation) => {
+    if (!station.location) return;
+    const url = `${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke&station=${station.station_id}`;
+    window.open(url, "_blank");
+  }, []);
 
   return (
     <>
@@ -73,7 +79,8 @@ function AdminUkePermitsPage() {
             data={stations}
             isLoading={isLoading}
             isFetchingMore={isFetching && !isLoading}
-            onRowClick={handleRowClick}
+            onOpenDetails={handleOpenDetails}
+            onViewOnMap={handleViewOnMap}
             onLoadMore={loadMore}
             hasMore={hasMore}
             totalItems={totalStations ?? stations.length}

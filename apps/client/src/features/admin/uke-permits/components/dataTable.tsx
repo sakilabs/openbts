@@ -1,9 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactTable, getCoreRowModel, getPaginationRowModel } from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { InformationCircleIcon, MapPinIcon } from "@hugeicons/core-free-icons";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { createUnassignedPermitsColumns } from "./columns";
 import type { UkeStation } from "@/types/station";
 
@@ -11,7 +14,8 @@ interface UnassignedPermitsDataTableProps {
   data: UkeStation[];
   isLoading?: boolean;
   isFetchingMore?: boolean;
-  onRowClick?: (station: UkeStation) => void;
+  onOpenDetails?: (station: UkeStation) => void;
+  onViewOnMap?: (station: UkeStation) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
   totalItems?: number;
@@ -21,7 +25,8 @@ export function UnassignedPermitsDataTable({
   data,
   isLoading,
   isFetchingMore,
-  onRowClick,
+  onOpenDetails,
+  onViewOnMap,
   onLoadMore,
   hasMore,
   totalItems,
@@ -63,6 +68,8 @@ export function UnassignedPermitsDataTable({
   const skeletonRowsToShow =
     isFetchingMore && hasMore && isOnLastLoadedPage && currentPageRows < pagination.pageSize ? pagination.pageSize - currentPageRows : 0;
 
+  const rows = table.getRowModel().rows;
+
   return (
     <div ref={containerRef} className="h-full overflow-x-auto overflow-y-hidden">
       <DataTable.Root table={table}>
@@ -80,7 +87,37 @@ export function UnassignedPermitsDataTable({
               </DataTable.Empty>
             </tbody>
           ) : (
-            <DataTable.Body onRowClick={onRowClick} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
+            <tbody className="[&_tr:last-child]:border-0">
+              {rows.map((row) => (
+                <DropdownMenu key={row.id}>
+                  <DropdownMenuTrigger
+                    render={
+                      <tr
+                        data-state={row.getIsSelected() ? "selected" : undefined}
+                        className="h-16 border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
+                      />
+                    }
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-2 align-middle overflow-hidden" style={{ width: cell.column.getSize() }}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-auto">
+                    <DropdownMenuItem onClick={() => onOpenDetails?.(row.original)}>
+                      <HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
+                      {t("ukePermits.openDetails")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onViewOnMap?.(row.original)}>
+                      <HugeiconsIcon icon={MapPinIcon} className="size-4" />
+                      {t("ukePermits.viewOnMap")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ))}
+              {skeletonRowsToShow > 0 && <DataTable.SkeletonRows rows={skeletonRowsToShow} columns={columnCount} />}
+            </tbody>
           )}
           <DataTable.Footer columns={columnCount}>
             <DataTablePagination table={table} totalItems={totalItems ?? data.length} showRowsPerPage={false} />

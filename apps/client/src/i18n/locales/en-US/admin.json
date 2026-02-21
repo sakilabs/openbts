@@ -53,7 +53,9 @@
     "title": "Unassigned UKE Permits",
     "permits": "Permits",
     "showingStations": "Showing {{count}} stations",
-    "showingStationsOfTotal": "Showing {{count}} of {{total}} stations"
+    "showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
+    "openDetails": "Open details",
+    "viewOnMap": "View on map"
   },
   "ukeImport": {
     "title": "UKE Import",
