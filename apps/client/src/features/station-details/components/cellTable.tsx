@@ -47,7 +47,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">RNC</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">CID</th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">LongCID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("stations:cells.carrier")}</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">UARFCN</th>
                   </>
                 )}
                 {rat === "LTE" && (
@@ -123,7 +123,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <td className="px-4 py-2 font-mono">{cell.details?.rnc ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.cid_long ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.carrier ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.arfcn ?? "-"}</td>
                       </>
                     )}
                     {rat === "LTE" && (

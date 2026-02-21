@@ -106,7 +106,7 @@ function getMlpBandCode(
   if (!bandValue) return null;
   switch (rat) {
     case "GSM":
-      return `E${bandValue}`;
+      return `G${bandValue}`;
     case "UMTS":
       return `U${bandValue}`;
     case "LTE":
@@ -151,10 +151,10 @@ export function toCLF30Hex(cell: CellExportData): string | null {
   const rncHex = `0x${(cell.rnc ?? 0).toString(16).toUpperCase().padStart(4, "0")}`;
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const rat = getRatCode(cell.rat);
+  const posRat = (cell.latitude != null && cell.longitude != null) ? -1 : 0;
   const description = getDescription(cell);
 
-  return `${mccmnc};${cidHex};${lacHex};${rncHex};${lat};${lon};${rat};${description};0`;
+  return `${mccmnc};${cidHex};${lacHex};${rncHex};${lat};${lon};${posRat};${description};0`;
 }
 
 export function toCLF30Dec(cell: CellExportData): string | null {
@@ -168,10 +168,10 @@ export function toCLF30Dec(cell: CellExportData): string | null {
   const rncDec = (cell.rnc ?? 0).toString().padStart(5, "0");
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const rat = getRatCode(cell.rat);
+  const posRat = (cell.latitude != null && cell.longitude != null) ? -1 : 0;
   const description = getDescription(cell);
 
-  return `${mccmnc};${cidDec};${lacDec};${rncDec};${lat};${lon};${rat};${description};0`;
+  return `${mccmnc};${cidDec};${lacDec};${rncDec};${lat};${lon};${posRat};${description};0`;
 }
 
 export function toCLF40(cell: CellExportData): string | null {
@@ -180,10 +180,12 @@ export function toCLF40(cell: CellExportData): string | null {
   if (!cellId) return null;
 
   const mccmnc = cell.operator_mnc;
-  const type = getRatCode(cell.rat);
+  const cidFormatted = cellId.toString().padStart(5, "0");
+  const lacFormatted = lac.toString().padStart(5, "0");
+  const type = 0;
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = -1;
+  const posRat = (cell.latitude != null && cell.longitude != null) ? -1 : 0;
   const description = getDescription(cell);
   const sys = getRatCode(cell.rat);
   const label = `${cell.station_id}_${cellId}`;
@@ -194,7 +196,7 @@ export function toCLF40(cell: CellExportData): string | null {
   const tilt = 0;
   const loc = cell.station_id;
 
-  return `${mccmnc};${cellId.toString().padStart(5, "0")};${lac.toString().padStart(5, "0")};${type};${lat};${lon};${posRat};${description};${sys};${label};${azi};${height};${hbw};${vbw};${tilt};${loc}`;
+  return `${mccmnc};${cidFormatted};${lacFormatted};${type};${lat};${lon};${posRat};${description};${sys};${label};${azi};${height};${hbw};${vbw};${tilt};${loc}`;
 }
 
 function getCellIdForExport(cell: CellExportData): bigint | number | null {
@@ -267,16 +269,16 @@ export function toNTM(cell: CellExportData): string | null {
 
   switch (cell.rat) {
     case "GSM": {
-      const cid = (cell.cid ?? NTM_UNKNOWN).toString().padStart(5, "0");
-      const lac = (cell.lac ?? NTM_UNKNOWN).toString().padStart(5, "0");
+      const cid = cell.cid ?? NTM_UNKNOWN;
+      const lac = cell.lac ?? NTM_UNKNOWN;
       let location = getNTMLocation(cell);
       const bandCode = getMlpBandCode("GSM", cell.band_value, cell.band_duplex);
       if (bandCode) location += ` [MLP:${cell.station_id}:${bandCode}]`;
       return `2G;${mcc};${mnc};${cid};${lac};${NTM_UNKNOWN};${NTM_UNKNOWN};${lat};${lon};${location};${NTM_UNKNOWN}`;
     }
     case "UMTS": {
-      const cid = (cell.cid_long ?? cell.cid ?? NTM_UNKNOWN).toString().padStart(5, "0");
-      const lac = (cell.lac ?? NTM_UNKNOWN).toString().padStart(5, "0");
+      const cid = cell.cid ?? NTM_UNKNOWN;
+      const lac = cell.lac ?? NTM_UNKNOWN;
       const rnc = cell.rnc ?? NTM_UNKNOWN;
       const uarfcn = cell.arfcn ?? NTM_UNKNOWN;
       let location = getNTMLocation(cell);
@@ -285,8 +287,8 @@ export function toNTM(cell: CellExportData): string | null {
       return `3G;${mcc};${mnc};${cid};${lac};${rnc};${NTM_UNKNOWN};${lat};${lon};${location};${uarfcn}`;
     }
     case "LTE": {
-      const ci = (cell.clid ?? NTM_UNKNOWN).toString().padStart(5, "0");
-      const tac = (cell.tac ?? NTM_UNKNOWN).toString().padStart(5, "0");
+      const ci = cell.clid ?? NTM_UNKNOWN;
+      const tac = cell.tac ?? NTM_UNKNOWN;
       const enb = cell.enbid ?? NTM_UNKNOWN;
       const earfcn = getEarfcn(cell.operator_mnc, cell.band_value, cell.band_duplex);
 
@@ -304,7 +306,7 @@ export function toNTM(cell: CellExportData): string | null {
     }
     case "NR": {
       const nci = cell.nci != null ? cell.nci : NTM_UNKNOWN;
-      const tac = (cell.nrtac ?? NTM_UNKNOWN).toString().padStart(5, "0");
+      const tac = cell.nrtac ?? NTM_UNKNOWN;
       const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
 
       let location = getNTMLocation(cell);
