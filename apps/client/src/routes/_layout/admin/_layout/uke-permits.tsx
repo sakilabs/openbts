@@ -74,7 +74,7 @@ function AdminUkePermitsPage() {
           onRegionsChange={setSelectedRegions}
           onClearAllFilters={clearAllFilters}
           onSearchQueryChange={setSearchQuery}
-          stationCount={stations.length}
+          stationCount={totalStations}
           totalStations={totalStations}
         />
 

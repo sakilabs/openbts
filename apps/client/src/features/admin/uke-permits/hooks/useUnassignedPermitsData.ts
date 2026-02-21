@@ -103,7 +103,7 @@ export function useUnassignedPermitsData({ pagination, setPagination }: UseUnass
     queryFn: () =>
       fetchUnassignedPermits({
         page: pagination.pageIndex + 1,
-        limit: pagination.pageSize,
+        limit: Math.max(pagination.pageSize, 25),
         regions: selectedRegionCodes.length ? selectedRegionCodes.join(",") : undefined,
         operators: filters.operators.length ? filters.operators.join(",") : undefined,
       }),
