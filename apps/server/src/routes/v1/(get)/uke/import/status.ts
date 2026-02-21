@@ -15,6 +15,7 @@ const importStepSchema = z.object({
     "prune_associations",
     "cleanup_orphaned_uke_locations",
     "associate",
+    "snapshot",
     "cleanup",
   ]),
   status: z.enum(["pending", "running", "success", "skipped", "error"]),
