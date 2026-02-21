@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { calculateComputedValues } from "@/features/admin/cells/calculateComputedValues";
 
 const cellClassName = "px-2 py-1 font-mono text-xs text-muted-foreground";
 
@@ -7,34 +8,6 @@ function DiffOldValueCell({ value }: { value: unknown }) {
   if (typeof value === "boolean")
     return <Checkbox checked={value} disabled className="size-3 rounded-[3px] **:data-[slot=checkbox-indicator]:*:size-2.5" />;
   return <>{String(value)}</>;
-}
-
-function calculateServerValues(type: "longCID" | "eCID" | "nci", details: Record<string, unknown>) {
-  switch (type) {
-    case "longCID":
-      {
-        const isRNCPresent = details.rnc !== null && details.rnc !== undefined && details.rnc !== 0;
-        const isCIDPresent = details.cid !== null && details.cid !== undefined && details.cid !== 0;
-        if (isRNCPresent && isCIDPresent) return (details.rnc as number) * 65536 + (details.cid as number);
-      }
-      break;
-    case "eCID":
-      {
-        const isENBIDPresent = details.enbid !== null && details.enbid !== undefined && details.enbid !== 0;
-        const isCLIDPresent = details.clid !== null && details.clid !== undefined && details.clid !== 0;
-        if (isENBIDPresent && isCLIDPresent) return (details.enbid as number) * 256 + (details.clid as number);
-      }
-      break;
-    case "nci":
-      {
-        const isGNBIDPresent = details.gnbid !== null && details.gnbid !== undefined && details.gnbid !== 0;
-        const isCLIDPresent = details.clid !== null && details.clid !== undefined && details.clid !== 0;
-        if (isGNBIDPresent && isCLIDPresent) return (details.gnbid as number) * 4096 + (details.clid as number);
-      }
-      break;
-  }
-
-  return null;
 }
 
 export function SubmissionDiffDetailCells({ details, rat }: { details: Record<string, unknown>; rat: string }) {
@@ -55,7 +28,7 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
         </>
       );
     case "UMTS": {
-      const longCid = calculateServerValues("longCID", d);
+      const longCid = calculateComputedValues("longCID", d);
       return (
         <>
           <td className={cellClassName}>
@@ -77,7 +50,7 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
       );
     }
     case "LTE": {
-      const eCid = calculateServerValues("eCID", d);
+      const eCid = calculateComputedValues("eCID", d);
       return (
         <>
           <td className={cellClassName}>
@@ -102,7 +75,7 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
       );
     }
     case "NR": {
-      const nci = calculateServerValues("nci", d);
+      const nci = calculateComputedValues("nci", d);
       return (
         <>
           <td className={cellClassName}>

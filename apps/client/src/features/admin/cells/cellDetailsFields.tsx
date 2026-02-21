@@ -2,6 +2,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { DetailInputCell, DetailComputedCell } from "@/features/admin/cells/components/detailFieldCells";
+import { calculateComputedValues } from "@/features/admin/cells/calculateComputedValues";
 
 const NR_TYPE_OPTIONS = [
   { value: "nsa", label: "NSA (Non-Standalone)" },
@@ -49,7 +50,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
         </>
       );
     case "UMTS": {
-      const longCid = d.rnc !== undefined && d.cid !== undefined ? (d.rnc as number) * 65536 + (d.cid as number) : null;
+      const longCid = calculateComputedValues("longCID", d);
       return (
         <>
           <DetailInputCell
@@ -89,7 +90,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
       );
     }
     case "LTE": {
-      const eCid = d.enbid !== undefined && d.clid !== undefined ? (d.enbid as number) * 256 + (d.clid as number) : null;
+      const eCid = calculateComputedValues("eCID", d);
       return (
         <>
           <DetailInputCell
@@ -138,7 +139,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
     case "NR": {
       const nrType = (d.type as "nsa" | "sa") ?? "nsa";
       const nrTypeLabel = NR_TYPE_OPTIONS.find((opt) => opt.value === nrType)?.label ?? "NSA";
-      const nci = d.gnbid !== undefined && d.clid !== undefined ? (d.gnbid as number) * 4096 + (d.clid as number) : null;
+      const nci = calculateComputedValues("nci", d);
       return (
         <>
           <td className="px-1.5 py-1">
