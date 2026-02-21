@@ -27,6 +27,21 @@ type UseCellDraftsReturn<T extends CellDraftBase> = {
   deleteCell: (localId: string) => void;
 };
 
+function getSharedDetailFields(rat: string): string[] {
+  switch (rat) {
+    case "GSM":
+      return ["lac"];
+    case "UMTS":
+      return ["lac", "rnc"];
+    case "LTE":
+      return ["tac", "enbid"];
+    case "NR":
+      return ["nrtac", "gnbid"];
+    default:
+      return [];
+  }
+}
+
 export function useCellDrafts<T extends CellDraftBase>({
   initialCells,
   initialEnabledRats,
@@ -90,7 +105,19 @@ export function useCellDrafts<T extends CellDraftBase>({
         toast.error(t("toast.noBands", { rat }));
         return;
       }
-      setCells((prev) => [...prev, createNewCell(rat, bandsForRat[0])]);
+      setCells((prev) => {
+        const newCell = createNewCell(rat, bandsForRat[0]);
+        const existingSibling = prev.find((c) => c.rat === rat);
+        if (existingSibling) {
+          const sharedFields = getSharedDetailFields(rat);
+          const inherited: Record<string, unknown> = {};
+          for (const field of sharedFields) {
+            if (existingSibling.details[field] !== undefined) inherited[field] = existingSibling.details[field];
+          }
+          if (Object.keys(inherited).length > 0) newCell.details = { ...newCell.details, ...inherited };
+        }
+        return [...prev, newCell];
+      });
     },
     [disabled, allBands, createNewCell, t],
   );

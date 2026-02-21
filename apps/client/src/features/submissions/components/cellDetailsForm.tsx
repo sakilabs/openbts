@@ -307,10 +307,10 @@ const CellRow = memo(function CellRow({
     const opts = value ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
     const defaultDuplex = opts.length === 1 ? opts[0] : null;
     const newBandId = findBandId(value, defaultDuplex);
-    onUpdate(cell.id, { band_id: newBandId });
-    if (rat === "GSM" && value === 1800) {
-      onDetailsChange(cell.id, "e_gsm", false);
-    }
+    if (!newBandId) return;
+    const patch: Partial<ProposedCellForm> = { band_id: newBandId };
+    if (rat === "GSM" && value === 1800) patch.details = { ...cell.details, e_gsm: false } as ProposedCellForm["details"];
+    onUpdate(cell.id, patch);
   };
 
   const handleDuplexChange = (dup: string | null) => {

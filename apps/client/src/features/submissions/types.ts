@@ -6,7 +6,7 @@ export type { RatType };
 export type GSMCellDetails = {
   lac: number;
   cid: number;
-  is_egsm?: boolean;
+  e_gsm?: boolean;
 };
 
 export type UMTSCellDetails = {
