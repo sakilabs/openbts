@@ -25,6 +25,7 @@ export interface CellExportData {
   notes?: string | null;
   city?: string | null;
   address?: string | null;
+  e_gsm?: boolean | null;
   arfcn?: number | null; // UMTS UARFCN
   nr_bands?: Array<{ value: number; duplex: "FDD" | "TDD" | null }>; // associated NR bands at same station (for LTE cells)
 }
@@ -102,11 +103,12 @@ function getMlpBandCode(
   rat: "GSM" | "UMTS" | "LTE",
   bandValue: number | null | undefined,
   bandDuplex: "FDD" | "TDD" | null | undefined,
+  e_gsm?: boolean | null,
 ): string | null {
   if (!bandValue) return null;
   switch (rat) {
     case "GSM":
-      return `G${bandValue}`;
+      return `${e_gsm ? "E" : "G"}${bandValue}`;
     case "UMTS":
       return `U${bandValue}`;
     case "LTE":
@@ -151,7 +153,7 @@ export function toCLF30Hex(cell: CellExportData): string | null {
   const rncHex = `0x${(cell.rnc ?? 0).toString(16).toUpperCase().padStart(4, "0")}`;
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = (cell.latitude != null && cell.longitude != null) ? -1 : 0;
+  const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
   const description = getDescription(cell);
 
   return `${mccmnc};${cidHex};${lacHex};${rncHex};${lat};${lon};${posRat};${description};0`;
@@ -168,7 +170,7 @@ export function toCLF30Dec(cell: CellExportData): string | null {
   const rncDec = (cell.rnc ?? 0).toString().padStart(5, "0");
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = (cell.latitude != null && cell.longitude != null) ? -1 : 0;
+  const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
   const description = getDescription(cell);
 
   return `${mccmnc};${cidDec};${lacDec};${rncDec};${lat};${lon};${posRat};${description};0`;
@@ -185,7 +187,7 @@ export function toCLF40(cell: CellExportData): string | null {
   const type = 0;
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = (cell.latitude != null && cell.longitude != null) ? -1 : 0;
+  const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
   const description = getDescription(cell);
   const sys = getRatCode(cell.rat);
   const label = `${cell.station_id}_${cellId}`;
@@ -272,7 +274,7 @@ export function toNTM(cell: CellExportData): string | null {
       const cid = cell.cid ?? NTM_UNKNOWN;
       const lac = cell.lac ?? NTM_UNKNOWN;
       let location = getNTMLocation(cell);
-      const bandCode = getMlpBandCode("GSM", cell.band_value, cell.band_duplex);
+      const bandCode = getMlpBandCode("GSM", cell.band_value, cell.band_duplex, cell.e_gsm);
       if (bandCode) location += ` [MLP:${cell.station_id}:${bandCode}]`;
       return `2G;${mcc};${mnc};${cid};${lac};${NTM_UNKNOWN};${NTM_UNKNOWN};${lat};${lon};${location};${NTM_UNKNOWN}`;
     }

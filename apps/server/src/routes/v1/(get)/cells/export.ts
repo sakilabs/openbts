@@ -228,6 +228,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       notes: row.notes,
       city: row.station.location?.city ?? null,
       address: row.station.location?.address ?? null,
+      e_gsm: row.gsm?.e_gsm ?? null,
       arfcn: row.umts?.arfcn ?? null,
       nr_bands: row.rat === "LTE" ? stationNrBandsMap.get(row.station.id) : undefined,
     };

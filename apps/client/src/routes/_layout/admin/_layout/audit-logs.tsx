@@ -208,8 +208,11 @@ function AdminAuditLogsPage() {
             (row.original.new_values as Record<string, unknown> | null)?.id ??
             null;
           const displayId = recordId ?? fallbackId;
-          return displayId !== null ? (
-            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">#{String(displayId)}</span>
+          const shortId = displayId !== null ? String(displayId).split("-").pop() : null;
+          return shortId !== null ? (
+            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded" title={String(displayId)}>
+              #{shortId}
+            </span>
           ) : (
             <span className="text-muted-foreground text-xs">—</span>
           );
