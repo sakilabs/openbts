@@ -9,7 +9,8 @@
     "locations": "Lokalizacje",
     "editLocation": "Edytuj lokalizację",
     "settings": "Ustawienia",
-    "ukeImport": "Import UKE"
+    "ukeImport": "Import UKE",
+    "ukePermits": "Nieprzypisane pozwolenia UKE"
   },
   "settings": {
     "title": "Ustawienia systemowe",
@@ -47,6 +48,12 @@
   },
   "locations": {
     "title": "Lokalizacje"
+  },
+  "ukePermits": {
+    "title": "Nieprzypisane pozwolenia UKE",
+    "permits": "Pozwolenia",
+    "showingStations": "Wyświetlono {{count}} stacji",
+    "showingStationsOfTotal": "Wyświetlono {{count}} z {{total}} stacji"
   },
   "ukeImport": {
     "title": "Import UKE",

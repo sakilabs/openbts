@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "1c24da1f-8a99-4092-bf65-636f1e12458b",
+  "id": "c2dcd101-f80c-4b4a-ac3d-df0a1982ed42",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -226,6 +226,12 @@
     {
       "isRlsEnabled": false,
       "name": "stations_permits",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "stats_snapshots",
       "entityType": "tables",
       "schema": "public"
     },
@@ -1688,6 +1694,106 @@
       "generated": null,
       "identity": {
         "type": "always",
+        "name": "stats_snapshots_id_seq",
+        "increment": "1",
+        "startWith": "1",
+        "minValue": "1",
+        "maxValue": "2147483647",
+        "cache": 1,
+        "cycle": false
+      },
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "snapshot_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "operator_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "band_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "unique_stations_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "permits_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "createdAt",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": {
+        "type": "always",
         "name": "uke_import_metadata_id_seq",
         "increment": "1",
         "startWith": "1",
@@ -2732,7 +2838,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "carrier",
+      "name": "arfcn",
       "entityType": "columns",
       "schema": "public",
       "table": "umts_cells"
@@ -4917,7 +5023,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "carrier",
+      "name": "arfcn",
       "entityType": "columns",
       "schema": "submissions",
       "table": "proposed_umts_cells"
@@ -5888,6 +5994,83 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "stations_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "snapshot_date",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "stats_snapshots_date_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "operator_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "stats_snapshots_operator_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "snapshot_date",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "operator_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "band_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "stats_snapshots_date_operator_band_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "stats_snapshots"
     },
     {
       "nameExplicit": true,
@@ -7423,6 +7606,32 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["operator_id"],
+      "schemaTo": "public",
+      "tableTo": "operators",
+      "columnsTo": ["id"],
+      "onUpdate": "CASCADE",
+      "onDelete": "CASCADE",
+      "name": "stats_snapshots_operator_id_operators_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["band_id"],
+      "schemaTo": "public",
+      "tableTo": "bands",
+      "columnsTo": ["id"],
+      "onUpdate": "CASCADE",
+      "onDelete": "CASCADE",
+      "name": "stats_snapshots_band_id_bands_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "stats_snapshots"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["region_id"],
       "schemaTo": "public",
       "tableTo": "regions",
@@ -7999,6 +8208,14 @@
     {
       "columns": ["id"],
       "nameExplicit": false,
+      "name": "stats_snapshots_pkey",
+      "schema": "public",
+      "table": "stats_snapshots",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
       "name": "uke_import_metadata_pkey",
       "schema": "public",
       "table": "uke_import_metadata",
@@ -8267,6 +8484,15 @@
       "entityType": "uniques",
       "schema": "public",
       "table": "stations_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["snapshot_date", "operator_id", "band_id"],
+      "nullsNotDistinct": false,
+      "name": "stats_snapshots_date_operator_band_unique",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "stats_snapshots"
     },
     {
       "nameExplicit": true,

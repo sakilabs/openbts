@@ -9,7 +9,8 @@
     "locations": "Locations",
     "editLocation": "Edit Location",
     "settings": "Settings",
-    "ukeImport": "UKE Import"
+    "ukeImport": "UKE Import",
+    "ukePermits": "Unassigned UKE Permits"
   },
   "settings": {
     "title": "System Settings",
@@ -47,6 +48,12 @@
   },
   "locations": {
     "title": "Locations"
+  },
+  "ukePermits": {
+    "title": "Unassigned UKE Permits",
+    "permits": "Permits",
+    "showingStations": "Showing {{count}} stations",
+    "showingStationsOfTotal": "Showing {{count}} of {{total}} stations"
   },
   "ukeImport": {
     "title": "UKE Import",

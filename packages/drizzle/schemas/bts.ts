@@ -262,7 +262,7 @@ export const ukePermitSectors = pgTable(
 /**
  * Cells table
  * @example
- * { id: 1, station_id: 1, band_id: 1, lac: 123, cid: 456, cid_long: 123456789, carrier: 1, is_confirmed: false, updatedAt: new Date(), createdAt: new Date() }
+ * { id: 1, station_id: 1, band_id: 1, lac: 123, cid: 456, cid_long: 123456789, arfcn: 1, is_confirmed: false, updatedAt: new Date(), createdAt: new Date() }
  */
 export const cells = pgTable(
   "cells",
@@ -311,7 +311,7 @@ export const umtsCells = pgTable(
       .references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),
     lac: integer("lac"),
-    carrier: integer("carrier"),
+    arfcn: integer("arfcn"),
     rnc: integer("rnc").notNull(),
     cid: integer("cid").notNull(),
     cid_long: integer("cid_long")
@@ -532,6 +532,29 @@ export const ukeImportMetadata = pgTable("uke_import_metadata", {
   last_import_date: timestamp({ withTimezone: true }).notNull().defaultNow(),
   status: varchar("status", { length: 20 }).notNull(),
 });
+
+export const statsSnapshots = pgTable(
+  "stats_snapshots",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    snapshot_date: timestamp("snapshot_date", { withTimezone: true }).notNull(),
+    operator_id: integer("operator_id")
+      .references(() => operators.id, { onDelete: "cascade", onUpdate: "cascade" })
+      .notNull(),
+    band_id: integer("band_id")
+      .references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" })
+      .notNull(),
+    unique_stations_count: integer("unique_stations_count").notNull(),
+    permits_count: integer("permits_count").notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("stats_snapshots_date_operator_band_unique").on(t.snapshot_date, t.operator_id, t.band_id),
+    index("stats_snapshots_date_idx").on(t.snapshot_date),
+    index("stats_snapshots_operator_id_idx").on(t.operator_id),
+    index("stats_snapshots_date_operator_band_idx").on(t.snapshot_date, t.operator_id, t.band_id),
+  ],
+);
 
 export const deletedEntries = pgTable(
   "deleted_entries",

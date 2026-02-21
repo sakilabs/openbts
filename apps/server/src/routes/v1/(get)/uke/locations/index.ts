@@ -61,7 +61,15 @@ const schemaRoute = {
       .regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
       .optional()
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
-    new: z.coerce.boolean().optional().default(false),
+    new: z
+      .string()
+      .optional()
+      .transform((val): number | null => {
+        if (!val || val === "false" || val === "0") return null;
+        if (val === "true") return 30;
+        const n = Number(val);
+        return n >= 1 && n <= 30 ? n : null;
+      }),
   }),
   response: {
     200: z.object({
@@ -83,7 +91,7 @@ type ResponseData = z.infer<typeof ukeLocationsSchema> & {
 };
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentOnly } = req.query;
+  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentDays } = req.query;
   const offset = (page - 1) * limit;
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
   let envelope: ReturnType<typeof sql> | undefined;
@@ -145,9 +153,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     const conditions: SQL<unknown>[] = [];
     if (envelope) conditions.push(sql`${locFields.point} && ${envelope}`);
     if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
-    if (recentOnly) {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      conditions.push(sql`GREATEST(${locFields.createdAt}, ${locFields.updatedAt}) >= ${thirtyDaysAgo.toISOString()}`);
+    if (recentDays) {
+      const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
+      conditions.push(sql`GREATEST(${locFields.createdAt}, ${locFields.updatedAt}) >= ${cutoff.toISOString()}`);
     }
     return conditions;
   };

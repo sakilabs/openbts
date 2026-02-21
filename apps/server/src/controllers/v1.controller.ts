@@ -20,6 +20,7 @@ export async function APIv1Controller(fastify: FastifyZodInstance) {
   for (const file of routeFiles) {
     let route: RouteOptions;
     try {
+      // eslint-disable-next-line no-await-in-loop
       const module = await import(`file://${file}`).catch((err) => {
         log("Failed to import route file %s: %o", file, err);
         return null;

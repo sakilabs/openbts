@@ -116,7 +116,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     filters.operators.length +
     filters.bands.length +
     filters.rat.length +
-    (filters.recentOnly ? 1 : 0) +
+    (filters.recentDays !== null ? 1 : 0) +
     (filters.showRadiolines ? (filters.radiolineOperators?.length ?? 0) : 0);
   const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
   const showResults = activeOverlay === "results" && (isSearching || osmResults.length > 0 || stationResults.length > 0);
@@ -182,7 +182,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   const handleClearAllBands = useCallback(() => onFiltersChange({ ...filters, bands: [] }), [filters, onFiltersChange]);
 
-  const handleToggleRecentOnly = useCallback(() => onFiltersChange({ ...filters, recentOnly: !filters.recentOnly }), [filters, onFiltersChange]);
+  const handleRecentDaysChange = useCallback((days: number | null) => onFiltersChange({ ...filters, recentDays: days }), [filters, onFiltersChange]);
 
   const handleClearFilters = useCallback(
     () =>
@@ -191,7 +191,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         bands: [],
         rat: [],
         source: filters.source,
-        recentOnly: false,
+        recentDays: null,
         showStations: filters.showStations,
         showRadiolines: filters.showRadiolines,
         radiolineOperators: [],
@@ -321,7 +321,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               onToggleOperator={handleToggleOperator}
               onToggleBand={handleToggleBand}
               onToggleRat={handleToggleRat}
-              onToggleRecentOnly={handleToggleRecentOnly}
+              onRecentDaysChange={handleRecentDaysChange}
               onSelectAllRats={handleSelectAllRats}
               onClearAllRats={handleClearAllRats}
               onSelectAllBands={handleSelectAllBands}
@@ -362,7 +362,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                 onToggleOperator={handleToggleOperator}
                 onToggleBand={handleToggleBand}
                 onToggleRat={handleToggleRat}
-                onToggleRecentOnly={handleToggleRecentOnly}
+                onRecentDaysChange={handleRecentDaysChange}
                 onSelectAllRats={handleSelectAllRats}
                 onClearAllRats={handleClearAllRats}
                 onSelectAllBands={handleSelectAllBands}

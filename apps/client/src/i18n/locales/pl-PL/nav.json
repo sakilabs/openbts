@@ -19,9 +19,11 @@
     "submissions": "Zgłoszenia",
     "locations": "Lokalizacje",
     "settings": "Ustawienia",
+    "ukePermits": "Nieprzypisane pozwolenia UKE",
     "ukeImport": "Import UKE",
     "auditLogs": "Dziennik zdarzeń",
-    "deletedEntries": "Usunięte wpisy"
+    "deletedEntries": "Usunięte wpisy",
+    "statistics": "Statystyki"
   },
   "secondary": {
     "settings": "Ustawienia",

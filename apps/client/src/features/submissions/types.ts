@@ -11,7 +11,7 @@ export type GSMCellDetails = {
 
 export type UMTSCellDetails = {
   lac?: number;
-  carrier?: number;
+  arfcn?: number;
   rnc: number;
   cid: number;
 };

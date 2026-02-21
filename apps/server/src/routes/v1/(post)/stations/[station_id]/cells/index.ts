@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
@@ -119,6 +120,21 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     }
 
     const response: ResponseData = created.map((cell) => ({ ...cell, details: idToDetails.get(cell.id) ?? null }));
+
+    await Promise.all(
+      response.map((cell) =>
+        createAuditLog(
+          {
+            action: "cells.create",
+            table_name: "cells",
+            record_id: cell.id,
+            new_values: cell,
+            metadata: { station_id },
+          },
+          req,
+        ),
+      ),
+    );
 
     return res.send({ data: response });
   } catch (error) {

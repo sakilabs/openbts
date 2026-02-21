@@ -37,14 +37,21 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     where: {
       id: location_id,
     },
+    with: { region: { columns: { id: true, name: true, code: true } } },
   });
   if (!location) throw new ErrorResponse("NOT_FOUND");
 
   try {
     const [updated] = await db.update(locations).set(req.body).where(eq(locations.id, location_id)).returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+    const updatedWithRegion = await db.query.locations.findFirst({
+      where: { id: location_id },
+      with: { region: { columns: { id: true, name: true, code: true } } },
+    });
+
     await createAuditLog(
-      { action: "locations.update", table_name: "locations", record_id: location_id, old_values: location, new_values: updated },
+      { action: "locations.update", table_name: "locations", record_id: location_id, old_values: location, new_values: updatedWithRegion ?? updated },
       req,
     );
 

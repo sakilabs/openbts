@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "./checkbox";
 import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
@@ -217,6 +218,54 @@ function StatsSection({ stats, locale }: StatsSectionProps) {
   );
 }
 
+type RecentDaysFilterProps = {
+  filters: StationFilters;
+  onRecentDaysChange: (days: number | null) => void;
+};
+
+function RecentDaysFilter({ filters, onRecentDaysChange }: RecentDaysFilterProps) {
+  const { t } = useTranslation("main");
+  const [localDays, setLocalDays] = useState(filters.recentDays ?? 30);
+
+  const handleCommit = useCallback(
+    (value: number | readonly number[]) => onRecentDaysChange(Array.isArray(value) ? value[0] : value),
+    [onRecentDaysChange],
+  );
+
+  return (
+    <div>
+      <Checkbox
+        checked={filters.recentDays !== null}
+        onChange={(checked) => {
+          if (checked) {
+            setLocalDays(30);
+            onRecentDaysChange(30);
+          } else {
+            onRecentDaysChange(null);
+          }
+        }}
+      >
+        <span className="flex-1 text-left">{t("filters.newOnly")}</span>
+      </Checkbox>
+      {filters.recentDays !== null && (
+        <div className="flex items-center gap-3 px-2 pt-1.5 pb-0.5">
+          <Slider
+            min={1}
+            max={30}
+            step={1}
+            value={[localDays]}
+            onValueChange={(value) => setLocalDays(Array.isArray(value) ? value[0] : value)}
+            onValueCommitted={handleCommit}
+          />
+          <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap w-12 text-right">
+            {t("filters.recentDaysValue", { count: localDays })}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type FilterPanelProps = {
   filters: StationFilters;
   operators: Operator[];
@@ -226,7 +275,7 @@ type FilterPanelProps = {
   onToggleOperator: (mnc: number) => void;
   onToggleBand: (value: number) => void;
   onToggleRat: (rat: string) => void;
-  onToggleRecentOnly: () => void;
+  onRecentDaysChange: (days: number | null) => void;
   onSelectAllRats: () => void;
   onClearAllRats: () => void;
   onSelectAllBands: () => void;
@@ -244,7 +293,7 @@ export function FilterPanel({
   onToggleOperator,
   onToggleBand,
   onToggleRat,
-  onToggleRecentOnly,
+  onRecentDaysChange,
   onSelectAllRats,
   onClearAllRats,
   onSelectAllBands,
@@ -341,11 +390,7 @@ export function FilterPanel({
         </ButtonGroup>
       </div>
 
-      <div>
-        <Checkbox checked={filters.recentOnly} onChange={onToggleRecentOnly}>
-          <span className="flex-1 text-left">{t("filters.newOnly")}</span>
-        </Checkbox>
-      </div>
+      <RecentDaysFilter filters={filters} onRecentDaysChange={onRecentDaysChange} />
 
       <OperatorsSection
         filters={filters}

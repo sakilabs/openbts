@@ -93,7 +93,7 @@ function isNonEmpty(value: unknown): boolean {
   if (typeof value === "string") return value.trim().length > 0;
   if (typeof value === "number") return true;
   if (typeof value === "boolean") return true;
-  if (Array.isArray(value)) return value.length > 0 && value.some(isNonEmpty);
+  if (Array.isArray(value)) return value.some(isNonEmpty);
   if (typeof value === "object") return Object.values(value as object).some(isNonEmpty);
   return false;
 }
@@ -176,6 +176,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           await tx.delete(proposedCells).where(eq(proposedCells.submission_id, id));
         }
 
+        /* eslint-disable no-await-in-loop */
         for (const cell of req.body.cells) {
           const { details, ...cellData } = cell;
 
@@ -207,6 +208,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             }
           }
         }
+        /* eslint-enable no-await-in-loop */
       }
 
       const updated = await tx.query.submissions.findFirst({ where: { id } });

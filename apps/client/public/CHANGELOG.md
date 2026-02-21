@@ -1,11 +1,6 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
-What's being worked on:
-
-- [ ] Statistics page
-- [ ] Add ability to select a range of new stations (max. 30 days)
-
 # 2026-02-21
 
 ### 🩹 Fixes
@@ -17,6 +12,9 @@ What's being worked on:
 ### 🚀 Enhancements
 
 - When adding new cells to already existing set of cells, the new cell will inherit fields like `LAC`, `RNC`, `TAC`, `eNBID`, `NRTAC` & `gnBID`
+- Added new `/statistics` page with all data from UKE & internal db
+- Added ability to select a range of new stations (max. 30 days) by a slider
+- Added a new page with orphaned UKE permits to see which stations still need to be added etc.
 
 ### 🏡 Chore
 

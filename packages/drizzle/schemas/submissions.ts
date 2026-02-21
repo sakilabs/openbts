@@ -73,7 +73,7 @@ export const proposedUMTSCells = SubmissionsSchema.table("proposed_umts_cells", 
     .primaryKey()
     .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
   lac: integer("lac"),
-  carrier: integer("carrier"),
+  arfcn: integer("arfcn"),
   rnc: integer("rnc").notNull(),
   cid: integer("cid").notNull(),
 });

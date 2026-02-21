@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -137,6 +138,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     });
     if (!full) throw new ErrorResponse("FAILED_TO_UPDATE");
     const details = full?.gsm ?? full?.umts ?? full?.lte ?? full?.nr ?? null;
+
+    await createAuditLog(
+      {
+        action: "cells.update",
+        table_name: "cells",
+        record_id: cell_id,
+        old_values: cell,
+        new_values: { ...updated, details },
+        metadata: { station_id },
+      },
+      req,
+    );
+
     return res.send({ data: { ...updated, details } });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;

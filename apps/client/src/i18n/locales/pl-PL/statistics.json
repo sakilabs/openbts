@@ -1,0 +1,29 @@
+{
+  "title": "Statystyki",
+  "description": "Statystyki pozwoleń i trendy historyczne w podziale na operatorów i pasma. Dane są aktualizowane co 24 godziny",
+  "kpi": {
+    "totalPermits": "Pozwolenia",
+    "totalStations": "Unikalne stacje",
+    "totalInternalStations": "Stacje",
+    "totalCells": "Komórki"
+  },
+  "charts": {
+    "byRat": "Rozkład wg technologii",
+    "byOperator": "Rozkład wg operatora",
+    "byBand": "Unikalne stacje wg pasma",
+    "internalByRat": "Komórki wg technologii",
+    "internalByOperator": "Komórki wg operatora",
+    "internalByBand": "Komórki wg pasma",
+    "byVoivodeship": "Unikalne stacje wg województwa",
+    "internalByVoivodeship": "Stacje wg województwa",
+    "history": "Trendy historyczne",
+    "noHistoryData": "Brak danych historycznych. Dane pojawią się po pierwszym imporcie."
+  },
+  "filters": {
+    "allOperators": "Wszyscy operatorzy",
+    "allBands": "Wszystkie pasma",
+    "granularity": "Okres",
+    "monthly": "Miesięczne",
+    "daily": "Dziennie"
+  }
+}

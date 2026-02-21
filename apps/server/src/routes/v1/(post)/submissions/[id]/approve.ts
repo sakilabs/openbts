@@ -262,6 +262,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         );
       }
 
+      /* eslint-disable no-await-in-loop */
       for (const proposed of proposedCellRows) {
         switch (proposed.operation) {
           case "add": {
@@ -289,7 +290,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               }
               case "UMTS": {
                 const d = proposed.umts;
-                if (d) await tx.insert(umtsCells).values({ cell_id: newCell.id, lac: d.lac, carrier: d.carrier, rnc: d.rnc, cid: d.cid });
+                if (d) await tx.insert(umtsCells).values({ cell_id: newCell.id, lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid });
                 break;
               }
               case "LTE": {
@@ -357,10 +358,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               case "UMTS": {
                 const d = proposed.umts;
                 if (d)
-                  await tx
-                    .update(umtsCells)
-                    .set({ lac: d.lac, carrier: d.carrier, rnc: d.rnc, cid: d.cid })
-                    .where(eq(umtsCells.cell_id, targetCellId));
+                  await tx.update(umtsCells).set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid }).where(eq(umtsCells.cell_id, targetCellId));
                 break;
               }
               case "LTE": {
@@ -425,6 +423,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           }
         }
       }
+      /* eslint-enable no-await-in-loop */
 
       const now = new Date();
       const [updated] = await tx

@@ -23,6 +23,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
     where: {
       id: id,
     },
+    with: { region: { columns: { id: true, name: true, code: true } } },
   });
   if (!location) throw new ErrorResponse("NOT_FOUND");
 
@@ -31,7 +32,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
 
   try {
     await db.delete(locations).where(eq(locations.id, id));
-    await createAuditLog({ action: "locations.delete", table_name: "locations", record_id: id, old_values: location, new_values: null }, req);
+    await createAuditLog({ action: "locations.delete", table_name: "locations", record_id: id, old_values: location }, req);
   } catch {
     throw new ErrorResponse("FAILED_TO_DELETE");
   }

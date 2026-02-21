@@ -80,7 +80,7 @@ type FullState = {
   operators: number[];
   bands: number[];
   rat: string[];
-  recentOnly: boolean;
+  recentDays: number | null;
   regions: number[];
   q: string;
   order: StationSortDirection;
@@ -92,7 +92,7 @@ function stateToParams(state: FullState): URLSearchParams {
   if (state.operators.length) next.set("mnc", state.operators.join(","));
   if (state.bands.length) next.set("band", state.bands.join(","));
   if (state.rat.length) next.set("rat", state.rat.join(","));
-  if (state.recentOnly) next.set("recent", "1");
+  if (state.recentDays !== null) next.set("recent", String(state.recentDays));
   if (state.regions.length) next.set("regions", state.regions.join(","));
   if (state.q) next.set("q", state.q);
   if (state.order !== "desc") next.set("order", state.order);
@@ -105,7 +105,13 @@ function paramsToState(searchParams: URLSearchParams): FullState {
     operators: parseNumberArrayParam(searchParams.get("mnc")),
     bands: parseNumberArrayParam(searchParams.get("band")),
     rat: parseArrayParam(searchParams.get("rat")),
-    recentOnly: searchParams.get("recent") === "1",
+    recentDays: (() => {
+      const v = searchParams.get("recent");
+      if (!v) return null;
+      if (v === "1" || v === "true") return 30;
+      const n = Number(v);
+      return n >= 1 && n <= 30 ? n : null;
+    })(),
     regions: parseNumberArrayParam(searchParams.get("regions")),
     q: searchParams.get("q") ?? "",
     order: (searchParams.get("order") as StationSortDirection) ?? "desc",
@@ -137,9 +143,12 @@ export function useStationsData() {
       bands: state.bands,
       rat: state.rat,
       source: "internal",
-      recentOnly: state.recentOnly,
+      recentDays: state.recentDays,
+      showStations: true,
+      showRadiolines: false,
+      radiolineOperators: [],
     }),
-    [state.operators, state.bands, state.rat, state.recentOnly],
+    [state.operators, state.bands, state.rat, state.recentDays],
   );
 
   const selectedRegions = state.regions;
@@ -154,14 +163,17 @@ export function useStationsData() {
         bands: stateRef.current.bands,
         rat: stateRef.current.rat,
         source: "internal",
-        recentOnly: stateRef.current.recentOnly,
+        recentDays: stateRef.current.recentDays,
+        showStations: true,
+        showRadiolines: false,
+        radiolineOperators: [],
       };
       const resolved = typeof newFilters === "function" ? newFilters(current) : newFilters;
       commit({
         operators: resolved.operators,
         bands: resolved.bands,
         rat: resolved.rat,
-        recentOnly: resolved.recentOnly,
+        recentDays: resolved.recentDays,
       });
     },
     [commit],

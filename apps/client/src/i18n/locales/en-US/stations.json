@@ -12,10 +12,10 @@
     "newStation": "Create New Station"
   },
   "cells": {
-    "cellsCount_one": "{{count}} cell",
-    "cellsCount_few": "{{count}} cells",
-    "cellsCount_many": "{{count}} cells",
-    "cellsCount_other": "{{count}} cells",
+    "cellsCount_one": "{{count, number}} cell",
+    "cellsCount_few": "{{count, number}} cells",
+    "cellsCount_many": "{{count, number}} cells",
+    "cellsCount_other": "{{count, number}} cells",
     "notesPlaceholder": "e.g. picocell",
     "addCell": "Add Cell",
     "confirmCells": "Confirm cells",
@@ -26,13 +26,12 @@
     "diffModified": "modified",
     "diffDeleted": "deleted",
     "cellNotConfirmed": "This cell is not confirmed",
-    "carrier": "Carrier",
     "unknownBand": "Unknown Band"
   },
   "stationsAtLocation": "Stations at this location",
-  "stationsCount_one": "{{count}} station",
-  "stationsCount_few": "{{count}} stations",
-  "stationsCount_many": "{{count}} stations",
+  "stationsCount_one": "{{count, number}} station",
+  "stationsCount_few": "{{count, number}} stations",
+  "stationsCount_many": "{{count, number}} stations",
   "toast": {
     "locationSaved": "Location has been saved",
     "locationDeleted": "Location has been deleted",

@@ -28,8 +28,14 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     const [location] = await db.insert(locations).values(req.body).returning();
 
     if (!location) throw new ErrorResponse("FAILED_TO_CREATE");
+
+    const locationWithRegion = await db.query.locations.findFirst({
+      where: { id: location.id },
+      with: { region: { columns: { id: true, name: true, code: true } } },
+    });
+
     await createAuditLog(
-      { action: "locations.create", table_name: "locations", record_id: location.id, old_values: null, new_values: location },
+      { action: "locations.create", table_name: "locations", record_id: location.id, new_values: locationWithRegion ?? location },
       req,
     );
     return res.send({ data: location });

@@ -44,6 +44,7 @@ const navMainConfig = [
     items: [
       { titleKey: "items.mapView", url: "/" },
       { titleKey: "items.database", url: "/stations" },
+      { titleKey: "items.statistics", url: "/statistics" },
       { titleKey: "items.deletedEntries", url: "/deleted-entries" },
       { titleKey: "items.clfExport", url: "/clf-export" },
     ],
@@ -74,6 +75,7 @@ const adminNavConfig = [
       { titleKey: "items.stations", url: "/admin/stations" },
       { titleKey: "items.locations", url: "/admin/locations" },
       { titleKey: "items.submissions", url: "/admin/submissions" },
+      { titleKey: "items.ukePermits", url: "/admin/uke-permits" },
       { titleKey: "items.ukeImport", url: "/admin/uke-import" },
       { titleKey: "items.auditLogs", url: "/admin/audit-logs" },
       { titleKey: "items.settings", url: "/admin/settings" },

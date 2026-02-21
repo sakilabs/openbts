@@ -133,7 +133,7 @@ export default class App {
     this.fastify
       .register(cors, {
         origin: (origin, cb) => {
-          if (typeof origin === "undefined") {
+          if (!origin) {
             cb(null, true);
             return;
           }

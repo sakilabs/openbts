@@ -48,3 +48,9 @@ export function normalizeOperatorName(name: string): string {
 }
 
 export const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
+
+export function getOperatorSortIndex(mnc: number | null | undefined): number {
+  if (mnc == null) return TOP4_MNCS.length;
+  const idx = TOP4_MNCS.indexOf(mnc);
+  return idx === -1 ? TOP4_MNCS.length : idx;
+}

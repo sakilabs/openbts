@@ -5,6 +5,7 @@ import { join, dirname } from "node:path";
 import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 import { cleanupDownloads } from "@openbts/uke-importer/utils";
 import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
+import { takeStatsSnapshot } from "./statsSnapshot.service.js";
 import { logger } from "../utils/logger.js";
 import redis from "../database/redis.js";
 import { deletedEntries } from "@openbts/drizzle";
@@ -19,6 +20,7 @@ type ImportStepKey =
   | "prune_associations"
   | "cleanup_orphaned_uke_locations"
   | "associate"
+  | "snapshot"
   | "cleanup";
 type StepStatus = "pending" | "running" | "success" | "skipped" | "error";
 type JobState = "idle" | "running" | "success" | "error";
@@ -46,6 +48,7 @@ const STEP_KEYS: ImportStepKey[] = [
   "prune_associations",
   "cleanup_orphaned_uke_locations",
   "associate",
+  "snapshot",
   "cleanup",
 ];
 
@@ -258,6 +261,23 @@ async function runJob(
       markSkipped(job, "cleanup_orphaned_uke_locations");
       markSkipped(job, "prune_associations");
       markSkipped(job, "associate");
+      await saveJob(job);
+    }
+
+    if (stationsChanged || permitsChanged) {
+      markRunning(job, "snapshot");
+      await saveJob(job);
+      try {
+        await takeStatsSnapshot();
+        markSuccess(job, "snapshot");
+        await saveJob(job);
+      } catch (e) {
+        markError(job, "snapshot");
+        await saveJob(job);
+        logger.error("Stats snapshot failed", { error: e instanceof Error ? e.message : String(e) });
+      }
+    } else {
+      markSkipped(job, "snapshot");
       await saveJob(job);
     }
 

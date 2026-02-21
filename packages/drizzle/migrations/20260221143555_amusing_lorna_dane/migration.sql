@@ -166,6 +166,17 @@ CREATE TABLE "stations_permits" (
 	CONSTRAINT "stations_permits_pair_unique" UNIQUE("station_id","permit_id")
 );
 --> statement-breakpoint
+CREATE TABLE "stats_snapshots" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "stats_snapshots_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"snapshot_date" timestamp with time zone NOT NULL,
+	"operator_id" integer NOT NULL,
+	"band_id" integer NOT NULL,
+	"unique_stations_count" integer NOT NULL,
+	"permits_count" integer NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "stats_snapshots_date_operator_band_unique" UNIQUE("snapshot_date","operator_id","band_id")
+);
+--> statement-breakpoint
 CREATE TABLE "uke_import_metadata" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "uke_import_metadata_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"import_type" varchar(20) NOT NULL,
@@ -267,7 +278,7 @@ CREATE TABLE "uke_radiolines" (
 CREATE TABLE "umts_cells" (
 	"cell_id" integer PRIMARY KEY,
 	"lac" integer,
-	"carrier" integer,
+	"arfcn" integer,
 	"rnc" integer NOT NULL,
 	"cid" integer NOT NULL,
 	"cid_long" integer GENERATED ALWAYS AS (("umts_cells"."rnc" * 65536) + "umts_cells"."cid") STORED NOT NULL,
@@ -491,7 +502,7 @@ CREATE TABLE "submissions"."proposed_stations" (
 CREATE TABLE "submissions"."proposed_umts_cells" (
 	"proposed_cell_id" integer PRIMARY KEY,
 	"lac" integer,
-	"carrier" integer,
+	"arfcn" integer,
 	"rnc" integer NOT NULL,
 	"cid" integer NOT NULL
 );
@@ -545,6 +556,9 @@ CREATE INDEX "stations_updated_at_idx" ON "stations" ("updatedAt");--> statement
 CREATE INDEX "stations_created_at_idx" ON "stations" ("createdAt");--> statement-breakpoint
 CREATE INDEX "stations_permits_station_id_idx" ON "stations_permits" ("station_id");--> statement-breakpoint
 CREATE INDEX "stations_permits_permit_id_idx" ON "stations_permits" ("permit_id");--> statement-breakpoint
+CREATE INDEX "stats_snapshots_date_idx" ON "stats_snapshots" ("snapshot_date");--> statement-breakpoint
+CREATE INDEX "stats_snapshots_operator_id_idx" ON "stats_snapshots" ("operator_id");--> statement-breakpoint
+CREATE INDEX "stats_snapshots_date_operator_band_idx" ON "stats_snapshots" ("snapshot_date","operator_id","band_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_region_id_idx" ON "uke_locations" ("region_id");--> statement-breakpoint
 CREATE INDEX "uke_locations_point_gist" ON "uke_locations" USING gist ("point");--> statement-breakpoint
 CREATE INDEX "uke_locations_created_at_idx" ON "uke_locations" ("createdAt");--> statement-breakpoint
@@ -620,6 +634,8 @@ ALTER TABLE "stations" ADD CONSTRAINT "stations_location_id_locations_id_fkey" F
 ALTER TABLE "stations" ADD CONSTRAINT "stations_operator_id_operators_id_fkey" FOREIGN KEY ("operator_id") REFERENCES "operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "stations_permits" ADD CONSTRAINT "stations_permits_permit_id_uke_permits_id_fkey" FOREIGN KEY ("permit_id") REFERENCES "uke_permits"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "stations_permits" ADD CONSTRAINT "stations_permits_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "stats_snapshots" ADD CONSTRAINT "stats_snapshots_operator_id_operators_id_fkey" FOREIGN KEY ("operator_id") REFERENCES "operators"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "stats_snapshots" ADD CONSTRAINT "stats_snapshots_band_id_bands_id_fkey" FOREIGN KEY ("band_id") REFERENCES "bands"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "uke_locations" ADD CONSTRAINT "uke_locations_region_id_regions_id_fkey" FOREIGN KEY ("region_id") REFERENCES "regions"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "uke_permit_sectors" ADD CONSTRAINT "uke_permit_sectors_permit_id_uke_permits_id_fkey" FOREIGN KEY ("permit_id") REFERENCES "uke_permits"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "uke_permits" ADD CONSTRAINT "uke_permits_operator_id_operators_id_fkey" FOREIGN KEY ("operator_id") REFERENCES "operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint

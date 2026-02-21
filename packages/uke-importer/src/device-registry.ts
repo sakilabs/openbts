@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import path from "node:path";
 import url from "node:url";
 import { unlinkSync } from "node:fs";

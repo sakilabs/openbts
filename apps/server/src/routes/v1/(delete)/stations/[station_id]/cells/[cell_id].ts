@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
@@ -55,6 +56,17 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 
       await tx.delete(cells).where(eq(cells.id, cell_id));
     });
+
+    await createAuditLog(
+      {
+        action: "cells.delete",
+        table_name: "cells",
+        record_id: cell_id,
+        old_values: cell,
+        metadata: { station_id },
+      },
+      req,
+    );
 
     return res.status(204).send();
   } catch {

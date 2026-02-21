@@ -179,6 +179,7 @@ export async function upsertUkeLocations(
 
     if (toInsert.length) {
       for (const group of chunk(toInsert, BATCH_SIZE)) {
+        // eslint-disable-next-line no-await-in-loop
         await db.insert(ukeLocations).values(
           group.map((loc) => ({
             region_id: regionIds.get(loc.regionName) ?? 0,

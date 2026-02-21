@@ -57,7 +57,8 @@ function parseUrlHash(): {
       .filter((n) => !Number.isNaN(n)) || [];
   const rat = params.get("rat")?.split(",").filter(Boolean) || [];
   const source = (params.get("source") as StationSource) || "internal";
-  const recentOnly = params.get("new") === "true";
+  const newParam = params.get("new");
+  const recentDays = newParam === "true" ? 30 : newParam ? Math.min(30, Math.max(1, Number(newParam))) || null : null;
   const showRadiolines = params.get("radiolines") === "1";
   const showStations = params.get("stations") !== "0";
   const radiolineOperators =
@@ -76,7 +77,7 @@ function parseUrlHash(): {
   const radiolineId = radiolineIdStr ? Number.parseInt(radiolineIdStr, 10) : undefined;
 
   return {
-    filters: hasFilterParams ? { operators, bands, rat, source, recentOnly, showStations, showRadiolines, radiolineOperators } : null,
+    filters: hasFilterParams ? { operators, bands, rat, source, recentDays, showStations, showRadiolines, radiolineOperators } : null,
     center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
     zoom: !Number.isNaN(z) ? z : undefined,
     stationId,
@@ -92,7 +93,7 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
   if (filters.bands.length > 0) params.set("bands", filters.bands.join(","));
   if (filters.rat.length > 0) params.set("rat", filters.rat.join(","));
   params.set("source", filters.source);
-  if (filters.recentOnly) params.set("new", "true");
+  if (filters.recentDays !== null) params.set("new", String(filters.recentDays));
   if (filters.showRadiolines) params.set("radiolines", "1");
   if (!filters.showStations) params.set("stations", "0");
   if (filters.radiolineOperators.length > 0) params.set("rl_operators", filters.radiolineOperators.join(","));
@@ -130,7 +131,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
             bands: urlFilters.bands || [],
             rat: urlFilters.rat || [],
             source: urlFilters.source || "internal",
-            recentOnly: urlFilters.recentOnly || false,
+            recentDays: urlFilters.recentDays ?? null,
             showStations: urlFilters.showStations ?? true,
             showRadiolines: urlFilters.showRadiolines ?? false,
             radiolineOperators: urlFilters.radiolineOperators || [],

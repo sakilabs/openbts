@@ -1,0 +1,29 @@
+{
+  "title": "Statistics",
+  "description": "Permit statistics and historical trends across operators and bands. Data is updated every 24 hours",
+  "kpi": {
+    "totalPermits": "Total Permits",
+    "totalStations": "Unique Stations",
+    "totalInternalStations": "Total Stations",
+    "totalCells": "Total Cells"
+  },
+  "charts": {
+    "byRat": "Distribution by Technology",
+    "byOperator": "Distribution by Operator",
+    "byBand": "Unique Stations per Band",
+    "internalByRat": "Cells by Technology",
+    "internalByOperator": "Cells by Operator",
+    "internalByBand": "Cells per Band",
+    "byVoivodeship": "Unique Stations per Voivodeship",
+    "internalByVoivodeship": "Stations per Voivodeship",
+    "history": "Historical Trends",
+    "noHistoryData": "No historical data available yet. Data will appear after the first import."
+  },
+  "filters": {
+    "allOperators": "All Operators",
+    "allBands": "All Bands",
+    "granularity": "Period",
+    "monthly": "Monthly",
+    "daily": "Daily"
+  }
+}

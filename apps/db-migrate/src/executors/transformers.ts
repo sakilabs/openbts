@@ -70,7 +70,7 @@ export interface PreparedUMTSDetails {
   lac: number | null;
   rnc: number;
   cid: number;
-  carrier: number | null;
+  arfcn: number | null;
 }
 export interface PreparedLTEDetails {
   tac: number | null;
@@ -84,6 +84,7 @@ export interface PreparedNRDetails {
   gnbid: number | null;
   clid: number | null;
   pci: number | null;
+  type: "nsa" | "sa";
   supports_nr_redcap: boolean;
 }
 
@@ -252,7 +253,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
           const rnc = toInt(station.rnc) ?? 0;
           const cid = toInt(cell.cid) ?? 0;
           if (rnc === null || cid === null) logger.warn(`[WARN] Skipping UMTS cell id=${cell.id}: rnc=${rnc}, cid=${cid} (both required)`);
-          out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid, carrier: toInt(cell.ua_freq) } });
+          out.push({ ...base, rat, umts: { lac: toInt(cell.lac), rnc, cid, arfcn: toInt(cell.ua_freq) } });
         }
         break;
       case "LTE":
@@ -272,7 +273,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
           const clid = null;
           const nrtac = null;
           const pci = null;
-          out.push({ ...base, rat, nr: { nrtac, gnbid, clid, pci, supports_nr_redcap: false } });
+          out.push({ ...base, rat, nr: { nrtac, gnbid, clid, pci, type: "nsa", supports_nr_redcap: false } });
         }
         break;
     }

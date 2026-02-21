@@ -92,7 +92,7 @@ function isNonEmpty(value: unknown): boolean {
   if (typeof value === "string") return value.trim().length > 0;
   if (typeof value === "number") return true;
   if (typeof value === "boolean") return true;
-  if (Array.isArray(value)) return value.length > 0 && value.some(isNonEmpty);
+  if (Array.isArray(value)) return value.some(isNonEmpty);
   if (typeof value === "object") return Object.values(value as object).some(isNonEmpty);
   return false;
 }
@@ -201,6 +201,7 @@ async function processSubmission(
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
   if (proposedCellsInput && proposedCellsInput.length > 0) {
+    /* eslint-disable no-await-in-loop */
     for (const cell of proposedCellsInput) {
       try {
         const [base] = await tx
@@ -250,6 +251,7 @@ async function processSubmission(
         });
       }
     }
+    /* eslint-enable no-await-in-loop */
   }
 
   return { ...submission, proposedStation: stationData, proposedLocation: locationData, cells: proposedCellsInput };
@@ -270,24 +272,27 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     const results = await db.transaction(async (tx) => {
       const created: SubmissionWithExtras[] = [];
       for (const input of submissionInputs) {
+        // eslint-disable-next-line no-await-in-loop
         created.push(await processSubmission(tx, input, userId));
       }
       return created;
     });
 
-    for (const submission of results) {
-      await createAuditLog(
-        {
-          action: "submissions.create",
-          table_name: "submissions",
-          record_id: undefined,
-          old_values: null,
-          new_values: submission,
-          metadata: { submission_id: submission.id },
-        },
-        req,
-      );
-    }
+    await Promise.all(
+      results.map((submission) =>
+        createAuditLog(
+          {
+            action: "submissions.create",
+            table_name: "submissions",
+            record_id: undefined,
+            old_values: null,
+            new_values: submission,
+            metadata: { submission_id: submission.id },
+          },
+          req,
+        ),
+      ),
+    );
 
     return res.send({ data: results });
   } catch (error) {

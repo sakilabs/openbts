@@ -67,7 +67,7 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
             await db.insert(umtsCells).values({ ...d, cell_id: inserted.id });
             details = {
               lac: d.lac ?? null,
-              carrier: d.carrier ?? null,
+              arfcn: d.arfcn ?? null,
               rnc: d.rnc,
               cid: d.cid,
             } as z.infer<typeof umtsCellsSchema>;

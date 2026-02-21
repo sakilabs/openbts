@@ -61,7 +61,15 @@ const schemaRoute = {
       .regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
       .optional()
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
-    new: z.coerce.boolean().optional().default(false),
+    new: z
+      .string()
+      .optional()
+      .transform((val): number | null => {
+        if (!val || val === "false" || val === "0") return null;
+        if (val === "true") return 30;
+        const n = Number(val);
+        return n >= 1 && n <= 30 ? n : null;
+      }),
     orphaned: z.coerce.boolean().optional().default(false),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
     sortBy: z.enum(["id", "updatedAt", "createdAt"]).optional(),
@@ -94,7 +102,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     operators: operatorMncs,
     bands: bandValues,
     regions: regionNames,
-    new: recentOnly,
+    new: recentDays,
     orphaned,
     sort,
     sortBy,
@@ -226,9 +234,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         )}]::int4[])`,
       );
     }
-    if (recentOnly) {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      conditions.push(sql`(${locFields.createdAt} >= ${thirtyDaysAgo.toISOString()} OR ${locFields.updatedAt} >= ${thirtyDaysAgo.toISOString()})`);
+    if (recentDays) {
+      const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
+      conditions.push(sql`(${locFields.createdAt} >= ${cutoff.toISOString()} OR ${locFields.updatedAt} >= ${cutoff.toISOString()})`);
     }
     if (hasStationFilters) {
       const operatorCond = operatorIds.length

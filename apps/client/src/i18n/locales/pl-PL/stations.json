@@ -12,9 +12,9 @@
     "newStation": "Utwórz nową stację"
   },
   "cells": {
-    "cellsCount_one": "{{count}} komórka",
-    "cellsCount_few": "{{count}} komórki",
-    "cellsCount_many": "{{count}} komórek",
+    "cellsCount_one": "{{count, number}} komórka",
+    "cellsCount_few": "{{count, number}} komórki",
+    "cellsCount_many": "{{count, number}} komórek",
     "notesPlaceholder": "np. pikokomórka",
     "addCell": "Dodaj komórkę",
     "confirmCells": "Potwierdź komórki",
@@ -34,13 +34,12 @@
     "diffDeleted_many": "usuniętych",
     "diffDeleted_other": "usunięte",
     "cellNotConfirmed": "Ta komórka nie jest potwierdzona",
-    "carrier": "Nośnia",
     "unknownBand": "Nieznane pasmo"
   },
   "stationsAtLocation": "Stacje w tej lokalizacji",
-  "stationsCount_one": "{{count}} stacja",
-  "stationsCount_few": "{{count}} stacje",
-  "stationsCount_many": "{{count}} stacji",
+  "stationsCount_one": "{{count, number}} stacja",
+  "stationsCount_few": "{{count, number}} stacje",
+  "stationsCount_many": "{{count, number}} stacji",
   "toast": {
     "locationSaved": "Lokalizacja została zapisana",
     "locationDeleted": "Lokalizacja została usunięta",

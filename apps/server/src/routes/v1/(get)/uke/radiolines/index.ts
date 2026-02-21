@@ -104,7 +104,7 @@ type ReqQuery = {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit = undefined, page = 1, bounds, operators, permit_number, decision_type, new: recentOnly } = req.query;
+  const { limit = undefined, page = 1, bounds, operators, permit_number, decision_type } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   try {
@@ -121,10 +121,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         const rxPoint = sql`ST_SetSRID(ST_MakePoint(${f.rx_longitude}, ${f.rx_latitude}), 4326)`;
         conditions.push(sql`(ST_Intersects(${txPoint}, ${envelope}) OR ST_Intersects(${rxPoint}, ${envelope}))`);
       }
-      // if (recentOnly) {
-      //   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      //   conditions.push(sql`${f.createdAt} >= ${thirtyDaysAgo.toISOString()}`);
-      // }
       if (permit_number) {
         const like = `%${permit_number}%`;
         conditions.push(sql`(${f.permit_number} ILIKE ${like} OR similarity(${f.permit_number}, ${permit_number}) > ${SIMILARITY_THRESHOLD})`);

@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { eq, sql } from "drizzle-orm";
 
 import {
@@ -135,9 +136,7 @@ export async function updateOperatorParents(): Promise<void> {
   const sferia = nameToId.get("Sferia");
   if (sferia && parentOfPlus) updates.push({ child: sferia, parent: parentOfPlus });
 
-  for (const update of updates) {
-    await db.update(operators).set({ parent_id: update.parent }).where(eq(operators.id, update.child));
-  }
+  await Promise.all(updates.map((update) => db.update(operators).set({ parent_id: update.parent }).where(eq(operators.id, update.child))));
 }
 
 export async function writeLocations(items: PreparedLocation[], regionIds: RegionIdMap, options: WriteOptions = {}): Promise<LocationIdMap> {
@@ -389,7 +388,7 @@ export async function writeCellsAndDetails(
       lac: val.cell.umts.lac,
       rnc: val.cell.umts.rnc,
       cid: val.cell.umts.cid,
-      carrier: val.cell.umts.carrier,
+      arfcn: val.cell.umts.arfcn,
       createdAt: val.cell.date_added ?? new Date(),
       updatedAt: val.cell.date_updated ?? new Date(),
     }));
@@ -404,7 +403,7 @@ export async function writeCellsAndDetails(
       const insertedKeys = new Set(inserted.map((r) => `${r.cell_id}:${r.rnc}:${r.cid}`));
       const skipped = group.filter((g) => !insertedKeys.has(`${g.cell_id}:${g.rnc}:${g.cid}`));
       for (const g of skipped) {
-        logger.warn(`[umtsCells] conflict, skipped: cell_id=${g.cell_id}, lac=${g.lac}, rnc=${g.rnc}, cid=${g.cid}, carrier=${g.carrier}`);
+        logger.warn(`[umtsCells] conflict, skipped: cell_id=${g.cell_id}, lac=${g.lac}, rnc=${g.rnc}, cid=${g.cid}, arfcn=${g.arfcn}`);
       }
     }
   }
@@ -447,6 +446,7 @@ export async function writeCellsAndDetails(
       gnbid: val.cell.nr.gnbid,
       clid: val.cell.nr.clid,
       pci: val.cell.nr.pci,
+      type: val.cell.nr.type,
       supports_nr_redcap: val.cell.nr.supports_nr_redcap,
       createdAt: val.cell.date_added ?? new Date(),
       updatedAt: val.cell.date_updated ?? new Date(),

@@ -40,7 +40,7 @@ export type CellDetails = {
   // UMTS
   rnc?: number;
   cid_long?: number;
-  carrier?: number;
+  arfcn?: number;
   // LTE
   tac?: number;
   enbid?: number;
@@ -152,7 +152,7 @@ export type StationFilters = {
   bands: number[];
   rat: string[];
   source: StationSource;
-  recentOnly: boolean;
+  recentDays: number | null;
   showStations: boolean;
   showRadiolines: boolean;
   radiolineOperators: number[];

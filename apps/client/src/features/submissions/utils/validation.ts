@@ -132,7 +132,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("lac", d.lac);
       requireNonNegative("cid", d.cid);
       requireNonNegative("rnc", d.rnc);
-      optionalNonNegative("carrier", d.carrier);
+      optionalNonNegative("arfcn", d.arfcn);
       break;
     }
     case "LTE": {

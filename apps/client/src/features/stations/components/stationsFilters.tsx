@@ -123,7 +123,7 @@ export function StationsFilters({
       bands: [],
       rat: [],
       source: "internal",
-      recentOnly: false,
+      recentDays: null,
       showRadiolines: false,
       radiolineOperators: [],
       showStations: true,

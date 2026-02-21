@@ -19,9 +19,11 @@
     "submissions": "Submissions",
     "locations": "Locations",
     "settings": "Settings",
+    "ukePermits": "Unassigned UKE Permits",
     "ukeImport": "UKE Import",
     "auditLogs": "Audit Logs",
-    "deletedEntries": "Deleted Entries"
+    "deletedEntries": "Deleted Entries",
+    "statistics": "Statistics"
   },
   "secondary": {
     "settings": "Settings",
