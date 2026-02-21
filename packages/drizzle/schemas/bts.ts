@@ -342,6 +342,7 @@ export const lteCells = pgTable(
       .notNull()
       .generatedAlwaysAs((): SQL => sql`(${lteCells.enbid} * 256) + ${lteCells.clid}`),
     pci: integer("pci"),
+    earfcn: integer("earfcn"),
     supports_nb_iot: boolean("supports_nb_iot").default(false),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -373,6 +374,7 @@ export const nrCells = pgTable(
       (): SQL => sql`(${nrCells.gnbid}::bigint * power(2, 36 - ${nrCells.gnbid_length})::bigint) + ${nrCells.clid}::bigint`,
     ),
     pci: integer("pci"),
+    arfcn: integer("arfcn"),
     type: NRType("type").notNull(),
     supports_nr_redcap: boolean("supports_nr_redcap").default(false),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
