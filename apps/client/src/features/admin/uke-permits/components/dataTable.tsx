@@ -1,45 +1,43 @@
-import { useEffect, useMemo } from "react";
+import { useMemo, type Dispatch, type SetStateAction, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { InformationCircleIcon, MapPinIcon } from "@hugeicons/core-free-icons";
-import { useTablePagination } from "@/hooks/useTablePageSize";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { createUnassignedPermitsColumns } from "./columns";
 import type { UkeStation } from "@/types/station";
 
+interface PaginationState {
+  pageIndex: number;
+  pageSize: number;
+}
+
 interface UnassignedPermitsDataTableProps {
   data: UkeStation[];
   isLoading?: boolean;
-  isFetchingMore?: boolean;
   onOpenDetails?: (station: UkeStation) => void;
   onViewOnMap?: (station: UkeStation) => void;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  totalItems?: number;
+  totalItems: number;
+  containerRef: RefObject<HTMLDivElement | null>;
+  pagination: PaginationState;
+  setPagination: Dispatch<SetStateAction<PaginationState>>;
 }
 
 export function UnassignedPermitsDataTable({
   data,
   isLoading,
-  isFetchingMore,
   onOpenDetails,
   onViewOnMap,
-  onLoadMore,
-  hasMore,
   totalItems,
+  containerRef,
+  pagination,
+  setPagination,
 }: UnassignedPermitsDataTableProps) {
   "use no memo";
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
-
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
 
   const columns = useMemo(() => createUnassignedPermitsColumns({ t, tCommon }), [t, tCommon]);
 
@@ -47,27 +45,15 @@ export function UnassignedPermitsDataTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
+    pageCount: Math.ceil(totalItems / pagination.pageSize),
     state: { pagination },
     onPaginationChange: setPagination,
-    autoResetPageIndex: false,
   });
 
-  const pageCount = table.getPageCount();
   const columnCount = columns.length;
-
-  useEffect(() => {
-    if (hasMore && onLoadMore && pagination.pageIndex + 1 >= pageCount - 2) onLoadMore();
-  }, [pagination.pageIndex, pageCount, hasMore, onLoadMore]);
-
   const showSkeleton = isLoading && data.length === 0;
   const isEmpty = !isLoading && table.getRowModel().rows.length === 0;
-
-  const currentPageRows = table.getRowModel().rows.length;
-  const isOnLastLoadedPage = pagination.pageIndex === pageCount - 1;
-  const skeletonRowsToShow =
-    isFetchingMore && hasMore && isOnLastLoadedPage && currentPageRows < pagination.pageSize ? pagination.pageSize - currentPageRows : 0;
-
   const rows = table.getRowModel().rows;
 
   return (
@@ -116,11 +102,10 @@ export function UnassignedPermitsDataTable({
                   </DropdownMenuContent>
                 </DropdownMenu>
               ))}
-              {skeletonRowsToShow > 0 && <DataTable.SkeletonRows rows={skeletonRowsToShow} columns={columnCount} />}
             </tbody>
           )}
           <DataTable.Footer columns={columnCount}>
-            <DataTablePagination table={table} totalItems={totalItems ?? data.length} showRowsPerPage={false} />
+            <DataTablePagination table={table} totalItems={totalItems} showRowsPerPage={false} />
           </DataTable.Footer>
         </DataTable.Table>
       </DataTable.Root>

@@ -9,6 +9,7 @@ import { UnassignedPermitsDataTable } from "@/features/admin/uke-permits/compone
 import { UnassignedPermitsResponsiveFilters } from "@/features/admin/uke-permits/components/responsiveFilters";
 import { UkePermitDetailsDialog } from "@/features/station-details/components/ukePermitDetailsDialog";
 import { useUnassignedPermitsData } from "@/features/admin/uke-permits/hooks/useUnassignedPermitsData";
+import { useTablePagination } from "@/hooks/useTablePageSize";
 import type { UkeStation } from "@/types/station";
 
 function subscribeToHeaderActions(callback: () => void) {
@@ -26,7 +27,13 @@ function AdminUkePermitsPage() {
     () => null,
   );
 
-  const data = useUnassignedPermitsData();
+  const { containerRef, pagination, setPagination } = useTablePagination({
+    rowHeight: 64,
+    headerHeight: 40,
+    paginationHeight: 45,
+  });
+
+  const data = useUnassignedPermitsData({ pagination, setPagination });
 
   const {
     stations,
@@ -42,9 +49,6 @@ function AdminUkePermitsPage() {
     searchQuery,
     setSearchQuery,
     isLoading,
-    isFetching,
-    hasMore,
-    loadMore,
   } = data;
 
   const handleOpenDetails = useCallback((station: UkeStation) => setSelectedStation(station), []);
@@ -78,12 +82,12 @@ function AdminUkePermitsPage() {
           <UnassignedPermitsDataTable
             data={stations}
             isLoading={isLoading}
-            isFetchingMore={isFetching && !isLoading}
             onOpenDetails={handleOpenDetails}
             onViewOnMap={handleViewOnMap}
-            onLoadMore={loadMore}
-            hasMore={hasMore}
-            totalItems={totalStations ?? stations.length}
+            totalItems={totalStations}
+            containerRef={containerRef}
+            pagination={pagination}
+            setPagination={setPagination}
           />
         </div>
       </div>

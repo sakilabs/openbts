@@ -1,14 +1,18 @@
-import { useState, useMemo, useCallback, useRef } from "react";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useCallback, useRef, type Dispatch, type SetStateAction } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
 import { fetchUnassignedPermits } from "../api";
 
-const FETCH_LIMIT = 100;
 const STORAGE_KEY = "admin:uke-permits:filters";
 
 export type UnassignedPermitsFilters = {
   operators: number[];
 };
+
+interface PaginationState {
+  pageIndex: number;
+  pageSize: number;
+}
 
 type StoredState = {
   operators: number[];
@@ -35,7 +39,12 @@ function persist(state: StoredState) {
   } catch {}
 }
 
-export function useUnassignedPermitsData() {
+interface UseUnassignedPermitsDataOptions {
+  pagination: PaginationState;
+  setPagination: Dispatch<SetStateAction<PaginationState>>;
+}
+
+export function useUnassignedPermitsData({ pagination, setPagination }: UseUnassignedPermitsDataOptions) {
   const stored = useMemo(() => loadFromStorage(), []);
 
   const [filters, setFiltersRaw] = useState<UnassignedPermitsFilters>({ operators: stored.operators });
@@ -49,6 +58,8 @@ export function useUnassignedPermitsData() {
     persist(stateRef.current);
   }, []);
 
+  const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
+
   const setFilters = useCallback(
     (newFilters: UnassignedPermitsFilters | ((prev: UnassignedPermitsFilters) => UnassignedPermitsFilters)) => {
       setFiltersRaw((prev) => {
@@ -56,8 +67,9 @@ export function useUnassignedPermitsData() {
         save({ operators: resolved.operators });
         return resolved;
       });
+      resetPage();
     },
-    [save],
+    [save, resetPage],
   );
 
   const setSelectedRegions = useCallback(
@@ -67,15 +79,17 @@ export function useUnassignedPermitsData() {
         save({ regions: resolved });
         return resolved;
       });
+      resetPage();
     },
-    [save],
+    [save, resetPage],
   );
 
   const clearAllFilters = useCallback(() => {
     setFiltersRaw({ operators: [] });
     setSelectedRegionsRaw([]);
     save({ operators: [], regions: [] });
-  }, [save]);
+    resetPage();
+  }, [save, resetPage]);
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
   const { data: regions = [] } = useQuery(regionsQueryOptions());
@@ -84,44 +98,34 @@ export function useUnassignedPermitsData() {
     return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
   }, [selectedRegions, regions]);
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetching } = useInfiniteQuery({
-    queryKey: ["admin-unassigned-permits", FETCH_LIMIT, filters.operators, selectedRegionCodes],
-    queryFn: ({ pageParam }) =>
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["admin-unassigned-permits", pagination.pageIndex, pagination.pageSize, filters.operators, selectedRegionCodes],
+    queryFn: () =>
       fetchUnassignedPermits({
-        page: pageParam,
-        limit: FETCH_LIMIT,
+        page: pagination.pageIndex + 1,
+        limit: pagination.pageSize,
         regions: selectedRegionCodes.length ? selectedRegionCodes.join(",") : undefined,
         operators: filters.operators.length ? filters.operators.join(",") : undefined,
       }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.data.length === FETCH_LIMIT ? allPages.length + 1 : undefined;
-    },
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 5,
     refetchOnMount: "always",
   });
 
-  const allStations = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) ?? [];
-  }, [data]);
-
   const stations = useMemo(() => {
-    if (!searchQuery.trim()) return allStations;
+    const all = data?.data ?? [];
+    if (!searchQuery.trim()) return all;
     const q = searchQuery.toLowerCase();
-    return allStations.filter(
+    return all.filter(
       (s) =>
         s.station_id.toLowerCase().includes(q) ||
         s.operator?.name.toLowerCase().includes(q) ||
         s.location?.city?.toLowerCase().includes(q) ||
         s.location?.address?.toLowerCase().includes(q),
     );
-  }, [allStations, searchQuery]);
+  }, [data, searchQuery]);
 
-  const totalStations = useMemo(() => {
-    if (!data?.pages.length) return undefined;
-    return data.pages[data.pages.length - 1]?.totalCount;
-  }, [data]);
-
+  const totalStations = data?.totalCount ?? 0;
   const activeFilterCount = filters.operators.length + selectedRegions.length;
 
   return {
@@ -139,7 +143,5 @@ export function useUnassignedPermitsData() {
     setSearchQuery,
     isLoading,
     isFetching,
-    hasMore: hasNextPage,
-    loadMore: hasNextPage ? fetchNextPage : undefined,
   };
 }
