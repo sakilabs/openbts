@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSepa
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
 import { AuditLogDetailSheet } from "@/features/admin/audit-logs/components/audit-log-detail-sheet";
-import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "../../../features/admin/audit-logs/constants";
+import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "../../../../features/admin/audit-logs/constants";
 
 function formatAuditDate(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleDateString(locale, {
@@ -373,12 +373,11 @@ function AdminAuditLogsPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/audit-logs")({
+export const Route = createFileRoute("/_layout/admin/_layout/audit-logs")({
   component: AdminAuditLogsPage,
   staticData: {
     titleKey: "auditLogs.title",
     i18nNamespace: "admin",
     breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
-    allowedRoles: ["admin"],
   },
 });

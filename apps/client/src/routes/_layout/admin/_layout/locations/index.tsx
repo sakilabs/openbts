@@ -118,11 +118,12 @@ function AdminLocationsPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/locations/")({
+export const Route = createFileRoute("/_layout/admin/_layout/locations/")({
   component: AdminLocationsPage,
   staticData: {
     titleKey: "breadcrumbs.locations",
     i18nNamespace: "admin",
     breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
+    allowedRoles: ["admin", "moderator"],
   },
 });

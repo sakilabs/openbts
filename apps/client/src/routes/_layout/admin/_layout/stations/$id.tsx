@@ -468,7 +468,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/stations/$id")({
+export const Route = createFileRoute("/_layout/admin/_layout/stations/$id")({
   component: AdminStationDetailPage,
   staticData: {
     titleKey: "breadcrumbs.editStation",
@@ -477,5 +477,6 @@ export const Route = createFileRoute("/_layout/admin/stations/$id")({
       { titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
       { titleKey: "breadcrumbs.stations", path: "/admin/stations", i18nNamespace: "admin" },
     ],
+    allowedRoles: ["admin", "editor", "moderator"],
   },
 });

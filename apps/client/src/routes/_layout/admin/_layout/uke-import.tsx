@@ -196,7 +196,7 @@ function UkeImportPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/uke-import")({
+export const Route = createFileRoute("/_layout/admin/_layout/uke-import")({
   component: UkeImportPage,
   staticData: {
     titleKey: "breadcrumbs.ukeImport",

@@ -11,12 +11,9 @@ interface RequireRoleProps {
 
 export function RequireRole({ children, allowedRoles = ["admin"], redirectTo = "/" }: RequireRoleProps) {
   const { data: session, isPending } = authClient.useSession();
-
   if (isPending) return null;
 
-  if (!session?.user) {
-    return <RequireAuth>{children}</RequireAuth>;
-  }
+  if (!session?.user) return <RequireAuth>{children}</RequireAuth>;
 
   const userRole = session.user.role || "user";
 

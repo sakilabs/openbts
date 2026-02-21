@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { RAT_ICONS } from "@/features/shared/rat";
+import { RAT_ICONS, getSharedDetailFields } from "@/features/shared/rat";
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { generateCellId, getCellDiffStatus, buildOriginalCellsMap, type CellDiffStatus } from "../utils/cells";
 import type { RatType, ProposedCellForm, GSMCellDetails, UMTSCellDetails, LTECellDetails, NRCellDetails } from "../types";
@@ -97,11 +97,20 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
   }, [cells, originalsMap, isNewStation, originalCells, rat]);
 
   const handleAddCell = () => {
+    const defaults = getDefaultCellDetails(rat);
+    const existingSibling = cells[0] ?? originalCells.find((c) => c.rat === rat);
+    if (existingSibling) {
+      const sharedFields = getSharedDetailFields(rat);
+      for (const field of sharedFields) {
+        if ((existingSibling.details as Record<string, unknown>)[field] !== undefined)
+          (defaults as Record<string, unknown>)[field] = (existingSibling.details as Record<string, unknown>)[field];
+      }
+    }
     const newCell: ProposedCellForm = {
       id: generateCellId(),
       rat,
       band_id: null,
-      details: getDefaultCellDetails(rat),
+      details: defaults,
     };
     onCellsChange(rat, [...cells, newCell]);
   };

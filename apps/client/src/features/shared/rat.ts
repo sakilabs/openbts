@@ -24,6 +24,21 @@ export const RAT_OPTIONS: { value: RatType; label: string; gen: string }[] = [
 
 export const EXTENDED_RAT_OPTIONS: { value: string; label: string; gen: string }[] = [...RAT_OPTIONS, { value: "IOT", label: "IoT", gen: "NB" }];
 
+export function getSharedDetailFields(rat: string): string[] {
+  switch (rat) {
+    case "GSM":
+      return ["lac"];
+    case "UMTS":
+      return ["lac", "rnc"];
+    case "LTE":
+      return ["tac", "enbid"];
+    case "NR":
+      return ["nrtac", "gnbid"];
+    default:
+      return [];
+  }
+}
+
 export function ratToGenLabel(rat: string): string {
   if (rat === "GSM") return "2G";
   if (rat === "UMTS") return "3G";

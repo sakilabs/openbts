@@ -460,7 +460,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/submissions/$id")({
+export const Route = createFileRoute("/_layout/admin/_layout/submissions/$id")({
   component: SubmissionDetailPage,
   staticData: {
     titleKey: "detail.title",
@@ -469,6 +469,6 @@ export const Route = createFileRoute("/_layout/admin/submissions/$id")({
       { titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
       { titleKey: "breadcrumbs.submissions", path: "/admin/submissions", i18nNamespace: "admin" },
     ],
-    allowedRoles: ["admin", "editor"],
+    allowedRoles: ["admin", "editor", "moderator"],
   },
 });

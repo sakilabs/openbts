@@ -307,7 +307,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/locations/$id")({
+export const Route = createFileRoute("/_layout/admin/_layout/locations/$id")({
   component: AdminLocationDetailPage,
   staticData: {
     titleKey: "breadcrumbs.editLocation",
@@ -316,5 +316,6 @@ export const Route = createFileRoute("/_layout/admin/locations/$id")({
       { titleKey: "breadcrumbs.admin", path: "/admin/locations", i18nNamespace: "admin" },
       { titleKey: "breadcrumbs.locations", path: "/admin/locations", i18nNamespace: "admin" },
     ],
+    allowedRoles: ["admin", "moderator"],
   },
 });

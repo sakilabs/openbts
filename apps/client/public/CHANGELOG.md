@@ -11,6 +11,16 @@ What's being worked on:
 ### 🩹 Fixes
 
 - Fixed calculating preview `eCID`, `LongCID` & `NCI` on `/submission`, `/admin/submissions/$id` & `/admin/stations/$id`
+- Fixed adding or modifying GSM cells on `/submission` page by fixing the name of `e_gsm` property
+- Fixed check for GSM1800 so you can select it again on `/submission` page
+
+### 🚀 Enhancements
+
+- When adding new cells to already existing set of cells, the new cell will inherit fields like `LAC`, `RNC`, `TAC`, `eNBID`, `NRTAC` & `gnBID`
+
+### 🏡 Chore
+
+- Added missing i18n keys to `en-US` language
 
 # 2026-02-20
 

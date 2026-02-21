@@ -17,20 +17,20 @@ import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferen
 import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/deleted-entries'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
 import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
-import { Route as LayoutAdminUkeImportRouteImport } from './routes/_layout/admin/uke-import'
-import { Route as LayoutAdminSettingsRouteImport } from './routes/_layout/admin/settings'
-import { Route as LayoutAdminAuditLogsRouteImport } from './routes/_layout/admin/audit-logs'
 import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_layout'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
 import { Route as LayoutAccountSettingsRouteImport } from './routes/_layout/account/settings'
-import { Route as LayoutAdminUsersIndexRouteImport } from './routes/_layout/admin/users/index'
-import { Route as LayoutAdminSubmissionsIndexRouteImport } from './routes/_layout/admin/submissions/index'
-import { Route as LayoutAdminStationsIndexRouteImport } from './routes/_layout/admin/stations/index'
-import { Route as LayoutAdminLocationsIndexRouteImport } from './routes/_layout/admin/locations/index'
-import { Route as LayoutAdminUsersIdRouteImport } from './routes/_layout/admin/users/$id'
-import { Route as LayoutAdminSubmissionsIdRouteImport } from './routes/_layout/admin/submissions/$id'
-import { Route as LayoutAdminStationsIdRouteImport } from './routes/_layout/admin/stations/$id'
-import { Route as LayoutAdminLocationsIdRouteImport } from './routes/_layout/admin/locations/$id'
+import { Route as LayoutAdminLayoutUkeImportRouteImport } from './routes/_layout/admin/_layout/uke-import'
+import { Route as LayoutAdminLayoutSettingsRouteImport } from './routes/_layout/admin/_layout/settings'
+import { Route as LayoutAdminLayoutAuditLogsRouteImport } from './routes/_layout/admin/_layout/audit-logs'
+import { Route as LayoutAdminLayoutUsersIndexRouteImport } from './routes/_layout/admin/_layout/users/index'
+import { Route as LayoutAdminLayoutSubmissionsIndexRouteImport } from './routes/_layout/admin/_layout/submissions/index'
+import { Route as LayoutAdminLayoutStationsIndexRouteImport } from './routes/_layout/admin/_layout/stations/index'
+import { Route as LayoutAdminLayoutLocationsIndexRouteImport } from './routes/_layout/admin/_layout/locations/index'
+import { Route as LayoutAdminLayoutUsersIdRouteImport } from './routes/_layout/admin/_layout/users/$id'
+import { Route as LayoutAdminLayoutSubmissionsIdRouteImport } from './routes/_layout/admin/_layout/submissions/$id'
+import { Route as LayoutAdminLayoutStationsIdRouteImport } from './routes/_layout/admin/_layout/stations/$id'
+import { Route as LayoutAdminLayoutLocationsIdRouteImport } from './routes/_layout/admin/_layout/locations/$id'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -71,21 +71,6 @@ const LayoutChangelogRoute = LayoutChangelogRouteImport.update({
   path: '/changelog',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutAdminUkeImportRoute = LayoutAdminUkeImportRouteImport.update({
-  id: '/admin/uke-import',
-  path: '/admin/uke-import',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAdminSettingsRoute = LayoutAdminSettingsRouteImport.update({
-  id: '/admin/settings',
-  path: '/admin/settings',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAdminAuditLogsRoute = LayoutAdminAuditLogsRouteImport.update({
-  id: '/admin/audit-logs',
-  path: '/admin/audit-logs',
-  getParentRoute: () => LayoutRoute,
-} as any)
 const LayoutAdminLayoutRoute = LayoutAdminLayoutRouteImport.update({
   id: '/admin/_layout',
   path: '/admin',
@@ -102,50 +87,72 @@ const LayoutAccountSettingsRoute = LayoutAccountSettingsRouteImport.update({
   path: '/account/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutAdminUsersIndexRoute = LayoutAdminUsersIndexRouteImport.update({
-  id: '/admin/users/',
-  path: '/admin/users/',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAdminSubmissionsIndexRoute =
-  LayoutAdminSubmissionsIndexRouteImport.update({
-    id: '/admin/submissions/',
-    path: '/admin/submissions/',
-    getParentRoute: () => LayoutRoute,
+const LayoutAdminLayoutUkeImportRoute =
+  LayoutAdminLayoutUkeImportRouteImport.update({
+    id: '/uke-import',
+    path: '/uke-import',
+    getParentRoute: () => LayoutAdminLayoutRoute,
   } as any)
-const LayoutAdminStationsIndexRoute =
-  LayoutAdminStationsIndexRouteImport.update({
-    id: '/admin/stations/',
-    path: '/admin/stations/',
-    getParentRoute: () => LayoutRoute,
+const LayoutAdminLayoutSettingsRoute =
+  LayoutAdminLayoutSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => LayoutAdminLayoutRoute,
   } as any)
-const LayoutAdminLocationsIndexRoute =
-  LayoutAdminLocationsIndexRouteImport.update({
-    id: '/admin/locations/',
-    path: '/admin/locations/',
-    getParentRoute: () => LayoutRoute,
+const LayoutAdminLayoutAuditLogsRoute =
+  LayoutAdminLayoutAuditLogsRouteImport.update({
+    id: '/audit-logs',
+    path: '/audit-logs',
+    getParentRoute: () => LayoutAdminLayoutRoute,
   } as any)
-const LayoutAdminUsersIdRoute = LayoutAdminUsersIdRouteImport.update({
-  id: '/admin/users/$id',
-  path: '/admin/users/$id',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAdminSubmissionsIdRoute =
-  LayoutAdminSubmissionsIdRouteImport.update({
-    id: '/admin/submissions/$id',
-    path: '/admin/submissions/$id',
-    getParentRoute: () => LayoutRoute,
+const LayoutAdminLayoutUsersIndexRoute =
+  LayoutAdminLayoutUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => LayoutAdminLayoutRoute,
   } as any)
-const LayoutAdminStationsIdRoute = LayoutAdminStationsIdRouteImport.update({
-  id: '/admin/stations/$id',
-  path: '/admin/stations/$id',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAdminLocationsIdRoute = LayoutAdminLocationsIdRouteImport.update({
-  id: '/admin/locations/$id',
-  path: '/admin/locations/$id',
-  getParentRoute: () => LayoutRoute,
-} as any)
+const LayoutAdminLayoutSubmissionsIndexRoute =
+  LayoutAdminLayoutSubmissionsIndexRouteImport.update({
+    id: '/submissions/',
+    path: '/submissions/',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
+const LayoutAdminLayoutStationsIndexRoute =
+  LayoutAdminLayoutStationsIndexRouteImport.update({
+    id: '/stations/',
+    path: '/stations/',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
+const LayoutAdminLayoutLocationsIndexRoute =
+  LayoutAdminLayoutLocationsIndexRouteImport.update({
+    id: '/locations/',
+    path: '/locations/',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
+const LayoutAdminLayoutUsersIdRoute =
+  LayoutAdminLayoutUsersIdRouteImport.update({
+    id: '/users/$id',
+    path: '/users/$id',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
+const LayoutAdminLayoutSubmissionsIdRoute =
+  LayoutAdminLayoutSubmissionsIdRouteImport.update({
+    id: '/submissions/$id',
+    path: '/submissions/$id',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
+const LayoutAdminLayoutStationsIdRoute =
+  LayoutAdminLayoutStationsIdRouteImport.update({
+    id: '/stations/$id',
+    path: '/stations/$id',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
+const LayoutAdminLayoutLocationsIdRoute =
+  LayoutAdminLayoutLocationsIdRouteImport.update({
+    id: '/locations/$id',
+    path: '/locations/$id',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -157,18 +164,18 @@ export interface FileRoutesByFullPath {
   '/submission': typeof LayoutSubmissionRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
-  '/admin': typeof LayoutAdminLayoutRoute
-  '/admin/audit-logs': typeof LayoutAdminAuditLogsRoute
-  '/admin/settings': typeof LayoutAdminSettingsRoute
-  '/admin/uke-import': typeof LayoutAdminUkeImportRoute
-  '/admin/locations/$id': typeof LayoutAdminLocationsIdRoute
-  '/admin/stations/$id': typeof LayoutAdminStationsIdRoute
-  '/admin/submissions/$id': typeof LayoutAdminSubmissionsIdRoute
-  '/admin/users/$id': typeof LayoutAdminUsersIdRoute
-  '/admin/locations/': typeof LayoutAdminLocationsIndexRoute
-  '/admin/stations/': typeof LayoutAdminStationsIndexRoute
-  '/admin/submissions/': typeof LayoutAdminSubmissionsIndexRoute
-  '/admin/users/': typeof LayoutAdminUsersIndexRoute
+  '/admin': typeof LayoutAdminLayoutRouteWithChildren
+  '/admin/audit-logs': typeof LayoutAdminLayoutAuditLogsRoute
+  '/admin/settings': typeof LayoutAdminLayoutSettingsRoute
+  '/admin/uke-import': typeof LayoutAdminLayoutUkeImportRoute
+  '/admin/locations/$id': typeof LayoutAdminLayoutLocationsIdRoute
+  '/admin/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
+  '/admin/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
+  '/admin/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/admin/locations/': typeof LayoutAdminLayoutLocationsIndexRoute
+  '/admin/stations/': typeof LayoutAdminLayoutStationsIndexRoute
+  '/admin/submissions/': typeof LayoutAdminLayoutSubmissionsIndexRoute
+  '/admin/users/': typeof LayoutAdminLayoutUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/changelog': typeof LayoutChangelogRoute
@@ -180,18 +187,18 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
-  '/admin': typeof LayoutAdminLayoutRoute
-  '/admin/audit-logs': typeof LayoutAdminAuditLogsRoute
-  '/admin/settings': typeof LayoutAdminSettingsRoute
-  '/admin/uke-import': typeof LayoutAdminUkeImportRoute
-  '/admin/locations/$id': typeof LayoutAdminLocationsIdRoute
-  '/admin/stations/$id': typeof LayoutAdminStationsIdRoute
-  '/admin/submissions/$id': typeof LayoutAdminSubmissionsIdRoute
-  '/admin/users/$id': typeof LayoutAdminUsersIdRoute
-  '/admin/locations': typeof LayoutAdminLocationsIndexRoute
-  '/admin/stations': typeof LayoutAdminStationsIndexRoute
-  '/admin/submissions': typeof LayoutAdminSubmissionsIndexRoute
-  '/admin/users': typeof LayoutAdminUsersIndexRoute
+  '/admin': typeof LayoutAdminLayoutRouteWithChildren
+  '/admin/audit-logs': typeof LayoutAdminLayoutAuditLogsRoute
+  '/admin/settings': typeof LayoutAdminLayoutSettingsRoute
+  '/admin/uke-import': typeof LayoutAdminLayoutUkeImportRoute
+  '/admin/locations/$id': typeof LayoutAdminLayoutLocationsIdRoute
+  '/admin/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
+  '/admin/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
+  '/admin/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/admin/locations': typeof LayoutAdminLayoutLocationsIndexRoute
+  '/admin/stations': typeof LayoutAdminLayoutStationsIndexRoute
+  '/admin/submissions': typeof LayoutAdminLayoutSubmissionsIndexRoute
+  '/admin/users': typeof LayoutAdminLayoutUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -205,18 +212,18 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
-  '/_layout/admin/_layout': typeof LayoutAdminLayoutRoute
-  '/_layout/admin/audit-logs': typeof LayoutAdminAuditLogsRoute
-  '/_layout/admin/settings': typeof LayoutAdminSettingsRoute
-  '/_layout/admin/uke-import': typeof LayoutAdminUkeImportRoute
-  '/_layout/admin/locations/$id': typeof LayoutAdminLocationsIdRoute
-  '/_layout/admin/stations/$id': typeof LayoutAdminStationsIdRoute
-  '/_layout/admin/submissions/$id': typeof LayoutAdminSubmissionsIdRoute
-  '/_layout/admin/users/$id': typeof LayoutAdminUsersIdRoute
-  '/_layout/admin/locations/': typeof LayoutAdminLocationsIndexRoute
-  '/_layout/admin/stations/': typeof LayoutAdminStationsIndexRoute
-  '/_layout/admin/submissions/': typeof LayoutAdminSubmissionsIndexRoute
-  '/_layout/admin/users/': typeof LayoutAdminUsersIndexRoute
+  '/_layout/admin/_layout': typeof LayoutAdminLayoutRouteWithChildren
+  '/_layout/admin/_layout/audit-logs': typeof LayoutAdminLayoutAuditLogsRoute
+  '/_layout/admin/_layout/settings': typeof LayoutAdminLayoutSettingsRoute
+  '/_layout/admin/_layout/uke-import': typeof LayoutAdminLayoutUkeImportRoute
+  '/_layout/admin/_layout/locations/$id': typeof LayoutAdminLayoutLocationsIdRoute
+  '/_layout/admin/_layout/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
+  '/_layout/admin/_layout/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
+  '/_layout/admin/_layout/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/_layout/admin/_layout/locations/': typeof LayoutAdminLayoutLocationsIndexRoute
+  '/_layout/admin/_layout/stations/': typeof LayoutAdminLayoutStationsIndexRoute
+  '/_layout/admin/_layout/submissions/': typeof LayoutAdminLayoutSubmissionsIndexRoute
+  '/_layout/admin/_layout/users/': typeof LayoutAdminLayoutUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -278,17 +285,17 @@ export interface FileRouteTypes {
     | '/_layout/account/settings'
     | '/_layout/account/submissions'
     | '/_layout/admin/_layout'
-    | '/_layout/admin/audit-logs'
-    | '/_layout/admin/settings'
-    | '/_layout/admin/uke-import'
-    | '/_layout/admin/locations/$id'
-    | '/_layout/admin/stations/$id'
-    | '/_layout/admin/submissions/$id'
-    | '/_layout/admin/users/$id'
-    | '/_layout/admin/locations/'
-    | '/_layout/admin/stations/'
-    | '/_layout/admin/submissions/'
-    | '/_layout/admin/users/'
+    | '/_layout/admin/_layout/audit-logs'
+    | '/_layout/admin/_layout/settings'
+    | '/_layout/admin/_layout/uke-import'
+    | '/_layout/admin/_layout/locations/$id'
+    | '/_layout/admin/_layout/stations/$id'
+    | '/_layout/admin/_layout/submissions/$id'
+    | '/_layout/admin/_layout/users/$id'
+    | '/_layout/admin/_layout/locations/'
+    | '/_layout/admin/_layout/stations/'
+    | '/_layout/admin/_layout/submissions/'
+    | '/_layout/admin/_layout/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -353,27 +360,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutChangelogRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/admin/uke-import': {
-      id: '/_layout/admin/uke-import'
-      path: '/admin/uke-import'
-      fullPath: '/admin/uke-import'
-      preLoaderRoute: typeof LayoutAdminUkeImportRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/admin/settings': {
-      id: '/_layout/admin/settings'
-      path: '/admin/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof LayoutAdminSettingsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/admin/audit-logs': {
-      id: '/_layout/admin/audit-logs'
-      path: '/admin/audit-logs'
-      fullPath: '/admin/audit-logs'
-      preLoaderRoute: typeof LayoutAdminAuditLogsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
     '/_layout/admin/_layout': {
       id: '/_layout/admin/_layout'
       path: '/admin'
@@ -395,64 +381,117 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAccountSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/admin/users/': {
-      id: '/_layout/admin/users/'
-      path: '/admin/users'
+    '/_layout/admin/_layout/uke-import': {
+      id: '/_layout/admin/_layout/uke-import'
+      path: '/uke-import'
+      fullPath: '/admin/uke-import'
+      preLoaderRoute: typeof LayoutAdminLayoutUkeImportRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
+    }
+    '/_layout/admin/_layout/settings': {
+      id: '/_layout/admin/_layout/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof LayoutAdminLayoutSettingsRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
+    }
+    '/_layout/admin/_layout/audit-logs': {
+      id: '/_layout/admin/_layout/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof LayoutAdminLayoutAuditLogsRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
+    }
+    '/_layout/admin/_layout/users/': {
+      id: '/_layout/admin/_layout/users/'
+      path: '/users'
       fullPath: '/admin/users/'
-      preLoaderRoute: typeof LayoutAdminUsersIndexRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutUsersIndexRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/submissions/': {
-      id: '/_layout/admin/submissions/'
-      path: '/admin/submissions'
+    '/_layout/admin/_layout/submissions/': {
+      id: '/_layout/admin/_layout/submissions/'
+      path: '/submissions'
       fullPath: '/admin/submissions/'
-      preLoaderRoute: typeof LayoutAdminSubmissionsIndexRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutSubmissionsIndexRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/stations/': {
-      id: '/_layout/admin/stations/'
-      path: '/admin/stations'
+    '/_layout/admin/_layout/stations/': {
+      id: '/_layout/admin/_layout/stations/'
+      path: '/stations'
       fullPath: '/admin/stations/'
-      preLoaderRoute: typeof LayoutAdminStationsIndexRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutStationsIndexRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/locations/': {
-      id: '/_layout/admin/locations/'
-      path: '/admin/locations'
+    '/_layout/admin/_layout/locations/': {
+      id: '/_layout/admin/_layout/locations/'
+      path: '/locations'
       fullPath: '/admin/locations/'
-      preLoaderRoute: typeof LayoutAdminLocationsIndexRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutLocationsIndexRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/users/$id': {
-      id: '/_layout/admin/users/$id'
-      path: '/admin/users/$id'
+    '/_layout/admin/_layout/users/$id': {
+      id: '/_layout/admin/_layout/users/$id'
+      path: '/users/$id'
       fullPath: '/admin/users/$id'
-      preLoaderRoute: typeof LayoutAdminUsersIdRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutUsersIdRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/submissions/$id': {
-      id: '/_layout/admin/submissions/$id'
-      path: '/admin/submissions/$id'
+    '/_layout/admin/_layout/submissions/$id': {
+      id: '/_layout/admin/_layout/submissions/$id'
+      path: '/submissions/$id'
       fullPath: '/admin/submissions/$id'
-      preLoaderRoute: typeof LayoutAdminSubmissionsIdRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutSubmissionsIdRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/stations/$id': {
-      id: '/_layout/admin/stations/$id'
-      path: '/admin/stations/$id'
+    '/_layout/admin/_layout/stations/$id': {
+      id: '/_layout/admin/_layout/stations/$id'
+      path: '/stations/$id'
       fullPath: '/admin/stations/$id'
-      preLoaderRoute: typeof LayoutAdminStationsIdRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutStationsIdRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
-    '/_layout/admin/locations/$id': {
-      id: '/_layout/admin/locations/$id'
-      path: '/admin/locations/$id'
+    '/_layout/admin/_layout/locations/$id': {
+      id: '/_layout/admin/_layout/locations/$id'
+      path: '/locations/$id'
       fullPath: '/admin/locations/$id'
-      preLoaderRoute: typeof LayoutAdminLocationsIdRouteImport
-      parentRoute: typeof LayoutRoute
+      preLoaderRoute: typeof LayoutAdminLayoutLocationsIdRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
     }
   }
 }
+
+interface LayoutAdminLayoutRouteChildren {
+  LayoutAdminLayoutAuditLogsRoute: typeof LayoutAdminLayoutAuditLogsRoute
+  LayoutAdminLayoutSettingsRoute: typeof LayoutAdminLayoutSettingsRoute
+  LayoutAdminLayoutUkeImportRoute: typeof LayoutAdminLayoutUkeImportRoute
+  LayoutAdminLayoutLocationsIdRoute: typeof LayoutAdminLayoutLocationsIdRoute
+  LayoutAdminLayoutStationsIdRoute: typeof LayoutAdminLayoutStationsIdRoute
+  LayoutAdminLayoutSubmissionsIdRoute: typeof LayoutAdminLayoutSubmissionsIdRoute
+  LayoutAdminLayoutUsersIdRoute: typeof LayoutAdminLayoutUsersIdRoute
+  LayoutAdminLayoutLocationsIndexRoute: typeof LayoutAdminLayoutLocationsIndexRoute
+  LayoutAdminLayoutStationsIndexRoute: typeof LayoutAdminLayoutStationsIndexRoute
+  LayoutAdminLayoutSubmissionsIndexRoute: typeof LayoutAdminLayoutSubmissionsIndexRoute
+  LayoutAdminLayoutUsersIndexRoute: typeof LayoutAdminLayoutUsersIndexRoute
+}
+
+const LayoutAdminLayoutRouteChildren: LayoutAdminLayoutRouteChildren = {
+  LayoutAdminLayoutAuditLogsRoute: LayoutAdminLayoutAuditLogsRoute,
+  LayoutAdminLayoutSettingsRoute: LayoutAdminLayoutSettingsRoute,
+  LayoutAdminLayoutUkeImportRoute: LayoutAdminLayoutUkeImportRoute,
+  LayoutAdminLayoutLocationsIdRoute: LayoutAdminLayoutLocationsIdRoute,
+  LayoutAdminLayoutStationsIdRoute: LayoutAdminLayoutStationsIdRoute,
+  LayoutAdminLayoutSubmissionsIdRoute: LayoutAdminLayoutSubmissionsIdRoute,
+  LayoutAdminLayoutUsersIdRoute: LayoutAdminLayoutUsersIdRoute,
+  LayoutAdminLayoutLocationsIndexRoute: LayoutAdminLayoutLocationsIndexRoute,
+  LayoutAdminLayoutStationsIndexRoute: LayoutAdminLayoutStationsIndexRoute,
+  LayoutAdminLayoutSubmissionsIndexRoute:
+    LayoutAdminLayoutSubmissionsIndexRoute,
+  LayoutAdminLayoutUsersIndexRoute: LayoutAdminLayoutUsersIndexRoute,
+}
+
+const LayoutAdminLayoutRouteWithChildren =
+  LayoutAdminLayoutRoute._addFileChildren(LayoutAdminLayoutRouteChildren)
 
 interface LayoutRouteChildren {
   LayoutChangelogRoute: typeof LayoutChangelogRoute
@@ -464,18 +503,7 @@ interface LayoutRouteChildren {
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutAccountSettingsRoute: typeof LayoutAccountSettingsRoute
   LayoutAccountSubmissionsRoute: typeof LayoutAccountSubmissionsRoute
-  LayoutAdminLayoutRoute: typeof LayoutAdminLayoutRoute
-  LayoutAdminAuditLogsRoute: typeof LayoutAdminAuditLogsRoute
-  LayoutAdminSettingsRoute: typeof LayoutAdminSettingsRoute
-  LayoutAdminUkeImportRoute: typeof LayoutAdminUkeImportRoute
-  LayoutAdminLocationsIdRoute: typeof LayoutAdminLocationsIdRoute
-  LayoutAdminStationsIdRoute: typeof LayoutAdminStationsIdRoute
-  LayoutAdminSubmissionsIdRoute: typeof LayoutAdminSubmissionsIdRoute
-  LayoutAdminUsersIdRoute: typeof LayoutAdminUsersIdRoute
-  LayoutAdminLocationsIndexRoute: typeof LayoutAdminLocationsIndexRoute
-  LayoutAdminStationsIndexRoute: typeof LayoutAdminStationsIndexRoute
-  LayoutAdminSubmissionsIndexRoute: typeof LayoutAdminSubmissionsIndexRoute
-  LayoutAdminUsersIndexRoute: typeof LayoutAdminUsersIndexRoute
+  LayoutAdminLayoutRoute: typeof LayoutAdminLayoutRouteWithChildren
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -488,18 +516,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutAccountSettingsRoute: LayoutAccountSettingsRoute,
   LayoutAccountSubmissionsRoute: LayoutAccountSubmissionsRoute,
-  LayoutAdminLayoutRoute: LayoutAdminLayoutRoute,
-  LayoutAdminAuditLogsRoute: LayoutAdminAuditLogsRoute,
-  LayoutAdminSettingsRoute: LayoutAdminSettingsRoute,
-  LayoutAdminUkeImportRoute: LayoutAdminUkeImportRoute,
-  LayoutAdminLocationsIdRoute: LayoutAdminLocationsIdRoute,
-  LayoutAdminStationsIdRoute: LayoutAdminStationsIdRoute,
-  LayoutAdminSubmissionsIdRoute: LayoutAdminSubmissionsIdRoute,
-  LayoutAdminUsersIdRoute: LayoutAdminUsersIdRoute,
-  LayoutAdminLocationsIndexRoute: LayoutAdminLocationsIndexRoute,
-  LayoutAdminStationsIndexRoute: LayoutAdminStationsIndexRoute,
-  LayoutAdminSubmissionsIndexRoute: LayoutAdminSubmissionsIndexRoute,
-  LayoutAdminUsersIndexRoute: LayoutAdminUsersIndexRoute,
+  LayoutAdminLayoutRoute: LayoutAdminLayoutRouteWithChildren,
 }
 
 const LayoutRouteWithChildren =

@@ -150,7 +150,7 @@ function AdminUsersPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/users/")({
+export const Route = createFileRoute("/_layout/admin/_layout/users/")({
   component: AdminUsersPage,
   staticData: {
     titleKey: "breadcrumbs.users",

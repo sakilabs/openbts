@@ -28,11 +28,12 @@ function AdminStationsListPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/stations/")({
+export const Route = createFileRoute("/_layout/admin/_layout/stations/")({
   component: AdminStationsListPage,
   staticData: {
     titleKey: "breadcrumbs.stations",
     i18nNamespace: "admin",
     breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
+    allowedRoles: ["admin", "editor", "moderator"],
   },
 });

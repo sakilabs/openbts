@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { RAT_ORDER } from "../rat";
+import { RAT_ORDER, getSharedDetailFields } from "../rat";
 import type { CellDraftBase } from "../cellEditRow";
 import type { Band } from "@/types/station";
 
@@ -26,21 +26,6 @@ type UseCellDraftsReturn<T extends CellDraftBase> = {
   addCell: (rat: string) => void;
   deleteCell: (localId: string) => void;
 };
-
-function getSharedDetailFields(rat: string): string[] {
-  switch (rat) {
-    case "GSM":
-      return ["lac"];
-    case "UMTS":
-      return ["lac", "rnc"];
-    case "LTE":
-      return ["tac", "enbid"];
-    case "NR":
-      return ["nrtac", "gnbid"];
-    default:
-      return [];
-  }
-}
 
 export function useCellDrafts<T extends CellDraftBase>({
   initialCells,

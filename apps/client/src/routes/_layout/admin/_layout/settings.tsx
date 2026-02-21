@@ -338,7 +338,7 @@ function AdminSettingsPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/admin/settings")({
+export const Route = createFileRoute("/_layout/admin/_layout/settings")({
   component: AdminSettingsPage,
   staticData: {
     titleKey: "breadcrumbs.settings",
