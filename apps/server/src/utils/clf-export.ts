@@ -43,7 +43,7 @@ const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: nu
     900: { fdd: 3686 },
     1800: { fdd: 1599 },
     2100: { fdd: 225 },
-    2600: { fdd: 3175, tdd: -1 },
+    2600: { fdd: 3175, tdd: NTM_UNKNOWN },
   },
   26003: {
     700: { fdd: 9310 },
@@ -51,7 +51,7 @@ const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: nu
     900: { fdd: 3764 },
     1800: { fdd: 1749 },
     2100: { fdd: 75 },
-    2600: { fdd: 3025, tdd: -1 },
+    2600: { fdd: 3025, tdd: NTM_UNKNOWN },
   },
   26006: {
     700: { fdd: 9460 },
@@ -59,7 +59,7 @@ const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: nu
     900: { fdd: 3476 },
     1800: { fdd: 1875 },
     2100: { fdd: 525 },
-    2600: { fdd: 3350, tdd: -1 },
+    2600: { fdd: 3350, tdd: NTM_UNKNOWN },
   },
 };
 
