@@ -9,6 +9,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - The "unauthorized" page is now displayed for users without the required role
 - ARFCN -> UARFCN (UMTS)
 - Properly show the table on `/admin/uke-permits`
+- Fixed calculating the total stations on `/statistics` page
 
 ### 🚀 Enhancements
 

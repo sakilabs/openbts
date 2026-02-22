@@ -86,7 +86,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const ukeWhere = operator_id ? eq(ukePermits.operator_id, operator_id) : undefined;
   const stationWhere = operator_id ? eq(stations.operator_id, operator_id) : undefined;
 
-  const [byRatRows, byOperatorRows, internalByRat, internalByOperator] = await Promise.all([
+  const [byRatRows, byOperatorRows, ukeTotals, internalByRat, internalByOperator, internalTotals] = await Promise.all([
     db
       .select({
         rat: bands.rat,
@@ -112,6 +112,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
     db
       .select({
+        total_unique_stations: countDistinct(ukePermits.station_id),
+        total_permits: count(),
+      })
+      .from(ukePermits)
+      .where(ukeWhere),
+
+    db
+      .select({
         rat: cells.rat,
         stations: countDistinct(cells.station_id),
         cells: count(),
@@ -133,13 +141,22 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .innerJoin(operators, eq(stations.operator_id, operators.id))
       .where(stationWhere)
       .groupBy(operators.id, operators.name),
+
+    db
+      .select({
+        total_stations: countDistinct(cells.station_id),
+        total_cells: count(),
+      })
+      .from(cells)
+      .innerJoin(stations, eq(cells.station_id, stations.id))
+      .where(stationWhere),
   ]);
 
-  const totalUniqueStations = byRatRows.reduce((sum, r) => sum + r.unique_stations, 0);
-  const totalPermits = byRatRows.reduce((sum, r) => sum + r.permits, 0);
+  const totalUniqueStations = ukeTotals[0]?.total_unique_stations ?? 0;
+  const totalPermits = ukeTotals[0]?.total_permits ?? 0;
 
-  const totalInternalStations = internalByRat.reduce((sum, r) => sum + r.stations, 0);
-  const totalInternalCells = internalByRat.reduce((sum, r) => sum + r.cells, 0);
+  const totalInternalStations = internalTotals[0]?.total_stations ?? 0;
+  const totalInternalCells = internalTotals[0]?.total_cells ?? 0;
 
   const response = {
     data: {
