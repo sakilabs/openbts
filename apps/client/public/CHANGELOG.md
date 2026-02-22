@@ -18,6 +18,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added `editor` role
 - Calculate the speed of radiolines and show total speed
 - Added more checks on the server for duplicates per operator etc
+- Optimized `/uke/locations` even more
 
 # 2026-02-21
 

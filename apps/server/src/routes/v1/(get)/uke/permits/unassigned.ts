@@ -11,13 +11,13 @@ import type { JSONBody, Route } from "../../../../../interfaces/routes.interface
 
 const ukeLocationsSchema = createSelectSchema(ukeLocations)
   .omit({ point: true, region_id: true })
-  .extend({ createdAt: z.string().datetime({ offset: true }), updatedAt: z.string().datetime({ offset: true }) });
+  .extend({ createdAt: z.iso.datetime({ offset: true }), updatedAt: z.iso.datetime({ offset: true }) });
 const ukePermitsSchema = createSelectSchema(ukePermits)
   .omit({ location_id: true, operator_id: true, band_id: true })
   .extend({
-    createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
-    expiry_date: z.string().datetime({ offset: true }),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+    expiry_date: z.iso.datetime({ offset: true }),
   });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
@@ -37,6 +37,11 @@ const stationResponseSchema = z.object({
   operator: operatorsSchema.nullable(),
   location: locationResponseSchema.nullable(),
   permits: z.array(permitResponseSchema),
+});
+
+const responseSchema = z.object({
+  data: z.array(stationResponseSchema),
+  totalCount: z.number(),
 });
 
 const schemaRoute = {
@@ -62,10 +67,7 @@ const schemaRoute = {
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
   }),
   response: {
-    200: z.object({
-      data: z.array(stationResponseSchema),
-      totalCount: z.number(),
-    }),
+    200: z.toJSONSchema(responseSchema),
   },
 };
 
@@ -102,8 +104,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const operatorIds = operatorRows.map((r) => r.id);
   const regionIds = regionsRows.map((r) => r.id);
 
+  const notAssigned = sql`NOT EXISTS (SELECT 1 FROM ${stationsPermits} WHERE ${stationsPermits.permit_id} = ${ukePermits.id})`;
+
   const buildBaseConditions = (): SQL<unknown>[] => {
-    const conditions: SQL<unknown>[] = [sql`${stationsPermits.id} IS NULL`];
+    const conditions: SQL<unknown>[] = [notAssigned];
     if (operatorIds.length) conditions.push(inArray(ukePermits.operator_id, operatorIds));
     if (regionIds.length) {
       conditions.push(
@@ -121,12 +125,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       db
         .select({ count: countDistinct(ukePermits.station_id) })
         .from(ukePermits)
-        .leftJoin(stationsPermits, eq(stationsPermits.permit_id, ukePermits.id))
         .where(whereClause),
       db
         .select({ station_id: ukePermits.station_id })
         .from(ukePermits)
-        .leftJoin(stationsPermits, eq(stationsPermits.permit_id, ukePermits.id))
         .where(whereClause)
         .groupBy(ukePermits.station_id)
         .orderBy(sql`MAX(${ukePermits.id}) DESC`)
@@ -200,17 +202,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           ) FILTER (WHERE ${ukePermits.id} IS NOT NULL)`,
       })
       .from(ukePermits)
-      .leftJoin(stationsPermits, eq(stationsPermits.permit_id, ukePermits.id))
       .leftJoin(operators, eq(operators.id, ukePermits.operator_id))
       .leftJoin(ukeLocations, eq(ukeLocations.id, ukePermits.location_id))
       .leftJoin(regions, eq(regions.id, ukeLocations.region_id))
       .leftJoin(bands, eq(bands.id, ukePermits.band_id))
       .where(
-        and(
-          sql`${stationsPermits.id} IS NULL`,
-          inArray(ukePermits.station_id, stationIds),
-          ...(operatorIds.length ? [inArray(ukePermits.operator_id, operatorIds)] : []),
-        ),
+        and(notAssigned, inArray(ukePermits.station_id, stationIds), ...(operatorIds.length ? [inArray(ukePermits.operator_id, operatorIds)] : [])),
       )
       .groupBy(ukePermits.station_id)
       .orderBy(sql`MAX(${ukePermits.id}) DESC`);

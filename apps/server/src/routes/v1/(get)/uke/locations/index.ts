@@ -11,13 +11,13 @@ import type { JSONBody, Route } from "../../../../../interfaces/routes.interface
 
 const ukeLocationsSchema = createSelectSchema(ukeLocations)
   .omit({ point: true, region_id: true })
-  .extend({ createdAt: z.string().datetime({ offset: true }), updatedAt: z.string().datetime({ offset: true }) });
+  .extend({ createdAt: z.iso.datetime({ offset: true }), updatedAt: z.iso.datetime({ offset: true }) });
 const ukePermitsSchema = createSelectSchema(ukePermits)
   .omit({ location_id: true, operator_id: true, band_id: true })
   .extend({
-    createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
-    expiry_date: z.string().datetime({ offset: true }),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+    expiry_date: z.iso.datetime({ offset: true }),
   });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
@@ -26,6 +26,16 @@ const regionsSchema = createSelectSchema(regions);
 const permitResponseSchema = ukePermitsSchema.extend({
   band: bandsSchema.nullable(),
   operator: operatorsSchema.nullable(),
+});
+
+const responseSchema = z.object({
+  data: z.array(
+    ukeLocationsSchema.extend({
+      region: regionsSchema,
+      permits: z.array(permitResponseSchema),
+    }),
+  ),
+  totalCount: z.number(),
 });
 
 const schemaRoute = {
@@ -82,15 +92,7 @@ const schemaRoute = {
       }),
   }),
   response: {
-    200: z.object({
-      data: z.array(
-        ukeLocationsSchema.extend({
-          region: regionsSchema,
-          permits: z.array(permitResponseSchema),
-        }),
-      ),
-      totalCount: z.number(),
-    }),
+    200: z.toJSONSchema(responseSchema),
   },
 };
 
