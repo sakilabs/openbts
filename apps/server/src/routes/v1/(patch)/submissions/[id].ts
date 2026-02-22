@@ -4,8 +4,14 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import {
+  checkGSMDuplicate,
+  checkLTEDuplicate,
+  checkUMTSDuplicate,
+  getOperatorIdForStation,
+} from "../../../../services/cellDuplicateCheck.service.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import {
   submissions,
@@ -159,6 +165,28 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before updating." });
 
   if (req.body.cells && req.body.cells.length > 0) validateCellDuplicates(req.body.cells);
+
+  if (req.body.cells && req.body.cells.length > 0) {
+    const operatorId = submission.station_id ? await getOperatorIdForStation(submission.station_id) : null;
+    if (operatorId) {
+      for (const cell of req.body.cells) {
+        if (!cell.details || cell.operation === "removed") continue;
+        if (cell.rat === "GSM") {
+          const d = cell.details as { lac: number; cid: number };
+          /* eslint-disable-next-line no-await-in-loop */
+          await checkGSMDuplicate(d.lac, d.cid, operatorId);
+        } else if (cell.rat === "UMTS") {
+          const d = cell.details as { rnc: number; cid: number };
+          /* eslint-disable-next-line no-await-in-loop */
+          await checkUMTSDuplicate(d.rnc, d.cid, operatorId);
+        } else if (cell.rat === "LTE") {
+          const d = cell.details as { enbid: number; clid: number };
+          /* eslint-disable-next-line no-await-in-loop */
+          await checkLTEDuplicate(d.enbid, d.clid, operatorId);
+        }
+      }
+    }
+  }
 
   try {
     const result = await db.transaction(async (tx) => {

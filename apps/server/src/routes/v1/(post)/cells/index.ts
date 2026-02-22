@@ -5,6 +5,12 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import {
+  checkGSMDuplicate,
+  checkUMTSDuplicate,
+  checkLTEDuplicate,
+  getOperatorIdForStation,
+} from "../../../../services/cellDuplicateCheck.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -45,6 +51,22 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JSONBody<ResponseData>>) {
   try {
+    if (req.body.details && req.body.station_id) {
+      const operatorId = await getOperatorIdForStation(req.body.station_id);
+      if (operatorId) {
+        if (req.body.rat === "GSM") {
+          const d = req.body.details as z.infer<typeof gsmInsertSchema>;
+          await checkGSMDuplicate(d.lac, d.cid, operatorId);
+        } else if (req.body.rat === "UMTS") {
+          const d = req.body.details as z.infer<typeof umtsInsertSchema>;
+          await checkUMTSDuplicate(d.rnc, d.cid, operatorId);
+        } else if (req.body.rat === "LTE") {
+          const d = req.body.details as z.infer<typeof lteInsertSchema>;
+          await checkLTEDuplicate(d.enbid, d.clid, operatorId);
+        }
+      }
+    }
+
     const [inserted] = await db.insert(cells).values(req.body).returning();
     if (!inserted) throw new ErrorResponse("FAILED_TO_CREATE");
 

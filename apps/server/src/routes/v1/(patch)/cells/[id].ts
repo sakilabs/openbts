@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { checkGSMDuplicate, checkLTEDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
 import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -76,6 +77,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
+
+  if (req.body.details) {
+    const operatorId = await getOperatorIdForStation(cell.station_id);
+    if (operatorId) {
+      if (cell.rat === "GSM") {
+        const d = req.body.details as z.infer<typeof gsmUpdateSchema>;
+        if (d.lac !== undefined && d.cid !== undefined) await checkGSMDuplicate(d.lac, d.cid, operatorId, cell_id);
+      } else if (cell.rat === "LTE") {
+        const d = req.body.details as z.infer<typeof lteUpdateSchema>;
+        if (d.enbid !== undefined && d.clid !== undefined) await checkLTEDuplicate(d.enbid, d.clid, operatorId, cell_id);
+      }
+    }
+  }
 
   try {
     const [updated] = await db

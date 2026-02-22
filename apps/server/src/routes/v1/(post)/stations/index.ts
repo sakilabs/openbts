@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
 import { rebuildStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../utils/logger.js";
 
@@ -58,6 +59,25 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { cells: cellsData, ...stationData } = req.body;
+
+  if (stationData.operator_id && cellsData && cellsData.length > 0) {
+    for (const cell of cellsData) {
+      if (!cell.details) continue;
+      if (cell.rat === "GSM") {
+        const d = cell.details as z.infer<typeof gsmInsertSchema>;
+        /* eslint-disable-next-line no-await-in-loop */
+        await checkGSMDuplicate(d.lac, d.cid, stationData.operator_id);
+      } else if (cell.rat === "UMTS") {
+        const d = cell.details as z.infer<typeof umtsInsertSchema>;
+        /* eslint-disable-next-line no-await-in-loop */
+        await checkUMTSDuplicate(d.rnc, d.cid, stationData.operator_id);
+      } else if (cell.rat === "LTE") {
+        const d = cell.details as z.infer<typeof lteInsertSchema>;
+        /* eslint-disable-next-line no-await-in-loop */
+        await checkLTEDuplicate(d.enbid, d.clid, stationData.operator_id);
+      }
+    }
+  }
 
   try {
     const station = await db.transaction(async (tx) => {

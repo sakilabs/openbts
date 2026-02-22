@@ -43,7 +43,8 @@ export type ErrorCode =
   | "VALIDATION_ERROR"
   | "ALREADY_LOGGED_IN"
   | "INSUFFICIENT_PERMISSIONS"
-  | "TOO_MANY_REQUESTS";
+  | "TOO_MANY_REQUESTS"
+  | "DUPLICATE_ENTRY";
 
 interface ErrorDefinition {
   message: string;
@@ -106,5 +107,9 @@ const errors: Record<ErrorCode, ErrorDefinition> = {
   TOO_MANY_REQUESTS: {
     message: "You have made too many requests. Please try again later.",
     statusCode: 429,
+  },
+  DUPLICATE_ENTRY: {
+    message: "A duplicate entry already exists.",
+    statusCode: 409,
   },
 };

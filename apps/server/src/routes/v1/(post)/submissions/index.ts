@@ -13,8 +13,9 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -180,6 +181,26 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
     throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
 
   if (input.cells && input.cells.length > 0) validateCellDuplicates(input.cells);
+
+  const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
+  if (operatorId && input.cells && input.cells.length > 0) {
+    for (const cell of input.cells) {
+      if (!cell.details || cell.operation === "removed") continue;
+      if (cell.rat === "GSM") {
+        const d = cell.details as { lac: number; cid: number };
+        /* eslint-disable-next-line no-await-in-loop */
+        await checkGSMDuplicate(d.lac, d.cid, operatorId);
+      } else if (cell.rat === "UMTS") {
+        const d = cell.details as { rnc: number; cid: number };
+        /* eslint-disable-next-line no-await-in-loop */
+        await checkUMTSDuplicate(d.rnc, d.cid, operatorId);
+      } else if (cell.rat === "LTE") {
+        const d = cell.details as { enbid: number; clid: number };
+        /* eslint-disable-next-line no-await-in-loop */
+        await checkLTEDuplicate(d.enbid, d.clid, operatorId);
+      }
+    }
+  }
 
   if (type === "update" && targetStation) {
     const hasStationChanges =
