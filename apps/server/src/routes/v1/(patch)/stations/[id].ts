@@ -71,13 +71,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       try {
         const count = await db.$count(stations, eq(stations.location_id, oldLocationId));
         if (count === 0) {
+          const oldLocation = await db.query.locations.findFirst({
+            where: { id: oldLocationId },
+            with: { region: { columns: { id: true, name: true, code: true } } },
+          });
           await db.delete(locations).where(eq(locations.id, oldLocationId));
           await createAuditLog(
             {
               action: "locations.delete",
               table_name: "locations",
               record_id: oldLocationId,
-              old_values: { id: oldLocationId },
+              old_values: oldLocation ?? { id: oldLocationId },
               new_values: null,
             },
             req,

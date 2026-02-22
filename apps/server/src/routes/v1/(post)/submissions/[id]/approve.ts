@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -9,7 +9,23 @@ import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../../utils/logger.js";
-import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import {
+  submissions,
+  stations,
+  cells,
+  locations,
+  gsmCells,
+  umtsCells,
+  lteCells,
+  nrCells,
+  proposedStations,
+  proposedLocations,
+  proposedCells,
+  proposedGSMCells,
+  proposedUMTSCells,
+  proposedLTECells,
+  proposedNRCells,
+} from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -433,6 +449,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         }
       }
       /* eslint-enable no-await-in-loop */
+
+      const cellIds = proposedCellRows.map((c) => c.id);
+      if (cellIds.length > 0) {
+        await Promise.all([
+          tx.delete(proposedGSMCells).where(inArray(proposedGSMCells.proposed_cell_id, cellIds)),
+          tx.delete(proposedUMTSCells).where(inArray(proposedUMTSCells.proposed_cell_id, cellIds)),
+          tx.delete(proposedLTECells).where(inArray(proposedLTECells.proposed_cell_id, cellIds)),
+          tx.delete(proposedNRCells).where(inArray(proposedNRCells.proposed_cell_id, cellIds)),
+        ]);
+        await tx.delete(proposedCells).where(eq(proposedCells.submission_id, id));
+      }
+      await tx.delete(proposedStations).where(eq(proposedStations.submission_id, id));
+      await tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, id));
 
       const now = new Date();
       const [updated] = await tx

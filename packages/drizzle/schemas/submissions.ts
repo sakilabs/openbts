@@ -1,6 +1,6 @@
 import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./auth.ts";
-import { bands, cells, NRType, operators, ratEnum, regions, stations, StationStatus } from "./bts.ts";
+import { bands, cells, NRType, operators, ratEnum, regions, stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
@@ -121,7 +121,6 @@ export const proposedStations = SubmissionsSchema.table(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     is_confirmed: boolean("is_confirmed").default(false),
-    status: StationStatus("status").notNull().default("pending"),
   },
   (t) => [
     index("proposed_stations_submission_id_idx").on(t.submission_id),
