@@ -189,6 +189,10 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
         )}))`,
     ),
   },
+  city: {
+    table: "locations",
+    buildCondition: buildLikeAny(locations.city),
+  },
 
   // networksIds
   networks_id: {

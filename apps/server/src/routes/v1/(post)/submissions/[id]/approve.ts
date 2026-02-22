@@ -339,6 +339,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               where: {
                 id: targetCellId,
               },
+              with: { gsm: true, umts: true, lte: true, nr: true },
             });
             if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 
@@ -388,13 +389,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 break;
               }
             }
+
+            const updatedCell = await tx.query.cells.findFirst({
+              where: { id: targetCellId },
+              with: { gsm: true, umts: true, lte: true, nr: true },
+            });
+
             await createAuditLog(
               {
                 action: "cells.update",
                 table_name: "cells",
                 record_id: targetCellId,
                 old_values: targetCell,
-                new_values: cellUpdate,
+                new_values: updatedCell,
                 metadata: { submission_id: id },
               },
               req,
@@ -411,6 +418,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               where: {
                 id: targetCellId,
               },
+              with: { gsm: true, umts: true, lte: true, nr: true },
             });
             if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 

@@ -49,6 +49,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "mnc:", description: "Filter by operator MNC code", availableOn: ["map"] },
 
   // Location filters
+  { key: "city:", description: "Filter by city name (partial match)", availableOn: ["map", "stations"] },
   { key: "region:", description: "Filter by region code (e.g., MAZ, SL, WP)", availableOn: [] },
 
   // Cell filters

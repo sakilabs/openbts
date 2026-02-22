@@ -19,6 +19,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Calculate the speed of radiolines and show total speed
 - Added more checks on the server for duplicates per operator etc
 - Optimized `/uke/locations` even more
+- Added support for searching via city
 
 # 2026-02-21
 
