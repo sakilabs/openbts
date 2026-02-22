@@ -98,6 +98,29 @@ function isNonEmpty(value: unknown): boolean {
   return false;
 }
 
+function validateCellDuplicates(cells: z.infer<typeof cellInputSchema>[]): void {
+  for (const rat of ["GSM", "UMTS"] as const) {
+    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "removed");
+    const seen = new Set<number>();
+    for (const cell of ratCells) {
+      const cid = (cell.details as { cid?: number } | undefined)?.cid;
+      if (cid === undefined) continue;
+      if (seen.has(cid)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate CID ${cid} found in ${rat} cells` });
+      seen.add(cid);
+    }
+  }
+
+  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "removed");
+  const seen = new Set<string>();
+  for (const cell of lteCells) {
+    const d = cell.details as { enbid?: number; clid?: number } | undefined;
+    if (d?.enbid === undefined || d?.clid === undefined) continue;
+    const key = `${d.enbid}:${d.clid}`;
+    if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate eNBID+CLID (${d.enbid}+${d.clid}) found in LTE cells` });
+    seen.add(key);
+  }
+}
+
 function hasActualChanges(body: z.infer<typeof requestSchema>, existing: ExistingSubmission): boolean {
   if (body.review_notes !== undefined && body.review_notes !== existing.review_notes) return true;
   if (body.submitter_note !== undefined && body.submitter_note !== existing.submitter_note) return true;
@@ -134,6 +157,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
   if (!hasActualChanges(req.body, submission))
     throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before updating." });
+
+  if (req.body.cells && req.body.cells.length > 0) validateCellDuplicates(req.body.cells);
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -202,9 +227,15 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               case "LTE":
                 await tx.insert(proposedLTECells).values({ ...(details as z.infer<typeof lteInsertSchema>), proposed_cell_id: base.id });
                 break;
-              case "NR":
-                await tx.insert(proposedNRCells).values({ ...(details as z.infer<typeof nrInsertSchema>), proposed_cell_id: base.id });
+              case "NR": {
+                const nrDetails = details as z.infer<typeof nrInsertSchema>;
+                await tx.insert(proposedNRCells).values({
+                  ...nrDetails,
+                  proposed_cell_id: base.id,
+                  gnbid_length: nrDetails.gnbid ? nrDetails.gnbid.toString(2).length : undefined,
+                });
                 break;
+              }
             }
           }
         }

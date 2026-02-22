@@ -79,10 +79,10 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
           />
           <DetailComputedCell value={longCid} />
           <DetailInputCell
-            field="carrier"
-            placeholder="Carrier"
-            value={(d.carrier as number) ?? ""}
-            error={!!detailErrors?.carrier}
+            field="UARFCN"
+            placeholder="UARFCN"
+            value={(d.arfcn as number) ?? ""}
+            error={!!detailErrors?.arfcn}
             disabled={disabled}
             onDetailChange={onDetailChange}
           />

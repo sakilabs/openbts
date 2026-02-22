@@ -126,7 +126,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "NR":
           {
             const details = req.body.details as z.infer<typeof nrUpdateSchema>;
-            const [updated] = await db.update(nrCells).set(details).where(eq(nrCells.cell_id, cell_id)).returning();
+            const [updated] = await db
+              .update(nrCells)
+              .set({ ...details, ...(details.gnbid ? { gnbid_length: details.gnbid.toString(2).length } : {}) })
+              .where(eq(nrCells.cell_id, cell_id))
+              .returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",

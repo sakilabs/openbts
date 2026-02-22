@@ -52,7 +52,7 @@ export function UnassignedPermitsDataTable({
   });
 
   const columnCount = columns.length;
-  const showSkeleton = isLoading && data.length === 0;
+  const showSkeleton = isLoading;
   const isEmpty = !isLoading && table.getRowModel().rows.length === 0;
   const rows = table.getRowModel().rows;
 
@@ -105,7 +105,9 @@ export function UnassignedPermitsDataTable({
             </tbody>
           )}
           <DataTable.Footer columns={columnCount}>
-            <DataTablePagination table={table} totalItems={totalItems} showRowsPerPage={false} />
+            <div className="sticky left-0">
+              <DataTablePagination table={table} totalItems={totalItems} showRowsPerPage={false} />
+            </div>
           </DataTable.Footer>
         </DataTable.Table>
       </DataTable.Root>

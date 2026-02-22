@@ -1853,7 +1853,7 @@ components:
       type: object
       properties:
         lac: { type: integer, nullable: true }
-        carrier: { type: integer, nullable: true }
+        arfcn: { type: integer, nullable: true }
         rnc: { type: integer }
         cid: { type: integer }
         cid_long: { type: integer }

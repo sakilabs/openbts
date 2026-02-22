@@ -42,6 +42,8 @@
     "locationRequired": "Location is required",
     "cellsSaved": "Cells have been saved",
     "saved": "Station has been saved",
-    "noBands": "No available bands for {{rat}}"
+    "noBands": "No available bands for {{rat}}",
+    "duplicateCid": "Duplicate CID found in {{rat}} cells",
+    "duplicateEnbidClid": "Duplicate eNBID+CLID combination found in LTE cells"
   }
 }

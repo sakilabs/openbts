@@ -88,7 +88,7 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
         case "NR":
           {
             const d = req.body.details as z.infer<typeof nrInsertSchema>;
-            await db.insert(nrCells).values({ ...d, cell_id: inserted.id });
+            await db.insert(nrCells).values({ ...d, cell_id: inserted.id, gnbid_length: d.gnbid ? d.gnbid.toString(2).length : undefined });
             details = {
               nrtac: d.nrtac ?? null,
               gnbid: d.gnbid ?? null,

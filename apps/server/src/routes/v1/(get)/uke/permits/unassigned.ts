@@ -32,7 +32,7 @@ const stationResponseSchema = z.object({
 
 const schemaRoute = {
   querystring: z.object({
-    limit: z.coerce.number().min(1).max(1000).optional().default(500),
+    limit: z.coerce.number().min(1).max(200).optional().default(50),
     page: z.coerce.number().min(1).default(1),
     operators: z
       .string()
@@ -169,7 +169,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 const getUnassignedUkePermits: Route<ReqQuery, ResponseBody> = {
   url: "/uke/permits/unassigned",
   method: "GET",
-  config: { permissions: ["read:uke_permits"], allowGuestAccess: false },
+  config: { permissions: ["read:uke_permits_orphaned"], allowGuestAccess: false },
   schema: schemaRoute,
   handler,
 };

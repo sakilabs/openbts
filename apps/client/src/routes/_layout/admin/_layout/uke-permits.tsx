@@ -49,6 +49,7 @@ function AdminUkePermitsPage() {
     searchQuery,
     setSearchQuery,
     isLoading,
+    isFetching,
   } = data;
 
   const handleOpenDetails = useCallback((station: UkeStation) => setSelectedStation(station), []);
@@ -74,14 +75,14 @@ function AdminUkePermitsPage() {
           onRegionsChange={setSelectedRegions}
           onClearAllFilters={clearAllFilters}
           onSearchQueryChange={setSearchQuery}
-          stationCount={totalStations}
+          stationCount={stations.length}
           totalStations={totalStations}
         />
 
         <div className="flex-1 flex flex-col p-3 min-h-0 overflow-hidden">
           <UnassignedPermitsDataTable
             data={stations}
-            isLoading={isLoading}
+            isLoading={isLoading || isFetching}
             onOpenDetails={handleOpenDetails}
             onViewOnMap={handleViewOnMap}
             totalItems={totalStations}

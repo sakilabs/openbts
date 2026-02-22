@@ -308,6 +308,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                     cell_id: newCell.id,
                     nrtac: d.nrtac,
                     gnbid: d.gnbid,
+                    gnbid_length: d.gnbid ? d.gnbid.toString(2).length : undefined,
                     clid: d.clid,
                     pci: d.pci,
                     type: d.type,
@@ -378,7 +379,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                     .set({
                       nrtac: d.nrtac,
                       gnbid: d.gnbid,
-                      gnbid_length: d.gnbid_length,
+                      gnbid_length: d.gnbid ? d.gnbid.toString(2).length : d.gnbid_length,
                       clid: d.clid,
                       pci: d.pci,
                       supports_nr_redcap: d.supports_nr_redcap,

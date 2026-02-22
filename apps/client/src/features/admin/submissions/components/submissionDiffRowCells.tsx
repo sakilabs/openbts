@@ -44,7 +44,7 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
             <DiffOldValueCell value={longCid} />
           </td>
           <td className={cellClassName}>
-            <DiffOldValueCell value={d.carrier} />
+            <DiffOldValueCell value={d.arfcn} />
           </td>
         </>
       );

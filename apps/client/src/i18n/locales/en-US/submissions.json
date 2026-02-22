@@ -91,7 +91,9 @@
     "gnbidRequired": "gNBID is required",
     "mustBePositive": "Value cannot be negative",
     "typeRequired": "Type (NSA/SA) is required",
-    "typeInvalid": "Type must be NSA or SA"
+    "typeInvalid": "Type must be NSA or SA",
+    "cidDuplicate": "CID must be unique within the same RAT",
+    "enbidClidDuplicate": "eNBID+CLID combination must be unique within LTE cells"
   },
   "form": {
     "summary": "Leave a note if needed",

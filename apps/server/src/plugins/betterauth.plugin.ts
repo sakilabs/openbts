@@ -10,7 +10,7 @@ import * as schema from "@openbts/drizzle";
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
 import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
-import { accessControl, adminRole, modRole, userRole } from "./auth/permissions.js";
+import { accessControl, adminRole, editorRole, modRole, userRole } from "./auth/permissions.js";
 
 import type { FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
@@ -87,6 +87,7 @@ export const auth = betterAuth({
       roles: {
         admin: adminRole,
         // moderator: modRole,
+        editor: editorRole,
         user: userRole,
       },
     }),

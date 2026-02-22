@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchApiData } from "@/lib/api";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Station, Cell, Band, UkeStation } from "@/types/station";
@@ -319,6 +320,19 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
         toast.error(t("toast.locationRequired"));
         return;
       }
+    }
+
+    const cellLikes = localCells.map((c) => ({ id: c._localId, rat: c.rat, details: c.details }));
+
+    const cidDuplicates = findDuplicateCids(cellLikes);
+    if (cidDuplicates.length > 0) {
+      toast.error(t("toast.duplicateCid", { rat: cidDuplicates[0][0] }));
+      return;
+    }
+
+    if (findDuplicateEnbidClids(cellLikes).length > 0) {
+      toast.error(t("toast.duplicateEnbidClid"));
+      return;
     }
 
     saveMutation.mutate(

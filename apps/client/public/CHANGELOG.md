@@ -1,6 +1,21 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-02-22
+
+### 🩹 Fixes
+
+- Remove `cid` & `clid` from the checking function to calculate `longCID` or `eCID`
+- Display the "unauthorized" page for users without the required role
+- ARFCN -> UARFCN (UMTS)
+- Properly show the table on `/admin/uke-permits`
+
+### 🚀 Enhancements
+
+- Added checking for duplicated CID in GSM/UMTS
+- Added checking for duplicated enBID + CLID in LTE
+- Added `editor` role
+
 # 2026-02-21
 
 ### 🩹 Fixes

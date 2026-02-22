@@ -10,6 +10,7 @@ import type {
   SubmissionMode,
 } from "../types";
 import type { SearchStation } from "../api";
+import { findDuplicateCids, findDuplicateEnbidClids, type CellLike } from "./cellDuplicates";
 
 export type StationErrors = {
   station_id?: string;
@@ -92,6 +93,23 @@ export function validateCells(cells: ProposedCellForm[]): Record<string, CellErr
   for (const cell of cells) {
     const cellError = validateCell(cell);
     if (Object.keys(cellError).length > 0) errors[cell.id] = cellError;
+  }
+
+  const cellLikes: CellLike[] = cells.map((c) => ({ id: c.id, rat: c.rat, details: c.details }));
+
+  for (const [_, duplicateIds] of findDuplicateCids(cellLikes)) {
+    for (const cellId of duplicateIds) {
+      if (!errors[cellId]) errors[cellId] = {};
+      if (!errors[cellId].details) errors[cellId].details = {};
+      errors[cellId].details!.cid = "validation.cidDuplicate";
+    }
+  }
+
+  for (const cellId of findDuplicateEnbidClids(cellLikes)) {
+    if (!errors[cellId]) errors[cellId] = {};
+    if (!errors[cellId].details) errors[cellId].details = {};
+    errors[cellId].details!.enbid = "validation.enbidClidDuplicate";
+    errors[cellId].details!.clid = "validation.enbidClidDuplicate";
   }
 
   return errors;

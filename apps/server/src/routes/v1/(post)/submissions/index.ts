@@ -103,6 +103,29 @@ function hasMeaningfulChanges(input: SingleSubmission): boolean {
   return isNonEmpty(payload);
 }
 
+function validateCellDuplicates(cells: NonNullable<SingleSubmission["cells"]>): void {
+  for (const rat of ["GSM", "UMTS"] as const) {
+    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "removed");
+    const seen = new Set<number>();
+    for (const cell of ratCells) {
+      const cid = (cell.details as { cid?: number } | undefined)?.cid;
+      if (cid === undefined) continue;
+      if (seen.has(cid)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate CID ${cid} found in ${rat} cells` });
+      seen.add(cid);
+    }
+  }
+
+  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "removed");
+  const seen = new Set<string>();
+  for (const cell of lteCells) {
+    const d = cell.details as { enbid?: number; clid?: number } | undefined;
+    if (d?.enbid === undefined || d?.clid === undefined) continue;
+    const key = `${d.enbid}:${d.clid}`;
+    if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate eNBID+CLID (${d.enbid}+${d.clid}) found in LTE cells` });
+    seen.add(key);
+  }
+}
+
 async function validateSubmission(input: SingleSubmission): Promise<void> {
   const { station_id, type, station: stationData, location: locationData } = input;
 
@@ -155,6 +178,8 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
   if (type === "new" && existingLocation && existingLocation.stations && existingLocation.stations.length > 0)
     throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
+
+  if (input.cells && input.cells.length > 0) validateCellDuplicates(input.cells);
 
   if (type === "update" && targetStation) {
     const hasStationChanges =
@@ -238,7 +263,9 @@ async function processSubmission(
             }
             case "NR": {
               const details = cell.details as z.infer<typeof nrInsertSchema>;
-              await tx.insert(proposedNRCells).values({ ...details, proposed_cell_id: base.id });
+              await tx
+                .insert(proposedNRCells)
+                .values({ ...details, proposed_cell_id: base.id, gnbid_length: details.gnbid ? details.gnbid.toString(2).length : undefined });
               break;
             }
           }

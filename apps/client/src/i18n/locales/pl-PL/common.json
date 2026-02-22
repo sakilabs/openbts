@@ -165,5 +165,9 @@
     "gps": "Brak współrzędnych GPS",
     "region": "Brak województwa",
     "address": "Brak adresu"
+  },
+  "forbidden": {
+    "title": "Brak uprawnień",
+    "description": "Nie masz wymaganej roli, aby zobaczyć tę stronę."
   }
 }

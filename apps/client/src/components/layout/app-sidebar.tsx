@@ -71,14 +71,14 @@ const adminNavConfig = [
     url: "#",
     icon: SecurityLockIcon,
     items: [
-      { titleKey: "items.users", url: "/admin/users" },
-      { titleKey: "items.stations", url: "/admin/stations" },
-      { titleKey: "items.locations", url: "/admin/locations" },
-      { titleKey: "items.submissions", url: "/admin/submissions" },
-      { titleKey: "items.ukePermits", url: "/admin/uke-permits" },
-      { titleKey: "items.ukeImport", url: "/admin/uke-import" },
-      { titleKey: "items.auditLogs", url: "/admin/audit-logs" },
-      { titleKey: "items.settings", url: "/admin/settings" },
+      { titleKey: "items.users", url: "/admin/users", allowedRoles: ["admin"] },
+      { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor", "moderator"] },
+      { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor", "moderator"] },
+      { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor", "moderator"] },
+      { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor", "moderator"] },
+      { titleKey: "items.ukeImport", url: "/admin/uke-import", allowedRoles: ["admin"] },
+      { titleKey: "items.auditLogs", url: "/admin/audit-logs", allowedRoles: ["admin"] },
+      { titleKey: "items.settings", url: "/admin/settings", allowedRoles: ["admin"] },
     ],
   },
 ];
@@ -109,7 +109,18 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const authNavItems = useMemo(() => (showAuth ? mapConfig(authNavConfig) : []), [mapConfig, showAuth]);
   const userRole = session?.user?.role as string | undefined;
   const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
-  const adminNavItems = useMemo(() => (isAdmin ? mapConfig(adminNavConfig) : []), [mapConfig, isAdmin]);
+  const adminNavItems = useMemo(() => {
+    if (!isAdmin || !userRole) return [];
+    return adminNavConfig
+      .map((section) => ({
+        title: t(section.titleKey),
+        key: section.key,
+        url: section.url,
+        icon: section.icon,
+        items: section.items.filter((item) => item.allowedRoles.includes(userRole)).map((item) => ({ title: t(item.titleKey), url: item.url })),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [isAdmin, userRole, t]);
 
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(location.pathname === "/preferences");
