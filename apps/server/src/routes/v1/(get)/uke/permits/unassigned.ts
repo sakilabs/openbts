@@ -66,9 +66,6 @@ const schemaRoute = {
       .optional()
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
   }),
-  response: {
-    200: z.toJSONSchema(responseSchema),
-  },
 };
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };

@@ -91,9 +91,6 @@ const schemaRoute = {
         return n >= 1 && n <= 30 ? n : null;
       }),
   }),
-  response: {
-    200: z.toJSONSchema(responseSchema),
-  },
 };
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
