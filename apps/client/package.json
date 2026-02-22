@@ -58,6 +58,6 @@
     "i18next-cli": "^1.42.8",
     "typescript": "5.9.3",
     "typescript-eslint": "8.55.0",
-    "vite": "8.0.0-beta.14"
+    "vite": "8.0.0-beta.15"
   }
 }

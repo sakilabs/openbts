@@ -48,7 +48,7 @@ export default defineConfig({
       },
     },
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       manifest: {
         name: "OpenBTS",
         short_name: "OpenBTS",
@@ -59,7 +59,6 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,woff2,png,svg}"],
       },
       pwaAssets: { disabled: false, config: true },
-      devOptions: { enabled: true },
     }),
     // babel({
     // 	apply: "build",
@@ -107,6 +106,7 @@ export default defineConfig({
               name: "auth-vendor",
               test: /node_modules[\\/](better-auth|@daveyplate)/,
               priority: 12,
+              entriesAware: true,
             },
             {
               name: "i18n-vendor",
@@ -117,6 +117,7 @@ export default defineConfig({
               name: "vendor",
               test: /node_modules/,
               priority: 10,
+              entriesAware: true,
             },
           ],
         },
