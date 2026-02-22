@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SecurityLockIcon } from "@hugeicons/core-free-icons";
+import { showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +31,7 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
       toast.success("Role updated successfully");
       invalidateAll();
     },
-    onError: () => toast.error("Failed to update role"),
+    onError: (error) => showApiError(error),
   });
 
   const updateNameMutation = useMutation({
@@ -43,7 +44,7 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
       setEditName("");
       invalidateAll();
     },
-    onError: () => toast.error("Failed to update name"),
+    onError: (error) => showApiError(error),
   });
 
   const setPasswordMutation = useMutation({
@@ -55,7 +56,7 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
       toast.success("Password updated successfully");
       setNewPassword("");
     },
-    onError: () => toast.error("Failed to set password"),
+    onError: (error) => showApiError(error),
   });
 
   return (

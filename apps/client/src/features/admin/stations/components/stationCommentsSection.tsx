@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchApiData, API_BASE } from "@/lib/api";
+import { fetchApiData, API_BASE, showApiError } from "@/lib/api";
 import type { StationComment } from "@/types/station";
 
 type StationCommentsSectionProps = {
@@ -38,8 +38,8 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
       queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
       toast.success(t("stationComments.deleted"));
     },
-    onError: () => {
-      toast.error(t("stationComments.deleteFailed"));
+    onError: (error) => {
+      showApiError(error);
     },
   });
 

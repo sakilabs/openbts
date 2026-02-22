@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ComputerIcon } from "@hugeicons/core-free-icons";
+import { showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +22,7 @@ export function SessionsCard({ userId, sessions }: { userId: string; sessions: S
       toast.success("Session revoked");
       invalidateAll();
     },
-    onError: () => toast.error("Failed to revoke session"),
+    onError: (error) => showApiError(error),
   });
 
   const revokeAllMutation = useMutation({
@@ -33,7 +34,7 @@ export function SessionsCard({ userId, sessions }: { userId: string; sessions: S
       toast.success("All sessions revoked");
       invalidateAll();
     },
-    onError: () => toast.error("Failed to revoke sessions"),
+    onError: (error) => showApiError(error),
   });
 
   return (

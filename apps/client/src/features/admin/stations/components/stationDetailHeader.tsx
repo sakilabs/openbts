@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { showApiError } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { useDeleteStationMutation } from "@/features/admin/stations/mutations";
 import type { Operator, Station } from "@/types/station";
@@ -53,8 +54,8 @@ export function StationDetailHeader({
         toast.success(t("toast.deleted"));
         navigate({ to: "/admin/stations" });
       },
-      onError: () => {
-        toast.error(t("common:error.toast"));
+      onError: (error) => {
+        showApiError(error);
       },
     });
   };

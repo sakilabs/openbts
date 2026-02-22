@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
-import { fetchApiData } from "@/lib/api";
+import { fetchApiData, showApiError } from "@/lib/api";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -265,7 +265,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
           if (updatedAt) initialUpdatedAt.current = updatedAt;
           toast.success(t("toast.saved"));
         },
-        onError: () => toast.error(t("common:error.toast")),
+        onError: (error) => showApiError(error),
       },
     );
   };
@@ -279,7 +279,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
           toast.success(t("toast.approved"));
           navigate({ to: "/admin/submissions" });
         },
-        onError: () => toast.error(t("common:error.toast")),
+        onError: (error) => showApiError(error),
       },
     );
   };
@@ -293,7 +293,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
           toast.success(t("toast.rejected"));
           navigate({ to: "/admin/submissions" });
         },
-        onError: () => toast.error(t("common:error.toast")),
+        onError: (error) => showApiError(error),
       },
     );
   };

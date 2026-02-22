@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import {
   AlertDialog,
@@ -57,7 +58,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
       setBanDuration(0);
       invalidateAll();
     },
-    onError: () => toast.error("Failed to ban user"),
+    onError: (error) => showApiError(error),
   });
 
   const unbanMutation = useMutation({
@@ -69,7 +70,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
       toast.success("User unbanned successfully");
       invalidateAll();
     },
-    onError: () => toast.error("Failed to unban user"),
+    onError: (error) => showApiError(error),
   });
 
   const deleteMutation = useMutation({
@@ -81,7 +82,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
       toast.success("User deleted successfully");
       navigate({ to: "/admin/users" });
     },
-    onError: () => toast.error("Failed to delete user"),
+    onError: (error) => showApiError(error),
   });
 
   return (

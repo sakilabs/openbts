@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { fetchApiData } from "@/lib/api";
+import { fetchApiData, showApiError } from "@/lib/api";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
 import { Button } from "@/components/ui/button";
@@ -358,8 +358,8 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
             dispatch({ type: "CLEAR_DELETED" });
           }
         },
-        onError: (_error) => {
-          toast.error(t("common:error.toast"));
+        onError: (error) => {
+          showApiError(error);
         },
       },
     );

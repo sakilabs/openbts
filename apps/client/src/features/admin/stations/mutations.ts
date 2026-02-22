@@ -187,8 +187,6 @@ export function useSaveStationMutation() {
         }
       }
 
-      await patchStation(station.id, stationPatch);
-
       if (payload.deletedServerCellIds.length > 0) {
         await Promise.all(payload.deletedServerCellIds.map((cellId) => deleteCell(station.id, cellId)));
       }
@@ -221,6 +219,8 @@ export function useSaveStationMutation() {
           })),
         );
       }
+
+      await patchStation(station.id, stationPatch);
 
       return { mode: "update" as const, stationId: station.id };
     },

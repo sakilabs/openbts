@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SentIcon, AlertCircleIcon, PencilEdit02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
-import { fetchApiData } from "@/lib/api";
+import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { formatShortDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,7 +52,7 @@ export function MySubmissions() {
       queryClient.invalidateQueries({ queryKey: ["my-submissions"] });
       toast.success(t("toast.deleted"));
     },
-    onError: () => toast.error(t("common:error.toast")),
+    onError: (error) => showApiError(error),
   });
 
   const submissions = useMemo(() => allSubmissions?.filter((s) => s.submitter_id === session?.user?.id) ?? [], [allSubmissions, session?.user?.id]);

@@ -24,6 +24,7 @@ import {
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import { fetchLocationDetail } from "@/features/admin/locations/api";
 import { usePatchLocationMutation, useDeleteLocationMutation } from "@/features/admin/locations/mutations";
+import { showApiError } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 
@@ -109,7 +110,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
       },
       {
         onSuccess: () => toast.success(t("toast.locationSaved")),
-        onError: () => toast.error(t("common:error.toast")),
+        onError: (error) => showApiError(error),
       },
     );
   };
@@ -130,8 +131,8 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
         toast.success(t("toast.locationDeleted"));
         navigate({ to: "/admin/locations" });
       },
-      onError: () => {
-        toast.error(t("common:error.toast"));
+      onError: (error) => {
+        showApiError(error);
       },
     });
   };

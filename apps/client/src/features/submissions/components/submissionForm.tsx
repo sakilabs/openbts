@@ -15,6 +15,7 @@ import { NewStationForm } from "./newStationForm";
 import { RatSelector } from "./ratSelector";
 import { CellDetailsForm } from "./cellDetailsForm";
 import { createSubmission, updateSubmission, fetchSubmissionForEdit, fetchStationForSubmission, type SearchStation } from "../api";
+import { showApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
@@ -156,8 +157,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
       }
       setShowErrors(false);
     },
-    onError: () => {
-      toast.error(t("common:error.toast"));
+    onError: (error) => {
+      showApiError(error);
     },
   });
 
