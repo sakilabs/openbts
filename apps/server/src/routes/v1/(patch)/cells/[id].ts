@@ -6,7 +6,7 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
-import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import { cells, gsmCells, umtsCells, lteCells, nrCells, stations } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -170,6 +170,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         record_id: cell_id,
         old_values: cell,
         new_values: { ...updated, details },
+      },
+      req,
+    );
+
+    await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, cell.station_id));
+    await createAuditLog(
+      {
+        action: "stations.update",
+        table_name: "stations",
+        record_id: cell.station_id,
+        new_values: { updatedAt: new Date() },
+        metadata: { reason: "cells.update" },
       },
       req,
     );

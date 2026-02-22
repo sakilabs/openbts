@@ -1,4 +1,5 @@
-import { cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import { cells, gsmCells, umtsCells, lteCells, nrCells, stations } from "@openbts/drizzle";
+import { eq } from "drizzle-orm";
 import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -154,6 +155,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           req,
         ),
       ),
+    );
+
+    await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id));
+    await createAuditLog(
+      {
+        action: "stations.update",
+        table_name: "stations",
+        record_id: station_id,
+        old_values: { updatedAt: station.updatedAt },
+        new_values: { updatedAt: new Date() },
+        metadata: { reason: "cells.create" },
+      },
+      req,
     );
 
     return res.send({ data: response });

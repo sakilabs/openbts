@@ -220,7 +220,14 @@ export function useSaveStationMutation() {
         await Promise.all(payload.deletedServerCellIds.map((cellId) => deleteCell(station.id, cellId)));
       }
 
-      await patchStation(station.id, stationPatch);
+      const stationChanged =
+        stationPatch.station_id !== station.station_id ||
+        stationPatch.operator_id !== station.operator_id ||
+        stationPatch.notes !== station.notes ||
+        stationPatch.is_confirmed !== station.is_confirmed ||
+        ("location_id" in stationPatch && stationPatch.location_id !== station.location_id);
+
+      if (stationChanged) await patchStation(station.id, stationPatch);
 
       return { mode: "update" as const, stationId: station.id };
     },

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { cells, gsmCells, lteCells, nrCells, umtsCells } from "@openbts/drizzle";
+import { cells, gsmCells, lteCells, nrCells, umtsCells, stations } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -52,6 +52,19 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
           record_id: cell.id,
           old_values: cell,
           new_values: null,
+        },
+        req,
+        tx,
+      );
+
+      await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, cell.station_id));
+      await createAuditLog(
+        {
+          action: "stations.update",
+          table_name: "stations",
+          record_id: cell.station_id,
+          new_values: { updatedAt: new Date() },
+          metadata: { reason: "cells.delete" },
         },
         req,
         tx,
