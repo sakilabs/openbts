@@ -12,6 +12,7 @@ export type RadioLineTooltipContentProps = {
   directions: { freq: string; bandwidth: string | null; polarization: string | null; forward: boolean }[];
   directionCount: number;
   linkType?: RadioLinkType;
+  totalSpeed?: string | null;
 };
 
 export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
@@ -21,6 +22,7 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
   directions,
   directionCount,
   linkType,
+  totalSpeed,
 }: RadioLineTooltipContentProps) {
   const linkTypeStyle = linkType ? getLinkTypeStyle(linkType) : null;
 
@@ -42,6 +44,7 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
             {linkType}
           </span>
         )}
+        {totalSpeed && <span className="text-[10px] font-mono font-semibold text-emerald-600 whitespace-nowrap">{totalSpeed}</span>}
       </div>
 
       {directions.length > 0 && (

@@ -1,6 +1,15 @@
 import type { StationSource, LocationWithStations, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { getOperatorColor, resolveOperatorMnc } from "@/lib/operatorUtils";
-import { calculateDistance, formatDistance, formatFrequency, formatBandwidth, groupRadioLinesIntoLinks } from "./utils";
+import {
+  calculateDistance,
+  formatDistance,
+  formatFrequency,
+  formatBandwidth,
+  formatSpeed,
+  groupRadioLinesIntoLinks,
+  calculateRadiolineSpeed,
+  calculateLinkTotalSpeed,
+} from "./utils";
 
 export const DEFAULT_COLOR = "#3b82f6";
 
@@ -95,13 +104,18 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
     const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
     const distanceFormatted = formatDistance(distance);
 
+    const totalSpeed = calculateLinkTotalSpeed(link);
+
     const directionsJson = JSON.stringify(
-      link.directions.map((d) => ({
-        freq: formatFrequency(d.link.freq),
-        bandwidth: d.link.bandwidth ? formatBandwidth(d.link.bandwidth) : null,
-        polarization: d.link.polarization ?? null,
-        forward: d.tx.latitude === link.a.latitude && d.tx.longitude === link.a.longitude,
-      })),
+      link.directions.map((d) => {
+        const calcSpeed = d.link.ch_width && d.link.modulation_type ? calculateRadiolineSpeed(d.link.ch_width, d.link.modulation_type) : null;
+        return {
+          freq: formatFrequency(d.link.freq),
+          bandwidth: calcSpeed != null ? formatSpeed(calcSpeed) : d.link.bandwidth ? formatBandwidth(d.link.bandwidth) : null,
+          polarization: d.link.polarization ?? null,
+          forward: d.tx.latitude === link.a.latitude && d.tx.longitude === link.a.longitude,
+        };
+      }),
     );
 
     lineFeatures.push({
@@ -124,6 +138,7 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
         directionsJson,
         directionCount: link.directions.length,
         linkType: link.linkType,
+        totalSpeed: totalSpeed != null ? formatSpeed(totalSpeed) : null,
       },
     });
 

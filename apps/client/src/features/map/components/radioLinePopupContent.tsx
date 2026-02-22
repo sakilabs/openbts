@@ -6,7 +6,17 @@ import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/l
 import { isPermitExpired } from "@/lib/dateUtils";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
-import { calculateDistance, formatDistance, formatFrequency, formatBandwidth, getLinkTypeStyle, buildRadiolineShareUrl } from "../utils";
+import {
+  calculateDistance,
+  formatDistance,
+  formatFrequency,
+  formatBandwidth,
+  formatSpeed,
+  getLinkTypeStyle,
+  buildRadiolineShareUrl,
+  calculateRadiolineSpeed,
+  calculateLinkTotalSpeed,
+} from "../utils";
 import type { DuplexRadioLink } from "../utils";
 import { cn } from "@/lib/utils";
 
@@ -74,6 +84,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
   const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
   const permitNumber = first.permit.number;
   const linkTypeStyle = getLinkTypeStyle(link.linkType);
+  const totalSpeed = calculateLinkTotalSpeed(link);
 
   return (
     <div className="w-72 text-sm">
@@ -102,6 +113,11 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
               {link.linkType}
             </span>
           ) : null}
+          {totalSpeed != null && (
+            <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[8px] font-mono font-semibold text-emerald-600 border border-emerald-500/20">
+              {formatSpeed(totalSpeed)}
+            </span>
+          )}
           {link.isExpired && (
             <span className="px-1 py-px rounded-md bg-destructive/10 text-[8px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
               {t("common:status.expired")}
@@ -113,6 +129,8 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
           {link.directions.map((dir) => {
             const dirExpired = isPermitExpired(dir.permit.expiry_date);
             const isForward = dir.tx.latitude === link.a.latitude && dir.tx.longitude === link.a.longitude;
+            const dirCalcSpeed =
+              dir.link.ch_width && dir.link.modulation_type ? calculateRadiolineSpeed(dir.link.ch_width, dir.link.modulation_type) : null;
             return (
               <div key={dir.id} className="flex items-start gap-1.5">
                 {link.directions.length > 1 && (
@@ -136,11 +154,15 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
                       {dir.link.ch_width} MHz
                     </span>
                   )}
-                  {dir.link.bandwidth && (
+                  {dirCalcSpeed != null ? (
+                    <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[8px] font-mono font-medium text-emerald-600 border border-emerald-500/20">
+                      {formatSpeed(dirCalcSpeed)}
+                    </span>
+                  ) : dir.link.bandwidth ? (
                     <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
                       {formatBandwidth(dir.link.bandwidth)}
                     </span>
-                  )}
+                  ) : null}
                   {dirExpired && <span className="size-1.5 rounded-full bg-destructive shrink-0 mt-1" title={t("common:status.expired")} />}
                 </div>
               </div>

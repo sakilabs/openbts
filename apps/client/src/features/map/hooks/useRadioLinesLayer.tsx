@@ -168,7 +168,16 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
         return;
       }
 
-      const { radioLineId, color = "#3b82f6", operatorName, distanceFormatted: distance = "", directionCount = 1, directionsJson, linkType } = props;
+      const {
+        radioLineId,
+        color = "#3b82f6",
+        operatorName,
+        distanceFormatted: distance = "",
+        directionCount = 1,
+        directionsJson,
+        linkType,
+        totalSpeed,
+      } = props;
 
       const tooltip = buildTooltip(tooltipRef.current, radioLineId);
       tooltipRef.current = tooltip;
@@ -181,6 +190,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
           directions={parseDirections(directionsJson)}
           directionCount={directionCount}
           linkType={linkType}
+          totalSpeed={totalSpeed}
         />,
       );
       tooltip.popup.setLngLat(e.lngLat).addTo(map);

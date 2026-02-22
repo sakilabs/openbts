@@ -32,7 +32,17 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { CopyButton } from "./copyButton";
 import { ShareButton } from "./shareButton";
-import { calculateDistance, formatDistance, formatBandwidth, formatFrequency, getLinkTypeStyle, buildRadiolineShareUrl } from "@/features/map/utils";
+import {
+  calculateDistance,
+  formatDistance,
+  formatBandwidth,
+  formatFrequency,
+  formatSpeed,
+  getLinkTypeStyle,
+  buildRadiolineShareUrl,
+  calculateRadiolineSpeed,
+  calculateLinkTotalSpeed,
+} from "@/features/map/utils";
 import type { DuplexRadioLink } from "@/features/map/utils";
 
 type RadioLineDetailsDialogProps = {
@@ -115,6 +125,11 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
   const linkTypeStyle = getLinkTypeStyle(link.linkType);
 
   const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
+  const totalSpeed = calculateLinkTotalSpeed(link);
+  const dirSpeed =
+    radioLine.link.ch_width && radioLine.link.modulation_type
+      ? calculateRadiolineSpeed(radioLine.link.ch_width, radioLine.link.modulation_type)
+      : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -162,6 +177,13 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   <span className="text-sm font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
                   {(link.linkType === "FDD" || link.linkType === "2+0 FDD" || link.linkType === "XPIC" || link.linkType === "SD") && (
                     <span className="text-xs text-muted-foreground">+{link.directions.length - 1}</span>
+                  )}
+                  {totalSpeed != null && (
+                    <>
+                      <span className="text-sm text-muted-foreground">·</span>
+                      <HugeiconsIcon icon={DashboardSpeed01Icon} className="size-3.5 text-muted-foreground" />
+                      <span className="text-sm font-medium font-mono text-foreground/90">{formatSpeed(totalSpeed)}</span>
+                    </>
                   )}
                 </div>
               </div>
@@ -282,8 +304,13 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                 {radioLine.link.modulation_type && (
                   <InfoRow icon={Activity01Icon} label={t("radiolines.modulation")} value={radioLine.link.modulation_type} />
                 )}
-                {radioLine.link.bandwidth && (
+                {dirSpeed != null ? (
+                  <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.bandwidth")} value={formatSpeed(dirSpeed)} mono />
+                ) : radioLine.link.bandwidth ? (
                   <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.bandwidth")} value={formatBandwidth(radioLine.link.bandwidth)} />
+                ) : null}
+                {totalSpeed != null && (
+                  <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.totalSpeed")} value={formatSpeed(totalSpeed)} mono />
                 )}
               </div>
             </div>

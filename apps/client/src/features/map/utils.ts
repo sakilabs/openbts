@@ -92,6 +92,65 @@ export function formatBandwidth(bandwidth: string): string {
   return num >= 1000 ? `${(num / 1000).toFixed(2)} Gb/s` : `${num} Mb/s`;
 }
 
+export function formatSpeed(mbps: number): string {
+  return mbps >= 1000 ? `${(mbps / 1000).toFixed(2)} Gb/s` : `~${Math.round(mbps)} Mb/s`;
+}
+
+const MODULATION_BITS: Record<string, number> = {
+  BPSK: 1,
+  QPSK: 2,
+  "4QAM": 2,
+  "8QAM": 3,
+  "16QAM": 4,
+  "32QAM": 5,
+  "64QAM": 6,
+  "128QAM": 7,
+  "256QAM": 8,
+  "512QAM": 9,
+  "1024QAM": 10,
+  "2048QAM": 11,
+  "4096QAM": 12,
+};
+
+export function getModulationBits(modulationType: string): number | null {
+  const normalized = modulationType.toUpperCase().replace(/[\s\-_]/g, "");
+  if (MODULATION_BITS[normalized] != null) return MODULATION_BITS[normalized];
+
+  if (normalized.includes("QPSK")) return 2;
+  if (normalized.includes("BPSK")) return 1;
+
+  const match = normalized.match(/(\d+)QAM/);
+  if (match) {
+    const bits = Math.log2(Number.parseInt(match[1], 10));
+    if (Number.isInteger(bits) && bits >= 1 && bits <= 14) return bits;
+  }
+
+  return null;
+}
+
+export function calculateRadiolineSpeed(chWidth: number, modulationType: string): number | null {
+  const n = getModulationBits(modulationType);
+  if (n == null) return null;
+  return chWidth * n * 0.85;
+}
+
+export function calculateLinkTotalSpeed(link: DuplexRadioLink): number | null {
+  let total = 0;
+  let anyCalculated = false;
+
+  for (const dir of link.directions) {
+    if (dir.link.ch_width && dir.link.modulation_type) {
+      const speed = calculateRadiolineSpeed(dir.link.ch_width, dir.link.modulation_type);
+      if (speed != null) {
+        total += speed;
+        anyCalculated = true;
+      }
+    }
+  }
+
+  return anyCalculated ? total : null;
+}
+
 export function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(2)} km` : `${Math.round(meters)} m`;
 }
