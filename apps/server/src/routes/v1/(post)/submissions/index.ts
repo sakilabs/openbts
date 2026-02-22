@@ -189,15 +189,15 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
       if (cell.rat === "GSM") {
         const d = cell.details as { lac: number; cid: number };
         /* eslint-disable-next-line no-await-in-loop */
-        await checkGSMDuplicate(d.lac, d.cid, operatorId);
+        await checkGSMDuplicate(d.lac, d.cid, operatorId, cell.target_cell_id ?? undefined);
       } else if (cell.rat === "UMTS") {
         const d = cell.details as { rnc: number; cid: number };
         /* eslint-disable-next-line no-await-in-loop */
-        await checkUMTSDuplicate(d.rnc, d.cid, operatorId);
+        await checkUMTSDuplicate(d.rnc, d.cid, operatorId, cell.target_cell_id ?? undefined);
       } else if (cell.rat === "LTE") {
         const d = cell.details as { enbid: number; clid: number };
         /* eslint-disable-next-line no-await-in-loop */
-        await checkLTEDuplicate(d.enbid, d.clid, operatorId);
+        await checkLTEDuplicate(d.enbid, d.clid, operatorId, cell.target_cell_id ?? undefined);
       }
     }
   }
