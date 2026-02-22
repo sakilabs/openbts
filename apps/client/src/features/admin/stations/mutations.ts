@@ -187,8 +187,19 @@ export function useSaveStationMutation() {
         }
       }
 
-      if (payload.deletedServerCellIds.length > 0) {
-        await Promise.all(payload.deletedServerCellIds.map((cellId) => deleteCell(station.id, cellId)));
+      const newCells = payload.localCells.filter((lc) => !lc._serverId);
+      if (newCells.length > 0) {
+        await createCells(
+          station.id,
+          newCells.map((lc) => ({
+            station_id: station.id,
+            band_id: lc.band_id,
+            rat: lc.rat,
+            is_confirmed: lc.is_confirmed,
+            notes: lc.notes || null,
+            details: pickCellDetails(lc.rat, lc.details),
+          })),
+        );
       }
 
       const modifiedCells = payload.localCells.filter((lc) => lc._serverId && isCellModified(lc, originalCells));
@@ -205,19 +216,8 @@ export function useSaveStationMutation() {
         );
       }
 
-      const newCells = payload.localCells.filter((lc) => !lc._serverId);
-      if (newCells.length > 0) {
-        await createCells(
-          station.id,
-          newCells.map((lc) => ({
-            station_id: station.id,
-            band_id: lc.band_id,
-            rat: lc.rat,
-            is_confirmed: lc.is_confirmed,
-            notes: lc.notes || null,
-            details: pickCellDetails(lc.rat, lc.details),
-          })),
-        );
+      if (payload.deletedServerCellIds.length > 0) {
+        await Promise.all(payload.deletedServerCellIds.map((cellId) => deleteCell(station.id, cellId)));
       }
 
       await patchStation(station.id, stationPatch);
