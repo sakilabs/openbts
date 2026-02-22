@@ -222,10 +222,10 @@ export function useSaveStationMutation() {
 
       const stationChanged =
         stationPatch.station_id !== station.station_id ||
-        stationPatch.operator_id !== station.operator_id ||
-        stationPatch.notes !== station.notes ||
+        stationPatch.operator_id !== (station.operator?.id ?? null) ||
+        stationPatch.notes !== (station.notes ?? null) ||
         stationPatch.is_confirmed !== station.is_confirmed ||
-        ("location_id" in stationPatch && stationPatch.location_id !== station.location_id);
+        ("location_id" in stationPatch && stationPatch.location_id !== (station.location?.id ?? null));
 
       if (stationChanged) await patchStation(station.id, stationPatch);
 

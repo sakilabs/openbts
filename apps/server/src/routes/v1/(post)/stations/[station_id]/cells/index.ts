@@ -157,14 +157,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       ),
     );
 
-    await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id));
+    const [updatedStation] = await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id)).returning();
     await createAuditLog(
       {
         action: "stations.update",
         table_name: "stations",
         record_id: station_id,
-        old_values: { updatedAt: station.updatedAt },
-        new_values: { updatedAt: new Date() },
+        old_values: station,
+        new_values: updatedStation,
         metadata: { reason: "cells.create" },
       },
       req,

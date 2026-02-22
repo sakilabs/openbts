@@ -85,6 +85,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
         .insert(stations)
         .values({
           ...stationData,
+          status: "published",
           updatedAt: new Date(),
           createdAt: new Date(),
         })
