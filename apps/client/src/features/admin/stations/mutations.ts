@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { patchStation, patchCell, createCells, deleteCell, createLocation, createStation, deleteStation } from "./api";
+import { patchStation, patchCell, patchCells, createCells, deleteCell, createLocation, createStation, deleteStation } from "./api";
 import { patchLocation } from "../locations/api";
 import type { Station, Cell } from "@/types/station";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
@@ -204,15 +204,15 @@ export function useSaveStationMutation() {
 
       const modifiedCells = payload.localCells.filter((lc) => lc._serverId && isCellModified(lc, originalCells));
       if (modifiedCells.length > 0) {
-        await Promise.all(
-          modifiedCells.map((lc) =>
-            patchCell(station.id, lc._serverId as number, {
-              band_id: lc.band_id,
-              notes: lc.notes || null,
-              is_confirmed: lc.is_confirmed,
-              details: pickCellDetails(lc.rat, lc.details),
-            }),
-          ),
+        await patchCells(
+          station.id,
+          modifiedCells.map((lc) => ({
+            cell_id: lc._serverId as number,
+            band_id: lc.band_id,
+            notes: lc.notes || null,
+            is_confirmed: lc.is_confirmed,
+            details: pickCellDetails(lc.rat, lc.details),
+          })),
         );
       }
 

@@ -17,6 +17,14 @@ export async function patchCell(stationId: number, cellId: number, body: Record<
   });
 }
 
+export async function patchCells(stationId: number, cellsData: Array<{ cell_id: number } & Record<string, unknown>>) {
+  return fetchJson<{ data: Cell[] }>(`${API_BASE}/stations/${stationId}/cells`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cells: cellsData }),
+  });
+}
+
 export async function createCells(stationId: number, cellsData: Record<string, unknown>[]) {
   return fetchJson<{ data: Cell[] }>(`${API_BASE}/stations/${stationId}/cells`, {
     method: "POST",
