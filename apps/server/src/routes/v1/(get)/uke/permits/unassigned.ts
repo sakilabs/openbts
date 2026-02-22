@@ -11,10 +11,14 @@ import type { JSONBody, Route } from "../../../../../interfaces/routes.interface
 
 const ukeLocationsSchema = createSelectSchema(ukeLocations)
   .omit({ point: true, region_id: true })
-  .extend({ createdAt: z.string().datetime(), updatedAt: z.string().datetime() });
+  .extend({ createdAt: z.string().datetime({ offset: true }), updatedAt: z.string().datetime({ offset: true }) });
 const ukePermitsSchema = createSelectSchema(ukePermits)
   .omit({ location_id: true, operator_id: true, band_id: true })
-  .extend({ createdAt: z.string().datetime(), updatedAt: z.string().datetime(), expiry_date: z.string().datetime() });
+  .extend({
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+    expiry_date: z.string().datetime({ offset: true }),
+  });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
 const regionsSchema = createSelectSchema(regions);
