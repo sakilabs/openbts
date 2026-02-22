@@ -5,8 +5,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
-- Remove `cid` & `clid` from the checking function to calculate `longCID` or `eCID`
-- Display the "unauthorized" page for users without the required role
+- Removed `cid` & `clid` from the checking function to calculate `longCID` or `eCID`
+- The "unauthorized" page is now displayed for users without the required role
 - ARFCN -> UARFCN (UMTS)
 - Properly show the table on `/admin/uke-permits`
 
@@ -15,6 +15,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added checking for duplicated CID in GSM/UMTS
 - Added checking for duplicated enBID + CLID in LTE
 - Added `editor` role
+- Calculate the speed of radiolines and show total speed
 
 # 2026-02-21
 
