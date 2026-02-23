@@ -96,7 +96,7 @@ function AdminUsersPage() {
           ...(debouncedSearch
             ? {
                 searchValue: debouncedSearch,
-                searchField: "email" as const,
+                searchField: "name" as const,
                 searchOperator: "contains" as const,
               }
             : {}),

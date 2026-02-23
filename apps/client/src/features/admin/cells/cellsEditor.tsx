@@ -127,25 +127,28 @@ export function CellsEditor<T extends CellDraftBase>({
                     />
                     <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
                     <span className="font-semibold text-sm">{rat}</span>
-                    <span className="text-xs text-muted-foreground">({t("stations:cells.cellsCount", { count: cellsForRat.length })})</span>
+                    <span className="text-xs text-muted-foreground">({cellsForRat.length})</span>
                     {hasChanges && (
                       <span className="flex items-center gap-2 ml-1">
                         {(badges.added ?? 0) > 0 && (
                           <span className="text-xs text-green-600 flex items-center gap-1">
                             <span className="size-1.5 rounded-full bg-green-500" />
-                            {badges.added} {t("cells.diffAdded", { count: badges.added })}
+                            {badges.added}
+                            <span className="hidden sm:inline">{t("cells.diffAdded", { count: badges.added })}</span>
                           </span>
                         )}
                         {(badges.modified ?? 0) > 0 && (
                           <span className="text-xs text-amber-600 flex items-center gap-1">
                             <span className="size-1.5 rounded-full bg-amber-500" />
-                            {badges.modified} {t("cells.diffModified", { count: badges.modified })}
+                            {badges.modified}
+                            <span className="hidden sm:inline">{t("cells.diffModified", { count: badges.modified })}</span>
                           </span>
                         )}
                         {(badges.deleted ?? 0) > 0 && (
                           <span className="text-xs text-red-600 flex items-center gap-1">
                             <span className="size-1.5 rounded-full bg-red-500" />
-                            {badges.deleted} {t("cells.diffDeleted", { count: badges.deleted })}
+                            {badges.deleted}
+                            <span className="hidden sm:inline">{t("cells.diffDeleted", { count: badges.deleted })}</span>
                           </span>
                         )}
                       </span>
@@ -160,7 +163,7 @@ export function CellsEditor<T extends CellDraftBase>({
                     {showAddButton && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => onAddCell(rat)} className="h-7 text-xs">
                         <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-                        {t("stations:cells.addCell")}
+                        <span className="hidden sm:inline">{t("stations:cells.addCell")}</span>
                       </Button>
                     )}
                   </div>

@@ -170,29 +170,32 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
             <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5 text-muted-foreground group-data-panel-open:rotate-0 -rotate-90" />
             <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
             <span className="font-semibold text-sm">{rat}</span>
-            <span className="text-xs text-muted-foreground">({t("stations:cells.cellsCount", { count: cells.length })})</span>
+            <span className="text-xs text-muted-foreground">({cells.length})</span>
             {diffCounts.added > 0 && (
               <span className="text-xs text-green-600 flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-green-500" />
-                {diffCounts.added} {t("stations:cells.diffAdded", { count: diffCounts.added })}
+                {diffCounts.added}
+                <span className="hidden sm:inline">{t("stations:cells.diffAdded", { count: diffCounts.added })}</span>
               </span>
             )}
             {diffCounts.modified > 0 && (
               <span className="text-xs text-amber-600 flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-amber-500" />
-                {diffCounts.modified} {t("stations:cells.diffModified", { count: diffCounts.modified })}
+                {diffCounts.modified}
+                <span className="hidden sm:inline">{t("stations:cells.diffModified", { count: diffCounts.modified })}</span>
               </span>
             )}
             {diffCounts.deleted > 0 && (
               <span className="text-xs text-red-600 flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-red-500" />
-                {diffCounts.deleted} {t("stations:cells.diffDeleted", { count: diffCounts.deleted })}
+                {diffCounts.deleted}
+                <span className="hidden sm:inline">{t("stations:cells.diffDeleted", { count: diffCounts.deleted })}</span>
               </span>
             )}
           </CollapsibleTrigger>
           <Button type="button" variant="ghost" size="sm" onClick={handleAddCell} className="h-7 text-xs">
             <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-            {t("stations:cells.addCell")}
+            <span className="hidden sm:inline">{t("stations:cells.addCell")}</span>
           </Button>
         </div>
         <CollapsibleContent>

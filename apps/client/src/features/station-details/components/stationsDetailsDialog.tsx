@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, PencilEdit02Icon, Tick02Icon, Wifi01Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, PencilEdit02Icon, Tick02Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import { Link } from "@tanstack/react-router";
 import { authClient } from "@/lib/authClient";
 import { getOperatorColor } from "@/lib/operatorUtils";
