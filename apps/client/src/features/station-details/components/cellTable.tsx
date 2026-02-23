@@ -77,7 +77,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                 return (
                   <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20")}>
                     <td className={cn("px-4 py-2 font-mono", isNew && "border-l-2 border-l-green-500")}>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 whitespace-nowrap">
                         <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : `${cell.band.value} MHz`}</span>
                         {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
@@ -145,8 +145,29 @@ export function CellTable({ rat, cells }: CellTableProps) {
                       </>
                     )}
                     <td className="px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">{cell.notes || "-"}</span>
+                      <div className="flex items-center gap-1.5">
+                        {cell.notes ? (
+                          <Tooltip>
+                            <TooltipTrigger render={<span className="text-muted-foreground truncate max-w-32 cursor-help" />}>
+                              {cell.notes}
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-64">
+                              {cell.notes}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                        {cell.details?.supports_nb_iot && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[10px] font-medium">
+                            <HugeiconsIcon icon={WifiConnected01Icon} className="size-3" /> NB-IoT
+                          </span>
+                        )}
+                        {cell.details?.supports_nr_redcap && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded text-[10px] font-medium">
+                            <HugeiconsIcon icon={BatteryLowIcon} className="size-3" /> RedCap
+                          </span>
+                        )}
                         {isNew && (
                           <Tooltip>
                             <TooltipTrigger>
@@ -168,21 +189,6 @@ export function CellTable({ rat, cells }: CellTableProps) {
             </tbody>
           </table>
         </div>
-
-        {(rat === "LTE" || rat === "NR") && cells.some((c) => c.details?.supports_nb_iot || c.details?.supports_nr_redcap) && (
-          <div className="px-4 py-2 border-t bg-muted/30 flex flex-wrap gap-1.5">
-            {cells.some((c) => c.details?.supports_nb_iot) && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">
-                <HugeiconsIcon icon={WifiConnected01Icon} className="size-3" /> NB-IoT
-              </span>
-            )}
-            {cells.some((c) => c.details?.supports_nr_redcap) && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded text-xs font-medium">
-                <HugeiconsIcon icon={BatteryLowIcon} className="size-3" /> RedCap
-              </span>
-            )}
-          </div>
-        )}
       </CollapsibleContent>
     </Collapsible>
   );

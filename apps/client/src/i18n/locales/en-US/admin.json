@@ -109,7 +109,10 @@
       "allEntities": "All Tables",
       "allActions": "All Actions",
       "dateFrom": "From",
-      "dateTo": "To"
+      "dateTo": "To",
+      "recordId": "Record ID",
+      "userId": "User ID",
+      "moreFilters": "More filters"
     },
     "empty": {
       "title": "No logs found",
@@ -125,7 +128,10 @@
       "noChanges": "No changes recorded",
       "metadata": "Metadata",
       "ipAddress": "IP Address",
-      "userAgent": "User Agent"
+      "userAgent": "User Agent",
+      "links": "Links",
+      "station": "Station",
+      "submission": "Submission"
     }
   }
 }

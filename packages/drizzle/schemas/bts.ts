@@ -136,6 +136,7 @@ export const stations = pgTable(
     location_id: integer("location_id").references(() => locations.id, { onDelete: "set null", onUpdate: "cascade" }),
     operator_id: integer("operator_id").references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" }),
     notes: text("notes"),
+    extra_address: text("extra_address"),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     is_confirmed: boolean("is_confirmed").default(false),

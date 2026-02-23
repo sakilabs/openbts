@@ -40,6 +40,8 @@ const schemaRoute = {
     offset: z.coerce.number().min(0).default(0),
     status: z.enum(["pending", "approved", "rejected"]).optional(),
     type: z.enum(["new", "update", "delete"]).optional(),
+    station_id: z.string().optional(),
+    submitter_id: z.string().optional(),
   }),
   response: {
     200: z.object({
@@ -87,13 +89,16 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read_all"] })) || false;
 
-  const { limit, offset, status, type } = req.query;
+  const { limit, offset, status, type, station_id, submitter_id } = req.query;
 
   const whereFilter: Record<string, unknown> = {};
   const countConditions = [];
   if (!hasAdminPermission) {
     whereFilter.submitter_id = userId;
     countConditions.push(eq(submissions.submitter_id, userId));
+  } else if (submitter_id) {
+    whereFilter.submitter_id = submitter_id;
+    countConditions.push(eq(submissions.submitter_id, submitter_id));
   }
   if (status) {
     whereFilter.status = status;
@@ -102,6 +107,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   if (type) {
     whereFilter.type = type;
     countConditions.push(eq(submissions.type, type));
+  }
+  if (station_id) {
+    const station = await db.query.stations.findFirst({
+      where: { station_id },
+      columns: { id: true },
+    });
+    if (!station) return res.send({ data: [], totalCount: 0 });
+    whereFilter.station_id = station.id;
+    countConditions.push(eq(submissions.station_id, station.id));
   }
 
   const [totalCount] = await db

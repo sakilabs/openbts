@@ -31,7 +31,7 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
   const { t } = useTranslation(["submissions", "common"]);
 
   return (
-    <div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm transition-all">
+    <div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm transition-all">
       <div className="flex items-center">
         <Button
           variant="ghost"
@@ -44,24 +44,26 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0 overflow-hidden">
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0",
             SUBMISSION_TYPE[submission.type].badgeClass,
           )}
         >
           <span className={cn("size-1.5 rounded-full", SUBMISSION_TYPE[submission.type].dotClass)} />
           {t(`common:submissionType.${submission.type}`)}
         </span>
-        <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", SUBMISSION_STATUS[submission.status].bgClass)}>
+        <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md shrink-0", SUBMISSION_STATUS[submission.status].bgClass)}>
           <HugeiconsIcon
             icon={SUBMISSION_STATUS[submission.status].icon}
             className={cn("size-3.5", SUBMISSION_STATUS[submission.status].iconClass)}
           />
           <span className="text-xs font-medium capitalize">{t(`common:status.${submission.status}`)}</span>
         </div>
-        <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/40">{submission.id}</span>
+        <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/40 truncate min-w-0">
+          {submission.id}
+        </span>
       </div>
 
       <div className="flex items-center gap-2">

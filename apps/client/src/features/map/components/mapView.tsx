@@ -59,11 +59,11 @@ type DetailState = {
 };
 
 type DetailAction =
-  | { type: "open_station"; id: number; source: StationSource }
-  | { type: "close_station" }
-  | { type: "open_uke_station"; station: UkeStation }
-  | { type: "close_uke_station" }
-  | { type: "set_pending_radioline"; id: number | null };
+  | { type: "OPEN_STATION"; id: number; source: StationSource }
+  | { type: "CLOSE_STATION" }
+  | { type: "OPEN_UKE_STATION"; station: UkeStation }
+  | { type: "CLOSE_UKE_STATION" }
+  | { type: "SET_PENDING_RADIOLINE"; id: number | null };
 
 const initialDetailState: DetailState = {
   selectedStation: null,
@@ -73,15 +73,15 @@ const initialDetailState: DetailState = {
 
 function detailReducer(state: DetailState, action: DetailAction): DetailState {
   switch (action.type) {
-    case "open_station":
+    case "OPEN_STATION":
       return { ...state, selectedStation: { id: action.id, source: action.source } };
-    case "close_station":
+    case "CLOSE_STATION":
       return { ...state, selectedStation: null };
-    case "open_uke_station":
+    case "OPEN_UKE_STATION":
       return { ...state, selectedUkeStation: action.station };
-    case "close_uke_station":
+    case "CLOSE_UKE_STATION":
       return { ...state, selectedUkeStation: null };
-    case "set_pending_radioline":
+    case "SET_PENDING_RADIOLINE":
       return { ...state, pendingRadiolineId: action.id };
     default:
       return state;
@@ -120,8 +120,8 @@ function MapViewInner() {
     cleanup: cleanupPopup,
   } = useMapPopup({
     map,
-    onOpenStationDetails: useCallback((id: number, source: StationSource) => dispatchDetail({ type: "open_station", id, source }), []),
-    onOpenUkeStationDetails: useCallback((station: UkeStation) => dispatchDetail({ type: "open_uke_station", station }), []),
+    onOpenStationDetails: useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []),
+    onOpenUkeStationDetails: useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []),
   });
 
   const {
@@ -209,11 +209,11 @@ function MapViewInner() {
     [map, showPopup],
   );
 
-  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "open_station", id, source }), []);
-  const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "close_station" }), []);
-  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "open_uke_station", station }), []);
-  const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "close_uke_station" }), []);
-  const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "set_pending_radioline", id }), []);
+  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []);
+  const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "CLOSE_STATION" }), []);
+  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []);
+  const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
+  const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
 
   return (
     <>

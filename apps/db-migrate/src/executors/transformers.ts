@@ -40,6 +40,7 @@ export interface PreparedStation {
   location_original_id: number;
   station_id: string;
   notes: string | null;
+  extra_address: string | null;
   status: "published" | "inactive" | "pending";
   is_confirmed: boolean;
   date_added: Date | null;
@@ -167,6 +168,7 @@ export function prepareStations(rows: LegacyBaseStationRow[], mncToOperatorName:
         location_original_id: station.location_id,
         station_id: stationId,
         notes: station.notes ? stripNotes(station.notes.trim(), [/\bnetworks?\b/gi]) : null,
+        extra_address: station.location_details?.trim() || null,
         status: normalizeStatus(station.station_status),
         is_confirmed: station.edit_status.toLowerCase() === "published",
         date_added: safeDate(station.date_added, { type: "station", id: station.id, field: "date_added" }),

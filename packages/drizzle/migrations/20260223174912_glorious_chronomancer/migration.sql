@@ -153,6 +153,7 @@ CREATE TABLE "stations" (
 	"location_id" integer,
 	"operator_id" integer,
 	"notes" text,
+	"extra_address" text,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"is_confirmed" boolean DEFAULT false,
@@ -497,7 +498,6 @@ CREATE TABLE "submissions"."proposed_stations" (
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"is_confirmed" boolean DEFAULT false,
-	"status" "station_status" DEFAULT 'pending'::"station_status" NOT NULL,
 	CONSTRAINT "proposed_stations_submission_station_unique" UNIQUE("submission_id","station_id")
 );
 --> statement-breakpoint

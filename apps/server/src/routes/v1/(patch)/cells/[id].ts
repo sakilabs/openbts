@@ -72,9 +72,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   const { cell_id } = req.params;
 
   const cell = await db.query.cells.findFirst({
-    where: {
-      id: cell_id,
-    },
+    where: { id: cell_id },
+    with: { gsm: true, umts: true, lte: true, nr: true },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
 
@@ -163,12 +162,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     });
     const details = full?.gsm ?? full?.umts ?? full?.lte ?? full?.nr ?? null;
 
+    const { gsm, umts, lte, nr, ...oldBase } = cell;
+    const oldDetails = cell.gsm ?? cell.umts ?? cell.lte ?? cell.nr ?? null;
     await createAuditLog(
       {
         action: "cells.update",
         table_name: "cells",
         record_id: cell_id,
-        old_values: cell,
+        old_values: { ...oldBase, details: oldDetails },
         new_values: { ...updated, details },
       },
       req,

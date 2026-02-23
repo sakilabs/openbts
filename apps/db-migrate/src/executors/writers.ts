@@ -208,6 +208,7 @@ export async function writeStations(
     location_id: p.locationId,
     operator_id: p.operatorId,
     notes: p.station.notes ?? undefined,
+    extra_address: p.station.extra_address ?? undefined,
     status: p.station.status,
     is_confirmed: p.station.is_confirmed,
     createdAt: p.station.date_added ?? undefined,

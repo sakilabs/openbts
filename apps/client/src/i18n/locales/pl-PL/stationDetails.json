@@ -9,7 +9,8 @@
     "networkName": "Nazwa N!:",
     "mnoName": "MNO:",
     "internalNotes": "Notatki wewnętrzne",
-    "newCellTooltip": "Ta komórka została dodana w ciągu ostatnich 30 dni"
+    "newCellTooltip": "Ta komórka została dodana w ciągu ostatnich 30 dni",
+    "si2pemLink": "Znajdź raport instalacji na si2pem.gov.pl"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} pozwolenie",
@@ -43,7 +44,8 @@
   },
   "dialog": {
     "hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
-    "btsStation": "Stacja BTS"
+    "btsStation": "Stacja BTS",
+    "showOnMap": "Pokaż na mapie"
   },
   "comments": {
     "title": "Komentarze społeczności",

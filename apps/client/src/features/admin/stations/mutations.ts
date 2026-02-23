@@ -81,6 +81,7 @@ export interface SaveStationPayload {
   stationId: string;
   operatorId: number | null;
   notes: string;
+  extraAddress: string;
   isConfirmed: boolean;
   location: {
     region_id: number | null;
@@ -135,6 +136,7 @@ export function useSaveStationMutation() {
           operator_id: payload.operatorId,
           location_id: locationId,
           notes: payload.notes || null,
+          extra_address: payload.extraAddress || null,
           is_confirmed: payload.isConfirmed,
           cells: cellsPayload,
         });
@@ -153,6 +155,7 @@ export function useSaveStationMutation() {
         station_id: payload.stationId,
         operator_id: payload.operatorId,
         notes: payload.notes || null,
+        extra_address: payload.extraAddress || null,
         is_confirmed: payload.isConfirmed,
       };
 

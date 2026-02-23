@@ -21,7 +21,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -147,15 +146,6 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         <NavMain items={navItems} />
         {authNavItems.length > 0 && <NavMain items={authNavItems} />}
         {adminNavItems.length > 0 && <NavMain items={adminNavItems} />}
-        <SidebarMenuItem>
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuButton render={<Link to="/changelog" />} isActive={location.pathname === "/changelog"}>
-                <span>{t("items.changelog")}</span>
-              </SidebarMenuButton>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarMenuItem>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
@@ -202,33 +192,38 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           )}
           {session?.user && <NavUser data={session} />}
-          {(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (
-            <div
-              className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-muted-foreground"
-              title={[import.meta.env.VITE_GIT_COMMIT, import.meta.env.VITE_APP_VERSION && `v${import.meta.env.VITE_APP_VERSION}`]
-                .filter(Boolean)
-                .join(" · ")}
-            >
-              <HugeiconsIcon icon={GitBranchIcon} className="size-3 shrink-0" />
-              <span className="truncate">
-                {import.meta.env.VITE_GIT_COMMIT && (
-                  <a
-                    href={`https://github.com/sakilabs/openbts/commit/${import.meta.env.VITE_GIT_COMMIT}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-chart-1 hover:underline"
-                  >
-                    {import.meta.env.VITE_GIT_COMMIT}
-                  </a>
-                )}
-                {import.meta.env.VITE_APP_VERSION && (
-                  <span className="text-muted-foreground">
-                    {import.meta.env.VITE_GIT_COMMIT ? " " : ""}(v{import.meta.env.VITE_APP_VERSION})
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center justify-between px-2 py-1 text-[10px] text-muted-foreground">
+            {(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (
+              <div
+                className="flex items-center gap-1.5 min-w-0"
+                title={[import.meta.env.VITE_GIT_COMMIT, import.meta.env.VITE_APP_VERSION && `v${import.meta.env.VITE_APP_VERSION}`]
+                  .filter(Boolean)
+                  .join(" · ")}
+              >
+                <HugeiconsIcon icon={GitBranchIcon} className="size-3 shrink-0" />
+                <span className="truncate">
+                  {import.meta.env.VITE_GIT_COMMIT && (
+                    <a
+                      href={`https://github.com/sakilabs/openbts/commit/${import.meta.env.VITE_GIT_COMMIT}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-chart-1 hover:underline"
+                    >
+                      {import.meta.env.VITE_GIT_COMMIT}
+                    </a>
+                  )}
+                  {import.meta.env.VITE_APP_VERSION && (
+                    <span className="text-muted-foreground">
+                      {import.meta.env.VITE_GIT_COMMIT ? " " : ""}(v{import.meta.env.VITE_APP_VERSION})
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
+            <Link to="/changelog" className={cn("shrink-0 hover:underline", location.pathname === "/changelog" && "text-foreground")}>
+              {t("items.changelog")}
+            </Link>
+          </div>
         </SidebarMenu>
       </SidebarFooter>
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />

@@ -1,11 +1,8 @@
-import { useMemo, type Dispatch, type SetStateAction, type RefObject } from "react";
+import { useMemo, useCallback, type Dispatch, type SetStateAction, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { InformationCircleIcon, MapPinIcon } from "@hugeicons/core-free-icons";
+import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { createUnassignedPermitsColumns } from "./columns";
 import type { UkeStation } from "@/types/station";
 
@@ -54,7 +51,8 @@ export function UnassignedPermitsDataTable({
   const columnCount = columns.length;
   const showSkeleton = isLoading;
   const isEmpty = !isLoading && table.getRowModel().rows.length === 0;
-  const rows = table.getRowModel().rows;
+
+  const handleRowClick = useCallback((station: UkeStation) => onOpenDetails?.(station), [onOpenDetails]);
 
   return (
     <div ref={containerRef} className="h-full overflow-x-auto overflow-y-hidden">
@@ -73,36 +71,7 @@ export function UnassignedPermitsDataTable({
               </DataTable.Empty>
             </tbody>
           ) : (
-            <tbody className="[&_tr:last-child]:border-0">
-              {rows.map((row) => (
-                <DropdownMenu key={row.id}>
-                  <DropdownMenuTrigger
-                    render={
-                      <tr
-                        data-state={row.getIsSelected() ? "selected" : undefined}
-                        className="h-16 border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
-                      />
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="p-2 align-middle overflow-hidden" style={{ width: cell.column.getSize() }}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-auto">
-                    <DropdownMenuItem onClick={() => onOpenDetails?.(row.original)}>
-                      <HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
-                      {t("ukePermits.openDetails")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onViewOnMap?.(row.original)}>
-                      <HugeiconsIcon icon={MapPinIcon} className="size-4" />
-                      {t("ukePermits.viewOnMap")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ))}
-            </tbody>
+            <DataTable.Body onRowClick={handleRowClick} />
           )}
           <DataTable.Footer columns={columnCount}>
             <div className="sticky left-0">

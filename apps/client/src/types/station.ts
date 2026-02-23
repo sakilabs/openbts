@@ -84,6 +84,7 @@ export type Station = {
   location_id: number;
   operator_id: number;
   notes: string | null;
+  extra_address: string | null;
   updatedAt: string;
   createdAt: string;
   is_confirmed: boolean;
@@ -239,6 +240,7 @@ export type UkeStation = {
   operator: UkeOperator | null;
   permits: UkePermit[];
   location: {
+    id: number;
     city: string | null;
     address: string | null;
     latitude: number;

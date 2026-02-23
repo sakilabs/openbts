@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatFullDate } from "@/lib/format";
 import { type AuditLogEntry, TABLE_LABELS, getActionStyle } from "../constants";
 import { ChangesTable } from "./changes-table";
+import { Link } from "@tanstack/react-router";
 
 interface AuditLogDetailSheetProps {
   entry: AuditLogEntry | null;
@@ -18,6 +19,15 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
   if (!entry) return null;
 
   const style = getActionStyle(entry.action);
+
+  const stationId =
+    entry.table_name === "stations" && entry.record_id != null
+      ? entry.record_id
+      : ((entry.metadata?.station_id as number | null | undefined) ?? null);
+  const submissionId =
+    entry.table_name === "submissions" && entry.record_id != null
+      ? entry.record_id
+      : ((entry.metadata?.submission_id as number | null | undefined) ?? null);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -72,6 +82,33 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.columns.source")}</span>
                 <span className="text-sm uppercase">{entry.source ?? "—"}</span>
               </div>
+              {(stationId != null || submissionId != null) && (
+                <div className="flex flex-col gap-1 col-span-2">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.detail.links")}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {stationId != null && (
+                      <Link
+                        to="/admin/stations/$id"
+                        params={{ id: String(stationId) }}
+                        className="text-sm text-primary hover:underline"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        {t("auditLogs.detail.station")} #{stationId}
+                      </Link>
+                    )}
+                    {submissionId != null && (
+                      <Link
+                        to="/admin/submissions/$id"
+                        params={{ id: String(submissionId) }}
+                        className="text-sm text-primary hover:underline"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        {t("auditLogs.detail.submission")} #{submissionId}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 

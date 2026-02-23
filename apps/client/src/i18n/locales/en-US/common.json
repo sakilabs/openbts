@@ -53,6 +53,7 @@
     "standard": "Standard",
     "notes": "Notes",
     "address": "Address",
+    "extraAddress": "Extra Address",
     "city": "City",
     "status": "Status",
     "type": "Type",

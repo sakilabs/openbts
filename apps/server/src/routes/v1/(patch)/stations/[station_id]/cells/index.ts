@@ -68,6 +68,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           cellsData.map((c) => c.cell_id),
         ),
     },
+    with: {
+      gsm: { columns: { cell_id: false } },
+      umts: { columns: { cell_id: false } },
+      lte: { columns: { cell_id: false } },
+      nr: { columns: { cell_id: false } },
+    },
   });
 
   for (const cellData of cellsData) {
@@ -201,14 +207,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     });
 
     await Promise.all(
-      response.map((cell, idx) => {
-        const oldCell = existingCells.find((c) => c.id === cell.id);
+      response.map((cell) => {
+        const oldFull = existingCells.find((c) => c.id === cell.id);
+        const { gsm, umts, lte, nr, ...oldBase } = oldFull ?? ({} as typeof oldFull & Record<string, never>);
+        const oldDetails = oldFull ? (oldFull.gsm ?? oldFull.umts ?? oldFull.lte ?? oldFull.nr ?? undefined) : undefined;
         return createAuditLog(
           {
             action: "cells.update",
             table_name: "cells",
             record_id: cell.id,
-            old_values: oldCell,
+            old_values: { ...oldBase, details: oldDetails },
             new_values: cell,
             metadata: { station_id },
           },

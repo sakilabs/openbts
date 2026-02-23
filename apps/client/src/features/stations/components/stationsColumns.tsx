@@ -152,15 +152,16 @@ export function createStationsColumns({ t, locale, isSearchActive = false, sort,
       header: t("labels.location"),
       size: 280,
       accessorFn: (s) => s.location,
-      cell: ({ getValue }) => {
+      cell: ({ getValue, row }) => {
         const location = getValue<Station["location"]>();
         if (!location) return <span className="text-muted-foreground">-</span>;
+        const address = row.original.extra_address || location.address;
         return (
           <div className="flex items-start gap-2 overflow-hidden">
             <HugeiconsIcon icon={MapPinIcon} className="size-4 text-muted-foreground shrink-0 mt-0.5" />
             <div className="flex flex-col min-w-0 overflow-hidden">
               <span className="font-medium truncate">{location.city}</span>
-              <span className="text-xs text-muted-foreground truncate">{location.address}</span>
+              <span className="text-xs text-muted-foreground truncate">{address}</span>
             </div>
           </div>
         );

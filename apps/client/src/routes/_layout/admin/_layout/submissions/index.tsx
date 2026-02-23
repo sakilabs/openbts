@@ -1,12 +1,14 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FilterIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
-import { fetchJson, API_BASE } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { fetchJson, API_BASE } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
@@ -30,6 +32,13 @@ function AdminSubmissionsListPage() {
     const saved = localStorage.getItem("admin:submissions:type");
     return saved === "all" || saved === "new" || saved === "update" || saved === "delete" ? saved : "all";
   });
+  const [stationIdFilter, setStationIdFilter] = useState("");
+  const [userIdFilter, setUserIdFilter] = useState("");
+
+  const stationIdFilterRef = useRef(stationIdFilter);
+  stationIdFilterRef.current = stationIdFilter;
+  const userIdFilterRef = useRef(userIdFilter);
+  userIdFilterRef.current = userIdFilter;
 
   const handleStatusFilter = useCallback((v: typeof statusFilter) => {
     setStatusFilter(v);
@@ -48,13 +57,15 @@ function AdminSubmissionsListPage() {
   });
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter],
+    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, stationIdFilter, userIdFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
       params.set("offset", (pagination.pageIndex * pagination.pageSize).toString());
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (typeFilter !== "all") params.set("type", typeFilter);
+      if (stationIdFilter) params.set("station_id", stationIdFilter);
+      if (userIdFilter) params.set("submitter_id", userIdFilter);
 
       return fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions?${params.toString()}`);
     },
@@ -70,7 +81,7 @@ function AdminSubmissionsListPage() {
     () => [
       columnHelper.accessor("id", {
         header: t("common:labels.id"),
-        size: 100,
+        size: 80,
         cell: ({ getValue }) => {
           const id = getValue();
           const lastPart = id.slice(-8);
@@ -85,10 +96,7 @@ function AdminSubmissionsListPage() {
           const typeCfg = SUBMISSION_TYPE[type];
           return (
             <span
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                typeCfg.badgeClass,
-              )}
+              className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border", typeCfg.badgeClass)}
             >
               <span className={cn("size-1.5 rounded-full", typeCfg.dotClass)} />
               {t(`common:submissionType.${type}`)}
@@ -111,7 +119,38 @@ function AdminSubmissionsListPage() {
         },
       }),
       columnHelper.accessor("station", {
-        header: t("common:labels.station"),
+        header: () => (
+          <div className="flex items-center gap-1 group/col">
+            <span>{t("common:labels.station")}</span>
+            <Popover>
+              <PopoverTrigger
+                className={cn(
+                  "p-0.5 rounded transition-colors",
+                  stationIdFilterRef.current
+                    ? "text-primary"
+                    : "text-muted-foreground/40 opacity-0 group-hover/col:opacity-100 hover:text-muted-foreground",
+                )}
+              >
+                <HugeiconsIcon icon={FilterIcon} className="size-3" />
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-52 p-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{t("common:labels.stationId")}</label>
+                  <Input
+                    autoFocus
+                    className="h-8 text-sm"
+                    placeholder="BTS12345"
+                    value={stationIdFilterRef.current}
+                    onChange={(e) => {
+                      setStationIdFilter(e.target.value);
+                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                    }}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        ),
         cell: ({ getValue, row }) => {
           const station = getValue();
           const proposedStation = row.original.proposedStation;
@@ -121,7 +160,38 @@ function AdminSubmissionsListPage() {
         },
       }),
       columnHelper.accessor("submitter", {
-        header: t("detail.submitter"),
+        header: () => (
+          <div className="flex items-center gap-1 group/col">
+            <span>{t("detail.submitter")}</span>
+            <Popover>
+              <PopoverTrigger
+                className={cn(
+                  "p-0.5 rounded transition-colors",
+                  userIdFilterRef.current
+                    ? "text-primary"
+                    : "text-muted-foreground/40 opacity-0 group-hover/col:opacity-100 hover:text-muted-foreground",
+                )}
+              >
+                <HugeiconsIcon icon={FilterIcon} className="size-3" />
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-52 p-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{t("admin:auditLogs.filters.userId")}</label>
+                  <Input
+                    autoFocus
+                    className="h-8 text-sm"
+                    placeholder="uuid..."
+                    value={userIdFilterRef.current}
+                    onChange={(e) => {
+                      setUserIdFilter(e.target.value);
+                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                    }}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        ),
         cell: ({ getValue }) => {
           const submitter = getValue();
           return (
@@ -137,21 +207,21 @@ function AdminSubmissionsListPage() {
       }),
       columnHelper.accessor("cells", {
         header: t("table.cells"),
-        size: 80,
+        size: 120,
         cell: ({ getValue }) => <span className="text-xs font-mono bg-muted px-2 py-1 rounded">{getValue().length}</span>,
       }),
       columnHelper.accessor("createdAt", {
         header: t("common:labels.submitted"),
-        size: 140,
+        size: 120,
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
       columnHelper.accessor("reviewed_at", {
         header: t("common:labels.reviewed"),
-        size: 140,
+        size: 120,
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
     ],
-    [t, i18n.language],
+    [t, i18n.language, setPagination],
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);
@@ -174,7 +244,7 @@ function AdminSubmissionsListPage() {
           <p className="text-muted-foreground text-sm">{t("adminDescription")}</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full md:w-auto">
           <div className="flex items-center p-1 bg-muted/50 rounded-lg border">
             {(["all", "pending", "approved", "rejected"] as const).map((status) => (
               <button

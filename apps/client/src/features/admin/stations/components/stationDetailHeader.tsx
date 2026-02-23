@@ -62,7 +62,7 @@ export function StationDetailHeader({
 
   return (
     <div
-      className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 py-2 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm transition-all"
+      className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm transition-all"
       style={{
         borderTopWidth: "3px",
         borderTopColor: selectedOperator ? getOperatorColor(selectedOperator.mnc) : "transparent",
@@ -91,7 +91,7 @@ export function StationDetailHeader({
             {isCreateMode ? t("common:labels.newStation") : station?.operator.name}
           </span>
           <div className="w-px h-3.5 bg-border/60 shrink-0" />
-          <span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20 shadow-sm shrink-0">
+          <span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20 shadow-sm truncate min-w-0">
             {isCreateMode ? stationId || "—" : station?.station_id}
           </span>
         </div>

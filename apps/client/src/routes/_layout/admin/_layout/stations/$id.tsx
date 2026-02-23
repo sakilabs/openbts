@@ -126,6 +126,7 @@ function getInitialFormState(station: Station | undefined): {
   stationId: string;
   operatorId: number | null;
   notes: string;
+  extraAddress: string;
   isConfirmed: boolean;
   location: ProposedLocationForm;
   existingLocationId: number | null;
@@ -135,6 +136,7 @@ function getInitialFormState(station: Station | undefined): {
     stationId: station?.station_id ?? "",
     operatorId: station?.operator?.id ?? null,
     notes: station?.notes ?? "",
+    extraAddress: station?.extra_address ?? "",
     isConfirmed: station?.is_confirmed ?? false,
     location: station?.location
       ? {
@@ -154,6 +156,7 @@ type FormAction =
   | { type: "SET_STATION_ID"; payload: string }
   | { type: "SET_OPERATOR_ID"; payload: number | null }
   | { type: "SET_NOTES"; payload: string }
+  | { type: "SET_EXTRA_ADDRESS"; payload: string }
   | { type: "SET_CONFIRMED"; payload: boolean }
   | { type: "PATCH_LOCATION"; payload: Partial<ProposedLocationForm> }
   | { type: "SET_LOCATION"; payload: ProposedLocationForm }
@@ -171,6 +174,8 @@ function formReducer(state: ReturnType<typeof getInitialFormState>, action: Form
       return { ...state, operatorId: action.payload };
     case "SET_NOTES":
       return { ...state, notes: action.payload };
+    case "SET_EXTRA_ADDRESS":
+      return { ...state, extraAddress: action.payload };
     case "SET_CONFIRMED":
       return { ...state, isConfirmed: action.payload };
     case "PATCH_LOCATION":
@@ -197,7 +202,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
   const { t } = useTranslation("stations");
 
   const [formState, dispatch] = useReducer(formReducer, station, getInitialFormState);
-  const { stationId, operatorId, notes, isConfirmed, location, existingLocationId, deletedServerCellIds } = formState;
+  const { stationId, operatorId, notes, extraAddress, isConfirmed, location, existingLocationId, deletedServerCellIds } = formState;
 
   const { data: settings } = useSettings();
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
@@ -341,6 +346,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
         stationId,
         operatorId,
         notes,
+        extraAddress,
         isConfirmed,
         location,
         existingLocationId,
@@ -391,6 +397,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
     if (stationId !== initial.stationId) return true;
     if (operatorId !== initial.operatorId) return true;
     if (notes !== initial.notes) return true;
+    if (extraAddress !== initial.extraAddress) return true;
     if (isConfirmed !== initial.isConfirmed) return true;
     if (!shallowEqual(location as unknown as Record<string, unknown>, initial.location as unknown as Record<string, unknown>)) return true;
     if (deletedServerCellIds.length > 0) return true;
@@ -399,7 +406,7 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
       if (getLocalCellDiffStatus(lc, originalCells) !== "unchanged") return true;
     }
     return false;
-  }, [isCreateMode, station, stationId, operatorId, notes, isConfirmed, location, deletedServerCellIds, localCells, originalCells]);
+  }, [isCreateMode, station, stationId, operatorId, notes, extraAddress, isConfirmed, location, deletedServerCellIds, localCells, originalCells]);
 
   const getStationDiffBadges = useCallback(
     (rat: string, cellsForRat: LocalCell[]): DiffBadges => {
@@ -449,6 +456,8 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
               onOperatorIdChange={(v) => dispatch({ type: "SET_OPERATOR_ID", payload: v })}
               notes={notes}
               onNotesChange={(v) => dispatch({ type: "SET_NOTES", payload: v })}
+              extraAddress={extraAddress}
+              onExtraAddressChange={(v) => dispatch({ type: "SET_EXTRA_ADDRESS", payload: v })}
               isConfirmed={isConfirmed}
               onIsConfirmedChange={(v) => dispatch({ type: "SET_CONFIRMED", payload: v })}
               location={location}

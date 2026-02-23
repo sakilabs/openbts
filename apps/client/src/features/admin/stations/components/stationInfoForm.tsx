@@ -19,6 +19,8 @@ type StationInfoFormProps = {
   onOperatorIdChange: (value: number | null) => void;
   notes: string;
   onNotesChange: (value: string) => void;
+  extraAddress: string;
+  onExtraAddressChange: (value: string) => void;
   isConfirmed: boolean;
   onIsConfirmedChange: (checked: boolean) => void;
   location: ProposedLocationForm;
@@ -36,6 +38,8 @@ export function StationInfoForm({
   onOperatorIdChange,
   notes,
   onNotesChange,
+  extraAddress,
+  onExtraAddressChange,
   isConfirmed,
   onIsConfirmedChange,
   location,
@@ -111,6 +115,10 @@ export function StationInfoForm({
           <div className="space-y-2">
             <Label>{t("common:labels.notes")}</Label>
             <Textarea value={notes} onChange={(e) => onNotesChange(e.target.value)} rows={3} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("common:labels.extraAddress")}</Label>
+            <Input value={extraAddress} onChange={(e) => onExtraAddressChange(e.target.value)} placeholder={t("common:labels.address")} />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox checked={isConfirmed} onCheckedChange={(checked) => onIsConfirmedChange(checked === true)} />

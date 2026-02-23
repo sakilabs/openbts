@@ -92,7 +92,6 @@
     "finishedAt": "Zakończono"
   },
   "auditLogs": {
-    "title": "Logi audytu",
     "subtitle": "Przeglądaj aktywność systemu i zmiany",
     "columns": {
       "timestamp": "Data utworzenia",
@@ -109,7 +108,10 @@
       "allEntities": "Wszystkie tabele",
       "allActions": "Wszystkie akcje",
       "dateFrom": "Od",
-      "dateTo": "Do"
+      "dateTo": "Do",
+      "recordId": "ID rekordu",
+      "userId": "ID użytkownika",
+      "moreFilters": "Więcej filtrów"
     },
     "empty": {
       "title": "Nie znaleziono logów",
@@ -125,7 +127,10 @@
       "noChanges": "Brak zapisanych zmian",
       "metadata": "Metadane",
       "ipAddress": "Adres IP",
-      "userAgent": "Przeglądarka"
+      "userAgent": "Przeglądarka",
+      "links": "Linki",
+      "station": "Stacja",
+      "submission": "Zgłoszenie"
     }
   }
 }

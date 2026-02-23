@@ -9,7 +9,8 @@
     "networkName": "Network Name:",
     "mnoName": "MNO:",
     "internalNotes": "Internal Notes",
-    "newCellTooltip": "This cell was added in the last 30 days"
+    "newCellTooltip": "This cell was added in the last 30 days",
+    "si2pemLink": "Find installation report on si2pem.gov.pl"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} permit",
@@ -43,7 +44,8 @@
   },
   "dialog": {
     "hardwareLease": "Hardware lease from {{operator}} (virtual station)",
-    "btsStation": "BTS Station"
+    "btsStation": "BTS Station",
+    "showOnMap": "Show on map"
   },
   "comments": {
     "title": "Community Comments",

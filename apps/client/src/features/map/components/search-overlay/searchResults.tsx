@@ -111,7 +111,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">
-                        {station.location?.address || station.location?.city || t("stationDetails:dialog.btsStation")}
+                        {station.extra_address || station.location?.address || station.location?.city || t("stationDetails:dialog.btsStation")}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
                         {station.networks?.networks_id && (

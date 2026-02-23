@@ -174,7 +174,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {headerTopStyle && <div className="shrink-0 h-0.75" style={headerTopStyle} />}
-      <div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 py-2 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm">
+      <div className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm">
         <Button
           variant="ghost"
           size="sm"
@@ -185,11 +185,11 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
           <span className="font-medium">{t("common:actions.back")}</span>
         </Button>
 
-        <div className="flex items-center gap-2.5 px-3 py-1.5 bg-secondary/30 rounded-full border border-border/40 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-          <HugeiconsIcon icon={Location01Icon} className="size-3.5 text-primary" />
-          <span className="font-bold text-sm tracking-tight truncate">{location.city || location.address || `#${location.id}`}</span>
+        <div className="flex items-center gap-2.5 px-3 py-1.5 bg-secondary/30 rounded-full border border-border/40 shadow-[0_1px_2px_rgba(0,0,0,0.05)] min-w-0 overflow-hidden">
+          <HugeiconsIcon icon={Location01Icon} className="size-3.5 text-primary shrink-0" />
+          <span className="font-bold text-sm tracking-tight truncate min-w-0">{location.city || location.address || `#${location.id}`}</span>
           <div className="w-px h-3.5 bg-border/60 shrink-0" />
-          <span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20">
+          <span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20 truncate min-w-0">
             {location.id}
           </span>
         </div>

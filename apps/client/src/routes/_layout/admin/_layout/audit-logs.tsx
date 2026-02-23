@@ -242,7 +242,7 @@ function AdminAuditLogsPage() {
       <div className="flex flex-col gap-3 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("auditLogs.title")}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t("nav:items.auditLogs")}</h1>
             <p className="text-muted-foreground text-sm">{t("auditLogs.subtitle")}</p>
           </div>
         </div>
@@ -379,8 +379,8 @@ function AdminAuditLogsPage() {
 export const Route = createFileRoute("/_layout/admin/_layout/audit-logs")({
   component: AdminAuditLogsPage,
   staticData: {
-    titleKey: "auditLogs.title",
-    i18nNamespace: "admin",
+    titleKey: "items.auditLogs",
+    i18nNamespace: "nav",
     breadcrumbs: [{ titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" }],
   },
 });

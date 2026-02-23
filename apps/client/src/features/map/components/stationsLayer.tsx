@@ -250,23 +250,8 @@ export function StationsLayer({
       longitude: ukeLocation.longitude,
     };
 
-    map.flyTo({
-      center: [location.longitude, location.latitude],
-      zoom: 16,
-      essential: true,
-      speed: 1.5,
-    });
-
-    const handleMoveEnd = () => {
-      const ukeStations = groupPermitsByStation(ukeLocation.permits ?? [], ukeLocation);
-      showPopup([location.longitude, location.latitude], location, null, ukeStations, filters.source);
-    };
-
-    map.once("moveend", handleMoveEnd);
-
-    return () => {
-      map.off("moveend", handleMoveEnd);
-    };
+    const ukeStations = groupPermitsByStation(ukeLocation.permits ?? [], ukeLocation);
+    showPopup([location.longitude, location.latitude], location, null, ukeStations, filters.source);
   }, [map, locations, filters.source, showPopup]);
 
   const fetchAndUpdatePopup = useCallback(

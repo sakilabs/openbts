@@ -7,20 +7,25 @@ import {
   Building02Icon,
   Calendar03Icon,
   Globe02Icon,
+  Link01Icon,
   Location01Icon,
+  MapsLocation01Icon,
   Note01Icon,
   RefreshIcon,
   SignalFull02Icon,
   Tag01Icon,
 } from "@hugeicons/core-free-icons";
+import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { CellTable } from "./cellTable";
 import { RAT_ORDER } from "@/features/map/constants";
 import { NetWorkSIds } from "./networkIds";
 import { PermitsList } from "./permitsList";
 import { CommentsList } from "./commentsList";
 import { CopyButton } from "./copyButton";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { NavigationLinks } from "./navLinks";
 import { groupCellsByRat } from "../utils";
 import { TAB_OPTIONS, type TabId } from "../tabs";
@@ -36,13 +41,16 @@ type StationDetailsBodyProps = {
   station?: Station;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  onClose: () => void;
 };
 
-export function StationDetailsBody({ stationId, source, isLoading, error, station, activeTab, onTabChange }: StationDetailsBodyProps) {
+export function StationDetailsBody({ stationId, source, isLoading, error, station, activeTab, onTabChange, onClose }: StationDetailsBodyProps) {
   const { t } = useTranslation(["stationDetails", "common"]);
   const { i18n } = useTranslation();
   const { data: settings } = useSettings();
   const { preferences } = usePreferences();
+  const location = useLocation();
+  const isOnMap = location.pathname === "/";
   const cellGroups = station ? groupCellsByRat(station.cells) : {};
   const visibleTabs = useMemo(
     () =>
@@ -162,14 +170,56 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                         <HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
                         <span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
                         <span className="text-sm font-mono font-medium">{station?.station_id}</span>
-                        <div className="ml-auto sm:ml-0">
+                        <div className="flex items-center gap-1">
                           <CopyButton text={station?.station_id || ""} />
+                          {station?.station_id && (
+                            <Tooltip>
+                              <TooltipTrigger
+                                render={
+                                  <a
+                                    href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
+                                  />
+                                }
+                              >
+                                <HugeiconsIcon icon={Link01Icon} className="size-3.5 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </div>
                       {station?.networks && <NetWorkSIds networks={station.networks} />}
-                      {preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
+                      {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                         <div className="sm:col-span-2 pt-3 border-t border-border/50">
-                          <NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="buttons" />
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {!isOnMap && (
+                              <Tooltip>
+                                <TooltipTrigger
+                                  render={
+                                    <Link
+                                      to="/"
+                                      hash={`map=16/${station.location.latitude}/${station.location.longitude}?location=${station.location.id}`}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                      onClick={onClose}
+                                    />
+                                  }
+                                >
+                                  <HugeiconsIcon icon={MapsLocation01Icon} className="size-3.5" />
+                                  {t("dialog.showOnMap")}
+                                </TooltipTrigger>
+                                <TooltipContent>{t("dialog.showOnMap")}</TooltipContent>
+                              </Tooltip>
+                            )}
+                            {preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
+                              <>
+                                {!isOnMap && <Separator orientation="vertical" className="h-5 mx-1" />}
+                                <NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="buttons" />
+                              </>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

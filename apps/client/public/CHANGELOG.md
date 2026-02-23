@@ -6,10 +6,17 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🩹 Fixes
 
 - Fixed double `stations.update` audit log when creating new cell
+- Fixed some UI bugs on mobile
+- The station is now marked with status `active` when submission is approved
 
 ### 🚀 Enhancements
 
 - Added support for batch patching cells
+- Added button in the dialogs to show the location on the main map
+- Added `extra_address` to each station
+- Added button for si2pem link
+- Added submission/station link in the audit log sheet
+- Changed how the `RedCap` & `NB-IoT` is shown in the cell table
 
 # 2026-02-22
 
