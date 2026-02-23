@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, PencilEdit02Icon, Tick02Icon, Wifi01Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { authClient } from "@/lib/authClient";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { getHardwareLeaseOperator } from "@/lib/stationUtils";
@@ -30,8 +30,6 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
   const [activeTab, setActiveTab] = useState<TabId>(() => getDefaultTab(source));
   const { data: settings } = useSettings();
   const { data: session } = authClient.useSession();
-  const location = useLocation();
-  const isOnMap = location.pathname === "/";
   const userRole = session?.user?.role as string | undefined;
   const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
 
@@ -140,23 +138,6 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         {station.extra_address || station.location.address || t("dialog.btsStation")}
                       </p>
                     </div>
-                    {!isOnMap && (
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Link
-                              to="/"
-                              hash={`map=16/${station.location.latitude}/${station.location.longitude}?location=${station.location.id}`}
-                              className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors shrink-0 mt-0.5"
-                              onClick={onClose}
-                            />
-                          }
-                        >
-                          <HugeiconsIcon icon={MapsLocation01Icon} className="size-3.5 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>{t("dialog.showOnMap")}</TooltipContent>
-                      </Tooltip>
-                    )}
                   </div>
                 </div>
               ) : null}
