@@ -116,7 +116,7 @@ function Skeleton({ rows, columns }: SkeletonProps) {
         <tr key={rowIndex} className="h-16 border-b transition-colors">
           {colArray.map((colIndex) => (
             <td key={colIndex} className="p-2 align-middle">
-              <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-20 animate-pulse rounded bg-muted" />
             </td>
           ))}
         </tr>

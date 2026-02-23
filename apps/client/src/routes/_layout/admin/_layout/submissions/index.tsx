@@ -137,7 +137,6 @@ function AdminSubmissionsListPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">{t("common:labels.stationId")}</label>
                   <Input
-                    autoFocus
                     className="h-8 text-sm"
                     placeholder="BTS12345"
                     value={stationIdFilterRef.current}
@@ -178,7 +177,6 @@ function AdminSubmissionsListPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">{t("admin:auditLogs.filters.userId")}</label>
                   <Input
-                    autoFocus
                     className="h-8 text-sm"
                     placeholder="uuid..."
                     value={userIdFilterRef.current}
