@@ -1,6 +1,16 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-02-23
+
+### 🩹 Fixes
+
+- Fixed double `stations.update` audit log when creating new cell
+
+### 🚀 Enhancements
+
+- Added support for batch patching cells
+
 # 2026-02-22
 
 ### 🩹 Fixes
