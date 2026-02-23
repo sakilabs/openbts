@@ -342,7 +342,7 @@ export function StationsFilters({
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
           {totalStations !== undefined
-            ? t("main:filters.showingStationsOfTotal", { count: stationCount, total: totalStations.toLocaleString(i18n.language) })
+            ? t("main:filters.showingStationsOfTotal", { count: stationCount, total: totalStations })
             : t("main:filters.showingStations", { count: stationCount })}
         </div>
       </div>

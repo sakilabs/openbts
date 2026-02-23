@@ -277,7 +277,7 @@ export function useStationsData() {
     operators,
     regions,
     uniqueBandValues,
-    totalStations: totalStationsFromApi,
+    totalStations: searchQuery.trim().length > 0 ? undefined : totalStationsFromApi,
 
     filters,
     setFilters,
