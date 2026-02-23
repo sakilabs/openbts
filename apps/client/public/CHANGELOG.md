@@ -17,6 +17,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added button for si2pem link
 - Added submission/station link in the audit log sheet
 - Changed how the `RedCap` & `NB-IoT` is shown in the cell table
+- Removed "cells" and "added", "changed", "deleted" texts in cell tables on mobile
+- Made user search work by name
 
 # 2026-02-22
 
