@@ -272,6 +272,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
             <button
               data-filter-toggle
               onClick={() => setShowFilters(!showFilters)}
+              onMouseDown={(e) => e.preventDefault()}
               type="button"
               className={cn(
                 "flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all font-medium text-sm shrink-0 whitespace-nowrap",

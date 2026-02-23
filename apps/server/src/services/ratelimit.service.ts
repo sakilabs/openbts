@@ -91,9 +91,8 @@ export class RateLimitService {
     }
 
     if (req.userSession) {
-      const fingerprint = generateFingerprint(req);
-      if (!fingerprint) return null;
-      return `${this.prefix}guest:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
+      const userId = req.userSession.user.id;
+      return `${this.prefix}user:${userId}${useRouteKey ? `:${route}` : ""}`;
     }
 
     const fingerprint = generateFingerprint(req);

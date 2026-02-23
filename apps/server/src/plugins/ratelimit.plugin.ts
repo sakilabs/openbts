@@ -17,7 +17,10 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
   fastify.decorate("rateLimitService", rateLimitService);
   fastify.addHook("preHandler", async (req: FastifyRequest, res: FastifyReply) => {
     const result = await rateLimitService.processRequest(req);
-    if (!result) return;
+    if (!result) {
+      if (!req.userSession && !req.apiToken) throw new ErrorResponse("TOO_MANY_REQUESTS");
+      return;
+    }
 
     if (!result.allowed) {
       res.header("X-Retry-After", result.retryAfter?.toString() || "60");
