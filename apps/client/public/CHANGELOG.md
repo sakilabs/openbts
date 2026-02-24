@@ -3,6 +3,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 # 2026-02-24
 
+### 🩹 Fixes
+
+- Properly show the numbers for total stations etc.
+
 ### 🚀 Enhancements
 
 - You can now quickly add new station from existing UKE station by using `Create` button from the dialog
