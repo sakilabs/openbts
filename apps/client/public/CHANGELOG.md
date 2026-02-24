@@ -10,6 +10,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🚀 Enhancements
 
 - You can now quickly add new station from existing UKE station by using `Create` button from the dialog
+- Do not show the "radiolines" amount when its layer is disabled
 
 # 2026-02-23
 

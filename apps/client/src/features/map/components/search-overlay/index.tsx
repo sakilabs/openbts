@@ -379,27 +379,29 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
       <div className="hidden md:flex absolute top-4 left-4 z-10 flex-col items-start gap-1.5">
         <div className="flex items-center gap-1.5">
           <div className="flex items-stretch shadow-xl rounded-lg overflow-hidden border bg-background/95 backdrop-blur-md">
-            <Tooltip>
-              <TooltipTrigger
-                className={cn("px-2 py-1.5 flex items-center gap-2 border-r border-border/50", hasMoreLocations && "cursor-help")}
-                disabled={!hasMoreLocations}
-              >
-                {isLoading || isFetching ? (
-                  <Spinner className="size-3 text-primary" />
-                ) : hasMoreLocations ? (
-                  <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
-                ) : (
-                  <div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
-                )}
-                <div className="flex items-baseline gap-1">
-                  <span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
-                    {locationCount.toLocaleString(i18n.language)}
-                  </span>
-                  <span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</TooltipContent>
-            </Tooltip>
+            {filters.showStations && (
+              <Tooltip>
+                <TooltipTrigger
+                  className={cn("px-2 py-1.5 flex items-center gap-2 border-r border-border/50", hasMoreLocations && "cursor-help")}
+                  disabled={!hasMoreLocations}
+                >
+                  {isLoading || isFetching ? (
+                    <Spinner className="size-3 text-primary" />
+                  ) : hasMoreLocations ? (
+                    <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+                  ) : (
+                    <div className="size-1.5 rounded-full shrink-0 bg-emerald-500" />
+                  )}
+                  <div className="flex items-baseline gap-1">
+                    <span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
+                      {locationCount.toLocaleString(i18n.language)}
+                    </span>
+                    <span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</TooltipContent>
+              </Tooltip>
+            )}
             {(radioLineCount > 0 || isRadioLinesFetching) && (
               <Tooltip>
                 <TooltipTrigger
@@ -469,13 +471,19 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               )}
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-1">
-                  <span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>
-                    {locationCount.toLocaleString(i18n.language)}
-                  </span>
-                  <span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+                  {filters.showStations && (
+                    <>
+                      <span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>
+                        {locationCount.toLocaleString(i18n.language)}
+                      </span>
+                      <span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+                        {t("overlay.locations")}
+                      </span>
+                    </>
+                  )}
                   {(radioLineCount > 0 || isRadioLinesFetching) && (
                     <>
-                      <span className="text-[8px] text-muted-foreground leading-none">·</span>
+                      {filters.showStations && <span className="text-[8px] text-muted-foreground leading-none">·</span>}
                       {isRadioLinesFetching ? (
                         <Spinner className="size-2.5 text-primary" />
                       ) : hasMoreRadioLines ? (
@@ -501,7 +509,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               </div>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p>{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</p>
+              {filters.showStations && <p>{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</p>}
               {hasMoreRadioLines && (
                 <p>
                   {t("overlay.moreRadiolines", {
