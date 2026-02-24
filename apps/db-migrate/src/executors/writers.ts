@@ -241,13 +241,13 @@ export async function writeStations(
   const rows = uniqueStationIds.length ? await db.query.stations.findMany({ where: { station_id: { in: uniqueStationIds } } }) : [];
   const pairToId = new Map<string, number>();
   for (const row of rows) {
-    const key = row.station_id;
+    const key = `${row.station_id}:${row.operator_id}`;
     if (!pairToId.has(key)) pairToId.set(key, row.id);
   }
 
   const map: StationIdMap = new Map();
   for (const p of prepared) {
-    const key = p.station.station_id;
+    const key = `${p.station.station_id}:${p.operatorId}`;
     const id = pairToId.get(key);
     if (typeof id === "number") map.set(p.station.original_id, id);
   }

@@ -56,8 +56,14 @@ export async function upsertBands(
       where: { value: { in: unique.map((k) => k.value) } },
     });
 
-    const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.duplex}:${b.variant}`));
-    const toInsert = unique.filter((k) => !existingKeys.has(`${k.rat}:${k.value}:null:${k.variant}`));
+    const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.variant}`));
+    const existingNames = new Set(existing.map((b) => b.name));
+    const toInsert = unique.filter((k) => {
+      if (existingKeys.has(`${k.rat}:${k.value}:${k.variant}`)) return false;
+      const name = k.variant === "railway" ? `GSM-R ${k.value}` : `${k.rat} ${k.value}`;
+      if (existingNames.has(name)) return false;
+      return true;
+    });
 
     if (toInsert.length) {
       await db.insert(bands).values(
