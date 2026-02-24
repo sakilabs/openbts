@@ -14,6 +14,7 @@ const importStepSchema = z.object({
     "permits",
     "prune_deleted_entries",
     "prune_associations",
+    "cleanup_orphaned_uke_locations",
     "associate",
     "snapshot",
     "cleanup",
