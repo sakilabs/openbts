@@ -250,7 +250,7 @@ function MapViewInner() {
           <RadioLinesLayer radioLines={radioLines} pendingRadiolineId={pendingRadiolineId} onPendingRadiolineConsumed={handlePendingRadiolineId} />
         </Suspense>
       )}
-      <MapControls showLocate showCompass showScale />
+      <MapControls showLocate showCompass showScale showFullscreen />
       <Suspense fallback={null}>
         {selectedStation && (
           <StationDetailsDialog
