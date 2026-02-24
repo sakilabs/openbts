@@ -12,6 +12,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - You can now quickly add new station from existing UKE station by using `Create` button from the dialog
 - Do not show the "radiolines" amount when its layer is disabled
 - Add submissions cleanup option for admins
+- Map can be opened in the fullscreen mode
 
 # 2026-02-23
 
