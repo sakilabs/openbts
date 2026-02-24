@@ -74,6 +74,9 @@
     "search": "Search",
     "none": "None",
     "confirmed": "Confirmed",
+    "networksId": "N! ID",
+    "networksName": "Network name",
+    "mnoName": "MNO name",
     "cells": "cells",
     "newStation": "New Station",
     "submitted": "Submitted",
@@ -106,7 +109,8 @@
     "noOperatorsFound": "No operators found",
     "noBandsFound": "No bands found",
     "noRegionsFound": "No regions found",
-    "errorFetching": "Error fetching data"
+    "errorFetching": "Error fetching data",
+    "optional": "Optional"
   },
   "status": {
     "all": "All",

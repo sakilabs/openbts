@@ -93,7 +93,7 @@ CREATE TABLE "lte_cells" (
 CREATE TABLE "networks_ids" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "networks_ids_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"station_id" integer NOT NULL,
-	"networks_id" varchar(16) NOT NULL,
+	"networks_id" integer NOT NULL,
 	"networks_name" varchar(50),
 	"mno_name" varchar(50),
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
@@ -495,6 +495,9 @@ CREATE TABLE "submissions"."proposed_stations" (
 	"station_id" varchar(16),
 	"operator_id" integer NOT NULL,
 	"notes" text,
+	"networks_id" integer,
+	"networks_name" varchar(50),
+	"mno_name" varchar(50),
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"is_confirmed" boolean DEFAULT false,
@@ -543,7 +546,7 @@ CREATE INDEX "lte_cells_nb_iot_true_idx" ON "lte_cells" ("enbid","clid") WHERE "
 CREATE INDEX "lte_cells_enbid_trgm_idx" ON "lte_cells" USING gin (("enbid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "lte_cells_ecid_trgm_idx" ON "lte_cells" USING gin (("ecid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "networks_ids_station_idx" ON "networks_ids" ("station_id");--> statement-breakpoint
-CREATE INDEX "networks_ids_networks_id_trgm_idx" ON "networks_ids" USING gin (("networks_id") gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "networks_ids_networks_id_trgm_idx" ON "networks_ids" USING gin (("networks_id"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "networks_ids_networks_name_trgm_idx" ON "networks_ids" USING gin (("networks_name") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "nr_cells_redcap_true_idx" ON "nr_cells" ("gnbid","clid") WHERE "supports_nr_redcap" = true;--> statement-breakpoint
 CREATE INDEX "nr_cells_gnbid_trgm_idx" ON "nr_cells" USING gin (("gnbid"::text) gin_trgm_ops);--> statement-breakpoint

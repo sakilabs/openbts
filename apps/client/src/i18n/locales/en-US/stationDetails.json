@@ -6,8 +6,6 @@
   "specs": {
     "basicInfo": "Basic Information",
     "cellDetails": "Cell Details",
-    "networkName": "Network Name:",
-    "mnoName": "MNO:",
     "internalNotes": "Internal Notes",
     "newCellTooltip": "This cell was added in the last 30 days",
     "si2pemLink": "Find installation report on si2pem.gov.pl"

@@ -1,13 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchApiData } from "@/lib/api";
+import type { RuntimeSettings } from "@/features/admin/settings/api";
 
-export interface RuntimeSettings {
-  enforceAuthForAllRoutes: boolean;
-  allowedUnauthenticatedRoutes: string[];
-  disabledRoutes: string[];
-  enableStationComments: boolean;
-  submissionsEnabled: boolean;
-}
+export type { RuntimeSettings, Announcement } from "@/features/admin/settings/api";
 
 const fetchSettings = () =>
   fetchApiData<RuntimeSettings>("settings", {

@@ -29,6 +29,7 @@ export type SearchStation = {
   cells: SearchCell[];
   location: (Location & { region: Region }) | null;
   operator: Operator | null;
+  networks?: { networks_id: number; networks_name: string | null; mno_name: string | null } | null;
 };
 
 export async function searchStations(query: string): Promise<SearchStation[]> {
@@ -107,6 +108,13 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
     })),
     location: station.location,
     operator: station.operator,
+    networks: station.networks
+      ? {
+          networks_id: station.networks.networks_id,
+          networks_name: station.networks.networks_name,
+          mno_name: station.networks.mno_name,
+        }
+      : null,
   };
 }
 
@@ -134,14 +142,18 @@ export function pickCellDetails(rat: RatType | undefined, details: Partial<CellF
   return picked as Partial<CellFormDetails>;
 }
 
-export async function createSubmission(data: SubmissionFormData): Promise<SubmissionResponse> {
-  const payload: Record<string, unknown> = {
-    type: data.type,
-  };
+function buildSubmissionPayload(data: SubmissionFormData): Record<string, unknown> {
+  const payload: Record<string, unknown> = { type: data.type };
 
   if (data.station_id) payload.station_id = data.station_id;
   if (data.submitter_note) payload.submitter_note = data.submitter_note;
-  if (data.station) payload.station = data.station;
+  if (data.station) {
+    const { networks_id, networks_name, mno_name, ...stationBase } = data.station;
+    payload.station = {
+      ...stationBase,
+      ...(networks_id ? { networks_id, networks_name: networks_name || undefined, mno_name: mno_name || undefined } : {}),
+    };
+  }
   if (data.location) payload.location = data.location;
   if (data.cells.length > 0) {
     payload.cells = data.cells.map((cell) => ({
@@ -154,29 +166,18 @@ export async function createSubmission(data: SubmissionFormData): Promise<Submis
     }));
   }
 
-  return postApiData<SubmissionResponse>("submissions", payload);
+  return payload;
+}
+
+export async function createSubmission(data: SubmissionFormData): Promise<SubmissionResponse> {
+  return postApiData<SubmissionResponse>("submissions", buildSubmissionPayload(data));
 }
 
 export async function updateSubmission(id: string, data: SubmissionFormData): Promise<SubmissionResponse> {
-  const payload: Record<string, unknown> = { type: data.type };
-  if (data.station_id) payload.station_id = data.station_id;
-  if (data.submitter_note) payload.submitter_note = data.submitter_note;
-  if (data.station) payload.station = data.station;
-  if (data.location) payload.location = data.location;
-  if (data.cells.length > 0) {
-    payload.cells = data.cells.map((cell) => ({
-      operation: cell.operation,
-      target_cell_id: cell.target_cell_id,
-      band_id: cell.band_id,
-      rat: cell.rat,
-      notes: cell.notes,
-      details: pickCellDetails(cell.rat, cell.details),
-    }));
-  }
   return fetchApiData<SubmissionResponse>(`submissions/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(buildSubmissionPayload(data)),
   });
 }
 

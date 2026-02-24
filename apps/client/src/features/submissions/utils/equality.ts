@@ -121,6 +121,9 @@ export interface OriginalState {
   station?: ProposedStationForm | null;
   location?: ProposedLocationForm | null;
   cells?: ProposedCellForm[];
+  networksId?: number | null;
+  networksName?: string;
+  mnoName?: string;
 }
 
 const EMPTY_STATION: ProposedStationForm = { station_id: "", operator_id: null, notes: "" };

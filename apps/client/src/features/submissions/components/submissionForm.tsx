@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, Tick02Icon, PencilEdit02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
+import { SentIcon, Tick02Icon, PencilEdit02Icon, Delete02Icon, Globe02Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { StationSelector } from "./stationSelector";
@@ -22,6 +24,7 @@ import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
 import { hasFormChanges, type OriginalState } from "../utils/equality";
 import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
+import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
 import type { UkeStation } from "@/types/station";
 
 type FormValues = {
@@ -34,6 +37,9 @@ type FormValues = {
   cells: ProposedCellForm[];
   originalCells: ProposedCellForm[];
   submitterNote: string;
+  networksId: number | null;
+  networksName: string;
+  mnoName: string;
 };
 
 const INITIAL_VALUES: FormValues = {
@@ -46,6 +52,9 @@ const INITIAL_VALUES: FormValues = {
   cells: [],
   originalCells: [],
   submitterNote: "",
+  networksId: null,
+  networksName: "",
+  mnoName: "",
 };
 
 function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
@@ -100,8 +109,16 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
       location: ProposedLocationForm,
       cells: ProposedCellForm[],
       submitterNote: string,
+      networksId: number | null,
+      networksName: string,
+      mnoName: string,
     ): boolean => {
-      return hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState, isEditMode);
+      if (hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState, isEditMode)) return true;
+      if (mode === "existing") {
+        if (networksId !== (originalState.networksId ?? null)) return true;
+        if (networksId !== null && (networksName !== (originalState.networksName ?? "") || mnoName !== (originalState.mnoName ?? ""))) return true;
+      }
+      return false;
     },
     [originalState, isEditMode],
   );
@@ -132,11 +149,22 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
 
       const submissionType = isDeleteMode ? "delete" : isNewStation ? "new" : "update";
 
+      const existingStation =
+        !isNewStation && !isDeleteMode && value.networksId
+          ? {
+              station_id: value.selectedStation!.station_id,
+              operator_id: value.selectedStation!.operator_id,
+              networks_id: value.networksId,
+              networks_name: value.networksName || undefined,
+              mno_name: value.mnoName || undefined,
+            }
+          : undefined;
+
       await mutation.mutateAsync({
         station_id: isNewStation ? null : (value.selectedStation?.id ?? null),
         type: submissionType,
         submitter_note: value.submitterNote || undefined,
-        station: isNewStation ? value.newStation : undefined,
+        station: isNewStation ? value.newStation : existingStation,
         location: hasLocation && !isDeleteMode ? value.location : undefined,
         cells: isDeleteMode ? [] : cells,
       });
@@ -169,6 +197,9 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
     form.setFieldValue("action", "update");
     form.setFieldValue("location", INITIAL_VALUES.location);
     form.setFieldValue("submitterNote", "");
+    form.setFieldValue("networksId", null);
+    form.setFieldValue("networksName", "");
+    form.setFieldValue("mnoName", "");
     if (newMode === "existing") {
       form.setFieldValue("newStation", INITIAL_VALUES.newStation);
       form.setFieldValue("selectedStation", null);
@@ -201,6 +232,13 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         form.setFieldValue("originalCells", structuredClone(cells));
         form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
 
+        const networksId = station.networks?.networks_id ?? null;
+        const networksName = station.networks?.networks_name ?? "";
+        const mnoName = station.networks?.mno_name ?? "";
+        form.setFieldValue("networksId", networksId);
+        form.setFieldValue("networksName", networksName);
+        form.setFieldValue("mnoName", mnoName);
+
         if (station.location) {
           const location = {
             latitude: station.location.latitude,
@@ -210,27 +248,23 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             region_id: station.location.region?.id ?? null,
           };
           form.setFieldValue("location", location);
-          setOriginalState({
-            location,
-            cells: structuredClone(cells),
-          });
+          setOriginalState({ location, cells: structuredClone(cells), networksId, networksName, mnoName });
         } else {
-          setOriginalState({ cells: structuredClone(cells) });
+          setOriginalState({ cells: structuredClone(cells), networksId, networksName, mnoName });
         }
       } else {
         form.setFieldValue("cells", []);
         form.setFieldValue("originalCells", []);
         form.setFieldValue("selectedRats", []);
         form.setFieldValue("location", INITIAL_VALUES.location);
+        form.setFieldValue("networksId", null);
+        form.setFieldValue("networksName", "");
+        form.setFieldValue("mnoName", "");
         setOriginalState({});
       }
     },
     [form],
   );
-
-  const handleStationSelect = (station: SearchStation | null) => {
-    loadStation(station);
-  };
 
   const handleUkeStationSelect = useCallback(
     (station: UkeStation) => {
@@ -339,7 +373,16 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
           station_id: submission.proposedStation.station_id ?? "",
           operator_id: submission.proposedStation.operator_id,
           notes: submission.proposedStation.notes ?? "",
+          networks_id: submission.proposedStation.networks_id ?? undefined,
+          networks_name: submission.proposedStation.networks_name ?? undefined,
+          mno_name: submission.proposedStation.mno_name ?? undefined,
         });
+      }
+
+      if (!isNew && submission.proposedStation?.networks_id) {
+        form.setFieldValue("networksId", submission.proposedStation.networks_id);
+        form.setFieldValue("networksName", submission.proposedStation.networks_name ?? "");
+        form.setFieldValue("mnoName", submission.proposedStation.mno_name ?? "");
       }
 
       if (submission.proposedLocation) {
@@ -426,7 +469,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         )}
         <form.Subscribe selector={(s) => ({ mode: s.values.mode, selectedStation: s.values.selectedStation })}>
           {({ mode, selectedStation }) => (
-            <StationSelector mode={mode} selectedStation={selectedStation} onModeChange={handleModeChange} onStationSelect={handleStationSelect} />
+            <StationSelector mode={mode} selectedStation={selectedStation} onModeChange={handleModeChange} onStationSelect={loadStation} />
           )}
         </form.Subscribe>
 
@@ -493,6 +536,75 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             mode: s.values.mode,
             action: s.values.action,
             selectedStation: s.values.selectedStation,
+            networksId: s.values.networksId,
+            networksName: s.values.networksName,
+            mnoName: s.values.mnoName,
+          })}
+        >
+          {({ mode, action, selectedStation, networksId, networksName, mnoName }) => {
+            if (mode !== "existing" || !selectedStation || action === "delete") return null;
+            const operatorMnc = selectedStation.operator?.mnc;
+            if (!operatorMnc || !NETWORKS_ID_MNCS.includes(operatorMnc)) return null;
+
+            return (
+              <div className="border rounded-xl overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
+                  <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
+                  <span className="font-semibold text-sm">NetWorkS! ID</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="existing_networks_id" className="text-xs">
+                        {t("common:labels.networksId", "N! ID")}
+                      </Label>
+                      <Input
+                        id="existing_networks_id"
+                        type="number"
+                        placeholder="e.g. 12345"
+                        value={networksId ?? ""}
+                        onChange={(e) => form.setFieldValue("networksId", e.target.value ? Number(e.target.value) : null)}
+                        className="h-8 font-mono text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="existing_networks_name" className="text-xs">
+                        {t("common:labels.networksName", "Network name")}
+                      </Label>
+                      <Input
+                        id="existing_networks_name"
+                        placeholder={t("common:placeholder.optional", "Optional")}
+                        value={networksName}
+                        maxLength={50}
+                        onChange={(e) => form.setFieldValue("networksName", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="existing_mno_name" className="text-xs">
+                      {t("common:labels.mnoName", "MNO name")}
+                    </Label>
+                    <Input
+                      id="existing_mno_name"
+                      placeholder={t("common:placeholder.optional", "Optional")}
+                      value={mnoName}
+                      maxLength={50}
+                      onChange={(e) => form.setFieldValue("mnoName", e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          }}
+        </form.Subscribe>
+
+        <form.Subscribe
+          selector={(s) => ({
+            mode: s.values.mode,
+            action: s.values.action,
+            selectedStation: s.values.selectedStation,
             selectedRats: s.values.selectedRats,
             location: s.values.location,
           })}
@@ -520,12 +632,28 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             cells: s.values.cells,
             cellsCount: s.values.cells.filter((c) => s.values.selectedRats.includes(c.rat)).length,
             submitterNote: s.values.submitterNote,
+            networksId: s.values.networksId,
+            networksName: s.values.networksName,
+            mnoName: s.values.mnoName,
             canSubmit: s.canSubmit,
             isSubmitting: s.isSubmitting,
           })}
         >
-          {({ mode, action, selectedStation, newStation, location, cells, submitterNote, canSubmit, isSubmitting }) => {
-            const hasChanges = computeHasChanges(mode, action, newStation, location, cells, submitterNote);
+          {({
+            mode,
+            action,
+            selectedStation,
+            newStation,
+            location,
+            cells,
+            submitterNote,
+            networksId,
+            networksName,
+            mnoName,
+            canSubmit,
+            isSubmitting,
+          }) => {
+            const hasChanges = computeHasChanges(mode, action, newStation, location, cells, submitterNote, networksId, networksName, mnoName);
             return (
               <SubmitSection
                 mode={mode}

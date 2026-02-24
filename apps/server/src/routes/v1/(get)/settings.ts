@@ -6,17 +6,22 @@ import { getRuntimeSettings, type RuntimeSettings } from "../../../services/sett
 
 type Response = RuntimeSettings;
 
+export const settingsDataSchema = z.object({
+  enforceAuthForAllRoutes: z.boolean(),
+  allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
+  disabledRoutes: z.array(z.string().min(1)),
+  enableStationComments: z.boolean(),
+  submissionsEnabled: z.boolean(),
+  announcement: z.object({
+    message: z.string(),
+    enabled: z.boolean(),
+    type: z.enum(["info", "warning", "error"]),
+  }),
+});
+
 const schemaRoute = {
   response: {
-    200: z.object({
-      data: z.object({
-        enforceAuthForAllRoutes: z.boolean(),
-        allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
-        disabledRoutes: z.array(z.string().min(1)),
-        enableStationComments: z.boolean(),
-        submissionsEnabled: z.boolean(),
-      }),
-    }),
+    200: z.object({ data: settingsDataSchema }),
   },
 };
 

@@ -169,8 +169,6 @@ const fetchStations = async (where?: SQL, limit?: number) => {
     .where(and(ne(stations.status, "inactive"), where))
     .limit(limit || 100);
 
-  console.log(matchingIds);
-
   if (matchingIds.length === 0) return [];
 
   return db.query.stations.findMany({
@@ -291,7 +289,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       .from(networksIds)
       .where(
         or(
-          sql`${networksIds.networks_id} ILIKE ${`%${searchQuery}%`}`,
+          sql`CAST(${networksIds.networks_id} AS TEXT) ILIKE ${`%${searchQuery}%`}`,
           sql`${networksIds.networks_name} ILIKE ${`%${searchQuery}%`}`,
           sql`${networksIds.mno_name} ILIKE ${`%${searchQuery}%`}`,
         ),

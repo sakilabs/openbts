@@ -2,12 +2,19 @@ import { redis } from "../database/redis.js";
 
 type NonEmptyString = string & { __brand: "NonEmptyString" };
 
+export interface Announcement {
+  message: string;
+  enabled: boolean;
+  type: "info" | "warning" | "error";
+}
+
 export interface RuntimeSettings {
   enforceAuthForAllRoutes: boolean;
   allowedUnauthenticatedRoutes: NonEmptyString[];
   disabledRoutes: NonEmptyString[];
   enableStationComments: boolean;
   submissionsEnabled: boolean;
+  announcement: Announcement;
 }
 
 const SETTINGS_KEY = "runtime:settings";
@@ -19,6 +26,7 @@ const defaultSettings: RuntimeSettings = {
   disabledRoutes: [],
   enableStationComments: false,
   submissionsEnabled: true,
+  announcement: { message: "", enabled: false, type: "info" },
 };
 
 let inMemorySettings: RuntimeSettings = { ...defaultSettings };
@@ -38,7 +46,12 @@ function isSettings(obj: unknown): obj is RuntimeSettings {
     Array.isArray(candidate.disabledRoutes) &&
     candidate.disabledRoutes.every(isNonEmptyString) &&
     typeof candidate.enableStationComments === "boolean" &&
-    typeof candidate.submissionsEnabled === "boolean"
+    typeof candidate.submissionsEnabled === "boolean" &&
+    candidate.announcement !== null &&
+    typeof candidate.announcement === "object" &&
+    typeof candidate.announcement.enabled === "boolean" &&
+    typeof candidate.announcement.message === "string" &&
+    (candidate.announcement.type === "info" || candidate.announcement.type === "warning" || candidate.announcement.type === "error")
   );
 }
 
@@ -50,6 +63,7 @@ function deepMergeSettings(base: RuntimeSettings, patch: Partial<RuntimeSettings
   if (Array.isArray(patch.allowedUnauthenticatedRoutes))
     next.allowedUnauthenticatedRoutes = patch.allowedUnauthenticatedRoutes.filter(isNonEmptyString) as NonEmptyString[];
   if (Array.isArray(patch.disabledRoutes)) next.disabledRoutes = patch.disabledRoutes.filter(isNonEmptyString) as NonEmptyString[];
+  if (patch.announcement && typeof patch.announcement === "object") next.announcement = { ...patch.announcement };
   return next;
 }
 
@@ -59,7 +73,14 @@ export async function initRuntimeSettings(): Promise<void> {
     const existing = await redis.get(SETTINGS_KEY);
     if (existing) {
       const parsed = JSON.parse(existing);
-      inMemorySettings = isSettings(parsed) ? parsed : defaultSettings;
+      if (isSettings(parsed)) {
+        inMemorySettings = parsed;
+      } else if (parsed && typeof parsed === "object") {
+        inMemorySettings = deepMergeSettings(defaultSettings, parsed);
+        await redis.set(SETTINGS_KEY, JSON.stringify(inMemorySettings));
+      } else {
+        inMemorySettings = { ...defaultSettings };
+      }
     } else {
       await redis.set(SETTINGS_KEY, JSON.stringify(defaultSettings));
       inMemorySettings = { ...defaultSettings };
@@ -87,11 +108,9 @@ export function getRuntimeSettings(): RuntimeSettings {
 export async function updateRuntimeSettings(patch: Partial<RuntimeSettings>): Promise<RuntimeSettings> {
   const next = deepMergeSettings(inMemorySettings, patch);
   inMemorySettings = next;
-  await redis.set(SETTINGS_KEY, JSON.stringify(next));
-  const publisher = redis.duplicate();
-  await publisher.connect();
-  await publisher.publish(CHANNEL, JSON.stringify(next));
-  await publisher.quit();
+  const json = JSON.stringify(next);
+  await redis.set(SETTINGS_KEY, json);
+  await redis.publish(CHANNEL, json);
   return next;
 }
 

@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-route
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/api";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { AuthGuard } from "@/components/auth/authGuard";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
@@ -90,6 +91,7 @@ function AppLayout() {
               <div id="header-actions" className="ml-auto flex items-center gap-2" />
             </div>
           </header>
+          <AnnouncementBanner />
           <Outlet />
         </SidebarInset>
       </SidebarProvider>

@@ -10,6 +10,7 @@ import {
   CheckmarkCircle02Icon,
   AlertCircleIcon,
   DatabaseIcon,
+  Alert02Icon,
 } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -154,6 +155,7 @@ function AdminSettingsPage() {
             disabledRoutes: [],
             enableStationComments: false,
             submissionsEnabled: true,
+            announcement: { message: "", enabled: false, type: "info" as const },
           },
     [settings, patch],
   );
@@ -165,7 +167,8 @@ function AdminSettingsPage() {
       formData.enableStationComments !== settings.enableStationComments ||
       formData.submissionsEnabled !== settings.submissionsEnabled ||
       JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes) ||
-      JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes)
+      JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes) ||
+      JSON.stringify(formData.announcement) !== JSON.stringify(settings.announcement)
     );
   }, [settings, formData]);
 
@@ -206,6 +209,9 @@ function AdminSettingsPage() {
       }
       if (JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes)) {
         patch.disabledRoutes = formData.disabledRoutes;
+      }
+      if (JSON.stringify(formData.announcement) !== JSON.stringify(settings.announcement)) {
+        patch.announcement = formData.announcement;
       }
     }
     mutation.mutate(patch);
@@ -351,6 +357,76 @@ function AdminSettingsPage() {
               </div>
             </SettingsCard>
           </div>
+
+          <SettingsCard
+            icon={<HugeiconsIcon icon={Alert02Icon} className="size-4" />}
+            title={t("settings.announcement")}
+            description={t("settings.announcementDesc")}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-3 border-b">
+                <div>
+                  <p className="text-sm font-medium">{t("settings.enableAnnouncement")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formData.announcement?.enabled ? t("settings.announcementEnabled") : t("settings.announcementDisabled")}
+                  </p>
+                </div>
+                <Toggle
+                  checked={formData.announcement?.enabled ?? false}
+                  onChange={(checked) =>
+                    setPatch((prev) => ({
+                      ...prev,
+                      announcement: { ...(formData.announcement ?? { message: "", type: "info" as const }), enabled: checked },
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">{t("settings.announcementType")}</p>
+                <div className="flex gap-2">
+                  {(["info", "warning", "error"] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() =>
+                        setPatch((prev) => ({
+                          ...prev,
+                          announcement: { ...(formData.announcement ?? { message: "", enabled: false }), type },
+                        }))
+                      }
+                      className={cn(
+                        "px-3 py-1.5 text-xs font-medium rounded-md border transition-colors",
+                        formData.announcement?.type === type
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-input hover:bg-muted",
+                      )}
+                    >
+                      {t(`settings.announcementType${type.charAt(0).toUpperCase() + type.slice(1)}` as "settings.announcementTypeInfo")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">{t("settings.announcementMessage")}</p>
+                <Input
+                  value={formData.announcement?.message ?? ""}
+                  onChange={(e) =>
+                    setPatch((prev) => ({
+                      ...prev,
+                      announcement: {
+                        ...(formData.announcement ?? { enabled: false, type: "info" as const }),
+                        message: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder={t("settings.announcementMessagePlaceholder")}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+          </SettingsCard>
 
           <SettingsCard
             icon={<HugeiconsIcon icon={DatabaseIcon} className="size-4" />}

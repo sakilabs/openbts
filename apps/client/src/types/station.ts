@@ -71,7 +71,7 @@ export type Cell = {
 export type NetWorkS = {
   id: number;
   station_id: number;
-  networks_id: string;
+  networks_id: number;
   networks_name: string | null;
   mno_name: string | null;
   updatedAt: string;

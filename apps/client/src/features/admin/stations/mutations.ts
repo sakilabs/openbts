@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { patchStation, patchCell, patchCells, createCells, deleteCell, createLocation, createStation, deleteStation } from "./api";
+import { patchStation, patchCell, patchCells, createCells, deleteCell, createLocation, createStation, deleteStation, updateNetworksId } from "./api";
 import { patchLocation } from "../locations/api";
 import type { Station, Cell } from "@/types/station";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { shallowEqual } from "@/lib/shallowEqual";
 import { pickCellDetails } from "@/features/submissions/api";
 
-type LocalCell = CellDraftBase & {
+export type LocalCell = CellDraftBase & {
   _serverId?: number;
 };
 
@@ -64,7 +64,7 @@ export function useCreateCellsMutation(stationId: number) {
   });
 }
 
-function isCellModified(lc: LocalCell, originalCells: Cell[]): boolean {
+export function isCellModified(lc: LocalCell, originalCells: Cell[]): boolean {
   if (!lc._serverId) return false;
   const orig = originalCells.find((c) => c.id === lc._serverId);
   if (!orig) return false;
@@ -94,6 +94,9 @@ export interface SaveStationPayload {
   localCells: LocalCell[];
   deletedServerCellIds: number[];
   originalStation?: Station;
+  networksId?: number;
+  networksName?: string;
+  mnoName?: string;
 }
 
 export function useSaveStationMutation() {
@@ -140,6 +143,14 @@ export function useSaveStationMutation() {
           is_confirmed: payload.isConfirmed,
           cells: cellsPayload,
         });
+
+        if (payload.networksId) {
+          await updateNetworksId(res.data.id, {
+            networks_id: payload.networksId,
+            networks_name: payload.networksName || null,
+            mno_name: payload.mnoName || null,
+          });
+        }
 
         return { mode: "create" as const, station: res.data };
       }
@@ -231,6 +242,20 @@ export function useSaveStationMutation() {
         ("location_id" in stationPatch && stationPatch.location_id !== (station.location?.id ?? null));
 
       if (stationChanged) await patchStation(station.id, stationPatch);
+
+      const existingNetworksId = payload.originalStation?.networks?.networks_id ?? null;
+      const networksIdChanged =
+        payload.networksId !== existingNetworksId ||
+        payload.networksName !== (payload.originalStation?.networks?.networks_name ?? "") ||
+        payload.mnoName !== (payload.originalStation?.networks?.mno_name ?? "");
+
+      if (payload.networksId != null && networksIdChanged) {
+        await updateNetworksId(station.id, {
+          networks_id: payload.networksId,
+          networks_name: payload.networksName || null,
+          mno_name: payload.mnoName || null,
+        });
+      }
 
       return { mode: "update" as const, stationId: station.id };
     },

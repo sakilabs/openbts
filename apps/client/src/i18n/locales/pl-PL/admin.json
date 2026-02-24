@@ -40,7 +40,18 @@
     "cleanupDesc": "Usuwa dane proponowane (komórki, stacje, lokalizacje) ze zgłoszeń starszych niż 1 miesiąc. Same rekordy zgłoszeń są zachowane.",
     "cleanupRun": "Uruchom czyszczenie",
     "cleanupSuccess": "Wyczyszczono dane proponowane z {{count}} zgłoszenia(ń)",
-    "cleanupError": "Nie udało się uruchomić czyszczenia"
+    "cleanupError": "Nie udało się uruchomić czyszczenia",
+    "announcement": "Ogłoszenie",
+    "announcementDesc": "Wyświetl baner z ogłoszeniem dla wszystkich użytkowników",
+    "announcementMessage": "Wiadomość",
+    "announcementMessagePlaceholder": "Wpisz treść ogłoszenia...",
+    "announcementType": "Typ",
+    "announcementTypeInfo": "Informacja",
+    "announcementTypeWarning": "Ostrzeżenie",
+    "announcementTypeError": "Błąd",
+    "enableAnnouncement": "Włącz ogłoszenie",
+    "announcementEnabled": "Ogłoszenie jest widoczne dla wszystkich użytkowników",
+    "announcementDisabled": "Ogłoszenie jest ukryte"
   },
   "users": {
     "table": {

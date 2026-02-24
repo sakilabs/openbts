@@ -1,15 +1,14 @@
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Building02Icon } from "@hugeicons/core-free-icons";
+import { Building02Icon, Globe02Icon } from "@hugeicons/core-free-icons";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { OperatorSelect } from "@/components/operator-select";
 import { operatorsQueryOptions } from "@/features/shared/queries";
-import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
+import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
 import type { ProposedStationForm } from "../types";
 import type { StationErrors } from "../utils/validation";
 
@@ -24,13 +23,8 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
 
-  const { topOperators, restOperators } = useMemo(
-    () => ({
-      topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
-      restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
-    }),
-    [operators],
-  );
+  const selectedOperator = operators.find((o) => o.id === station.operator_id);
+  const showNetworksId = selectedOperator ? NETWORKS_ID_MNCS.includes(selectedOperator.mnc) : false;
 
   return (
     <div className="border rounded-xl overflow-hidden">
@@ -64,52 +58,12 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
             <Label htmlFor="operator" className="text-xs">
               {t("common:labels.operator")}
             </Label>
-            <Select
-              value={station.operator_id?.toString() ?? ""}
-              onValueChange={(value) =>
-                onStationChange({
-                  ...station,
-                  operator_id: value ? Number.parseInt(value, 10) : null,
-                })
-              }
-            >
-              <SelectTrigger className={`h-8 text-sm ${errors?.operator_id ? "border-destructive" : ""}`}>
-                <SelectValue>
-                  {station.operator_id ? (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="size-2.5 rounded-full"
-                        style={{
-                          backgroundColor: getOperatorColor(operators.find((o) => o.id === station.operator_id)?.mnc ?? 0),
-                        }}
-                      />
-                      {operators.find((o) => o.id === station.operator_id)?.name}
-                    </div>
-                  ) : (
-                    t("common:placeholder.selectOperator")
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {topOperators.map((operator) => (
-                  <SelectItem key={operator.id} value={operator.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
-                      {operator.name}
-                    </div>
-                  </SelectItem>
-                ))}
-                {topOperators.length > 0 && restOperators.length > 0 && <SelectSeparator />}
-                {restOperators.map((operator) => (
-                  <SelectItem key={operator.id} value={operator.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
-                      {operator.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <OperatorSelect
+              operators={operators}
+              value={station.operator_id}
+              onChange={(value) => onStationChange({ ...station, operator_id: value })}
+              className={`h-8 text-sm ${errors?.operator_id ? "border-destructive" : ""}`}
+            />
             {errors?.operator_id && <p className="text-xs text-destructive">{t(errors.operator_id)}</p>}
           </div>
         </div>
@@ -127,6 +81,56 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
             className="text-sm resize-none"
           />
         </div>
+
+        {showNetworksId && (
+          <div className="border-t pt-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
+              <span className="font-semibold text-sm">NetWorkS! ID</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="networks_id" className="text-xs">
+                  {t("common:labels.networksId")}
+                </Label>
+                <Input
+                  id="networks_id"
+                  type="number"
+                  placeholder="e.g. 12345"
+                  value={station.networks_id ?? ""}
+                  onChange={(e) => onStationChange({ ...station, networks_id: e.target.value ? Number(e.target.value) : undefined })}
+                  className="h-8 font-mono text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="networks_name" className="text-xs">
+                  {t("common:labels.networksName")}
+                </Label>
+                <Input
+                  id="networks_name"
+                  placeholder={t("common:placeholder.optional")}
+                  value={station.networks_name ?? ""}
+                  maxLength={50}
+                  onChange={(e) => onStationChange({ ...station, networks_name: e.target.value || undefined })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="mno_name" className="text-xs">
+                {t("common:labels.mnoName")}
+              </Label>
+              <Input
+                id="mno_name"
+                placeholder={t("common:placeholder.optional")}
+                value={station.mno_name ?? ""}
+                maxLength={50}
+                onChange={(e) => onStationChange({ ...station, mno_name: e.target.value || undefined })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

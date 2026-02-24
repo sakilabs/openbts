@@ -197,7 +197,14 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   // networksIds
   networks_id: {
     table: "networksIds",
-    buildCondition: buildLikeAny(networksIds.networks_id),
+    buildCondition: (value: FilterValue) => {
+      const values = String(value)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const conditions = values.map((val) => sql`CAST(${networksIds.networks_id} AS TEXT) ILIKE ${`%${val}%`}`);
+      return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
+    },
   },
   networks_name: {
     table: "networksIds",

@@ -1,11 +1,18 @@
 import { fetchJson, API_BASE } from "@/lib/api";
 
+export interface Announcement {
+  message: string;
+  enabled: boolean;
+  type: "info" | "warning" | "error";
+}
+
 export interface RuntimeSettings {
   enforceAuthForAllRoutes: boolean;
   allowedUnauthenticatedRoutes: string[];
   disabledRoutes: string[];
   enableStationComments: boolean;
   submissionsEnabled: boolean;
+  announcement: Announcement;
 }
 
 export type SettingsPatch = Partial<RuntimeSettings>;

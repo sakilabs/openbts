@@ -52,6 +52,9 @@ export type ProposedStationForm = {
   station_id: string;
   operator_id: number | null;
   notes?: string;
+  networks_id?: number;
+  networks_name?: string;
+  mno_name?: string;
 };
 
 export type ProposedLocationForm = {

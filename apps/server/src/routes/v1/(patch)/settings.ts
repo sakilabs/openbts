@@ -5,6 +5,7 @@ import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
 import { getRuntimeSettings, updateRuntimeSettings, type RuntimeSettings } from "../../../services/settings.service.js";
 import { createAuditLog } from "../../../services/auditLog.service.js";
 import { ErrorResponse } from "../../../errors.js";
+import { settingsDataSchema } from "../(get)/settings.js";
 
 type ReqBody = { Body: Partial<RuntimeSettings> };
 type Response = RuntimeSettings;
@@ -17,18 +18,17 @@ const schemaRoute = {
       disabledRoutes: z.array(z.string().min(1)).optional(),
       enableStationComments: z.boolean().optional(),
       submissionsEnabled: z.boolean().optional(),
+      announcement: z
+        .object({
+          message: z.string(),
+          enabled: z.boolean(),
+          type: z.enum(["info", "warning", "error"]),
+        })
+        .optional(),
     })
     .strict(),
   response: {
-    200: z.object({
-      data: z.object({
-        enforceAuthForAllRoutes: z.boolean(),
-        allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
-        disabledRoutes: z.array(z.string().min(1)),
-        enableStationComments: z.boolean(),
-        submissionsEnabled: z.boolean(),
-      }),
-    }),
+    200: z.object({ data: settingsDataSchema }),
   },
 };
 

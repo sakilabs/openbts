@@ -171,6 +171,16 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     notes: submission.proposedStation?.notes ?? submission.station?.notes ?? "",
   }));
 
+  const [networksForm, setNetworksForm] = useState<{
+    networks_id: number | null;
+    networks_name: string;
+    mno_name: string;
+  }>(() => ({
+    networks_id: submission.proposedStation?.networks_id ?? null,
+    networks_name: submission.proposedStation?.networks_name ?? "",
+    mno_name: submission.proposedStation?.mno_name ?? "",
+  }));
+
   const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => ({
     region_id: submission.proposedLocation?.region_id ?? null,
     city: submission.proposedLocation?.city ?? "",
@@ -256,6 +266,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         submissionId: submission.id,
         reviewNotes,
         stationForm,
+        networksForm,
         locationForm,
         localCells,
       },
@@ -421,6 +432,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               submission={submission}
               stationForm={stationForm}
               onStationFormChange={(patch) => setStationForm((prev) => ({ ...prev, ...patch }))}
+              networksForm={networksForm}
+              onNetworksFormChange={(patch) => setNetworksForm((prev) => ({ ...prev, ...patch }))}
               locationForm={locationForm}
               onLocationFormChange={(patch) => setLocationForm((prev) => ({ ...prev, ...patch }))}
               operators={operators}

@@ -29,6 +29,9 @@ export type ProposedStation = {
   operator_id: number | null;
   location_id: number | null;
   notes: string | null;
+  networks_id?: number | null;
+  networks_name?: string | null;
+  mno_name?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -45,33 +48,26 @@ export type ProposedLocation = {
   updatedAt?: string;
 };
 
-export type SubmissionRow = {
+type SubmissionBase = {
   id: string;
   station_id: number | null;
   submitter_id: string;
   status: "pending" | "approved" | "rejected";
   type: "new" | "update" | "delete";
-  review_notes: string | null;
   reviewer_id: string | null;
+  review_notes: string | null;
   createdAt: string;
   updatedAt: string;
   reviewed_at: string | null;
+};
+
+export type SubmissionRow = SubmissionBase & {
   station?: { station_id: string } | null;
   proposedStation?: ProposedStation | null;
 };
 
-export type SubmissionDetail = {
-  id: string;
-  station_id: number | null;
-  submitter_id: string;
-  status: "pending" | "approved" | "rejected";
-  type: "new" | "update" | "delete";
-  reviewer_id: string | null;
-  review_notes: string | null;
+export type SubmissionDetail = SubmissionBase & {
   submitter_note: string | null;
-  createdAt: string;
-  updatedAt: string;
-  reviewed_at: string | null;
   station: { id: number; station_id: string; operator_id: number; notes: string | null; is_confirmed: boolean } | null;
   submitter: SubmissionUser;
   reviewer: SubmissionUser | null;
@@ -80,18 +76,8 @@ export type SubmissionDetail = {
   cells: ProposedCell[];
 };
 
-export type SubmissionListItem = {
-  id: string;
-  station_id: number | null;
-  submitter_id: string;
-  status: "pending" | "approved" | "rejected";
-  type: "new" | "update" | "delete";
-  reviewer_id: string | null;
-  review_notes: string | null;
+export type SubmissionListItem = SubmissionBase & {
   submitter_note: string | null;
-  createdAt: string;
-  updatedAt: string;
-  reviewed_at: string | null;
   station: { id: number; station_id: string } | null;
   submitter: SubmissionUser;
   reviewer: SubmissionUser | null;

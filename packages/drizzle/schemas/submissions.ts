@@ -118,6 +118,9 @@ export const proposedStations = SubmissionsSchema.table(
       .references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
       .notNull(),
     notes: text("notes"),
+    networks_id: integer("networks_id"),
+    networks_name: varchar("networks_name", { length: 50 }),
+    mno_name: varchar("mno_name", { length: 50 }),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     is_confirmed: boolean("is_confirmed").default(false),

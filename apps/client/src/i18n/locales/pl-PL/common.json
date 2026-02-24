@@ -73,6 +73,9 @@
     "search": "Wyszukiwanie",
     "none": "Żadne",
     "confirmed": "Potwierdzona",
+    "networksId": "N! ID",
+    "networksName": "Nazwa NetWorkS!",
+    "mnoName": "Nazwa MNO",
     "cells": "komórki",
     "newStation": "Nowa stacja",
     "submitted": "Zgłoszone",
@@ -101,7 +104,8 @@
     "noOperatorsFound": "Nie znaleziono operatorów",
     "noBandsFound": "Nie znaleziono pasm",
     "noRegionsFound": "Nie znaleziono województw",
-    "errorFetching": "Błąd podczas pobierania danych"
+    "errorFetching": "Błąd podczas pobierania danych",
+    "optional": "Opcjonalnie"
   },
   "status": {
     "all": "Wszystkie",

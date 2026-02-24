@@ -9,7 +9,7 @@ import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../../utils/logger.js";
-import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
+import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells, networksIds } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -37,6 +37,75 @@ type ReqParams = { Params: { id: string } };
 type ReqBody = { Body: { review_notes?: string } | undefined };
 type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof submissionsSelectSchema>;
+
+async function upsertLocation(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  proposedLocation: { region_id: number; city: string | null; address: string | null; longitude: number; latitude: number },
+  req: FastifyRequest<RequestData>,
+  submissionId: string,
+): Promise<number> {
+  const existingLocation = await tx.query.locations.findFirst({
+    where: {
+      AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
+    },
+  });
+
+  if (existingLocation) {
+    const metadataChanged =
+      existingLocation.region_id !== proposedLocation.region_id ||
+      existingLocation.city !== proposedLocation.city ||
+      existingLocation.address !== proposedLocation.address;
+
+    if (metadataChanged) {
+      await tx
+        .update(locations)
+        .set({
+          region_id: proposedLocation.region_id,
+          city: proposedLocation.city,
+          address: proposedLocation.address,
+          updatedAt: new Date(),
+        })
+        .where(eq(locations.id, existingLocation.id));
+      await createAuditLog(
+        {
+          action: "locations.update",
+          table_name: "locations",
+          record_id: existingLocation.id,
+          old_values: { region_id: existingLocation.region_id, city: existingLocation.city, address: existingLocation.address },
+          new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
+          metadata: { submission_id: submissionId },
+        },
+        req,
+        tx,
+      );
+    }
+    return existingLocation.id;
+  }
+
+  const [newLocation] = await tx
+    .insert(locations)
+    .values({
+      region_id: proposedLocation.region_id,
+      city: proposedLocation.city,
+      address: proposedLocation.address,
+      longitude: proposedLocation.longitude,
+      latitude: proposedLocation.latitude,
+    })
+    .returning();
+  if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
+  await createAuditLog(
+    {
+      action: "locations.create",
+      table_name: "locations",
+      record_id: newLocation.id,
+      new_values: newLocation,
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+  return newLocation.id;
+}
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
   if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
@@ -82,67 +151,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         let locationId: number | null = null;
 
         if (proposedLocation) {
-          const existingLocation = await tx.query.locations.findFirst({
-            where: {
-              AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
-            },
-          });
-
-          if (existingLocation) {
-            const metadataChanged =
-              existingLocation.region_id !== proposedLocation.region_id ||
-              existingLocation.city !== proposedLocation.city ||
-              existingLocation.address !== proposedLocation.address;
-
-            if (metadataChanged) {
-              await tx
-                .update(locations)
-                .set({
-                  region_id: proposedLocation.region_id,
-                  city: proposedLocation.city,
-                  address: proposedLocation.address,
-                  updatedAt: new Date(),
-                })
-                .where(eq(locations.id, existingLocation.id));
-              await createAuditLog(
-                {
-                  action: "locations.update",
-                  table_name: "locations",
-                  record_id: existingLocation.id,
-                  old_values: { region_id: existingLocation.region_id, city: existingLocation.city, address: existingLocation.address },
-                  new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
-                  metadata: { submission_id: id },
-                },
-                req,
-                tx,
-              );
-            }
-            locationId = existingLocation.id;
-          } else {
-            const [newLocation] = await tx
-              .insert(locations)
-              .values({
-                region_id: proposedLocation.region_id,
-                city: proposedLocation.city,
-                address: proposedLocation.address,
-                longitude: proposedLocation.longitude,
-                latitude: proposedLocation.latitude,
-              })
-              .returning();
-            if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
-            locationId = newLocation.id;
-            await createAuditLog(
-              {
-                action: "locations.create",
-                table_name: "locations",
-                record_id: newLocation.id,
-                new_values: newLocation,
-                metadata: { submission_id: id },
-              },
-              req,
-              tx,
-            );
-          }
+          locationId = await upsertLocation(tx, proposedLocation, req, id);
         }
 
         if (proposedStation) {
@@ -164,73 +173,30 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             req,
             tx,
           );
+
+          if (proposedStation.networks_id) {
+            await tx
+              .insert(networksIds)
+              .values({
+                station_id: newStation.id,
+                networks_id: proposedStation.networks_id,
+                networks_name: proposedStation.networks_name ?? null,
+                mno_name: proposedStation.mno_name ?? null,
+              })
+              .onConflictDoUpdate({
+                target: [networksIds.station_id, networksIds.networks_id],
+                set: {
+                  networks_name: proposedStation.networks_name ?? null,
+                  mno_name: proposedStation.mno_name ?? null,
+                  updatedAt: new Date(),
+                },
+              });
+          }
         }
       }
 
       if (submission.type === "update" && proposedLocation && stationId) {
-        const existingLocation = await tx.query.locations.findFirst({
-          where: {
-            AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
-          },
-        });
-
-        let locationId: number;
-
-        if (existingLocation) {
-          const metadataChanged =
-            existingLocation.region_id !== proposedLocation.region_id ||
-            existingLocation.city !== proposedLocation.city ||
-            existingLocation.address !== proposedLocation.address;
-
-          if (metadataChanged) {
-            await tx
-              .update(locations)
-              .set({
-                region_id: proposedLocation.region_id,
-                city: proposedLocation.city,
-                address: proposedLocation.address,
-                updatedAt: new Date(),
-              })
-              .where(eq(locations.id, existingLocation.id));
-            await createAuditLog(
-              {
-                action: "locations.update",
-                table_name: "locations",
-                record_id: existingLocation.id,
-                old_values: { region_id: existingLocation.region_id, city: existingLocation.city, address: existingLocation.address },
-                new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
-                metadata: { submission_id: id },
-              },
-              req,
-              tx,
-            );
-          }
-          locationId = existingLocation.id;
-        } else {
-          const [newLocation] = await tx
-            .insert(locations)
-            .values({
-              region_id: proposedLocation.region_id,
-              city: proposedLocation.city,
-              address: proposedLocation.address,
-              longitude: proposedLocation.longitude,
-              latitude: proposedLocation.latitude,
-            })
-            .returning();
-          if (!newLocation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
-          locationId = newLocation.id;
-          await createAuditLog(
-            {
-              action: "locations.create",
-              table_name: "locations",
-              record_id: newLocation.id,
-              new_values: newLocation,
-              metadata: { submission_id: id },
-            },
-            req,
-            tx,
-          );
-        }
+        const locationId = await upsertLocation(tx, proposedLocation, req, id);
 
         await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
         await createAuditLog(
@@ -244,6 +210,25 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           req,
           tx,
         );
+      }
+
+      if (submission.type === "update" && proposedStation?.networks_id && stationId) {
+        await tx
+          .insert(networksIds)
+          .values({
+            station_id: stationId,
+            networks_id: proposedStation.networks_id,
+            networks_name: proposedStation.networks_name ?? null,
+            mno_name: proposedStation.mno_name ?? null,
+          })
+          .onConflictDoUpdate({
+            target: [networksIds.station_id, networksIds.networks_id],
+            set: {
+              networks_name: proposedStation.networks_name ?? null,
+              mno_name: proposedStation.mno_name ?? null,
+              updatedAt: new Date(),
+            },
+          });
       }
 
       if (submission.type === "delete") {

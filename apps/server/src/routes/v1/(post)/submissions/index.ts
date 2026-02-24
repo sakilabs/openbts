@@ -207,7 +207,8 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
       stationData &&
       (stationData.station_id !== targetStation.station_id ||
         stationData.operator_id !== targetStation.operator_id ||
-        (stationData.notes ?? null) !== (targetStation.notes ?? null));
+        (stationData.notes ?? null) !== (targetStation.notes ?? null) ||
+        stationData.networks_id !== undefined);
 
     const currentLocation = targetStation.location;
     const hasLocationChanges =

@@ -181,7 +181,7 @@ export const networksIds = pgTable(
     station_id: integer("station_id")
       .references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),
-    networks_id: varchar("networks_id", { length: 16 }).notNull(),
+    networks_id: integer("networks_id").notNull(),
     networks_name: varchar("networks_name", { length: 50 }),
     //* Putting MNO name here because it comes from NetWorkS! database and will only be available for T-Mobile & Orange
     mno_name: varchar("mno_name", { length: 50 }),
@@ -190,7 +190,7 @@ export const networksIds = pgTable(
   },
   (t) => [
     index("networks_ids_station_idx").on(t.station_id),
-    index("networks_ids_networks_id_trgm_idx").using("gin", sql`(${t.networks_id}) gin_trgm_ops`),
+    index("networks_ids_networks_id_trgm_idx").using("gin", sql`(${t.networks_id}::text) gin_trgm_ops`),
     index("networks_ids_networks_name_trgm_idx").using("gin", sql`(${t.networks_name}) gin_trgm_ops`),
     unique("networks_ids_networks_id_unique").on(t.station_id, t.networks_id),
   ],

@@ -40,7 +40,18 @@
     "cleanupDesc": "Remove proposed data (cells, stations, locations) from submissions older than 1 month. The submission records themselves are kept.",
     "cleanupRun": "Run cleanup",
     "cleanupSuccess": "Cleaned up proposed data from {{count}} submission(s)",
-    "cleanupError": "Failed to run cleanup"
+    "cleanupError": "Failed to run cleanup",
+    "announcement": "Announcement",
+    "announcementDesc": "Display a banner announcement to all users",
+    "announcementMessage": "Message",
+    "announcementMessagePlaceholder": "Enter announcement message...",
+    "announcementType": "Type",
+    "announcementTypeInfo": "Info",
+    "announcementTypeWarning": "Warning",
+    "announcementTypeError": "Error",
+    "enableAnnouncement": "Enable announcement",
+    "announcementEnabled": "Announcement is visible to all users",
+    "announcementDisabled": "Announcement is hidden"
   },
   "users": {
     "table": {

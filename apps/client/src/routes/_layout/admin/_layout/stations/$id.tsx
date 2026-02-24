@@ -12,21 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Station, Cell, Band, UkeStation } from "@/types/station";
 import { RAT_ORDER } from "@/features/admin/cells/rat";
-import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
 import type { DiffBadges } from "@/features/admin/cells/cellsEditor";
 import { operatorsQueryOptions, bandsQueryOptions } from "@/features/admin/queries";
-import { useSaveStationMutation } from "@/features/admin/stations/mutations";
+import { useSaveStationMutation, type LocalCell, isCellModified } from "@/features/admin/stations/mutations";
 import { shallowEqual } from "@/lib/shallowEqual";
 import { StationDetailHeader } from "@/features/admin/stations/components/stationDetailHeader";
 import { StationInfoForm } from "@/features/admin/stations/components/stationInfoForm";
 import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
 import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
-
-type LocalCell = CellDraftBase & {
-  _serverId?: number;
-};
 
 function cellToLocal(cell: Cell): LocalCell {
   return {
@@ -44,16 +39,8 @@ type CellDiffStatus = "added" | "modified" | "unchanged";
 
 function getLocalCellDiffStatus(lc: LocalCell, originalCells: Cell[]): CellDiffStatus {
   if (!lc._serverId) return "added";
-  const orig = originalCells.find((c) => c.id === lc._serverId);
-  if (!orig) return "added";
-  if (
-    lc.band_id !== orig.band.id ||
-    lc.notes !== (orig.notes ?? "") ||
-    lc.is_confirmed !== orig.is_confirmed ||
-    !shallowEqual(lc.details, orig.details ?? {})
-  )
-    return "modified";
-  return "unchanged";
+  if (!originalCells.some((c) => c.id === lc._serverId)) return "added";
+  return isCellModified(lc, originalCells) ? "modified" : "unchanged";
 }
 
 function getDiffBorderClass(status: CellDiffStatus): string | undefined {
@@ -140,6 +127,9 @@ function getInitialFormState(station: Station | undefined): {
   location: ProposedLocationForm;
   existingLocationId: number | null;
   deletedServerCellIds: number[];
+  networksId: number | null;
+  networksName: string;
+  mnoName: string;
 } {
   return {
     stationId: station?.station_id ?? "",
@@ -158,6 +148,9 @@ function getInitialFormState(station: Station | undefined): {
       : { ...emptyLocation },
     existingLocationId: station?.location?.id ?? null,
     deletedServerCellIds: [],
+    networksId: station?.networks?.networks_id ?? null,
+    networksName: station?.networks?.networks_name ?? "",
+    mnoName: station?.networks?.mno_name ?? "",
   };
 }
 
@@ -173,7 +166,10 @@ type FormAction =
   | { type: "ADD_DELETED_ID"; payload: number }
   | { type: "CLEAR_DELETED" }
   | { type: "RESET_CREATE" }
-  | { type: "LOAD_STATION"; payload: Station };
+  | { type: "LOAD_STATION"; payload: Station }
+  | { type: "SET_NETWORKS_ID"; payload: number | null }
+  | { type: "SET_NETWORKS_NAME"; payload: string }
+  | { type: "SET_MNO_NAME"; payload: string };
 
 function formReducer(state: ReturnType<typeof getInitialFormState>, action: FormAction): ReturnType<typeof getInitialFormState> {
   switch (action.type) {
@@ -201,6 +197,12 @@ function formReducer(state: ReturnType<typeof getInitialFormState>, action: Form
       return { ...getInitialFormState(undefined), location: { ...emptyLocation } };
     case "LOAD_STATION":
       return getInitialFormState(action.payload);
+    case "SET_NETWORKS_ID":
+      return { ...state, networksId: action.payload };
+    case "SET_NETWORKS_NAME":
+      return { ...state, networksName: action.payload };
+    case "SET_MNO_NAME":
+      return { ...state, mnoName: action.payload };
     default:
       return state;
   }
@@ -219,7 +221,19 @@ function StationDetailForm({
   const { t } = useTranslation("stations");
 
   const [formState, dispatch] = useReducer(formReducer, station, getInitialFormState);
-  const { stationId, operatorId, notes, extraAddress, isConfirmed, location, existingLocationId, deletedServerCellIds } = formState;
+  const {
+    stationId,
+    operatorId,
+    notes,
+    extraAddress,
+    isConfirmed,
+    location,
+    existingLocationId,
+    deletedServerCellIds,
+    networksId,
+    networksName,
+    mnoName,
+  } = formState;
 
   const { data: settings } = useSettings();
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
@@ -391,6 +405,9 @@ function StationDetailForm({
         localCells,
         deletedServerCellIds,
         originalStation: station,
+        networksId: networksId ?? undefined,
+        networksName: networksName || undefined,
+        mnoName: mnoName || undefined,
       },
       {
         onSuccess: (result) => {
@@ -440,11 +457,29 @@ function StationDetailForm({
     if (!shallowEqual(location as unknown as Record<string, unknown>, initial.location as unknown as Record<string, unknown>)) return true;
     if (deletedServerCellIds.length > 0) return true;
     if (localCells.length !== originalCells.length) return true;
+    if (networksId !== initial.networksId) return true;
+    if (networksName !== initial.networksName) return true;
+    if (mnoName !== initial.mnoName) return true;
     for (const lc of localCells) {
       if (getLocalCellDiffStatus(lc, originalCells) !== "unchanged") return true;
     }
     return false;
-  }, [isCreateMode, station, stationId, operatorId, notes, extraAddress, isConfirmed, location, deletedServerCellIds, localCells, originalCells]);
+  }, [
+    isCreateMode,
+    station,
+    stationId,
+    operatorId,
+    notes,
+    extraAddress,
+    isConfirmed,
+    location,
+    deletedServerCellIds,
+    localCells,
+    originalCells,
+    networksId,
+    networksName,
+    mnoName,
+  ]);
 
   const getStationDiffBadges = useCallback(
     (rat: string, cellsForRat: LocalCell[]): DiffBadges => {
@@ -504,6 +539,12 @@ function StationDetailForm({
               operators={operators}
               selectedOperator={selectedOperator}
               onUkeStationSelect={handleUkeStationSelect}
+              networksId={networksId}
+              onNetworksIdChange={(v) => dispatch({ type: "SET_NETWORKS_ID", payload: v ?? null })}
+              networksName={networksName}
+              onNetworksNameChange={(v) => dispatch({ type: "SET_NETWORKS_NAME", payload: v })}
+              mnoName={mnoName}
+              onMnoNameChange={(v) => dispatch({ type: "SET_MNO_NAME", payload: v })}
             />
 
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}

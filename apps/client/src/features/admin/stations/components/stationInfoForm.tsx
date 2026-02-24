@@ -1,13 +1,12 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AirportTowerIcon } from "@hugeicons/core-free-icons";
+import { AirportTowerIcon, Globe02Icon } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
+import { OperatorSelect } from "@/components/operator-select";
+import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import type { Operator, UkeStation, LocationWithStations } from "@/types/station";
@@ -29,6 +28,12 @@ type StationInfoFormProps = {
   operators: Operator[];
   selectedOperator?: Operator;
   onUkeStationSelect?: (station: UkeStation) => void;
+  networksId?: number | null;
+  onNetworksIdChange?: (value: number | null) => void;
+  networksName?: string;
+  onNetworksNameChange?: (value: string) => void;
+  mnoName?: string;
+  onMnoNameChange?: (value: string) => void;
 };
 
 export function StationInfoForm({
@@ -48,16 +53,16 @@ export function StationInfoForm({
   operators,
   selectedOperator,
   onUkeStationSelect,
+  networksId,
+  onNetworksIdChange,
+  networksName,
+  onNetworksNameChange,
+  mnoName,
+  onMnoNameChange,
 }: StationInfoFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
-  const { topOperators, restOperators } = useMemo(
-    () => ({
-      topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
-      restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
-    }),
-    [operators],
-  );
+  const showNetworksId = selectedOperator ? NETWORKS_ID_MNCS.includes(selectedOperator.mnc) : false;
 
   return (
     <div className="space-y-3">
@@ -74,42 +79,7 @@ export function StationInfoForm({
             </div>
             <div className="space-y-2">
               <Label>{t("common:labels.operator")}</Label>
-              <Select
-                value={operatorId !== null ? operatorId.toString() : ""}
-                onValueChange={(v) => onOperatorIdChange(v ? Number.parseInt(v, 10) : null)}
-              >
-                <SelectTrigger>
-                  <SelectValue>
-                    {selectedOperator ? (
-                      <div className="flex items-center gap-2">
-                        <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(selectedOperator.mnc) }} />
-                        {selectedOperator.name}
-                      </div>
-                    ) : (
-                      t("common:placeholder.selectOperator")
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {topOperators.map((op) => (
-                    <SelectItem key={op.id} value={op.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
-                        {op.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                  {topOperators.length > 0 && restOperators.length > 0 && <SelectSeparator />}
-                  {restOperators.map((op) => (
-                    <SelectItem key={op.id} value={op.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
-                        {op.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <OperatorSelect operators={operators} value={operatorId} onChange={onOperatorIdChange} />
             </div>
           </div>
           <div className="space-y-2">
@@ -124,6 +94,45 @@ export function StationInfoForm({
             <Checkbox checked={isConfirmed} onCheckedChange={(checked) => onIsConfirmedChange(checked === true)} />
             <Label>{t("common:labels.confirmed")}</Label>
           </div>
+
+          {showNetworksId && (
+            <div className="border-t pt-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
+                <span className="font-semibold text-sm">NetWorkS! ID</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("common:labels.networksId")}</Label>
+                  <Input
+                    type="number"
+                    value={networksId ?? ""}
+                    placeholder="e.g. 12345"
+                    onChange={(e) => onNetworksIdChange?.(e.target.value ? Number(e.target.value) : null)}
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("common:labels.networksName")}</Label>
+                  <Input
+                    value={networksName ?? ""}
+                    maxLength={50}
+                    placeholder={t("common:placeholder.optional")}
+                    onChange={(e) => onNetworksNameChange?.(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("common:labels.mnoName")}</Label>
+                <Input
+                  value={mnoName ?? ""}
+                  maxLength={50}
+                  placeholder={t("common:placeholder.optional")}
+                  onChange={(e) => onMnoNameChange?.(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
