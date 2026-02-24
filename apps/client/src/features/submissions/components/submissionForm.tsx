@@ -15,6 +15,7 @@ import { NewStationForm } from "./newStationForm";
 import { RatSelector } from "./ratSelector";
 import { CellDetailsForm } from "./cellDetailsForm";
 import { createSubmission, updateSubmission, fetchSubmissionForEdit, fetchStationForSubmission, type SearchStation } from "../api";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { showApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
@@ -62,9 +63,10 @@ function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
 type SubmissionFormProps = {
   preloadStationId?: number;
   editSubmissionId?: string;
+  preloadUkeStationId?: string;
 };
 
-export function SubmissionForm({ preloadStationId, editSubmissionId }: SubmissionFormProps) {
+export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeStationId }: SubmissionFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
   const queryClient = useQueryClient();
   const [showErrors, setShowErrors] = useState(false);
@@ -258,6 +260,27 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
     [form],
   );
 
+  const { data: preloadUkePermits } = useQuery({
+    queryKey: ["uke-permits-preload", preloadUkeStationId],
+    queryFn: () => fetchUkePermitsByStationId(preloadUkeStationId!),
+    enabled: !!preloadUkeStationId && !isEditMode,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const hasAppliedUkePreload = useRef(false);
+
+  useEffect(() => {
+    if (!preloadUkePermits?.length || hasAppliedUkePreload.current) return;
+    hasAppliedUkePreload.current = true;
+    const first = preloadUkePermits[0];
+    handleUkeStationSelect({
+      station_id: preloadUkeStationId!,
+      operator: first.operator ?? null,
+      location: first.location ?? null,
+      permits: preloadUkePermits,
+    });
+  }, [preloadUkePermits, preloadUkeStationId, handleUkeStationSelect]);
+
   const lastAppliedStationId = useRef<number | null>(null);
 
   // Sync form state when preloaded station data arrives from query
@@ -392,7 +415,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId }: Submissio
       }}
       className="flex flex-col lg:flex-row gap-4 h-full"
     >
-      <div className="w-full lg:flex-2 space-y-3">
+      <div className="w-full lg:flex-2 space-y-3 max-w-136">
         {isEditMode && (
           <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 flex items-center gap-2.5">
             <HugeiconsIcon icon={PencilEdit02Icon} className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />

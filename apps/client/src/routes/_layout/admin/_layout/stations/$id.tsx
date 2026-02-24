@@ -1,6 +1,7 @@
-import { useMemo, useCallback, useReducer } from "react";
+import { useMemo, useCallback, useReducer, useEffect, useRef } from "react";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ function getDiffBorderClass(status: CellDiffStatus): string | undefined {
 
 function AdminStationDetailPage() {
   const { id } = Route.useParams();
+  const { uke } = Route.useSearch();
   const navigate = useNavigate();
 
   const isCreateMode = id === "new";
@@ -111,7 +113,14 @@ function AdminStationDetailPage() {
     );
   }
 
-  return <StationDetailForm key={station?.id ?? "new"} station={station} isCreateMode={isCreateMode} />;
+  return (
+    <StationDetailForm
+      key={station?.id ?? "new"}
+      station={station}
+      isCreateMode={isCreateMode}
+      preloadUkeStationId={isCreateMode ? uke : undefined}
+    />
+  );
 }
 
 const emptyLocation: ProposedLocationForm = {
@@ -197,7 +206,15 @@ function formReducer(state: ReturnType<typeof getInitialFormState>, action: Form
   }
 }
 
-function StationDetailForm({ station, isCreateMode }: { station: Station | undefined; isCreateMode: boolean }) {
+function StationDetailForm({
+  station,
+  isCreateMode,
+  preloadUkeStationId,
+}: {
+  station: Station | undefined;
+  isCreateMode: boolean;
+  preloadUkeStationId?: string;
+}) {
   const navigate = useNavigate();
   const { t } = useTranslation("stations");
 
@@ -310,6 +327,27 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
     },
     [setLocalCells, setEnabledRats],
   );
+
+  const { data: preloadUkePermits } = useQuery({
+    queryKey: ["uke-permits-preload", preloadUkeStationId],
+    queryFn: () => fetchUkePermitsByStationId(preloadUkeStationId!),
+    enabled: !!preloadUkeStationId && isCreateMode,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const hasAppliedUkePreload = useRef(false);
+
+  useEffect(() => {
+    if (!preloadUkePermits?.length || hasAppliedUkePreload.current) return;
+    hasAppliedUkePreload.current = true;
+    const first = preloadUkePermits[0];
+    handleUkeStationSelect({
+      station_id: preloadUkeStationId!,
+      operator: first.operator ?? null,
+      location: first.location ?? null,
+      permits: preloadUkePermits,
+    });
+  }, [preloadUkePermits, preloadUkeStationId, handleUkeStationSelect]);
 
   const handleSaveStation = () => {
     if (isCreateMode) {
@@ -493,6 +531,9 @@ function StationDetailForm({ station, isCreateMode }: { station: Station | undef
 
 export const Route = createFileRoute("/_layout/admin/_layout/stations/$id")({
   component: AdminStationDetailPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    uke: search.uke as string | undefined,
+  }),
   staticData: {
     titleKey: "breadcrumbs.editStation",
     i18nNamespace: "admin",

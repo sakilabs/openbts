@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  Add01Icon,
   Cancel01Icon,
   Globe02Icon,
   Link01Icon,
@@ -24,6 +25,8 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { authClient } from "@/lib/authClient";
+import { useSettings } from "@/hooks/useSettings";
 
 type UkeStationDetailsDialogProps = {
   station: UkeStation | null;
@@ -35,6 +38,11 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
   const { preferences } = usePreferences();
   const location = useLocation();
   const isOnMap = location.pathname === "/";
+  const { data: settings } = useSettings();
+  const { data: session } = authClient.useSession();
+  const userRole = session?.user?.role as string | undefined;
+  const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
+  const isLoggedIn = !!session?.user;
 
   useEscapeKey(onClose, !!station);
 
@@ -96,6 +104,28 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                   size="md"
                 />
               )}
+              {isAdmin ? (
+                <Link
+                  to="/admin/stations/$id"
+                  params={{ id: "new" }}
+                  search={{ uke: station.station_id }}
+                  className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+                  onClick={onClose}
+                >
+                  <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
+                  <span className="hidden sm:inline">{t("dialog.createStation")}</span>
+                </Link>
+              ) : isLoggedIn && settings?.submissionsEnabled ? (
+                <Link
+                  to="/submission"
+                  search={{ uke: station.station_id }}
+                  className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+                  onClick={onClose}
+                >
+                  <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
+                  <span className="hidden sm:inline">{t("dialog.createStation")}</span>
+                </Link>
+              ) : null}
               <button type="button" onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
                 <HugeiconsIcon icon={Cancel01Icon} className="size-5" />
               </button>

@@ -12,14 +12,17 @@ function AdminStationsListPage() {
   const { t } = useTranslation("stations");
   const navigate = useNavigate();
   const data = useStationsData();
-  const handleRowClick = useCallback((station: Station) => navigate({ to: "/admin/stations/$id", params: { id: String(station.id) } }), [navigate]);
+  const handleRowClick = useCallback(
+    (station: Station) => navigate({ to: "/admin/stations/$id", params: { id: String(station.id) }, search: { uke: undefined } }),
+    [navigate],
+  );
 
   return (
     <StationsListLayout
       data={data}
       onRowClick={handleRowClick}
       headerActions={
-        <Button size="sm" onClick={() => navigate({ to: "/admin/stations/$id", params: { id: "new" } })}>
+        <Button size="sm" onClick={() => navigate({ to: "/admin/stations/$id", params: { id: "new" }, search: { uke: undefined } })}>
           <HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
           {t("actions.newStation")}
         </Button>

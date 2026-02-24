@@ -90,6 +90,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                       <Link
                         to="/admin/stations/$id"
                         params={{ id: String(stationId) }}
+                        search={{ uke: undefined }}
                         className="text-sm text-primary hover:underline"
                         onClick={() => onOpenChange(false)}
                       >

@@ -170,7 +170,8 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
             <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5 text-muted-foreground group-data-panel-open:rotate-0 -rotate-90" />
             <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
             <span className="font-semibold text-sm">{rat}</span>
-            <span className="text-xs text-muted-foreground">({cells.length})</span>
+            <span className="text-xs text-muted-foreground inline sm:hidden">({cells.length})</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">({t("stations:cells.cellsCount", { count: cells.length })})</span>
             {diffCounts.added > 0 && (
               <span className="text-xs text-green-600 flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-green-500" />

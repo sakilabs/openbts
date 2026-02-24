@@ -104,6 +104,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         <Link
                           to="/admin/stations/$id"
                           params={{ id: String(station.id) }}
+                          search={{ uke: undefined }}
                           className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
                           onClick={onClose}
                         >

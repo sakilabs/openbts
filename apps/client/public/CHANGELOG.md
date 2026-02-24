@@ -1,6 +1,12 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-02-24
+
+### 🚀 Enhancements
+
+- You can now quickly add new station from existing UKE station by using `Create` button from the dialog
+
 # 2026-02-23
 
 ### 🩹 Fixes
@@ -8,6 +14,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed double `stations.update` audit log when creating new cell
 - Fixed some UI bugs on mobile
 - The station is now marked with status `active` when submission is approved
+- Fixed focus on filter button
+- The filters panel properly show the station count when search is used on `/station` & `/admin/stations`
 
 ### 🚀 Enhancements
 
@@ -19,6 +27,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Changed how the `RedCap` & `NB-IoT` is shown in the cell table
 - Removed "cells" and "added", "changed", "deleted" texts in cell tables on mobile
 - Made user search work by name
+- Used lazy loading for `recharts` components so they won't end up in initial bundle
 
 # 2026-02-22
 

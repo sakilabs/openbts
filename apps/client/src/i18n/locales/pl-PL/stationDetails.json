@@ -45,7 +45,8 @@
   "dialog": {
     "hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
     "btsStation": "Stacja BTS",
-    "showOnMap": "Pokaż na mapie"
+    "showOnMap": "Pokaż na mapie",
+    "createStation": "Utwórz stację"
   },
   "comments": {
     "title": "Komentarze społeczności",

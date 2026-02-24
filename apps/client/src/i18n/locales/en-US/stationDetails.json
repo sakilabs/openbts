@@ -45,7 +45,8 @@
   "dialog": {
     "hardwareLease": "Hardware lease from {{operator}} (virtual station)",
     "btsStation": "BTS Station",
-    "showOnMap": "Show on map"
+    "showOnMap": "Show on map",
+    "createStation": "Create station"
   },
   "comments": {
     "title": "Community Comments",
