@@ -2,13 +2,22 @@ import { useState, useMemo, useCallback, type ReactNode, type KeyboardEvent } fr
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ShieldUserIcon, Message01Icon, SentIcon, Cancel01Icon, CheckmarkCircle02Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
+import {
+  ShieldUserIcon,
+  Message01Icon,
+  SentIcon,
+  Cancel01Icon,
+  CheckmarkCircle02Icon,
+  AlertCircleIcon,
+  DatabaseIcon,
+} from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchSettings, patchSettings, type RuntimeSettings, type SettingsPatch } from "@/features/admin/settings/api";
+import { fetchSettings, patchSettings, cleanupSubmissions, type RuntimeSettings, type SettingsPatch } from "@/features/admin/settings/api";
 
 function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
   return (
@@ -167,6 +176,16 @@ function AdminSettingsPage() {
       setPatch({});
       setShowSaveSuccess(true);
       setTimeout(() => setShowSaveSuccess(false), 3000);
+    },
+  });
+
+  const cleanupMutation = useMutation({
+    mutationFn: cleanupSubmissions,
+    onSuccess: (result) => {
+      toast.success(t("settings.cleanupSuccess", { count: result.cleaned }));
+    },
+    onError: () => {
+      toast.error(t("settings.cleanupError"));
     },
   });
 
@@ -332,6 +351,19 @@ function AdminSettingsPage() {
               </div>
             </SettingsCard>
           </div>
+
+          <SettingsCard
+            icon={<HugeiconsIcon icon={DatabaseIcon} className="size-4" />}
+            title={t("settings.cleanupTitle")}
+            description={t("settings.cleanupDesc")}
+          >
+            <div className="flex items-center justify-between pt-1">
+              <Button size="sm" variant="destructive" onClick={() => cleanupMutation.mutate()} disabled={cleanupMutation.isPending}>
+                {cleanupMutation.isPending && <Spinner className="size-4 mr-2" />}
+                {t("settings.cleanupRun")}
+              </Button>
+            </div>
+          </SettingsCard>
         </div>
       </div>
     </div>

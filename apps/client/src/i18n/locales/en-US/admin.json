@@ -35,7 +35,12 @@
     "submissionsDesc": "Allow users to submit new stations",
     "enableSubmissions": "Enable submissions",
     "submissionsEnabled": "Users can submit stations",
-    "submissionsDisabled": "Submissions are disabled"
+    "submissionsDisabled": "Submissions are disabled",
+    "cleanupTitle": "Submission Data Cleanup",
+    "cleanupDesc": "Remove proposed data (cells, stations, locations) from submissions older than 1 month. The submission records themselves are kept.",
+    "cleanupRun": "Run cleanup",
+    "cleanupSuccess": "Cleaned up proposed data from {{count}} submission(s)",
+    "cleanupError": "Failed to run cleanup"
   },
   "users": {
     "table": {

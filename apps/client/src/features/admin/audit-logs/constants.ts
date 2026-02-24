@@ -27,6 +27,7 @@ export const ACTION_STYLES: Record<string, { badgeClass: string; dotClass: strin
   delete: { badgeClass: "bg-red-500/10 border-red-500/20 text-red-400", dotClass: "bg-red-400" },
   approve: { badgeClass: "bg-sky-500/10 border-sky-500/20 text-sky-400", dotClass: "bg-sky-400" },
   reject: { badgeClass: "bg-orange-500/10 border-orange-500/20 text-orange-400", dotClass: "bg-orange-400" },
+  cleanup: { badgeClass: "bg-purple-500/10 border-purple-500/20 text-purple-400", dotClass: "bg-purple-400" },
   start: { badgeClass: "bg-violet-500/10 border-violet-500/20 text-violet-400", dotClass: "bg-violet-400" },
 };
 
@@ -58,7 +59,10 @@ export const ACTION_GROUPS: { label: string; actions: string[] }[] = [
   { label: "Operators", actions: ["operators.create", "operators.update", "operators.delete"] },
   { label: "Bands", actions: ["bands.create", "bands.update", "bands.delete"] },
   { label: "Regions", actions: ["regions.create", "regions.update", "regions.delete"] },
-  { label: "Submissions", actions: ["submissions.create", "submissions.update", "submissions.delete", "submissions.approve", "submissions.reject"] },
+  {
+    label: "Submissions",
+    actions: ["submissions.create", "submissions.update", "submissions.delete", "submissions.approve", "submissions.reject", "submissions.cleanup"],
+  },
   { label: "Settings", actions: ["settings.update"] },
   { label: "Comments", actions: ["station_comments.create", "station_comments.delete"] },
   { label: "User Lists", actions: ["user_lists.create", "user_lists.update", "user_lists.delete"] },

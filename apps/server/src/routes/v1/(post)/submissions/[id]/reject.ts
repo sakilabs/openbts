@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -7,16 +7,7 @@ import { ErrorResponse } from "../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import {
-  submissions,
-  proposedCells,
-  proposedGSMCells,
-  proposedUMTSCells,
-  proposedLTECells,
-  proposedNRCells,
-  proposedStations,
-  proposedLocations,
-} from "@openbts/drizzle";
+import { submissions } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -62,44 +53,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be rejected" });
 
   try {
-    const result = await db.transaction(async (tx) => {
-      const proposedCellRows = await tx.query.proposedCells.findMany({
-        where: {
-          submission_id: id,
-        },
-        columns: { id: true },
-      });
-      const cellIds = proposedCellRows.map((c) => c.id);
-
-      if (cellIds.length > 0) {
-        await Promise.all([
-          tx.delete(proposedGSMCells).where(inArray(proposedGSMCells.proposed_cell_id, cellIds)),
-          tx.delete(proposedUMTSCells).where(inArray(proposedUMTSCells.proposed_cell_id, cellIds)),
-          tx.delete(proposedLTECells).where(inArray(proposedLTECells.proposed_cell_id, cellIds)),
-          tx.delete(proposedNRCells).where(inArray(proposedNRCells.proposed_cell_id, cellIds)),
-        ]);
-        await tx.delete(proposedCells).where(eq(proposedCells.submission_id, id));
-      }
-
-      await tx.delete(proposedStations).where(eq(proposedStations.submission_id, id));
-      await tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, id));
-
-      const now = new Date();
-      const [updated] = await tx
-        .update(submissions)
-        .set({
-          status: "rejected",
-          reviewer_id: session.user.id,
-          review_notes: req.body?.review_notes ?? submission.review_notes,
-          reviewed_at: now,
-          updatedAt: now,
-        })
-        .where(eq(submissions.id, id))
-        .returning();
-      if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
-
-      return updated;
-    });
+    const now = new Date();
+    const [result] = await db
+      .update(submissions)
+      .set({
+        status: "rejected",
+        reviewer_id: session.user.id,
+        review_notes: req.body?.review_notes ?? submission.review_notes,
+        reviewed_at: now,
+        updatedAt: now,
+      })
+      .where(eq(submissions.id, id))
+      .returning();
+    if (!result) throw new ErrorResponse("FAILED_TO_UPDATE");
 
     await createAuditLog(
       {

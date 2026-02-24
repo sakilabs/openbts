@@ -35,7 +35,12 @@
     "submissionsDesc": "Pozwól użytkownikom zgłaszać nowe stacje",
     "enableSubmissions": "Włącz zgłoszenia",
     "submissionsEnabled": "Użytkownicy mogą zgłaszać stacje",
-    "submissionsDisabled": "Zgłoszenia są wyłączone"
+    "submissionsDisabled": "Zgłoszenia są wyłączone",
+    "cleanupTitle": "Czyszczenie danych zgłoszeń",
+    "cleanupDesc": "Usuwa dane proponowane (komórki, stacje, lokalizacje) ze zgłoszeń starszych niż 1 miesiąc. Same rekordy zgłoszeń są zachowane.",
+    "cleanupRun": "Uruchom czyszczenie",
+    "cleanupSuccess": "Wyczyszczono dane proponowane z {{count}} zgłoszenia(ń)",
+    "cleanupError": "Nie udało się uruchomić czyszczenia"
   },
   "users": {
     "table": {

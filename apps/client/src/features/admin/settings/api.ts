@@ -23,3 +23,10 @@ export async function patchSettings(patch: SettingsPatch): Promise<RuntimeSettin
   });
   return res.data;
 }
+
+export async function cleanupSubmissions(): Promise<{ cleaned: number }> {
+  const res = await fetchJson<{ data: { cleaned: number } }>(`${API_BASE}/submissions/cleanup`, {
+    method: "POST",
+  });
+  return res.data;
+}
