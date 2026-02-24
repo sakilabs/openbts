@@ -271,8 +271,9 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
                   {stations.map((station) => (
                     <Link
                       key={station.id}
-                      to={"/admin/stations"}
+                      to={"/admin/stations/$id"}
                       params={{ id: String(station.id) }}
+                      search={{ uke: undefined }}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
                     >
                       {station.operator && (
