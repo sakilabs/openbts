@@ -462,17 +462,17 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               className={cn("px-2 py-1.5 bg-muted/30 flex items-center gap-2", hasMoreLocations && "cursor-help")}
               disabled={!hasMoreLocations}
             >
-              {isLoading || isFetching ? (
-                <Spinner className="size-3 text-primary" />
-              ) : hasMoreLocations ? (
-                <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
-              ) : (
-                <div className={cn("size-1.5 rounded-full shrink-0", searchMode === "search" ? "bg-primary" : "bg-emerald-500")} />
-              )}
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-1">
                   {filters.showStations && (
                     <>
+                      {isLoading || isFetching ? (
+                        <Spinner className="size-3 text-primary" />
+                      ) : hasMoreLocations ? (
+                        <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
+                      ) : (
+                        <div className={cn("size-1.5 rounded-full shrink-0", searchMode === "search" ? "bg-primary" : "bg-emerald-500")} />
+                      )}
                       <span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>
                         {locationCount.toLocaleString(i18n.language)}
                       </span>
