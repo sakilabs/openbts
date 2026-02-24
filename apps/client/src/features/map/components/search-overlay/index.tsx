@@ -398,9 +398,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                   <span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
-              </TooltipContent>
+              <TooltipContent side="bottom">{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</TooltipContent>
             </Tooltip>
             {(radioLineCount > 0 || isRadioLinesFetching) && (
               <Tooltip>
@@ -426,8 +424,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
                   {t("overlay.moreRadiolines", {
-                    total: radioLineTotalCount.toLocaleString(i18n.language),
-                    shown: radioLineCount.toLocaleString(i18n.language),
+                    total: radioLineTotalCount,
+                    shown: radioLineCount,
                   })}
                 </TooltipContent>
               </Tooltip>
@@ -503,14 +501,12 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               </div>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p>
-                {t("overlay.moreStations", { total: totalCount.toLocaleString(i18n.language), shown: locationCount.toLocaleString(i18n.language) })}
-              </p>
+              <p>{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</p>
               {hasMoreRadioLines && (
                 <p>
                   {t("overlay.moreRadiolines", {
-                    total: radioLineTotalCount.toLocaleString(i18n.language),
-                    shown: radioLineCount.toLocaleString(i18n.language),
+                    total: radioLineTotalCount,
+                    shown: radioLineCount,
                   })}
                 </p>
               )}

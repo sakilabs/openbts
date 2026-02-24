@@ -52,8 +52,8 @@
   "ukePermits": {
     "title": "Nieprzypisane pozwolenia UKE",
     "permits": "Pozwolenia",
-    "showingStations": "Wyświetlono {{count}} stacji",
-    "showingStationsOfTotal": "Wyświetlono {{count}} z {{total}} stacji",
+    "showingStations": "Wyświetlono {{count, number}} stacji",
+    "showingStationsOfTotal": "Wyświetlono {{count, number}} z {{total, number}} stacji",
     "openDetails": "Otwórz szczegóły",
     "viewOnMap": "Pokaż na mapie"
   },

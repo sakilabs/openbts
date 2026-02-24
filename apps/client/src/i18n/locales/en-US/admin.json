@@ -52,8 +52,8 @@
   "ukePermits": {
     "title": "Unassigned UKE Permits",
     "permits": "Permits",
-    "showingStations": "Showing {{count}} stations",
-    "showingStationsOfTotal": "Showing {{count}} of {{total}} stations",
+    "showingStations": "Showing {{count, number}} stations",
+    "showingStationsOfTotal": "Showing {{count, number}} of {{total, number}} stations",
     "openDetails": "Open details",
     "viewOnMap": "View on map"
   },

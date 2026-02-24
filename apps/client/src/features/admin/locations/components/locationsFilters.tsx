@@ -48,7 +48,7 @@ export function LocationsFilters({
   totalLocations,
   isSheet = false,
 }: LocationsFiltersProps) {
-  const { t, i18n } = useTranslation(["admin", "common"]);
+  const { t } = useTranslation(["admin", "common"]);
   const activeFilterCount = filters.operators.length + selectedRegions.length;
 
   const [showOtherOperators, setShowOtherOperators] = useState(false);
@@ -216,7 +216,7 @@ export function LocationsFilters({
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
           {totalLocations !== undefined
-            ? t("main:filters.showingLocationsOfTotal", { count: locationCount, total: totalLocations.toLocaleString(i18n.language) })
+            ? t("main:filters.showingLocationsOfTotal", { count: locationCount, total: totalLocations })
             : t("locations.showingLocations", { count: locationCount })}
         </div>
       </div>

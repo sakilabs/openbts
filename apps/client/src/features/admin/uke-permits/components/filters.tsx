@@ -48,7 +48,7 @@ export function UnassignedPermitsFilters({
   totalStations,
   isSheet = false,
 }: UnassignedPermitsFiltersProps) {
-  const { t, i18n } = useTranslation(["admin", "common"]);
+  const { t } = useTranslation(["admin", "common"]);
   const activeFilterCount = filters.operators.length + selectedRegions.length;
 
   const [showOtherOperators, setShowOtherOperators] = useState(false);
@@ -216,7 +216,7 @@ export function UnassignedPermitsFilters({
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
           {totalStations !== undefined
-            ? t("ukePermits.showingStationsOfTotal", { count: stationCount, total: totalStations.toLocaleString(i18n.language) })
+            ? t("ukePermits.showingStationsOfTotal", { count: stationCount, total: totalStations })
             : t("ukePermits.showingStations", { count: stationCount })}
         </div>
       </div>
