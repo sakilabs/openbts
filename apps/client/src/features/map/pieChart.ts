@@ -1,8 +1,8 @@
 import { getOperatorColor } from "@/lib/operatorUtils";
 
-const PIE_IMAGE_SIZE = 32;
-const PIE_FILL_RADIUS = 12;
-const PIE_STROKE_RADIUS = 14;
+const PIE_IMAGE_SIZE = 34;
+const PIE_FILL_RADIUS = 13;
+const PIE_STROKE_RADIUS = 15;
 const PIE_STROKE_WIDTH = 4;
 
 export function createPieChartImage(segments: { value: number; color: string }[]): ImageData | null {

@@ -32,7 +32,7 @@ const CIRCLE_LAYER_CONFIG: maplibregl.LayerSpecification = {
   filter: ["!", ["get", "isMultiOperator"]],
   paint: {
     "circle-color": ["get", "color"],
-    "circle-radius": 6,
+    "circle-radius": 7,
     "circle-stroke-width": 2,
     "circle-stroke-color": "#fff",
   },

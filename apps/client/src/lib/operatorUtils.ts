@@ -1,15 +1,15 @@
 export const getOperatorColor = (mnc: number): string => {
   switch (mnc) {
     case 26002:
-      return "#E20074"; // T-Mobile - Magenta
+      return "#E10174"; // T-Mobile - Magenta
     case 26003:
-      return "#FF7900"; // Orange
+      return "#FFC342"; // Orange
     case 26001:
-      return "#00B140"; // Plus - Green
+      return "#006600"; // Plus - Green
     case 26006:
-      return "#8B00FF"; // Play - Purple
+      return "#7C4EC4"; // Play - Purple
     case 26034:
-      return "#990A33"; // NetWorkS! - Dark Red
+      return "#A2334C"; // NetWorkS! - Dark Red
     case 26015:
     case 26016:
     case 26017:
