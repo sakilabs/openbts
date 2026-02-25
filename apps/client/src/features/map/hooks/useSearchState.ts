@@ -19,6 +19,10 @@ function computeOverlay(input: string, hasMatches: boolean): OverlayType {
   return null;
 }
 
+function hasUnclosedQuote(input: string): boolean {
+  return /\w+:\s*"[^"]*$/.test(input) || /\w+:\s*'[^']*$/.test(input);
+}
+
 function getLastWord(input: string): string {
   const words = input.split(/\s/);
   return words[words.length - 1] || "";
@@ -81,7 +85,7 @@ export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateA
     const value = e.target.value;
     setInputValue(value);
 
-    if (value.endsWith(" ") || value === "") {
+    if ((value.endsWith(" ") && !hasUnclosedQuote(value)) || value === "") {
       const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
       const { filters: detected, remainingText } = parseFilters(fullQuery);
 

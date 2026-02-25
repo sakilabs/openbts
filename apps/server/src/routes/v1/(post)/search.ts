@@ -284,6 +284,27 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   }
 
   if (stationMap.size < limit) {
+    const cityMatches = await db
+      .selectDistinct({ id: stations.id })
+      .from(stations)
+      .innerJoin(locations, eq(stations.location_id, locations.id))
+      .where(and(ne(stations.status, "inactive"), sql`${locations.city} ILIKE ${`%${searchQuery}%`}`))
+      .limit(limit);
+
+    const missingCityIds = cityMatches
+      .map((r) => r.id)
+      .filter((id) => !stationMap.has(id))
+      .slice(0, limit - stationMap.size);
+
+    if (missingCityIds.length > 0) {
+      const additionalStations = await fetchStations(inArray(stations.id, missingCityIds), limit - stationMap.size);
+      for (const station of additionalStations) {
+        stationMap.set(station.id, withCellDetails(station));
+      }
+    }
+  }
+
+  if (stationMap.size < limit) {
     const networkMatches = await db
       .selectDistinct({ stationId: networksIds.station_id })
       .from(networksIds)
