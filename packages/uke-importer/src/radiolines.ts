@@ -15,6 +15,7 @@ import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate,
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertUkeOperators } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
+import { sql } from "drizzle-orm";
 import { lt } from "drizzle-orm";
 import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 
@@ -230,12 +231,12 @@ export async function importRadiolines(): Promise<boolean> {
             ukeRadiolines.rx_latitude,
             ukeRadiolines.polarization,
             ukeRadiolines.ch_num,
-            ukeRadiolines.decision_type,
-            ukeRadiolines.issue_date,
-            ukeRadiolines.expiry_date,
           ],
           set: {
             updatedAt: new Date(),
+            decision_type: sql.raw("excluded.decision_type"),
+            issue_date: sql.raw("excluded.issue_date"),
+            expiry_date: sql.raw("excluded.expiry_date"),
           },
         });
     }
