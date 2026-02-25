@@ -46,7 +46,7 @@ function StepStatusIcon({ status }: { status: StepStatus }) {
     case "error":
       return <HugeiconsIcon icon={Cancel01Icon} className="size-4 text-destructive" />;
     case "skipped":
-      return <span className="text-muted-foreground text-sm">—</span>;
+      return <span className="text-muted-foreground text-sm">-</span>;
     default:
       return <span className="size-4 inline-flex items-center justify-center text-muted-foreground">○</span>;
   }

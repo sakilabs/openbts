@@ -96,7 +96,7 @@ export function SubmissionStationForm({
           <div className="space-y-2">
             <Label>{t("common:labels.notes")}</Label>
             <Textarea value={stationForm.notes} onChange={(e) => onStationFormChange({ notes: e.target.value })} rows={3} disabled={isFormDisabled} />
-            {stationDiffs?.notes && <ChangeBadge label={t("diff.current")} current={submission.station?.notes ?? "—"} />}
+            {stationDiffs?.notes && <ChangeBadge label={t("diff.current")} current={submission.station?.notes ?? "-"} />}
           </div>
 
           {showNetworksId && (
@@ -109,15 +109,15 @@ export function SubmissionStationForm({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground text-xs">{t("common:labels.networksId")}</span>
-                    <p className="font-mono font-medium">{networksForm.networks_id ?? "—"}</p>
+                    <p className="font-mono font-medium">{networksForm.networks_id ?? "-"}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground text-xs">{t("common:labels.networksName")}</span>
-                    <p className="font-medium">{networksForm.networks_name || "—"}</p>
+                    <p className="font-medium">{networksForm.networks_name || "-"}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground text-xs">{t("common:labels.mnoName")}</span>
-                    <p className="font-medium">{networksForm.mno_name || "—"}</p>
+                    <p className="font-medium">{networksForm.mno_name || "-"}</p>
                   </div>
                 </div>
               ) : (
@@ -133,7 +133,7 @@ export function SubmissionStationForm({
                         className="font-mono"
                       />
                       {currentStation?.networks?.networks_id !== undefined && networksForm.networks_id !== currentStation.networks.networks_id && (
-                        <ChangeBadge label={t("diff.current")} current={String(currentStation.networks.networks_id ?? "—")} />
+                        <ChangeBadge label={t("diff.current")} current={String(currentStation.networks.networks_id ?? "-")} />
                       )}
                     </div>
                     <div className="space-y-2">
@@ -146,7 +146,7 @@ export function SubmissionStationForm({
                       />
                       {currentStation?.networks?.networks_name !== undefined &&
                         networksForm.networks_name !== (currentStation.networks.networks_name ?? "") && (
-                          <ChangeBadge label={t("diff.current")} current={currentStation.networks.networks_name ?? "—"} />
+                          <ChangeBadge label={t("diff.current")} current={currentStation.networks.networks_name ?? "-"} />
                         )}
                     </div>
                   </div>
@@ -159,7 +159,7 @@ export function SubmissionStationForm({
                       onChange={(e) => onNetworksFormChange({ mno_name: e.target.value })}
                     />
                     {currentStation?.networks?.mno_name !== undefined && networksForm.mno_name !== (currentStation.networks.mno_name ?? "") && (
-                      <ChangeBadge label={t("diff.current")} current={currentStation.networks.mno_name ?? "—"} />
+                      <ChangeBadge label={t("diff.current")} current={currentStation.networks.mno_name ?? "-"} />
                     )}
                   </div>
                 </>

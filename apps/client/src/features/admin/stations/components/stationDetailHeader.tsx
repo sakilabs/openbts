@@ -92,7 +92,7 @@ export function StationDetailHeader({
           </span>
           <div className="w-px h-3.5 bg-border/60 shrink-0" />
           <span className="text-xs font-mono text-muted-foreground bg-background/60 px-1.5 py-0.5 rounded border border-border/20 shadow-sm truncate min-w-0">
-            {isCreateMode ? stationId || "—" : station?.station_id}
+            {isCreateMode ? stationId || "-" : station?.station_id}
           </span>
         </div>
       </div>

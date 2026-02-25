@@ -4,6 +4,7 @@
     "subtitle": "Przeglądaj wpisy usunięte podczas importów UKE",
     "columns": {
       "deletedAt": "Data usunięcia",
+      "createdAt": "Data utworzenia",
       "sourceTable": "Tabela",
       "sourceType": "Źródło",
       "sourceId": "Oryginalne ID",
@@ -20,6 +21,13 @@
     "empty": {
       "title": "Brak usuniętych wpisów",
       "subtitle": "Spróbuj zmienić filtry"
+    },
+    "detail": {
+      "title": "Usunięty wpis",
+      "overview": "Przegląd",
+      "data": "Zapisane dane",
+      "field": "Pole",
+      "value": "Wartość"
     }
   }
 }

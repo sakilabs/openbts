@@ -214,14 +214,14 @@ function AdminAuditLogsPage() {
               #{shortId}
             </span>
           ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-muted-foreground text-xs">-</span>
           );
         },
       }),
       columnHelper.accessor("source", {
         header: t("auditLogs.columns.source"),
         size: 80,
-        cell: ({ getValue }) => <span className="text-xs text-muted-foreground uppercase">{getValue() ?? "—"}</span>,
+        cell: ({ getValue }) => <span className="text-xs text-muted-foreground uppercase">{getValue() ?? "-"}</span>,
       }),
     ],
     [t, sort, i18n.language, resetPage],

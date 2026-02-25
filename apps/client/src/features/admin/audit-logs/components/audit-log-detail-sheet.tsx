@@ -80,7 +80,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.columns.source")}</span>
-                <span className="text-sm uppercase">{entry.source ?? "—"}</span>
+                <span className="text-sm uppercase">{entry.source ?? "-"}</span>
               </div>
               {(stationId != null || submissionId != null) && (
                 <div className="flex flex-col gap-1 col-span-2">

@@ -13,16 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
-
-interface DeletedEntry {
-  id: number;
-  source_table: string;
-  source_id: number;
-  source_type: string;
-  data: Record<string, unknown>;
-  deleted_at: string;
-  import_id: number | null;
-}
+import { DeletedEntryDetailSheet } from "@/features/deleted-entries/components/deleted-entry-detail-sheet";
+import type { DeletedEntry } from "@/features/deleted-entries/types";
 
 function formatDeletedDate(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleDateString(locale, {
@@ -58,6 +50,7 @@ type FilterState = {
   dateTo: string;
   search: string;
   sort: "asc" | "desc";
+  selectedEntry: DeletedEntry | null;
 };
 
 function filterReducer(
@@ -69,6 +62,7 @@ function filterReducer(
     | { type: "SET_DATE_TO"; payload: string }
     | { type: "SET_SEARCH"; payload: string }
     | { type: "SET_SORT"; payload: "asc" | "desc" }
+    | { type: "SET_SELECTED_ENTRY"; payload: DeletedEntry | null }
     | { type: "CLEAR_FILTERS" },
 ): FilterState {
   switch (action.type) {
@@ -84,6 +78,8 @@ function filterReducer(
       return { ...state, search: action.payload };
     case "SET_SORT":
       return { ...state, sort: action.payload };
+    case "SET_SELECTED_ENTRY":
+      return { ...state, selectedEntry: action.payload };
     case "CLEAR_FILTERS":
       return { ...state, sourceTable: "", sourceType: "", dateFrom: "", dateTo: "", search: "" };
     default:
@@ -98,6 +94,7 @@ const initialFilterState: FilterState = {
   dateTo: "",
   search: "",
   sort: "desc",
+  selectedEntry: null,
 };
 
 function DeletedEntriesPage() {
@@ -105,7 +102,7 @@ function DeletedEntriesPage() {
   const { t, i18n } = useTranslation(["deletedEntries", "common"]);
 
   const [filterState, dispatchFilter] = useReducer(filterReducer, initialFilterState);
-  const { sourceTable, sourceType, dateFrom, dateTo, search, sort } = filterState;
+  const { sourceTable, sourceType, dateFrom, dateTo, search, sort, selectedEntry } = filterState;
 
   const { containerRef, pagination, setPagination } = useTablePagination({
     rowHeight: 64,
@@ -173,6 +170,19 @@ function DeletedEntriesPage() {
           <span className="text-muted-foreground tabular-nums text-xs font-mono">{formatDeletedDate(getValue(), i18n.language)}</span>
         ),
       }),
+      columnHelper.display({
+        id: "createdAt",
+        header: t("deletedEntries.columns.createdAt"),
+        size: 160,
+        cell: ({ row }) => {
+          const createdAt = row.original.data.createdAt as string | undefined;
+          return createdAt ? (
+            <span className="text-muted-foreground tabular-nums text-xs font-mono">{formatDeletedDate(createdAt, i18n.language)}</span>
+          ) : (
+            <span className="text-muted-foreground text-xs">-</span>
+          );
+        },
+      }),
       columnHelper.accessor("source_table", {
         header: t("deletedEntries.columns.sourceTable"),
         size: 140,
@@ -212,12 +222,22 @@ function DeletedEntriesPage() {
           const rowData = getValue();
           const isPermits = row.original.source_table === "uke_permits";
           const label = isPermits ? ((rowData.station_id as string) ?? (rowData.decision_number as string)) : (rowData.permit_number as string);
-          return label ? (
-            <span className="text-xs truncate max-w-48 block" title={String(label)}>
-              {String(label)}
-            </span>
-          ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+          const decisionNumber = isPermits ? (rowData.decision_number as string | undefined) : undefined;
+          return (
+            <div className="flex flex-col gap-0.5 max-w-48">
+              {label ? (
+                <span className="text-xs truncate" title={String(label)}>
+                  {String(label)}
+                </span>
+              ) : (
+                <span className="text-muted-foreground text-xs">-</span>
+              )}
+              {decisionNumber && label !== decisionNumber && (
+                <span className="text-[10px] text-muted-foreground truncate" title={decisionNumber}>
+                  {decisionNumber}
+                </span>
+              )}
+            </div>
           );
         },
       }),
@@ -229,7 +249,7 @@ function DeletedEntriesPage() {
           return importId !== null ? (
             <span className="text-xs font-mono text-muted-foreground">#{importId}</span>
           ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-muted-foreground text-xs">-</span>
           );
         },
       }),
@@ -377,7 +397,7 @@ function DeletedEntriesPage() {
                 </tr>
               </tbody>
             ) : (
-              <DataTable.Body />
+              <DataTable.Body onRowClick={(row: DeletedEntry) => dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: row })} />
             )}
             <DataTable.Footer columns={columns.length}>
               <DataTablePagination table={table} totalItems={total} showRowsPerPage={false} />
@@ -385,6 +405,14 @@ function DeletedEntriesPage() {
           </DataTable.Table>
         </DataTable.Root>
       </div>
+
+      <DeletedEntryDetailSheet
+        entry={selectedEntry}
+        open={selectedEntry !== null}
+        onOpenChange={(open) => {
+          if (!open) dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: null });
+        }}
+      />
     </div>
   );
 }

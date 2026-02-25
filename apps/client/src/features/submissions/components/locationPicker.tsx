@@ -306,7 +306,7 @@ export function LocationPicker({
               onChange={(e) => onLocationChange({ city: e.target.value })}
               className="h-8 text-sm"
             />
-            {locationDiffs?.city && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.city || "—"} />}
+            {locationDiffs?.city && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.city || "-"} />}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="address" className="text-xs">
@@ -319,7 +319,7 @@ export function LocationPicker({
               onChange={(e) => onLocationChange({ address: e.target.value })}
               className="h-8 text-sm"
             />
-            {locationDiffs?.address && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.address || "—"} />}
+            {locationDiffs?.address && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.address || "-"} />}
           </div>
         </div>
       </div>

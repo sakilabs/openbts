@@ -4,6 +4,7 @@
     "subtitle": "View entries removed during UKE imports",
     "columns": {
       "deletedAt": "Deleted At",
+      "createdAt": "Created At",
       "sourceTable": "Table",
       "sourceType": "Source",
       "sourceId": "Original ID",
@@ -20,6 +21,13 @@
     "empty": {
       "title": "No deleted entries found",
       "subtitle": "Try adjusting your filters"
+    },
+    "detail": {
+      "title": "Deleted Entry",
+      "overview": "Overview",
+      "data": "Stored Data",
+      "field": "Field",
+      "value": "Value"
     }
   }
 }

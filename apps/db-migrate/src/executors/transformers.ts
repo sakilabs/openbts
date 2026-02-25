@@ -191,7 +191,7 @@ export function prepareBands(cells: LegacyCellRow[]): PreparedBandKey[] {
       logger.warn(`[WARN] Skipping band for cell id=${cell.id}: null/zero band value "${cell.band}"`);
       continue;
     }
-    const duplex = mapDuplex(cell.duplex);
+    const duplex = mapDuplex(cell.duplex) ?? (rat === "UMTS" ? "FDD" : null);
     keys.push({ rat, value, duplex });
   }
   const seen = new Set<string>();
@@ -227,7 +227,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
     const band_key: PreparedBandKey = {
       rat,
       value: bandValue,
-      duplex: mapDuplex(cell.duplex),
+      duplex: mapDuplex(cell.duplex) ?? (rat === "UMTS" ? "FDD" : null),
     };
     const base: PreparedCellBase = {
       original_id: cell.id,
