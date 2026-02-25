@@ -6,7 +6,7 @@ import { UkeKpiCards, InternalKpiCards } from "@/features/statistics/components/
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { statsSummaryQueryOptions, statsPermitsQueryOptions, statsVoivodeshipsQueryOptions } from "@/features/statistics/queries";
-import { operatorsQueryOptions, bandsQueryOptions } from "@/features/shared/queries";
+import { operatorsQueryOptions } from "@/features/shared/queries";
 
 const UkeDistributionCharts = lazy(() =>
   import("@/features/statistics/components/distributionCharts").then((m) => ({ default: m.UkeDistributionCharts })),
@@ -50,7 +50,6 @@ function StatisticsPage() {
   const { data: permits, isLoading: permitsLoading } = useQuery(statsPermitsQueryOptions());
   const { data: voivodeships, isLoading: voivodeshipsLoading } = useQuery(statsVoivodeshipsQueryOptions());
   const { data: operators } = useQuery(operatorsQueryOptions());
-  const { data: bands } = useQuery(bandsQueryOptions());
 
   return (
     <main className="flex-1 overflow-y-auto p-4">
@@ -89,7 +88,7 @@ function StatisticsPage() {
         </section>
 
         <Suspense fallback={<ChartCardSkeleton />}>
-          <HistoryChart operators={operators} bands={bands} />
+          <HistoryChart operators={operators} />
         </Suspense>
       </div>
     </main>
