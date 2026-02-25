@@ -87,15 +87,16 @@ export function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
-export function parseExcelDate(val: number | string | undefined): Date | null {
-  if (val == null || val === "") return null;
+export function parseExcelDate(val: number | string | undefined): Date {
+  if (val == null || val === "") return new Date();
   if (typeof val === "number") {
     const epoch = new Date(Date.UTC(1899, 11, 30));
     return new Date(epoch.getTime() + val * 86400000);
   }
 
-  const date = new Date(val);
-  return Number.isNaN(date.getTime()) ? null : date;
+  const ddmmyyyy = String(val).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  const date = ddmmyyyy ? new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`) : new Date(val);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
 export async function cleanupDownloads(): Promise<void> {
