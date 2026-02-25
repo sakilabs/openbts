@@ -15,7 +15,7 @@ import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate,
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertUkeOperators } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
-import { lt, sql } from "drizzle-orm";
+import { lt } from "drizzle-orm";
 import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
 
 import type { RawRadioLineData } from "./types.js";
@@ -63,24 +63,26 @@ export async function importRadiolines(): Promise<boolean> {
 
   const importStartTime = new Date();
 
-  console.log("[radiolines] Truncating reference tables");
-  await db.execute(
-    sql`TRUNCATE TABLE ${ukeOperators}, ${radioLinesManufacturers}, ${radiolinesAntennaTypes}, ${radiolinesTransmitterTypes} RESTART IDENTITY CASCADE;`,
-  );
-
   console.log("[radiolines] Upserting manufacturers...");
   const manufArr = Array.from(manufNames).filter((s) => s.length > 0);
+  const manufIdByName = new Map<string, number>();
   if (manufArr.length) {
-    for (const group of chunk(manufArr, BATCH_SIZE)) {
-      await db
-        .insert(radioLinesManufacturers)
-        .values(group.map((n) => ({ name: n })))
-        .onConflictDoNothing({ target: [radioLinesManufacturers.name] });
+    const existingManuf = await db.query.radioLinesManufacturers.findMany({
+      where: { name: { in: manufArr } },
+    });
+    for (const m of existingManuf) manufIdByName.set(m.name, m.id);
+
+    const toInsertManuf = manufArr.filter((n) => !manufIdByName.has(n));
+    if (toInsertManuf.length) {
+      for (const group of chunk(toInsertManuf, BATCH_SIZE)) {
+        await db.insert(radioLinesManufacturers).values(group.map((n) => ({ name: n })));
+      }
+      const newManuf = await db.query.radioLinesManufacturers.findMany({
+        where: { name: { in: toInsertManuf } },
+      });
+      for (const m of newManuf) manufIdByName.set(m.name, m.id);
     }
   }
-  const manufRowsAll = manufArr.length ? await db.query.radioLinesManufacturers.findMany({ where: { name: { in: manufArr } } }) : [];
-  const manufIdByName = new Map<string, number>();
-  for (const m of manufRowsAll) manufIdByName.set(m.name, m.id);
 
   console.log("[radiolines] Upserting antenna types...");
   const antTypesRaw = Array.from(antTypeTuples).map((s) => {
@@ -88,21 +90,24 @@ export async function importRadiolines(): Promise<boolean> {
     return { name, manufacturer_id: man ? (manufIdByName.get(man) ?? null) : null } as { name: string | undefined; manufacturer_id: number | null };
   });
   const antTypes = antTypesRaw.filter(isNonEmptyName);
+  const antIdByName = new Map<string, number>();
   if (antTypes.length) {
-    for (const group of chunk(antTypes, BATCH_SIZE)) {
-      await db
-        .insert(radiolinesAntennaTypes)
-        .values(group.map((a) => ({ name: a.name, manufacturer_id: a.manufacturer_id })))
-        .onConflictDoNothing({ target: [radiolinesAntennaTypes.name] });
+    const existingAnt = await db.query.radiolinesAntennaTypes.findMany({
+      where: { name: { in: antTypes.map((a) => a.name) } },
+    });
+    for (const a of existingAnt) antIdByName.set(a.name, a.id);
+
+    const toInsertAnt = antTypes.filter((a) => !antIdByName.has(a.name));
+    if (toInsertAnt.length) {
+      for (const group of chunk(toInsertAnt, BATCH_SIZE)) {
+        await db.insert(radiolinesAntennaTypes).values(group.map((a) => ({ name: a.name, manufacturer_id: a.manufacturer_id })));
+      }
+      const newAnt = await db.query.radiolinesAntennaTypes.findMany({
+        where: { name: { in: toInsertAnt.map((a) => a.name) } },
+      });
+      for (const a of newAnt) antIdByName.set(a.name, a.id);
     }
   }
-  const antRowsAll = antTypes.length
-    ? await db.query.radiolinesAntennaTypes.findMany({
-        where: { name: { in: antTypes.map((a) => a.name) } },
-      })
-    : [];
-  const antIdByName = new Map<string, number>();
-  for (const a of antRowsAll) antIdByName.set(a.name, a.id);
 
   console.log("[radiolines] Upserting transmitter types...");
   const txTypesRaw = Array.from(txTypeTuples).map((s) => {
@@ -110,21 +115,24 @@ export async function importRadiolines(): Promise<boolean> {
     return { name, manufacturer_id: man ? (manufIdByName.get(man) ?? null) : null } as { name: string | undefined; manufacturer_id: number | null };
   });
   const txTypes = txTypesRaw.filter(isNonEmptyName);
+  const txIdByName = new Map<string, number>();
   if (txTypes.length) {
-    for (const group of chunk(txTypes, BATCH_SIZE)) {
-      await db
-        .insert(radiolinesTransmitterTypes)
-        .values(group.map((t) => ({ name: t.name, manufacturer_id: t.manufacturer_id })))
-        .onConflictDoNothing({ target: [radiolinesTransmitterTypes.name] });
+    const existingTx = await db.query.radiolinesTransmitterTypes.findMany({
+      where: { name: { in: txTypes.map((t) => t.name) } },
+    });
+    for (const t of existingTx) txIdByName.set(t.name, t.id);
+
+    const toInsertTx = txTypes.filter((t) => !txIdByName.has(t.name));
+    if (toInsertTx.length) {
+      for (const group of chunk(toInsertTx, BATCH_SIZE)) {
+        await db.insert(radiolinesTransmitterTypes).values(group.map((t) => ({ name: t.name, manufacturer_id: t.manufacturer_id })));
+      }
+      const newTx = await db.query.radiolinesTransmitterTypes.findMany({
+        where: { name: { in: toInsertTx.map((t) => t.name) } },
+      });
+      for (const t of newTx) txIdByName.set(t.name, t.id);
     }
   }
-  const txRowsAll = txTypes.length
-    ? await db.query.radiolinesTransmitterTypes.findMany({
-        where: { name: { in: txTypes.map((t) => t.name) } },
-      })
-    : [];
-  const txIdByName = new Map<string, number>();
-  for (const t of txRowsAll) txIdByName.set(t.name, t.id);
 
   console.log("[radiolines] Upserting operators...");
   const radioOpNames = Array.from(new Set(rows.map((r) => String(r.Operator || "").trim()).filter((s) => s.length > 0)));
