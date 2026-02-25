@@ -275,7 +275,7 @@ CREATE TABLE "uke_radiolines" (
 	"expiry_date" timestamp with time zone NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "uke_radiolines_natural_key" UNIQUE("permit_number","operator_id","freq","tx_longitude","tx_latitude","rx_longitude","rx_latitude","polarization","ch_num")
+	CONSTRAINT "uke_radiolines_natural_key" UNIQUE("permit_number","operator_id","freq","tx_longitude","tx_latitude","rx_longitude","rx_latitude","polarization","ch_num","decision_type","issue_date","expiry_date")
 );
 --> statement-breakpoint
 CREATE TABLE "umts_cells" (

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
-  Wifi01Icon,
   Calendar03Icon,
   Location01Icon,
   ArrowUp01Icon,
@@ -17,6 +16,7 @@ import {
   Building02Icon,
   Activity01Icon,
   Radio01Icon,
+  Route02Icon,
   HorizontalResizeIcon,
   Rotate01Icon,
   DashboardSpeed01Icon,
@@ -148,7 +148,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
               className="size-12 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0"
               style={{ backgroundColor: operatorColor }}
             >
-              <HugeiconsIcon icon={Wifi01Icon} className="size-6" />
+              <HugeiconsIcon icon={Route02Icon} className="size-6" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-col gap-1">

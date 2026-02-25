@@ -513,6 +513,9 @@ export const ukeRadiolines = pgTable(
       t.rx_latitude,
       t.polarization,
       t.ch_num,
+      t.decision_type,
+      t.issue_date,
+      t.expiry_date
     ),
     index("uke_radiolines_operator_id_idx").on(t.operator_id),
     index("uke_radiolines_permit_number_idx").on(t.permit_number),

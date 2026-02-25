@@ -199,7 +199,17 @@ export async function importRadiolines(): Promise<boolean> {
       permit_number: String(r["Nr_pozw/dec"] || "").trim(),
       decision_type: (r.Rodz_dec === "zmP" ? "zmP" : "P") as "zmP" | "P",
       issue_date: parseExcelDate(r.Data_wydania),
-      expiry_date: parseExcelDate(r["Data_ważn_pozw/dec"]) ?? new Date(),
+      expiry_date: (() => {
+        const expiry = parseExcelDate(r["Data_ważn_pozw/dec"]);
+        if (expiry) return expiry;
+        const issue = parseExcelDate(r.Data_wydania);
+        if (issue) {
+          const copy = new Date(issue);
+          copy.setFullYear(copy.getFullYear() + 10);
+          return copy;
+        }
+        return new Date();
+      })(),
     };
   });
 
@@ -220,6 +230,9 @@ export async function importRadiolines(): Promise<boolean> {
             ukeRadiolines.rx_latitude,
             ukeRadiolines.polarization,
             ukeRadiolines.ch_num,
+            ukeRadiolines.decision_type,
+            ukeRadiolines.issue_date,
+            ukeRadiolines.expiry_date,
           ],
           set: {
             updatedAt: new Date(),
