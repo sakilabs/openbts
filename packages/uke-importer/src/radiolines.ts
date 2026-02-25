@@ -89,7 +89,11 @@ export async function importRadiolines(): Promise<boolean> {
     const [name, man] = s.split("|");
     return { name, manufacturer_id: man ? (manufIdByName.get(man) ?? null) : null } as { name: string | undefined; manufacturer_id: number | null };
   });
-  const antTypes = antTypesRaw.filter(isNonEmptyName);
+  const antTypesDeduped = new Map<string, (typeof antTypesRaw)[number] & { name: string }>();
+  for (const a of antTypesRaw.filter(isNonEmptyName)) {
+    if (!antTypesDeduped.has(a.name)) antTypesDeduped.set(a.name, a);
+  }
+  const antTypes = Array.from(antTypesDeduped.values());
   const antIdByName = new Map<string, number>();
   if (antTypes.length) {
     const existingAnt = await db.query.radiolinesAntennaTypes.findMany({
@@ -114,7 +118,11 @@ export async function importRadiolines(): Promise<boolean> {
     const [name, man] = s.split("|");
     return { name, manufacturer_id: man ? (manufIdByName.get(man) ?? null) : null } as { name: string | undefined; manufacturer_id: number | null };
   });
-  const txTypes = txTypesRaw.filter(isNonEmptyName);
+  const txTypesDeduped = new Map<string, (typeof txTypesRaw)[number] & { name: string }>();
+  for (const t of txTypesRaw.filter(isNonEmptyName)) {
+    if (!txTypesDeduped.has(t.name)) txTypesDeduped.set(t.name, t);
+  }
+  const txTypes = Array.from(txTypesDeduped.values());
   const txIdByName = new Map<string, number>();
   if (txTypes.length) {
     const existingTx = await db.query.radiolinesTransmitterTypes.findMany({
