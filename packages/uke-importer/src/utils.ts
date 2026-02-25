@@ -94,8 +94,19 @@ export function parseExcelDate(val: number | string | undefined): Date {
     return new Date(epoch.getTime() + val * 86400000);
   }
 
-  const ddmmyyyy = String(val).match(/^(\d{2})-(\d{2})-(\d{4})$/);
-  const date = ddmmyyyy ? new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`) : new Date(val);
+  const parts = String(val).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  let date: Date;
+  if (parts) {
+    const [, a, b, yyyy] = parts as [string, string, string, string];
+    const aNum = Number.parseInt(a, 10);
+    const bNum = Number.parseInt(b, 10);
+    const isMDY = aNum <= 12 && bNum > 12;
+    const mm = isMDY ? a : b;
+    const dd = isMDY ? b : a;
+    date = new Date(`${yyyy}-${mm}-${dd}`);
+  } else {
+    date = new Date(val);
+  }
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 

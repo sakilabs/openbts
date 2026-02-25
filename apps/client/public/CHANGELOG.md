@@ -1,6 +1,21 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-02-25
+
+### 🩹 Fixes
+
+- Autocomplete now properly parses filters that are unquoted
+- UKE-Importer now uses regex to catch a date when it's provided as string
+
+### 🚀 Enhancements
+
+- History trends on `/statistics` has been redesigned to show all bands better etc.
+- Added sheet with detailed information on what was removed on `/deleted-entries`
+- Resized dots by 1px
+- Search now also looks in city column by default
+- Changed operator colors
+
 # 2026-02-24
 
 ### 🩹 Fixes
