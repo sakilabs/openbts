@@ -185,7 +185,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
           and(
             inArray(fields.station_id, lteStationIds),
             eq(fields.rat, "NR"),
-            sql`EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${fields.id} AND ${nrCells.type} = "nsa")`,
+            sql`EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${fields.id} AND ${nrCells.type} = 'nsa')`,
           ) ?? sql`true`,
       },
       with: {
