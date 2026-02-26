@@ -17,15 +17,18 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "nav-collapsed-state";
 
+type NavSubItem = {
+  title: string;
+  url: string;
+  icon?: IconSvgElement;
+};
+
 type NavItem = {
   title: string;
   key: string;
   url: string;
   icon: IconSvgElement;
-  items?: {
-    title: string;
-    url: string;
-  }[];
+  items?: NavSubItem[];
 };
 
 export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
@@ -83,6 +86,7 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.url}>
                           <SidebarMenuSubButton render={<Link to={subItem.url} />} isActive={location.pathname === subItem.url}>
+                            {subItem.icon && <HugeiconsIcon icon={subItem.icon} className="size-3.5" />}
                             <span>{subItem.title}</span>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>

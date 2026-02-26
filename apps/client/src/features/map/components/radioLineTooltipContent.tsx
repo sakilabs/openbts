@@ -29,7 +29,7 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
   return (
     <div className="min-w-40">
       <div className="flex items-center gap-2 px-2.5 py-1.5">
-        <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+        <span className="size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: color }} aria-hidden />
         <span className="text-xs font-semibold truncate">{operatorName}</span>
         <span className="ml-auto text-[10px] font-mono text-muted-foreground whitespace-nowrap">{distanceFormatted}</span>
         {linkTypeStyle && linkType && (

@@ -90,7 +90,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
     <div className="w-72 text-sm">
       <button type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => onOpenDetails(link)}>
         <div className="flex items-center gap-1.5">
-          <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+          <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
           <span className="font-medium text-xs" style={{ color }}>
             {normalizeOperatorName(operatorName)}
           </span>

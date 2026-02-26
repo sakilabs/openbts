@@ -3,11 +3,21 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AddCircleIcon,
   AirportTowerIcon,
-  ArrowRight01Icon,
+  AnalyticsUpIcon,
+  DatabaseIcon,
+  Delete02Icon,
+  Download04Icon,
+  FileAttachmentIcon,
   GitBranchIcon,
   Login01Icon,
+  Location01Icon,
+  MapsIcon,
+  Note01Icon,
+  SentIcon,
   Settings02Icon,
   SecurityLockIcon,
+  Upload04Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
@@ -15,20 +25,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AuthDialog } from "@/components/auth/authDialog";
 import { authClient } from "@/lib/authClient";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { APP_NAME } from "@/lib/api";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
@@ -41,11 +39,11 @@ const navMainConfig = [
     url: "#",
     icon: AirportTowerIcon,
     items: [
-      { titleKey: "items.mapView", url: "/" },
-      { titleKey: "items.database", url: "/stations" },
-      { titleKey: "items.statistics", url: "/statistics" },
-      { titleKey: "items.deletedEntries", url: "/deleted-entries" },
-      { titleKey: "items.clfExport", url: "/clf-export" },
+      { titleKey: "items.mapView", url: "/", icon: MapsIcon },
+      { titleKey: "items.database", url: "/stations", icon: DatabaseIcon },
+      { titleKey: "items.statistics", url: "/statistics", icon: AnalyticsUpIcon },
+      { titleKey: "items.deletedEntries", url: "/deleted-entries", icon: Delete02Icon },
+      { titleKey: "items.clfExport", url: "/clf-export", icon: Download04Icon },
     ],
   },
 ];
@@ -57,8 +55,8 @@ const authNavConfig = [
     url: "#",
     icon: AddCircleIcon,
     items: [
-      { titleKey: "items.submitStation", url: "/submission" },
-      { titleKey: "items.mySubmissions", url: "/account/submissions" },
+      { titleKey: "items.submitStation", url: "/submission", icon: AddCircleIcon },
+      { titleKey: "items.mySubmissions", url: "/account/submissions", icon: SentIcon },
     ],
   },
 ];
@@ -70,14 +68,14 @@ const adminNavConfig = [
     url: "#",
     icon: SecurityLockIcon,
     items: [
-      { titleKey: "items.users", url: "/admin/users", allowedRoles: ["admin"] },
-      { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor", "moderator"] },
-      { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor", "moderator"] },
-      { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor", "moderator"] },
-      { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor", "moderator"] },
-      { titleKey: "items.ukeImport", url: "/admin/uke-import", allowedRoles: ["admin"] },
-      { titleKey: "items.auditLogs", url: "/admin/audit-logs", allowedRoles: ["admin"] },
-      { titleKey: "items.settings", url: "/admin/settings", allowedRoles: ["admin"] },
+      { titleKey: "items.users", url: "/admin/users", allowedRoles: ["admin"], icon: UserGroupIcon },
+      { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor", "moderator"], icon: AirportTowerIcon },
+      { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor", "moderator"], icon: Location01Icon },
+      { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor", "moderator"], icon: SentIcon },
+      { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor", "moderator"], icon: FileAttachmentIcon },
+      { titleKey: "items.ukeImport", url: "/admin/uke-import", allowedRoles: ["admin"], icon: Upload04Icon },
+      { titleKey: "items.auditLogs", url: "/admin/audit-logs", allowedRoles: ["admin"], icon: Note01Icon },
+      { titleKey: "items.settings", url: "/admin/settings", allowedRoles: ["admin"], icon: Settings02Icon },
     ],
   },
 ];
@@ -98,6 +96,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         items: section.items.map((item) => ({
           title: t(item.titleKey),
           url: item.url,
+          icon: item.icon,
         })),
       })),
     [t],
@@ -116,15 +115,14 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         key: section.key,
         url: section.url,
         icon: section.icon,
-        items: section.items.filter((item) => item.allowedRoles.includes(userRole)).map((item) => ({ title: t(item.titleKey), url: item.url })),
+        items: section.items
+          .filter((item) => item.allowedRoles.includes(userRole))
+          .map((item) => ({ title: t(item.titleKey), url: item.url, icon: item.icon })),
       }))
       .filter((section) => section.items.length > 0);
   }, [isAdmin, userRole, t]);
 
   const location = useLocation();
-  const [settingsOpen, setSettingsOpen] = useState(location.pathname === "/preferences");
-
-  const settingsSubItems = [{ title: t("items.preferences"), url: "/preferences" }];
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -149,29 +147,12 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <SidebarMenuItem>
-              <CollapsibleTrigger render={<SidebarMenuButton tooltip={t("sections.settings")} />}>
-                <HugeiconsIcon icon={Settings02Icon} />
-                <span>{t("sections.settings")}</span>
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  className={cn("ml-auto size-4 transition-transform duration-200", settingsOpen && "rotate-90")}
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {settingsSubItems.map((item) => (
-                    <SidebarMenuSubItem key={item.url}>
-                      <SidebarMenuSubButton render={<Link to={item.url} />} isActive={location.pathname === item.url}>
-                        <span>{item.title}</span>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
+          <SidebarMenuItem>
+            <SidebarMenuButton render={<Link to="/preferences" />} isActive={location.pathname === "/preferences"}>
+              <HugeiconsIcon icon={Settings02Icon} />
+              <span>{t("items.preferences")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <ThemeToggle />
           </SidebarMenuItem>

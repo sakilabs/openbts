@@ -5,10 +5,6 @@ import {
   Cancel01Icon,
   Calendar03Icon,
   Location01Icon,
-  ArrowUp01Icon,
-  ArrowDown01Icon,
-  Link01Icon,
-  LicenseIcon,
   RulerIcon,
   Satellite01Icon,
   SignalFull02Icon,
@@ -16,7 +12,6 @@ import {
   Building02Icon,
   Activity01Icon,
   Radio01Icon,
-  Route02Icon,
   HorizontalResizeIcon,
   Rotate01Icon,
   DashboardSpeed01Icon,
@@ -55,7 +50,7 @@ function InfoRow({ icon, label, value, mono }: { icon?: typeof Cancel01Icon; lab
   return (
     <div className="flex items-center gap-2">
       {icon && <HugeiconsIcon icon={icon} className="size-3.5 text-muted-foreground shrink-0" />}
-      <span className="text-sm text-muted-foreground">{label}:</span>
+      <span className="text-xs text-muted-foreground shrink-0">{label}:</span>
       <span className={cn("text-sm font-medium", mono && "font-mono")}>{value}</span>
     </div>
   );
@@ -143,13 +138,8 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
 
       <div className="relative bg-background rounded-2xl shadow-2xl w-full max-w-3xl max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="shrink-0 bg-background/95 backdrop-blur-sm border-b">
-          <div className="px-6 py-4 flex items-start gap-4">
-            <div
-              className="size-12 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0"
-              style={{ backgroundColor: operatorColor }}
-            >
-              <HugeiconsIcon icon={Route02Icon} className="size-6" />
-            </div>
+          <div className="h-1" style={{ backgroundColor: operatorColor }} />
+          <div className="px-6 py-4 flex items-start">
             <div className="flex-1 min-w-0">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 min-w-0">
@@ -169,20 +159,16 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                     </span>
                   ) : null}
                 </div>
-                <div className="flex items-center gap-2">
-                  <HugeiconsIcon icon={RulerIcon} className="size-3.5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground/90">{formatDistance(distance)}</span>
-                  <span className="text-sm text-muted-foreground">·</span>
-                  <HugeiconsIcon icon={Radio01Icon} className="size-3.5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
-                  {(link.linkType === "FDD" || link.linkType === "2+0 FDD" || link.linkType === "XPIC" || link.linkType === "SD") && (
-                    <span className="text-xs text-muted-foreground">+{link.directions.length - 1}</span>
-                  )}
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground/90">{formatDistance(distance)}</span>
+                  <span>·</span>
+                  <span className="font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
+                  {(link.linkType === "FDD" || link.linkType === "2+0 FDD" || link.linkType === "XPIC" || link.linkType === "SD") &&
+                    link.directions.length > 1 && <span className="text-xs">+{link.directions.length - 1}</span>}
                   {totalSpeed != null && (
                     <>
-                      <span className="text-sm text-muted-foreground">·</span>
-                      <HugeiconsIcon icon={DashboardSpeed01Icon} className="size-3.5 text-muted-foreground" />
-                      <span className="text-sm font-medium font-mono text-foreground/90">{formatSpeed(totalSpeed)}</span>
+                      <span>·</span>
+                      <span className="font-medium font-mono text-foreground/90">{formatSpeed(totalSpeed)}</span>
                     </>
                   )}
                 </div>
@@ -212,80 +198,10 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
             />
           )}
 
-          <div className="px-6 py-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <HugeiconsIcon icon={ArrowUp01Icon} className="size-3.5" />
-                  {t("radiolines.txSide")}
-                </h3>
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-                    <span className="font-mono text-sm font-medium">
-                      {formatCoordinates(radioLine.tx.latitude, radioLine.tx.longitude, preferences.gpsFormat)}
-                    </span>
-                    <CopyButton text={`${radioLine.tx.latitude}, ${radioLine.tx.longitude}`} />
-                  </div>
-                  <InfoRow icon={RulerIcon} label={t("radiolines.height")} value={`${radioLine.tx.height} m`} />
-                  {radioLine.tx.antenna?.type?.name && (
-                    <InfoRow icon={Satellite01Icon} label={t("radiolines.antennaType")} value={radioLine.tx.antenna.type.name} />
-                  )}
-                  {radioLine.tx.antenna?.gain && (
-                    <InfoRow icon={SignalFull02Icon} label={t("radiolines.antennaGain")} value={`${radioLine.tx.antenna.gain} dBi`} mono />
-                  )}
-                  {radioLine.tx.antenna?.height && (
-                    <InfoRow icon={RulerIcon} label={t("radiolines.antennaHeight")} value={`${radioLine.tx.antenna.height} m`} mono />
-                  )}
-                  {radioLine.tx.eirp && <InfoRow icon={FlashIcon} label={t("radiolines.eirp")} value={`${radioLine.tx.eirp} dBW`} mono />}
-                  {radioLine.tx.transmitter?.type?.name && (
-                    <InfoRow icon={Satellite01Icon} label={t("radiolines.transmitterType")} value={radioLine.tx.transmitter.type.name} />
-                  )}
-                  {radioLine.tx.transmitter?.type?.manufacturer?.name && (
-                    <InfoRow icon={Building02Icon} label={t("radiolines.manufacturer")} value={radioLine.tx.transmitter.type.manufacturer.name} />
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5" />
-                  {t("radiolines.rxSide")}
-                </h3>
-                <div className="rounded-xl border bg-muted/20 p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-                    <span className="font-mono text-sm font-medium">
-                      {formatCoordinates(radioLine.rx.latitude, radioLine.rx.longitude, preferences.gpsFormat)}
-                    </span>
-                    <CopyButton text={`${radioLine.rx.latitude}, ${radioLine.rx.longitude}`} />
-                  </div>
-                  <InfoRow icon={RulerIcon} label={t("radiolines.height")} value={`${radioLine.rx.height} m`} />
-                  {radioLine.rx.type?.name && <InfoRow icon={Satellite01Icon} label={t("radiolines.receiverType")} value={radioLine.rx.type.name} />}
-                  {radioLine.rx.gain !== null && (
-                    <InfoRow icon={SignalFull02Icon} label={t("radiolines.antennaGain")} value={`${radioLine.rx.gain} dBi`} mono />
-                  )}
-                  {radioLine.rx.height_antenna !== null && (
-                    <InfoRow icon={RulerIcon} label={t("radiolines.antennaHeight")} value={`${radioLine.rx.height_antenna} m`} mono />
-                  )}
-                  {radioLine.rx.noise_figure !== null && (
-                    <InfoRow icon={Activity01Icon} label={t("radiolines.noiseFigure")} value={`${radioLine.rx.noise_figure} dB`} mono />
-                  )}
-                  {radioLine.rx.type?.manufacturer?.name && (
-                    <InfoRow icon={Building02Icon} label={t("radiolines.manufacturer")} value={radioLine.rx.type.manufacturer.name} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="px-6 pb-5">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <HugeiconsIcon icon={Link01Icon} className="size-3.5" />
-              {t("radiolines.linkParams")}
-            </h3>
+          <div className="px-6 pt-5 pb-2">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">{t("radiolines.linkParams")}</h3>
             <div className="rounded-xl border bg-muted/20 p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
                 <InfoRow
                   icon={Radio01Icon}
                   label={t("radiolines.frequency")}
@@ -316,11 +232,75 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
             </div>
           </div>
 
+          <div className="px-6 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">{t("radiolines.txSide")}</h3>
+                <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
+                    <span className="font-mono text-sm font-medium">
+                      {formatCoordinates(radioLine.tx.latitude, radioLine.tx.longitude, preferences.gpsFormat)}
+                    </span>
+                    <CopyButton text={`${radioLine.tx.latitude}, ${radioLine.tx.longitude}`} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <InfoRow icon={RulerIcon} label={t("radiolines.height")} value={`${radioLine.tx.height} m`} />
+                    {radioLine.tx.antenna?.type?.name && (
+                      <InfoRow icon={Satellite01Icon} label={t("radiolines.antennaType")} value={radioLine.tx.antenna.type.name} />
+                    )}
+                    {radioLine.tx.antenna?.gain && (
+                      <InfoRow icon={SignalFull02Icon} label={t("radiolines.antennaGain")} value={`${radioLine.tx.antenna.gain} dBi`} mono />
+                    )}
+                    {radioLine.tx.antenna?.height && (
+                      <InfoRow icon={RulerIcon} label={t("radiolines.antennaHeight")} value={`${radioLine.tx.antenna.height} m`} mono />
+                    )}
+                    {radioLine.tx.eirp && <InfoRow icon={FlashIcon} label={t("radiolines.eirp")} value={`${radioLine.tx.eirp} dBW`} mono />}
+                    {radioLine.tx.transmitter?.type?.name && (
+                      <InfoRow icon={Satellite01Icon} label={t("radiolines.transmitterType")} value={radioLine.tx.transmitter.type.name} />
+                    )}
+                    {radioLine.tx.transmitter?.type?.manufacturer?.name && (
+                      <InfoRow icon={Building02Icon} label={t("radiolines.manufacturer")} value={radioLine.tx.transmitter.type.manufacturer.name} />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">{t("radiolines.rxSide")}</h3>
+                <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
+                    <span className="font-mono text-sm font-medium">
+                      {formatCoordinates(radioLine.rx.latitude, radioLine.rx.longitude, preferences.gpsFormat)}
+                    </span>
+                    <CopyButton text={`${radioLine.rx.latitude}, ${radioLine.rx.longitude}`} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <InfoRow icon={RulerIcon} label={t("radiolines.height")} value={`${radioLine.rx.height} m`} />
+                    {radioLine.rx.type?.name && (
+                      <InfoRow icon={Satellite01Icon} label={t("radiolines.receiverType")} value={radioLine.rx.type.name} />
+                    )}
+                    {radioLine.rx.gain !== null && (
+                      <InfoRow icon={SignalFull02Icon} label={t("radiolines.antennaGain")} value={`${radioLine.rx.gain} dBi`} mono />
+                    )}
+                    {radioLine.rx.height_antenna !== null && (
+                      <InfoRow icon={RulerIcon} label={t("radiolines.antennaHeight")} value={`${radioLine.rx.height_antenna} m`} mono />
+                    )}
+                    {radioLine.rx.noise_figure !== null && (
+                      <InfoRow icon={Activity01Icon} label={t("radiolines.noiseFigure")} value={`${radioLine.rx.noise_figure} dB`} mono />
+                    )}
+                    {radioLine.rx.type?.manufacturer?.name && (
+                      <InfoRow icon={Building02Icon} label={t("radiolines.manufacturer")} value={radioLine.rx.type.manufacturer.name} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="px-6 pb-5">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <HugeiconsIcon icon={LicenseIcon} className="size-3.5" />
-              {t("stationDetails:permits.permit")}
-            </h3>
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">{t("stationDetails:permits.permit")}</h3>
             <div className="rounded-xl border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

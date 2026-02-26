@@ -1,6 +1,21 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-02-26
+
+### 🩹 Fixes
+
+- Fixed some React Compiler stuff
+
+### 🚀 Enhancements
+
+- Redesigned radioline dialog
+- Redesigned headers of station, UKE station & radioline dialogs
+- Changed operator dots to rounded boxes
+- Added option to enable tooltips for station "dots" in the preferences
+- Added icons for all items on navbar
+- Redesigned badges across whole app
+
 # 2026-02-25
 
 ### 🩹 Fixes

@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
-import type MapLibreGL from "maplibre-gl";
+import { useEffect, useRef, type ReactNode } from "react";
+import { createRoot } from "react-dom/client";
+import MapLibreGL from "maplibre-gl";
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
 import { syncPieImages } from "../pieChart";
 
@@ -20,7 +21,39 @@ type UseMapLayerArgs = {
   onFeatureClick: FeatureClickHandler;
   onFeatureContextMenu?: FeatureClickHandler;
   onFeatureMouseDown?: (locationId: number) => void;
+  renderHoverTooltip?: (data: FeatureClickData) => ReactNode | null;
 };
+
+type ActiveTooltip = {
+  popup: maplibregl.Popup;
+  root: ReturnType<typeof createRoot>;
+  activeLocationId: number;
+};
+
+function destroyTooltip(state: ActiveTooltip | null): null {
+  state?.root.unmount();
+  state?.popup.remove();
+  return null;
+}
+
+function buildTooltip(state: ActiveTooltip | null, locationId: number): ActiveTooltip {
+  if (state?.activeLocationId === locationId) return state;
+
+  state?.root.unmount();
+  state?.popup.remove();
+
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  const popup = new MapLibreGL.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    className: "station-hover-tooltip",
+    maxWidth: "none",
+    offset: 12,
+  }).setDOMContent(container);
+
+  return { popup, root, activeLocationId: locationId };
+}
 
 const SYMBOL_LAYER_ID = `${POINT_LAYER_ID}-symbol`;
 const LAYER_IDS = [POINT_LAYER_ID, SYMBOL_LAYER_ID] as const;
@@ -65,9 +98,18 @@ function extractFeatureClickData(feature: GeoJSON.Feature): FeatureClickData | n
   };
 }
 
-export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick, onFeatureContextMenu, onFeatureMouseDown }: UseMapLayerArgs) {
-  const callbackRefs = useRef({ onFeatureClick, onFeatureContextMenu, onFeatureMouseDown });
-  callbackRefs.current = { onFeatureClick, onFeatureContextMenu, onFeatureMouseDown };
+export function useMapLayer({
+  map,
+  isLoaded,
+  geoJSON,
+  onFeatureClick,
+  onFeatureContextMenu,
+  onFeatureMouseDown,
+  renderHoverTooltip,
+}: UseMapLayerArgs) {
+  const callbackRefs = useRef({ onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip });
+  callbackRefs.current = { onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip };
+  const tooltipRef = useRef<ActiveTooltip | null>(null);
 
   const geoJSONRef = useRef(geoJSON);
   geoJSONRef.current = geoJSON;
@@ -118,12 +160,54 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick, onFeatureC
       }
     };
 
-    const handleMouseEnter = () => {
+    const handleMouseEnter = (e: maplibregl.MapMouseEvent) => {
       map.getCanvas().style.cursor = "pointer";
+
+      const { renderHoverTooltip } = callbackRefs.current;
+      if (!renderHoverTooltip) return;
+
+      const features = map.queryRenderedFeatures(e.point, { layers: [...LAYER_IDS] });
+      const data = features[0] && extractFeatureClickData(features[0]);
+      if (!data) return;
+
+      const content = renderHoverTooltip(data);
+      if (!content) return;
+
+      const tooltip = buildTooltip(tooltipRef.current, data.locationId);
+      tooltipRef.current = tooltip;
+      tooltip.root.render(content);
+      tooltip.popup.setLngLat(data.coordinates).addTo(map);
+    };
+
+    const handleMouseMove = (e: maplibregl.MapMouseEvent) => {
+      const { renderHoverTooltip } = callbackRefs.current;
+      if (!renderHoverTooltip || !tooltipRef.current) return;
+
+      const features = map.queryRenderedFeatures(e.point, { layers: [...LAYER_IDS] });
+      const data = features[0] && extractFeatureClickData(features[0]);
+
+      if (!data) {
+        tooltipRef.current = destroyTooltip(tooltipRef.current);
+        return;
+      }
+
+      if (tooltipRef.current.activeLocationId === data.locationId) {
+        tooltipRef.current.popup.setLngLat(data.coordinates);
+        return;
+      }
+
+      const content = renderHoverTooltip(data);
+      if (!content) return;
+
+      const tooltip = buildTooltip(tooltipRef.current, data.locationId);
+      tooltipRef.current = tooltip;
+      tooltip.root.render(content);
+      tooltip.popup.setLngLat(data.coordinates).addTo(map);
     };
 
     const handleMouseLeave = () => {
       map.getCanvas().style.cursor = "";
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
 
     ensureLayersExist();
@@ -134,6 +218,7 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick, onFeatureC
       map.on("click", layerId, handleClick);
       map.on("contextmenu", layerId, handleContextMenu);
       map.on("mouseenter", layerId, handleMouseEnter);
+      map.on("mousemove", layerId, handleMouseMove);
       map.on("mouseleave", layerId, handleMouseLeave);
     }
 
@@ -148,6 +233,7 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick, onFeatureC
           map.off("click", layerId, handleClick);
           map.off("contextmenu", layerId, handleContextMenu);
           map.off("mouseenter", layerId, handleMouseEnter);
+          map.off("mousemove", layerId, handleMouseMove);
           map.off("mouseleave", layerId, handleMouseLeave);
         }
 
@@ -160,6 +246,7 @@ export function useMapLayer({ map, isLoaded, geoJSON, onFeatureClick, onFeatureC
       }
 
       addedImagesRef.current.clear();
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
   }, [map, isLoaded]);
 

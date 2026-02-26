@@ -70,7 +70,7 @@ function OperatorsSection({
       <div className="grid grid-cols-2 gap-1">
         {topOperators.map((op) => (
           <Checkbox key={op.mnc} checked={filters.operators.includes(op.mnc)} onChange={() => onToggleOperator(op.mnc)}>
-            <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+            <div className="size-3 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
             <span className="flex-1 text-left truncate">{op.name}</span>
           </Checkbox>
         ))}
@@ -95,7 +95,7 @@ function OperatorsSection({
             <div className="grid grid-cols-2 gap-1 mt-1.5 pt-1.5 border-t border-border/50">
               {otherOperators.map((op) => (
                 <Checkbox key={op.mnc} checked={filters.operators.includes(op.mnc)} onChange={() => onToggleOperator(op.mnc)}>
-                  <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                  <div className="size-3 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
                   <span className="flex-1 text-left truncate">{op.name}</span>
                 </Checkbox>
               ))}

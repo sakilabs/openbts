@@ -42,7 +42,7 @@ export function AnnouncementBanner() {
     try {
       localStorage.setItem(DISMISSED_KEY, announcement.message);
     } catch {}
-  }, [announcement?.message]);
+  }, [announcement]);
 
   if (!announcement?.enabled || !announcement.message) return null;
   if (dismissed === announcement.message) return null;

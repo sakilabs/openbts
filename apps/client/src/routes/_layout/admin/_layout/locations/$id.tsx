@@ -277,7 +277,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
                       className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
                     >
                       {station.operator && (
-                        <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(station.operator.mnc) }} />
+                        <div className="size-3 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(station.operator.mnc) }} />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">

@@ -84,7 +84,7 @@ export function StationDetailHeader({
         <div className="flex items-center gap-2.5 px-3 py-1.5 bg-secondary/30 rounded-full border border-border/40 shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-w-full overflow-hidden group transition-colors">
           {selectedOperator && (
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="size-2.5 rounded-full relative z-10" style={{ backgroundColor: getOperatorColor(selectedOperator.mnc) }} />
+              <div className="size-2.5 rounded-[2px] relative z-10" style={{ backgroundColor: getOperatorColor(selectedOperator.mnc) }} />
             </div>
           )}
           <span className="font-bold text-sm text-foreground tracking-tight truncate min-w-0">

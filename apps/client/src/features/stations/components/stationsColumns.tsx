@@ -84,7 +84,7 @@ export function createStationsColumns({ t, locale, isSearchActive = false, sort,
         if (!s.operator) return <span className="text-muted-foreground">-</span>;
         return (
           <div className="flex items-start gap-2">
-            <div className="size-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: getOperatorColor(s.operator.mnc) }} />
+            <div className="size-3 rounded-[2px] shrink-0 mt-1" style={{ backgroundColor: getOperatorColor(s.operator.mnc) }} />
             <div className="flex flex-col">
               <span className="font-medium">{s.operator.name}</span>
               {s.operator.full_name !== s.operator.name && (

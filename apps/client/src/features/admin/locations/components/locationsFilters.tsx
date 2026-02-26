@@ -139,7 +139,7 @@ export function LocationsFilters({
                   checked={filters.operators.includes(op.mnc)}
                   onCheckedChange={() => handleToggleOperator(op.mnc)}
                 />
-                <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                <div className="size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
                 <span className="text-sm truncate">{op.name}</span>
               </label>
             ))}
@@ -176,7 +176,7 @@ export function LocationsFilters({
                         checked={filters.operators.includes(op.mnc)}
                         onCheckedChange={() => handleToggleOperator(op.mnc)}
                       />
-                      <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                      <div className="size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
                       <span className="text-sm truncate">{op.name}</span>
                     </label>
                   ))}

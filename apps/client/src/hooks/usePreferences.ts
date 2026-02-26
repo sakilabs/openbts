@@ -11,6 +11,7 @@ export interface UserPreferences {
   radiolinesMinZoom: number;
   mapStationsLimit: number;
   mapRadiolinesLimit: number;
+  showMapHoverTooltip: boolean;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -22,6 +23,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   radiolinesMinZoom: 8,
   mapStationsLimit: 1000,
   mapRadiolinesLimit: 500,
+  showMapHoverTooltip: false,
 };
 
 let listeners: Array<() => void> = [];

@@ -174,7 +174,7 @@ function ClfExportPage() {
                       const operator = sortedOperators.find((op) => op.mnc === mnc);
                       return operator ? (
                         <ComboboxChip key={mnc}>
-                          <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(mnc) }} />
+                          <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(mnc) }} />
                           {operator.name}
                         </ComboboxChip>
                       ) : null;
@@ -189,7 +189,7 @@ function ClfExportPage() {
                       <ComboboxEmpty>{t("common:placeholder.noOperatorsFound")}</ComboboxEmpty>
                       {sortedOperators.map((operator) => (
                         <ComboboxItem key={operator.mnc} value={operator}>
-                          <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
+                          <div className="size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
                           <span>{operator.name}</span>
                           <span className="text-muted-foreground text-xs ml-auto">{operator.mnc}</span>
                         </ComboboxItem>

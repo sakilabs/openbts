@@ -22,7 +22,7 @@ function StationSkeleton() {
   return (
     <div className="px-3 py-2 border-b border-border/30 last:border-0">
       <div className="flex items-center gap-1.5">
-        <Skeleton className="size-2 rounded-full" />
+        <Skeleton className="size-2 rounded-[2px]" />
         <Skeleton className="h-3 w-20" />
         <Skeleton className="h-2.5 w-12" />
       </div>
@@ -135,7 +135,7 @@ export const PopupContent = memo(function PopupContent({
                 onClick={() => onOpenUkeStationDetails(station)}
               >
                 <div className="flex items-center gap-1.5">
-                  <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
                   <span className="font-medium text-xs" style={{ color }}>
                     {operatorName}
                   </span>
@@ -174,7 +174,7 @@ export const PopupContent = memo(function PopupContent({
                 onClick={() => onOpenStationDetails(station.id)}
               >
                 <div className="flex items-center gap-1.5">
-                  <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                  <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
                   <span className="font-medium text-xs" style={{ color }}>
                     {operatorName}
                   </span>

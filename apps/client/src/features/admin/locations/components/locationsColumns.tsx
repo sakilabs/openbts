@@ -119,11 +119,11 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
               <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 text-muted-foreground" />
               <span className="text-sm font-medium">{stations.length}</span>
             </div>
-            <div className="flex items-center -space-x-1">
+            <div className="flex items-center gap-0.5">
               {uniqueOperators.slice(0, 4).map((op) => (
                 <Tooltip key={op.id}>
                   <TooltipTrigger>
-                    <div className="size-3 rounded-full border border-background" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                    <div className="size-3 rounded-[2px] border border-background" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{op.name}</p>

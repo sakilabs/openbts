@@ -95,10 +95,8 @@ function AdminSubmissionsListPage() {
           const type = getValue();
           const typeCfg = SUBMISSION_TYPE[type];
           return (
-            <span
-              className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border", typeCfg.badgeClass)}
-            >
-              <span className={cn("size-1.5 rounded-full", typeCfg.dotClass)} />
+            <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase border", typeCfg.badgeClass)}>
+              <span className={cn("size-1.5 rounded-[1px]", typeCfg.dotClass)} />
               {t(`common:submissionType.${type}`)}
             </span>
           );

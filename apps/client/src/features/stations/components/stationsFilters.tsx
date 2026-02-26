@@ -59,7 +59,7 @@ export function StationsFilters({
   totalStations,
   isSheet = false,
 }: StationsFiltersProps) {
-  const { t, i18n } = useTranslation(["stations", "common"]);
+  const { t } = useTranslation(["stations", "common"]);
   const activeFilterCount = filters.operators.length + filters.bands.length + filters.rat.length + selectedRegions.length;
 
   const [showOtherOperators, setShowOtherOperators] = useState(false);
@@ -217,7 +217,7 @@ export function StationsFilters({
                   checked={filters.operators.includes(op.mnc)}
                   onCheckedChange={() => handleToggleOperator(op.mnc)}
                 />
-                <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                <div className="size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
                 <span className="text-sm truncate">{op.name}</span>
               </label>
             ))}
@@ -254,7 +254,7 @@ export function StationsFilters({
                         checked={filters.operators.includes(op.mnc)}
                         onCheckedChange={() => handleToggleOperator(op.mnc)}
                       />
-                      <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+                      <div className="size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
                       <span className="text-sm truncate">{op.name}</span>
                     </label>
                   ))}

@@ -108,11 +108,11 @@ export function MySubmissions() {
             <div className="flex items-center gap-3 px-4 py-3">
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                  "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border",
                   typeCfg.badgeClass,
                 )}
               >
-                <span className={cn("size-1.5 rounded-full", typeCfg.dotClass)} />
+                <span className={cn("size-1.5 rounded-[1px]", typeCfg.dotClass)} />
                 {t(`common:submissionType.${submission.type}`)}
               </span>
 

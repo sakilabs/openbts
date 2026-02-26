@@ -5,7 +5,6 @@ import {
   Cancel01Icon,
   Globe02Icon,
   Link01Icon,
-  Wifi01Icon,
   Location01Icon,
   Building02Icon,
   Tag01Icon,
@@ -69,13 +68,8 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
       <div className="relative bg-background rounded-2xl shadow-2xl w-full max-w-3xl max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="shrink-0 bg-background/95 backdrop-blur-sm border-b">
-          <div className="px-6 py-4 flex items-start gap-4">
-            <div
-              className="size-12 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0"
-              style={{ backgroundColor: operatorColor }}
-            >
-              <HugeiconsIcon icon={Wifi01Icon} className="size-6" />
-            </div>
+          <div className="h-1" style={{ backgroundColor: operatorColor }} />
+          <div className="px-6 py-4 flex items-start">
             <div className="flex-1 min-w-0">
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2 min-w-0">
@@ -180,10 +174,13 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                         render={
                           <a
                             href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
+                            aria-label="View on SI2PEM"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
-                          />
+                          >
+                            <span className="sr-only">{t("specs.si2pemLink")}</span>
+                          </a>
                         }
                       >
                         <HugeiconsIcon icon={Link01Icon} className="size-3.5 text-muted-foreground" />

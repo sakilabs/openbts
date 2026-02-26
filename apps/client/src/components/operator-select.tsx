@@ -31,7 +31,7 @@ export function OperatorSelect({ operators, value, onChange, disabled, className
         <SelectValue>
           {selectedOperator ? (
             <div className="flex items-center gap-2">
-              <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(selectedOperator.mnc) }} />
+              <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: getOperatorColor(selectedOperator.mnc) }} />
               {selectedOperator.name}
             </div>
           ) : (
@@ -43,7 +43,7 @@ export function OperatorSelect({ operators, value, onChange, disabled, className
         {topOperators.map((op) => (
           <SelectItem key={op.id} value={op.id.toString()}>
             <div className="flex items-center gap-2">
-              <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+              <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
               {op.name}
             </div>
           </SelectItem>
@@ -52,7 +52,7 @@ export function OperatorSelect({ operators, value, onChange, disabled, className
         {restOperators.map((op) => (
           <SelectItem key={op.id} value={op.id.toString()}>
             <div className="flex items-center gap-2">
-              <div className="size-2.5 rounded-full" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
+              <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
               {op.name}
             </div>
           </SelectItem>

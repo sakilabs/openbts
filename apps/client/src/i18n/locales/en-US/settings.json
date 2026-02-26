@@ -23,7 +23,11 @@
     "mapStationsLimit": "Stations Limit on Map",
     "mapStationsLimitHint": "Maximum number of stations displayed on the map at once",
     "mapRadiolinesLimit": "Radiolines Limit on Map",
-    "mapRadiolinesLimitHint": "Maximum number of radiolines displayed on the map at once"
+    "mapRadiolinesLimitHint": "Maximum number of radiolines displayed on the map at once",
+    "mapHoverTooltip": "Map Hover Tooltip",
+    "mapHoverTooltipHint": "Show a preview tooltip when hovering over station markers on the map",
+    "mapHoverTooltipLabel": "Enable hover tooltip",
+    "mapHoverTooltipDesc": "Show station count and location when hovering over markers"
   },
   "page": {
     "title": "Account Settings",

@@ -183,11 +183,11 @@ function AdminAuditLogsPage() {
           return (
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border",
                 style.badgeClass,
               )}
             >
-              <span className={cn("size-1.5 rounded-full", style.dotClass)} />
+              <span className={cn("size-1.5 rounded-[1px]", style.dotClass)} />
               {action}
             </span>
           );
@@ -316,7 +316,7 @@ function AdminAuditLogsPage() {
             <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-muted-foreground">
               <HugeiconsIcon icon={Cancel01Icon} className="size-3" data-icon="inline-start" />
               {t("common:actions.clearAll")}
-              <span className="ml-1 bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none">
+              <span className="ml-1 bg-muted text-muted-foreground rounded-sm px-1.5 py-0.5 text-[10px] font-bold leading-none">
                 {activeFilterCount}
               </span>
             </Button>

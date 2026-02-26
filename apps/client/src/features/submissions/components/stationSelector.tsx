@@ -104,7 +104,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
               <div className="flex items-center justify-between gap-4 p-3 border rounded-lg bg-muted/30">
                 <div className="flex items-start gap-3 min-w-0">
                   <div
-                    className="size-3 rounded-full shrink-0 mt-1"
+                    className="size-3 rounded-[2px] shrink-0 mt-1"
                     style={{ backgroundColor: getOperatorColor(selectedStation.operator?.mnc ?? 0) }}
                   />
                   <div className="min-w-0 space-y-1">
@@ -172,7 +172,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
                           >
                             <div
-                              className="size-2.5 rounded-full shrink-0 shadow-sm border border-white dark:border-gray-800 transition-transform group-hover:scale-125"
+                              className="size-2.5 rounded-[2px] shrink-0 shadow-sm border border-white dark:border-gray-800 transition-transform group-hover:scale-125"
                               style={{ backgroundColor: getOperatorColor(station.operator?.mnc ?? 0) }}
                             />
                             <div className="flex-1 min-w-0">

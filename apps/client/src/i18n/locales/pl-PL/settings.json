@@ -23,7 +23,11 @@
     "mapStationsLimit": "Limit stacji na mapie",
     "mapStationsLimitHint": "Maksymalna liczba stacji wyświetlanych jednocześnie na mapie",
     "mapRadiolinesLimit": "Limit radiolinii na mapie",
-    "mapRadiolinesLimitHint": "Maksymalna liczba radiolinii wyświetlanych jednocześnie na mapie"
+    "mapRadiolinesLimitHint": "Maksymalna liczba radiolinii wyświetlanych jednocześnie na mapie",
+    "mapHoverTooltip": "Podpowiedź na mapie",
+    "mapHoverTooltipHint": "Pokaż podpowiedź po najechaniu na znaczniki stacji na mapie",
+    "mapHoverTooltipLabel": "Włącz podpowiedź po najechaniu",
+    "mapHoverTooltipDesc": "Pokaż liczbę stacji i lokalizację po najechaniu na znaczniki"
   },
   "page": {
     "title": "Ustawienia konta",

@@ -47,11 +47,11 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.columns.action")}</span>
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border w-fit",
+                    "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border w-fit",
                     style.badgeClass,
                   )}
                 >
-                  <span className={cn("size-1.5 rounded-full", style.dotClass)} />
+                  <span className={cn("size-1.5 rounded-[1px]", style.dotClass)} />
                   {entry.action}
                 </span>
               </div>

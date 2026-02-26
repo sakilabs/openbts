@@ -178,6 +178,30 @@ function PreferencesPage() {
                 <span className="text-sm font-mono font-medium tabular-nums w-12 text-right shrink-0">{preferences.mapRadiolinesLimit}</span>
               </div>
             </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapHoverTooltip")}</Label>
+              <p className="text-xs text-muted-foreground">{t("preferences.mapHoverTooltipHint")}</p>
+              <label
+                htmlFor="hover-tooltip"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                  preferences.showMapHoverTooltip ? "bg-primary/10" : "hover:bg-muted",
+                )}
+              >
+                <Checkbox
+                  id="hover-tooltip"
+                  checked={preferences.showMapHoverTooltip}
+                  onCheckedChange={(checked) => updatePreferences({ showMapHoverTooltip: !!checked })}
+                />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{t("preferences.mapHoverTooltipLabel")}</span>
+                  <span className="text-xs text-muted-foreground">{t("preferences.mapHoverTooltipDesc")}</span>
+                </div>
+              </label>
+            </div>
           </section>
         </div>
       </div>

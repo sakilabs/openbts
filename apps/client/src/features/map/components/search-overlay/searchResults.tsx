@@ -103,7 +103,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
                 >
                   <div
-                    className="size-2.5 rounded-full shrink-0 shadow-sm border border-white dark:border-gray-800 transition-transform group-hover:scale-125"
+                    className="size-2.5 rounded-[2px] shrink-0 shadow-sm border border-white dark:border-gray-800 transition-transform group-hover:scale-125"
                     style={{
                       backgroundColor: getOperatorColor(station.operator?.mnc),
                     }}

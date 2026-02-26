@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMap } from "@/components/ui/map";
+import { usePreferences } from "@/hooks/usePreferences";
 
 import type {
   StationFilters,
@@ -14,7 +15,9 @@ import type { LocationsResponse } from "../api";
 import { fetchLocationWithStations } from "../api";
 import { fetchStation, fetchUkePermit } from "@/features/station-details/api";
 import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
+import { getOperatorColor } from "@/lib/operatorUtils";
 import { groupPermitsByStation } from "../utils";
+import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 import { useUrlSync } from "../hooks/useURLSync";
 import { useMapLayer } from "../hooks/useMapLayer";
 import { showApiError } from "@/lib/api";
@@ -117,6 +120,7 @@ export function StationsLayer({
   cleanupPopup,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
+  const { preferences } = usePreferences();
   const pendingStationId = useRef<number | string | undefined>(null);
   const pendingLocationId = useRef<number | null>(null);
   const pendingUkeLocationId = useRef<number | null>(null);
@@ -324,6 +328,37 @@ export function StationsLayer({
     [onActiveMarkerChange],
   );
 
+  const renderHoverTooltip = useCallback(
+    (data: { locationId: number; city?: string; address?: string; source: string }) => {
+      const isUke = data.source === "uke";
+
+      let entries: Array<{ name: string; color: string; stationId: string }>;
+      if (isUke) {
+        const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === data.locationId);
+        if (!ukeLocation?.permits?.length) return null;
+        const ukeStations = groupPermitsByStation(ukeLocation.permits, ukeLocation);
+        entries = ukeStations.map((s) => ({
+          name: s.operator?.name || "Unknown",
+          color: s.operator?.mnc ? getOperatorColor(s.operator.mnc) : "#3b82f6",
+          stationId: s.station_id,
+        }));
+      } else {
+        const locationData = locations.find((loc) => loc.id === data.locationId);
+        if (!locationData?.stations?.length) return null;
+        entries = locationData.stations.map((s) => ({
+          name: s.operator?.name || "Unknown",
+          color: s.operator?.mnc ? getOperatorColor(s.operator.mnc) : "#3b82f6",
+          stationId: s.station_id,
+        }));
+      }
+
+      if (entries.length === 0) return null;
+
+      return <StationHoverTooltipContent city={data.city} address={data.address} stations={entries} />;
+    },
+    [locations],
+  );
+
   useMapLayer({
     map,
     isLoaded,
@@ -331,6 +366,7 @@ export function StationsLayer({
     onFeatureClick: handleFeatureClick,
     onFeatureContextMenu: handleFeatureContextMenu,
     onFeatureMouseDown: handleFeatureMouseDown,
+    renderHoverTooltip: preferences.showMapHoverTooltip ? renderHoverTooltip : undefined,
   });
 
   useEffect(() => cleanupPopup, [cleanupPopup]);
