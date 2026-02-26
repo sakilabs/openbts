@@ -33,7 +33,7 @@ export function createUnassignedPermitsColumns({ t, tCommon }: CreateColumnsOpti
         const color = op.mnc ? getOperatorColor(op.mnc) : undefined;
         return (
           <div className="flex items-center gap-2">
-            {color && <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />}
+            {color && <div className="size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />}
             <span className="text-sm font-medium truncate">{op.name}</span>
           </div>
         );

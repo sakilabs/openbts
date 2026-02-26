@@ -6,6 +6,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🩹 Fixes
 
 - Fixed some React Compiler stuff
+- Fixed adding data to all CLF exports
+- Fixed associating the stations with permits
 
 ### 🚀 Enhancements
 

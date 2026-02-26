@@ -26,7 +26,6 @@ export function UnassignedPermitsDataTable({
   data,
   isLoading,
   onOpenDetails,
-  onViewOnMap,
   totalItems,
   containerRef,
   pagination,

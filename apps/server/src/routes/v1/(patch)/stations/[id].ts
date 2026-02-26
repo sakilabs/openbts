@@ -83,6 +83,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               record_id: oldLocationId,
               old_values: oldLocation ?? { id: oldLocationId },
               new_values: null,
+              metadata: {
+                station_id: station_id,
+                reason: "stations.update",
+              },
             },
             req,
           );

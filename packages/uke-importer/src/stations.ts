@@ -245,9 +245,10 @@ export async function associateStationsWithPermits(): Promise<boolean> {
   }
 
   const permitStationIds = [...new Set(permits.map((p) => p.station_id))];
-  logger.log(`Looking for ${permitStationIds.length} unique station IDs`);
+  const permitOperatorIds = [...new Set(permits.map((p) => p.operator_id))];
+  logger.log(`Looking for ${permitStationIds.length} unique station IDs across ${permitOperatorIds.length} operators`);
   const matchingStations = await db.query.stations.findMany({
-    where: { station_id: { in: permitStationIds } },
+    where: { station_id: { in: permitStationIds }, operator_id: { in: permitOperatorIds } },
     columns: { id: true, station_id: true, operator_id: true },
   });
   logger.log(`Found ${matchingStations.length} matching stations`);
