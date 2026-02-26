@@ -181,7 +181,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
   if (lteStationIds.length > 0) {
     const nrBandRows = await db.query.cells.findMany({
       where: {
-        RAW: (fields) => and(inArray(fields.station_id, lteStationIds), eq(fields.rat, "NR")) ?? sql`true`,
+        RAW: (fields) =>
+          and(
+            inArray(fields.station_id, lteStationIds),
+            eq(fields.rat, "NR"),
+            sql`EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${fields.id} AND ${nrCells.type} = "nsa")`,
+          ) ?? sql`true`,
       },
       with: {
         band: {
