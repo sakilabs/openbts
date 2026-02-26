@@ -155,7 +155,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       station: {
         with: {
           operator: true,
-          location: { columns: { point: false } },
+          location: { columns: { point: false }, with: { region: { columns: { code: true } } } },
         },
       },
       band: {
@@ -175,30 +175,27 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
     },
   });
 
-  // For NTM format, fetch NR bands per LTE station so we can show [5G: n1|n78|...] in LTE rows
   const stationNrBandsMap = new Map<number, Array<{ value: number; duplex: "FDD" | "TDD" | null }>>();
-  if (format === "ntm") {
-    const lteStationIds = [...new Set(rows.filter((r) => r.rat === "LTE").map((r) => r.station.id))];
+  const lteStationIds = [...new Set(rows.filter((r) => r.rat === "LTE").map((r) => r.station.id))];
 
-    if (lteStationIds.length > 0) {
-      const nrBandRows = await db.query.cells.findMany({
-        where: {
-          RAW: (fields) => and(inArray(fields.station_id, lteStationIds), eq(fields.rat, "NR")) ?? sql`true`,
+  if (lteStationIds.length > 0) {
+    const nrBandRows = await db.query.cells.findMany({
+      where: {
+        RAW: (fields) => and(inArray(fields.station_id, lteStationIds), eq(fields.rat, "NR")) ?? sql`true`,
+      },
+      with: {
+        band: {
+          columns: { value: true, duplex: true },
+          where: { variant: "commercial" },
         },
-        with: {
-          band: {
-            columns: { value: true, duplex: true },
-            where: { variant: "commercial" },
-          },
-        },
-      });
+      },
+    });
 
-      for (const nrRow of nrBandRows) {
-        if (!nrRow.band?.value) continue;
-        const list = stationNrBandsMap.get(nrRow.station_id) ?? [];
-        list.push({ value: nrRow.band.value, duplex: nrRow.band.duplex ?? null });
-        stationNrBandsMap.set(nrRow.station_id, list);
-      }
+    for (const nrRow of nrBandRows) {
+      if (!nrRow.band?.value) continue;
+      const list = stationNrBandsMap.get(nrRow.station_id) ?? [];
+      list.push({ value: nrRow.band.value, duplex: nrRow.band.duplex ?? null });
+      stationNrBandsMap.set(nrRow.station_id, list);
     }
   }
 
@@ -230,6 +227,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
       address: row.station.extra_address ?? row.station.location?.address ?? null,
       e_gsm: row.gsm?.e_gsm ?? null,
       arfcn: row.umts?.arfcn ?? null,
+      region_code: row.station.location?.region?.code ?? null,
       nr_bands: row.rat === "LTE" ? stationNrBandsMap.get(row.station.id) : undefined,
     };
 
