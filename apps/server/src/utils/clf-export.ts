@@ -236,10 +236,11 @@ function getRatCode(rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR" | "IOT"): number
 
 function getDescription(cell: CellExportData): string {
   const parts: string[] = [];
-  if (cell.band_name) parts.push(cell.band_name);
+  const locationParts = [cell.city, cell.address].filter(Boolean).join(", ");
+  if (locationParts) parts.push(locationParts);
   if (cell.notes) parts.push(cell.notes);
 
-  return parts.join(" - ").substring(0, 100) || "N/A";
+  return (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
 }
 
 function getMlpTags(cell: CellExportData): string {
