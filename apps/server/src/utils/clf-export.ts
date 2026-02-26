@@ -124,7 +124,7 @@ export function toCLF20(cell: CellExportData): string | null {
   const cellHex = cellId.toString(16).toUpperCase().padStart(4, "0");
   const lacHex = lac.toString(16).toUpperCase().padStart(4, "0");
   const mccmnc = cell.operator_mnc;
-  const description = getDescription(cell);
+  const description = getDescription(cell) + getMlpTags(cell);
 
   return `${cellHex}${lacHex}${mccmnc}\t${description}`;
 }
@@ -137,7 +137,7 @@ export function toCLF21(cell: CellExportData): string | null {
   const cellDec = cellId.toString().padStart(5, "0");
   const lacDec = lac.toString().padStart(5, "0");
   const mccmnc = cell.operator_mnc;
-  const description = getDescription(cell);
+  const description = getDescription(cell) + getMlpTags(cell);
 
   return `${cellDec}${lacDec}${mccmnc}\t${description}`;
 }
@@ -154,7 +154,7 @@ export function toCLF30Hex(cell: CellExportData): string | null {
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
   const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
-  const description = getDescription(cell);
+  const description = getDescription(cell) + getMlpTags(cell);
 
   return `${mccmnc};${cidHex};${lacHex};${rncHex};${lat};${lon};${posRat};${description};0`;
 }
@@ -171,7 +171,7 @@ export function toCLF30Dec(cell: CellExportData): string | null {
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
   const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
-  const description = getDescription(cell);
+  const description = getDescription(cell) + getMlpTags(cell);
 
   return `${mccmnc};${cidDec};${lacDec};${rncDec};${lat};${lon};${posRat};${description};0`;
 }
@@ -188,7 +188,7 @@ export function toCLF40(cell: CellExportData): string | null {
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
   const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
-  const description = getDescription(cell);
+  const description = getDescription(cell) + getMlpTags(cell);
   const sys = getRatCode(cell.rat);
   const label = `${cell.station_id}_${cellId}`;
   const azi = 0;
@@ -240,6 +240,41 @@ function getDescription(cell: CellExportData): string {
   if (cell.notes) parts.push(cell.notes);
 
   return parts.join(" - ").substring(0, 100) || "N/A";
+}
+
+function getMlpTags(cell: CellExportData): string {
+  let tags = "";
+  switch (cell.rat) {
+    case "GSM": {
+      const bandCode = getMlpBandCode("GSM", cell.band_value, cell.band_duplex, cell.e_gsm);
+      if (bandCode) tags += ` [MLP:${cell.station_id}:${bandCode}]`;
+      break;
+    }
+    case "UMTS": {
+      const rnc = cell.rnc ?? NTM_UNKNOWN;
+      const uarfcn = cell.arfcn ?? NTM_UNKNOWN;
+      const bandCode = getMlpBandCode("UMTS", cell.band_value, cell.band_duplex);
+      if (bandCode) tags += ` [MLP:${cell.station_id}:${rnc}:${bandCode}-${uarfcn}]`;
+      break;
+    }
+    case "LTE": {
+      const bandCode = getMlpBandCode("LTE", cell.band_value, cell.band_duplex);
+      if (bandCode) tags += ` [MLP:${cell.station_id}:${bandCode}]`;
+      if (cell.enbid != null && cell.clid != null) tags += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
+      if (cell.nr_bands && cell.nr_bands.length > 0) {
+        const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
+        const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
+        if (unique.length > 0) tags += ` [5G: ${unique.join("|")}]`;
+      }
+      break;
+    }
+    case "NR": {
+      const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
+      if (nrDesig) tags += ` [${nrDesig}]`;
+      break;
+    }
+  }
+  return tags;
 }
 
 export function convertToCLF(cell: CellExportData, format: ClfFormat): string | null {
@@ -300,7 +335,7 @@ export function toNTM(cell: CellExportData): string | null {
       if (cell.enbid != null && cell.clid != null) location += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
       if (cell.nr_bands && cell.nr_bands.length > 0) {
         const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
-        const unique = [...new Set(nrDesignations)].sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+        const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
         if (unique.length > 0) location += ` [5G: ${unique.join("|")}]`;
       }
 
@@ -335,7 +370,7 @@ export function toNetMonitor(cell: CellExportData): string | null {
   const lat = cell.latitude ?? "";
   const lon = cell.longitude ?? "";
   const accuracy = 100;
-  const description = getDescription(cell).replace(/;/g, ",");
+  const description = (getDescription(cell) + getMlpTags(cell)).replace(/;/g, ",");
 
   switch (cell.rat) {
     case "GSM": {
