@@ -3,6 +3,13 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 # 2026-02-26
 
+### 🚀 Enhancements
+
+- Added support to add MNO name for `Plus` stations
+- Added markers which are very similar to the dots
+
+# 2026-02-26
+
 ### 🩹 Fixes
 
 - Fixed some React Compiler stuff
@@ -45,7 +52,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Do not show the "radiolines" amount when its layer is disabled
 - Add submissions cleanup option for admins
 - Map can be opened in the fullscreen mode
-- Added support for adding NetWorkS! ID & name & internal operator's name for T-Mobile & Orange
+- Added support for adding NetWorks ID & name & internal operator's name for T-Mobile & Orange
 - Added announcement banner
 
 # 2026-02-23

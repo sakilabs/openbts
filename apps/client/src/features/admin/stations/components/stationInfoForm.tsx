@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OperatorSelect } from "@/components/operator-select";
-import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import type { Operator, UkeStation, LocationWithStations } from "@/types/station";
@@ -62,7 +62,9 @@ export function StationInfoForm({
 }: StationInfoFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
-  const showNetworksId = selectedOperator ? NETWORKS_ID_MNCS.includes(selectedOperator.mnc) : false;
+  const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!networksId;
+  const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !networksId && !!mnoName;
+  const showSection = showExtraIdsFields || showMnoNameOnly;
 
   return (
     <div className="space-y-3">
@@ -95,33 +97,35 @@ export function StationInfoForm({
             <Label>{t("common:labels.confirmed")}</Label>
           </div>
 
-          {showNetworksId && (
+          {showSection && (
             <div className="border-t pt-3 space-y-3">
               <div className="flex items-center gap-2">
                 <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
-                <span className="font-semibold text-sm">NetWorkS! ID</span>
+                <span className="font-semibold text-sm">Extra Identificators</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("common:labels.networksId")}</Label>
-                  <Input
-                    type="number"
-                    value={networksId ?? ""}
-                    placeholder="e.g. 12345"
-                    onChange={(e) => onNetworksIdChange?.(e.target.value ? Number(e.target.value) : null)}
-                    className="font-mono"
-                  />
+              {showExtraIdsFields && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("common:labels.networksId")}</Label>
+                    <Input
+                      type="number"
+                      value={networksId ?? ""}
+                      placeholder="e.g. 12345"
+                      onChange={(e) => onNetworksIdChange?.(e.target.value ? Number(e.target.value) : null)}
+                      className="font-mono"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("common:labels.networksName")}</Label>
+                    <Input
+                      value={networksName ?? ""}
+                      maxLength={50}
+                      placeholder={t("common:placeholder.optional")}
+                      onChange={(e) => onNetworksNameChange?.(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>{t("common:labels.networksName")}</Label>
-                  <Input
-                    value={networksName ?? ""}
-                    maxLength={50}
-                    placeholder={t("common:placeholder.optional")}
-                    onChange={(e) => onNetworksNameChange?.(e.target.value)}
-                  />
-                </div>
-              </div>
+              )}
               <div className="space-y-2">
                 <Label>{t("common:labels.mnoName")}</Label>
                 <Input

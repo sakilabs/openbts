@@ -2,14 +2,7 @@
 import path from "node:path";
 import url from "node:url";
 
-import {
-  radiolinesAntennaTypes,
-  radioLinesManufacturers,
-  radiolinesTransmitterTypes,
-  ukeOperators,
-  ukeRadiolines,
-  deletedEntries,
-} from "@openbts/drizzle";
+import { radiolinesAntennaTypes, radioLinesManufacturers, radiolinesTransmitterTypes, ukeRadiolines, deletedEntries } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, RADIOLINES_URL } from "./config.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 import { scrapeXlsxLinks } from "./scrape.js";

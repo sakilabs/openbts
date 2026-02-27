@@ -171,7 +171,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     notes: submission.proposedStation?.notes ?? submission.station?.notes ?? "",
   }));
 
-  const [networksForm, setNetworksForm] = useState<{
+  const [extraForm, setExtraForm] = useState<{
     networks_id: number | null;
     networks_name: string;
     mno_name: string;
@@ -266,7 +266,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         submissionId: submission.id,
         reviewNotes,
         stationForm,
-        networksForm,
+        extraForm,
         locationForm,
         localCells,
       },
@@ -432,8 +432,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               submission={submission}
               stationForm={stationForm}
               onStationFormChange={(patch) => setStationForm((prev) => ({ ...prev, ...patch }))}
-              networksForm={networksForm}
-              onNetworksFormChange={(patch) => setNetworksForm((prev) => ({ ...prev, ...patch }))}
+              extraIdsForm={extraForm}
+              onExtraIdsChange={(patch) => setExtraForm((prev) => ({ ...prev, ...patch }))}
               locationForm={locationForm}
               onLocationFormChange={(patch) => setLocationForm((prev) => ({ ...prev, ...patch }))}
               operators={operators}

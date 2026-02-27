@@ -114,9 +114,9 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
                         {station.extra_address || station.location?.address || station.location?.city || t("stationDetails:dialog.btsStation")}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
-                        {station.networks?.networks_id && (
+                        {station.extra_identificators?.networks_id && (
                           <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            N!{station.networks.networks_id}
+                            N!{station.extra_identificators.networks_id}
                           </span>
                         )}
                         <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{station.station_id}</span>

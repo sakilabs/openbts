@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay } from "@/hooks/usePreferences";
+import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay, type MapPointStyle } from "@/hooks/usePreferences";
 import { toggleValue } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,11 @@ const NAVIGATION_APP_OPTIONS: { value: NavigationApp; labelKey: string; icon: ty
   { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
   { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
   { value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
+];
+
+const MAP_POINT_STYLE_OPTIONS: { value: MapPointStyle; labelKey: string; descKey: string }[] = [
+  { value: "dots", labelKey: "preferences.mapPointStyleDots", descKey: "preferences.mapPointStyleDotsDesc" },
+  { value: "markers", labelKey: "preferences.mapPointStyleMarkers", descKey: "preferences.mapPointStyleMarkersDesc" },
 ];
 
 const NAV_DISPLAY_OPTIONS: { value: NavLinksDisplay; labelKey: string; descKey: string }[] = [
@@ -201,6 +206,35 @@ function PreferencesPage() {
                   <span className="text-xs text-muted-foreground">{t("preferences.mapHoverTooltipDesc")}</span>
                 </div>
               </label>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapPointStyle")}</Label>
+              <p className="text-xs text-muted-foreground">{t("preferences.mapPointStyleHint")}</p>
+              <RadioGroup
+                value={preferences.mapPointStyle}
+                onValueChange={(v) => updatePreferences({ mapPointStyle: v as MapPointStyle })}
+                className="flex flex-col gap-1"
+              >
+                {MAP_POINT_STYLE_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    htmlFor={`map-point-style-${option.value}`}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                      preferences.mapPointStyle === option.value ? "bg-primary/10" : "hover:bg-muted",
+                    )}
+                  >
+                    <RadioGroupItem id={`map-point-style-${option.value}`} value={option.value} />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{t(option.labelKey)}</span>
+                      <span className="text-xs text-muted-foreground">{t(option.descKey)}</span>
+                    </div>
+                  </label>
+                ))}
+              </RadioGroup>
             </div>
           </section>
         </div>

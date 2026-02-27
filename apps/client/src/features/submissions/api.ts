@@ -29,7 +29,7 @@ export type SearchStation = {
   cells: SearchCell[];
   location: (Location & { region: Region }) | null;
   operator: Operator | null;
-  networks?: { networks_id: number; networks_name: string | null; mno_name: string | null } | null;
+  extra_identificators?: { networks_id: number | null; networks_name: string | null; mno_name: string | null } | null;
 };
 
 export async function searchStations(query: string): Promise<SearchStation[]> {
@@ -108,11 +108,11 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
     })),
     location: station.location,
     operator: station.operator,
-    networks: station.networks
+    extra_identificators: station.extra_identificators
       ? {
-          networks_id: station.networks.networks_id,
-          networks_name: station.networks.networks_name,
-          mno_name: station.networks.mno_name,
+          networks_id: station.extra_identificators.networks_id,
+          networks_name: station.extra_identificators.networks_name,
+          mno_name: station.extra_identificators.mno_name,
         }
       : null,
   };
@@ -149,9 +149,10 @@ function buildSubmissionPayload(data: SubmissionFormData): Record<string, unknow
   if (data.submitter_note) payload.submitter_note = data.submitter_note;
   if (data.station) {
     const { networks_id, networks_name, mno_name, ...stationBase } = data.station;
+    const hasAnyExtraIdField = "networks_id" in data.station || "networks_name" in data.station || "mno_name" in data.station;
     payload.station = {
       ...stationBase,
-      ...(networks_id ? { networks_id, networks_name: networks_name || undefined, mno_name: mno_name || undefined } : {}),
+      ...(hasAnyExtraIdField ? { networks_id: networks_id ?? null, networks_name: networks_name ?? null, mno_name: mno_name ?? null } : {}),
     };
   }
   if (data.location) payload.location = data.location;

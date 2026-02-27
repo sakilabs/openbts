@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { locations, regions, stations, cells, bands, operators, networksIds } from "@openbts/drizzle";
+import { locations, regions, stations, cells, bands, operators, extraIdentificators } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -16,12 +16,12 @@ const stationsSchema = createSelectSchema(stations).omit({ status: true, operato
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorSchema = createSelectSchema(operators);
-const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
+const extraIdentificatorsSchema = createSelectSchema(extraIdentificators).omit({ station_id: true });
 const cellResponseSchema = cellsSchema.extend({ band: bandsSchema });
 const stationResponseSchema = stationsSchema.extend({
   cells: z.array(cellResponseSchema),
   operator: operatorSchema,
-  networks: networksSchema.optional(),
+  extra_identificators: extraIdentificatorsSchema.optional(),
 });
 
 const schemaRoute = {
@@ -178,7 +178,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
             with: { band: true },
           },
           operator: true,
-          networks: { columns: { station_id: false } },
+          extra_identificators: { columns: { station_id: false } },
         },
       },
     },
@@ -187,8 +187,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   if (!location) throw new ErrorResponse("NOT_FOUND");
 
   const cleanedStations = location.stations.map((station) => {
-    const stationData = { ...station } as StationData & { networks?: unknown | null };
-    if (!stationData.networks) delete stationData.networks;
+    const stationData = { ...station } as StationData & { extra_identificators?: unknown | null };
+    if (!stationData.extra_identificators) delete stationData.extra_identificators;
     return stationData as StationData;
   });
 

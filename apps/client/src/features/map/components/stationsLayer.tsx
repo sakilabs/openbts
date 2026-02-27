@@ -367,6 +367,7 @@ export function StationsLayer({
     onFeatureContextMenu: handleFeatureContextMenu,
     onFeatureMouseDown: handleFeatureMouseDown,
     renderHoverTooltip: preferences.showMapHoverTooltip ? renderHoverTooltip : undefined,
+    pointStyle: preferences.mapPointStyle,
   });
 
   useEffect(() => cleanupPopup, [cleanupPopup]);

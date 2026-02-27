@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { CellTable } from "./cellTable";
 import { RAT_ORDER } from "@/features/map/constants";
-import { NetWorkSIds } from "./networkIds";
+import { ExtraIdentificatorsDisplay } from "./extraIdentificators";
 import { PermitsList } from "./permitsList";
 import { CommentsList } from "./commentsList";
 import { CopyButton } from "./copyButton";
@@ -176,8 +176,10 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                             <Tooltip>
                               <TooltipTrigger
                                 render={
+                                  // biome-ignore lint/a11y/useAnchorContent: Accessibility is not needed here
                                   <a
                                     href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
+                                    title={t("specs.si2pemLink")}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
@@ -191,7 +193,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                           )}
                         </div>
                       </div>
-                      {station?.networks && <NetWorkSIds networks={station.networks} />}
+                      {station?.extra_identificators && <ExtraIdentificatorsDisplay data={station.extra_identificators} />}
                       {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                         <div className="sm:col-span-2 pt-3 border-t border-border/50">
                           <div className="flex items-center gap-1.5 flex-wrap">

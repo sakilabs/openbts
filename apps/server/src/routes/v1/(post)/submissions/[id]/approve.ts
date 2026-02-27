@@ -9,7 +9,7 @@ import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../../utils/logger.js";
-import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells, networksIds } from "@openbts/drizzle";
+import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells, extraIdentificators } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -174,17 +174,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             tx,
           );
 
-          if (proposedStation.networks_id) {
+          if (proposedStation.networks_id || proposedStation.mno_name) {
             await tx
-              .insert(networksIds)
+              .insert(extraIdentificators)
               .values({
                 station_id: newStation.id,
-                networks_id: proposedStation.networks_id,
+                networks_id: proposedStation.networks_id ?? null,
                 networks_name: proposedStation.networks_name ?? null,
                 mno_name: proposedStation.mno_name ?? null,
               })
               .onConflictDoUpdate({
-                target: [networksIds.station_id, networksIds.networks_id],
+                target: [extraIdentificators.station_id, extraIdentificators.networks_id],
                 set: {
                   networks_name: proposedStation.networks_name ?? null,
                   mno_name: proposedStation.mno_name ?? null,
@@ -212,17 +212,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         );
       }
 
-      if (submission.type === "update" && proposedStation?.networks_id && stationId) {
+      if (submission.type === "update" && proposedStation && (proposedStation.networks_id || proposedStation.mno_name) && stationId) {
         await tx
-          .insert(networksIds)
+          .insert(extraIdentificators)
           .values({
             station_id: stationId,
-            networks_id: proposedStation.networks_id,
+            networks_id: proposedStation.networks_id ?? null,
             networks_name: proposedStation.networks_name ?? null,
             mno_name: proposedStation.mno_name ?? null,
           })
           .onConflictDoUpdate({
-            target: [networksIds.station_id, networksIds.networks_id],
+            target: [extraIdentificators.station_id, extraIdentificators.networks_id],
             set: {
               networks_name: proposedStation.networks_name ?? null,
               mno_name: proposedStation.mno_name ?? null,

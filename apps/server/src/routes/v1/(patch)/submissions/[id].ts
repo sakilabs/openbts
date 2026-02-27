@@ -48,7 +48,7 @@ const stationInputSchema = createInsertSchema(proposedStations).omit({ createdAt
 const locationInputSchema = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
 
 const requestSchema = z.object({
-  review_notes: z.string().optional(),
+  review_notes: z.string().nullable().optional(),
   submitter_note: z.string().optional(),
   station: stationInputSchema.optional(),
   location: locationInputSchema.optional(),

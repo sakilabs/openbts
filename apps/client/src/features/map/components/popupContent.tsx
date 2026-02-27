@@ -179,8 +179,8 @@ export const PopupContent = memo(function PopupContent({
                     {operatorName}
                   </span>
                   <span className="text-[10px] text-muted-foreground">{stationId}</span>
-                  {station.networks?.networks_id && (
-                    <span className="text-[10px] text-muted-foreground font-mono">N!{station.networks.networks_id}</span>
+                  {station.extra_identificators?.networks_id && (
+                    <span className="text-[10px] text-muted-foreground font-mono">N!{station.extra_identificators.networks_id}</span>
                   )}
                 </div>
                 {hasCells ? (

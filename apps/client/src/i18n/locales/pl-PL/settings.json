@@ -27,7 +27,13 @@
     "mapHoverTooltip": "Podpowiedź na mapie",
     "mapHoverTooltipHint": "Pokaż podpowiedź po najechaniu na znaczniki stacji na mapie",
     "mapHoverTooltipLabel": "Włącz podpowiedź po najechaniu",
-    "mapHoverTooltipDesc": "Pokaż liczbę stacji i lokalizację po najechaniu na znaczniki"
+    "mapHoverTooltipDesc": "Pokaż liczbę stacji i lokalizację po najechaniu na znaczniki",
+    "mapPointStyle": "Styl stacji na mapie",
+    "mapPointStyleHint": "Wybierz sposób wyświetlania stacji na mapie",
+    "mapPointStyleDots": "Kropki",
+    "mapPointStyleDotsDesc": "Wypełnione kółka w kolorach operatorów",
+    "mapPointStyleMarkers": "Znaczniki",
+    "mapPointStyleMarkersDesc": "Pinezki w kolorach operatorów"
   },
   "page": {
     "title": "Ustawienia konta",

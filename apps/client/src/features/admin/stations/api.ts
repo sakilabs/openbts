@@ -61,9 +61,12 @@ export async function createStation(body: Record<string, unknown>) {
   });
 }
 
-export async function updateNetworksId(stationId: number, body: { networks_id: number; networks_name?: string | null; mno_name?: string | null }) {
-  return fetchJson<{ data: { id: number; networks_id: number; networks_name: string | null; mno_name: string | null } }>(
-    `${API_BASE}/stations/${stationId}/networks-id`,
+export async function updateExtraIds(
+  stationId: number,
+  body: { networks_id?: number | null; networks_name?: string | null; mno_name?: string | null },
+) {
+  return fetchJson<{ data: { id: number; networks_id: number | null; networks_name: string | null; mno_name: string | null } }>(
+    `${API_BASE}/stations/${stationId}/extra-identifiers`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

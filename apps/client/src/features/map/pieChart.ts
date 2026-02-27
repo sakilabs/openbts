@@ -52,6 +52,109 @@ function createOperatorSegments(operators: number[]) {
   }));
 }
 
+const PIN_W = 22;
+const PIN_H = 34;
+const PIN_CX = PIN_W / 2;
+const PIN_CY = 10;
+const PIN_R = 9;
+
+function tracePinPath(ctx: CanvasRenderingContext2D) {
+  const cx = PIN_CX,
+    cy = PIN_CY,
+    r = PIN_R,
+    H = PIN_H;
+  ctx.moveTo(cx, H);
+  ctx.bezierCurveTo(cx - 3, H - 5, cx - r, cy + r + 2, cx - r, cy);
+  ctx.arc(cx, cy, r, Math.PI, 0, false);
+  ctx.bezierCurveTo(cx + r, cy + r + 2, cx + 3, H - 5, cx, H);
+  ctx.closePath();
+}
+
+function createPinImage(segments: { value: number; color: string }[]): ImageData | null {
+  const canvas = document.createElement("canvas");
+  canvas.width = PIN_W;
+  canvas.height = PIN_H;
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+
+  const cx = PIN_CX,
+    cy = PIN_CY,
+    r = PIN_R;
+
+  ctx.beginPath();
+  tracePinPath(ctx);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+  let startAngle = -Math.PI / 2;
+  for (const { value, color } of segments) {
+    const endAngle = startAngle + (value / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    startAngle = endAngle;
+  }
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  return ctx.getImageData(0, 0, PIN_W, PIN_H);
+}
+
+export function syncMarkerImages(map: maplibregl.Map, features: GeoJSON.Feature[], addedImages: Set<string>): void {
+  for (const feature of features) {
+    const props = feature.properties;
+    if (!props) continue;
+
+    if (props.isMultiOperator) {
+      const pieImageId = props.pieImageId;
+      if (!pieImageId) continue;
+      const imageId = `m${pieImageId}`;
+      if (addedImages.has(imageId)) continue;
+      if (map.hasImage(imageId)) {
+        addedImages.add(imageId);
+        continue;
+      }
+      const segments = createOperatorSegments(parseOperators(props.operators));
+      const imageData = createPinImage(segments);
+      if (imageData) {
+        map.addImage(imageId, imageData);
+        addedImages.add(imageId);
+      }
+    } else {
+      const color = props.color;
+      if (!color) continue;
+      const imageId = `mpin-${color}`;
+      if (addedImages.has(imageId)) continue;
+      if (map.hasImage(imageId)) {
+        addedImages.add(imageId);
+        continue;
+      }
+      const imageData = createPinImage([{ value: 1, color }]);
+      if (imageData) {
+        map.addImage(imageId, imageData);
+        addedImages.add(imageId);
+      }
+    }
+  }
+}
+
 export function syncPieImages(map: maplibregl.Map, features: GeoJSON.Feature[], addedImages: Set<string>): void {
   for (const feature of features) {
     const pieImageId = feature.properties?.pieImageId;

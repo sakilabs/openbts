@@ -8,7 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { locations, stations, cells, bands, operators, regions, networksIds, lteCells, nrCells } from "@openbts/drizzle";
+import { locations, stations, cells, bands, operators, regions, extraIdentificators, lteCells, nrCells } from "@openbts/drizzle";
 
 const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
@@ -16,17 +16,17 @@ const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
 const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const operatorSchema = createSelectSchema(operators);
-const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
+const extraIdentificatorsSchema = createSelectSchema(extraIdentificators).omit({ station_id: true });
 const cellResponseSchema = cellsSchema.extend({ band: bandsSchema });
 const stationResponseSchema = stationsSchema.extend({
   cells: z.array(cellResponseSchema),
   location: locationSchema.extend({ region: regionSchema }),
   operator: operatorSchema,
-  networks: networksSchema.optional(),
+  extra_identificators: extraIdentificatorsSchema.optional(),
 });
 type Station = z.infer<typeof stationResponseSchema>;
 type CellWithBand = z.infer<typeof cellsSchema> & { band: z.infer<typeof bandsSchema> | null };
-type StationRaw = z.infer<typeof stationsSchema> & { cells: CellWithBand[]; networks?: z.infer<typeof networksSchema> | null };
+type StationRaw = z.infer<typeof stationsSchema> & { cells: CellWithBand[]; extra_identificators?: z.infer<typeof extraIdentificatorsSchema> | null };
 const schemaRoute = {
   querystring: z.object({
     bounds: z
@@ -214,7 +214,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           },
           location: { columns: { point: false, region_id: false }, with: { region: true } },
           operator: true,
-          networks: { columns: { station_id: false } },
+          extra_identificators: { columns: { station_id: false } },
         },
         where: {
           RAW: (fields) => {
@@ -236,8 +236,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         return { ...rest, band };
       });
 
-      const stationWithNetworks = { ...station, cells: cellsWithoutDetails } as Station & { networks?: z.infer<typeof networksSchema> | null };
-      if (!stationWithNetworks.networks) delete (stationWithNetworks as { networks?: unknown }).networks;
+      const stationWithNetworks = { ...station, cells: cellsWithoutDetails } as Station & {
+        extra_identificators?: z.infer<typeof extraIdentificatorsSchema> | null;
+      };
+      if (!stationWithNetworks.extra_identificators) delete (stationWithNetworks as { extra_identificators?: unknown }).extra_identificators;
       return stationWithNetworks as Station;
     });
 

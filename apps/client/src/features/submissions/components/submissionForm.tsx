@@ -24,7 +24,7 @@ import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells
 import { validateForm, validateCells, hasErrors, type FormErrors, type CellError } from "../utils/validation";
 import { hasFormChanges, type OriginalState } from "../utils/equality";
 import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
-import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import type { UkeStation } from "@/types/station";
 
 type FormValues = {
@@ -110,13 +110,14 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
       cells: ProposedCellForm[],
       submitterNote: string,
       networksId: number | null,
-      networksName: string,
-      mnoName: string,
+      networksName: string | null,
+      mnoName: string | null,
     ): boolean => {
       if (hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState, isEditMode)) return true;
       if (mode === "existing") {
         if (networksId !== (originalState.networksId ?? null)) return true;
-        if (networksId !== null && (networksName !== (originalState.networksName ?? "") || mnoName !== (originalState.mnoName ?? ""))) return true;
+        if (networksId !== null && networksName !== (originalState.networksName ?? "")) return true;
+        if (mnoName !== (originalState.mnoName ?? "")) return true;
       }
       return false;
     },
@@ -149,14 +150,15 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
 
       const submissionType = isDeleteMode ? "delete" : isNewStation ? "new" : "update";
 
+      const hadExtraIds = (originalState.networksId !== null && originalState.networksId !== undefined) || !!originalState.mnoName;
       const existingStation =
-        !isNewStation && !isDeleteMode && value.networksId
+        !isNewStation && !isDeleteMode && (value.networksId !== null || value.networksName || value.mnoName || hadExtraIds)
           ? {
               station_id: value.selectedStation!.station_id,
               operator_id: value.selectedStation!.operator_id,
               networks_id: value.networksId,
-              networks_name: value.networksName || undefined,
-              mno_name: value.mnoName || undefined,
+              networks_name: value.networksName || null,
+              mno_name: value.mnoName || null,
             }
           : undefined;
 
@@ -232,9 +234,9 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         form.setFieldValue("originalCells", structuredClone(cells));
         form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
 
-        const networksId = station.networks?.networks_id ?? null;
-        const networksName = station.networks?.networks_name ?? "";
-        const mnoName = station.networks?.mno_name ?? "";
+        const networksId = station.extra_identificators?.networks_id ?? null;
+        const networksName = station.extra_identificators?.networks_name ?? "";
+        const mnoName = station.extra_identificators?.mno_name ?? "";
         form.setFieldValue("networksId", networksId);
         form.setFieldValue("networksName", networksName);
         form.setFieldValue("mnoName", mnoName);
@@ -379,10 +381,13 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         });
       }
 
-      if (!isNew && submission.proposedStation?.networks_id) {
-        form.setFieldValue("networksId", submission.proposedStation.networks_id);
-        form.setFieldValue("networksName", submission.proposedStation.networks_name ?? "");
-        form.setFieldValue("mnoName", submission.proposedStation.mno_name ?? "");
+      if (!isNew && submission.proposedStation) {
+        if (submission.proposedStation.networks_id) {
+          form.setFieldValue("networksId", submission.proposedStation.networks_id);
+          form.setFieldValue("networksName", submission.proposedStation.networks_name ?? "");
+        }
+
+        if (submission.proposedStation.mno_name) form.setFieldValue("mnoName", submission.proposedStation.mno_name);
       }
 
       if (submission.proposedLocation) {
@@ -544,43 +549,47 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
           {({ mode, action, selectedStation, networksId, networksName, mnoName }) => {
             if (mode !== "existing" || !selectedStation || action === "delete") return null;
             const operatorMnc = selectedStation.operator?.mnc;
-            if (!operatorMnc || !NETWORKS_ID_MNCS.includes(operatorMnc)) return null;
+            const showExtraIdFields = !!operatorMnc && EXTRA_IDENTIFICATORS_MNCS.includes(operatorMnc);
+            const showMnoNameOnly = !!operatorMnc && MNO_NAME_ONLY_MNCS.includes(operatorMnc);
+            if (!showExtraIdFields && !showMnoNameOnly) return null;
 
             return (
               <div className="border rounded-xl overflow-hidden">
                 <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
                   <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
-                  <span className="font-semibold text-sm">NetWorkS! ID</span>
+                  <span className="font-semibold text-sm">Extra Identificators</span>
                 </div>
                 <div className="p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="existing_networks_id" className="text-xs">
-                        {t("common:labels.networksId", "N! ID")}
-                      </Label>
-                      <Input
-                        id="existing_networks_id"
-                        type="number"
-                        placeholder="e.g. 12345"
-                        value={networksId ?? ""}
-                        onChange={(e) => form.setFieldValue("networksId", e.target.value ? Number(e.target.value) : null)}
-                        className="h-8 font-mono text-sm"
-                      />
+                  {showExtraIdFields && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="existing_networks_id" className="text-xs">
+                          {t("common:labels.networksId", "N! ID")}
+                        </Label>
+                        <Input
+                          id="existing_networks_id"
+                          type="number"
+                          placeholder="e.g. 12345"
+                          value={networksId ?? ""}
+                          onChange={(e) => form.setFieldValue("networksId", e.target.value ? Number(e.target.value) : null)}
+                          className="h-8 font-mono text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="existing_networks_name" className="text-xs">
+                          {t("common:labels.networksName", "MNO name")}
+                        </Label>
+                        <Input
+                          id="existing_networks_name"
+                          placeholder={t("common:placeholder.optional", "Optional")}
+                          value={networksName}
+                          maxLength={50}
+                          onChange={(e) => form.setFieldValue("networksName", e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="existing_networks_name" className="text-xs">
-                        {t("common:labels.networksName", "Network name")}
-                      </Label>
-                      <Input
-                        id="existing_networks_name"
-                        placeholder={t("common:placeholder.optional", "Optional")}
-                        value={networksName}
-                        maxLength={50}
-                        onChange={(e) => form.setFieldValue("networksName", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                  </div>
+                  )}
                   <div className="space-y-1.5">
                     <Label htmlFor="existing_mno_name" className="text-xs">
                       {t("common:labels.mnoName", "MNO name")}

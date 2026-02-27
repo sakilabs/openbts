@@ -83,9 +83,9 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "nr_pci:", description: "5G PCI", availableOn: ["map", "stations"] },
   { key: "supports_nr_redcap:", description: "Supports NR RedCap (true, false)", availableOn: ["map", "stations"] },
 
-  // NetWorkS filters
-  { key: "networks_id:", description: "Search by NetWorkS! ID", availableOn: ["map", "stations"] },
-  { key: "networks_name:", description: "Search by NetWorkS! name", availableOn: ["map", "stations"] },
+  // Extra Identificators filters
+  { key: "networks_id:", description: "Search by NetWorks ID", availableOn: ["map", "stations"] },
+  { key: "networks_name:", description: "Search by NetWorks name", availableOn: ["map", "stations"] },
   { key: "mno_name:", description: "Search by MNO name", availableOn: ["map", "stations"] },
 ];
 

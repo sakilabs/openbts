@@ -1,5 +1,5 @@
 import { eq, or, and, sql, inArray, ne, type SQL } from "drizzle-orm";
-import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, networksIds, regions } from "@openbts/drizzle";
+import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, extraIdentificators, regions } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -21,7 +21,7 @@ const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSche
 const locationSelectSchema = createSelectSchema(locations).omit({ point: true });
 const regionSelectSchema = createSelectSchema(regions);
 const operatorsSelectSchema = createSelectSchema(operators);
-const networksSchema = createSelectSchema(networksIds).omit({ station_id: true });
+const extraIdentificatorsSchema = createSelectSchema(extraIdentificators).omit({ station_id: true });
 const cellWithDetailsSchema = cellsSelectSchema.extend({ details: cellDetailsSchema });
 
 type ReqBody = { Body: { query?: string }; Querystring: { limit?: number } };
@@ -35,11 +35,11 @@ type StationWithRatCells = z.infer<typeof stationsSelectSchema> & {
   cells: CellWithRat[];
   location: z.infer<typeof locationSelectSchema> | null;
   operator: z.infer<typeof operatorsSelectSchema> | null;
-  networks?: z.infer<typeof networksSchema> | null;
+  extra_identificators?: z.infer<typeof extraIdentificatorsSchema> | null;
 };
 type StationWithCells = z.infer<typeof stationsSelectSchema> & {
   cells: z.infer<typeof cellWithDetailsSchema>[];
-  networks?: z.infer<typeof networksSchema>;
+  extra_identificators?: z.infer<typeof extraIdentificatorsSchema>;
   location: z.infer<typeof locationSelectSchema> | null;
   operator: z.infer<typeof operatorsSelectSchema> | null;
 };
@@ -61,7 +61,7 @@ const schemaRoute = {
             })
             .nullable(),
           operator: operatorsSelectSchema.nullable(),
-          networks: networksSchema.optional(),
+          extra_identificators: extraIdentificatorsSchema.optional(),
         }),
       ),
     }),
@@ -73,7 +73,7 @@ const stationQueryConfig = {
     cells: { with: { gsm: true, umts: true, lte: true, nr: true } },
     location: { with: { region: true }, columns: { point: false } },
     operator: true,
-    networks: { columns: { station_id: false } },
+    extra_identificators: { columns: { station_id: false } },
   },
   columns: { status: false },
 } as const;
@@ -97,8 +97,8 @@ const withCellDetails = (station: StationWithRatCells): StationWithCells => {
     ...rest,
     details: gsm ?? umts ?? lte ?? nr ?? null,
   }));
-  const result = { ...station, cells: transformedCells } as StationWithCells & { networks?: unknown };
-  if (!result.networks) delete result.networks;
+  const result = { ...station, cells: transformedCells } as StationWithCells & { extra_identificators?: unknown };
+  if (!result.extra_identificators) delete result.extra_identificators;
   return result;
 };
 
@@ -221,17 +221,17 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       );
     }
 
-    if (grouped.networksIds.length > 0) {
-      const networkStationIds = await db
-        .selectDistinct({ stationId: networksIds.station_id })
-        .from(networksIds)
-        .where(combineConditions(grouped.networksIds));
+    if (grouped.extraIdentificators.length > 0) {
+      const extraStationIds = await db
+        .selectDistinct({ stationId: extraIdentificators.station_id })
+        .from(extraIdentificators)
+        .where(combineConditions(grouped.extraIdentificators));
 
-      if (networkStationIds.length === 0) return res.send({ data: [] });
+      if (extraStationIds.length === 0) return res.send({ data: [] });
       stationConditions.push(
         inArray(
           stations.id,
-          networkStationIds.map((r) => r.stationId),
+          extraStationIds.map((r) => r.stationId),
         ),
       );
     }
@@ -305,18 +305,18 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   }
 
   if (stationMap.size < limit) {
-    const networkMatches = await db
-      .selectDistinct({ stationId: networksIds.station_id })
-      .from(networksIds)
+    const extraMatches = await db
+      .selectDistinct({ stationId: extraIdentificators.station_id })
+      .from(extraIdentificators)
       .where(
         or(
-          sql`CAST(${networksIds.networks_id} AS TEXT) ILIKE ${`%${searchQuery}%`}`,
-          sql`${networksIds.networks_name} ILIKE ${`%${searchQuery}%`}`,
-          sql`${networksIds.mno_name} ILIKE ${`%${searchQuery}%`}`,
+          sql`CAST(${extraIdentificators.networks_id} AS TEXT) ILIKE ${`%${searchQuery}%`}`,
+          sql`${extraIdentificators.networks_name} ILIKE ${`%${searchQuery}%`}`,
+          sql`${extraIdentificators.mno_name} ILIKE ${`%${searchQuery}%`}`,
         ),
       );
 
-    const missingIds = networkMatches
+    const missingIds = extraMatches
       .map((r) => r.stationId)
       .filter((id) => !stationMap.has(id))
       .slice(0, limit - stationMap.size);

@@ -27,7 +27,13 @@
     "mapHoverTooltip": "Map Hover Tooltip",
     "mapHoverTooltipHint": "Show a preview tooltip when hovering over station markers on the map",
     "mapHoverTooltipLabel": "Enable hover tooltip",
-    "mapHoverTooltipDesc": "Show station count and location when hovering over markers"
+    "mapHoverTooltipDesc": "Show station count and location when hovering over markers",
+    "mapPointStyle": "Map Station Style",
+    "mapPointStyleHint": "Choose how stations are displayed on the map",
+    "mapPointStyleDots": "Dots",
+    "mapPointStyleDotsDesc": "Compact filled circles with operator colors",
+    "mapPointStyleMarkers": "Markers",
+    "mapPointStyleMarkersDesc": "Location pin markers with operator colors"
   },
   "page": {
     "title": "Account Settings",

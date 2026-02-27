@@ -1,9 +1,9 @@
 import { sql, inArray, or, type SQL } from "drizzle-orm";
-import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations, networksIds } from "@openbts/drizzle";
+import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations, extraIdentificators } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 export type FilterValue = string | number | boolean;
-export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells" | "locations" | "networksIds";
+export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells" | "locations" | "extraIdentificators";
 export type FilterCondition = {
   table: FilterTable;
   buildCondition: (value: FilterValue) => SQL;
@@ -194,25 +194,25 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     buildCondition: buildLikeAny(locations.city),
   },
 
-  // networksIds
+  // extraIdentificators
   networks_id: {
-    table: "networksIds",
+    table: "extraIdentificators",
     buildCondition: (value: FilterValue) => {
       const values = String(value)
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-      const conditions = values.map((val) => sql`CAST(${networksIds.networks_id} AS TEXT) ILIKE ${`%${val}%`}`);
+      const conditions = values.map((val) => sql`CAST(${extraIdentificators.networks_id} AS TEXT) ILIKE ${`%${val}%`}`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },
   },
   networks_name: {
-    table: "networksIds",
-    buildCondition: buildLikeAny(networksIds.networks_name),
+    table: "extraIdentificators",
+    buildCondition: buildLikeAny(extraIdentificators.networks_name),
   },
   mno_name: {
-    table: "networksIds",
-    buildCondition: buildLikeAny(networksIds.mno_name),
+    table: "extraIdentificators",
+    buildCondition: buildLikeAny(extraIdentificators.mno_name),
   },
 };
 
@@ -226,7 +226,7 @@ export type GroupedFilters = {
   lteCells: SQL[];
   nrCells: SQL[];
   locations: SQL[];
-  networksIds: SQL[];
+  extraIdentificators: SQL[];
 };
 
 const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(\d+(?:,\s*\d+)*)|(true|false)|([a-zA-Z][a-zA-Z0-9]*(?:,\s*[a-zA-Z][a-zA-Z0-9]*)*))/gi;
@@ -262,7 +262,7 @@ const createEmptyGroupedFilters = (): GroupedFilters => ({
   lteCells: [],
   nrCells: [],
   locations: [],
-  networksIds: [],
+  extraIdentificators: [],
 });
 
 export function parseFilterQuery(query: string): { filters: ParsedFilters; remainingQuery: string } {

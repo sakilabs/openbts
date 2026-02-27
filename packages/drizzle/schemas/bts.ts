@@ -28,7 +28,7 @@ export const NRType = pgEnum("nr_type", ["nsa", "sa"]);
 /**
  * Operator table
  * @example
- * { id: 1, name: "NetWorkS!", full_name: "NetWorks Sp. z o.o.", parent_id: null, mnc_code: 26034 }
+ * { id: 1, name: "NetWorks", full_name: "NetWorks Sp. z o.o.", parent_id: null, mnc_code: 26034 }
  * @example
  * { id: 2, name: "T-Mobile", full_name: "T-Mobile Polska Sp. z o.o.", parent_id: 1, mnc_code: 26002 }
  */
@@ -174,25 +174,25 @@ export const stationsPermits = pgTable(
   ],
 );
 
-export const networksIds = pgTable(
-  "networks_ids",
+export const extraIdentificators = pgTable(
+  "extra_identificators",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
     station_id: integer("station_id")
       .references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),
-    networks_id: integer("networks_id").notNull(),
+    //* Nullable - Plus (26001) stations may only have mno_name without a networks_id
+    networks_id: integer("networks_id"),
     networks_name: varchar("networks_name", { length: 50 }),
-    //* Putting MNO name here because it comes from NetWorkS! database and will only be available for T-Mobile & Orange
     mno_name: varchar("mno_name", { length: 50 }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("networks_ids_station_idx").on(t.station_id),
-    index("networks_ids_networks_id_trgm_idx").using("gin", sql`(${t.networks_id}::text) gin_trgm_ops`),
-    index("networks_ids_networks_name_trgm_idx").using("gin", sql`(${t.networks_name}) gin_trgm_ops`),
-    unique("networks_ids_networks_id_unique").on(t.station_id, t.networks_id),
+    index("extra_identificators_station_idx").on(t.station_id),
+    index("extra_identificators_networks_id_trgm_idx").using("gin", sql`(${t.networks_id}::text) gin_trgm_ops`),
+    index("extra_identificators_networks_name_trgm_idx").using("gin", sql`(${t.networks_name}) gin_trgm_ops`),
+    unique("extra_identificators_networks_id_unique").on(t.station_id, t.networks_id).nullsNotDistinct(),
   ],
 );
 

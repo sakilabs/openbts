@@ -68,10 +68,10 @@ export type Cell = {
   details: CellDetails;
 };
 
-export type NetWorkS = {
+export type ExtraIdentificator = {
   id: number;
   station_id: number;
-  networks_id: number;
+  networks_id: number | null;
   networks_name: string | null;
   mno_name: string | null;
   updatedAt: string;
@@ -91,7 +91,7 @@ export type Station = {
   cells: Cell[];
   location: Location;
   operator: Operator;
-  networks?: NetWorkS;
+  extra_identificators?: ExtraIdentificator;
 };
 
 export type RadioLineEquipmentType = {

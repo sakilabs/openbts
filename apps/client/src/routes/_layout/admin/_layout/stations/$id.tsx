@@ -148,9 +148,9 @@ function getInitialFormState(station: Station | undefined): {
       : { ...emptyLocation },
     existingLocationId: station?.location?.id ?? null,
     deletedServerCellIds: [],
-    networksId: station?.networks?.networks_id ?? null,
-    networksName: station?.networks?.networks_name ?? "",
-    mnoName: station?.networks?.mno_name ?? "",
+    networksId: station?.extra_identificators?.networks_id ?? null,
+    networksName: station?.extra_identificators?.networks_name ?? "",
+    mnoName: station?.extra_identificators?.mno_name ?? "",
   };
 }
 

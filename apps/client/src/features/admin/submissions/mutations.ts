@@ -17,7 +17,7 @@ export interface SaveSubmissionPayload {
     operator_id: number | null;
     notes: string;
   };
-  networksForm: {
+  extraForm: {
     networks_id: number | null;
     networks_name: string;
     mno_name: string;
@@ -39,9 +39,9 @@ export function useSaveSubmissionMutation() {
             station_id: payload.stationForm.station_id,
             operator_id: payload.stationForm.operator_id,
             notes: payload.stationForm.notes || null,
-            networks_id: payload.networksForm.networks_id,
-            networks_name: payload.networksForm.networks_name || null,
-            mno_name: payload.networksForm.mno_name || null,
+            networks_id: payload.extraForm.networks_id,
+            networks_name: payload.extraForm.networks_name || null,
+            mno_name: payload.extraForm.mno_name || null,
           },
           location: {
             region_id: payload.locationForm.region_id,

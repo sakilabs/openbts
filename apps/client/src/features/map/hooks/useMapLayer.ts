@@ -2,7 +2,8 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
-import { syncPieImages } from "../pieChart";
+import { syncPieImages, syncMarkerImages } from "../pieChart";
+import type { MapPointStyle } from "@/hooks/usePreferences";
 
 type FeatureClickData = {
   coordinates: [number, number];
@@ -22,6 +23,7 @@ type UseMapLayerArgs = {
   onFeatureContextMenu?: FeatureClickHandler;
   onFeatureMouseDown?: (locationId: number) => void;
   renderHoverTooltip?: (data: FeatureClickData) => ReactNode | null;
+  pointStyle?: MapPointStyle;
 };
 
 type ActiveTooltip = {
@@ -83,6 +85,32 @@ const SYMBOL_LAYER_CONFIG: maplibregl.LayerSpecification = {
   },
 };
 
+const MARKER_SINGLE_LAYER_CONFIG: maplibregl.LayerSpecification = {
+  id: POINT_LAYER_ID,
+  type: "symbol",
+  source: SOURCE_ID,
+  filter: ["!", ["get", "isMultiOperator"]],
+  layout: {
+    "icon-image": ["concat", "mpin-", ["get", "color"]],
+    "icon-size": 1,
+    "icon-allow-overlap": true,
+    "icon-anchor": "bottom",
+  },
+};
+
+const MARKER_MULTI_LAYER_CONFIG: maplibregl.LayerSpecification = {
+  id: SYMBOL_LAYER_ID,
+  type: "symbol",
+  source: SOURCE_ID,
+  filter: ["get", "isMultiOperator"],
+  layout: {
+    "icon-image": ["concat", "m", ["get", "pieImageId"]],
+    "icon-size": 1,
+    "icon-allow-overlap": true,
+    "icon-anchor": "bottom",
+  },
+};
+
 function extractFeatureClickData(feature: GeoJSON.Feature): FeatureClickData | null {
   if (feature.geometry.type !== "Point") return null;
 
@@ -106,6 +134,7 @@ export function useMapLayer({
   onFeatureContextMenu,
   onFeatureMouseDown,
   renderHoverTooltip,
+  pointStyle = "dots",
 }: UseMapLayerArgs) {
   const callbackRefs = useRef({ onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip });
   callbackRefs.current = { onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip };
@@ -127,10 +156,15 @@ export function useMapLayer({
         addedImagesRef.current.clear();
       }
 
-      if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(CIRCLE_LAYER_CONFIG);
-      if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(SYMBOL_LAYER_CONFIG);
-
-      syncPieImages(map, geoJSONRef.current.features, addedImagesRef.current);
+      if (pointStyle === "markers") {
+        if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(MARKER_SINGLE_LAYER_CONFIG);
+        if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(MARKER_MULTI_LAYER_CONFIG);
+        syncMarkerImages(map, geoJSONRef.current.features, addedImagesRef.current);
+      } else {
+        if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(CIRCLE_LAYER_CONFIG);
+        if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(SYMBOL_LAYER_CONFIG);
+        syncPieImages(map, geoJSONRef.current.features, addedImagesRef.current);
+      }
     };
 
     const handleMouseDown = (e: maplibregl.MapMouseEvent) => {
@@ -248,7 +282,7 @@ export function useMapLayer({
       addedImagesRef.current.clear();
       tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, pointStyle]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -256,7 +290,11 @@ export function useMapLayer({
     const source = map.getSource(SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
     if (!source) return;
 
-    syncPieImages(map, geoJSON.features, addedImagesRef.current);
+    if (pointStyle === "markers") {
+      syncMarkerImages(map, geoJSON.features, addedImagesRef.current);
+    } else {
+      syncPieImages(map, geoJSON.features, addedImagesRef.current);
+    }
     source.setData(geoJSON);
-  }, [map, isLoaded, geoJSON]);
+  }, [map, isLoaded, geoJSON, pointStyle]);
 }

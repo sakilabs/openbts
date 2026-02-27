@@ -3,6 +3,7 @@ import { useSyncExternalStore, useCallback } from "react";
 export type GpsFormat = "decimal" | "dms";
 export type NavigationApp = "google-maps" | "apple-maps" | "waze";
 export type NavLinksDisplay = "inline" | "buttons";
+export type MapPointStyle = "dots" | "markers";
 
 export interface UserPreferences {
   gpsFormat: GpsFormat;
@@ -12,6 +13,7 @@ export interface UserPreferences {
   mapStationsLimit: number;
   mapRadiolinesLimit: number;
   showMapHoverTooltip: boolean;
+  mapPointStyle: MapPointStyle;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -24,6 +26,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapStationsLimit: 1000,
   mapRadiolinesLimit: 500,
   showMapHoverTooltip: false,
+  mapPointStyle: "dots",
 };
 
 let listeners: Array<() => void> = [];

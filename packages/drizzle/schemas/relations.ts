@@ -18,7 +18,7 @@ import {
   umtsCells,
   lteCells,
   nrCells,
-  networksIds,
+  extraIdentificators,
   ukeLocations,
   ukeOperators,
   ukeImportMetadata,
@@ -56,7 +56,7 @@ export const relations = defineRelations(
     umtsCells,
     lteCells,
     nrCells,
-    networksIds,
+    extraIdentificators,
     ukeLocations,
     ukeOperators,
     accounts,
@@ -113,9 +113,9 @@ export const relations = defineRelations(
         optional: false,
       }),
       cells: helpers.many.cells(),
-      networks: helpers.one.networksIds({
+      extra_identificators: helpers.one.extraIdentificators({
         from: helpers.stations.id,
-        to: helpers.networksIds.station_id,
+        to: helpers.extraIdentificators.station_id,
       }),
     },
     cells: {
@@ -330,9 +330,9 @@ export const relations = defineRelations(
         to: helpers.stations.id,
       }),
     },
-    networksIds: {
+    extraIdentificators: {
       station: helpers.one.stations({
-        from: helpers.networksIds.station_id,
+        from: helpers.extraIdentificators.station_id,
         to: helpers.stations.id,
       }),
     },

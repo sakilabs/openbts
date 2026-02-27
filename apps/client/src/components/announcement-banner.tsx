@@ -27,11 +27,11 @@ const typeConfig = {
 export function AnnouncementBanner() {
   const { data: settings } = useSettings();
   const [dismissed, setDismissed] = useState(() => {
+    let value: string | null = null;
     try {
-      return localStorage.getItem(DISMISSED_KEY) ?? "";
-    } catch {
-      return "";
-    }
+      value = localStorage.getItem(DISMISSED_KEY);
+    } catch {}
+    return value ?? "";
   });
   const [expanded, setExpanded] = useState(false);
 
@@ -53,7 +53,7 @@ export function AnnouncementBanner() {
   return (
     <div className={cn("flex items-center gap-2 px-4 py-2 border-b text-sm shrink-0", config.className)}>
       <HugeiconsIcon icon={config.icon} className="size-4 shrink-0" />
-      <p className={cn("flex-1 min-w-0", expanded ? "break-words sm:truncate" : "truncate")}>{announcement.message}</p>
+      <p className={cn("flex-1 min-w-0", expanded ? "wrap-break-word sm:truncate" : "truncate")}>{announcement.message}</p>
       <div className="flex items-center gap-1 shrink-0">
         <button
           type="button"

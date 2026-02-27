@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OperatorSelect } from "@/components/operator-select";
 import { operatorsQueryOptions } from "@/features/shared/queries";
-import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import type { ProposedStationForm } from "../types";
 import type { StationErrors } from "../utils/validation";
 
@@ -24,7 +24,9 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
 
   const selectedOperator = operators.find((o) => o.id === station.operator_id);
-  const showNetworksId = selectedOperator ? NETWORKS_ID_MNCS.includes(selectedOperator.mnc) : false;
+  const showExtraIdFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : false;
+  const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : false;
+  const showSection = showExtraIdFields || showMnoNameOnly;
 
   return (
     <div className="border rounded-xl overflow-hidden">
@@ -82,40 +84,42 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
           />
         </div>
 
-        {showNetworksId && (
+        {showSection && (
           <div className="border-t pt-3 space-y-3">
             <div className="flex items-center gap-2">
               <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
-              <span className="font-semibold text-sm">NetWorkS! ID</span>
+              <span className="font-semibold text-sm">Extra Identificators</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="networks_id" className="text-xs">
-                  {t("common:labels.networksId")}
-                </Label>
-                <Input
-                  id="networks_id"
-                  type="number"
-                  placeholder="e.g. 12345"
-                  value={station.networks_id ?? ""}
-                  onChange={(e) => onStationChange({ ...station, networks_id: e.target.value ? Number(e.target.value) : undefined })}
-                  className="h-8 font-mono text-sm"
-                />
+            {showExtraIdFields && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="networks_id" className="text-xs">
+                    {t("common:labels.networksId")}
+                  </Label>
+                  <Input
+                    id="networks_id"
+                    type="number"
+                    placeholder="e.g. 12345"
+                    value={station.networks_id ?? ""}
+                    onChange={(e) => onStationChange({ ...station, networks_id: e.target.value ? Number(e.target.value) : undefined })}
+                    className="h-8 font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="networks_name" className="text-xs">
+                    {t("common:labels.networksName")}
+                  </Label>
+                  <Input
+                    id="networks_name"
+                    placeholder={t("common:placeholder.optional")}
+                    value={station.networks_name ?? ""}
+                    maxLength={50}
+                    onChange={(e) => onStationChange({ ...station, networks_name: e.target.value || undefined })}
+                    className="h-8 text-sm"
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="networks_name" className="text-xs">
-                  {t("common:labels.networksName")}
-                </Label>
-                <Input
-                  id="networks_name"
-                  placeholder={t("common:placeholder.optional")}
-                  value={station.networks_name ?? ""}
-                  maxLength={50}
-                  onChange={(e) => onStationChange({ ...station, networks_name: e.target.value || undefined })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="mno_name" className="text-xs">
                 {t("common:labels.mnoName")}

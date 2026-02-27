@@ -9,7 +9,7 @@ export const getOperatorColor = (mnc: number): string => {
     case 26006:
       return "#8549CE"; // Play - Purple
     case 26034:
-      return "#A2334C"; // NetWorkS! - Dark Red
+      return "#A2334C"; // NetWorks - Dark Red
     default:
       return "#00E1FF"; // blue
   }
@@ -25,7 +25,7 @@ const OPERATOR_NAME_TO_MNC: Record<string, number> = {
   "towerlink poland": 26001,
   p4: 26006,
   play: 26006,
-  "networks!": 26034,
+  NetWorks: 26034,
   aero2: 26016,
 };
 
@@ -44,7 +44,8 @@ export function normalizeOperatorName(name: string): string {
 }
 
 export const TOP4_MNCS = [26001, 26002, 26003, 26006]; // Plus, T-Mobile, Orange, Play
-export const NETWORKS_ID_MNCS = [26002, 26003]; // T-Mobile, Orange
+export const EXTRA_IDENTIFICATORS_MNCS = [26002, 26003]; // T-Mobile, Orange
+export const MNO_NAME_ONLY_MNCS = [26001]; // Plus
 
 export function getOperatorSortIndex(mnc: number | null | undefined): number {
   if (mnc == null) return TOP4_MNCS.length;

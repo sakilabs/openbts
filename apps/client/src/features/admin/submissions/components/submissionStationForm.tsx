@@ -6,14 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OperatorSelect } from "@/components/operator-select";
 import { cn } from "@/lib/utils";
-import { NETWORKS_ID_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import type { Operator, Station } from "@/types/station";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import { ChangeBadge } from "./common";
 
-type NetworksForm = {
+type ExtraIdentificatorsType = {
   networks_id: number | null;
   networks_name: string;
   mno_name: string;
@@ -27,8 +27,8 @@ type SubmissionStationFormProps = {
     notes: string;
   };
   onStationFormChange: (patch: Partial<{ station_id: string; operator_id: number | null; notes: string }>) => void;
-  networksForm: NetworksForm;
-  onNetworksFormChange: (patch: Partial<NetworksForm>) => void;
+  extraIdsForm: ExtraIdentificatorsType;
+  onExtraIdsChange: (patch: Partial<ExtraIdentificatorsType>) => void;
   locationForm: ProposedLocationForm;
   onLocationFormChange: (patch: Partial<ProposedLocationForm>) => void;
   operators: Operator[];
@@ -45,8 +45,8 @@ export function SubmissionStationForm({
   submission,
   stationForm,
   onStationFormChange,
-  networksForm,
-  onNetworksFormChange,
+  extraIdsForm,
+  onExtraIdsChange,
   locationForm,
   onLocationFormChange,
   operators,
@@ -59,7 +59,9 @@ export function SubmissionStationForm({
   isDeleteSubmission,
 }: SubmissionStationFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
-  const showNetworksId = selectedOperator ? NETWORKS_ID_MNCS.includes(selectedOperator.mnc) : !!networksForm.networks_id;
+  const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!extraIdsForm.networks_id;
+  const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !extraIdsForm.networks_id && !!extraIdsForm.mno_name;
+  const showSection = showExtraIdsFields || showMnoNameOnly;
 
   return (
     <>
@@ -99,68 +101,76 @@ export function SubmissionStationForm({
             {stationDiffs?.notes && <ChangeBadge label={t("diff.current")} current={submission.station?.notes ?? "-"} />}
           </div>
 
-          {showNetworksId && (
+          {showSection && (
             <div className="border-t pt-3 space-y-3">
               <div className="flex items-center gap-2">
                 <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
-                <span className="font-semibold text-sm">NetWorkS! ID</span>
+                <span className="font-semibold text-sm">Extra Identificators</span>
               </div>
               {isFormDisabled ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground text-xs">{t("common:labels.networksId")}</span>
-                    <p className="font-mono font-medium">{networksForm.networks_id ?? "-"}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">{t("common:labels.networksName")}</span>
-                    <p className="font-medium">{networksForm.networks_name || "-"}</p>
-                  </div>
+                  {showExtraIdsFields && (
+                    <>
+                      <div>
+                        <span className="text-muted-foreground text-xs">{t("common:labels.networksId")}</span>
+                        <p className="font-mono font-medium">{extraIdsForm.networks_id ?? "-"}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">{t("common:labels.networksName")}</span>
+                        <p className="font-medium">{extraIdsForm.networks_name || "-"}</p>
+                      </div>
+                    </>
+                  )}
                   <div>
                     <span className="text-muted-foreground text-xs">{t("common:labels.mnoName")}</span>
-                    <p className="font-medium">{networksForm.mno_name || "-"}</p>
+                    <p className="font-medium">{extraIdsForm.mno_name || "-"}</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t("common:labels.networksId")}</Label>
-                      <Input
-                        type="number"
-                        value={networksForm.networks_id ?? ""}
-                        placeholder="e.g. 12345"
-                        onChange={(e) => onNetworksFormChange({ networks_id: e.target.value ? Number(e.target.value) : null })}
-                        className="font-mono"
-                      />
-                      {currentStation?.networks?.networks_id !== undefined && networksForm.networks_id !== currentStation.networks.networks_id && (
-                        <ChangeBadge label={t("diff.current")} current={String(currentStation.networks.networks_id ?? "-")} />
-                      )}
+                  {showExtraIdsFields && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t("common:labels.networksId")}</Label>
+                        <Input
+                          type="number"
+                          value={extraIdsForm.networks_id ?? ""}
+                          placeholder="e.g. 12345"
+                          onChange={(e) => onExtraIdsChange({ networks_id: e.target.value ? Number(e.target.value) : null })}
+                          className="font-mono"
+                        />
+                        {currentStation?.extra_identificators?.networks_id !== undefined &&
+                          extraIdsForm.networks_id !== currentStation.extra_identificators.networks_id && (
+                            <ChangeBadge label={t("diff.current")} current={String(currentStation.extra_identificators.networks_id ?? "-")} />
+                          )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("common:labels.networksName")}</Label>
+                        <Input
+                          value={extraIdsForm.networks_name}
+                          maxLength={50}
+                          placeholder={t("common:placeholder.optional")}
+                          onChange={(e) => onExtraIdsChange({ networks_name: e.target.value })}
+                        />
+                        {currentStation?.extra_identificators?.networks_name !== undefined &&
+                          extraIdsForm.networks_name !== (currentStation.extra_identificators.networks_name ?? "") && (
+                            <ChangeBadge label={t("diff.current")} current={currentStation.extra_identificators.networks_name ?? "-"} />
+                          )}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t("common:labels.networksName")}</Label>
-                      <Input
-                        value={networksForm.networks_name}
-                        maxLength={50}
-                        placeholder={t("common:placeholder.optional")}
-                        onChange={(e) => onNetworksFormChange({ networks_name: e.target.value })}
-                      />
-                      {currentStation?.networks?.networks_name !== undefined &&
-                        networksForm.networks_name !== (currentStation.networks.networks_name ?? "") && (
-                          <ChangeBadge label={t("diff.current")} current={currentStation.networks.networks_name ?? "-"} />
-                        )}
-                    </div>
-                  </div>
+                  )}
                   <div className="space-y-2">
                     <Label>{t("common:labels.mnoName")}</Label>
                     <Input
-                      value={networksForm.mno_name}
+                      value={extraIdsForm.mno_name}
                       maxLength={50}
                       placeholder={t("common:placeholder.optional")}
-                      onChange={(e) => onNetworksFormChange({ mno_name: e.target.value })}
+                      onChange={(e) => onExtraIdsChange({ mno_name: e.target.value })}
                     />
-                    {currentStation?.networks?.mno_name !== undefined && networksForm.mno_name !== (currentStation.networks.mno_name ?? "") && (
-                      <ChangeBadge label={t("diff.current")} current={currentStation.networks.mno_name ?? "-"} />
-                    )}
+                    {currentStation?.extra_identificators?.mno_name !== undefined &&
+                      extraIdsForm.mno_name !== (currentStation.extra_identificators.mno_name ?? "") && (
+                        <ChangeBadge label={t("diff.current")} current={currentStation.extra_identificators.mno_name ?? "-"} />
+                      )}
                   </div>
                 </>
               )}

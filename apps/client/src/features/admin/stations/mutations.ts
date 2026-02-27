@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { patchStation, patchCell, patchCells, createCells, deleteCell, createLocation, createStation, deleteStation, updateNetworksId } from "./api";
+import { patchStation, patchCell, patchCells, createCells, deleteCell, createLocation, createStation, deleteStation, updateExtraIds } from "./api";
 import { patchLocation } from "../locations/api";
 import type { Station, Cell } from "@/types/station";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
@@ -144,9 +144,9 @@ export function useSaveStationMutation() {
           cells: cellsPayload,
         });
 
-        if (payload.networksId) {
-          await updateNetworksId(res.data.id, {
-            networks_id: payload.networksId,
+        if (payload.networksId || payload.networksName || payload.mnoName) {
+          await updateExtraIds(res.data.id, {
+            networks_id: payload.networksId ?? null,
             networks_name: payload.networksName || null,
             mno_name: payload.mnoName || null,
           });
@@ -243,15 +243,17 @@ export function useSaveStationMutation() {
 
       if (stationChanged) await patchStation(station.id, stationPatch);
 
-      const existingNetworksId = payload.originalStation?.networks?.networks_id ?? null;
-      const networksIdChanged =
+      const existingNetworksId = payload.originalStation?.extra_identificators?.networks_id ?? null;
+      const extraIdsFieldsChanged =
         payload.networksId !== existingNetworksId ||
-        payload.networksName !== (payload.originalStation?.networks?.networks_name ?? "") ||
-        payload.mnoName !== (payload.originalStation?.networks?.mno_name ?? "");
+        payload.networksName !== (payload.originalStation?.extra_identificators?.networks_name ?? "") ||
+        payload.mnoName !== (payload.originalStation?.extra_identificators?.mno_name ?? "");
 
-      if (payload.networksId != null && networksIdChanged) {
-        await updateNetworksId(station.id, {
-          networks_id: payload.networksId,
+      const existingHasExtraIds =
+        (existingNetworksId !== null && existingNetworksId !== undefined) || !!payload.originalStation?.extra_identificators?.mno_name;
+      if (((payload.networksId !== null && payload.networksId !== undefined) || !!payload.mnoName || existingHasExtraIds) && extraIdsFieldsChanged) {
+        await updateExtraIds(station.id, {
+          networks_id: payload.networksId ?? null,
           networks_name: payload.networksName || null,
           mno_name: payload.mnoName || null,
         });

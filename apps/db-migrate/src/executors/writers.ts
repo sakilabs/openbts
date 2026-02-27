@@ -118,12 +118,12 @@ export async function writeOperators(items: PreparedOperator[], options: WriteOp
 }
 
 export async function updateOperatorParents(): Promise<void> {
-  const relevant = ["NetWorkS!", "T-Mobile", "Orange", "Plus", "Aero 2", "Sferia"] as const;
+  const relevant = ["NetWorks", "T-Mobile", "Orange", "Plus", "Aero 2", "Sferia"] as const;
   const rows = await db.query.operators.findMany({ where: { name: { in: relevant as unknown as string[] } } });
   const nameToId = new Map<string, number>();
   for (const operator of rows) nameToId.set(operator.name, operator.id);
 
-  const parentOfNetworks = nameToId.get("NetWorkS!");
+  const parentOfNetworks = nameToId.get("NetWorks");
   const parentOfPlus = nameToId.get("Plus");
 
   const updates: Array<{ child: number; parent: number }> = [];
