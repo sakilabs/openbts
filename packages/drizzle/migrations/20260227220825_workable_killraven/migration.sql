@@ -49,6 +49,17 @@ CREATE TABLE "deleted_entries" (
 	"import_id" integer
 );
 --> statement-breakpoint
+CREATE TABLE "extra_identificators" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "extra_identificators_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"station_id" integer NOT NULL,
+	"networks_id" integer,
+	"networks_name" varchar(50),
+	"mno_name" varchar(50),
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "extra_identificators_networks_id_unique" UNIQUE NULLS NOT DISTINCT("station_id","networks_id")
+);
+--> statement-breakpoint
 CREATE TABLE "gsm_cells" (
 	"cell_id" integer PRIMARY KEY,
 	"lac" integer NOT NULL,
@@ -88,17 +99,6 @@ CREATE TABLE "lte_cells" (
 	CONSTRAINT "lte_cells_enbid_clid_unique" UNIQUE("cell_id","enbid","clid"),
 	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
 	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
-);
---> statement-breakpoint
-CREATE TABLE "networks_ids" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "networks_ids_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"station_id" integer NOT NULL,
-	"networks_id" integer NOT NULL,
-	"networks_name" varchar(50),
-	"mno_name" varchar(50),
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "networks_ids_networks_id_unique" UNIQUE("station_id","networks_id")
 );
 --> statement-breakpoint
 CREATE TABLE "nr_cells" (
@@ -275,7 +275,7 @@ CREATE TABLE "uke_radiolines" (
 	"expiry_date" timestamp with time zone NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "uke_radiolines_natural_key" UNIQUE("permit_number","operator_id","freq","tx_longitude","tx_latitude","rx_longitude","rx_latitude","polarization","ch_num","decision_type","issue_date","expiry_date")
+	CONSTRAINT "uke_radiolines_natural_key" UNIQUE("permit_number","operator_id","freq","tx_longitude","tx_latitude","rx_longitude","rx_latitude","polarization","ch_num")
 );
 --> statement-breakpoint
 CREATE TABLE "umts_cells" (
@@ -535,6 +535,9 @@ CREATE INDEX "deleted_entries_source_type_idx" ON "deleted_entries" ("source_typ
 CREATE INDEX "deleted_entries_deleted_at_idx" ON "deleted_entries" ("deleted_at");--> statement-breakpoint
 CREATE INDEX "deleted_entries_source_table_type_idx" ON "deleted_entries" ("source_table","source_type");--> statement-breakpoint
 CREATE INDEX "deleted_entries_source_table_deleted_at_idx" ON "deleted_entries" ("source_table","deleted_at");--> statement-breakpoint
+CREATE INDEX "extra_identificators_station_idx" ON "extra_identificators" ("station_id");--> statement-breakpoint
+CREATE INDEX "extra_identificators_networks_id_trgm_idx" ON "extra_identificators" USING gin (("networks_id"::text) gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "extra_identificators_networks_name_trgm_idx" ON "extra_identificators" USING gin (("networks_name") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "gsm_cells_cid_idx" ON "gsm_cells" ("cid");--> statement-breakpoint
 CREATE INDEX "gsm_cells_cid_trgm_idx" ON "gsm_cells" USING gin (("cid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "locations_region_id_idx" ON "locations" ("region_id");--> statement-breakpoint
@@ -545,9 +548,6 @@ CREATE INDEX "locations_updated_at_idx" ON "locations" ("updatedAt");--> stateme
 CREATE INDEX "lte_cells_nb_iot_true_idx" ON "lte_cells" ("enbid","clid") WHERE "supports_nb_iot" = true;--> statement-breakpoint
 CREATE INDEX "lte_cells_enbid_trgm_idx" ON "lte_cells" USING gin (("enbid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "lte_cells_ecid_trgm_idx" ON "lte_cells" USING gin (("ecid"::text) gin_trgm_ops);--> statement-breakpoint
-CREATE INDEX "networks_ids_station_idx" ON "networks_ids" ("station_id");--> statement-breakpoint
-CREATE INDEX "networks_ids_networks_id_trgm_idx" ON "networks_ids" USING gin (("networks_id"::text) gin_trgm_ops);--> statement-breakpoint
-CREATE INDEX "networks_ids_networks_name_trgm_idx" ON "networks_ids" USING gin (("networks_name") gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "nr_cells_redcap_true_idx" ON "nr_cells" ("gnbid","clid") WHERE "supports_nr_redcap" = true;--> statement-breakpoint
 CREATE INDEX "nr_cells_gnbid_trgm_idx" ON "nr_cells" USING gin (("gnbid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "nr_cells_nci_trgm_idx" ON "nr_cells" USING gin (("nci"::text) gin_trgm_ops);--> statement-breakpoint
@@ -627,10 +627,10 @@ CREATE INDEX "submission_created_at_idx" ON "submissions"."submissions" ("create
 ALTER TABLE "cells" ADD CONSTRAINT "cells_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "cells" ADD CONSTRAINT "cells_band_id_bands_id_fkey" FOREIGN KEY ("band_id") REFERENCES "bands"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "deleted_entries" ADD CONSTRAINT "deleted_entries_import_id_uke_import_metadata_id_fkey" FOREIGN KEY ("import_id") REFERENCES "uke_import_metadata"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "extra_identificators" ADD CONSTRAINT "extra_identificators_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "gsm_cells" ADD CONSTRAINT "gsm_cells_cell_id_cells_id_fkey" FOREIGN KEY ("cell_id") REFERENCES "cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "locations" ADD CONSTRAINT "locations_region_id_regions_id_fkey" FOREIGN KEY ("region_id") REFERENCES "regions"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "lte_cells" ADD CONSTRAINT "lte_cells_cell_id_cells_id_fkey" FOREIGN KEY ("cell_id") REFERENCES "cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
-ALTER TABLE "networks_ids" ADD CONSTRAINT "networks_ids_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "nr_cells" ADD CONSTRAINT "nr_cells_cell_id_cells_id_fkey" FOREIGN KEY ("cell_id") REFERENCES "cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "operators" ADD CONSTRAINT "operators_parent_id_operators_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "radiolines_antenna_types" ADD CONSTRAINT "radiolines_antenna_types_TuOPp7ql9804_fkey" FOREIGN KEY ("manufacturer_id") REFERENCES "radiolines_manufacturers"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
