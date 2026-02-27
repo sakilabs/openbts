@@ -120,7 +120,7 @@ export function createLocationsColumns({ t, tCommon, locale, sort, sortBy, onSor
               <span className="text-sm font-medium">{stations.length}</span>
             </div>
             <div className="flex items-center gap-0.5">
-              {uniqueOperators.slice(0, 4).map((op) => (
+              {uniqueOperators.map((op) => (
                 <Tooltip key={op.id}>
                   <TooltipTrigger>
                     <div className="size-3 rounded-[2px] border border-background" style={{ backgroundColor: getOperatorColor(op.mnc) }} />

@@ -3,7 +3,8 @@ import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { networksIds } from "@openbts/drizzle";
+import { networksIds, stations } from "@openbts/drizzle";
+import { eq } from "drizzle-orm";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -67,6 +68,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     .returning();
 
   if (!result) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+  await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id));
 
   await createAuditLog(
     {

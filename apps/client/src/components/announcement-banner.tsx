@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { InformationCircleIcon, Alert02Icon, AlertCircleIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { InformationCircleIcon, Alert02Icon, AlertCircleIcon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -33,6 +33,7 @@ export function AnnouncementBanner() {
       return "";
     }
   });
+  const [expanded, setExpanded] = useState(false);
 
   const announcement = settings?.announcement;
 
@@ -52,10 +53,20 @@ export function AnnouncementBanner() {
   return (
     <div className={cn("flex items-center gap-2 px-4 py-2 border-b text-sm shrink-0", config.className)}>
       <HugeiconsIcon icon={config.icon} className="size-4 shrink-0" />
-      <p className="flex-1 min-w-0 truncate">{announcement.message}</p>
-      <button type="button" onClick={handleDismiss} className={cn("shrink-0 rounded-full p-0.5 transition-colors", config.dismissClassName)}>
-        <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
-      </button>
+      <p className={cn("flex-1 min-w-0", expanded ? "break-words sm:truncate" : "truncate")}>{announcement.message}</p>
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className={cn("sm:hidden rounded-full p-0.5 transition-colors", config.dismissClassName)}
+          aria-label={expanded ? "Collapse announcement" : "Expand announcement"}
+        >
+          <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", expanded && "rotate-180")} />
+        </button>
+        <button type="button" onClick={handleDismiss} className={cn("rounded-full p-0.5 transition-colors", config.dismissClassName)}>
+          <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
