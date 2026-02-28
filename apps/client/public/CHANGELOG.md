@@ -20,7 +20,6 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added markers to the map (See `/preferences` page to switch between dots & markers)
 - Added ability to add MNO names to `Plus` stations
 
-
 # 2026-02-26
 
 ### 🚀 Enhancements

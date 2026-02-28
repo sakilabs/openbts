@@ -10,7 +10,7 @@ import { upsertUkeOperators } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
 import { sql } from "drizzle-orm";
 import { lt } from "drizzle-orm";
-import { getLastImportedHrefs, recordImportMetadata } from "./import-check.js";
+import { getLastImportedFileNames, recordImportMetadata } from "./import-check.js";
 
 import type { RawRadioLineData } from "./types.js";
 function isNonEmptyName<T extends { name: string | undefined }>(v: T): v is T & { name: string } {
@@ -27,11 +27,11 @@ export async function importRadiolines(): Promise<boolean> {
   }
   console.log(`[radiolines] Found ${links.length} file(s)`);
 
-  const previousHrefs = await getLastImportedHrefs("radiolines");
-  const newLinks = previousHrefs ? links.filter((l) => !previousHrefs.has(l.href)) : links;
+  const previousFileNames = await getLastImportedFileNames("radiolines");
+  const newLinks = previousFileNames ? links.filter((l) => !previousFileNames.has(l.href.split("/").pop() ?? l.href)) : links;
 
   if (newLinks.length === 0) {
-    if (previousHrefs && previousHrefs.size !== links.length) {
+    if (previousFileNames && previousFileNames.size !== links.length) {
       console.log("[radiolines] No new files to process, updating metadata");
       await recordImportMetadata("radiolines", links, "success");
     } else {

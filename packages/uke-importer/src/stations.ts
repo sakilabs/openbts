@@ -17,7 +17,7 @@ import {
 } from "./utils.js";
 
 const logger = createLogger("stations");
-import { getLastImportedHrefs, recordImportMetadata } from "./import-check.js";
+import { getLastImportedFileNames, recordImportMetadata } from "./import-check.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertBands, getOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
@@ -139,11 +139,11 @@ export async function importStations(): Promise<boolean> {
   const links = unfiltered;
   logger.log(`Found ${links.length} files to process`);
 
-  const previousHrefs = await getLastImportedHrefs("stations");
-  const newLinks = previousHrefs ? links.filter((l) => !previousHrefs.has(l.href)) : links;
+  const previousFileNames = await getLastImportedFileNames("stations");
+  const newLinks = previousFileNames ? links.filter((l) => !previousFileNames.has(l.href.split("/").pop() ?? l.href)) : links;
 
   if (newLinks.length === 0) {
-    if (previousHrefs && previousHrefs.size !== links.length) {
+    if (previousFileNames && previousFileNames.size !== links.length) {
       logger.log("No new files to process, updating metadata");
       await recordImportMetadata("stations", links, "success");
     } else {

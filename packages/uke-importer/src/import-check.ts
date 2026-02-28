@@ -3,7 +3,7 @@ import { db } from "@openbts/drizzle/db";
 
 type ImportType = "stations" | "radiolines" | "stations_permits" | "permits";
 
-export async function getLastImportedHrefs(importType: ImportType): Promise<Set<string> | null> {
+export async function getLastImportedFileNames(importType: ImportType): Promise<Set<string> | null> {
   const latestImport = await db.query.ukeImportMetadata.findFirst({
     where: {
       AND: [{ import_type: importType }, { status: "success" }],
@@ -13,7 +13,7 @@ export async function getLastImportedHrefs(importType: ImportType): Promise<Set<
   if (!latestImport) return null;
   try {
     const hrefs: string[] = JSON.parse(latestImport.file_list);
-    return new Set(hrefs);
+    return new Set(hrefs.map((href) => href.split("/").pop() ?? href));
   } catch {
     return null;
   }

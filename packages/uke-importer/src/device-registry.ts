@@ -10,7 +10,7 @@ import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, 
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
 
 const logger = createLogger("device-registry");
-import { getLastImportedHrefs, recordImportMetadata } from "./import-check.ts";
+import { getLastImportedFileNames, recordImportMetadata } from "./import-check.ts";
 import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
@@ -460,11 +460,11 @@ export async function importPermitDevices(): Promise<boolean> {
   logger.log(`Found ${links.length} files:`, links.map((l) => l.operatorKey).join(", "));
 
   const linksForCheck = links.map((l) => ({ href: l.href, text: l.text }));
-  const previousHrefs = await getLastImportedHrefs("permits");
-  const newLinks = previousHrefs ? links.filter((l) => !previousHrefs.has(l.href)) : links;
+  const previousFileNames = await getLastImportedFileNames("permits");
+  const newLinks = previousFileNames ? links.filter((l) => !previousFileNames.has(l.href.split("/").pop() ?? l.href)) : links;
 
   if (newLinks.length === 0) {
-    if (previousHrefs && previousHrefs.size !== links.length) {
+    if (previousFileNames && previousFileNames.size !== links.length) {
       logger.log("No new files to process, updating metadata");
       await recordImportMetadata("permits", linksForCheck, "success");
     } else {
