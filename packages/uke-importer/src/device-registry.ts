@@ -10,12 +10,12 @@ import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, 
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
 
 const logger = createLogger("device-registry");
-import { isDataUpToDate, recordImportMetadata } from "./import-check.ts";
+import { getLastImportedHrefs, recordImportMetadata } from "./import-check.ts";
 import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
 import { db } from "@openbts/drizzle/db";
-import { and, eq, lt } from "drizzle-orm/sql/expressions/conditions";
+import { and, eq, inArray, lt } from "drizzle-orm/sql/expressions/conditions";
 
 function getRegionByTeryt(teryt: string): { name: string; code: string } | null {
   return REGION_BY_TERYT_PREFIX[teryt] ?? null;
@@ -460,15 +460,25 @@ export async function importPermitDevices(): Promise<boolean> {
   logger.log(`Found ${links.length} files:`, links.map((l) => l.operatorKey).join(", "));
 
   const linksForCheck = links.map((l) => ({ href: l.href, text: l.text }));
-  if (await isDataUpToDate("permits", linksForCheck)) {
-    logger.log("Data is up-to-date, skipping import");
+  const previousHrefs = await getLastImportedHrefs("permits");
+  const newLinks = previousHrefs ? links.filter((l) => !previousHrefs.has(l.href)) : links;
+
+  if (newLinks.length === 0) {
+    if (previousHrefs && previousHrefs.size !== links.length) {
+      logger.log("No new files to process, updating metadata");
+      await recordImportMetadata("permits", linksForCheck, "success");
+    } else {
+      logger.log("Data is up-to-date, skipping import");
+    }
     return false;
   }
+
+  logger.log(`Processing ${newLinks.length} new file(s) (skipping ${links.length - newLinks.length} already imported)`);
 
   ensureDownloadDir();
 
   logger.log("Looking up operators...");
-  const operatorNamesNeeded = links.map((l) => PERMIT_FILE_OPERATOR_MAP[l.operatorKey]).filter((n): n is string => n !== null && n !== undefined);
+  const operatorNamesNeeded = newLinks.map((l) => PERMIT_FILE_OPERATOR_MAP[l.operatorKey]).filter((n): n is string => n !== null && n !== undefined);
 
   const operatorIds = new Map<string, number>();
   if (operatorNamesNeeded.length > 0) {
@@ -492,7 +502,7 @@ export async function importPermitDevices(): Promise<boolean> {
   logger.log("Downloading all files...");
   const downloadedFiles: Array<{ filePath: string; operatorKey: string; operatorId: number }> = [];
 
-  for (const l of links) {
+  for (const l of newLinks) {
     const operatorName = PERMIT_FILE_OPERATOR_MAP[l.operatorKey];
     if (!operatorName) {
       logger.warn(`Unknown operator key: ${l.operatorKey}`);
@@ -536,10 +546,20 @@ export async function importPermitDevices(): Promise<boolean> {
   const importMetadataId = await recordImportMetadata("permits", linksForCheck, "success");
 
   logger.log("Deleting stale device registry permits...");
-  const stalePermits = await db
-    .select()
-    .from(ukePermits)
-    .where(and(eq(ukePermits.source, "device_registry"), lt(ukePermits.updatedAt, importStartTime)));
+  const processedOperatorIds = [...new Set(downloadedFiles.map((f) => f.operatorId))];
+  const stalePermits =
+    processedOperatorIds.length > 0
+      ? await db
+          .select()
+          .from(ukePermits)
+          .where(
+            and(
+              eq(ukePermits.source, "device_registry"),
+              inArray(ukePermits.operator_id, processedOperatorIds),
+              lt(ukePermits.updatedAt, importStartTime),
+            ),
+          )
+      : [];
 
   if (stalePermits.length > 0) {
     for (const group of chunk(stalePermits, BATCH_SIZE)) {
@@ -553,7 +573,15 @@ export async function importPermitDevices(): Promise<boolean> {
         })),
       );
     }
-    await db.delete(ukePermits).where(and(eq(ukePermits.source, "device_registry"), lt(ukePermits.updatedAt, importStartTime)));
+    await db
+      .delete(ukePermits)
+      .where(
+        and(
+          eq(ukePermits.source, "device_registry"),
+          inArray(ukePermits.operator_id, processedOperatorIds),
+          lt(ukePermits.updatedAt, importStartTime),
+        ),
+      );
   }
   logger.log(`Deleted ${stalePermits.length} stale device registry permits`);
 

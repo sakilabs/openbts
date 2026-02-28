@@ -1,6 +1,26 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-02-28
+
+### 🩹 Fixes
+
+- Made expand button visible when announcement is truncated
+
+### 🚀 Enhancements
+
+- Make `uke-importer` import only new files
+- Added reload prompt to clear cache etc.
+- `0 MHz` band is now shown as `Unknown`
+
+# 2026-02-27
+
+### 🚀 Enhancements
+
+- Added markers to the map (See `/preferences` page to switch between dots & markers)
+- Added ability to add MNO names to `Plus` stations
+
+
 # 2026-02-26
 
 ### 🚀 Enhancements

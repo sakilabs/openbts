@@ -10,7 +10,7 @@ import { upsertUkeOperators } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
 import { sql } from "drizzle-orm";
 import { lt } from "drizzle-orm";
-import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
+import { getLastImportedHrefs, recordImportMetadata } from "./import-check.js";
 
 import type { RawRadioLineData } from "./types.js";
 function isNonEmptyName<T extends { name: string | undefined }>(v: T): v is T & { name: string } {
@@ -27,13 +27,23 @@ export async function importRadiolines(): Promise<boolean> {
   }
   console.log(`[radiolines] Found ${links.length} file(s)`);
 
-  if (await isDataUpToDate("radiolines", links)) {
-    console.log("[radiolines] Data is up-to-date, skipping import");
+  const previousHrefs = await getLastImportedHrefs("radiolines");
+  const newLinks = previousHrefs ? links.filter((l) => !previousHrefs.has(l.href)) : links;
+
+  if (newLinks.length === 0) {
+    if (previousHrefs && previousHrefs.size !== links.length) {
+      console.log("[radiolines] No new files to process, updating metadata");
+      await recordImportMetadata("radiolines", links, "success");
+    } else {
+      console.log("[radiolines] Data is up-to-date, skipping import");
+    }
     return false;
   }
 
+  console.log(`[radiolines] Processing ${newLinks.length} new file(s) (skipping ${links.length - newLinks.length} already imported)`);
+
   ensureDownloadDir();
-  const first = links[0];
+  const first = newLinks[0];
   const fileName = `${(first.text || path.basename(new url.URL(first.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
   const filePath = path.join(DOWNLOAD_DIR, fileName);
   console.log(`[radiolines] Downloading: ${fileName}`);

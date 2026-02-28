@@ -3,7 +3,7 @@ import path from "node:path";
 import url from "node:url";
 
 import { ukePermits, stationsPermits, deletedEntries, type ratEnum, type BandVariant } from "@openbts/drizzle";
-import { and, lt, eq } from "drizzle-orm";
+import { and, inArray, lt, eq } from "drizzle-orm";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import {
   chunk,
@@ -17,7 +17,7 @@ import {
 } from "./utils.js";
 
 const logger = createLogger("stations");
-import { isDataUpToDate, recordImportMetadata } from "./import-check.js";
+import { getLastImportedHrefs, recordImportMetadata } from "./import-check.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import { upsertBands, getOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
@@ -139,14 +139,25 @@ export async function importStations(): Promise<boolean> {
   const links = unfiltered;
   logger.log(`Found ${links.length} files to process`);
 
-  if (await isDataUpToDate("stations", links)) {
-    logger.log("Data is up-to-date, skipping import");
+  const previousHrefs = await getLastImportedHrefs("stations");
+  const newLinks = previousHrefs ? links.filter((l) => !previousHrefs.has(l.href)) : links;
+
+  if (newLinks.length === 0) {
+    if (previousHrefs && previousHrefs.size !== links.length) {
+      logger.log("No new files to process, updating metadata");
+      await recordImportMetadata("stations", links, "success");
+    } else {
+      logger.log("Data is up-to-date, skipping import");
+    }
     return false;
   }
+
+  logger.log(`Processing ${newLinks.length} new file(s) (skipping ${links.length - newLinks.length} already imported)`);
+
   ensureDownloadDir();
   logger.log("Parsing band information from file labels...");
   const bandKeys: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] }> = [];
-  for (const l of links) {
+  for (const l of newLinks) {
     const parsed = parseBandFromLabel(l.text || l.href);
     if (parsed) bandKeys.push(parsed);
   }
@@ -161,7 +172,7 @@ export async function importStations(): Promise<boolean> {
   const fileRows: Array<{ label: string; rows: RawUkeData[] }> = [];
 
   let totalCount = 0;
-  for (const l of links) {
+  for (const l of newLinks) {
     const fileName = `${(l.text || path.basename(new url.URL(l.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
     const filePath = path.join(DOWNLOAD_DIR, fileName);
     logger.log(`Downloading: ${fileName}`);
@@ -206,10 +217,19 @@ export async function importStations(): Promise<boolean> {
   const importMetadataId = await recordImportMetadata("stations", links, "success");
 
   logger.log("Deleting stale station permits...");
-  const stalePermits = await db
-    .select()
-    .from(ukePermits)
-    .where(and(eq(ukePermits.source, "permits"), lt(ukePermits.updatedAt, importStartTime)));
+  const processedBandIds = fileRows
+    .map((fr) => parseBandFromLabel(fr.label))
+    .filter((b): b is NonNullable<typeof b> => b !== null)
+    .map((b) => bandMap.get(`${b.rat}:${b.value}:${b.variant}`))
+    .filter((id): id is number => id !== undefined);
+
+  const stalePermits =
+    processedBandIds.length > 0
+      ? await db
+          .select()
+          .from(ukePermits)
+          .where(and(eq(ukePermits.source, "permits"), inArray(ukePermits.band_id, processedBandIds), lt(ukePermits.updatedAt, importStartTime)))
+      : [];
 
   if (stalePermits.length > 0) {
     for (const group of chunk(stalePermits, BATCH_SIZE)) {
@@ -224,7 +244,9 @@ export async function importStations(): Promise<boolean> {
       );
     }
 
-    await db.delete(ukePermits).where(and(eq(ukePermits.source, "permits"), lt(ukePermits.updatedAt, importStartTime)));
+    await db
+      .delete(ukePermits)
+      .where(and(eq(ukePermits.source, "permits"), inArray(ukePermits.band_id, processedBandIds), lt(ukePermits.updatedAt, importStartTime)));
   }
   logger.log(`Deleted ${stalePermits.length} stale station permits`);
 

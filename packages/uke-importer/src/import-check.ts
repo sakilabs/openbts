@@ -3,16 +3,20 @@ import { db } from "@openbts/drizzle/db";
 
 type ImportType = "stations" | "radiolines" | "stations_permits" | "permits";
 
-export async function isDataUpToDate(importType: ImportType, fileLinks: Array<{ href: string; text: string }>): Promise<boolean> {
-  const fileList = JSON.stringify(fileLinks.map((l) => l.href).sort());
+export async function getLastImportedHrefs(importType: ImportType): Promise<Set<string> | null> {
   const latestImport = await db.query.ukeImportMetadata.findFirst({
     where: {
       AND: [{ import_type: importType }, { status: "success" }],
     },
     orderBy: { last_import_date: "desc" },
   });
-  if (!latestImport) return false;
-  return latestImport.file_list === fileList;
+  if (!latestImport) return null;
+  try {
+    const hrefs: string[] = JSON.parse(latestImport.file_list);
+    return new Set(hrefs);
+  } catch {
+    return null;
+  }
 }
 
 export async function recordImportMetadata(
