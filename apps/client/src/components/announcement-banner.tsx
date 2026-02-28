@@ -64,7 +64,9 @@ export function AnnouncementBanner() {
   return (
     <div className={cn("flex items-center gap-2 px-4 py-2 border-b text-sm shrink-0", config.className)}>
       <HugeiconsIcon icon={config.icon} className="size-4 shrink-0" />
-      <p ref={textRef} className={cn("flex-1 min-w-0", expanded ? "wrap-break-word" : "truncate")}>{announcement.message}</p>
+      <p ref={textRef} className={cn("flex-1 min-w-0", expanded ? "wrap-break-word" : "truncate")}>
+        {announcement.message}
+      </p>
       <div className="flex items-center gap-1 shrink-0">
         {(isTruncated || expanded) && (
           <button
