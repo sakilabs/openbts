@@ -14,6 +14,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added reload prompt to clear cache etc.
 - `0 MHz` band is now shown as `Unknown`
 - Added tooltips to cell table headers that show the full name of e.g. `PCI`, `NCI`, `LongCID` etc
+- Instead of the email, navbar now shows the username instead. To see your email, click on the `user` button
 
 # 2026-02-27
 
