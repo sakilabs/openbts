@@ -24,7 +24,10 @@ const operatorsSelectSchema = createSelectSchema(operators);
 const extraIdentificatorsSchema = createSelectSchema(extraIdentificators).omit({ station_id: true });
 const cellWithDetailsSchema = cellsSelectSchema.extend({ details: cellDetailsSchema });
 
-type ReqBody = { Body: { query?: string }; Querystring: { limit?: number } };
+type ReqBody = {
+  Body: { query?: string };
+  Querystring: { limit?: number; sort?: "asc" | "desc"; sortBy?: "station_id" | "updatedAt" | "createdAt" };
+};
 type CellWithRat = z.infer<typeof cellsSelectSchema> & {
   gsm?: z.infer<typeof gsmCellsSchema>;
   umts?: z.infer<typeof umtsCellsSchema>;
@@ -49,6 +52,8 @@ const schemaRoute = {
   }),
   querystring: z.object({
     limit: z.coerce.number().int().min(1).max(100).optional().default(100),
+    sort: z.enum(["asc", "desc"]).optional().default("desc"),
+    sortBy: z.enum(["station_id", "updatedAt", "createdAt"]).optional().default("updatedAt"),
   }),
   response: {
     200: z.object({
@@ -100,6 +105,16 @@ const withCellDetails = (station: StationWithRatCells): StationWithCells => {
   const result = { ...station, cells: transformedCells } as StationWithCells & { extra_identificators?: unknown };
   if (!result.extra_identificators) delete result.extra_identificators;
   return result;
+};
+
+const sortStations = (arr: StationWithCells[], sortBy: "station_id" | "updatedAt" | "createdAt", sort: "asc" | "desc"): StationWithCells[] => {
+  const dir = sort === "asc" ? 1 : -1;
+  return [...arr].sort((a, b) => {
+    if (sortBy === "station_id") return dir * a.station_id.localeCompare(b.station_id);
+    const aTime = new Date(a[sortBy] as Date | string).getTime();
+    const bTime = new Date(b[sortBy] as Date | string).getTime();
+    return dir * (aTime - bTime);
+  });
 };
 
 const combineConditions = (conditions: SQL[]): SQL | undefined =>
@@ -181,7 +196,7 @@ const fetchStations = async (where?: SQL, limit?: number) => {
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
   const { query } = req.body;
-  const { limit: requestedLimit } = req.query;
+  const { limit: requestedLimit, sort = "desc", sortBy = "updatedAt" } = req.query;
   if (!query?.trim()) throw new ErrorResponse("INVALID_QUERY");
 
   const limit = Math.min(Math.max(requestedLimit ?? 100, 1), 100);
@@ -237,7 +252,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     }
 
     const filteredStations = await fetchStations(combineConditions(stationConditions), limit);
-    return res.send({ data: filteredStations.map(withCellDetails) });
+    return res.send({ data: sortStations(filteredStations.map(withCellDetails), sortBy, sort) });
   }
 
   const searchQuery = remainingQuery || query;
@@ -329,7 +344,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     }
   }
 
-  return res.send({ data: Array.from(stationMap.values()).slice(0, limit) });
+  return res.send({ data: sortStations(Array.from(stationMap.values()).slice(0, limit), sortBy, sort) });
 }
 
 const searchRoute: Route<ReqBody, StationWithCells[]> = {

@@ -6,12 +6,14 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🩹 Fixes
 
 - Made expand button visible when announcement is truncated
+- `/search` server route now takes sort option so the sorting will work on `/stations` page
 
 ### 🚀 Enhancements
 
 - Make `uke-importer` import only new files
 - Added reload prompt to clear cache etc.
 - `0 MHz` band is now shown as `Unknown`
+- Added tooltips to cell table headers that show the full name of e.g. `PCI`, `NCI`, `LongCID` etc
 
 # 2026-02-27
 

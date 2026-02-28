@@ -37,35 +37,154 @@ export function CellTable({ rat, cells }: CellTableProps) {
                 {rat !== "GSM" && <th className="px-4 py-2 text-left font-medium text-muted-foreground">Duplex</th>}
                 {rat === "GSM" && (
                   <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">LAC</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">CID</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">LAC</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Local Area Code</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">CID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Cell ID</TooltipContent>
+                      </Tooltip>
+                    </th>
                   </>
                 )}
                 {rat === "UMTS" && (
                   <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">LAC</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">RNC</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">CID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">LongCID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">UARFCN</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">LAC</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Local Area Code</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">RNC</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Radio Network Controller</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">CID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Cell ID</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">LongCID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Long Cell ID ((RNC * 65536) + CID)</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">UARFCN</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Absolute Radio Frequency Channel Number</TooltipContent>
+                      </Tooltip>
+                    </th>
                   </>
                 )}
                 {rat === "LTE" && (
                   <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">TAC</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">eNBID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">CLID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">E-CID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">PCI</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">TAC</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Tracking Area Code</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">eNBID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>eNodeB ID</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">CLID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Cell Local ID</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">E-CID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Enhanced CID ((eNBID * 256) + CLID)</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">PCI</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Physical Cell ID</TooltipContent>
+                      </Tooltip>
+                    </th>
                   </>
                 )}
                 {rat === "NR" && (
                   <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">TAC</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">CLID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">gNBID</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">NCI</th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">PCI</th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">TAC</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Tracking Area Code</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">CLID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Cell Local ID</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">gNBID</span>
+                        </TooltipTrigger>
+                        <TooltipContent>gNodeB ID (22-32 bits)</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">NCI</span>
+                        </TooltipTrigger>
+                        <TooltipContent>NR Cell Identity</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">PCI</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Physical Cell ID</TooltipContent>
+                      </Tooltip>
+                    </th>
                   </>
                 )}
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("common:labels.notes")}</th>

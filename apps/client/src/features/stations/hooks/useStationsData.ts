@@ -28,8 +28,10 @@ function buildSearchQuery({ query, filters, regionNames }: SearchWithFiltersPara
   return filterParts.join(" ").trim();
 }
 
-const searchStations = async (query: string) => {
-  return fetchApiData<Station[]>("search", {
+const searchStations = async (query: string, sort: StationSortDirection, sortBy: StationSortBy | undefined) => {
+  const params = new URLSearchParams({ sort });
+  if (sortBy) params.set("sortBy", sortBy);
+  return fetchApiData<Station[]>(`search?${params}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
@@ -251,8 +253,8 @@ export function useStationsData() {
   }, [searchQuery, filters, selectedRegionNames]);
 
   const { data: searchResults = [], isLoading: isSearching } = useQuery({
-    queryKey: ["station-search-table", combinedSearchQuery],
-    queryFn: () => searchStations(combinedSearchQuery),
+    queryKey: ["station-search-table", combinedSearchQuery, sort, sortBy],
+    queryFn: () => searchStations(combinedSearchQuery, sort, sortBy),
     enabled: combinedSearchQuery.length > 0,
     staleTime: 1000 * 60 * 5,
   });
