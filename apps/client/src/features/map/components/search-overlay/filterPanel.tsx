@@ -301,7 +301,7 @@ export function FilterPanel({
   onClearFilters,
   isSheet = false,
 }: FilterPanelProps) {
-  const { t, i18n } = useTranslation(["main", "common"]);
+  const { t, i18n } = useTranslation(["main", "common", "stations"]);
   const [showOtherOperators, setShowOtherOperators] = useState(false);
 
   const { data: stats } = useQuery({
@@ -471,7 +471,7 @@ export function FilterPanel({
                   : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
               )}
             >
-              {value}
+              {value === 0 ? t("stations:cells.unknownBand") : value}
             </button>
           ))}
         </div>

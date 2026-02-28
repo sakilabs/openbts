@@ -323,7 +323,7 @@ export function StationsFilters({
           >
             <ComboboxChips ref={bandChipsRef} className="min-h-8 max-h-16 overflow-y-auto text-sm">
               {filters.bands.map((band) => (
-                <ComboboxChip key={band}>{band}</ComboboxChip>
+                <ComboboxChip key={band}>{band === 0 ? t("stations:cells.unknownBand") : band}</ComboboxChip>
               ))}
               <ComboboxChipsInput placeholder={filters.bands.length === 0 ? t("common:placeholder.selectBand") : ""} />
             </ComboboxChips>
@@ -332,7 +332,7 @@ export function StationsFilters({
                 <ComboboxEmpty>{t("common:placeholder.noBandsFound")}</ComboboxEmpty>
                 {uniqueBandValues.map((band) => (
                   <ComboboxItem key={band} value={band}>
-                    <span className="font-mono">{band} MHz</span>
+                    <span className="font-mono">{band === 0 ? t("stations:cells.unknownBand") : `${band} MHz`}</span>
                   </ComboboxItem>
                 ))}
               </ComboboxList>

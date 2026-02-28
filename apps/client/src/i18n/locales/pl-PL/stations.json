@@ -34,7 +34,7 @@
     "diffDeleted_many": "usuniętych",
     "diffDeleted_other": "usunięte",
     "cellNotConfirmed": "Ta komórka nie jest potwierdzona",
-    "unknownBand": "Nieznane pasmo"
+    "unknownBand": "Nieznane"
   },
   "stationsAtLocation": "Stacje w tej lokalizacji",
   "stationsCount_one": "{{count, number}} stacja",

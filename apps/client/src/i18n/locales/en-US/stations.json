@@ -26,7 +26,7 @@
     "diffModified": "modified",
     "diffDeleted": "deleted",
     "cellNotConfirmed": "This cell is not confirmed",
-    "unknownBand": "Unknown Band"
+    "unknownBand": "Unknown"
   },
   "stationsAtLocation": "Stations at this location",
   "stationsCount_one": "{{count, number}} station",
