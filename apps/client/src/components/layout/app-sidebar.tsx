@@ -9,6 +9,8 @@ import {
   Download04Icon,
   FileAttachmentIcon,
   GitBranchIcon,
+  InformationCircleIcon,
+  LegalDocument01Icon,
   Login01Icon,
   Location01Icon,
   MapsIcon,
@@ -61,6 +63,19 @@ const authNavConfig = [
   },
 ];
 
+const infoNavConfig = [
+  {
+    titleKey: "sections.info",
+    key: "info",
+    url: "#",
+    icon: InformationCircleIcon,
+    items: [
+      { titleKey: "items.about", url: "/about", icon: InformationCircleIcon },
+      { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },
+    ],
+  },
+];
+
 const adminNavConfig = [
   {
     titleKey: "sections.admin",
@@ -103,6 +118,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   );
 
   const navItems = useMemo(() => mapConfig(navMainConfig), [mapConfig]);
+  const infoNavItems = useMemo(() => mapConfig(infoNavConfig), [mapConfig]);
   const showAuth = !!(session?.user && settings?.submissionsEnabled);
   const authNavItems = useMemo(() => (showAuth ? mapConfig(authNavConfig) : []), [mapConfig, showAuth]);
   const userRole = session?.user?.role as string | undefined;
@@ -144,6 +160,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         <NavMain items={navItems} />
         {authNavItems.length > 0 && <NavMain items={authNavItems} />}
         {adminNavItems.length > 0 && <NavMain items={adminNavItems} />}
+        <NavMain items={infoNavItems} />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

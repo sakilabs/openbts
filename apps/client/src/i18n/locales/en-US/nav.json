@@ -3,7 +3,8 @@
     "stations": "Stations",
     "contribute": "Submissions",
     "settings": "Settings",
-    "admin": "Admin"
+    "admin": "Admin",
+    "info": "Information"
   },
   "items": {
     "mapView": "Map View",
@@ -23,7 +24,9 @@
     "ukeImport": "UKE Import",
     "auditLogs": "Audit Logs",
     "deletedEntries": "Deleted Entries",
-    "statistics": "Statistics"
+    "statistics": "Statistics",
+    "about": "About",
+    "tos": "Terms of Service"
   },
   "secondary": {
     "settings": "Settings",

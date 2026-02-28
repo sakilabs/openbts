@@ -16,7 +16,7 @@ export function ReloadPrompt() {
   if (!needRefresh) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 relative max-w-sm rounded-xl border border-border bg-popover p-4 shadow-lg animate-in slide-in-from-bottom-4 fade-in">
+    <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-border bg-popover p-4 shadow-lg animate-in slide-in-from-bottom-4 fade-in">
       <Button variant="ghost" size="icon-sm" className="absolute top-2 right-2" onClick={() => setNeedRefresh(false)} aria-label={t("actions.close")}>
         <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
       </Button>

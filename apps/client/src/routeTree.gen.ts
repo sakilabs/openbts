@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutTosRouteImport } from './routes/_layout/tos'
 import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submission'
 import { Route as LayoutStatisticsRouteImport } from './routes/_layout/statistics'
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
@@ -18,6 +19,7 @@ import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferen
 import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/deleted-entries'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
 import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
+import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
 import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_layout'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
 import { Route as LayoutAccountSettingsRouteImport } from './routes/_layout/account/settings'
@@ -41,6 +43,11 @@ const LayoutRoute = LayoutRouteImport.update({
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutTosRoute = LayoutTosRouteImport.update({
+  id: '/tos',
+  path: '/tos',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSubmissionRoute = LayoutSubmissionRouteImport.update({
@@ -76,6 +83,11 @@ const LayoutClfExportRoute = LayoutClfExportRouteImport.update({
 const LayoutChangelogRoute = LayoutChangelogRouteImport.update({
   id: '/changelog',
   path: '/changelog',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAboutRoute = LayoutAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminLayoutRoute = LayoutAdminLayoutRouteImport.update({
@@ -169,6 +181,7 @@ const LayoutAdminLayoutLocationsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
+  '/about': typeof LayoutAboutRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
@@ -176,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
+  '/tos': typeof LayoutTosRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/admin': typeof LayoutAdminLayoutRouteWithChildren
@@ -193,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof LayoutAdminLayoutUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/about': typeof LayoutAboutRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
@@ -200,6 +215,7 @@ export interface FileRoutesByTo {
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
+  '/tos': typeof LayoutTosRoute
   '/': typeof LayoutIndexRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
@@ -220,6 +236,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/about': typeof LayoutAboutRoute
   '/_layout/changelog': typeof LayoutChangelogRoute
   '/_layout/clf-export': typeof LayoutClfExportRoute
   '/_layout/deleted-entries': typeof LayoutDeletedEntriesRoute
@@ -227,6 +244,7 @@ export interface FileRoutesById {
   '/_layout/stations': typeof LayoutStationsRoute
   '/_layout/statistics': typeof LayoutStatisticsRoute
   '/_layout/submission': typeof LayoutSubmissionRoute
+  '/_layout/tos': typeof LayoutTosRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
@@ -248,6 +266,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/changelog'
     | '/clf-export'
     | '/deleted-entries'
@@ -255,6 +274,7 @@ export interface FileRouteTypes {
     | '/stations'
     | '/statistics'
     | '/submission'
+    | '/tos'
     | '/account/settings'
     | '/account/submissions'
     | '/admin'
@@ -272,6 +292,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/about'
     | '/changelog'
     | '/clf-export'
     | '/deleted-entries'
@@ -279,6 +300,7 @@ export interface FileRouteTypes {
     | '/stations'
     | '/statistics'
     | '/submission'
+    | '/tos'
     | '/'
     | '/account/settings'
     | '/account/submissions'
@@ -298,6 +320,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/_layout/about'
     | '/_layout/changelog'
     | '/_layout/clf-export'
     | '/_layout/deleted-entries'
@@ -305,6 +328,7 @@ export interface FileRouteTypes {
     | '/_layout/stations'
     | '/_layout/statistics'
     | '/_layout/submission'
+    | '/_layout/tos'
     | '/_layout/'
     | '/_layout/account/settings'
     | '/_layout/account/submissions'
@@ -341,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof LayoutIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/tos': {
+      id: '/_layout/tos'
+      path: '/tos'
+      fullPath: '/tos'
+      preLoaderRoute: typeof LayoutTosRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/submission': {
@@ -390,6 +421,13 @@ declare module '@tanstack/react-router' {
       path: '/changelog'
       fullPath: '/changelog'
       preLoaderRoute: typeof LayoutChangelogRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/about': {
+      id: '/_layout/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof LayoutAboutRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin/_layout': {
@@ -535,6 +573,7 @@ const LayoutAdminLayoutRouteWithChildren =
   LayoutAdminLayoutRoute._addFileChildren(LayoutAdminLayoutRouteChildren)
 
 interface LayoutRouteChildren {
+  LayoutAboutRoute: typeof LayoutAboutRoute
   LayoutChangelogRoute: typeof LayoutChangelogRoute
   LayoutClfExportRoute: typeof LayoutClfExportRoute
   LayoutDeletedEntriesRoute: typeof LayoutDeletedEntriesRoute
@@ -542,6 +581,7 @@ interface LayoutRouteChildren {
   LayoutStationsRoute: typeof LayoutStationsRoute
   LayoutStatisticsRoute: typeof LayoutStatisticsRoute
   LayoutSubmissionRoute: typeof LayoutSubmissionRoute
+  LayoutTosRoute: typeof LayoutTosRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutAccountSettingsRoute: typeof LayoutAccountSettingsRoute
   LayoutAccountSubmissionsRoute: typeof LayoutAccountSubmissionsRoute
@@ -549,6 +589,7 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutAboutRoute: LayoutAboutRoute,
   LayoutChangelogRoute: LayoutChangelogRoute,
   LayoutClfExportRoute: LayoutClfExportRoute,
   LayoutDeletedEntriesRoute: LayoutDeletedEntriesRoute,
@@ -556,6 +597,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutStationsRoute: LayoutStationsRoute,
   LayoutStatisticsRoute: LayoutStatisticsRoute,
   LayoutSubmissionRoute: LayoutSubmissionRoute,
+  LayoutTosRoute: LayoutTosRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutAccountSettingsRoute: LayoutAccountSettingsRoute,
   LayoutAccountSubmissionsRoute: LayoutAccountSubmissionsRoute,
