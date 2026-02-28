@@ -43,7 +43,8 @@ export async function importRadiolines(): Promise<boolean> {
   console.log(`[radiolines] Processing ${newLinks.length} new file(s) (skipping ${links.length - newLinks.length} already imported)`);
 
   ensureDownloadDir();
-  const first = newLinks[0];
+  const [first] = newLinks;
+  if (!first) return false;
   const fileName = `${(first.text || path.basename(new url.URL(first.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
   const filePath = path.join(DOWNLOAD_DIR, fileName);
   console.log(`[radiolines] Downloading: ${fileName}`);
