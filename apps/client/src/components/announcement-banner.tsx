@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { InformationCircleIcon, Alert02Icon, AlertCircleIcon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,16 @@ export function AnnouncementBanner() {
   });
   const [expanded, setExpanded] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
-  const textRef = useRef<HTMLParagraphElement>(null);
+  const observerRef = useRef<ResizeObserver>(null);
+
+  const textRef = useCallback((el: HTMLParagraphElement | null) => {
+    observerRef.current?.disconnect();
+    if (!el) return;
+    const check = () => setIsTruncated(el.scrollWidth > el.clientWidth);
+    check();
+    observerRef.current = new ResizeObserver(check);
+    observerRef.current.observe(el);
+  }, []);
 
   const announcement = settings?.announcement;
 
@@ -46,16 +55,6 @@ export function AnnouncementBanner() {
       localStorage.setItem(DISMISSED_KEY, announcement.message);
     } catch {}
   }, [announcement]);
-
-  useEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
-    const check = () => setIsTruncated(el.scrollWidth > el.clientWidth);
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   if (!announcement?.enabled || !announcement.message) return null;
   if (dismissed === announcement.message) return null;
