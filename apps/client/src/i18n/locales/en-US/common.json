@@ -182,6 +182,10 @@
     "region": "No region",
     "address": "No address"
   },
+  "pwa": {
+    "updateAvailable": "A new version is available",
+    "updateDescription": "Reload to get the latest features and fixes."
+  },
   "forbidden": {
     "title": "No permissions",
     "description": "You don't have the required role to view this page."

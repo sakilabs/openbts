@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { BackendStatusProvider } from "@/components/backend-status";
 import { Toaster } from "@/components/ui/sonner";
+import { ReloadPrompt } from "@/components/reload-prompt";
 import { BackendUnavailableError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import i18n from "@/i18n/config";
@@ -48,6 +49,7 @@ function AppProviders({ children }: { children: ReactNode }) {
     >
       <ErrorBoundary>{children}</ErrorBoundary>
       <Toaster />
+      <ReloadPrompt />
     </AuthUIProvider>
   );
 }

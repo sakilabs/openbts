@@ -171,6 +171,10 @@
     "region": "Brak województwa",
     "address": "Brak adresu"
   },
+  "pwa": {
+    "updateAvailable": "Dostępna jest nowa wersja",
+    "updateDescription": "Odśwież, aby uzyskać najnowsze funkcje i poprawki."
+  },
   "forbidden": {
     "title": "Brak uprawnień",
     "description": "Nie masz wymaganej roli, aby zobaczyć tę stronę."
