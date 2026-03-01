@@ -14,6 +14,7 @@
     "internalByRat": "Komórki wg technologii",
     "internalByOperator": "Komórki wg operatora",
     "internalByBand": "Komórki wg pasma",
+    "internalStationsPerOperator": "Stacje wg operatora",
     "byVoivodeship": "Unikalne stacje wg województwa",
     "internalByVoivodeship": "Stacje wg województwa",
     "history": "Trendy historyczne",

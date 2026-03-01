@@ -58,6 +58,15 @@ const schemaRoute = {
               .filter((n) => !Number.isNaN(n))
           : undefined,
       ),
+    new: z
+      .string()
+      .optional()
+      .transform((val): number | null => {
+        if (!val || val === "false" || val === "0") return null;
+        if (val === "true") return 30;
+        const n = Number(val);
+        return n >= 1 && n <= 30 ? n : null;
+      }),
   }),
   response: {
     200: z.object({
@@ -75,7 +84,7 @@ type ResponseData = z.infer<typeof locationsSchema> & { region: z.infer<typeof r
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { id } = req.params;
-  const { rat, operators: operatorMncs, bands: bandValues } = req.query;
+  const { rat, operators: operatorMncs, bands: bandValues, new: recentDays } = req.query;
 
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
@@ -107,10 +116,12 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
   const iotRequested = requestedRats.includes("iot");
 
+  const cutoff = recentDays ? new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000) : null;
+
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
   const buildStationFilter = (stationFields: typeof stations) => {
-    if (!hasStationFilters) return undefined;
+    if (!hasStationFilters && !cutoff) return undefined;
 
     const conditions: ReturnType<typeof sql>[] = [];
     if (operatorIds.length) {
@@ -156,6 +167,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       )`);
     }
 
+    if (cutoff)
+      conditions.push(sql`(${stationFields.updatedAt} >= ${cutoff.toISOString()} OR ${stationFields.createdAt} >= ${cutoff.toISOString()})`);
+
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
 
@@ -171,7 +185,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       region: true,
       stations: {
         columns: { status: false, location_id: false, operator_id: false },
-        where: hasStationFilters ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
+        where: hasStationFilters || cutoff ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
         with: {
           cells: {
             columns: { band_id: false, station_id: false },

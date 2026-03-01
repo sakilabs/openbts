@@ -86,8 +86,8 @@ function createPinImage(segments: { value: number; color: string }[]): ImageData
   tracePinPath(ctx);
   ctx.fillStyle = "#ffffff";
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;

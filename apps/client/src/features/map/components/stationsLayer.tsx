@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMap } from "@/components/ui/map";
 import { usePreferences } from "@/hooks/usePreferences";
 
-import type {
-  StationFilters,
-  StationSource,
-  LocationWithStations,
-  LocationInfo,
-  StationWithoutCells,
-  UkeStation,
-  UkeLocationWithPermits,
-} from "@/types/station";
+import type { StationFilters, StationSource, LocationInfo, StationWithoutCells, UkeStation, UkeLocationWithPermits } from "@/types/station";
 import type { LocationsResponse } from "../api";
 import { fetchLocationWithStations } from "../api";
 import { fetchStation, fetchUkePermit } from "@/features/station-details/api";
+
 import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
 import { getOperatorColor } from "@/lib/operatorUtils";
-import { groupPermitsByStation } from "../utils";
+import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 import { useUrlSync } from "../hooks/useURLSync";
 import { useMapLayer } from "../hooks/useMapLayer";
 import { showApiError } from "@/lib/api";
 import { POINT_LAYER_ID } from "../constants";
+
+const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
+export function locationQueryKey(locationId: number, filters: StationFilters) {
+  return ["location", locationId, filters] as const;
+}
 
 export const DEFAULT_FILTERS: StationFilters = {
   operators: [],
@@ -64,24 +64,6 @@ export function loadMapFilters(): StationFilters | null {
   }
 }
 
-type PrefetchCache = Map<
-  number,
-  {
-    promise: Promise<LocationWithStations>;
-    data?: LocationWithStations;
-  }
->;
-
-function toLocationInfo(loc: LocationWithStations): LocationInfo {
-  return {
-    id: loc.id,
-    city: loc.city,
-    address: loc.address,
-    latitude: loc.latitude,
-    longitude: loc.longitude,
-  };
-}
-
 type ShowPopupFn = (
   coordinates: [number, number],
   location: LocationInfo,
@@ -104,6 +86,7 @@ type StationsLayerProps = {
   showPopup: ShowPopupFn;
   updatePopupStations: UpdatePopupStationsFn;
   cleanupPopup: () => void;
+  onPopupLocationChange: (popup: { locationId: number; source: StationSource }) => void;
 };
 
 export function StationsLayer({
@@ -116,11 +99,12 @@ export function StationsLayer({
   onOpenUkeStationDetails,
   onRadiolineIdFromUrl,
   showPopup,
-  updatePopupStations,
   cleanupPopup,
+  onPopupLocationChange,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
+  const queryClient = useQueryClient();
   const pendingStationId = useRef<number | string | undefined>(null);
   const pendingLocationId = useRef<number | null>(null);
   const pendingUkeLocationId = useRef<number | null>(null);
@@ -185,7 +169,12 @@ export function StationsLayer({
         }
 
         pendingLocationId.current = locationId;
-        fetchLocationWithStations(locationId, activeFilters)
+        queryClient
+          .fetchQuery({
+            queryKey: locationQueryKey(locationId, activeFilters),
+            queryFn: () => fetchLocationWithStations(locationId, activeFilters),
+            staleTime: 1000 * 60 * 2,
+          })
           .then((locationData) => {
             const location = toLocationInfo(locationData);
             map.flyTo({
@@ -199,6 +188,7 @@ export function StationsLayer({
           .then((locationData) => {
             const location = toLocationInfo(locationData);
             showPopup([location.longitude, location.latitude], location, locationData.stations as StationWithoutCells[], null, activeFilters.source);
+            onPopupLocationChange({ locationId, source: activeFilters.source });
           })
           .catch((error) => {
             console.error("Failed to fetch shared location:", error);
@@ -209,7 +199,17 @@ export function StationsLayer({
           });
       }
     },
-    [map, filters, showPopup, onFiltersChange, onOpenStationDetails, onOpenUkeStationDetails, onRadiolineIdFromUrl],
+    [
+      queryClient,
+      map,
+      filters,
+      showPopup,
+      onFiltersChange,
+      onOpenStationDetails,
+      onOpenUkeStationDetails,
+      onRadiolineIdFromUrl,
+      onPopupLocationChange,
+    ],
   );
 
   useUrlSync({
@@ -220,14 +220,7 @@ export function StationsLayer({
     onInitialize: handleUrlInitialize,
   });
 
-  const prefetchCacheRef = useRef<PrefetchCache>(new Map());
-  useEffect(() => {
-    prefetchCacheRef.current = new Map();
-  }, []);
-
-  const locations = locationsResponse?.data ?? [];
-
-  const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+  const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
 
   const geoJSON = useMemo(() => {
     if (!filters.showStations) return EMPTY_GEOJSON;
@@ -256,44 +249,23 @@ export function StationsLayer({
 
     const ukeStations = groupPermitsByStation(ukeLocation.permits ?? [], ukeLocation);
     showPopup([location.longitude, location.latitude], location, null, ukeStations, filters.source);
-  }, [map, locations, filters.source, showPopup]);
-
-  const fetchAndUpdatePopup = useCallback(
-    async (locationId: number, _location: LocationInfo, source: StationSource) => {
-      const cache = prefetchCacheRef.current;
-      const cached = cache.get(locationId);
-      const dataPromise =
-        cached?.data !== undefined ? Promise.resolve(cached.data) : cached ? cached.promise : fetchLocationWithStations(locationId, filters);
-      try {
-        const data = await dataPromise;
-        updatePopupStations(toLocationInfo(data), data.stations, source);
-      } catch (error: unknown) {
-        console.error("Failed to fetch station cells:", error);
-        showApiError(error);
-      }
-    },
-    [filters, updatePopupStations],
-  );
+    onPopupLocationChange({ locationId, source: filters.source });
+  }, [map, locations, filters.source, showPopup, onPopupLocationChange]);
 
   const handleFeatureMouseDown = useCallback(
     (locationId: number) => {
-      const cache = prefetchCacheRef.current;
-      if (filters.source === "uke" || cache.has(locationId)) return;
-
-      const entry = {
-        promise: fetchLocationWithStations(locationId, filters).then((data) => {
-          entry.data = data;
-          return data;
-        }),
-        data: undefined as LocationWithStations | undefined,
-      };
-      cache.set(locationId, entry);
+      if (filters.source === "uke") return;
+      queryClient.prefetchQuery({
+        queryKey: locationQueryKey(locationId, filters),
+        queryFn: () => fetchLocationWithStations(locationId, filters),
+        staleTime: 1000 * 60 * 2,
+      });
     },
-    [filters],
+    [queryClient, filters],
   );
 
   const handleFeatureClick = useCallback(
-    async (data: { coordinates: [number, number]; locationId: number; city?: string; address?: string; source: string }) => {
+    (data: { coordinates: [number, number]; locationId: number; city?: string; address?: string; source: string }) => {
       const { coordinates, locationId, city, address, source } = data;
       const [lng, lat] = coordinates;
 
@@ -301,6 +273,7 @@ export function StationsLayer({
         const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === locationId);
         const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
         showPopup(coordinates, { id: locationId, city, address, latitude: lat, longitude: lng }, null, ukeStations, source as StationSource);
+        onPopupLocationChange({ locationId, source: source as StationSource });
         return;
       }
 
@@ -314,9 +287,9 @@ export function StationsLayer({
       };
 
       showPopup(coordinates, location, locationData?.stations ?? null, null, source as StationSource);
-      await fetchAndUpdatePopup(locationId, location, source as StationSource);
+      onPopupLocationChange({ locationId, source: source as StationSource });
     },
-    [locations, showPopup, fetchAndUpdatePopup],
+    [locations, showPopup, onPopupLocationChange],
   );
 
   const handleFeatureContextMenu = useCallback(

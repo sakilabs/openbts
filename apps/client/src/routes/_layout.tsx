@@ -26,6 +26,8 @@ export interface RouteHandle {
   allowedRoles?: string[];
 }
 
+const EMPTY_BREADCRUMBS: BreadcrumbSegment[] = [];
+
 function AppLayout() {
   const matches = useMatches();
   const { t } = useTranslation();
@@ -36,7 +38,7 @@ function AppLayout() {
   const handle = currentRoute?.staticData as RouteHandle | undefined;
 
   const pageTitle = handle?.titleKey ? t(handle.titleKey, { ns: handle.i18nNamespace }) : (handle?.title ?? "");
-  const breadcrumbs = handle?.breadcrumbs ?? [];
+  const breadcrumbs = handle?.breadcrumbs ?? EMPTY_BREADCRUMBS;
 
   useEffect(() => {
     const titleParts: string[] = [];

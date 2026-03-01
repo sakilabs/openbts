@@ -219,9 +219,11 @@ export function useStationsData() {
 
   const { data: regions = [] } = useQuery(regionsQueryOptions());
 
+  const regionById = useMemo(() => new Map(regions.map((r) => [r.id, r])), [regions]);
+
   const selectedRegionNames = useMemo(() => {
-    return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
-  }, [selectedRegions, regions]);
+    return selectedRegions.map((id) => regionById.get(id)?.code).filter((code): code is string => Boolean(code));
+  }, [selectedRegions, regionById]);
 
   const { data, fetchNextPage, hasNextPage, isLoading, isFetching } = useInfiniteQuery({
     queryKey: ["stations-list", FETCH_LIMIT, filters.operators, filters.bands, filters.rat, selectedRegionNames, sort, sortBy],

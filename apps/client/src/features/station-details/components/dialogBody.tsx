@@ -51,6 +51,10 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
   const { preferences } = usePreferences();
   const location = useLocation();
   const isOnMap = location.pathname === "/";
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+    [i18n.language],
+  );
   const cellGroups = station ? groupCellsByRat(station.cells) : {};
   const visibleTabs = useMemo(
     () =>
@@ -256,29 +260,11 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-2">
                         <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-                        {t("common:labels.created")}:{" "}
-                        {station
-                          ? new Date(station.createdAt).toLocaleDateString(i18n.language, {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
+                        {t("common:labels.created")}: {station ? dateFormatter.format(new Date(station.createdAt)) : "-"}
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-                        {t("common:labels.updated")}:{" "}
-                        {station
-                          ? new Date(station.updatedAt).toLocaleDateString(i18n.language, {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
+                        {t("common:labels.updated")}: {station ? dateFormatter.format(new Date(station.updatedAt)) : "-"}
                       </span>
                     </div>
                   </section>

@@ -88,7 +88,15 @@ const schemaRoute = {
       ),
     permit_number: z.string().optional(),
     decision_type: z.literal(["zmP", "P"]).optional(),
-    new: z.coerce.boolean().optional().default(false),
+    new: z
+      .string()
+      .optional()
+      .transform((val): number | null => {
+        if (!val || val === "false" || val === "0") return null;
+        if (val === "true") return 30;
+        const n = Number(val);
+        return n >= 1 && n <= 30 ? n : null;
+      }),
   }),
   response: {
     200: z.object({
@@ -104,7 +112,7 @@ type ReqQuery = {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit = undefined, page = 1, bounds, operators, permit_number, decision_type } = req.query;
+  const { limit = undefined, page = 1, bounds, operators, permit_number, decision_type, new: recentDays } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   try {
@@ -127,6 +135,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       }
       if (decision_type) conditions.push(eq(f.decision_type, decision_type));
       if (operators) conditions.push(inArray(f.operator_id, operators));
+      if (recentDays) {
+        const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
+        conditions.push(sql`${f.updatedAt} >= ${cutoff.toISOString()}`);
+      }
 
       return conditions;
     }

@@ -15,7 +15,8 @@ type OperatorSelectProps = {
 export function OperatorSelect({ operators, value, onChange, disabled, className }: OperatorSelectProps) {
   const { t } = useTranslation("common");
 
-  const selectedOperator = operators.find((o) => o.id === value);
+  const operatorById = useMemo(() => new Map(operators.map((o) => [o.id, o])), [operators]);
+  const selectedOperator = value !== null ? operatorById.get(value) : undefined;
 
   const { topOperators, restOperators } = useMemo(
     () => ({

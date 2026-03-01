@@ -1,6 +1,22 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-02
+
+### 🩹 Fixes
+
+- Locations now filter by station `updatedAt`/`createdAt`
+- Stations in the popup are also being filtered by `new` filter right now
+- `editor` role now has proper API rate limiting
+
+### 🚀 Enhancements
+
+- Made the stroke line for new markers a little wider
+- Added chart with stations per operator on `/statistics` for internal db
+- The "new" filter also works for radiolines now
+- Various rendering optimizations - O(1) operator lookups, memoized date formatters, shared query options
+- Station popup now opens immediately with basic data and updates in the background once station details are loaded
+
 # 2026-02-28
 
 ### 🩹 Fixes
@@ -10,7 +26,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
-- Make `uke-importer` import only new files
+- Made `uke-importer` import only new files
 - Added reload prompt to clear cache etc.
 - `0 MHz` band is now shown as `Unknown`
 - Added tooltips to cell table headers that show the full name of e.g. `PCI`, `NCI`, `LongCID` etc

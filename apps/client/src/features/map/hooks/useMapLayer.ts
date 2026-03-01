@@ -256,6 +256,8 @@ export function useMapLayer({
       map.on("mouseleave", layerId, handleMouseLeave);
     }
 
+    const addedImages = addedImagesRef.current;
+
     return () => {
       const isMapValid = map.getStyle() !== undefined;
 
@@ -279,7 +281,7 @@ export function useMapLayer({
         } catch {}
       }
 
-      addedImagesRef.current.clear();
+      addedImages.clear();
       tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
   }, [map, isLoaded, pointStyle]);

@@ -7,7 +7,8 @@ import { cn, toggleValue } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Station, StationFilters } from "@/types/station";
-import { fetchBands, fetchOperators, searchLocations, searchStations } from "../../searchApi";
+import { searchLocations, searchStations } from "../../searchApi";
+import { operatorsQueryOptions, bandsQueryOptions } from "@/features/shared/queries";
 import { AutocompleteDropdown } from "./autocompleteDropdown";
 import { FilterPanel } from "./filterPanel";
 import { SearchResults } from "./searchResults";
@@ -81,17 +82,9 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     closeOverlay,
   } = useSearchState({ filterKeywords: mapFilterKeywords, parseFilters });
 
-  const { data: operators = [] } = useQuery({
-    queryKey: ["operators"],
-    queryFn: fetchOperators,
-    staleTime: 1000 * 60 * 30,
-  });
+  const { data: operators = [] } = useQuery(operatorsQueryOptions());
 
-  const { data: bands = [] } = useQuery({
-    queryKey: ["bands"],
-    queryFn: fetchBands,
-    staleTime: 1000 * 60 * 30,
-  });
+  const { data: bands = [] } = useQuery(bandsQueryOptions());
 
   const searchKeyword = parseFilters(debouncedQuery).remainingText;
 

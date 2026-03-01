@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
 import { POLAND_CENTER } from "../constants";
@@ -7,8 +7,9 @@ import type { StationFilters, StationSource, Station, LocationInfo, StationWitho
 import { MapSearchOverlay } from "./search-overlay";
 import { useMapBounds } from "../hooks/useMapBounds";
 import { fetchLocations, fetchLocationWithStations, fetchRadioLines } from "../api";
+import { locationQueryKey } from "./stationsLayer";
 import { useMapPopup } from "../hooks/useMapPopup";
-import { groupPermitsByStation } from "../utils";
+import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { showApiError } from "@/lib/api";
 import { usePreferences } from "@/hooks/usePreferences";
 
@@ -46,10 +47,6 @@ function saveMapPosition(center: [number, number], zoom: number) {
   try {
     localStorage.setItem(MAP_POSITION_KEY, JSON.stringify({ center, zoom }));
   } catch {}
-}
-
-function toLocationInfo(loc: { id: number; city?: string; address?: string; latitude: number; longitude: number }): LocationInfo {
-  return { id: loc.id, city: loc.city, address: loc.address, latitude: loc.latitude, longitude: loc.longitude };
 }
 
 type DetailState = {
@@ -94,6 +91,11 @@ function MapViewInner() {
   const { preferences } = usePreferences();
   const [filters, setFilters] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
+
+  const handlePopupClose = useCallback(() => {
+    setActivePopupLocation(null);
+  }, []);
 
   useEffect(() => {
     saveMapFilters(filters);
@@ -122,6 +124,7 @@ function MapViewInner() {
     map,
     onOpenStationDetails: useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []),
     onOpenUkeStationDetails: useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []),
+    onClose: handlePopupClose,
   });
 
   const {
@@ -136,7 +139,7 @@ function MapViewInner() {
     placeholderData: (prev) => prev,
   });
 
-  const locations = locationsResponse?.data ?? [];
+  const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
   const locationsRef = useRef(locations);
   useEffect(() => {
     locationsRef.current = locations;
@@ -145,8 +148,14 @@ function MapViewInner() {
   const totalCount = locationsResponse?.totalCount ?? 0;
 
   const { data: radioLinesResponse, isFetching: isRadioLinesFetching } = useQuery({
-    queryKey: ["radiolines", bounds, filters.radiolineOperators, preferences.mapRadiolinesLimit],
-    queryFn: ({ signal }) => fetchRadioLines(bounds, { signal, operatorIds: filters.radiolineOperators, limit: preferences.mapRadiolinesLimit }),
+    queryKey: ["radiolines", bounds, filters.radiolineOperators, filters.recentDays, preferences.mapRadiolinesLimit],
+    queryFn: ({ signal }) =>
+      fetchRadioLines(bounds, {
+        signal,
+        operatorIds: filters.radiolineOperators,
+        limit: preferences.mapRadiolinesLimit,
+        recentDays: filters.recentDays,
+      }),
     enabled: filters.showRadiolines && !!bounds && !isMoving && zoom >= preferences.radiolinesMinZoom,
     staleTime: 1000 * 60 * 5,
     placeholderData: (prev) => prev,
@@ -155,6 +164,23 @@ function MapViewInner() {
   const radioLines = radioLinesResponse?.data ?? [];
   const radioLineCount = radioLines.length;
   const radioLineTotalCount = radioLinesResponse?.totalCount ?? 0;
+
+  const { data: popupLocationData, error: popupLocationError } = useQuery({
+    queryKey: locationQueryKey(activePopupLocation?.locationId ?? 0, filters),
+    queryFn: () => fetchLocationWithStations(activePopupLocation?.locationId ?? 0, filters),
+    enabled: !!activePopupLocation && activePopupLocation.source !== "uke",
+    staleTime: 1000 * 60 * 2,
+  });
+
+  useEffect(() => {
+    if (!popupLocationData || !activePopupLocation || activePopupLocation.source === "uke") return;
+    if (popupLocationData.id !== activePopupLocation.locationId) return;
+    updatePopupStations(toLocationInfo(popupLocationData), popupLocationData.stations as StationWithoutCells[], activePopupLocation.source);
+  }, [popupLocationData, activePopupLocation, updatePopupStations]);
+
+  useEffect(() => {
+    if (popupLocationError) showApiError(popupLocationError);
+  }, [popupLocationError]);
 
   const handleLocationSelect = useCallback(
     (lat: number, lng: number) => {
@@ -194,17 +220,19 @@ function MapViewInner() {
           longitude: lng,
         };
         showPopup([lng, lat], location, null, ukeStations, currentFilters.source);
+        setActivePopupLocation({ locationId: ukeLocation?.id ?? station.id, source: currentFilters.source });
         return;
       }
 
-      try {
-        const data = await fetchLocationWithStations(station.location_id, currentFilters);
-        const location = toLocationInfo(data);
-        showPopup([lng, lat], location, data.stations as StationWithoutCells[], null, currentFilters.source);
-      } catch (error) {
-        console.error("Failed to fetch station data:", error);
-        showApiError(error);
-      }
+      const location: LocationInfo = {
+        id: station.location_id,
+        city: station.location?.city,
+        address: station.location?.address,
+        latitude: lat,
+        longitude: lng,
+      };
+      showPopup([lng, lat], location, null, null, currentFilters.source);
+      setActivePopupLocation({ locationId: station.location_id, source: currentFilters.source });
     },
     [map, showPopup],
   );
@@ -244,6 +272,7 @@ function MapViewInner() {
         showPopup={showPopup}
         updatePopupStations={updatePopupStations}
         cleanupPopup={cleanupPopup}
+        onPopupLocationChange={setActivePopupLocation}
       />
       {filters.showRadiolines && (
         <Suspense fallback={null}>

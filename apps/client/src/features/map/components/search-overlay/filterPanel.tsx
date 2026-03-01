@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo, type RefObject } from "react";
+import { useState, useCallback, useMemo, useRef, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
@@ -61,6 +61,7 @@ function OperatorsSection({
   onFiltersChange,
 }: OperatorsSectionProps) {
   const { t } = useTranslation(["main", "common"]);
+  const radiolineOpMap = useMemo(() => new Map(radiolineOperatorsList.map((o) => [o.id, o])), [radiolineOperatorsList]);
 
   return (
     <div>
@@ -125,7 +126,7 @@ function OperatorsSection({
               className="min-h-8 max-h-24 overflow-y-auto overflow-x-hidden text-sm overscroll-contain custom-scrollbar"
             >
               {(filters.radiolineOperators ?? []).map((id) => {
-                const op = radiolineOperatorsList.find((o) => o.id === id);
+                const op = radiolineOpMap.get(id);
                 if (!op) return null;
                 const maxLen = 12;
                 const label = op.name.length > maxLen ? `${op.name.slice(0, maxLen)} ....` : op.name;
@@ -169,6 +170,10 @@ type StatsSectionProps = {
 
 function StatsSection({ stats, locale }: StatsSectionProps) {
   const { t } = useTranslation(["main", "common"]);
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(locale, { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+    [locale],
+  );
 
   return (
     <div className="pt-2 border-t">
@@ -180,29 +185,13 @@ function StatsSection({ stats, locale }: StatsSectionProps) {
         <div className="flex justify-between">
           <span className="text-muted-foreground">{t("stats.internalData")}:</span>
           <span className="font-medium tabular-nums">
-            {stats.lastUpdated.stations
-              ? new Date(stats.lastUpdated.stations).toLocaleDateString(locale, {
-                  year: "numeric",
-                  month: "numeric",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : t("common:status.never")}
+            {stats.lastUpdated.stations ? dateFormatter.format(new Date(stats.lastUpdated.stations)) : t("common:status.never")}
           </span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">{t("stationDetails:tabs.permits")}:</span>
           <span className="font-medium tabular-nums">
-            {stats.lastUpdated.stations_permits
-              ? new Date(stats.lastUpdated.stations_permits).toLocaleDateString(locale, {
-                  year: "numeric",
-                  month: "numeric",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : t("common:status.never")}
+            {stats.lastUpdated.stations_permits ? dateFormatter.format(new Date(stats.lastUpdated.stations_permits)) : t("common:status.never")}
           </span>
         </div>
         <div className="flex justify-between">

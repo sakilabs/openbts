@@ -1340,7 +1340,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Create submission(s) (single object or array of 1-10)
-      description: In each item's `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
+      description: In each item's `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server. If any of the items in the array is invalid or will throw an error, the entire request will be rejected with an error and no submissions will be created.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1913,6 +1913,10 @@ paths:
         - name: decision_type
           in: query
           schema: { type: string, enum: [zmP, P] }
+        - name: new
+          in: query
+          description: Only return radiolines updated within the last N days (1–30). Pass `true` for 30 days.
+          schema: { type: string }
       responses:
         "200":
           description: OK

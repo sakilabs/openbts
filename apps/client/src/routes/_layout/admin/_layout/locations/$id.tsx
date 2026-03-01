@@ -146,7 +146,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
     return false;
   }, [locationForm, location]);
 
-  const stations = location.stations ?? [];
+  const stations = useMemo(() => location.stations ?? [], [location]);
 
   const operatorColors = useMemo(() => {
     const seen = new Set<number>();

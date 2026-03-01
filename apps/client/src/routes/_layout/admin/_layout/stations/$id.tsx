@@ -442,7 +442,7 @@ function StationDetailForm({
 
   const selectedOperator = useMemo(() => operators.find((o) => o.id === operatorId), [operators, operatorId]);
 
-  const originalCells = station?.cells ?? [];
+  const originalCells = useMemo(() => station?.cells ?? [], [station]);
 
   const hasChanges = useMemo(() => {
     if (isCreateMode) return true;

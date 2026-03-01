@@ -2,8 +2,6 @@ import type { Station } from "@/types/station";
 import { fetchJson, postApiData } from "@/lib/api";
 import type { OSMResult } from "./types";
 
-export { fetchOperators, fetchBands } from "@/features/shared/api";
-
 export const searchStations = (query: string) => postApiData<Station[], { query: string }>("search", { query });
 
 export async function searchLocations(query: string): Promise<OSMResult[]> {

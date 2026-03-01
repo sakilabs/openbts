@@ -1,6 +1,10 @@
-import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine } from "@/types/station";
+import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine, LocationInfo } from "@/types/station";
 import { RAT_ORDER } from "./constants";
 import { isPermitExpired } from "@/lib/dateUtils";
+
+export function toLocationInfo(loc: { id: number; city?: string; address?: string; latitude: number; longitude: number }): LocationInfo {
+  return { id: loc.id, city: loc.city, address: loc.address, latitude: loc.latitude, longitude: loc.longitude };
+}
 
 const DEG_TO_RAD = Math.PI / 180;
 const EARTH_RADIUS_M = 6_371_000;
@@ -58,10 +62,12 @@ function ratOrder(rat: string): number {
   return index === -1 ? 999 : index;
 }
 
+const BAND_REGEX = /^([A-Za-z]+(?:-[A-Za-z]+)?)(\d+)$/;
+
 function sortBands(bands: string[]): string[] {
   return bands.sort((a, b) => {
-    const matchA = a.match(/^([A-Za-z]+(?:-[A-Za-z]+)?)(\d+)$/);
-    const matchB = b.match(/^([A-Za-z]+(?:-[A-Za-z]+)?)(\d+)$/);
+    const matchA = a.match(BAND_REGEX);
+    const matchB = b.match(BAND_REGEX);
 
     if (!matchA || !matchB) return a.localeCompare(b);
 

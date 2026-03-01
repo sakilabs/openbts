@@ -14,6 +14,7 @@
     "internalByRat": "Cells by Technology",
     "internalByOperator": "Cells by Operator",
     "internalByBand": "Cells per Band",
+    "internalStationsPerOperator": "Stations per Operator",
     "byVoivodeship": "Unique Stations per Voivodeship",
     "internalByVoivodeship": "Stations per Voivodeship",
     "history": "Historical Trends",

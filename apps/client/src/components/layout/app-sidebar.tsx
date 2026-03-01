@@ -97,32 +97,30 @@ const adminNavConfig = [
   },
 ];
 
+function translateNav(config: typeof navMainConfig, t: (key: string) => string) {
+  return config.map((section) => ({
+    title: t(section.titleKey),
+    key: section.key,
+    url: section.url,
+    icon: section.icon,
+    items: section.items.map((item) => ({
+      title: t(item.titleKey),
+      url: item.url,
+      icon: item.icon,
+    })),
+  }));
+}
+
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation("nav");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const { data: session } = authClient.useSession();
   const { data: settings } = useSettings();
 
-  const mapConfig = useMemo(
-    () => (config: typeof navMainConfig) =>
-      config.map((section) => ({
-        title: t(section.titleKey),
-        key: section.key,
-        url: section.url,
-        icon: section.icon,
-        items: section.items.map((item) => ({
-          title: t(item.titleKey),
-          url: item.url,
-          icon: item.icon,
-        })),
-      })),
-    [t],
-  );
-
-  const navItems = useMemo(() => mapConfig(navMainConfig), [mapConfig]);
-  const infoNavItems = useMemo(() => mapConfig(infoNavConfig), [mapConfig]);
+  const navItems = useMemo(() => translateNav(navMainConfig, t), [t]);
+  const infoNavItems = useMemo(() => translateNav(infoNavConfig, t), [t]);
   const showAuth = !!(session?.user && settings?.submissionsEnabled);
-  const authNavItems = useMemo(() => (showAuth ? mapConfig(authNavConfig) : []), [mapConfig, showAuth]);
+  const authNavItems = useMemo(() => (showAuth ? translateNav(authNavConfig, t) : []), [t, showAuth]);
   const userRole = session?.user?.role as string | undefined;
   const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
   const adminNavItems = useMemo(() => {

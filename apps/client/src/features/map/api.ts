@@ -61,12 +61,13 @@ export type RadioLinesResponse = {
 
 export async function fetchRadioLines(
   bounds: string,
-  options?: { signal?: AbortSignal; operatorIds?: number[]; limit?: number },
+  options?: { signal?: AbortSignal; operatorIds?: number[]; limit?: number; recentDays?: number | null },
 ): Promise<RadioLinesResponse> {
   const params = new URLSearchParams();
   params.set("bounds", bounds);
   params.set("limit", String(options?.limit ?? 500));
   if (options?.operatorIds?.length) params.set("operators", options.operatorIds.join(","));
+  if (options?.recentDays) params.set("new", String(options.recentDays));
 
   return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {
     signal: options?.signal,

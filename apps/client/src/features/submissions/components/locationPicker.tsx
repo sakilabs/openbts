@@ -583,6 +583,8 @@ function usePickerMapLayers({
       map.on("mouseleave", layerId, handleMouseLeave);
     }
 
+    const addedImages = addedImagesRef.current;
+
     return () => {
       map.off("styledata", ensureLayersExist);
 
@@ -601,7 +603,7 @@ function usePickerMapLayers({
         // source may already be removed
       }
 
-      addedImagesRef.current.clear();
+      addedImages.clear();
     };
   }, [map, isLoaded]);
 
@@ -673,6 +675,8 @@ function usePickerMapLayers({
       }
     }
 
+    const addedUkeImages = addedUkeImagesRef.current;
+
     return () => {
       map.off("styledata", ensureUkeLayersExist);
 
@@ -691,7 +695,7 @@ function usePickerMapLayers({
         // source may already be removed
       }
 
-      addedUkeImagesRef.current.clear();
+      addedUkeImages.clear();
     };
   }, [map, isLoaded, showUkeLocations]);
 

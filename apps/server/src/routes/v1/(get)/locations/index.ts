@@ -167,10 +167,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
   const iotRequested = requestedRats.includes("iot");
 
+  const cutoff = recentDays ? new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000) : null;
+
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
   const buildStationFilter = (stationFields: typeof stations) => {
-    if (!hasStationFilters) return undefined;
+    if (!hasStationFilters && !cutoff) return undefined;
     const conditions: ReturnType<typeof sql>[] = [];
 
     if (operatorIds.length) {
@@ -219,6 +221,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 			)`);
     }
 
+    if (cutoff)
+      conditions.push(sql`(${stationFields.updatedAt} >= ${cutoff.toISOString()} OR ${stationFields.createdAt} >= ${cutoff.toISOString()})`);
+
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
 
@@ -234,9 +239,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         )}]::int4[])`,
       );
     }
-    if (recentDays) {
-      const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
-      conditions.push(sql`(${locFields.createdAt} >= ${cutoff.toISOString()} OR ${locFields.updatedAt} >= ${cutoff.toISOString()})`);
+    if (cutoff) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${stations}
+        WHERE ${stations.location_id} = ${locFields.id}
+        AND (${stations.updatedAt} >= ${cutoff.toISOString()} OR ${stations.createdAt} >= ${cutoff.toISOString()})
+      )`);
     }
     if (hasStationFilters) {
       const operatorCond = operatorIds.length
@@ -311,7 +319,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           region: true,
           stations: {
             columns: { status: false, location_id: false },
-            where: hasStationFilters ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
+            where: hasStationFilters || cutoff ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
             with: {
               operator: true,
             },

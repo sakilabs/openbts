@@ -20,6 +20,9 @@ const UkeVoivodeshipChart = lazy(() => import("@/features/statistics/components/
 const InternalVoivodeshipChart = lazy(() =>
   import("@/features/statistics/components/voivodeshipChart").then((m) => ({ default: m.InternalVoivodeshipChart })),
 );
+const InternalOperatorStationsChart = lazy(() =>
+  import("@/features/statistics/components/operatorStationsChart").then((m) => ({ default: m.InternalOperatorStationsChart })),
+);
 const HistoryChart = lazy(() => import("@/features/statistics/components/historyChart").then((m) => ({ default: m.HistoryChart })));
 
 function ChartCardSkeleton({ contentClassName }: { contentClassName?: string }) {
@@ -76,6 +79,9 @@ function StatisticsPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">{t("main:stats.internalData")}</h2>
           <InternalKpiCards data={summary} isLoading={summaryLoading} />
+          <Suspense fallback={<ChartCardSkeleton />}>
+            <InternalOperatorStationsChart data={summary} isLoading={summaryLoading} />
+          </Suspense>
           <Suspense fallback={<DistributionSkeleton />}>
             <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
           </Suspense>
