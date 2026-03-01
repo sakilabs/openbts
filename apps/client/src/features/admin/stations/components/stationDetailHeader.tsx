@@ -62,7 +62,7 @@ export function StationDetailHeader({
 
   return (
     <div
-      className="shrink-0 border-b bg-background/90 backdrop-blur-md px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm transition-all"
+      className="shrink-0 border-b bg-background px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm"
       style={{
         borderTopWidth: "3px",
         borderTopColor: selectedOperator ? getOperatorColor(selectedOperator.mnc) : "transparent",
