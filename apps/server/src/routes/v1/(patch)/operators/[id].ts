@@ -15,7 +15,7 @@ const operatorsUpdateSchema = createUpdateSchema(operators).strict();
 const operatorsSelectSchema = createSelectSchema(operators);
 const schemaRoute = {
   params: z.object({
-    operator_id: z.coerce.number<number>(),
+    id: z.coerce.number<number>(),
   }),
   body: operatorsUpdateSchema,
   response: {
@@ -30,22 +30,19 @@ type RequestData = ReqBody & ReqParams;
 type ResponseData = z.infer<typeof operatorsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const { operator_id } = req.params;
+  const { id } = req.params;
 
   const operator = await db.query.operators.findFirst({
     where: {
-      id: operator_id,
+      id,
     },
   });
   if (!operator) throw new ErrorResponse("NOT_FOUND");
 
   try {
-    const [updated] = await db.update(operators).set(req.body).where(eq(operators.id, operator_id)).returning();
+    const [updated] = await db.update(operators).set(req.body).where(eq(operators.id, id)).returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
-    await createAuditLog(
-      { action: "operators.update", table_name: "operators", record_id: operator_id, old_values: operator, new_values: updated },
-      req,
-    );
+    await createAuditLog({ action: "operators.update", table_name: "operators", record_id: id, old_values: operator, new_values: updated }, req);
 
     return res.send({ data: updated });
   } catch (error) {
@@ -55,7 +52,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 }
 
 const updateOperator: Route<RequestData, ResponseData> = {
-  url: "/operators/:operator_id",
+  url: "/operators/:id",
   method: "PATCH",
   config: { permissions: ["write:operators"] },
   schema: schemaRoute,

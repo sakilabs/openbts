@@ -54,7 +54,7 @@ const requestSchema = cellsUpdateSchema.extend({
 
 const schemaRoute = {
   params: z.object({
-    cell_id: z.coerce.number<number>(),
+    id: z.coerce.number<number>(),
   }),
   body: requestSchema,
   response: {
@@ -69,10 +69,10 @@ type RequestData = ReqBody & ReqParams;
 type ResponseData = z.infer<typeof cellsSelectSchema> & { details: z.infer<typeof cellDetailsSchema> };
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const { cell_id } = req.params;
+  const { id } = req.params;
 
   const cell = await db.query.cells.findFirst({
-    where: { id: cell_id },
+    where: { id },
     with: { gsm: true, umts: true, lte: true, nr: true },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
@@ -82,10 +82,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     if (operatorId) {
       if (cell.rat === "GSM") {
         const d = req.body.details as z.infer<typeof gsmUpdateSchema>;
-        if (d.lac !== undefined && d.cid !== undefined) await checkGSMDuplicate(d.lac, d.cid, operatorId, cell_id);
+        if (d.lac !== undefined && d.cid !== undefined) await checkGSMDuplicate(d.lac, d.cid, operatorId, id);
       } else if (cell.rat === "LTE") {
         const d = req.body.details as z.infer<typeof lteUpdateSchema>;
-        if (d.enbid !== undefined && d.clid !== undefined) await checkLTEDuplicate(d.enbid, d.clid, operatorId, cell_id);
+        if (d.enbid !== undefined && d.clid !== undefined) await checkLTEDuplicate(d.enbid, d.clid, operatorId, id);
       }
     }
   }
@@ -97,7 +97,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         ...req.body,
         updatedAt: new Date(),
       })
-      .where(eq(cells.id, cell_id))
+      .where(eq(cells.id, id))
       .returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
@@ -106,7 +106,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "GSM":
           {
             const details = req.body.details as z.infer<typeof gsmUpdateSchema>;
-            const [updated] = await db.update(gsmCells).set(details).where(eq(gsmCells.cell_id, cell_id)).returning();
+            const [updated] = await db.update(gsmCells).set(details).where(eq(gsmCells.cell_id, id)).returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -117,7 +117,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "UMTS":
           {
             const details = req.body.details as z.infer<typeof umtsUpdateSchema>;
-            const [updated] = await db.update(umtsCells).set(details).where(eq(umtsCells.cell_id, cell_id)).returning();
+            const [updated] = await db.update(umtsCells).set(details).where(eq(umtsCells.cell_id, id)).returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -128,7 +128,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "LTE":
           {
             const details = req.body.details as z.infer<typeof lteUpdateSchema>;
-            const [updated] = await db.update(lteCells).set(details).where(eq(lteCells.cell_id, cell_id)).returning();
+            const [updated] = await db.update(lteCells).set(details).where(eq(lteCells.cell_id, id)).returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -142,7 +142,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             const [updated] = await db
               .update(nrCells)
               .set({ ...details, ...(details.gnbid ? { gnbid_length: details.gnbid.toString(2).length } : {}) })
-              .where(eq(nrCells.cell_id, cell_id))
+              .where(eq(nrCells.cell_id, id))
               .returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
@@ -156,7 +156,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
     const full = await db.query.cells.findFirst({
       where: {
-        id: cell_id,
+        id,
       },
       with: { gsm: true, umts: true, lte: true, nr: true },
     });
@@ -168,7 +168,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       {
         action: "cells.update",
         table_name: "cells",
-        record_id: cell_id,
+        record_id: id,
         old_values: { ...oldBase, details: oldDetails },
         new_values: { ...updated, details },
       },
@@ -195,7 +195,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 }
 
 const updateCell: Route<RequestData, ResponseData> = {
-  url: "/cells/:cell_id",
+  url: "/cells/:id",
   method: "PATCH",
   config: { permissions: ["write:cells"] },
   schema: schemaRoute,

@@ -15,7 +15,7 @@ const locationsUpdateSchema = createUpdateSchema(locations).strict();
 const locationsSelectSchema = createSelectSchema(locations);
 const schemaRoute = {
   params: z.object({
-    location_id: z.coerce.number<number>(),
+    id: z.coerce.number<number>(),
   }),
   body: locationsUpdateSchema,
   response: {
@@ -30,28 +30,28 @@ type RequestData = ReqBody & ReqParams;
 type ResponseData = z.infer<typeof locationsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const { location_id } = req.params;
-  if (Number.isNaN(location_id)) throw new ErrorResponse("INVALID_QUERY");
+  const { id } = req.params;
+  if (Number.isNaN(id)) throw new ErrorResponse("INVALID_QUERY");
 
   const location = await db.query.locations.findFirst({
     where: {
-      id: location_id,
+      id,
     },
     with: { region: { columns: { id: true, name: true, code: true } } },
   });
   if (!location) throw new ErrorResponse("NOT_FOUND");
 
   try {
-    const [updated] = await db.update(locations).set(req.body).where(eq(locations.id, location_id)).returning();
+    const [updated] = await db.update(locations).set(req.body).where(eq(locations.id, id)).returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
     const updatedWithRegion = await db.query.locations.findFirst({
-      where: { id: location_id },
+      where: { id },
       with: { region: { columns: { id: true, name: true, code: true } } },
     });
 
     await createAuditLog(
-      { action: "locations.update", table_name: "locations", record_id: location_id, old_values: location, new_values: updatedWithRegion ?? updated },
+      { action: "locations.update", table_name: "locations", record_id: id, old_values: location, new_values: updatedWithRegion ?? updated },
       req,
     );
 
@@ -65,7 +65,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 }
 
 const updateLocation: Route<RequestData, ResponseData> = {
-  url: "/locations/:location_id",
+  url: "/locations/:id",
   method: "PATCH",
   schema: schemaRoute,
   config: { permissions: ["write:locations"] },

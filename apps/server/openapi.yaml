@@ -19,6 +19,7 @@ tags:
   - name: Regions
   - name: Locations
   - name: Submissions
+  - name: Deleted Entries
   - name: Search
   - name: Audit Logs
   - name: UKE
@@ -64,6 +65,9 @@ paths:
     patch:
       tags: [Settings]
       summary: Update runtime settings
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         content:
           application/json:
@@ -80,6 +84,8 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/RuntimeSettings" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
   /stats:
@@ -116,6 +122,130 @@ paths:
                           uke_radiolines: { type: integer }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /stats/summary:
+    get:
+      tags: [Stats]
+      summary: Get summary statistics by RAT and operator
+      parameters:
+        - name: operator_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [total_permits, total_unique_stations, by_rat, by_operator, internal]
+                    properties:
+                      total_permits: { type: integer }
+                      total_unique_stations: { type: integer }
+                      by_rat:
+                        type: array
+                        items: { $ref: "#/components/schemas/StatsByRat" }
+                      by_operator:
+                        type: array
+                        items: { $ref: "#/components/schemas/StatsByOperator" }
+                      internal: { $ref: "#/components/schemas/InternalSummary" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stats/permits:
+    get:
+      tags: [Stats]
+      summary: Get permits statistics by band and operator
+      parameters:
+        - name: operator_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [uke, internal]
+                    properties:
+                      uke:
+                        type: array
+                        items: { $ref: "#/components/schemas/PermitsByBandUKE" }
+                      internal:
+                        type: array
+                        items: { $ref: "#/components/schemas/PermitsByBandInternal" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stats/permits/history:
+    get:
+      tags: [Stats]
+      summary: Get permits history over time
+      parameters:
+        - name: operator_id
+          in: query
+          schema: { type: integer }
+        - name: band_id
+          in: query
+          schema: { type: integer }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - name: granularity
+          in: query
+          schema: { type: string, enum: [daily, monthly], default: monthly }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PermitsHistoryRow" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stats/voivodeships:
+    get:
+      tags: [Stats]
+      summary: Get statistics by voivodeship (region)
+      parameters:
+        - name: operator_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [uke, internal]
+                    properties:
+                      uke:
+                        type: array
+                        items: { $ref: "#/components/schemas/VoivodeshipUKE" }
+                      internal:
+                        type: array
+                        items: { $ref: "#/components/schemas/VoivodeshipInternal" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /cells:
     get:
       tags: [Cells]
@@ -136,7 +266,7 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetailsAndBand" } }
         "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -144,6 +274,9 @@ paths:
       tags: [Cells]
       summary: Create cell
       description: In `details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -160,6 +293,7 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/CellWithDetails" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -213,13 +347,16 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/CellWithDetails" }
+                  data: { $ref: "#/components/schemas/CellWithStationBandDetails" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     patch:
       tags: [Cells]
       summary: Update cell
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       requestBody:
@@ -238,11 +375,15 @@ paths:
                   data: { $ref: "#/components/schemas/CellWithDetails" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     delete:
       tags: [Cells]
       summary: Delete cell
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       responses:
@@ -305,6 +446,9 @@ paths:
     post:
       tags: [Stations]
       summary: Create station with optional cells
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -321,6 +465,8 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/StationWithCells" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -347,6 +493,9 @@ paths:
     patch:
       tags: [Stations]
       summary: Update station
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       requestBody:
@@ -362,13 +511,17 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/Station" }
+                  data: { $ref: "#/components/schemas/StationRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     delete:
       tags: [Stations]
       summary: Delete station
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       responses:
@@ -423,6 +576,42 @@ paths:
                   data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Stations]
+      summary: Update multiple cells on station
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cells]
+              properties:
+                cells:
+                  type: array
+                  minItems: 1
+                  items: { $ref: "#/components/schemas/CellUpdateWithId" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -453,6 +642,9 @@ paths:
     patch:
       tags: [Stations]
       summary: Update cell on station
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
         - name: cell_id
@@ -475,11 +667,15 @@ paths:
                   data: { $ref: "#/components/schemas/CellWithDetails" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     delete:
       tags: [Stations]
       summary: Delete cell from station
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
         - name: cell_id
@@ -516,6 +712,9 @@ paths:
     post:
       tags: [Stations]
       summary: Create comment (multipart/form-data with content and optional files)
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
       requestBody:
@@ -548,6 +747,9 @@ paths:
     delete:
       tags: [Stations]
       summary: Delete comment
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
         - name: comment_id
@@ -557,6 +759,8 @@ paths:
       responses:
         "204": { description: No Content }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -606,6 +810,36 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /stations/{station_id}/extra-identifiers:
+    patch:
+      tags: [Stations]
+      summary: Update extra identifiers for station
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExtraIdentifiersPatch" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/ExtraIdentificators" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /operators:
     get:
       tags: [Operators]
@@ -625,6 +859,9 @@ paths:
     post:
       tags: [Operators]
       summary: Create operator
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -641,6 +878,8 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/Operator" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -666,6 +905,9 @@ paths:
     patch:
       tags: [Operators]
       summary: Update operator
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       requestBody:
@@ -682,6 +924,8 @@ paths:
                 required: [data]
                 properties:
                   data: { $ref: "#/components/schemas/Operator" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -692,6 +936,8 @@ paths:
         - $ref: "#/components/parameters/IdPath"
       responses:
         "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -715,6 +961,9 @@ paths:
     post:
       tags: [Bands]
       summary: Create band
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -731,6 +980,8 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/Band" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -756,6 +1007,9 @@ paths:
     patch:
       tags: [Bands]
       summary: Update band
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       requestBody:
@@ -772,6 +1026,8 @@ paths:
                 required: [data]
                 properties:
                   data: { $ref: "#/components/schemas/Band" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -782,6 +1038,8 @@ paths:
         - $ref: "#/components/parameters/IdPath"
       responses:
         "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -805,6 +1063,9 @@ paths:
     post:
       tags: [Regions]
       summary: Create region
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -821,6 +1082,8 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/Region" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -846,6 +1109,9 @@ paths:
     patch:
       tags: [Regions]
       summary: Update region
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       requestBody:
@@ -862,6 +1128,8 @@ paths:
                 required: [data]
                 properties:
                   data: { $ref: "#/components/schemas/Region" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -872,6 +1140,8 @@ paths:
         - $ref: "#/components/parameters/IdPath"
       responses:
         "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -922,11 +1192,15 @@ paths:
                 properties:
                   data: { type: array, items: { $ref: "#/components/schemas/LocationWithRegionStations" } }
                   totalCount: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     post:
       tags: [Locations]
       summary: Create location
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -943,6 +1217,8 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/Location" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -977,6 +1253,9 @@ paths:
     patch:
       tags: [Locations]
       summary: Update location
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       requestBody:
@@ -993,16 +1272,24 @@ paths:
                 required: [data]
                 properties:
                   data: { $ref: "#/components/schemas/Location" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     delete:
       tags: [Locations]
       summary: Delete location
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       responses:
         "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -1011,6 +1298,9 @@ paths:
     get:
       tags: [Submissions]
       summary: List submissions
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: limit
           in: query
@@ -1024,6 +1314,14 @@ paths:
         - name: type
           in: query
           schema: { type: string, enum: [new, update, delete] }
+        - name: station_id
+          in: query
+          description: Filter by station's station_id identifier
+          schema: { type: string }
+        - name: submitter_id
+          in: query
+          description: Filter by submitter user ID (admin only)
+          schema: { type: string, format: uuid }
       responses:
         "200":
           description: OK
@@ -1043,6 +1341,9 @@ paths:
       tags: [Submissions]
       summary: Create submission(s) (single object or array of 1-10)
       description: In each item's `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -1075,6 +1376,9 @@ paths:
     get:
       tags: [Submissions]
       summary: Get submission by ID (UUID)
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: id
           in: path
@@ -1099,6 +1403,9 @@ paths:
       tags: [Submissions]
       summary: Update submission
       description: In `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: id
           in: path
@@ -1127,6 +1434,9 @@ paths:
     delete:
       tags: [Submissions]
       summary: Delete submission
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: id
           in: path
@@ -1145,6 +1455,9 @@ paths:
     post:
       tags: [Submissions]
       summary: Approve submission
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: id
           in: path
@@ -1178,6 +1491,9 @@ paths:
     post:
       tags: [Submissions]
       summary: Reject submission
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: id
           in: path
@@ -1207,6 +1523,100 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /submissions/cleanup:
+    post:
+      tags: [Submissions]
+      summary: Clean up old submissions
+      description: Deletes proposed data (cells, stations, locations) for submissions older than 1 month
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [cleaned]
+                    properties:
+                      cleaned: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /deleted-entries:
+    get:
+      tags: [Deleted Entries]
+      summary: List deleted entries
+      parameters:
+        - name: source_table
+          in: query
+          schema: { type: string, enum: [uke_permits, uke_radiolines] }
+        - name: source_type
+          in: query
+          schema: { type: string, enum: [permits, device_registry, radiolines] }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/DeletedEntry" }
+                  totalCount: { type: integer }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /deleted-entries/summary:
+    get:
+      tags: [Deleted Entries]
+      summary: Get summary of deleted entries
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [total_deleted, by_source, by_import]
+                    properties:
+                      total_deleted: { type: integer }
+                      by_source:
+                        type: array
+                        items: { $ref: "#/components/schemas/DeletedEntriesBySource" }
+                      by_import:
+                        type: array
+                        items: { $ref: "#/components/schemas/DeletedEntriesByImport" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /search:
     post:
       tags: [Search]
@@ -1221,11 +1631,17 @@ paths:
         - **lteCells**: enbid, ecid, lte_clid, tac, supports_nb_iot
         - **nrCells**: gnbid, nci, nr_clid, nrtac, supports_nr_redcap
         - **locations**: region (3-letter codes)
-        - **networksIds**: networks_id, networks_name, mno_name
+        - **extraIdentifiers**: networks_id, networks_name, mno_name
       parameters:
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [station_id, updatedAt, createdAt], default: updatedAt }
       requestBody:
         required: true
         content:
@@ -1253,6 +1669,9 @@ paths:
     get:
       tags: [Audit Logs]
       summary: List audit logs
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - name: limit
           in: query
@@ -1295,6 +1714,8 @@ paths:
                   data: { type: array, items: { $ref: "#/components/schemas/AuditLogWithUser" } }
                   totalCount: { type: integer }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -1302,6 +1723,9 @@ paths:
     get:
       tags: [Audit Logs]
       summary: Get audit log by ID
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
       responses:
@@ -1314,6 +1738,8 @@ paths:
                 required: [data]
                 properties:
                   data: { $ref: "#/components/schemas/AuditLogWithUser" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -1426,6 +1852,44 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /uke/permits/unassigned:
+    get:
+      tags: [UKE]
+      summary: Get UKE permits without assigned stations
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: operators
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: regions
+          in: query
+          schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/UnassignedPermitStation" }
+                  totalCount: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /uke/radiolines:
     get:
       tags: [UKE]
@@ -1504,6 +1968,9 @@ paths:
     post:
       tags: [UKE]
       summary: Start UKE import job
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       requestBody:
         content:
           application/json:
@@ -1524,6 +1991,7 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/UkeImportJobStatus" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -1531,6 +1999,9 @@ paths:
     get:
       tags: [UKE]
       summary: Get UKE import job status
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
       responses:
         "200":
           description: OK
@@ -1542,10 +2013,23 @@ paths:
                 properties:
                   data: { $ref: "#/components/schemas/UkeImportJobStatus" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: API Key for authentication via X-Api-Key header
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+      description: Cookie-based authentication
+
   parameters:
     IdPath:
       name: id
@@ -1563,32 +2047,128 @@ components:
       description: Bad request (invalid parameters, validation error, or invalid query)
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [BAD_REQUEST, VALIDATION_ERROR, INVALID_QUERY]
+          example:
+            errors:
+              - code: BAD_REQUEST
+                message: Invalid request
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [UNAUTHORIZED]
+          example:
+            errors:
+              - code: UNAUTHORIZED
+                message: Unauthorized
     Forbidden:
       description: Forbidden or insufficient permissions
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [FORBIDDEN, INSUFFICIENT_PERMISSIONS]
+          example:
+            errors:
+              - code: FORBIDDEN
+                message: Forbidden
     NotFound:
       description: Resource not found
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [NOT_FOUND]
+          example:
+            errors:
+              - code: NOT_FOUND
+                message: Resource not found
     TooManyRequests:
       description: Rate limit exceeded
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [TOO_MANY_REQUESTS]
+          example:
+            errors:
+              - code: TOO_MANY_REQUESTS
+                message: Too many requests
+    Conflict:
+      description: Conflict (e.g. duplicate entry)
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [DUPLICATE_ENTRY]
+          example:
+            errors:
+              - code: DUPLICATE_ENTRY
+                message: Duplicate entry
     InternalServerError:
       description: Internal server error (e.g. failed to create/update/delete)
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/ApiError" }
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ApiError"
+              - type: object
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          enum: [INTERNAL_SERVER_ERROR, FAILED_TO_CREATE, FAILED_TO_UPDATE, FAILED_TO_DELETE, AUTH_FAILURE]
+          example:
+            errors:
+              - code: INTERNAL_SERVER_ERROR
+                message: Internal server error
 
   schemas:
     ApiError:
@@ -1619,6 +2199,7 @@ components:
                   - ALREADY_LOGGED_IN
                   - INSUFFICIENT_PERMISSIONS
                   - TOO_MANY_REQUESTS
+                  - DUPLICATE_ENTRY
               message: { type: string }
               details:
                 type: array
@@ -1631,13 +2212,20 @@ components:
 
     RuntimeSettings:
       type: object
-      required: [enforceAuthForAllRoutes, allowedUnauthenticatedRoutes, disabledRoutes, enableStationComments, submissionsEnabled]
+      required: [enforceAuthForAllRoutes, allowedUnauthenticatedRoutes, disabledRoutes, enableStationComments, submissionsEnabled, announcement]
       properties:
         enforceAuthForAllRoutes: { type: boolean }
         allowedUnauthenticatedRoutes: { type: array, items: { type: string } }
         disabledRoutes: { type: array, items: { type: string } }
         enableStationComments: { type: boolean }
         submissionsEnabled: { type: boolean }
+        announcement:
+          type: object
+          required: [message, enabled, type]
+          properties:
+            message: { type: string }
+            enabled: { type: boolean }
+            type: { type: string, enum: [info, warning, error] }
     RuntimeSettingsPatch:
       type: object
       properties:
@@ -1646,6 +2234,12 @@ components:
         disabledRoutes: { type: array, items: { type: string } }
         enableStationComments: { type: boolean }
         submissionsEnabled: { type: boolean }
+        announcement:
+          type: object
+          properties:
+            message: { type: string }
+            enabled: { type: boolean }
+            type: { type: string, enum: [info, warning, error] }
 
     Band:
       type: object
@@ -1764,8 +2358,22 @@ components:
           properties:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithBand" } }
             operator: { $ref: "#/components/schemas/Operator", nullable: true }
-            networks: { $ref: "#/components/schemas/NetworksId", nullable: true }
+            extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
 
+    StationRecord:
+      type: object
+      description: Raw station database record as returned by update operations (no joined relations).
+      properties:
+        id: { type: integer }
+        station_id: { type: string }
+        location_id: { type: integer, nullable: true }
+        operator_id: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        extra_address: { type: string, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        is_confirmed: { type: boolean, nullable: true }
+        status: { type: string, enum: [published, inactive, pending] }
     Station:
       type: object
       properties:
@@ -1777,6 +2385,7 @@ components:
         is_confirmed: { type: boolean, nullable: true }
         operator: { $ref: "#/components/schemas/Operator", nullable: true }
         location: { $ref: "#/components/schemas/Location", nullable: true }
+        extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
     StationWithOperator:
       allOf:
         - $ref: "#/components/schemas/Station"
@@ -1809,7 +2418,7 @@ components:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithBandAndDetails" } }
             location: { $ref: "#/components/schemas/LocationWithRegion" }
             operator: { $ref: "#/components/schemas/Operator", nullable: true }
-            networks: { $ref: "#/components/schemas/NetworksId", nullable: true }
+            extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
     StationSearchResult:
       allOf:
         - $ref: "#/components/schemas/Station"
@@ -1818,20 +2427,13 @@ components:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
             location: { $ref: "#/components/schemas/LocationWithRegion", nullable: true }
             operator: { $ref: "#/components/schemas/Operator", nullable: true }
-            networks: { $ref: "#/components/schemas/NetworksId", nullable: true }
+            extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
     LocationWithRegion:
       allOf:
         - $ref: "#/components/schemas/Location"
         - type: object
           properties:
             region: { $ref: "#/components/schemas/Region" }
-    NetworksId:
-      type: object
-      properties:
-        networks_id: { type: string }
-        networks_name: { type: string, nullable: true }
-        mno_name: { type: string, nullable: true }
-
     CellBase:
       type: object
       properties:
@@ -1936,6 +2538,14 @@ components:
           properties:
             band: { $ref: "#/components/schemas/Band" }
             details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+    CellWithStationBandDetails:
+      allOf:
+        - $ref: "#/components/schemas/CellBase"
+        - type: object
+          properties:
+            station: { $ref: "#/components/schemas/Station" }
+            band: { $ref: "#/components/schemas/Band" }
+            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellCreate:
       description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
       type: object
@@ -2000,6 +2610,9 @@ components:
         station_id: { type: string, nullable: true }
         operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
+        networks_id: { type: integer, nullable: true }
+        networks_name: { type: string, nullable: true, maxLength: 150 }
+        mno_name: { type: string, nullable: true, maxLength: 50 }
     ProposedLocationInsert:
       type: object
       required: [region_id, longitude, latitude]
@@ -2090,6 +2703,9 @@ components:
         station_id: { type: string, nullable: true }
         operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
+        networks_id: { type: integer, nullable: true }
+        networks_name: { type: string, nullable: true }
+        mno_name: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
         status: { type: string, enum: [published, inactive, pending] }
         updatedAt: { type: string, format: date-time }
@@ -2275,6 +2891,207 @@ components:
             expiry_date: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
+
+    # Stats schemas
+    StatsByRat:
+      type: object
+      properties:
+        rat: { type: string }
+        unique_stations: { type: integer }
+        permits: { type: integer }
+        share_pct: { type: number }
+    StatsByOperator:
+      type: object
+      properties:
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        unique_stations: { type: integer }
+        permits: { type: integer }
+    InternalStatsByRat:
+      type: object
+      properties:
+        rat: { type: string }
+        stations: { type: integer }
+        cells: { type: integer }
+        share_pct: { type: number }
+    InternalStatsByOperator:
+      type: object
+      properties:
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        stations: { type: integer }
+        cells: { type: integer }
+    InternalSummary:
+      type: object
+      properties:
+        total_stations: { type: integer }
+        total_cells: { type: integer }
+        by_rat: { type: array, items: { $ref: "#/components/schemas/InternalStatsByRat" } }
+        by_operator: { type: array, items: { $ref: "#/components/schemas/InternalStatsByOperator" } }
+    PermitsByBandUKE:
+      type: object
+      properties:
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        band:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            rat: { type: string }
+        unique_stations: { type: integer }
+        permits_count: { type: integer }
+        share_pct: { type: number }
+    PermitsByBandInternal:
+      type: object
+      properties:
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        band:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            rat: { type: string }
+        stations: { type: integer }
+        cells: { type: integer }
+        share_pct: { type: number }
+    PermitsHistoryRow:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        band:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        unique_stations: { type: integer }
+        permits_count: { type: integer }
+    VoivodeshipUKE:
+      type: object
+      properties:
+        region:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        unique_stations: { type: integer }
+        permits: { type: integer }
+    VoivodeshipInternal:
+      type: object
+      properties:
+        region:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        operator:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        stations: { type: integer }
+        cells: { type: integer }
+
+    # Deleted entries schemas
+    DeletedEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        source_table: { type: string }
+        source_id: { type: integer }
+        source_type: { type: string }
+        data: { type: object }
+        deleted_at: { type: string, format: date-time }
+        import_id: { type: integer, nullable: true }
+    DeletedEntriesBySource:
+      type: object
+      properties:
+        source_type: { type: string }
+        count: { type: integer }
+    DeletedEntriesByImport:
+      type: object
+      properties:
+        import_id: { type: integer }
+        date: { type: string, format: date }
+        deleted_count: { type: integer }
+
+    # UKE unassigned permits schema
+    UnassignedPermitStation:
+      type: object
+      properties:
+        station_id: { type: string }
+        operator:
+          allOf:
+            - $ref: "#/components/schemas/UkeOperator"
+          nullable: true
+        location:
+          type: object
+          properties:
+            id: { type: integer }
+            city: { type: string, nullable: true }
+            address: { type: string, nullable: true }
+            longitude: { type: number }
+            latitude: { type: number }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            region: { $ref: "#/components/schemas/Region" }
+          nullable: true
+        permits:
+          type: array
+          items: { $ref: "#/components/schemas/UkePermitWithBandOperator" }
+
+    # Cell update schema
+    CellUpdateWithId:
+      type: object
+      required: [cell_id]
+      properties:
+        cell_id: { type: integer }
+        band_id: { type: integer }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
+
+    # Extra identifiers schemas
+    ExtraIdentificators:
+      type: object
+      properties:
+        id: { type: integer }
+        networks_id: { type: integer, nullable: true }
+        networks_name: { type: string, nullable: true }
+        mno_name: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ExtraIdentifiersPatch:
+      type: object
+      properties:
+        networks_id: { type: integer, nullable: true }
+        networks_name: { type: string, nullable: true, maxLength: 150 }
+        mno_name: { type: string, nullable: true, maxLength: 50 }
+
     UkeImportJobStatus:
       type: object
       properties:

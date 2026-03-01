@@ -15,7 +15,7 @@ const regionsUpdateSchema = createUpdateSchema(regions).strict();
 const regionsSelectSchema = createSelectSchema(regions);
 const schemaRoute = {
   params: z.object({
-    region_id: z.coerce.number<number>(),
+    id: z.coerce.number<number>(),
   }),
   body: regionsUpdateSchema,
   response: {
@@ -30,19 +30,19 @@ type RequestData = ReqBody & ReqParams;
 type ResponseData = z.infer<typeof regionsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const { region_id } = req.params;
+  const { id } = req.params;
 
   const region = await db.query.regions.findFirst({
     where: {
-      id: region_id,
+      id,
     },
   });
   if (!region) throw new ErrorResponse("NOT_FOUND");
 
   try {
-    const [updated] = await db.update(regions).set(req.body).where(eq(regions.id, region_id)).returning();
+    const [updated] = await db.update(regions).set(req.body).where(eq(regions.id, id)).returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
-    await createAuditLog({ action: "regions.update", table_name: "regions", record_id: region_id, old_values: region, new_values: updated }, req);
+    await createAuditLog({ action: "regions.update", table_name: "regions", record_id: id, old_values: region, new_values: updated }, req);
 
     return res.send({ data: updated });
   } catch (error) {
@@ -52,7 +52,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 }
 
 const updateRegion: Route<RequestData, ResponseData> = {
-  url: "/regions/:region_id",
+  url: "/regions/:id",
   method: "PATCH",
   config: { permissions: ["write:regions"] },
   schema: schemaRoute,

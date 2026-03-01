@@ -15,7 +15,7 @@ const bandsUpdateSchema = createUpdateSchema(bands);
 const bandsSelectSchema = createSelectSchema(bands);
 const schemaRoute = {
   params: z.object({
-    band_id: z.coerce.number<number>(),
+    id: z.coerce.number<number>(),
   }),
   body: bandsUpdateSchema,
   response: {
@@ -30,19 +30,19 @@ type RequestData = ReqBody & ReqParams;
 type ResponseData = z.infer<typeof bandsSelectSchema>;
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const { band_id } = req.params;
+  const { id } = req.params;
 
   const band = await db.query.bands.findFirst({
     where: {
-      id: band_id,
+      id,
     },
   });
   if (!band) throw new ErrorResponse("NOT_FOUND");
 
   try {
-    const [updated] = await db.update(bands).set(req.body).where(eq(bands.id, band_id)).returning();
+    const [updated] = await db.update(bands).set(req.body).where(eq(bands.id, id)).returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
-    await createAuditLog({ action: "bands.update", table_name: "bands", record_id: band_id, old_values: band, new_values: updated }, req);
+    await createAuditLog({ action: "bands.update", table_name: "bands", record_id: id, old_values: band, new_values: updated }, req);
 
     return res.send({ data: updated });
   } catch (error) {
@@ -52,7 +52,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 }
 
 const updateBand: Route<RequestData, ResponseData> = {
-  url: "/bands/:band_id",
+  url: "/bands/:id",
   method: "PATCH",
   config: { permissions: ["write:bands"] },
   schema: schemaRoute,
