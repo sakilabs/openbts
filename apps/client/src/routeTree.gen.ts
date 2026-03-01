@@ -17,6 +17,7 @@ import { Route as LayoutStatisticsRouteImport } from './routes/_layout/statistic
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
 import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferences'
 import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/deleted-entries'
+import { Route as LayoutContactRouteImport } from './routes/_layout/contact'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
 import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
 import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
@@ -73,6 +74,11 @@ const LayoutPreferencesRoute = LayoutPreferencesRouteImport.update({
 const LayoutDeletedEntriesRoute = LayoutDeletedEntriesRouteImport.update({
   id: '/deleted-entries',
   path: '/deleted-entries',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutContactRoute = LayoutContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutClfExportRoute = LayoutClfExportRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof LayoutAboutRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
+  '/contact': typeof LayoutContactRoute
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/about': typeof LayoutAboutRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
+  '/contact': typeof LayoutContactRoute
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/_layout/about': typeof LayoutAboutRoute
   '/_layout/changelog': typeof LayoutChangelogRoute
   '/_layout/clf-export': typeof LayoutClfExportRoute
+  '/_layout/contact': typeof LayoutContactRoute
   '/_layout/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/_layout/preferences': typeof LayoutPreferencesRoute
   '/_layout/stations': typeof LayoutStationsRoute
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/changelog'
     | '/clf-export'
+    | '/contact'
     | '/deleted-entries'
     | '/preferences'
     | '/stations'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/changelog'
     | '/clf-export'
+    | '/contact'
     | '/deleted-entries'
     | '/preferences'
     | '/stations'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/_layout/about'
     | '/_layout/changelog'
     | '/_layout/clf-export'
+    | '/_layout/contact'
     | '/_layout/deleted-entries'
     | '/_layout/preferences'
     | '/_layout/stations'
@@ -407,6 +419,13 @@ declare module '@tanstack/react-router' {
       path: '/deleted-entries'
       fullPath: '/deleted-entries'
       preLoaderRoute: typeof LayoutDeletedEntriesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/contact': {
+      id: '/_layout/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof LayoutContactRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/clf-export': {
@@ -576,6 +595,7 @@ interface LayoutRouteChildren {
   LayoutAboutRoute: typeof LayoutAboutRoute
   LayoutChangelogRoute: typeof LayoutChangelogRoute
   LayoutClfExportRoute: typeof LayoutClfExportRoute
+  LayoutContactRoute: typeof LayoutContactRoute
   LayoutDeletedEntriesRoute: typeof LayoutDeletedEntriesRoute
   LayoutPreferencesRoute: typeof LayoutPreferencesRoute
   LayoutStationsRoute: typeof LayoutStationsRoute
@@ -592,6 +612,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAboutRoute: LayoutAboutRoute,
   LayoutChangelogRoute: LayoutChangelogRoute,
   LayoutClfExportRoute: LayoutClfExportRoute,
+  LayoutContactRoute: LayoutContactRoute,
   LayoutDeletedEntriesRoute: LayoutDeletedEntriesRoute,
   LayoutPreferencesRoute: LayoutPreferencesRoute,
   LayoutStationsRoute: LayoutStationsRoute,

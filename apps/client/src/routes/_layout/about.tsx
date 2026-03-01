@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { APP_NAME } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Timeline,
   TimelineContent,
@@ -10,6 +14,9 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from "@/components/reui/timeline";
+
+const markdownClasses =
+  "space-y-4 text-sm text-muted-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-foreground [&_p]:leading-relaxed [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_strong]:text-foreground";
 
 const historyEvents = [
   {
@@ -59,22 +66,40 @@ const historyEvents = [
   },
 ];
 
+const aboutContent = `Serwis ${APP_NAME} dedykowany jest w głównej mierze osobom pasjonującym się technologiami powiązanymi z sieciami komórkowymi, a w szczególności z warstwą radiową tychże sieci. Serwis, a zwłaszcza mapa lokalizacji, może stanowić także pożyteczne kompendium wiedzy dla wszystkich osób zainteresowanych lokalizacjami nadajników BTS w Polsce i potencjalną dostępnością usług w ich okolicach.
+
+Pierwotnym założeniem serwisu było stworzenie uniwersalnej bazy danych oraz wyszukiwarki stacji bazowych sieci komórkowych w Polsce. Niemal wszystkie dane w bazie zostały zgromadzone wysiłkiem pasjonatów GSM-u z różnych zakątków Polski, którzy wyposażeni w odpowiedni sprzęt mozolnie gromadzą i dostarczają informacje o nadajnikach BTS w ich okolicach.`;
+
+const authors = [
+  {
+    name: "Krzysztof Niemczyk",
+    initials: "KN",
+    description:
+      "Odpowiedzialny za utrzymywanie serwisu oraz bazy danych w należytym porządku, zagadnienia merytoryczne oraz ew. współpracę z podmiotami zewnętrznymi.",
+  },
+  {
+    name: "Dawid Lorenz",
+    initials: "DL",
+    description:
+      'Pomysłodawca i ojciec założyciel BTSearch. Aktualnie nie pracuje na bieżąco nad serwisem, aczkolwiek BTSearch "v2" to jego dzieło. ;)',
+  },
+];
+
+const contributorsNote = `Wśród osób, które wspierały rozwój BTSearch w przeszłości znajdują się **Dominik Boryś** oraz **Tomasz Wasiak**. Autorem logotypu jest **Sławomir Salicki**. Nieocenioną pomocą przy wdrażaniu "v2" służył **Marek Matulka**. **Dziękujemy!**`;
+
+const thanksContent = `Przede wszystkim serdecznie dziękujemy wszystkim "łowcom BTS-ów", którzy bezinteresownie przysyłali dane o stacjach bazowych i bez których baza danych BTSearch byłaby po prostu pusta.
+
+Dziękujemy serwisowi telekomunikacyjnemu [TELEPOLIS.PL](https://telepolis.pl) za udostępnienie hostingu.`;
+
 function AboutPage() {
   return (
-    <main className="flex-1 overflow-y-auto p-4">
+    <main className="flex-1 overflow-y-auto custom-scrollbar p-4">
       <div className="max-w-4xl space-y-10">
         <section className="space-y-4">
           <h1 className="text-2xl font-bold">O serwisie</h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            Serwis {APP_NAME} dedykowany jest w głównej mierze osobom pasjonującym się technologiami powiązanymi z sieciami komórkowymi, a w
-            szczególności z warstwą radiową tychże sieci. Serwis, a zwłaszcza mapa lokalizacji, może stanowić także pożyteczne kompendium wiedzy dla
-            wszystkich osób zainteresowanych lokalizacjami nadajników BTS w Polsce i potencjalną dostępnością usług w ich okolicach.
-          </p>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            Pierwotnym założeniem serwisu było stworzenie uniwersalnej bazy danych oraz wyszukiwarki stacji bazowych sieci komórkowych w Polsce.
-            Niemal wszystkie dane w bazie zostały zgromadzone wysiłkiem pasjonatów GSM-u z różnych zakątków Polski, którzy wyposażeni w odpowiedni
-            sprzęt mozolnie gromadzą i dostarczają informacje o nadajnikach BTS w ich okolicach.
-          </p>
+          <article className={markdownClasses}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{aboutContent}</ReactMarkdown>
+          </article>
         </section>
 
         <section className="space-y-4">
@@ -97,41 +122,32 @@ function AboutPage() {
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Autorzy</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border p-4 space-y-1">
-              <h3 className="font-medium text-sm">Krzysztof Niemczyk</h3>
-              <p className="text-sm text-muted-foreground">
-                Odpowiedzialny za utrzymywanie serwisu oraz bazy danych w należytym porządku, zagadnienia merytoryczne oraz ew. współpracę z
-                podmiotami zewnętrznymi.
-              </p>
-            </div>
-            <div className="rounded-lg border p-4 space-y-1">
-              <h3 className="font-medium text-sm">Dawid Lorenz</h3>
-              <p className="text-sm text-muted-foreground">
-                Pomysłodawca i ojciec założyciel BTSearch. Aktualnie nie pracuje na bieżąco nad serwisem, aczkolwiek BTSearch &quot;v2&quot; to jego
-                dzieło. ;)
-              </p>
-            </div>
+            {authors.map((author) => (
+              <Card key={author.name}>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Avatar size="lg">
+                      <AvatarFallback>{author.initials}</AvatarFallback>
+                    </Avatar>
+                    <CardTitle>{author.name}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{author.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          <p className="text-sm text-muted-foreground">
-            Wśród osób, które wspierały rozwój BTSearch w przeszłości znajdują się <strong>Dominik Boryś</strong> oraz <strong>Tomasz Wasiak</strong>.
-            Autorem logotypu jest <strong>Sławomir Salicki</strong>. Nieocenioną pomocą przy wdrażaniu &quot;v2&quot; służył{" "}
-            <strong>Marek Matulka</strong>. <strong>Dziękujemy!</strong>
-          </p>
+          <article className={markdownClasses}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{contributorsNote}</ReactMarkdown>
+          </article>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">Podziękowania</h2>
-          <p className="text-sm text-muted-foreground">
-            Przede wszystkim serdecznie dziękujemy wszystkim &quot;łowcom BTS-ów&quot;, którzy bezinteresownie przysyłali dane o stacjach bazowych i
-            bez których baza danych BTSearch byłaby po prostu pusta.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Dziękujemy serwisowi telekomunikacyjnemu{" "}
-            <a href="https://telepolis.pl" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
-              TELEPOLIS.PL
-            </a>{" "}
-            za udostępnienie hostingu.
-          </p>
+          <article className={markdownClasses}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{thanksContent}</ReactMarkdown>
+          </article>
         </section>
       </div>
     </main>

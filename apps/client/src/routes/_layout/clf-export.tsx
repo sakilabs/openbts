@@ -284,7 +284,7 @@ function ClfExportPage() {
                         checked={field.state.value.includes(band)}
                         onCheckedChange={() => field.handleChange(toggleValue(field.state.value, band))}
                       />
-                      <span className="font-mono">{band}</span>
+                      <span className="font-mono">{band === 0 ? t("stations:cells.unknownBand") : band}</span>
                     </label>
                   ))}
                 </div>

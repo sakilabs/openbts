@@ -13,6 +13,7 @@ import {
   LegalDocument01Icon,
   Login01Icon,
   Location01Icon,
+  Mail01Icon,
   MapsIcon,
   Note01Icon,
   SentIcon,
@@ -71,6 +72,7 @@ const infoNavConfig = [
     icon: InformationCircleIcon,
     items: [
       { titleKey: "items.about", url: "/about", icon: InformationCircleIcon },
+      { titleKey: "items.contact", url: "/contact", icon: Mail01Icon },
       { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },
     ],
   },

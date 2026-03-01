@@ -1,4 +1,6 @@
+import { useEffect, useCallback } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowReloadHorizontalIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
@@ -6,17 +8,36 @@ import { Button } from "@/components/ui/button";
 
 export function ReloadPrompt() {
   const { t } = useTranslation();
+  const router = useRouter();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered: (r) => r && setInterval(() => r.update(), 5 * 60 * 1000),
+    onNeedRefresh: () => setNeedRefresh(true),
   });
+
+  const checkForUpdate = useCallback(() => {
+    navigator.serviceWorker?.getRegistration().then((r) => r?.update());
+  }, []);
+
+  useEffect(() => {
+    const handleVisibility = () => document.visibilityState === "visible" && checkForUpdate();
+    const handleOnline = () => checkForUpdate();
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [checkForUpdate]);
+
+  useEffect(() => router.subscribe("onResolved", checkForUpdate), [router, checkForUpdate]);
 
   if (!needRefresh) return null;
 
   return (
-    <div className="relative bottom-4 right-4 z-50 max-w-sm rounded-xl border border-border bg-popover p-4 shadow-lg animate-in slide-in-from-bottom-4 fade-in">
+    <div className="sticky bottom-4 ml-auto mr-4 z-50 max-w-sm rounded-xl border border-border bg-popover p-4 shadow-lg animate-in slide-in-from-bottom-4 fade-in">
       <Button variant="ghost" size="icon-sm" className="absolute top-2 right-2" onClick={() => setNeedRefresh(false)} aria-label={t("actions.close")}>
         <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
       </Button>
