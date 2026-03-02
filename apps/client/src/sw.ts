@@ -5,13 +5,27 @@ declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+type PushPayload = {
+  title?: string;
+  metadata?: { station_id?: string; reviewer_note?: string; submitter_name?: string; submission_type?: string };
+  actionUrl?: string;
+};
+
 self.addEventListener("push", (event) => {
-  const data =
-    ((event as PushEvent).data?.json() as {
-      title?: string;
-      metadata?: { station_id?: string; reviewer_note?: string; submitter_name?: string; submission_type?: string };
-      actionUrl?: string;
-    }) ?? {};
+  let data: PushPayload = {};
+  try {
+    data = ((event as PushEvent).data?.json() as PushPayload) ?? {};
+  } catch {
+    data = { title: (event as PushEvent).data?.text() ?? "OpenBTS" };
+  }
 
   const lines: string[] = [];
   if (data.metadata?.submitter_name) lines.push(`By ${data.metadata.submitter_name}`);
