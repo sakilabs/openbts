@@ -57,7 +57,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
   const operatorColor = station.operator?.mnc ? getOperatorColor(station.operator.mnc) : "#3b82f6";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto sm:items-center">
       <button
         type="button"
         className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-default"
@@ -66,7 +66,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
         aria-label={t("common:actions.close")}
       />
 
-      <div className="relative bg-background rounded-2xl shadow-2xl w-full max-w-3xl max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-background rounded-2xl shadow-2xl w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="shrink-0 bg-background/95 backdrop-blur-sm border-b">
           <div className="h-1" style={{ backgroundColor: operatorColor }} />
           <div className="px-6 py-4 flex items-start">

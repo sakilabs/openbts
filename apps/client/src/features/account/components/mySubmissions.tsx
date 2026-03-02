@@ -105,10 +105,10 @@ export function MySubmissions() {
             key={submission.id}
             className={cn("group rounded-xl border border-l-4 bg-card transition-colors overflow-hidden", statusCfg.borderClass)}
           >
-            <div className="flex items-center gap-3 px-4 py-3">
+            <div className="flex items-center gap-3 px-4 py-3 min-w-0">
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border",
+                  "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border shrink-0",
                   typeCfg.badgeClass,
                 )}
               >
@@ -116,7 +116,7 @@ export function MySubmissions() {
                 {t(`common:submissionType.${submission.type}`)}
               </span>
 
-              <span className="text-xs font-mono text-muted-foreground">#{submission.id}</span>
+              <span className="text-xs font-mono text-muted-foreground hidden sm:inline shrink-0">#{submission.id}</span>
 
               {submission.station?.station_id ? (
                 <span className="text-sm font-mono font-medium text-foreground">{submission.station.station_id}</span>

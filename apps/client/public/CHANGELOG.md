@@ -8,6 +8,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Locations now filter by station `updatedAt`/`createdAt`
 - Stations in the popup are also being filtered by `new` filter right now
 - `editor` role now has proper API rate limiting
+- Fixed layout overflow issues on the submissions list on mobile
+- Audit log detail sheet now takes full width on mobile
+- Station detail header operator info is hidden on small screens to prevent overflow
+- UKE permit dialog is now scrollable on small screens and uses `dvh` instead of `vh`
 
 ### 🚀 Enhancements
 

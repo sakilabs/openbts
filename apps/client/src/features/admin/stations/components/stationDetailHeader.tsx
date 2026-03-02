@@ -80,7 +80,7 @@ export function StationDetailHeader({
         </Button>
       </div>
 
-      <div className="flex items-center justify-center flex-1 min-w-0 mx-2 md:mx-4">
+      <div className="hidden sm:flex items-center justify-center flex-1 min-w-0 mx-2 md:mx-4">
         <div className="flex items-center gap-2.5 px-3 py-1.5 bg-secondary/30 rounded-full border border-border/40 shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-w-full overflow-hidden group transition-colors">
           {selectedOperator && (
             <div className="relative flex items-center justify-center shrink-0">

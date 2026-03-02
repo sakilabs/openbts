@@ -31,7 +31,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="max-w-xl! sm:max-w-5xl! overflow-y-auto custom-scrollbar">
+      <SheetContent side="right" className="w-full! max-w-xl! sm:max-w-5xl! overflow-y-auto custom-scrollbar">
         <SheetHeader>
           <SheetTitle>{t("auditLogs.detail.title")}</SheetTitle>
           <SheetDescription>
