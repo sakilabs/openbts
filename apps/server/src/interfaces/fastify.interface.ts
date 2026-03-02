@@ -10,7 +10,7 @@ import type {
 import type { auth } from "../plugins/betterauth.plugin.js";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
-export type Session = typeof auth.$Infer.Session;
+export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 type ApiKey = Awaited<ReturnType<typeof auth.api.getApiKey>>;
 export type ApiToken = Omit<
   ApiKey,

@@ -260,7 +260,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 await tx.insert(proposedNRCells).values({
                   ...nrDetails,
                   proposed_cell_id: base.id,
-                  gnbid_length: nrDetails.gnbid ? nrDetails.gnbid.toString(2).length : undefined,
+                  gnbid_length: nrDetails.gnbid ? Number(nrDetails.gnbid).toString(2).length : undefined,
                 });
                 break;
               }

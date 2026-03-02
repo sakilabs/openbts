@@ -288,7 +288,7 @@ async function processSubmission(
               const details = cell.details as z.infer<typeof nrInsertSchema>;
               await tx
                 .insert(proposedNRCells)
-                .values({ ...details, proposed_cell_id: base.id, gnbid_length: details.gnbid ? details.gnbid.toString(2).length : undefined });
+                .values({ ...details, proposed_cell_id: base.id, gnbid_length: details.gnbid ? Number(details.gnbid).toString(2).length : undefined });
               break;
             }
           }
@@ -296,7 +296,7 @@ async function processSubmission(
       } catch (error) {
         if (error instanceof ErrorResponse) throw error;
         throw new ErrorResponse("FAILED_TO_CREATE", {
-          message: `Failed to create proposed ${cell.rat ?? "unknown"} cell: ${error instanceof Error ? error.message : "Unknown error"}`,
+          message: `Failed to create proposed ${String(cell.rat ?? "unknown")} cell: ${error instanceof Error ? error.message : "Unknown error"}`,
           cause: error,
         });
       }

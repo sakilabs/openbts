@@ -141,7 +141,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             const details = req.body.details as z.infer<typeof nrUpdateSchema>;
             const [updated] = await db
               .update(nrCells)
-              .set({ ...details, ...(details.gnbid ? { gnbid_length: details.gnbid.toString(2).length } : {}) })
+              .set({ ...details, ...(details.gnbid ? { gnbid_length: Number(details.gnbid).toString(2).length } : {}) })
               .where(eq(nrCells.cell_id, id))
               .returning();
             if (!updated) {
