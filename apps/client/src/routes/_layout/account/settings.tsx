@@ -61,10 +61,10 @@ function AccountSettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <section className="space-y-0">
+          {/* <section className="space-y-0">
             <SectionHeader icon={Key01Icon} title={t("apiKeys.title")} description={t("apiKeys.description")} />
             <ApiKeysCard />
-          </section>
+          </section> */}
 
           <section className="space-y-0">
             <SectionHeader icon={ComputerIcon} title={t("sessions.title")} description={t("sessions.description")} />

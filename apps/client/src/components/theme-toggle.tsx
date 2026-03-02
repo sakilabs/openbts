@@ -1,6 +1,6 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Moon02Icon, Sun03Icon, ComputerIcon } from "@hugeicons/core-free-icons";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import { useTranslation } from "react-i18next";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

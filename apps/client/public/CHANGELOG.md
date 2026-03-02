@@ -12,6 +12,9 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Audit log detail sheet now takes full width on mobile
 - Station detail header operator info is hidden on small screens to prevent overflow
 - UKE permit dialog is now scrollable on small screens and uses `dvh` instead of `vh`
+- Fixed `x-api-key` header not being read due to casing mismatch
+- Fixed rate limit race condition with concurrent requests
+- Fixed location filter query so band, RAT and IoT filters are evaluated independently instead of requiring a single cell to match all at once
 
 ### 🚀 Enhancements
 
@@ -20,6 +23,20 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - The "new" filter also works for radiolines now
 - Various rendering optimizations - O(1) operator lookups, memoized date formatters, shared query options
 - Station popup now opens immediately with basic data and updates in the background once station details are loaded
+- Added in-app notification system with bell icon in the header
+- Added push notifications support
+- Users get notified when their submissions are approved or rejected
+- Staff (admin/moderator/editor) get notified about new submissions
+- Added "mark all read" and per-notification read tracking
+- Added PWA app badge showing unread notification count (or pending submissions for staff)
+- Added Wake Lock on the map view to prevent screen from turning off
+- Added PWA share target to share coordinates from Google Maps, Apple Maps etc. to open them on the map
+- Added PWA shortcuts for Map, Stations and My Submissions
+- Replaced `next-themes` with a custom lightweight theme provider
+- Switched service worker to `injectManifest` strategy with custom push notification handling
+- Optimized `useClickOutside` and `useEscapeKey` hooks to use a single shared global listener instead of one per instance
+- Daily UKE import job now runs at a consistent midnight UTC instead of drifting based on server start time
+- Redis connection is now awaited before the server starts accepting requests
 
 # 2026-02-28
 

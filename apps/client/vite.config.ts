@@ -48,12 +48,40 @@ export default defineConfig({
       },
     },
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "prompt",
       manifest: {
         name: "OpenBTS",
         short_name: "OpenBTS",
         description: "Map and data explorer for BT stations",
         theme_color: "#0c0c0c",
+        shortcuts: [
+          {
+            name: "Map",
+            short_name: "Map",
+            url: "/",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" }],
+          },
+          {
+            name: "Stations",
+            short_name: "Stations",
+            url: "/stations",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" }],
+          },
+          {
+            name: "My Submissions",
+            short_name: "Submissions",
+            url: "/account/submissions",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" }],
+          },
+        ],
+        share_target: {
+          action: "/share-target",
+          method: "GET",
+          params: { title: "title", text: "text", url: "url" },
+        },
       },
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,woff2,png,svg}"],

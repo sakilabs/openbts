@@ -185,40 +185,44 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     }
 
     if (bandIds.length || nonIotRats.length || iotRequested) {
-      const cellConditions: ReturnType<typeof sql>[] = [];
+      const cellExistsConditions: ReturnType<typeof sql>[] = [];
 
       if (bandIds.length) {
-        cellConditions.push(
-          sql`${cells.band_id} = ANY(ARRAY[${sql.join(
+        cellExistsConditions.push(sql`EXISTS (
+					SELECT 1 FROM ${cells}
+					WHERE ${cells.station_id} = ${stationFields.id}
+					AND ${cells.band_id} = ANY(ARRAY[${sql.join(
             bandIds.map((id) => sql`${id}`),
             sql`,`,
-          )}]::int4[])`,
-        );
-      }
-
-      if (nonIotRats.length) {
-        cellConditions.push(
-          sql`${cells.rat} IN (${sql.join(
-            nonIotRats.map((r) => sql`${r}`),
-            sql`,`,
-          )})`,
-        );
-      }
-
-      if (iotRequested) {
-        cellConditions.push(sql`(
-					EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
-					OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
+          )}]::int4[])
 				)`);
       }
 
-      const cellWhere = cellConditions.length > 1 ? sql`(${sql.join(cellConditions, sql` AND `)})` : cellConditions[0];
+      if (nonIotRats.length) {
+        cellExistsConditions.push(sql`EXISTS (
+					SELECT 1 FROM ${cells}
+					WHERE ${cells.station_id} = ${stationFields.id}
+					AND ${cells.rat} IN (${sql.join(
+            nonIotRats.map((r) => sql`${r}`),
+            sql`,`,
+          )})
+				)`);
+      }
 
-      conditions.push(sql`EXISTS (
-				SELECT 1 FROM ${cells}
-				WHERE ${cells.station_id} = ${stationFields.id}
-				AND ${cellWhere}
-			)`);
+      if (iotRequested) {
+        cellExistsConditions.push(sql`EXISTS (
+					SELECT 1 FROM ${cells}
+					WHERE ${cells.station_id} = ${stationFields.id}
+					AND (
+						EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
+						OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
+					)
+				)`);
+      }
+
+      const cellWhere = cellExistsConditions.length > 1 ? sql`(${sql.join(cellExistsConditions, sql` OR `)})` : cellExistsConditions[0];
+
+      conditions.push(cellWhere!);
     }
 
     if (cutoff)
@@ -253,38 +257,53 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             sql`,`,
           )}]::int4[])`
         : sql``;
-      const bandCond = bandIds.length
-        ? sql` AND ${cells.band_id} = ANY(ARRAY[${sql.join(
-            bandIds.map((id) => sql`${id}`),
-            sql`,`,
-          )}]::int4[])`
-        : sql``;
-      const ratCond = nonIotRats.length
-        ? sql` AND ${cells.rat} IN (${sql.join(
-            nonIotRats.map((r) => sql`${r}`),
-            sql`,`,
-          )})`
-        : sql``;
-      const iotCond = iotRequested
-        ? sql` AND (
-						EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
-						OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
-					)`
-        : sql``;
 
       if (bandIds.length || nonIotRats.length || iotRequested) {
-        conditions.push(sql`
-					EXISTS (
+        const existsClauses: ReturnType<typeof sql>[] = [];
+
+        if (bandIds.length) {
+          existsClauses.push(sql`EXISTS (
 						SELECT 1
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
 						${operatorCond}
-						${bandCond}
-						${ratCond}
-						${iotCond}
-					)
-				`);
+						AND ${cells.band_id} = ANY(ARRAY[${sql.join(
+              bandIds.map((id) => sql`${id}`),
+              sql`,`,
+            )}]::int4[])
+					)`);
+        }
+
+        if (nonIotRats.length) {
+          existsClauses.push(sql`EXISTS (
+						SELECT 1
+						FROM ${stations}
+						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
+						WHERE ${stations.location_id} = ${locFields.id}
+						${operatorCond}
+						AND ${cells.rat} IN (${sql.join(
+              nonIotRats.map((r) => sql`${r}`),
+              sql`,`,
+            )})
+					)`);
+        }
+
+        if (iotRequested) {
+          existsClauses.push(sql`EXISTS (
+						SELECT 1
+						FROM ${stations}
+						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
+						WHERE ${stations.location_id} = ${locFields.id}
+						${operatorCond}
+						AND (
+							EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_nb_iot} = true)
+							OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
+						)
+					)`);
+        }
+
+        conditions.push(existsClauses.length > 1 ? sql`(${sql.join(existsClauses, sql` OR `)})` : existsClauses[0]!);
       } else {
         conditions.push(sql`
 					EXISTS (

@@ -1,0 +1,15 @@
+{
+  "title": "Powiadomienia",
+  "empty": "Brak powiadomień",
+  "markAllRead": "Oznacz wszystkie jako przeczytane",
+  "enablePush": "Włącz powiadomienia push",
+  "enabling": "Włączanie…",
+  "pushDescription": "Otrzymuj powiadomienia o aktualizacjach zgłoszeń",
+  "station": "Stacja: {{stationId}}",
+  "reviewerNote": "Notatka: {{note}}",
+  "submittedBy": "Od {{name}}",
+  "permissionDenied": "Odmówiono dostępu do powiadomień",
+  "pushEnabled": "Włączono powiadomienia push",
+  "pushFailed": "Nie udało się włączyć powiadomień",
+  "pushDisableFailed": "Nie udało się wyłączyć powiadomień"
+}

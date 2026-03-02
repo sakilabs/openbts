@@ -19,7 +19,7 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
   if (isPublicByStatic && !settings.enforceAuthForAllRoutes) return;
 
   const { headers } = req;
-  const authHeader = headers["X-API-Key"];
+  const authHeader = headers["x-api-key"];
   if (!authHeader) {
     const user = await getCurrentUser(req);
     const allowGuest = route?.config?.allowGuestAccess && !settings.enforceAuthForAllRoutes;

@@ -8,6 +8,7 @@ import { getRuntimeSettings } from "../../../../../services/settings.service.js"
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
+import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
 import { logger } from "../../../../../utils/logger.js";
 import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells, extraIdentificators } from "@openbts/drizzle";
 
@@ -125,7 +126,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
 
   try {
-    const result = await db.transaction(async (tx) => {
+    const transactionResult = await db.transaction(async (tx) => {
       const proposedStation = await tx.query.proposedStations.findFirst({
         where: {
           submission_id: id,
@@ -433,8 +434,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         .returning();
       if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-      return updated;
+      return { submission: updated, resolvedStationId: stationId };
     });
+
+    const { submission: result, resolvedStationId } = transactionResult;
+
+    const stationStringId = resolvedStationId
+      ? ((await db.query.stations.findFirst({ where: { id: resolvedStationId }, columns: { station_id: true } }))?.station_id ?? null)
+      : null;
 
     void rebuildStationsPermitsAssociations().catch((e) =>
       logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
@@ -451,6 +458,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       },
       req,
     );
+
+    void createAndDeliverNotification({
+      userId: submission.submitter_id,
+      type: "submission_approved",
+      title: "Submission approved",
+      submissionId: id,
+      metadata: {
+        ...(stationStringId ? { station_id: stationStringId } : {}),
+        ...(result.review_notes ? { reviewer_note: result.review_notes.slice(0, 200) } : {}),
+      },
+      actionUrl: "/account/submissions",
+    }).catch((e) => logger.error("Failed to send notification", { error: e }));
 
     return res.send({ data: result });
   } catch (error) {

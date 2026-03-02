@@ -32,10 +32,10 @@ type FetchOptions = RequestInit & {
 export async function fetchJson<T>(url: string, options?: FetchOptions): Promise<T> {
   const { allowedErrors, ...fetchOptions } = options ?? {};
 
-  const response = await fetch(url, fetchOptions);
+  const response = await fetch(url, { credentials: "include", ...fetchOptions });
 
   if (!response.ok) {
-    if (allowedErrors?.includes(response.status)) return null as T;
+    if (allowedErrors?.includes(response.status)) return null as unknown as T;
 
     if (response.status === 502 || response.status === 503 || response.status === 504) {
       throw new BackendUnavailableError(response.status);
@@ -61,13 +61,13 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
     throw new Error(`Request failed: ${response.status}`);
   }
 
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204) return undefined as unknown as T;
   return response.json();
 }
 
 export async function fetchApiData<T>(endpoint: string, options?: FetchOptions): Promise<T> {
   const result = await fetchJson<{ data: T }>(`${API_BASE}/${endpoint}`, options);
-  return result?.data ?? (null as T);
+  return result?.data ?? (null as unknown as T);
 }
 
 export async function postApiData<T, B = unknown>(endpoint: string, body: B): Promise<T> {

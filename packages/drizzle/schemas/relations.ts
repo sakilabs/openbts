@@ -25,7 +25,19 @@ import {
   deletedEntries,
   statsSnapshots,
 } from "./bts.ts";
-import { accounts, apikeys, attachments, auditLogs, passkeys, stationComments, twoFactors, userLists, users } from "./auth.ts";
+import {
+  accounts,
+  apikeys,
+  attachments,
+  auditLogs,
+  notifications,
+  passkeys,
+  pushSubscriptions,
+  stationComments,
+  twoFactors,
+  userLists,
+  users,
+} from "./auth.ts";
 import {
   submissions,
   proposedCells,
@@ -63,7 +75,9 @@ export const relations = defineRelations(
     apikeys,
     attachments,
     auditLogs,
+    notifications,
     passkeys,
+    pushSubscriptions,
     stationComments,
     twoFactors,
     userLists,
@@ -221,6 +235,20 @@ export const relations = defineRelations(
         from: helpers.users.id,
         to: helpers.submissions.reviewer_id,
         alias: "reviewer",
+      }),
+      notifications: helpers.many.notifications(),
+      pushSubscriptions: helpers.many.pushSubscriptions(),
+    },
+    notifications: {
+      user: helpers.one.users({
+        from: helpers.notifications.userId,
+        to: helpers.users.id,
+      }),
+    },
+    pushSubscriptions: {
+      user: helpers.one.users({
+        from: helpers.pushSubscriptions.userId,
+        to: helpers.users.id,
       }),
     },
     accounts: {

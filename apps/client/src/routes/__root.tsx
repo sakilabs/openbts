@@ -27,6 +27,7 @@ const queryClient = new QueryClient({
         if (error instanceof BackendUnavailableError) return false;
         return failureCount < 3;
       },
+      throwOnError: (error) => error instanceof BackendUnavailableError,
     },
   },
 });
@@ -58,7 +59,7 @@ function RootComponent() {
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider defaultTheme="system" storageKey="ui-theme">
           <BackendStatusProvider queryClient={queryClient}>
             <AppProviders>
               <Outlet />

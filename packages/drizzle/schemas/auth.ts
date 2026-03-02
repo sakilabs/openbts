@@ -3,6 +3,8 @@ import { nanoid } from "nanoid";
 import { stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
+export const NotificationType = pgEnum("notification_type", ["submission_approved", "submission_rejected", "new_submission"]);
+
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
 export const AuditAction = pgEnum("audit_action", [
@@ -309,4 +311,47 @@ export const auditLogs = pgTable(
     index("audit_logs_action_created_idx").on(table.action, table.createdAt),
     index("audit_logs_invoked_by_created_idx").on(table.invoked_by, table.createdAt),
   ],
+);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`)
+      .notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: NotificationType("type").notNull(),
+    title: text("title").notNull(),
+    submissionId: uuid("submission_id"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    actionUrl: text("action_url"),
+    readAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("notifications_user_id_idx").on(t.userId),
+    index("notifications_created_at_idx").on(t.createdAt),
+    index("notifications_user_read_idx").on(t.userId, t.readAt),
+  ],
+);
+
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`)
+      .notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("push_subscriptions_user_id_idx").on(t.userId)],
 );

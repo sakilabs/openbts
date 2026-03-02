@@ -7,7 +7,9 @@ import { ErrorResponse } from "../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import { submissions } from "@openbts/drizzle";
+import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
+import { logger } from "../../../../../utils/logger.js";
+import { submissions, stations } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -78,6 +80,22 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       },
       req,
     );
+
+    const stationStringId = submission.station_id
+      ? ((await db.query.stations.findFirst({ where: { id: submission.station_id }, columns: { station_id: true } }))?.station_id ?? null)
+      : null;
+
+    void createAndDeliverNotification({
+      userId: submission.submitter_id,
+      type: "submission_rejected",
+      title: "Submission rejected",
+      submissionId: id,
+      metadata: {
+        ...(stationStringId ? { station_id: stationStringId } : {}),
+        ...(result.review_notes ? { reviewer_note: result.review_notes.slice(0, 200) } : {}),
+      },
+      actionUrl: "/account/submissions",
+    }).catch((e) => logger.error("Failed to send notification", { error: e }));
 
     return res.send({ data: result });
   } catch (error) {

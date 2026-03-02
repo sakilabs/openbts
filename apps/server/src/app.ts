@@ -10,6 +10,7 @@ import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
 import { initRuntimeSettings } from "./services/settings.service.js";
+import { redisReady } from "./database/redis.js";
 import { ValidationError, type ErrorResponse } from "./errors.js";
 import { registerRateLimit } from "./plugins/ratelimit.plugin.js";
 import { logger, serializeError } from "./utils/logger.js";
@@ -26,19 +27,6 @@ export default class App {
       logger: false,
       trustProxy: true,
       genReqId: () => randomUUID(),
-      // ajv: {
-      // 	customOptions: {
-      // 		allErrors: true,
-      // 	},
-      // },
-      // schemaErrorFormatter: (errors, _) => {
-      // 	const formattedErrors = errors.map((err) => ({
-      // 		field: String(err.instancePath?.slice(1) || err.params?.missingProperty || "unknown"),
-      // 		validationMessage: err.message,
-      // 	}));
-
-      // 	return new ValidationError(formattedErrors);
-      // },
     }).withTypeProvider<ZodTypeProvider>();
     this.fastify.setValidatorCompiler(validatorCompiler);
     this.fastify.setSerializerCompiler(serializerCompiler);
@@ -46,7 +34,6 @@ export default class App {
     debug.enable("sakilabs/openbts:*");
 
     this.checkEnvironment();
-    void this.initServices();
     this.initHooks();
     this.initMiddlewares();
     this.initControllers();
@@ -60,6 +47,7 @@ export default class App {
   }
 
   private async initServices(): Promise<void> {
+    await redisReady;
     await initRuntimeSettings();
   }
 
@@ -158,6 +146,7 @@ export default class App {
 
   public async listen(port: number): Promise<void> {
     try {
+      await this.initServices();
       await this.fastify.listen({ port, host: "127.0.0.1" });
       this.dlogger("Server is ready on port %d", port);
     } catch (err) {

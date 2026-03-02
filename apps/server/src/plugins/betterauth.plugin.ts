@@ -1,6 +1,5 @@
 import { fromNodeHeaders } from "better-auth/node";
-import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
-import type { GenericEndpointContext } from "@better-auth/core";
+import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions, type GenericEndpointContext } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { admin, multiSession, twoFactor, username } from "better-auth/plugins";
 import { apiKey } from "@better-auth/api-key";
@@ -79,7 +78,7 @@ export const auth = betterAuth({
   },
   experimental: { joins: true },
   hooks: {
-    before: createAuthMiddleware(beforeAuthHook.bind(this)),
+    before: createAuthMiddleware(beforeAuthHook),
   },
   plugins: [
     admin({
@@ -215,19 +214,15 @@ async function beforeAuthHook(
   }
 }
 
-export async function getCurrentUser(req: FastifyRequest) {
-  const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
-
-  return session;
+export function getCurrentUser(req: FastifyRequest) {
+  return auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
 }
 
-export async function verifyApiKey(apiKey: string, requiredPermissions?: Record<string, string[]>) {
-  const result = await auth.api.verifyApiKey({
+export function verifyApiKey(apiKey: string, requiredPermissions?: Record<string, string[]>) {
+  return auth.api.verifyApiKey({
     body: {
       key: apiKey,
       permissions: requiredPermissions,
     },
   });
-
-  return result;
 }

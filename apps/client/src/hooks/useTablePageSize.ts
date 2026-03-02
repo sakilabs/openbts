@@ -17,7 +17,7 @@ export function useTablePagination(options: UseTablePageSizeOptions = {}) {
   const { rowHeight = 52, headerHeight = 48, paginationHeight = 52, minRows = 5, maxRows = 100 } = options;
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: minRows });
+  const [pagination, setPagination] = useState<PaginationState>(() => ({ pageIndex: 0, pageSize: minRows }));
 
   useLayoutEffect(() => {
     const container = containerRef.current;

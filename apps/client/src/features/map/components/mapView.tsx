@@ -12,6 +12,7 @@ import { useMapPopup } from "../hooks/useMapPopup";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { showApiError } from "@/lib/api";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useWakeLock } from "../hooks/useWakeLock";
 
 const RadioLinesLayer = lazy(() => import("./radioLinesLayer"));
 
@@ -86,20 +87,25 @@ function detailReducer(state: DetailState, action: DetailAction): DetailState {
 }
 
 function MapViewInner() {
+  useWakeLock();
   const { map, isLoaded } = useMap();
   const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
   const { preferences } = usePreferences();
-  const [filters, setFilters] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
+  const [filters, setFiltersState] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
+
+  const setFilters = useCallback((update: StationFilters | ((prev: StationFilters) => StationFilters)) => {
+    setFiltersState((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      saveMapFilters(next);
+      return next;
+    });
+  }, []);
 
   const handlePopupClose = useCallback(() => {
     setActivePopupLocation(null);
   }, []);
-
-  useEffect(() => {
-    saveMapFilters(filters);
-  }, [filters]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -141,9 +147,7 @@ function MapViewInner() {
 
   const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
   const locationsRef = useRef(locations);
-  useEffect(() => {
-    locationsRef.current = locations;
-  }, [locations]);
+  locationsRef.current = locations;
   const locationCount = locations.length;
   const totalCount = locationsResponse?.totalCount ?? 0;
 
@@ -165,11 +169,15 @@ function MapViewInner() {
   const radioLineCount = radioLines.length;
   const radioLineTotalCount = radioLinesResponse?.totalCount ?? 0;
 
-  const { data: popupLocationData, error: popupLocationError } = useQuery({
+  const { data: popupLocationData } = useQuery({
     queryKey: locationQueryKey(activePopupLocation?.locationId ?? 0, filters),
     queryFn: () => fetchLocationWithStations(activePopupLocation?.locationId ?? 0, filters),
     enabled: !!activePopupLocation && activePopupLocation.source !== "uke",
     staleTime: 1000 * 60 * 2,
+    throwOnError: (error) => {
+      showApiError(error);
+      return false;
+    },
   });
 
   useEffect(() => {
@@ -177,10 +185,6 @@ function MapViewInner() {
     if (popupLocationData.id !== activePopupLocation.locationId) return;
     updatePopupStations(toLocationInfo(popupLocationData), popupLocationData.stations as StationWithoutCells[], activePopupLocation.source);
   }, [popupLocationData, activePopupLocation, updatePopupStations]);
-
-  useEffect(() => {
-    if (popupLocationError) showApiError(popupLocationError);
-  }, [popupLocationError]);
 
   const handleLocationSelect = useCallback(
     (lat: number, lng: number) => {
@@ -190,9 +194,7 @@ function MapViewInner() {
   );
 
   const filtersRef = useRef(filters);
-  useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
+  filtersRef.current = filters;
 
   const handleStationSelect = useCallback(
     async (station: Station) => {
@@ -274,22 +276,22 @@ function MapViewInner() {
         cleanupPopup={cleanupPopup}
         onPopupLocationChange={setActivePopupLocation}
       />
-      {filters.showRadiolines && (
+      {filters.showRadiolines ? (
         <Suspense fallback={null}>
           <RadioLinesLayer radioLines={radioLines} pendingRadiolineId={pendingRadiolineId} onPendingRadiolineConsumed={handlePendingRadiolineId} />
         </Suspense>
-      )}
+      ) : null}
       <MapControls showLocate showCompass showScale showFullscreen />
       <Suspense fallback={null}>
-        {selectedStation && (
+        {selectedStation ? (
           <StationDetailsDialog
             key={selectedStation.id}
             stationId={selectedStation.id}
             source={selectedStation.source}
             onClose={handleCloseStationDetails}
           />
-        )}
-        {selectedUkeStation && <UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} />}
+        ) : null}
+        {selectedUkeStation ? <UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} /> : null}
       </Suspense>
     </>
   );

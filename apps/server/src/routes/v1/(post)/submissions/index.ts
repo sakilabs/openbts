@@ -16,6 +16,8 @@ import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { notifyStaffNewSubmission } from "../../../../services/notification.service.js";
+import { logger } from "../../../../utils/logger.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -345,6 +347,28 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
         ),
       ),
     );
+
+    const submitterName = userSession.user.name || userSession.user.username || "Unknown";
+
+    const stationIdsToResolve = results.filter((s) => !s.proposedStation?.station_id && s.station_id).map((s) => s.station_id!);
+
+    const resolvedStations =
+      stationIdsToResolve.length > 0
+        ? await Promise.all(stationIdsToResolve.map((id) => db.query.stations.findFirst({ where: { id }, columns: { id: true, station_id: true } })))
+        : [];
+
+    const stationIdMap = new Map(resolvedStations.filter(Boolean).map((s) => [s!.id, s!.station_id]));
+
+    for (const submission of results) {
+      const stationStringId = submission.proposedStation?.station_id ?? (submission.station_id ? stationIdMap.get(submission.station_id) : undefined);
+
+      void notifyStaffNewSubmission({
+        submissionId: submission.id,
+        submitterName,
+        submissionType: submission.type ?? "new",
+        stationId: stationStringId ?? undefined,
+      }).catch((e) => logger.error("Failed to notify staff about new submission", { error: e }));
+    }
 
     return res.send({ data: results });
   } catch (error) {

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShareTargetRouteImport } from './routes/share-target'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutTosRouteImport } from './routes/_layout/tos'
@@ -37,6 +38,11 @@ import { Route as LayoutAdminLayoutSubmissionsIdRouteImport } from './routes/_la
 import { Route as LayoutAdminLayoutStationsIdRouteImport } from './routes/_layout/admin/_layout/stations/$id'
 import { Route as LayoutAdminLayoutLocationsIdRouteImport } from './routes/_layout/admin/_layout/locations/$id'
 
+const ShareTargetRoute = ShareTargetRouteImport.update({
+  id: '/share-target',
+  path: '/share-target',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => rootRouteImport,
@@ -187,6 +193,7 @@ const LayoutAdminLayoutLocationsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
+  '/share-target': typeof ShareTargetRoute
   '/about': typeof LayoutAboutRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof LayoutAdminLayoutUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/share-target': typeof ShareTargetRoute
   '/about': typeof LayoutAboutRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
@@ -244,6 +252,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/share-target': typeof ShareTargetRoute
   '/_layout/about': typeof LayoutAboutRoute
   '/_layout/changelog': typeof LayoutChangelogRoute
   '/_layout/clf-export': typeof LayoutClfExportRoute
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/share-target'
     | '/about'
     | '/changelog'
     | '/clf-export'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/share-target'
     | '/about'
     | '/changelog'
     | '/clf-export'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/share-target'
     | '/_layout/about'
     | '/_layout/changelog'
     | '/_layout/clf-export'
@@ -361,10 +373,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
+  ShareTargetRoute: typeof ShareTargetRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/share-target': {
+      id: '/share-target'
+      path: '/share-target'
+      fullPath: '/share-target'
+      preLoaderRoute: typeof ShareTargetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_layout': {
       id: '/_layout'
       path: ''
@@ -630,6 +650,7 @@ const LayoutRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
+  ShareTargetRoute: ShareTargetRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

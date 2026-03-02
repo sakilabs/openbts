@@ -8,6 +8,8 @@ import { AuthGuard } from "@/components/auth/authGuard";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { NotificationsBell } from "@/features/notifications/components/NotificationsBell";
+import { useAppBadge } from "@/features/notifications/useAppBadge";
 
 export interface BreadcrumbSegment {
   titleKey: string;
@@ -31,6 +33,7 @@ const EMPTY_BREADCRUMBS: BreadcrumbSegment[] = [];
 function AppLayout() {
   const matches = useMatches();
   const { t } = useTranslation();
+  useAppBadge();
 
   const currentRoute = [...matches]
     .reverse()
@@ -90,7 +93,9 @@ function AppLayout() {
                   )}
                 </BreadcrumbList>
               </Breadcrumb>
-              <div id="header-actions" className="ml-auto flex items-center gap-2" />
+              <div id="header-actions" className="ml-auto flex items-center gap-2">
+                <NotificationsBell />
+              </div>
             </div>
           </header>
           <AnnouncementBanner />

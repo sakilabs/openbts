@@ -1,5 +1,14 @@
 import { useEffect, useRef } from "react";
 
+type EscapeCallback = () => void;
+const escapeListeners = new Set<EscapeCallback>();
+
+function globalEscapeHandler(e: KeyboardEvent) {
+  if (e.key === "Escape") {
+    for (const cb of escapeListeners) cb();
+  }
+}
+
 export function useEscapeKey(callback: () => void, enabled = true) {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
@@ -7,11 +16,18 @@ export function useEscapeKey(callback: () => void, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") callbackRef.current();
-    }
+    const handler: EscapeCallback = () => callbackRef.current();
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    if (escapeListeners.size === 0) {
+      window.addEventListener("keydown", globalEscapeHandler);
+    }
+    escapeListeners.add(handler);
+
+    return () => {
+      escapeListeners.delete(handler);
+      if (escapeListeners.size === 0) {
+        window.removeEventListener("keydown", globalEscapeHandler);
+      }
+    };
   }, [enabled]);
 }

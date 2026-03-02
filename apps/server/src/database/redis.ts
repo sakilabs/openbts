@@ -26,13 +26,14 @@ export const redis = createClient({
     redisLogger("Redis is ready");
   });
 
-redis
+export const redisReady = redis
   .connect()
   .then(() => {
     redisLogger("Connected to Redis");
   })
   .catch((err) => {
     logger.error("Redis connection error: %O", err);
+    throw err;
   });
 
 export default redis;

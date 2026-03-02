@@ -19,12 +19,13 @@ function getFirstIp(value: string): string {
   return ips[0]?.trim() || "";
 }
 
+const IPV4_REGEX = /^(\d{1,3}\.){3}\d{1,3}$/;
+const IPV6_REGEX = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
+
 function isValidIp(ip: string): boolean {
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
   if (!ip || typeof ip !== "string") return false;
 
-  if (ipv4Regex.test(ip)) {
+  if (IPV4_REGEX.test(ip)) {
     const parts = ip.split(".");
     return parts.every((part) => {
       const num = Number.parseInt(part, 10);
@@ -32,7 +33,7 @@ function isValidIp(ip: string): boolean {
     });
   }
 
-  if (ipv6Regex.test(ip)) return true;
+  if (IPV6_REGEX.test(ip)) return true;
   return false;
 }
 

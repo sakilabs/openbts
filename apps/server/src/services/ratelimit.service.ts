@@ -218,8 +218,8 @@ export class RateLimitService {
       };
     }
 
-    if (count === 0) await this.redis.setEx(key, rateLimit.window, "1");
-    else await this.redis.incr(key);
+    const newCount = await this.redis.incr(key);
+    if (newCount === 1) await this.redis.expire(key, rateLimit.window);
 
     const ttl = await this.redis.ttl(key);
     const resetTime = Math.floor(Date.now() / 1000) + (ttl > 0 ? ttl : rateLimit.window);

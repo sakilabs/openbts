@@ -6,8 +6,20 @@ import { port } from "./config.js";
 import { installProcessErrorHandlers, logger } from "./utils/logger.js";
 import { startImportJob } from "./services/ukeImportJob.service.js";
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const workerCount = Number(process.env.WORKERS) || availableParallelism();
+
+function scheduleDailyImport() {
+  const now = new Date();
+  const nextRun = new Date(now);
+  nextRun.setUTCHours(24, 0, 0, 0);
+  const delay = nextRun.getTime() - now.getTime();
+
+  setTimeout(() => {
+    logger.info("uke_import_scheduled", { trigger: "daily" });
+    void startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
+    scheduleDailyImport();
+  }, delay);
+}
 
 if (cluster.isPrimary) {
   console.log(await figlet("sora"));
@@ -21,10 +33,7 @@ if (cluster.isPrimary) {
     cluster.fork();
   });
 
-  setInterval(() => {
-    logger.info("uke_import_scheduled", { trigger: "daily" });
-    void startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
-  }, ONE_DAY_MS);
+  scheduleDailyImport();
 } else {
   installProcessErrorHandlers();
   const app = new App();

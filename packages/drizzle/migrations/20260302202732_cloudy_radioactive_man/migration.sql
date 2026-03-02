@@ -13,6 +13,7 @@ CREATE TYPE "rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> stateme
 CREATE TYPE "api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
 CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'submissions.cleanup', 'settings.update', 'station_comments.create', 'station_comments.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
 CREATE TYPE "audit_source" AS ENUM('api', 'import', 'system');--> statement-breakpoint
+CREATE TYPE "notification_type" AS ENUM('submission_approved', 'submission_rejected', 'new_submission');--> statement-breakpoint
 CREATE TYPE "role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
 CREATE TYPE "cell_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
 CREATE TYPE "station_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
@@ -360,6 +361,18 @@ CREATE TABLE "audit_logs" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "notifications" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
+	"user_id" uuid NOT NULL,
+	"type" "notification_type" NOT NULL,
+	"title" text NOT NULL,
+	"submission_id" uuid,
+	"metadata" jsonb,
+	"action_url" text,
+	"readAt" timestamp with time zone,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "auth"."passkeys" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
 	"name" text,
@@ -372,6 +385,15 @@ CREATE TABLE "auth"."passkeys" (
 	"transports" text,
 	"created_at" timestamp,
 	"aaguid" text
+);
+--> statement-breakpoint
+CREATE TABLE "push_subscriptions" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
+	"user_id" uuid NOT NULL,
+	"endpoint" text NOT NULL UNIQUE,
+	"p256dh" text NOT NULL,
+	"auth" text NOT NULL,
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "station_comments" (
@@ -607,8 +629,12 @@ CREATE INDEX "audit_logs_action_idx" ON "audit_logs" ("action");--> statement-br
 CREATE INDEX "audit_logs_table_name_created_idx" ON "audit_logs" ("table_name","createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_action_created_idx" ON "audit_logs" ("action","createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_invoked_by_created_idx" ON "audit_logs" ("invoked_by","createdAt");--> statement-breakpoint
+CREATE INDEX "notifications_user_id_idx" ON "notifications" ("user_id");--> statement-breakpoint
+CREATE INDEX "notifications_created_at_idx" ON "notifications" ("createdAt");--> statement-breakpoint
+CREATE INDEX "notifications_user_read_idx" ON "notifications" ("user_id","readAt");--> statement-breakpoint
 CREATE INDEX "passkeys_userId_idx" ON "auth"."passkeys" ("user_id");--> statement-breakpoint
 CREATE INDEX "passkeys_credentialID_idx" ON "auth"."passkeys" ("credential_id");--> statement-breakpoint
+CREATE INDEX "push_subscriptions_user_id_idx" ON "push_subscriptions" ("user_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_id_idx" ON "station_comments" ("station_id");--> statement-breakpoint
 CREATE INDEX "station_comments_user_id_idx" ON "station_comments" ("user_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_created_idx" ON "station_comments" ("station_id","createdAt");--> statement-breakpoint
@@ -656,7 +682,9 @@ ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fkey" FOREI
 ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fkey" FOREIGN KEY ("author_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fkey" FOREIGN KEY ("invoked_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "auth"."passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "push_subscriptions" ADD CONSTRAINT "push_subscriptions_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "auth"."two_factors" ADD CONSTRAINT "two_factors_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint

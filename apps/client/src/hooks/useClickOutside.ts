@@ -1,5 +1,20 @@
 import { useEffect, useRef, type RefObject } from "react";
 
+type ClickOutsideEntry = {
+  ref: RefObject<HTMLElement | null>;
+  callback: () => void;
+};
+
+const clickOutsideListeners = new Set<ClickOutsideEntry>();
+
+function globalMousedownHandler(e: MouseEvent) {
+  for (const entry of clickOutsideListeners) {
+    if (entry.ref.current && !entry.ref.current.contains(e.target as Node)) {
+      entry.callback();
+    }
+  }
+}
+
 export function useClickOutside<T extends HTMLElement>(ref: RefObject<T | null>, callback: () => void, enabled = true) {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
@@ -7,13 +22,21 @@ export function useClickOutside<T extends HTMLElement>(ref: RefObject<T | null>,
   useEffect(() => {
     if (!enabled) return;
 
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        callbackRef.current();
-      }
-    }
+    const entry: ClickOutsideEntry = {
+      ref: ref as RefObject<HTMLElement | null>,
+      callback: () => callbackRef.current(),
+    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    if (clickOutsideListeners.size === 0) {
+      document.addEventListener("mousedown", globalMousedownHandler);
+    }
+    clickOutsideListeners.add(entry);
+
+    return () => {
+      clickOutsideListeners.delete(entry);
+      if (clickOutsideListeners.size === 0) {
+        document.removeEventListener("mousedown", globalMousedownHandler);
+      }
+    };
   }, [ref, enabled]);
 }

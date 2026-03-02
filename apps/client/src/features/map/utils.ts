@@ -102,6 +102,9 @@ export function formatSpeed(mbps: number): string {
   return mbps >= 1000 ? `${(mbps / 1000).toFixed(2)} Gb/s` : `~${Math.round(mbps)} Mb/s`;
 }
 
+const MODULATION_NORMALIZE_REGEX = /[\s\-_]/g;
+const QAM_REGEX = /(\d+)QAM/;
+
 const MODULATION_BITS: Record<string, number> = {
   BPSK: 1,
   QPSK: 2,
@@ -119,13 +122,13 @@ const MODULATION_BITS: Record<string, number> = {
 };
 
 export function getModulationBits(modulationType: string): number | null {
-  const normalized = modulationType.toUpperCase().replace(/[\s\-_]/g, "");
+  const normalized = modulationType.toUpperCase().replace(MODULATION_NORMALIZE_REGEX, "");
   if (MODULATION_BITS[normalized] != null) return MODULATION_BITS[normalized];
 
   if (normalized.includes("QPSK")) return 2;
   if (normalized.includes("BPSK")) return 1;
 
-  const match = normalized.match(/(\d+)QAM/);
+  const match = normalized.match(QAM_REGEX);
   if (match) {
     const bits = Math.log2(Number.parseInt(match[1], 10));
     if (Number.isInteger(bits) && bits >= 1 && bits <= 14) return bits;

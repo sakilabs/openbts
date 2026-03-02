@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@openbts/typescript-configs": "workspace:*",
+    "@types/node": "24.10.9",
     "drizzle-kit": "1.0.0-beta.15-859cf75"
   }
 }

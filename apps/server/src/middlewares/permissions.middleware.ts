@@ -1,6 +1,6 @@
 import { getRuntimeSettings } from "../services/settings.service.js";
 import { ErrorResponse } from "../errors.js";
-import { auth, getCurrentUser } from "../plugins/betterauth.plugin.js";
+import { auth } from "../plugins/betterauth.plugin.js";
 
 import type { FastifyRequest, FastifyReply } from "fastify";
 import type { Route } from "../interfaces/routes.interface.js";
@@ -31,8 +31,7 @@ export async function permissionsMiddleware(req: FastifyRequest, _: FastifyReply
   const isAllowedUnauthenticated = settings.allowedUnauthenticatedRoutes.some((p) => req.url?.startsWith(p));
   const requireAuth = (settings.enforceAuthForAllRoutes && !isAllowedUnauthenticated) || !route?.config?.allowGuestAccess;
   if (requireAuth) {
-    const user = await getCurrentUser(req);
-    if (!user && !req.apiToken) throw new ErrorResponse("UNAUTHORIZED");
+    if (!req.userSession && !req.apiToken) throw new ErrorResponse("UNAUTHORIZED");
     return;
   }
 
