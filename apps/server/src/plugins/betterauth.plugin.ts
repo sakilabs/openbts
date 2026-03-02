@@ -1,7 +1,9 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions } from "better-auth";
+import type { GenericEndpointContext } from "@better-auth/core";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
-import { admin, apiKey, multiSession, twoFactor, username } from "better-auth/plugins";
+import { admin, multiSession, twoFactor, username } from "better-auth/plugins";
+import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
 import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { hash, verify } from "@node-rs/argon2";
@@ -95,7 +97,7 @@ export const auth = betterAuth({
       apiKeyHeaders: ["authorization"],
       enableMetadata: true,
       permissions: {
-        defaultPermissions: async (userId, ctx) => {
+        defaultPermissions: async (referenceId: string, ctx: GenericEndpointContext) => {
           return {
             cells: ["read"],
             stations: ["read"],

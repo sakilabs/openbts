@@ -14,6 +14,7 @@
   "dependencies": {
     "@axiomhq/js": "1.4.0",
     "@axiomhq/logging": "0.2.0",
+    "@better-auth/api-key": "1.5.1",
     "@better-auth/core": "1.5.1",
     "@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",
     "@better-auth/passkey": "^1.5.1",

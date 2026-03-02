@@ -84,7 +84,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const apiToken = req.apiToken;
   if (!session?.user && !apiToken) throw new ErrorResponse("UNAUTHORIZED");
 
-  const userId = session?.user?.id ?? apiToken?.userId;
+  const userId = session?.user?.id ?? apiToken?.referenceId;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
   const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read_all"] })) || false;

@@ -286,9 +286,11 @@ async function processSubmission(
             }
             case "NR": {
               const details = cell.details as z.infer<typeof nrInsertSchema>;
-              await tx
-                .insert(proposedNRCells)
-                .values({ ...details, proposed_cell_id: base.id, gnbid_length: details.gnbid ? Number(details.gnbid).toString(2).length : undefined });
+              await tx.insert(proposedNRCells).values({
+                ...details,
+                proposed_cell_id: base.id,
+                gnbid_length: details.gnbid ? Number(details.gnbid).toString(2).length : undefined,
+              });
               break;
             }
           }
