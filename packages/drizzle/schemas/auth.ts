@@ -128,9 +128,8 @@ export const apikeys = AuthSchema.table(
     start: text("start"),
     prefix: text("prefix"),
     key: text("key").notNull(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    referenceId: uuid("reference_id").notNull(),
+    configId: varchar("config_id", { length: 255 }).default("default").notNull(),
     refillInterval: integer("refill_interval"),
     refillAmount: integer("refill_amount"),
     lastRefillAt: timestamp("last_refill_at"),
@@ -147,7 +146,11 @@ export const apikeys = AuthSchema.table(
     permissions: text("permissions"),
     metadata: text("metadata").default('{"tier":"basic"}'),
   },
-  (table) => [index("apikeys_key_idx").on(table.key), index("apikeys_userId_idx").on(table.userId)],
+  (table) => [
+    index("apikeys_key_idx").on(table.key),
+    index("apikeys_referenceId_idx").on(table.referenceId),
+    index("apikeys_configId_idx").on(table.configId),
+  ],
 );
 
 export const passkeys = AuthSchema.table(

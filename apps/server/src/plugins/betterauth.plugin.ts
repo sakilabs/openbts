@@ -183,7 +183,7 @@ async function beforeAuthHook(
     }
 
     const keys = await db.query.apikeys.findMany({
-      where: { userId: session.user.id },
+      where: { referenceId: session.user.id },
     });
 
     if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {

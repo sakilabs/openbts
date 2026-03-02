@@ -313,7 +313,8 @@ CREATE TABLE "auth"."apikeys" (
 	"start" text,
 	"prefix" text,
 	"key" text NOT NULL,
-	"user_id" uuid NOT NULL,
+	"reference_id" uuid NOT NULL,
+	"config_id" varchar(255) DEFAULT 'default' NOT NULL,
 	"refill_interval" integer,
 	"refill_amount" integer,
 	"last_refill_at" timestamp,
@@ -594,7 +595,8 @@ CREATE INDEX "umts_cells_cid_trgm_idx" ON "umts_cells" USING gin (("cid"::text) 
 CREATE INDEX "umts_cells_cid_long_trgm_idx" ON "umts_cells" USING gin (("cid_long"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "accounts_user_id_idx" ON "auth"."accounts" ("user_id");--> statement-breakpoint
 CREATE INDEX "apikeys_key_idx" ON "auth"."apikeys" ("key");--> statement-breakpoint
-CREATE INDEX "apikeys_userId_idx" ON "auth"."apikeys" ("user_id");--> statement-breakpoint
+CREATE INDEX "apikeys_referenceId_idx" ON "auth"."apikeys" ("reference_id");--> statement-breakpoint
+CREATE INDEX "apikeys_configId_idx" ON "auth"."apikeys" ("config_id");--> statement-breakpoint
 CREATE INDEX "attachment_author_id_idx" ON "attachments" ("author_id");--> statement-breakpoint
 CREATE INDEX "attachments_created_at_idx" ON "attachments" ("createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_record_id_idx" ON "audit_logs" ("record_id");--> statement-breakpoint
@@ -652,7 +654,6 @@ ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_VhBmnsa9wuqD_fkey" F
 ALTER TABLE "uke_radiolines" ADD CONSTRAINT "uke_radiolines_operator_id_uke_operators_id_fkey" FOREIGN KEY ("operator_id") REFERENCES "uke_operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fkey" FOREIGN KEY ("cell_id") REFERENCES "cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
-ALTER TABLE "auth"."apikeys" ADD CONSTRAINT "apikeys_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fkey" FOREIGN KEY ("author_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fkey" FOREIGN KEY ("invoked_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "auth"."passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint

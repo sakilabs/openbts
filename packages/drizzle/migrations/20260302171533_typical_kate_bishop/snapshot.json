@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "a271d422-36f1-4ef5-b983-f6b1fd0eb8e2",
+  "id": "da437392-c691-4a02-8044-3ca2ee848525",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -3206,7 +3206,20 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "user_id",
+      "name": "reference_id",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "apikeys"
+    },
+    {
+      "type": "varchar(255)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'default'",
+      "generated": null,
+      "identity": null,
+      "name": "config_id",
       "entityType": "columns",
       "schema": "auth",
       "table": "apikeys"
@@ -6821,7 +6834,7 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "user_id",
+          "value": "reference_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -6833,7 +6846,28 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "apikeys_userId_idx",
+      "name": "apikeys_referenceId_idx",
+      "entityType": "indexes",
+      "schema": "auth",
+      "table": "apikeys"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "config_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "apikeys_configId_idx",
       "entityType": "indexes",
       "schema": "auth",
       "table": "apikeys"
@@ -7838,19 +7872,6 @@
       "entityType": "fks",
       "schema": "auth",
       "table": "accounts"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["user_id"],
-      "schemaTo": "auth",
-      "tableTo": "users",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "apikeys_user_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "auth",
-      "table": "apikeys"
     },
     {
       "nameExplicit": false,

@@ -231,7 +231,7 @@ export const relations = defineRelations(
     },
     apikeys: {
       users: helpers.one.users({
-        from: helpers.apikeys.userId,
+        from: helpers.apikeys.referenceId,
         to: helpers.users.id,
       }),
     },
