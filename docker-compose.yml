@@ -5,11 +5,11 @@ services:
     build:
       context: .
       dockerfile: apps/client/Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3030/api/v1
+        - VITE_APP_NAME=OpenBTS
     ports:
-      - "3000:3000"
-    environment:
-      - VITE_API_URL=http://localhost:3030/api/v1
-      - VITE_APP_NAME=OpenBTS
+      - "3000:80"
     depends_on:
       - server
     restart: unless-stopped
