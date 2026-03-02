@@ -23,12 +23,12 @@ if (cluster.isPrimary) {
 
   setInterval(() => {
     logger.info("uke_import_scheduled", { trigger: "daily" });
-    startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
+    void startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
   }, ONE_DAY_MS);
 } else {
   installProcessErrorHandlers();
   const app = new App();
-  app.listen(port).then(() => {
+  void app.listen(port).then(() => {
     logger.info("worker_started", { pid: process.pid, port });
   });
 }

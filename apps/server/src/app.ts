@@ -46,7 +46,7 @@ export default class App {
     debug.enable("sakilabs/openbts:*");
 
     this.checkEnvironment();
-    this.initServices();
+    void this.initServices();
     this.initHooks();
     this.initMiddlewares();
     this.initControllers();

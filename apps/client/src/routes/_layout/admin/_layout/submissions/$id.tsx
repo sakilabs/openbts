@@ -251,7 +251,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       const fresh = await fetchApiData<SubmissionDetail>(`submissions/${submission.id}`);
       if (fresh.updatedAt !== initialUpdatedAt.current) {
         toast.warning(t("detail.staleWarning"));
-        queryClient.invalidateQueries({ queryKey: ["admin", "submission", submission.id] });
+        void queryClient.invalidateQueries({ queryKey: ["admin", "submission", submission.id] });
         return true;
       }
     } catch {
@@ -288,7 +288,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       {
         onSuccess: () => {
           toast.success(t("toast.approved"));
-          navigate({ to: "/admin/submissions" });
+          void navigate({ to: "/admin/submissions" });
         },
         onError: (error) => showApiError(error),
       },
@@ -302,7 +302,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       {
         onSuccess: () => {
           toast.success(t("toast.rejected"));
-          navigate({ to: "/admin/submissions" });
+          void navigate({ to: "/admin/submissions" });
         },
         onError: (error) => showApiError(error),
       },

@@ -48,7 +48,7 @@ function Value({ value }: { value: unknown }): React.ReactNode {
       </div>
     );
   }
-  return String(value);
+  return String(value as string | number | boolean | bigint);
 }
 
 interface DeletedEntryDetailSheetProps {

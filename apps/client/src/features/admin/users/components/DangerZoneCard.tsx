@@ -56,7 +56,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
       setBanDialogOpen(false);
       setBanReason("");
       setBanDuration(0);
-      invalidateAll();
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });
@@ -68,7 +68,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
     },
     onSuccess: () => {
       toast.success("User unbanned successfully");
-      invalidateAll();
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });
@@ -80,7 +80,7 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
     },
     onSuccess: () => {
       toast.success("User deleted successfully");
-      navigate({ to: "/admin/users" });
+      void navigate({ to: "/admin/users" });
     },
     onError: (error) => showApiError(error),
   });

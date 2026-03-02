@@ -455,7 +455,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     return res.send({ data: result });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
-    throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: error ? String(error) : "An unknown error occurred" });
+    throw new ErrorResponse("INTERNAL_SERVER_ERROR", {
+      message: error instanceof Error ? error.message : error ? String(error as string | number) : "An unknown error occurred",
+    });
   }
 }
 

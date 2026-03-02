@@ -255,7 +255,7 @@ export function StationsLayer({
   const handleFeatureMouseDown = useCallback(
     (locationId: number) => {
       if (filters.source === "uke") return;
-      queryClient.prefetchQuery({
+      void queryClient.prefetchQuery({
         queryKey: locationQueryKey(locationId, filters),
         queryFn: () => fetchLocationWithStations(locationId, filters),
         staleTime: 1000 * 60 * 2,

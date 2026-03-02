@@ -160,7 +160,7 @@ function TotpVerifyForm({ onSuccess }: { onSuccess: () => void }) {
   function handleCodeChange(value: string) {
     setCode(value);
     if (value.length === 6) {
-      handleVerify(value);
+      void handleVerify(value);
     }
   }
 
@@ -238,7 +238,7 @@ function SignInForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            void form.handleSubmit();
           }}
           className="space-y-4"
         >
@@ -344,7 +344,7 @@ function SignUpForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            void form.handleSubmit();
           }}
           className="space-y-4"
         >

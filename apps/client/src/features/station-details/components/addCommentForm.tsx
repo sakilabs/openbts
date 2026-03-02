@@ -57,7 +57,7 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
     onSuccess: () => {
       setContent("");
       setImages([]);
-      queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
+      return queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
     },
   });
 

@@ -134,7 +134,7 @@ export function useStationsData() {
     (patch: Partial<FullState>) => {
       const merged = { ...stateRef.current, ...patch };
       stateRef.current = merged;
-      navigate({ to: ".", search: Object.fromEntries(stateToParams(merged).entries()), replace: true });
+      void navigate({ to: ".", search: Object.fromEntries(stateToParams(merged).entries()), replace: true });
     },
     [navigate],
   );

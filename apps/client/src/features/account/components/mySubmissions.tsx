@@ -49,7 +49,7 @@ export function MySubmissions() {
   const deleteMutation = useMutation({
     mutationFn: deleteSubmission,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-submissions"] });
+      void queryClient.invalidateQueries({ queryKey: ["my-submissions"] });
       toast.success(t("toast.deleted"));
     },
     onError: (error) => showApiError(error),

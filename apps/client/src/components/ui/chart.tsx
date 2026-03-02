@@ -231,7 +231,7 @@ function ChartLegendContent({
       {payload
         .filter((item) => item.type !== "none")
         .map((item) => {
-          const key = `${nameKey || item.dataKey || "value"}`;
+          const key = `${String(nameKey || item.dataKey || "value")}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
           return (

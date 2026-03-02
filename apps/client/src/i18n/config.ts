@@ -79,7 +79,7 @@ function getDefaultLanguage(): SupportedLanguage {
   return "pl-PL";
 }
 
-i18n.use(initReactI18next).init({
+void i18n.use(initReactI18next).init({
   resources,
   lng: getDefaultLanguage(),
   fallbackLng: "en-US",

@@ -413,7 +413,7 @@ function StationDetailForm({
         onSuccess: (result) => {
           if (result.mode === "create") {
             toast.success(t("toast.created"));
-            navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
+            void navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
           } else {
             toast.success(t("toast.saved"));
             dispatch({ type: "CLEAR_DELETED" });

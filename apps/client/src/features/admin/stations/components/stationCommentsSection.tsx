@@ -35,7 +35,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
       if (!response.ok) throw new Error("Failed to delete comment");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
+      return queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
       toast.success(t("stationComments.deleted"));
     },
     onError: (error) => {

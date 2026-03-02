@@ -20,7 +20,7 @@ export function SessionsCard({ userId, sessions }: { userId: string; sessions: S
     },
     onSuccess: () => {
       toast.success("Session revoked");
-      invalidateAll();
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });
@@ -32,7 +32,7 @@ export function SessionsCard({ userId, sessions }: { userId: string; sessions: S
     },
     onSuccess: () => {
       toast.success("All sessions revoked");
-      invalidateAll();
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });

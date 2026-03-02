@@ -246,7 +246,7 @@ export class SQLParser {
 
     if (!isRecord(expr)) {
       if (typeof expr === "string" || typeof expr === "number") return expr;
-      return expr ? String(expr) : null;
+      return expr ? String(expr as boolean | bigint) : null;
     }
 
     const type = get<string>(expr, "type");
@@ -275,10 +275,10 @@ export class SQLParser {
       type === "bit_string" ||
       type === "var_string"
     )
-      return String(rawVal ?? "");
-    if (type === "date" || type === "datetime" || type === "time" || type === "timestamp") return String(rawVal ?? "");
+      return String((rawVal ?? "") as string | number | boolean);
+    if (type === "date" || type === "datetime" || type === "time" || type === "timestamp") return String((rawVal ?? "") as string | number | boolean);
     if (type === "star") return "*";
-    if (type === "param" || type === "origin") return String(rawVal ?? "");
+    if (type === "param" || type === "origin") return String((rawVal ?? "") as string | number | boolean);
     if (type === "default") return null;
     if (type === "unary_expr" && hasKey(expr, "operator") && hasKey(expr, "expr")) {
       const op = String(expr.operator);
@@ -290,10 +290,10 @@ export class SQLParser {
     if (type === "function" || type === "binary_expr" || type === "expr_list" || type === "column_ref") {
       const name = get(expr, "name");
       const column = get(expr, "column");
-      return String(rawVal ?? name ?? column ?? "");
+      return String((rawVal ?? name ?? column ?? "") as string | number);
     }
 
-    return String(rawVal ?? "");
+    return String((rawVal ?? "") as string | number | boolean);
   }
 }
 

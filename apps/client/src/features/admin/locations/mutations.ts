@@ -6,8 +6,10 @@ export function usePatchLocationMutation(locationId: number) {
   return useMutation({
     mutationFn: (body: Record<string, unknown>) => patchLocation(locationId, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "location", String(locationId)] });
-      queryClient.invalidateQueries({ queryKey: ["admin-locations-list"] });
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "location", String(locationId)] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-locations-list"] }),
+      ]);
     },
   });
 }
@@ -17,7 +19,7 @@ export function useDeleteLocationMutation() {
   return useMutation({
     mutationFn: (locationId: number) => deleteLocation(locationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-locations-list"] });
+      return queryClient.invalidateQueries({ queryKey: ["admin-locations-list"] });
     },
   });
 }

@@ -7,7 +7,7 @@ function DiffOldValueCell({ value }: { value: unknown }) {
   if (value === undefined || value === null) return <span className="text-muted-foreground/40">-</span>;
   if (typeof value === "boolean")
     return <Checkbox checked={value} disabled className="size-3 rounded-[3px] **:data-[slot=checkbox-indicator]:*:size-2.5" />;
-  return <>{String(value)}</>;
+  return <>{String(value as string | number)}</>;
 }
 
 export function SubmissionDiffDetailCells({ details, rat }: { details: Record<string, unknown>; rat: string }) {

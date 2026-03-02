@@ -1,7 +1,6 @@
 {
   "extends": "@openbts/typescript-configs/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "outDir": "./dist",
     "rootDir": ".",
     "allowImportingTsExtensions": true,

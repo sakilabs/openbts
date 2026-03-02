@@ -17,7 +17,7 @@ export function ReloadPrompt() {
   });
 
   const checkForUpdate = useCallback(() => {
-    navigator.serviceWorker?.getRegistration().then((r) => r?.update());
+    void navigator.serviceWorker?.getRegistration().then((r) => r?.update());
   }, []);
 
   useEffect(() => {

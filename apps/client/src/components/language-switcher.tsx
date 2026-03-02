@@ -18,7 +18,7 @@ export function LanguageSwitcher() {
   const FlagComponent = currentLanguage ? flagComponents[currentLanguage.countryCode] : null;
 
   const handleLanguageChange = (code: SupportedLanguage) => {
-    i18n.changeLanguage(code);
+    void i18n.changeLanguage(code);
     localStorage.setItem("i18nextLng", code);
   };
 

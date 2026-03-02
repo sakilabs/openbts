@@ -1021,9 +1021,9 @@ function MapControls({
     const container = map?.getContainer();
     if (!container) return;
     if (document.fullscreenElement) {
-      document.exitFullscreen();
+      void document.exitFullscreen();
     } else {
-      container.requestFullscreen();
+      void container.requestFullscreen();
     }
   }, [map]);
 

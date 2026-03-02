@@ -65,7 +65,7 @@ export function useSaveSubmissionMutation() {
       });
     },
     onSuccess: (_data, payload) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "submission", payload.submissionId] });
+      return queryClient.invalidateQueries({ queryKey: ["admin", "submission", payload.submissionId] });
     },
   });
 }
@@ -81,7 +81,7 @@ export function useApproveSubmissionMutation() {
       });
     },
     onSuccess: (_data, payload) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "submission", payload.submissionId] });
+      return queryClient.invalidateQueries({ queryKey: ["admin", "submission", payload.submissionId] });
     },
   });
 }
@@ -97,7 +97,7 @@ export function useRejectSubmissionMutation() {
       });
     },
     onSuccess: (_data, payload) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "submission", payload.submissionId] });
+      return queryClient.invalidateQueries({ queryKey: ["admin", "submission", payload.submissionId] });
     },
   });
 }

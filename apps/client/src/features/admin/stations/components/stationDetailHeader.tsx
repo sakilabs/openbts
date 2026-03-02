@@ -52,7 +52,7 @@ export function StationDetailHeader({
     deleteMutation.mutate(station.id, {
       onSuccess: () => {
         toast.success(t("toast.deleted"));
-        navigate({ to: "/admin/stations" });
+        void navigate({ to: "/admin/stations" });
       },
       onError: (error) => {
         showApiError(error);

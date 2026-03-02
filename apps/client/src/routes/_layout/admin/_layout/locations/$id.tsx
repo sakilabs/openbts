@@ -129,7 +129,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
     deleteMutation.mutate(location.id, {
       onSuccess: () => {
         toast.success(t("toast.locationDeleted"));
-        navigate({ to: "/admin/locations" });
+        void navigate({ to: "/admin/locations" });
       },
       onError: (error) => {
         showApiError(error);

@@ -201,7 +201,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   if (!location) throw new ErrorResponse("NOT_FOUND");
 
   const cleanedStations = location.stations.map((station) => {
-    const stationData = { ...station } as StationData & { extra_identificators?: unknown | null };
+    const stationData = { ...station } as StationData & { extra_identificators?: unknown };
     if (!stationData.extra_identificators) delete stationData.extra_identificators;
     return stationData as StationData;
   });

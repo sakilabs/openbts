@@ -29,7 +29,7 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
     },
     onSuccess: () => {
       toast.success("Role updated successfully");
-      invalidateAll();
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });
@@ -42,7 +42,7 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
     onSuccess: () => {
       toast.success("Name updated successfully");
       setEditName("");
-      invalidateAll();
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });

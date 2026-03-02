@@ -21,7 +21,7 @@ export function useDeleteStationMutation() {
   return useMutation({
     mutationFn: (stationId: number) => deleteStation(stationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "stations"] });
+      return queryClient.invalidateQueries({ queryKey: ["admin", "stations"] });
     },
   });
 }
@@ -31,7 +31,7 @@ export function useCreateStationMutation() {
   return useMutation({
     mutationFn: createStation,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "stations"] });
+      return queryClient.invalidateQueries({ queryKey: ["admin", "stations"] });
     },
   });
 }
@@ -41,7 +41,7 @@ export function usePatchStationMutation(stationId: number) {
   return useMutation({
     mutationFn: (body: Record<string, unknown>) => patchStation(stationId, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "station", String(stationId)] });
+      return queryClient.invalidateQueries({ queryKey: ["admin", "station", String(stationId)] });
     },
   });
 }
@@ -262,9 +262,7 @@ export function useSaveStationMutation() {
       return { mode: "update" as const, stationId: station.id };
     },
     onSuccess: (result) => {
-      if (result.mode === "update") {
-        queryClient.invalidateQueries({ queryKey: ["admin", "station", String(result.stationId)] });
-      }
+      if (result.mode === "update") return queryClient.invalidateQueries({ queryKey: ["admin", "station", String(result.stationId)] });
     },
   });
 }

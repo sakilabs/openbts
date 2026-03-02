@@ -183,7 +183,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
     onSuccess: () => {
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
       if (isEditMode) {
-        queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
+        void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
       } else {
         form.reset();
       }
@@ -401,7 +401,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
       }
 
       if (!isNew && submission.station) {
-        fetchStationForSubmission(submission.station.id).then((station) => {
+        void fetchStationForSubmission(submission.station.id).then((station) => {
           if (ignore) return;
           form.setFieldValue("selectedStation", station);
           const originals = stationCellsToForm(station);
@@ -452,7 +452,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        form.handleSubmit();
+        void form.handleSubmit();
       }}
       onKeyDown={(e) => {
         if (e.key !== "Enter") return;

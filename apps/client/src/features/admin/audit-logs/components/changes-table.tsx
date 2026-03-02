@@ -5,7 +5,7 @@ function isObject(val: unknown): val is Record<string, unknown> {
   return typeof val === "object" && val !== null && !Array.isArray(val);
 }
 
-function tryParseJson(val: string): unknown | undefined {
+function tryParseJson(val: string): unknown {
   if (!val.startsWith("{") && !val.startsWith("[")) return undefined;
   try {
     return JSON.parse(val);
@@ -33,7 +33,7 @@ function ObjectArrayValue({ items }: { items: Record<string, unknown>[] }) {
   return (
     <div className="flex flex-col gap-2 pl-2 border-l-2 border-muted/50 my-1">
       {items.map((item, index) => (
-        <div key={`object-${item}`} className="flex flex-col gap-1">
+        <div key={`object-${index}`} className="flex flex-col gap-1">
           <span className="text-[10px] uppercase text-muted-foreground font-semibold">Item {index + 1}</span>
           <div className="pl-2 border-l border-muted/30">
             {Object.entries(item).map(([k, v]) => (
@@ -82,7 +82,7 @@ function Value({ value }: { value: unknown }): React.ReactNode {
     if (parsed !== undefined) return <Value value={parsed} />;
   }
 
-  return String(value);
+  return String(value as string | number | boolean | bigint);
 }
 
 export function ChangesTable({ oldValues, newValues }: { oldValues: Record<string, unknown> | null; newValues: Record<string, unknown> | null }) {

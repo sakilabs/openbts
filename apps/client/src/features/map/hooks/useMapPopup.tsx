@@ -68,7 +68,7 @@ export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails
         .setDOMContent(container)
         .addTo(map);
 
-      if (onClose) popup.once("close", onClose);
+      if (onClose) void popup.once("close", onClose);
 
       popupRef.current = popup;
     },

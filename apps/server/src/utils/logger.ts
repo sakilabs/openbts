@@ -12,7 +12,12 @@ function serializeError(err: unknown): { name: string; message: string; stack?: 
       stack: err.stack,
     };
     if (anyErr.cause !== undefined) {
-      serialized.cause = anyErr.cause instanceof Error ? serializeError(anyErr.cause) : String(anyErr.cause);
+      serialized.cause =
+        anyErr.cause instanceof Error
+          ? serializeError(anyErr.cause)
+          : typeof anyErr.cause === "object" && anyErr.cause !== null
+            ? JSON.stringify(anyErr.cause)
+            : String(anyErr.cause as string | number | boolean);
     }
     return serialized;
   }
