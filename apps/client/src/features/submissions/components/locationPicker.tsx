@@ -1,9 +1,8 @@
-import { useState, useCallback, useRef, useMemo, useEffect, useReducer } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Location01Icon, Loading01Icon, Add01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
-import type MapLibreGL from "maplibre-gl";
+import { Location01Icon, Loading01Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,29 +10,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Map as MapGL, useMap, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
-import {
-  POLAND_CENTER,
-  PICKER_SOURCE_ID,
-  PICKER_CIRCLE_LAYER_ID,
-  PICKER_SYMBOL_LAYER_ID,
-  PICKER_LAYER_IDS,
-  PICKER_NEARBY_RADIUS_METERS,
-  PICKER_UKE_SOURCE_ID,
-  PICKER_UKE_CIRCLE_LAYER_ID,
-  PICKER_UKE_SYMBOL_LAYER_ID,
-  PICKER_UKE_LAYER_IDS,
-} from "@/features/map/constants";
+import { POLAND_CENTER, PICKER_LAYER_IDS, PICKER_NEARBY_RADIUS_METERS, PICKER_UKE_LAYER_IDS } from "@/features/map/constants";
 import { useMapBounds } from "@/features/map/hooks/useMapBounds";
-import { syncPieImages } from "@/features/map/pieChart";
 import { getOperatorData } from "@/features/map/geojson";
-import { calculateDistance, groupPermitsByStation, getPermitBands } from "@/features/map/utils";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { calculateDistance, groupPermitsByStation } from "@/features/map/utils";
 import { reverseGeocode, fetchLocationsInViewport, fetchUkeLocationsInViewport, type NominatimResult } from "../api";
 import { regionsQueryOptions } from "@/features/shared/queries";
 import type { LocationWithStations, Region, UkeLocationWithPermits, UkeStation, Location } from "@/types/station";
 import type { ProposedLocationForm } from "../types";
 import { ChangeBadge } from "@/features/admin/submissions/components/common";
 import type { LocationErrors } from "../utils/validation";
+import { useLocationPickerState } from "./useLocationPickerState";
+import { usePickerMapLayers } from "./usePickerMapLayers";
+import { NearbyLocationsPanel } from "./NearbyLocationsPanel";
+import { UkeStationPanelOverlay } from "./UkeStationPanelOverlay";
 
 function roundCoord(value: number): number {
   return Math.round(value * 1000000) / 1000000;
@@ -337,44 +327,6 @@ function SelectedLocationMarker() {
   );
 }
 
-type NearbyPanel = {
-  coords: { lat: number; lng: number };
-  locations: (LocationWithStations & { distance: number })[];
-};
-
-type UkeStationPanel = {
-  location: UkeLocationWithPermits;
-  stations: UkeStation[];
-};
-
-type PanelState = { nearbyPanel: NearbyPanel | null; ukeStationPanel: UkeStationPanel | null };
-type PanelAction =
-  | { type: "select_location" }
-  | { type: "select_uke"; location: UkeLocationWithPermits; stations: UkeStation[] }
-  | { type: "nearby"; coords: { lat: number; lng: number }; locations: (LocationWithStations & { distance: number })[] }
-  | { type: "clear_nearby" }
-  | { type: "clear_uke" }
-  | { type: "clear_both" };
-
-function panelReducer(state: PanelState, action: PanelAction): PanelState {
-  switch (action.type) {
-    case "select_location":
-      return { nearbyPanel: null, ukeStationPanel: null };
-    case "select_uke":
-      return { nearbyPanel: null, ukeStationPanel: { location: action.location, stations: action.stations } };
-    case "nearby":
-      return { nearbyPanel: { coords: action.coords, locations: action.locations }, ukeStationPanel: null };
-    case "clear_nearby":
-      return { ...state, nearbyPanel: null };
-    case "clear_uke":
-      return { ...state, ukeStationPanel: null };
-    case "clear_both":
-      return { nearbyPanel: null, ukeStationPanel: null };
-    default:
-      return state;
-  }
-}
-
 type PickerMapInnerProps = {
   location: ProposedLocationForm;
   onCoordinatesSet: (lat: number, lon: number) => void;
@@ -383,337 +335,10 @@ type PickerMapInnerProps = {
   onUkeStationSelect?: (station: UkeStation) => void;
 };
 
-function NearbyLocationsPanel({
-  nearbyPanel,
-  onLocationSelect,
-  onClose,
-  onCreateNew,
-}: {
-  nearbyPanel: NearbyPanel;
-  onLocationSelect: (loc: LocationWithStations) => void;
-  onClose: () => void;
-  onCreateNew: () => void;
-}) {
-  const { t } = useTranslation("submissions");
-
-  return (
-    <MapMarker longitude={nearbyPanel.coords.lng} latitude={nearbyPanel.coords.lat} anchor="bottom">
-      <MarkerContent className="cursor-default">
-        <div
-          role="dialog"
-          className="w-52 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <div className="px-2.5 py-1.5 border-b bg-muted/50 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-muted-foreground">{t("locationPicker.nearbyLocations")}</span>
-            <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
-              <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
-            </button>
-          </div>
-          <div className="max-h-28 overflow-y-auto">
-            {nearbyPanel.locations.map((loc) => (
-              <button
-                key={loc.id}
-                type="button"
-                onClick={() => onLocationSelect(loc)}
-                className="w-full flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-accent transition-colors text-left border-b last:border-b-0"
-              >
-                <HugeiconsIcon icon={Location01Icon} className="size-3 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium truncate">{loc.address || loc.city || `#${loc.id}`}</div>
-                  <div className="text-[10px] text-muted-foreground leading-tight">
-                    {t("stations:stationsCount", { count: loc.stations?.length ?? 0 })} · {Math.round(loc.distance)} m
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={onCreateNew}
-            className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors border-t"
-          >
-            <HugeiconsIcon icon={Add01Icon} className="size-3" />
-            {t("locationPicker.createNewLocation")}
-          </button>
-        </div>
-      </MarkerContent>
-    </MapMarker>
-  );
-}
-
-function UkeStationPanelOverlay({
-  ukeStationPanel,
-  onStationSelect,
-}: {
-  ukeStationPanel: UkeStationPanel;
-  onStationSelect: (station: UkeStation) => void;
-}) {
-  const { t } = useTranslation("submissions");
-
-  return (
-    <MapMarker longitude={ukeStationPanel.location.longitude} latitude={ukeStationPanel.location.latitude} anchor="bottom">
-      <MarkerContent className="cursor-default">
-        <div
-          role="dialog"
-          className="w-72 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden text-sm"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <div className="px-3 py-2 border-b border-border/50">
-            <h3 className="font-medium text-sm leading-tight pr-4">{ukeStationPanel.location.city}</h3>
-            {ukeStationPanel.location.address && <p className="text-[11px] text-muted-foreground">{ukeStationPanel.location.address}</p>}
-          </div>
-          <div className="max-h-54 overflow-y-auto custom-scrollbar">
-            {ukeStationPanel.stations.map((station) => {
-              const mnc = station.operator?.mnc;
-              const operatorName = station.operator?.name || "Unknown";
-              const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
-              const bands = getPermitBands(station.permits);
-
-              return (
-                <button
-                  key={station.station_id}
-                  type="button"
-                  onClick={() => onStationSelect(station)}
-                  className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                    <span className="font-medium text-xs" style={{ color }}>
-                      {operatorName}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-                    {bands.map((band) => (
-                      <span
-                        key={band}
-                        className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
-                      >
-                        {band}
-                      </span>
-                    ))}
-                    <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
-                      {station.permits.length} {station.permits.length === 1 ? "permit" : "permits"}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <div className="px-3 py-1 border-t border-border/50">
-            <span className="text-[10px] text-muted-foreground">{t("locationPicker.selectStation")}</span>
-          </div>
-        </div>
-      </MarkerContent>
-    </MapMarker>
-  );
-}
-
-function usePickerMapLayers({
-  map,
-  isLoaded,
-  geoJSON,
-  ukeGeoJSON,
-  showUkeLocations,
-}: {
-  map: MapLibreGL.Map | null;
-  isLoaded: boolean;
-  geoJSON: GeoJSON.FeatureCollection;
-  ukeGeoJSON: GeoJSON.FeatureCollection;
-  showUkeLocations: boolean;
-}) {
-  const addedImagesRef = useRef(new Set<string>());
-  const addedUkeImagesRef = useRef(new Set<string>());
-
-  useEffect(() => {
-    if (!map || !isLoaded) return;
-
-    const ensureLayersExist = () => {
-      if (!map.getSource(PICKER_SOURCE_ID)) {
-        map.addSource(PICKER_SOURCE_ID, {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
-        addedImagesRef.current.clear();
-      }
-      if (!map.getLayer(PICKER_CIRCLE_LAYER_ID)) {
-        map.addLayer({
-          id: PICKER_CIRCLE_LAYER_ID,
-          type: "circle",
-          source: PICKER_SOURCE_ID,
-          filter: ["!", ["get", "isMultiOperator"]],
-          paint: {
-            "circle-color": ["get", "color"],
-            "circle-radius": 6,
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#fff",
-          },
-        });
-      }
-      if (!map.getLayer(PICKER_SYMBOL_LAYER_ID)) {
-        map.addLayer({
-          id: PICKER_SYMBOL_LAYER_ID,
-          type: "symbol",
-          source: PICKER_SOURCE_ID,
-          filter: ["get", "isMultiOperator"],
-          layout: {
-            "icon-image": ["get", "pieImageId"],
-            "icon-size": 0.5,
-            "icon-allow-overlap": true,
-          },
-        });
-      }
-    };
-
-    const handleMouseEnter = () => {
-      map.getCanvas().style.cursor = "pointer";
-    };
-    const handleMouseLeave = () => {
-      map.getCanvas().style.cursor = "";
-    };
-
-    ensureLayersExist();
-    map.on("styledata", ensureLayersExist);
-
-    for (const layerId of PICKER_LAYER_IDS) {
-      map.on("mouseenter", layerId, handleMouseEnter);
-      map.on("mouseleave", layerId, handleMouseLeave);
-    }
-
-    const addedImages = addedImagesRef.current;
-
-    return () => {
-      map.off("styledata", ensureLayersExist);
-
-      for (const layerId of PICKER_LAYER_IDS) {
-        map.off("mouseenter", layerId, handleMouseEnter);
-        map.off("mouseleave", layerId, handleMouseLeave);
-        try {
-          map.removeLayer(layerId);
-        } catch {
-          // layer may already be removed
-        }
-      }
-      try {
-        map.removeSource(PICKER_SOURCE_ID);
-      } catch {
-        // source may already be removed
-      }
-
-      addedImages.clear();
-    };
-  }, [map, isLoaded]);
-
-  useEffect(() => {
-    if (!map || !isLoaded) return;
-    const source = map.getSource(PICKER_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
-    if (!source) return;
-
-    syncPieImages(map, geoJSON.features, addedImagesRef.current);
-    source.setData(geoJSON);
-  }, [map, isLoaded, geoJSON]);
-
-  useEffect(() => {
-    if (!map || !isLoaded) return;
-
-    const ensureUkeLayersExist = () => {
-      if (!map.getSource(PICKER_UKE_SOURCE_ID)) {
-        map.addSource(PICKER_UKE_SOURCE_ID, {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
-        addedUkeImagesRef.current.clear();
-      }
-      if (!map.getLayer(PICKER_UKE_CIRCLE_LAYER_ID)) {
-        map.addLayer({
-          id: PICKER_UKE_CIRCLE_LAYER_ID,
-          type: "circle",
-          source: PICKER_UKE_SOURCE_ID,
-          filter: ["!", ["get", "isMultiOperator"]],
-          paint: {
-            "circle-color": ["get", "color"],
-            "circle-radius": 6,
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#fff",
-          },
-        });
-      }
-      if (!map.getLayer(PICKER_UKE_SYMBOL_LAYER_ID)) {
-        map.addLayer({
-          id: PICKER_UKE_SYMBOL_LAYER_ID,
-          type: "symbol",
-          source: PICKER_UKE_SOURCE_ID,
-          filter: ["get", "isMultiOperator"],
-          layout: {
-            "icon-image": ["get", "pieImageId"],
-            "icon-size": 0.5,
-            "icon-allow-overlap": true,
-          },
-        });
-      }
-      if (map.getLayer(PICKER_CIRCLE_LAYER_ID)) map.moveLayer(PICKER_CIRCLE_LAYER_ID);
-      if (map.getLayer(PICKER_SYMBOL_LAYER_ID)) map.moveLayer(PICKER_SYMBOL_LAYER_ID);
-    };
-
-    const handleMouseEnter = () => {
-      map.getCanvas().style.cursor = "pointer";
-    };
-    const handleMouseLeave = () => {
-      map.getCanvas().style.cursor = "";
-    };
-
-    if (showUkeLocations) {
-      ensureUkeLayersExist();
-      map.on("styledata", ensureUkeLayersExist);
-
-      for (const layerId of PICKER_UKE_LAYER_IDS) {
-        map.on("mouseenter", layerId, handleMouseEnter);
-        map.on("mouseleave", layerId, handleMouseLeave);
-      }
-    }
-
-    const addedUkeImages = addedUkeImagesRef.current;
-
-    return () => {
-      map.off("styledata", ensureUkeLayersExist);
-
-      for (const layerId of PICKER_UKE_LAYER_IDS) {
-        map.off("mouseenter", layerId, handleMouseEnter);
-        map.off("mouseleave", layerId, handleMouseLeave);
-        try {
-          map.removeLayer(layerId);
-        } catch {
-          // layer may already be removed
-        }
-      }
-      try {
-        map.removeSource(PICKER_UKE_SOURCE_ID);
-      } catch {
-        // source may already be removed
-      }
-
-      addedUkeImages.clear();
-    };
-  }, [map, isLoaded, showUkeLocations]);
-
-  useEffect(() => {
-    if (!map || !isLoaded || !showUkeLocations) return;
-    const source = map.getSource(PICKER_UKE_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
-    if (!source) return;
-
-    syncPieImages(map, ukeGeoJSON.features, addedUkeImagesRef.current);
-    source.setData(ukeGeoJSON);
-  }, [map, isLoaded, showUkeLocations, ukeGeoJSON]);
-}
-
 function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, showUkeLocations, onUkeStationSelect }: PickerMapInnerProps) {
   const { map, isLoaded } = useMap();
   const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
-  const [panelState, dispatchPanel] = useReducer(panelReducer, { nearbyPanel: null, ukeStationPanel: null });
-  const { nearbyPanel, ukeStationPanel } = panelState;
+  const { nearbyPanel, ukeStationPanel, dispatchPanel } = useLocationPickerState();
 
   const lastInternalCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
@@ -762,7 +387,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
         if (loc) {
           lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
           callbackRefs.current.onExistingLocationSelect(loc);
-          dispatchPanel({ type: "select_location" });
+          dispatchPanel({ type: "SELECT_LOCATION" });
         }
         return;
       }
@@ -774,7 +399,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
           const ukeLoc = viewportUkeLocationsRef.current.find((l) => l.id === locationId);
           if (ukeLoc) {
             const stations = groupPermitsByStation(ukeLoc.permits ?? [], ukeLoc);
-            dispatchPanel({ type: "select_uke", location: ukeLoc, stations });
+            dispatchPanel({ type: "SELECT_UKE", location: ukeLoc, stations });
           }
           return;
         }
@@ -784,11 +409,11 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
       const nearby = computeNearby({ lat, lng }, viewportLocationsRef.current);
 
       if (nearby.length > 0) {
-        dispatchPanel({ type: "nearby", coords: { lat, lng }, locations: nearby });
+        dispatchPanel({ type: "NEARBY", coords: { lat, lng }, locations: nearby });
       } else {
         lastInternalCoordsRef.current = { lat, lng };
         callbackRefs.current.onCoordinatesSet(lat, lng);
-        dispatchPanel({ type: "clear_both" });
+        dispatchPanel({ type: "CLEAR_BOTH" });
       }
     };
 
@@ -796,7 +421,7 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     return () => {
       map.off("click", handleMapClick);
     };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, dispatchPanel]);
 
   useEffect(() => {
     if (!map || location.latitude === null || location.longitude === null) return;
@@ -828,46 +453,46 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     (loc: LocationWithStations) => {
       lastInternalCoordsRef.current = { lat: loc.latitude, lng: loc.longitude };
       onExistingLocationSelect(loc);
-      dispatchPanel({ type: "clear_nearby" });
+      dispatchPanel({ type: "CLEAR_NEARBY" });
     },
-    [onExistingLocationSelect],
+    [onExistingLocationSelect, dispatchPanel],
   );
 
   const handleCreateNewHere = useCallback(() => {
     if (!nearbyPanel) return;
     lastInternalCoordsRef.current = nearbyPanel.coords;
     onCoordinatesSet(nearbyPanel.coords.lat, nearbyPanel.coords.lng);
-    dispatchPanel({ type: "clear_nearby" });
-  }, [nearbyPanel, onCoordinatesSet]);
+    dispatchPanel({ type: "CLEAR_NEARBY" });
+  }, [nearbyPanel, onCoordinatesSet, dispatchPanel]);
 
   const handleSelectUkeStation = useCallback(
     (station: UkeStation) => {
       onUkeStationSelect?.(station);
-      dispatchPanel({ type: "clear_uke" });
+      dispatchPanel({ type: "CLEAR_UKE" });
     },
-    [onUkeStationSelect],
+    [onUkeStationSelect, dispatchPanel],
   );
 
   return (
     <>
-      {location.latitude !== null && location.longitude !== null && (
+      {location.latitude !== null && location.longitude !== null ? (
         <MapMarker longitude={location.longitude} latitude={location.latitude} draggable onDragEnd={handleDragEnd}>
           <MarkerContent>
             <SelectedLocationMarker />
           </MarkerContent>
         </MapMarker>
-      )}
+      ) : null}
 
-      {nearbyPanel && nearbyPanel.locations.length > 0 && (
+      {nearbyPanel && nearbyPanel.locations.length > 0 ? (
         <NearbyLocationsPanel
           nearbyPanel={nearbyPanel}
           onLocationSelect={handleSelectNearby}
-          onClose={() => dispatchPanel({ type: "clear_nearby" })}
+          onClose={() => dispatchPanel({ type: "CLEAR_NEARBY" })}
           onCreateNew={handleCreateNewHere}
         />
-      )}
+      ) : null}
 
-      {ukeStationPanel && <UkeStationPanelOverlay ukeStationPanel={ukeStationPanel} onStationSelect={handleSelectUkeStation} />}
+      {ukeStationPanel ? <UkeStationPanelOverlay ukeStationPanel={ukeStationPanel} onStationSelect={handleSelectUkeStation} /> : null}
     </>
   );
 }

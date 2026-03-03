@@ -1,6 +1,20 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-03
+
+### 🩹 Fixes
+
+- Fixed `MapCursorInfo` HUD overlapping the search/filter bar on narrower screens
+
+### 🚀 Enhancements
+
+- Added optional coverage circle around the measurement reference point (enable in preferences)
+- Press `Space` while measuring to pin/save the current line & circle as a persistent snapshot on the map; multiple snapshots can be stacked
+- Press `Escape` to clear all saved snapshots
+- The HUD overlay (REF, Dist, Azm, TA) remains visible after pinning a measurement so you can still read the saved values
+- Added two new map preferences: **Measure from any location** (right-click anywhere to set reference) and **Coverage circle** (draws a circle whose radius matches the measurement line)
+
 # 2026-03-02
 
 ### 🩹 Fixes

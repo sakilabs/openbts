@@ -14,6 +14,8 @@ export interface UserPreferences {
   mapRadiolinesLimit: number;
   showMapHoverTooltip: boolean;
   mapPointStyle: MapPointStyle;
+  mapRightClickMeasure: boolean;
+  mapMeasureCircle: boolean;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -27,6 +29,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapRadiolinesLimit: 500,
   showMapHoverTooltip: false,
   mapPointStyle: "dots",
+  mapRightClickMeasure: false,
+  mapMeasureCircle: false,
 };
 
 let listeners: Array<() => void> = [];

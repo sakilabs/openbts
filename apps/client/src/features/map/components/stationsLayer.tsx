@@ -74,19 +74,27 @@ type ShowPopupFn = (
 
 type UpdatePopupStationsFn = (location: LocationInfo, stations: StationWithoutCells[], source: StationSource) => void;
 
+type PopupActions = {
+  show: ShowPopupFn;
+  updateStations: UpdatePopupStationsFn;
+  cleanup: () => void;
+  setLocation: (popup: { locationId: number; source: StationSource }) => void;
+};
+
+type StationActions = {
+  openDetails: (id: number, source: StationSource) => void;
+  openUkeDetails: (station: UkeStation) => void;
+};
+
 type StationsLayerProps = {
   filters: StationFilters;
   onFiltersChange: (filters: StationFilters) => void;
   locationsResponse: LocationsResponse | undefined;
   zoom: number;
   onActiveMarkerChange: (marker: { latitude: number; longitude: number } | null) => void;
-  onOpenStationDetails: (id: number, source: StationSource) => void;
-  onOpenUkeStationDetails: (station: UkeStation) => void;
+  stationActions: StationActions;
+  popupActions: PopupActions;
   onRadiolineIdFromUrl?: (id: number) => void;
-  showPopup: ShowPopupFn;
-  updatePopupStations: UpdatePopupStationsFn;
-  cleanupPopup: () => void;
-  onPopupLocationChange: (popup: { locationId: number; source: StationSource }) => void;
 };
 
 export function StationsLayer({
@@ -95,12 +103,9 @@ export function StationsLayer({
   locationsResponse,
   zoom,
   onActiveMarkerChange,
-  onOpenStationDetails,
-  onOpenUkeStationDetails,
+  stationActions,
+  popupActions,
   onRadiolineIdFromUrl,
-  showPopup,
-  cleanupPopup,
-  onPopupLocationChange,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
@@ -108,6 +113,9 @@ export function StationsLayer({
   const pendingStationId = useRef<number | string | undefined>(null);
   const pendingLocationId = useRef<number | null>(null);
   const pendingUkeLocationId = useRef<number | null>(null);
+
+  const { show: showPopup, cleanup: cleanupPopup, setLocation: onPopupLocationChange } = popupActions;
+  const { openDetails: onOpenStationDetails, openUkeDetails: onOpenUkeStationDetails } = stationActions;
 
   const handleUrlInitialize = useCallback(
     async ({
@@ -345,19 +353,42 @@ export function StationsLayer({
 
   useEffect(() => cleanupPopup, [cleanupPopup]);
 
+  const onActiveMarkerChangeRef = useRef(onActiveMarkerChange);
+  const mapRightClickMeasureRef = useRef(preferences.mapRightClickMeasure);
+  useEffect(() => {
+    onActiveMarkerChangeRef.current = onActiveMarkerChange;
+  }, [onActiveMarkerChange]);
+  useEffect(() => {
+    mapRightClickMeasureRef.current = preferences.mapRightClickMeasure;
+  }, [preferences.mapRightClickMeasure]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onActiveMarkerChangeRef.current(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   useEffect(() => {
     if (!map) return;
 
     const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER_ID, `${POINT_LAYER_ID}-symbol`] });
-      if (features.length === 0) onActiveMarkerChange(null);
+      if (features.length === 0) {
+        if (mapRightClickMeasureRef.current) {
+          onActiveMarkerChangeRef.current({ latitude: e.lngLat.lat, longitude: e.lngLat.lng });
+        } else {
+          onActiveMarkerChangeRef.current(null);
+        }
+      }
     };
 
     map.on("contextmenu", handleContextMenu);
     return () => {
       map.off("contextmenu", handleContextMenu);
     };
-  }, [map, onActiveMarkerChange]);
+  }, [map]);
 
   if (!isLoaded) return null;
 

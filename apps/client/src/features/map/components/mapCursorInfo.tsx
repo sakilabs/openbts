@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useMap } from "@/components/ui/map";
 import { calculateDistance, calculateBearing, calculateTA } from "../utils";
@@ -6,45 +6,136 @@ import { Separator } from "@/components/ui/separator";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { usePreferences } from "@/hooks/usePreferences";
 
+const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
+type SavedMeasurement = {
+  marker: { lat: number; lng: number };
+  cursor: { lat: number; lng: number };
+};
+
+function generateCirclePolygon(lat: number, lng: number, radiusMeters: number): GeoJSON.Feature {
+  const R = 6371000;
+  const numPoints = 256;
+  const δ = radiusMeters / R;
+  const φ1 = (lat * Math.PI) / 180;
+  const λ1 = (lng * Math.PI) / 180;
+  const coords: [number, number][] = [];
+  for (let i = 0; i <= numPoints; i++) {
+    const bearing = (i / numPoints) * 2 * Math.PI;
+    const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(bearing));
+    const λ2 = λ1 + Math.atan2(Math.sin(bearing) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
+    coords.push([(λ2 * 180) / Math.PI, (φ2 * 180) / Math.PI]);
+  }
+  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [coords] } };
+}
+
 type MapCursorInfoProps = {
   activeMarker?: { latitude: number; longitude: number } | null;
+  onActiveMarkerClear?: () => void;
   className?: string;
 };
 
-export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
+export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: MapCursorInfoProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
   const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(null);
+  const [lastSaved, setLastSaved] = useState<SavedMeasurement | null>(null);
+
+  const activeMarkerRef = useRef(activeMarker);
+  const circleEnabledRef = useRef(preferences.mapMeasureCircle);
+  const cursorRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lineSourceRef = useRef<maplibregl.GeoJSONSource | null>(null);
+  const circleSourceRef = useRef<maplibregl.GeoJSONSource | null>(null);
+  const savedLineSourceRef = useRef<maplibregl.GeoJSONSource | null>(null);
+  const savedCircleSourceRef = useRef<maplibregl.GeoJSONSource | null>(null);
+  const savedMeasurementsRef = useRef<SavedMeasurement[]>([]);
+  const sourcesPopulated = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const onKeyDownRef = useRef<(e: KeyboardEvent) => void>(null!);
+  useEffect(() => {
+    activeMarkerRef.current = activeMarker;
+  }, [activeMarker]);
+  useEffect(() => {
+    circleEnabledRef.current = preferences.mapMeasureCircle;
+  }, [preferences.mapMeasureCircle]);
+
+  const markerLat = activeMarker?.latitude ?? null;
+  const markerLng = activeMarker?.longitude ?? null;
+  const circleEnabled = preferences.mapMeasureCircle;
+
+  const updateSavedSources = useCallback(() => {
+    const measurements = savedMeasurementsRef.current;
+    savedLineSourceRef.current?.setData({
+      type: "FeatureCollection",
+      features: measurements.map(({ marker, cursor }) => ({
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [marker.lng, marker.lat],
+            [cursor.lng, cursor.lat],
+          ],
+        },
+      })),
+    });
+    savedCircleSourceRef.current?.setData(
+      circleEnabledRef.current
+        ? {
+            type: "FeatureCollection",
+            features: measurements.map(({ marker, cursor }) =>
+              generateCirclePolygon(marker.lat, marker.lng, calculateDistance(marker.lat, marker.lng, cursor.lat, cursor.lng)),
+            ),
+          }
+        : EMPTY_FC,
+    );
+  }, []);
+
+  onKeyDownRef.current = (e: KeyboardEvent) => {
+    if (e.key === " ") {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      e.preventDefault();
+      const marker = activeMarkerRef.current;
+      const cursor = cursorRef.current;
+      if (!marker || !cursor) return;
+      const measurement = { marker: { lat: marker.latitude, lng: marker.longitude }, cursor };
+      savedMeasurementsRef.current = [...savedMeasurementsRef.current, measurement];
+      updateSavedSources();
+      setLastSaved(measurement);
+      onActiveMarkerClear?.();
+    } else if (e.key === "Escape") {
+      savedMeasurementsRef.current = [];
+      updateSavedSources();
+      setLastSaved(null);
+    }
+  };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => onKeyDownRef.current(e);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
     if (!map.getSource("cursor-measure-line")) {
-      map.addSource("cursor-measure-line", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
+      map.addSource("cursor-measure-line", { type: "geojson", data: EMPTY_FC });
     }
+    lineSourceRef.current = map.getSource("cursor-measure-line") as maplibregl.GeoJSONSource;
 
     if (!map.getLayer("cursor-measure-line")) {
       map.addLayer({
         id: "cursor-measure-line",
         type: "line",
         source: "cursor-measure-line",
-        layout: {
-          "line-cap": "round",
-          "line-join": "round",
-        },
-        paint: {
-          "line-color": "#f59f0b",
-          "line-width": 2,
-          "line-dasharray": [2, 1],
-        },
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#f59f0b", "line-width": 2, "line-dasharray": [2, 1] },
       });
     }
 
     return () => {
+      lineSourceRef.current = null;
       if (map.getStyle() === undefined) return;
-
       if (map.getLayer("cursor-measure-line")) map.removeLayer("cursor-measure-line");
       if (map.getSource("cursor-measure-line")) map.removeSource("cursor-measure-line");
     };
@@ -53,48 +144,190 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
   useEffect(() => {
     if (!map || !isLoaded) return;
 
-    const onMouseMove = (e: maplibregl.MapMouseEvent) => {
-      setCursor(e.lngLat);
-    };
-    map.on("mousemove", onMouseMove);
+    if (!map.getSource("cursor-measure-circle")) {
+      map.addSource("cursor-measure-circle", { type: "geojson", data: EMPTY_FC });
+    }
+    circleSourceRef.current = map.getSource("cursor-measure-circle") as maplibregl.GeoJSONSource;
 
-    queueMicrotask(() => setCursor((prev) => prev || map.getCenter()));
+    if (!map.getLayer("cursor-measure-circle-fill")) {
+      map.addLayer({
+        id: "cursor-measure-circle-fill",
+        type: "fill",
+        source: "cursor-measure-circle",
+        paint: { "fill-color": "#f59f0b", "fill-opacity": 0.08 },
+      });
+    }
+
+    if (!map.getLayer("cursor-measure-circle-line")) {
+      map.addLayer({
+        id: "cursor-measure-circle-line",
+        type: "line",
+        source: "cursor-measure-circle",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#f59f0b", "line-width": 2 },
+      });
+    }
 
     return () => {
-      map.off("mousemove", onMouseMove);
+      circleSourceRef.current = null;
+      if (map.getStyle() === undefined) return;
+      if (map.getLayer("cursor-measure-circle-line")) map.removeLayer("cursor-measure-circle-line");
+      if (map.getLayer("cursor-measure-circle-fill")) map.removeLayer("cursor-measure-circle-fill");
+      if (map.getSource("cursor-measure-circle")) map.removeSource("cursor-measure-circle");
+    };
+  }, [map, isLoaded]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    if (!map.getSource("saved-measure-lines")) {
+      map.addSource("saved-measure-lines", { type: "geojson", data: EMPTY_FC });
+    }
+    savedLineSourceRef.current = map.getSource("saved-measure-lines") as maplibregl.GeoJSONSource;
+    if (!map.getLayer("saved-measure-lines")) {
+      map.addLayer({
+        id: "saved-measure-lines",
+        type: "line",
+        source: "saved-measure-lines",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#f59f0b", "line-width": 2 },
+      });
+    }
+    return () => {
+      savedLineSourceRef.current = null;
+      if (map.getStyle() === undefined) return;
+      if (map.getLayer("saved-measure-lines")) map.removeLayer("saved-measure-lines");
+      if (map.getSource("saved-measure-lines")) map.removeSource("saved-measure-lines");
+    };
+  }, [map, isLoaded]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    if (!map.getSource("saved-measure-circles")) {
+      map.addSource("saved-measure-circles", { type: "geojson", data: EMPTY_FC });
+    }
+    savedCircleSourceRef.current = map.getSource("saved-measure-circles") as maplibregl.GeoJSONSource;
+    if (!map.getLayer("saved-measure-circles-fill")) {
+      map.addLayer({
+        id: "saved-measure-circles-fill",
+        type: "fill",
+        source: "saved-measure-circles",
+        paint: { "fill-color": "#f59f0b", "fill-opacity": 0.12 },
+      });
+    }
+    if (!map.getLayer("saved-measure-circles-line")) {
+      map.addLayer({
+        id: "saved-measure-circles-line",
+        type: "line",
+        source: "saved-measure-circles",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#f59f0b", "line-width": 2 },
+      });
+    }
+    return () => {
+      savedCircleSourceRef.current = null;
+      if (map.getStyle() === undefined) return;
+      if (map.getLayer("saved-measure-circles-line")) map.removeLayer("saved-measure-circles-line");
+      if (map.getLayer("saved-measure-circles-fill")) map.removeLayer("saved-measure-circles-fill");
+      if (map.getSource("saved-measure-circles")) map.removeSource("saved-measure-circles");
     };
   }, [map, isLoaded]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
 
-    const source = map.getSource("cursor-measure-line") as maplibregl.GeoJSONSource;
-    if (!source) return;
+    const onMouseMove = (e: maplibregl.MapMouseEvent) => {
+      const { lat, lng } = e.lngLat;
+      cursorRef.current = { lat, lng };
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        setCursor({ lat, lng });
+      });
 
-    if (activeMarker && cursor) {
-      source.setData({
+      const marker = activeMarkerRef.current;
+      if (marker) {
+        sourcesPopulated.current = true;
+        lineSourceRef.current?.setData({
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [marker.longitude, marker.latitude],
+              [lng, lat],
+            ],
+          },
+        });
+        if (circleEnabledRef.current) {
+          const radius = calculateDistance(marker.latitude, marker.longitude, lat, lng);
+          circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
+        } else {
+          circleSourceRef.current?.setData(EMPTY_FC);
+        }
+      } else if (sourcesPopulated.current) {
+        sourcesPopulated.current = false;
+        lineSourceRef.current?.setData(EMPTY_FC);
+        circleSourceRef.current?.setData(EMPTY_FC);
+      }
+    };
+
+    map.on("mousemove", onMouseMove);
+    queueMicrotask(() => {
+      const center = map.getCenter();
+      cursorRef.current = cursorRef.current ?? { lat: center.lat, lng: center.lng };
+      setCursor((prev) => prev ?? { lat: center.lat, lng: center.lng });
+    });
+
+    return () => {
+      map.off("mousemove", onMouseMove);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [map, isLoaded]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    const cursor = cursorRef.current;
+
+    if (markerLat !== null && markerLng !== null && cursor) {
+      sourcesPopulated.current = true;
+      lineSourceRef.current?.setData({
         type: "Feature",
         properties: {},
         geometry: {
           type: "LineString",
           coordinates: [
-            [activeMarker.longitude, activeMarker.latitude],
+            [markerLng, markerLat],
             [cursor.lng, cursor.lat],
           ],
         },
       });
+      if (circleEnabled) {
+        const radius = calculateDistance(markerLat, markerLng, cursor.lat, cursor.lng);
+        circleSourceRef.current?.setData(generateCirclePolygon(markerLat, markerLng, radius));
+      } else {
+        circleSourceRef.current?.setData(EMPTY_FC);
+      }
     } else {
-      source.setData({ type: "FeatureCollection", features: [] });
+      sourcesPopulated.current = false;
+      lineSourceRef.current?.setData(EMPTY_FC);
+      circleSourceRef.current?.setData(EMPTY_FC);
     }
-  }, [map, isLoaded, activeMarker, cursor]);
+  }, [map, isLoaded, markerLat, markerLng, circleEnabled]);
+
+  const metricsMarker = activeMarker ? { lat: activeMarker.latitude, lng: activeMarker.longitude } : (lastSaved?.marker ?? null);
+  const metricsCursor = activeMarker ? cursor : (lastSaved?.cursor ?? null);
 
   let metrics = null;
-  if (activeMarker && cursor) {
-    const distMeters = calculateDistance(activeMarker.latitude, activeMarker.longitude, cursor.lat, cursor.lng);
-    const bearing = calculateBearing(activeMarker.latitude, activeMarker.longitude, cursor.lat, cursor.lng);
+  if (metricsMarker && metricsCursor) {
+    const distMeters = calculateDistance(metricsMarker.lat, metricsMarker.lng, metricsCursor.lat, metricsCursor.lng);
+    const bearing = calculateBearing(metricsMarker.lat, metricsMarker.lng, metricsCursor.lat, metricsCursor.lng);
     const ta = calculateTA(distMeters);
 
     metrics = {
+      ref: metricsMarker,
       dist: distMeters > 1000 ? `${(distMeters / 1000).toFixed(2)} km` : `${Math.round(distMeters)} m`,
       bearing: Math.round(bearing),
       ta,
@@ -118,7 +351,7 @@ export function MapCursorInfo({ activeMarker, className }: MapCursorInfoProps) {
             <div className="flex items-center gap-1.5">
               <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none">REF</span>
               <span className="text-xs font-mono font-bold tabular-nums text-foreground leading-none">
-                {activeMarker ? formatCoordinates(activeMarker.latitude, activeMarker.longitude, preferences.gpsFormat) : null}
+                {formatCoordinates(metrics.ref.lat, metrics.ref.lng, preferences.gpsFormat)}
               </span>
             </div>
 

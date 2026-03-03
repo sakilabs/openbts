@@ -122,14 +122,17 @@ function MapViewInner() {
   const [detailState, dispatchDetail] = useReducer(detailReducer, initialDetailState);
   const { selectedStation, selectedUkeStation, pendingRadiolineId } = detailState;
 
+  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []);
+  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []);
+
   const {
     showPopup,
     updatePopupStations,
     cleanup: cleanupPopup,
   } = useMapPopup({
     map,
-    onOpenStationDetails: useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []),
-    onOpenUkeStationDetails: useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []),
+    onOpenStationDetails: handleOpenStationDetails,
+    onOpenUkeStationDetails: handleOpenUkeStationDetails,
     onClose: handlePopupClose,
   });
 
@@ -239,11 +242,28 @@ function MapViewInner() {
     [map, showPopup],
   );
 
-  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []);
+  const handleActiveMarkerClear = useCallback(() => setActiveMarker(null), []);
   const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "CLOSE_STATION" }), []);
-  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []);
   const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
   const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
+
+  const popupActions = useMemo(
+    () => ({
+      show: showPopup,
+      updateStations: updatePopupStations,
+      cleanup: cleanupPopup,
+      setLocation: setActivePopupLocation,
+    }),
+    [showPopup, updatePopupStations, cleanupPopup],
+  );
+
+  const stationActions = useMemo(
+    () => ({
+      openDetails: handleOpenStationDetails,
+      openUkeDetails: handleOpenUkeStationDetails,
+    }),
+    [handleOpenStationDetails, handleOpenUkeStationDetails],
+  );
 
   return (
     <>
@@ -258,6 +278,7 @@ function MapViewInner() {
         filters={filters}
         zoom={zoom}
         activeMarker={activeMarker}
+        onActiveMarkerClear={handleActiveMarkerClear}
         onFiltersChange={setFilters}
         onLocationSelect={handleLocationSelect}
         onStationSelect={handleStationSelect}
@@ -268,13 +289,9 @@ function MapViewInner() {
         locationsResponse={locationsResponse}
         zoom={zoom}
         onActiveMarkerChange={setActiveMarker}
-        onOpenStationDetails={handleOpenStationDetails}
-        onOpenUkeStationDetails={handleOpenUkeStationDetails}
+        stationActions={stationActions}
+        popupActions={popupActions}
         onRadiolineIdFromUrl={handlePendingRadiolineId}
-        showPopup={showPopup}
-        updatePopupStations={updatePopupStations}
-        cleanupPopup={cleanupPopup}
-        onPopupLocationChange={setActivePopupLocation}
       />
       {filters.showRadiolines ? (
         <Suspense fallback={null}>

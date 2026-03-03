@@ -33,7 +33,15 @@
     "mapPointStyleDots": "Dots",
     "mapPointStyleDotsDesc": "Compact filled circles with operator colors",
     "mapPointStyleMarkers": "Markers",
-    "mapPointStyleMarkersDesc": "Location pin markers with operator colors"
+    "mapPointStyleMarkersDesc": "Location pin markers with operator colors",
+    "mapRightClickMeasure": "Measure from any location",
+    "mapRightClickMeasureHint": "Right-click anywhere on the map to set a measurement reference point",
+    "mapRightClickMeasureLabel": "Enable measurement from any location",
+    "mapRightClickMeasureDesc": "Right-clicking on empty map sets a reference point instead of clearing it",
+    "mapMeasureCircle": "Coverage circle",
+    "mapMeasureCircleHint": "Draw a circle with a specified radius around the reference point on the map",
+    "mapMeasureCircleLabel": "Enable coverage circle",
+    "mapMeasureCircleDesc": "The circle radius will match the length of your measurement line"
   },
   "page": {
     "title": "Account Settings",

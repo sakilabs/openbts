@@ -33,7 +33,15 @@
     "mapPointStyleDots": "Kropki",
     "mapPointStyleDotsDesc": "Wypełnione kółka w kolorach operatorów",
     "mapPointStyleMarkers": "Znaczniki",
-    "mapPointStyleMarkersDesc": "Pinezki w kolorach operatorów"
+    "mapPointStyleMarkersDesc": "Pinezki w kolorach operatorów",
+    "mapRightClickMeasure": "Pomiar z dowolnego miejsca",
+    "mapRightClickMeasureHint": "Kliknij prawym przyciskiem myszy w dowolnym miejscu mapy, aby ustawić punkt odniesienia pomiaru odległości",
+    "mapRightClickMeasureLabel": "Włącz pomiar z dowolnego miejsca",
+    "mapRightClickMeasureDesc": "Prawy klik na pustej mapie ustawia punkt odniesienia zamiast go kasować",
+    "mapMeasureCircle": "Okrąg zasięgu",
+    "mapMeasureCircleHint": "Rysuj okrąg o podanym promieniu wokół punktu odniesienia na mapie",
+    "mapMeasureCircleLabel": "Włącz okrąg zasięgu",
+    "mapMeasureCircleDesc": "Promień okręgu będzie odpowiadał długości linii pomiarowej"
   },
   "page": {
     "title": "Ustawienia konta",
