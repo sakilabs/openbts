@@ -16,6 +16,7 @@ export interface UserPreferences {
   mapPointStyle: MapPointStyle;
   mapRightClickMeasure: boolean;
   mapMeasureCircle: boolean;
+  showStationPhotoPanel: boolean;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -31,6 +32,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapPointStyle: "dots",
   mapRightClickMeasure: false,
   mapMeasureCircle: false,
+  showStationPhotoPanel: true,
 };
 
 let listeners: Array<() => void> = [];

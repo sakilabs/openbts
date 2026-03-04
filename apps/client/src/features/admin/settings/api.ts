@@ -12,6 +12,7 @@ export interface RuntimeSettings {
   disabledRoutes: string[];
   enableStationComments: boolean;
   submissionsEnabled: boolean;
+  photosEnabled: boolean;
   announcement: Announcement;
 }
 

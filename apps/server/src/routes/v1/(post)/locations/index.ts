@@ -39,7 +39,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       req,
     );
     return res.send({ data: location });
-  } catch {
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("FAILED_TO_CREATE");
   }
 }

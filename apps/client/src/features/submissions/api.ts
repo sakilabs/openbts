@@ -75,11 +75,12 @@ export async function fetchUkeLocationsInViewport(bounds: string): Promise<UkeLo
 }
 
 export type SubmissionResponse = {
-  id: number;
+  id: string;
   station_id: number | null;
   submitter_id: string;
   status: "pending" | "approved" | "rejected";
   type: "new" | "update" | "delete";
+  pending_photos: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -166,12 +167,14 @@ function buildSubmissionPayload(data: SubmissionFormData): Record<string, unknow
       details: pickCellDetails(cell.rat, cell.details),
     }));
   }
+  if (data.pending_photos) payload.pending_photos = data.pending_photos;
 
   return payload;
 }
 
 export async function createSubmission(data: SubmissionFormData): Promise<SubmissionResponse> {
-  return postApiData<SubmissionResponse>("submissions", buildSubmissionPayload(data));
+  const results = await postApiData<SubmissionResponse[]>("submissions", buildSubmissionPayload(data));
+  return results[0];
 }
 
 export async function updateSubmission(id: string, data: SubmissionFormData): Promise<SubmissionResponse> {
@@ -188,4 +191,41 @@ export async function deleteSubmission(id: string): Promise<void> {
 
 export async function fetchSubmissionForEdit(id: string) {
   return fetchApiData<SubmissionDetail>(`submissions/${id}`);
+}
+
+export type SubmissionPhoto = {
+  id: number;
+  attachment_uuid: string;
+  mime_type: string;
+  note: string | null;
+  createdAt: string;
+  author: { uuid: string; username: string; name: string } | null;
+};
+
+export async function fetchSubmissionPhotos(submissionId: string): Promise<SubmissionPhoto[]> {
+  return fetchApiData<SubmissionPhoto[]>(`submissions/${submissionId}/photos`);
+}
+
+export async function deleteSubmissionPhoto(submissionId: string, photoId: number): Promise<void> {
+  await fetchJson(`${API_BASE}/submissions/${submissionId}/photos/${photoId}`, { method: "DELETE" });
+}
+
+export async function updateSubmissionPhotoNote(submissionId: string, photoId: number, note: string): Promise<void> {
+  await fetchJson(`${API_BASE}/submissions/${submissionId}/photos/${photoId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ note }),
+  });
+}
+
+export async function uploadSubmissionPhotos(submissionId: string, files: File[], notes?: string[]): Promise<void> {
+  const formData = new FormData();
+  for (let i = 0; i < files.length; i++) {
+    formData.append("notes", notes?.[i] ?? "");
+    formData.append("files", files[i]);
+  }
+  await fetchJson(`${API_BASE}/submissions/${submissionId}/photos`, {
+    method: "POST",
+    body: formData,
+  });
 }

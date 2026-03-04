@@ -7,6 +7,7 @@ import {
   Building02Icon,
   Calendar03Icon,
   Globe02Icon,
+  Image01Icon,
   Link01Icon,
   Location01Icon,
   MapsLocation01Icon,
@@ -24,6 +25,7 @@ import { RAT_ORDER } from "@/features/map/constants";
 import { ExtraIdentificatorsDisplay } from "./extraIdentificators";
 import { PermitsList } from "./permitsList";
 import { CommentsList } from "./commentsList";
+import { PhotoGallery } from "./photoGallery";
 import { CopyButton } from "./copyButton";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { NavigationLinks } from "./navLinks";
@@ -42,11 +44,21 @@ type StationDetailsBodyProps = {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   onClose: () => void;
+  isAdmin?: boolean;
 };
 
-export function StationDetailsBody({ stationId, source, isLoading, error, station, activeTab, onTabChange, onClose }: StationDetailsBodyProps) {
-  const { t } = useTranslation(["stationDetails", "common"]);
-  const { i18n } = useTranslation();
+export function StationDetailsBody({
+  stationId,
+  source,
+  isLoading,
+  error,
+  station,
+  activeTab,
+  onTabChange,
+  onClose,
+  isAdmin = false,
+}: StationDetailsBodyProps) {
+  const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const { data: settings } = useSettings();
   const { preferences } = usePreferences();
   const location = useLocation();
@@ -62,9 +74,10 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
         ? TAB_OPTIONS.filter((tab) => tab.id === "permits")
         : TAB_OPTIONS.filter((tab) => {
             if (tab.id === "comments" && !settings?.enableStationComments) return false;
+            if (tab.id === "photos" && !settings?.photosEnabled) return false;
             return true;
           }),
-    [source, settings?.enableStationComments],
+    [source, settings?.enableStationComments, settings?.photosEnabled],
   );
 
   return (
@@ -163,24 +176,23 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                       <div className="flex items-center gap-2">
                         <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
                         <span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
-                        <span className="text-sm font-medium">{station?.location.region?.name || "-"}</span>
+                        <span className="text-sm font-medium">{station.location.region?.name || "-"}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
                         <span className="text-sm text-muted-foreground">{t("common:labels.operator")}:</span>
-                        <span className="text-sm font-medium">{station?.operator.name}</span>
+                        <span className="text-sm font-medium">{station.operator.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
                         <span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
-                        <span className="text-sm font-mono font-medium">{station?.station_id}</span>
+                        <span className="text-sm font-mono font-medium">{station.station_id}</span>
                         <div className="flex items-center gap-1">
-                          <CopyButton text={station?.station_id || ""} />
-                          {station?.station_id && (
+                          <CopyButton text={station.station_id || ""} />
+                          {station.station_id && (
                             <Tooltip>
                               <TooltipTrigger
                                 render={
-                                  // biome-ignore lint/a11y/useAnchorContent: Accessibility is not needed here
                                   <a
                                     href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
                                     title={t("specs.si2pemLink")}
@@ -197,7 +209,7 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                           )}
                         </div>
                       </div>
-                      {station?.extra_identificators && <ExtraIdentificatorsDisplay data={station.extra_identificators} />}
+                      {station.extra_identificators && <ExtraIdentificatorsDisplay data={station.extra_identificators} />}
                       {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                         <div className="sm:col-span-2 pt-3 border-t border-border/50">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -260,11 +272,11 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-2">
                         <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-                        {t("common:labels.created")}: {station ? dateFormatter.format(new Date(station.createdAt)) : "-"}
+                        {t("common:labels.created")}: {dateFormatter.format(new Date(station.createdAt))}
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-                        {t("common:labels.updated")}: {station ? dateFormatter.format(new Date(station.updatedAt)) : "-"}
+                        {t("common:labels.updated")}: {dateFormatter.format(new Date(station.updatedAt))}
                       </span>
                     </div>
                   </section>
@@ -289,6 +301,17 @@ export function StationDetailsBody({ stationId, source, isLoading, error, statio
                       <HugeiconsIcon icon={RefreshIcon} className="size-4" /> {t("comments.title")}
                     </h3>
                     <CommentsList stationId={stationId} />
+                  </section>
+                </div>
+              )}
+
+              {activeTab === "photos" && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <section>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <HugeiconsIcon icon={Image01Icon} className="size-4" /> {t("photos.title")}
+                    </h3>
+                    <PhotoGallery stationId={stationId} isAdmin={isAdmin} />
                   </section>
                 </div>
               )}

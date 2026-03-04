@@ -10,7 +10,19 @@ import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
 import { logger } from "../../../../../utils/logger.js";
-import { submissions, stations, cells, locations, gsmCells, umtsCells, lteCells, nrCells, extraIdentificators } from "@openbts/drizzle";
+import {
+  submissions,
+  stations,
+  cells,
+  locations,
+  gsmCells,
+  umtsCells,
+  lteCells,
+  nrCells,
+  extraIdentificators,
+  submissionPhotos,
+  stationPhotos,
+} from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -419,6 +431,28 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         }
       }
       /* eslint-enable no-await-in-loop */
+
+      if (stationId && submission.type !== "delete") {
+        const photos = await tx.query.submissionPhotos.findMany({ where: { submission_id: id } });
+        if (photos.length > 0) {
+          const existingMain = await tx.query.stationPhotos.findFirst({
+            where: { station_id: stationId, is_main: true },
+          });
+          await tx
+            .insert(stationPhotos)
+            .values(
+              photos.map((p, i) => ({
+                station_id: stationId!,
+                attachment_id: p.attachment_id,
+                submission_id: id,
+                uploaded_by: submission.submitter_id,
+                is_main: !existingMain && i === 0,
+                note: p.note,
+              })),
+            )
+            .onConflictDoNothing();
+        }
+      }
 
       const now = new Date();
       const [updated] = await tx

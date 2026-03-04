@@ -11,6 +11,7 @@ import {
   AlertCircleIcon,
   DatabaseIcon,
   Alert02Icon,
+  Image01Icon,
 } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -155,6 +156,7 @@ function AdminSettingsPage() {
             disabledRoutes: [],
             enableStationComments: false,
             submissionsEnabled: true,
+            photosEnabled: true,
             announcement: { message: "", enabled: false, type: "info" as const },
           },
     [settings, patch],
@@ -166,6 +168,7 @@ function AdminSettingsPage() {
       formData.enforceAuthForAllRoutes !== settings.enforceAuthForAllRoutes ||
       formData.enableStationComments !== settings.enableStationComments ||
       formData.submissionsEnabled !== settings.submissionsEnabled ||
+      formData.photosEnabled !== settings.photosEnabled ||
       JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes) ||
       JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes) ||
       JSON.stringify(formData.announcement) !== JSON.stringify(settings.announcement)
@@ -203,6 +206,9 @@ function AdminSettingsPage() {
       }
       if (formData.submissionsEnabled !== settings.submissionsEnabled) {
         patch.submissionsEnabled = formData.submissionsEnabled;
+      }
+      if (formData.photosEnabled !== settings.photosEnabled) {
+        patch.photosEnabled = formData.photosEnabled;
       }
       if (JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes)) {
         patch.allowedUnauthenticatedRoutes = formData.allowedUnauthenticatedRoutes;
@@ -354,6 +360,22 @@ function AdminSettingsPage() {
                   checked={formData.submissionsEnabled}
                   onChange={(checked) => setPatch((prev) => ({ ...prev, submissionsEnabled: checked }))}
                 />
+              </div>
+            </SettingsCard>
+
+            <SettingsCard
+              icon={<HugeiconsIcon icon={Image01Icon} className="size-4" />}
+              title={t("settings.photos")}
+              description={t("settings.photosDesc")}
+            >
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <p className="text-sm font-medium">{t("settings.enablePhotos")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formData.photosEnabled ? t("settings.photosEnabled") : t("settings.photosDisabled")}
+                  </p>
+                </div>
+                <Toggle checked={formData.photosEnabled} onChange={(checked) => setPatch((prev) => ({ ...prev, photosEnabled: checked }))} />
               </div>
             </SettingsCard>
           </div>

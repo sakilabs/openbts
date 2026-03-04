@@ -35,7 +35,6 @@ function createSpatialIndex() {
   const woj = JSON.parse(fs.readFileSync(geojsonPath, "utf8")) as FeatureCollection;
   const wojExploded = explodeMultiPolygons(woj);
 
-  // biome-ignore lint/suspicious/noExplicitAny: broken types
   const tree = (geojsonRbush as any)();
   tree.load(wojExploded);
 

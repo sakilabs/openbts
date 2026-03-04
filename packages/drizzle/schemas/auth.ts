@@ -35,6 +35,12 @@ export const AuditAction = pgEnum("audit_action", [
   "settings.update",
   "station_comments.create",
   "station_comments.delete",
+  "station_photos.create",
+  "station_photos.update",
+  "station_photos.delete",
+  "submission_photos.create",
+  "submission_photos.update",
+  "submission_photos.delete",
   "user_lists.create",
   "user_lists.update",
   "user_lists.delete",
@@ -354,4 +360,26 @@ export const pushSubscriptions = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("push_subscriptions_user_id_idx").on(t.userId)],
+);
+
+export const stationPhotos = pgTable(
+  "station_photos",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    station_id: integer("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    attachment_id: integer("attachment_id")
+      .notNull()
+      .references(() => attachments.id, { onDelete: "cascade" }),
+    submission_id: uuid("submission_id"),
+    uploaded_by: uuid("uploaded_by").references(() => users.id, { onDelete: "set null" }),
+    is_main: boolean("is_main").notNull().default(false),
+    note: varchar("note", { length: 100 }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("station_photos_station_id_idx").on(t.station_id),
+    unique("station_photos_station_attachment_unique").on(t.station_id, t.attachment_id),
+  ],
 );

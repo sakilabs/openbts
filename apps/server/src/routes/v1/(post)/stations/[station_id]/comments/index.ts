@@ -72,7 +72,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           if (!mimetype.startsWith("image/") && !mimetype.startsWith("video/") && mimetype !== "application/pdf")
             throw new ErrorResponse("BAD_REQUEST");
           const fileExtension = path.extname(filePart.filename ?? "");
-          const uniqueFilename = `${Date.now()}-${Math.random().toString(36).slice(2)}${fileExtension}`;
+          const fileUuid = crypto.randomUUID();
+          const uniqueFilename = `${fileUuid}${fileExtension}`;
           const filePath = path.join(UPLOAD_DIR, uniqueFilename);
           savedPaths.push(filePath);
           await pipeline(filePart.file, createWriteStream(filePath));
@@ -80,7 +81,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           const fileSize = stats.size;
           const [newAttachment] = await db
             .insert(attachments)
-            .values({ name: filePart.filename ?? uniqueFilename, author_id: userId, mime_type: mimetype, size: fileSize })
+            .values({ uuid: fileUuid, name: filePart.filename ?? uniqueFilename, author_id: userId, mime_type: mimetype, size: fileSize })
             .returning();
           if (!newAttachment) throw new ErrorResponse("FAILED_TO_CREATE");
           (validatedAttachments as { uuid: string; type: string }[]).push({ uuid: newAttachment.uuid, type: newAttachment.mime_type });
@@ -92,7 +93,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           if (field.fieldname === "content") content = field.value != null ? String(field.value as string | number | boolean) : "";
         }
       }
-    } catch {
+    } catch (error) {
       await Promise.all(
         savedPaths.map(async (p) => {
           try {
@@ -101,6 +102,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           } catch {}
         }),
       );
+      if (error instanceof ErrorResponse) throw error;
       throw new ErrorResponse("INTERNAL_SERVER_ERROR");
     }
 

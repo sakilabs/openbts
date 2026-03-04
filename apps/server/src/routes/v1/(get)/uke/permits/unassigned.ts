@@ -115,18 +115,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   };
 
   try {
-    const baseConditions = buildBaseConditions();
-    const whereClause = and(...baseConditions)!;
-
     const [countResult, stationIdRows] = await Promise.all([
       db
         .select({ count: countDistinct(ukePermits.station_id) })
         .from(ukePermits)
-        .where(whereClause),
+        .where(and(...buildBaseConditions())),
       db
         .select({ station_id: ukePermits.station_id })
         .from(ukePermits)
-        .where(whereClause)
+        .where(and(...buildBaseConditions()))
         .groupBy(ukePermits.station_id)
         .orderBy(sql`MAX(${ukePermits.id}) DESC`)
         .limit(limit)

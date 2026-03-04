@@ -29,7 +29,8 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
   try {
     await db.delete(operators).where(eq(operators.id, id));
     await createAuditLog({ action: "operators.delete", table_name: "operators", record_id: id, old_values: operator, new_values: null }, req);
-  } catch {
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("FAILED_TO_DELETE");
   }
 

@@ -8,6 +8,7 @@ import {
   proposedNRCells,
   proposedStations,
   proposedLocations,
+  notifications,
 } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
@@ -76,11 +77,13 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
       await Promise.all([
         tx.delete(proposedStations).where(eq(proposedStations.submission_id, id)),
         tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, id)),
+        tx.delete(notifications).where(eq(notifications.submissionId, id)),
       ]);
 
       await tx.delete(submissions).where(eq(submissions.id, id));
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("FAILED_TO_DELETE");
   }
 

@@ -83,6 +83,7 @@ export type SubmissionFormData = {
   station?: ProposedStationForm;
   location?: ProposedLocationForm;
   cells: CellPayload[];
+  pending_photos?: number;
 };
 
 export type SubmissionMode = "existing" | "new";

@@ -1,7 +1,9 @@
 {
   "tabs": {
     "specs": "Specification",
-    "permits": "UKE Permits"
+    "permits": "UKE Permits",
+    "comments": "Comments",
+    "photos": "Photos"
   },
   "specs": {
     "basicInfo": "Basic Information",
@@ -56,5 +58,13 @@
     "placeholder": "Add a comment...",
     "addImages": "Add images",
     "postComment": "Post comment"
+  },
+  "photos": {
+    "title": "Photos",
+    "noPhotos": "No photos yet",
+    "noPhotosHint": "Photos are added when submissions are approved",
+    "setAsMain": "Set as main",
+    "uploadedBy": "Uploaded by {{username}}",
+    "unknownUser": "Unknown"
   }
 }

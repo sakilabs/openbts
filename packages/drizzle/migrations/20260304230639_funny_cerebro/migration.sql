@@ -11,7 +11,7 @@ CREATE TYPE "station_status" AS ENUM('published', 'inactive', 'pending');--> sta
 CREATE TYPE "uke_permission_type" AS ENUM('zmP', 'P');--> statement-breakpoint
 CREATE TYPE "rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> statement-breakpoint
 CREATE TYPE "api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
-CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'submissions.cleanup', 'settings.update', 'station_comments.create', 'station_comments.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
+CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'submissions.cleanup', 'settings.update', 'station_comments.create', 'station_comments.delete', 'station_photos.create', 'station_photos.update', 'station_photos.delete', 'submission_photos.create', 'submission_photos.update', 'submission_photos.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
 CREATE TYPE "audit_source" AS ENUM('api', 'import', 'system');--> statement-breakpoint
 CREATE TYPE "notification_type" AS ENUM('submission_approved', 'submission_rejected', 'new_submission');--> statement-breakpoint
 CREATE TYPE "role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
@@ -407,6 +407,18 @@ CREATE TABLE "station_comments" (
 	CONSTRAINT "station_comments_content_len" CHECK (char_length("content") BETWEEN 1 AND 10000)
 );
 --> statement-breakpoint
+CREATE TABLE "station_photos" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "station_photos_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"station_id" integer NOT NULL,
+	"attachment_id" integer NOT NULL,
+	"submission_id" uuid,
+	"uploaded_by" uuid,
+	"is_main" boolean DEFAULT false NOT NULL,
+	"note" varchar(100),
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "station_photos_station_attachment_unique" UNIQUE("station_id","attachment_id")
+);
+--> statement-breakpoint
 CREATE TABLE "auth"."two_factors" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
 	"secret" text NOT NULL,
@@ -535,6 +547,15 @@ CREATE TABLE "submissions"."proposed_umts_cells" (
 	"cid" integer NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "submissions"."submission_photos" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."submission_photos_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"submission_id" uuid NOT NULL,
+	"attachment_id" integer NOT NULL,
+	"note" varchar(100),
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "submission_photos_unique" UNIQUE("submission_id","attachment_id")
+);
+--> statement-breakpoint
 CREATE TABLE "submissions"."submissions" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
 	"station_id" integer,
@@ -546,7 +567,8 @@ CREATE TABLE "submissions"."submissions" (
 	"submitter_note" text,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"reviewed_at" timestamp with time zone
+	"reviewed_at" timestamp with time zone,
+	"pending_photos" integer
 );
 --> statement-breakpoint
 CREATE INDEX "bands_value_idx" ON "bands" ("value");--> statement-breakpoint
@@ -638,6 +660,7 @@ CREATE INDEX "push_subscriptions_user_id_idx" ON "push_subscriptions" ("user_id"
 CREATE INDEX "station_comments_station_id_idx" ON "station_comments" ("station_id");--> statement-breakpoint
 CREATE INDEX "station_comments_user_id_idx" ON "station_comments" ("user_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_created_idx" ON "station_comments" ("station_id","createdAt");--> statement-breakpoint
+CREATE INDEX "station_photos_station_id_idx" ON "station_photos" ("station_id");--> statement-breakpoint
 CREATE INDEX "twoFactors_secret_idx" ON "auth"."two_factors" ("secret");--> statement-breakpoint
 CREATE INDEX "twoFactors_userId_idx" ON "auth"."two_factors" ("user_id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" ("created_by");--> statement-breakpoint
@@ -647,6 +670,7 @@ CREATE INDEX "proposed_cells_submission_id_idx" ON "submissions"."proposed_cells
 CREATE INDEX "proposed_locations_submission_id_idx" ON "submissions"."proposed_locations" ("submission_id");--> statement-breakpoint
 CREATE INDEX "proposed_stations_submission_id_idx" ON "submissions"."proposed_stations" ("submission_id");--> statement-breakpoint
 CREATE INDEX "proposed_stations_target_station_id_idx" ON "submissions"."proposed_stations" ("target_station_id");--> statement-breakpoint
+CREATE INDEX "submission_photos_submission_id_idx" ON "submissions"."submission_photos" ("submission_id");--> statement-breakpoint
 CREATE INDEX "submission_station_id_idx" ON "submissions"."submissions" ("station_id");--> statement-breakpoint
 CREATE INDEX "submission_submitter_id_idx" ON "submissions"."submissions" ("submitter_id");--> statement-breakpoint
 CREATE INDEX "submission_reviewer_id_idx" ON "submissions"."submissions" ("reviewer_id");--> statement-breakpoint
@@ -687,6 +711,9 @@ ALTER TABLE "auth"."passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fkey" FO
 ALTER TABLE "push_subscriptions" ADD CONSTRAINT "push_subscriptions_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "station_photos" ADD CONSTRAINT "station_photos_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "station_photos" ADD CONSTRAINT "station_photos_attachment_id_attachments_id_fkey" FOREIGN KEY ("attachment_id") REFERENCES "attachments"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "station_photos" ADD CONSTRAINT "station_photos_uploaded_by_users_id_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "auth"."two_factors" ADD CONSTRAINT "two_factors_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "user_lists" ADD CONSTRAINT "user_lists_created_by_users_id_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_submission_id_submissions_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
@@ -702,6 +729,7 @@ ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_
 ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_target_station_id_stations_id_fkey" FOREIGN KEY ("target_station_id") REFERENCES "stations"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_operator_id_operators_id_fkey" FOREIGN KEY ("operator_id") REFERENCES "operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_umts_cells" ADD CONSTRAINT "proposed_umts_cells_proposed_cell_id_proposed_cells_id_fkey" FOREIGN KEY ("proposed_cell_id") REFERENCES "submissions"."proposed_cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "submissions"."submission_photos" ADD CONSTRAINT "submission_photos_submission_id_submissions_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_submitter_id_users_id_fkey" FOREIGN KEY ("submitter_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_reviewer_id_users_id_fkey" FOREIGN KEY ("reviewer_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

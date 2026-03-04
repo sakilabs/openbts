@@ -4,7 +4,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { createSubmission, updateSubmission, fetchSubmissionForEdit, fetchStationForSubmission, type SearchStation } from "../api";
+import {
+  createSubmission,
+  updateSubmission,
+  deleteSubmission,
+  fetchSubmissionForEdit,
+  fetchStationForSubmission,
+  uploadSubmissionPhotos,
+  type SearchStation,
+} from "../api";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { showApiError } from "@/lib/api";
 import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
@@ -66,6 +74,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const queryClient = useQueryClient();
   const [showErrors, setShowErrors] = useState(false);
   const [originalState, setOriginalState] = useState<OriginalState>({});
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoNotes, setPhotoNotes] = useState<string[]>([]);
 
   const isEditMode = !!editSubmissionId;
 
@@ -105,6 +115,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       networksName: string | null,
       mnoName: string | null,
     ): boolean => {
+      if (photos.length > 0) return true;
       if (hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState, isEditMode)) return true;
       if (mode === "existing") {
         if (networksId !== (originalState.networksId ?? null)) return true;
@@ -113,7 +124,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       }
       return false;
     },
-    [originalState, isEditMode],
+    [originalState, isEditMode, photos.length],
   );
 
   const form = useForm({
@@ -161,6 +172,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         station: isNewStation ? value.newStation : existingStation,
         location: hasLocation && !isDeleteMode ? value.location : undefined,
         cells: isDeleteMode ? [] : cells,
+        pending_photos: photos.length > 0 ? photos.length : undefined,
       });
     },
   });
@@ -172,7 +184,17 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
           return updateSubmission(editSubmissionId, data);
         }
       : createSubmission,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (photos.length > 0) {
+        const submissionId = isEditMode && editSubmissionId ? editSubmissionId : data.id;
+        const isPhotosOnly = !!data.pending_photos;
+        void uploadSubmissionPhotos(submissionId, photos, photoNotes).catch(() => {
+          toast.error(t("toast.photoUploadFailed"));
+          if (isPhotosOnly) void deleteSubmission(submissionId).catch(() => undefined);
+        });
+        setPhotos([]);
+        setPhotoNotes([]);
+      }
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
       if (isEditMode) {
         void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
@@ -514,6 +536,10 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     cellErrors,
     formErrors,
     computeHasChanges,
+    photos,
+    setPhotos,
+    photoNotes,
+    setPhotoNotes,
     handlers: {
       handleModeChange,
       handleActionChange,

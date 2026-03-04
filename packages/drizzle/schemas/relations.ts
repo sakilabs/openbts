@@ -34,6 +34,7 @@ import {
   passkeys,
   pushSubscriptions,
   stationComments,
+  stationPhotos,
   twoFactors,
   userLists,
   users,
@@ -47,6 +48,7 @@ import {
   proposedNRCells,
   proposedStations,
   proposedUMTSCells,
+  submissionPhotos,
 } from "./submissions.ts";
 
 export const relations = defineRelations(
@@ -79,6 +81,7 @@ export const relations = defineRelations(
     passkeys,
     pushSubscriptions,
     stationComments,
+    stationPhotos,
     twoFactors,
     userLists,
     users,
@@ -90,6 +93,7 @@ export const relations = defineRelations(
     proposedNRCells,
     proposedStations,
     proposedUMTSCells,
+    submissionPhotos,
     ukeImportMetadata,
     deletedEntries,
     statsSnapshots,
@@ -387,6 +391,25 @@ export const relations = defineRelations(
         to: helpers.proposedLocations.submission_id,
       }),
       proposedCells: helpers.many.proposedCells(),
+      photos: helpers.many.submissionPhotos(),
+    },
+    submissionPhotos: {
+      submission: helpers.one.submissions({
+        from: helpers.submissionPhotos.submission_id,
+        to: helpers.submissions.id,
+        optional: false,
+      }),
+    },
+    stationPhotos: {
+      station: helpers.one.stations({
+        from: helpers.stationPhotos.station_id,
+        to: helpers.stations.id,
+        optional: false,
+      }),
+      uploadedBy: helpers.one.users({
+        from: helpers.stationPhotos.uploaded_by,
+        to: helpers.users.id,
+      }),
     },
     proposedStations: {
       submission: helpers.one.submissions({

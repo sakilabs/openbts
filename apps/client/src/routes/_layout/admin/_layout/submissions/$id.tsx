@@ -22,6 +22,7 @@ import { SubmissionStationForm } from "@/features/admin/submissions/components/s
 import { AdminReviewCard } from "@/features/admin/submissions/components/adminReviewCard";
 import { SubmissionDiffDetailCells } from "@/features/admin/submissions/components/submissionDiffRowCells";
 import { useSaveSubmissionMutation, useApproveSubmissionMutation, useRejectSubmissionMutation } from "@/features/admin/submissions/mutations";
+import { SubmissionPhotosSection } from "@/features/admin/submissions/components/submissionPhotosSection";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -445,6 +446,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               isFormDisabled={isFormDisabled}
               isDeleteSubmission={isDeleteSubmission}
             />
+            <SubmissionPhotosSection submissionId={submission.id} />
           </div>
 
           <div className="w-full lg:flex-3 min-w-0 space-y-2">

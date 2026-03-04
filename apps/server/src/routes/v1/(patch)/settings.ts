@@ -18,6 +18,7 @@ const schemaRoute = {
       disabledRoutes: z.array(z.string().min(1)).optional(),
       enableStationComments: z.boolean().optional(),
       submissionsEnabled: z.boolean().optional(),
+      photosEnabled: z.boolean().optional(),
       announcement: z
         .object({
           message: z.string(),

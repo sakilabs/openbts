@@ -7,30 +7,262 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { usePreferences, type GpsFormat, type NavigationApp, type NavLinksDisplay, type MapPointStyle } from "@/hooks/usePreferences";
-import { toggleValue } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { usePreferences, type UserPreferences } from "@/hooks/usePreferences";
+import { toggleValue, cn } from "@/lib/utils";
 
-const GPS_FORMAT_OPTIONS: { value: GpsFormat; labelKey: string; example: string }[] = [
-  { value: "decimal", labelKey: "preferences.gpsDecimal", example: "52.23157, 21.00672" },
-  { value: "dms", labelKey: "preferences.gpsDms", example: "52°13'53.7\"N 21°00'24.2\"E" },
+type RadioOption = { value: string; labelKey: string; descKey?: string; example?: string };
+type CheckboxGroupOption = { value: string; labelKey: string; icon?: typeof GoogleMapsIcon };
+
+type RadioPref = {
+  type: "radio";
+  key: keyof UserPreferences;
+  labelKey: string;
+  hintKey: string;
+  options: RadioOption[];
+};
+
+type CheckboxGroupPref = {
+  type: "checkbox-group";
+  key: keyof UserPreferences;
+  labelKey: string;
+  hintKey: string;
+  options: CheckboxGroupOption[];
+};
+
+type CheckboxPref = {
+  type: "checkbox";
+  key: keyof UserPreferences;
+  labelKey: string;
+  hintKey: string;
+  itemLabelKey: string;
+  itemDescKey: string;
+};
+
+type SliderPref = {
+  type: "slider";
+  key: keyof UserPreferences;
+  labelKey: string;
+  hintKey: string;
+  min: number;
+  max: number;
+  step: number;
+  format?: (v: number) => string;
+};
+
+type PreferenceItem = RadioPref | CheckboxGroupPref | CheckboxPref | SliderPref;
+
+type PreferenceColumn = PreferenceItem[];
+
+const COLUMNS: [PreferenceColumn, PreferenceColumn] = [
+  [
+    {
+      type: "radio",
+      key: "gpsFormat",
+      labelKey: "preferences.gpsFormat",
+      hintKey: "preferences.gpsFormatHint",
+      options: [
+        { value: "decimal", labelKey: "preferences.gpsDecimal", example: "52.23157, 21.00672" },
+        { value: "dms", labelKey: "preferences.gpsDms", example: "52°13'53.7\"N 21°00'24.2\"E" },
+      ],
+    },
+    {
+      type: "checkbox-group",
+      key: "navigationApps",
+      labelKey: "preferences.navigationApps",
+      hintKey: "preferences.navigationAppsHint",
+      options: [
+        { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
+        { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
+        { value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
+      ],
+    },
+    {
+      type: "radio",
+      key: "navLinksDisplay",
+      labelKey: "preferences.navDisplayMode",
+      hintKey: "preferences.navDisplayModeHint",
+      options: [
+        { value: "inline", labelKey: "preferences.navDisplayInline", descKey: "preferences.navDisplayInlineDesc" },
+        { value: "buttons", labelKey: "preferences.navDisplayButtons", descKey: "preferences.navDisplayButtonsDesc" },
+      ],
+    },
+    {
+      type: "checkbox",
+      key: "showStationPhotoPanel",
+      labelKey: "preferences.stationPhotoPanel",
+      hintKey: "preferences.stationPhotoPanelHint",
+      itemLabelKey: "preferences.stationPhotoPanelLabel",
+      itemDescKey: "preferences.stationPhotoPanelDesc",
+    },
+  ],
+  [
+    {
+      type: "slider",
+      key: "radiolinesMinZoom",
+      labelKey: "preferences.radiolinesMinZoom",
+      hintKey: "preferences.radiolinesMinZoomHint",
+      min: 7,
+      max: 11,
+      step: 0.1,
+      format: (v) => v.toFixed(1),
+    },
+    {
+      type: "slider",
+      key: "mapStationsLimit",
+      labelKey: "preferences.mapStationsLimit",
+      hintKey: "preferences.mapStationsLimitHint",
+      min: 10,
+      max: 1000,
+      step: 10,
+    },
+    {
+      type: "slider",
+      key: "mapRadiolinesLimit",
+      labelKey: "preferences.mapRadiolinesLimit",
+      hintKey: "preferences.mapRadiolinesLimitHint",
+      min: 10,
+      max: 1000,
+      step: 10,
+    },
+    {
+      type: "checkbox",
+      key: "showMapHoverTooltip",
+      labelKey: "preferences.mapHoverTooltip",
+      hintKey: "preferences.mapHoverTooltipHint",
+      itemLabelKey: "preferences.mapHoverTooltipLabel",
+      itemDescKey: "preferences.mapHoverTooltipDesc",
+    },
+    {
+      type: "radio",
+      key: "mapPointStyle",
+      labelKey: "preferences.mapPointStyle",
+      hintKey: "preferences.mapPointStyleHint",
+      options: [
+        { value: "dots", labelKey: "preferences.mapPointStyleDots", descKey: "preferences.mapPointStyleDotsDesc" },
+        { value: "markers", labelKey: "preferences.mapPointStyleMarkers", descKey: "preferences.mapPointStyleMarkersDesc" },
+      ],
+    },
+    {
+      type: "checkbox",
+      key: "mapRightClickMeasure",
+      labelKey: "preferences.mapRightClickMeasure",
+      hintKey: "preferences.mapRightClickMeasureHint",
+      itemLabelKey: "preferences.mapRightClickMeasureLabel",
+      itemDescKey: "preferences.mapRightClickMeasureDesc",
+    },
+    {
+      type: "checkbox",
+      key: "mapMeasureCircle",
+      labelKey: "preferences.mapMeasureCircle",
+      hintKey: "preferences.mapMeasureCircleHint",
+      itemLabelKey: "preferences.mapMeasureCircleLabel",
+      itemDescKey: "preferences.mapMeasureCircleDesc",
+    },
+  ],
 ];
 
-const NAVIGATION_APP_OPTIONS: { value: NavigationApp; labelKey: string; icon: typeof GoogleMapsIcon }[] = [
-  { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
-  { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
-  { value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
-];
+function PreferenceField({
+  item,
+  preferences,
+  updatePreferences,
+  t,
+}: {
+  item: PreferenceItem;
+  preferences: UserPreferences;
+  updatePreferences: (update: Partial<UserPreferences>) => void;
+  t: (key: string) => string;
+}) {
+  switch (item.type) {
+    case "radio":
+      return (
+        <RadioGroup
+          value={preferences[item.key] as string}
+          onValueChange={(value) => updatePreferences({ [item.key]: value })}
+          className="flex flex-col gap-1"
+        >
+          {item.options.map((option) => (
+            <label
+              key={option.value}
+              htmlFor={`${item.key}-${option.value}`}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                preferences[item.key] === option.value ? "bg-primary/10" : "hover:bg-muted",
+              )}
+            >
+              <RadioGroupItem id={`${item.key}-${option.value}`} value={option.value} />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">{t(option.labelKey)}</span>
+                {option.example ? <span className="text-xs text-muted-foreground font-mono">{option.example}</span> : null}
+                {option.descKey ? <span className="text-xs text-muted-foreground">{t(option.descKey)}</span> : null}
+              </div>
+            </label>
+          ))}
+        </RadioGroup>
+      );
 
-const MAP_POINT_STYLE_OPTIONS: { value: MapPointStyle; labelKey: string; descKey: string }[] = [
-  { value: "dots", labelKey: "preferences.mapPointStyleDots", descKey: "preferences.mapPointStyleDotsDesc" },
-  { value: "markers", labelKey: "preferences.mapPointStyleMarkers", descKey: "preferences.mapPointStyleMarkersDesc" },
-];
+    case "checkbox-group": {
+      const selected = preferences[item.key] as string[];
+      return (
+        <div className="flex flex-col gap-1">
+          {item.options.map((option) => (
+            <label
+              key={option.value}
+              htmlFor={`${item.key}-${option.value}`}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                selected.includes(option.value) ? "bg-primary/10" : "hover:bg-muted",
+              )}
+            >
+              <Checkbox
+                id={`${item.key}-${option.value}`}
+                checked={selected.includes(option.value)}
+                onCheckedChange={() => updatePreferences({ [item.key]: toggleValue(selected, option.value) })}
+              />
+              {option.icon ? <HugeiconsIcon icon={option.icon} className="size-4 text-muted-foreground" /> : null}
+              <span className="text-sm font-medium">{t(option.labelKey)}</span>
+            </label>
+          ))}
+        </div>
+      );
+    }
 
-const NAV_DISPLAY_OPTIONS: { value: NavLinksDisplay; labelKey: string; descKey: string }[] = [
-  { value: "inline", labelKey: "preferences.navDisplayInline", descKey: "preferences.navDisplayInlineDesc" },
-  { value: "buttons", labelKey: "preferences.navDisplayButtons", descKey: "preferences.navDisplayButtonsDesc" },
-];
+    case "checkbox": {
+      const checked = preferences[item.key] as boolean;
+      return (
+        <label
+          htmlFor={item.key}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+            checked ? "bg-primary/10" : "hover:bg-muted",
+          )}
+        >
+          <Checkbox id={item.key} checked={checked} onCheckedChange={(v) => updatePreferences({ [item.key]: !!v })} />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium">{t(item.itemLabelKey)}</span>
+            <span className="text-xs text-muted-foreground">{t(item.itemDescKey)}</span>
+          </div>
+        </label>
+      );
+    }
+
+    case "slider": {
+      const value = preferences[item.key] as number;
+      const display = item.format ? item.format(value) : String(value);
+      return (
+        <div className="flex items-center gap-4 px-3 py-2.5">
+          <Slider
+            value={[value]}
+            onValueChange={(v) => updatePreferences({ [item.key]: Array.isArray(v) ? v[0] : v })}
+            min={item.min}
+            max={item.max}
+            step={item.step}
+          />
+          <span className="text-sm font-mono font-medium tabular-nums w-12 text-right shrink-0">{display}</span>
+        </div>
+      );
+    }
+  }
+}
 
 function PreferencesPage() {
   const { t } = useTranslation("settings");
@@ -45,246 +277,20 @@ function PreferencesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <section className="space-y-6">
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.gpsFormat")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.gpsFormatHint")}</p>
-              <RadioGroup
-                value={preferences.gpsFormat}
-                onValueChange={(value) => updatePreferences({ gpsFormat: value as GpsFormat })}
-                className="flex flex-col gap-1"
-              >
-                {GPS_FORMAT_OPTIONS.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`gps-${option.value}`}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                      preferences.gpsFormat === option.value ? "bg-primary/10" : "hover:bg-muted",
-                    )}
-                  >
-                    <RadioGroupItem id={`gps-${option.value}`} value={option.value} />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium">{t(option.labelKey)}</span>
-                      <span className="text-xs text-muted-foreground font-mono">{option.example}</span>
-                    </div>
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.navigationApps")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.navigationAppsHint")}</p>
-              <div className="flex flex-col gap-1">
-                {NAVIGATION_APP_OPTIONS.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`nav-${option.value}`}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                      preferences.navigationApps.includes(option.value) ? "bg-primary/10" : "hover:bg-muted",
-                    )}
-                  >
-                    <Checkbox
-                      id={`nav-${option.value}`}
-                      checked={preferences.navigationApps.includes(option.value)}
-                      onCheckedChange={() =>
-                        updatePreferences({
-                          navigationApps: toggleValue(preferences.navigationApps, option.value),
-                        })
-                      }
-                    />
-                    <HugeiconsIcon icon={option.icon} className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{t(option.labelKey)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.navDisplayMode")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.navDisplayModeHint")}</p>
-              <RadioGroup
-                value={preferences.navLinksDisplay}
-                onValueChange={(value) => updatePreferences({ navLinksDisplay: value as NavLinksDisplay })}
-                className="flex flex-col gap-1"
-              >
-                {NAV_DISPLAY_OPTIONS.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`nav-display-${option.value}`}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                      preferences.navLinksDisplay === option.value ? "bg-primary/10" : "hover:bg-muted",
-                    )}
-                  >
-                    <RadioGroupItem id={`nav-display-${option.value}`} value={option.value} />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium">{t(option.labelKey)}</span>
-                      <span className="text-xs text-muted-foreground">{t(option.descKey)}</span>
-                    </div>
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-          </section>
-
-          <section className="space-y-6">
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.radiolinesMinZoom")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.radiolinesMinZoomHint")}</p>
-              <div className="flex items-center gap-4 px-3 py-2.5">
-                <Slider
-                  value={[preferences.radiolinesMinZoom]}
-                  onValueChange={(value) => updatePreferences({ radiolinesMinZoom: Array.isArray(value) ? value[0] : value })}
-                  min={7}
-                  max={11}
-                  step={0.1}
-                />
-                <span className="text-sm font-mono font-medium tabular-nums w-8 text-right shrink-0">{preferences.radiolinesMinZoom.toFixed(1)}</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapStationsLimit")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.mapStationsLimitHint")}</p>
-              <div className="flex items-center gap-4 px-3 py-2.5">
-                <Slider
-                  value={[preferences.mapStationsLimit]}
-                  onValueChange={(value) => updatePreferences({ mapStationsLimit: Array.isArray(value) ? value[0] : value })}
-                  min={10}
-                  max={1000}
-                  step={10}
-                />
-                <span className="text-sm font-mono font-medium tabular-nums w-12 text-right shrink-0">{preferences.mapStationsLimit}</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapRadiolinesLimit")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.mapRadiolinesLimitHint")}</p>
-              <div className="flex items-center gap-4 px-3 py-2.5">
-                <Slider
-                  value={[preferences.mapRadiolinesLimit]}
-                  onValueChange={(value) => updatePreferences({ mapRadiolinesLimit: Array.isArray(value) ? value[0] : value })}
-                  min={10}
-                  max={1000}
-                  step={10}
-                />
-                <span className="text-sm font-mono font-medium tabular-nums w-12 text-right shrink-0">{preferences.mapRadiolinesLimit}</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapHoverTooltip")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.mapHoverTooltipHint")}</p>
-              <label
-                htmlFor="hover-tooltip"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                  preferences.showMapHoverTooltip ? "bg-primary/10" : "hover:bg-muted",
-                )}
-              >
-                <Checkbox
-                  id="hover-tooltip"
-                  checked={preferences.showMapHoverTooltip}
-                  onCheckedChange={(checked) => updatePreferences({ showMapHoverTooltip: !!checked })}
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{t("preferences.mapHoverTooltipLabel")}</span>
-                  <span className="text-xs text-muted-foreground">{t("preferences.mapHoverTooltipDesc")}</span>
+          {COLUMNS.map((column, colIdx) => (
+            <section key={colIdx} className="space-y-6">
+              {column.map((item, itemIdx) => (
+                <div key={item.key}>
+                  {itemIdx > 0 ? <Separator className="mb-6" /> : null}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t(item.labelKey)}</Label>
+                    <p className="text-xs text-muted-foreground">{t(item.hintKey)}</p>
+                    <PreferenceField item={item} preferences={preferences} updatePreferences={updatePreferences} t={t} />
+                  </div>
                 </div>
-              </label>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapPointStyle")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.mapPointStyleHint")}</p>
-              <RadioGroup
-                value={preferences.mapPointStyle}
-                onValueChange={(v) => updatePreferences({ mapPointStyle: v as MapPointStyle })}
-                className="flex flex-col gap-1"
-              >
-                {MAP_POINT_STYLE_OPTIONS.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`map-point-style-${option.value}`}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                      preferences.mapPointStyle === option.value ? "bg-primary/10" : "hover:bg-muted",
-                    )}
-                  >
-                    <RadioGroupItem id={`map-point-style-${option.value}`} value={option.value} />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium">{t(option.labelKey)}</span>
-                      <span className="text-xs text-muted-foreground">{t(option.descKey)}</span>
-                    </div>
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapRightClickMeasure")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.mapRightClickMeasureHint")}</p>
-              <label
-                htmlFor="right-click-measure"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                  preferences.mapRightClickMeasure ? "bg-primary/10" : "hover:bg-muted",
-                )}
-              >
-                <Checkbox
-                  id="right-click-measure"
-                  checked={preferences.mapRightClickMeasure}
-                  onCheckedChange={(checked) => updatePreferences({ mapRightClickMeasure: !!checked })}
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{t("preferences.mapRightClickMeasureLabel")}</span>
-                  <span className="text-xs text-muted-foreground">{t("preferences.mapRightClickMeasureDesc")}</span>
-                </div>
-              </label>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.mapMeasureCircle")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.mapMeasureCircleHint")}</p>
-              <label
-                htmlFor="measure-circle"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                  preferences.mapMeasureCircle ? "bg-primary/10" : "hover:bg-muted",
-                )}
-              >
-                <Checkbox
-                  id="measure-circle"
-                  checked={preferences.mapMeasureCircle}
-                  onCheckedChange={(checked) => updatePreferences({ mapMeasureCircle: !!checked })}
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{t("preferences.mapMeasureCircleLabel")}</span>
-                  <span className="text-xs text-muted-foreground">{t("preferences.mapMeasureCircleDesc")}</span>
-                </div>
-              </label>
-            </div>
-          </section>
+              ))}
+            </section>
+          ))}
         </div>
       </div>
     </main>

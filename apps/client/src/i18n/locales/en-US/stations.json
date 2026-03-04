@@ -44,6 +44,7 @@
     "saved": "Station has been saved",
     "noBands": "No available bands for {{rat}}",
     "duplicateCid": "Duplicate CID found in {{rat}} cells",
-    "duplicateEnbidClid": "Duplicate eNBID+CLID combination found in LTE cells"
+    "duplicateEnbidClid": "Duplicate eNBID+CLID combination found in LTE cells",
+    "photoUploadFailed": "Station created but photo upload failed"
   }
 }

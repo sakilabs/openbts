@@ -125,7 +125,26 @@
     "deleted": "Submission has been deleted",
     "saved": "Submission has been saved",
     "approved": "Submission has been approved",
-    "rejected": "Submission has been rejected"
+    "rejected": "Submission has been rejected",
+    "photoUploadFailed": "Submission created but photo upload failed"
+  },
+  "photos": {
+    "label": "Photos",
+    "add": "Add photo",
+    "empty": "No photos added yet",
+    "uploadFirst": "Upload first photo",
+    "remove": "Remove",
+    "setAsMain": "Set as main",
+    "hint": "Up to {{max}} photos, max {{size}} each",
+    "uploaded": "Photos uploaded",
+    "deleted": "Photo deleted",
+    "uploadFailed": "Failed to upload photos",
+    "confirmDelete": "Delete this photo?",
+    "confirmDeleteDesc": "This action cannot be undone. The photo will be permanently removed.",
+    "deleteFailed": "Failed to delete photo",
+    "setMainFailed": "Failed to update main photo",
+    "addNote": "Add note...",
+    "notePlaceholder": "Add note..."
   },
   "mySubmissions": {
     "editTooltip": "Edit submission",

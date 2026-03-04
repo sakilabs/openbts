@@ -3,7 +3,7 @@
   "empty": "Brak powiadomień",
   "markAllRead": "Oznacz wszystkie jako przeczytane",
   "enablePush": "Włącz powiadomienia push",
-  "enabling": "Włączanie…",
+  "enabling": "Włączanie...",
   "pushDescription": "Otrzymuj powiadomienia o aktualizacjach zgłoszeń",
   "station": "Stacja: {{stationId}}",
   "reviewerNote": "Notatka: {{note}}",

@@ -3,7 +3,7 @@
   "empty": "No notifications yet",
   "markAllRead": "Mark all read",
   "enablePush": "Enable push alerts",
-  "enabling": "Enabling…",
+  "enabling": "Enabling...",
   "pushDescription": "Get notified about submission updates",
   "station": "Station: {{stationId}}",
   "reviewerNote": "Note: {{note}}",

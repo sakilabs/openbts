@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useReducer, useEffect, useRef } from "react";
+import { useMemo, useCallback, useReducer, useEffect, useRef, useState } from "react";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
@@ -20,6 +20,9 @@ import { shallowEqual } from "@/lib/shallowEqual";
 import { StationDetailHeader } from "@/features/admin/stations/components/stationDetailHeader";
 import { StationInfoForm } from "@/features/admin/stations/components/stationInfoForm";
 import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
+import { StationPhotosSection } from "@/features/admin/stations/components/stationPhotosSection";
+import { PhotoUploadSection } from "@/features/submissions/components/photoUploadSection";
+import { uploadStationPhotos } from "@/features/station-details/api";
 import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
 
@@ -241,6 +244,9 @@ function StationDetailForm({
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user?.role === "admin";
 
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoNotes, setPhotoNotes] = useState<string[]>([]);
+
   const saveMutation = useSaveStationMutation();
 
   const handleServerCellDelete = useCallback((cell: LocalCell) => {
@@ -410,8 +416,13 @@ function StationDetailForm({
         mnoName: mnoName || undefined,
       },
       {
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           if (result.mode === "create") {
+            if (photos.length > 0) {
+              await uploadStationPhotos(result.station.id, photos).catch(() => {
+                toast.error(t("toast.photoUploadFailed"));
+              });
+            }
             toast.success(t("toast.created"));
             void navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
           } else {
@@ -548,6 +559,11 @@ function StationDetailForm({
             />
 
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
+            {isCreateMode ? (
+              <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} />
+            ) : (
+              station && <StationPhotosSection stationId={station.id} />
+            )}
           </div>
 
           <div className="w-full lg:flex-3 min-w-0 space-y-2">

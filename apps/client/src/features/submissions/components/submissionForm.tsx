@@ -10,8 +10,9 @@ import { ActionSelector } from "./actionSelector";
 import { SubmitSection } from "./submitSection";
 import { CellsSection } from "./cellsSection";
 import { ExtraIdentificatorsSection } from "./extraIdentificatorsSection";
+import { PhotoUploadSection } from "./photoUploadSection";
 import { useSubmissionForm } from "./useSubmissionForm";
-import { validateForm } from "../utils/validation";
+import { useSettings } from "@/hooks/useSettings";
 
 export interface SubmissionFormProps {
   preloadStationId?: number;
@@ -21,6 +22,7 @@ export interface SubmissionFormProps {
 
 export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeStationId }: SubmissionFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
+  const { data: settings } = useSettings();
   const {
     form,
     mutation,
@@ -28,6 +30,10 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
     cellErrors,
     formErrors,
     computeHasChanges,
+    photos,
+    setPhotos,
+    photoNotes,
+    setPhotoNotes,
     handlers: {
       handleModeChange,
       handleActionChange,
@@ -90,18 +96,10 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             if (mode === "existing" && action === "delete") return null;
             if (mode === "existing" && !selectedStation) return null;
 
-            const errors = validateForm({
-              mode,
-              selectedStation,
-              newStation: form.getFieldValue("newStation"),
-              location,
-              cells: [],
-            });
-
             return (
               <LocationPicker
                 location={location}
-                errors={formErrors.location ?? errors.location}
+                errors={formErrors.location}
                 onLocationChange={handleLocationChange}
                 onUkeStationSelect={mode === "new" ? handleUkeStationSelect : undefined}
               />
@@ -115,15 +113,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             const isLocationSet = location.latitude !== null && location.longitude !== null && location.region_id !== null;
             if (!isLocationSet) return null;
 
-            const errors = validateForm({
-              mode,
-              selectedStation: null,
-              newStation,
-              location,
-              cells: [],
-            });
-
-            return <NewStationForm station={newStation} errors={formErrors.station ?? errors.station} onStationChange={handleNewStationChange} />;
+            return <NewStationForm station={newStation} errors={formErrors.station} onStationChange={handleNewStationChange} />;
           }}
         </form.Subscribe>
 
@@ -152,6 +142,25 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             );
           }}
         </form.Subscribe>
+
+        {settings?.photosEnabled && (
+          <form.Subscribe
+            selector={(s) => ({
+              mode: s.values.mode,
+              selectedStation: s.values.selectedStation,
+              location: s.values.location,
+              action: s.values.action,
+            })}
+          >
+            {({ mode, selectedStation, location, action }) => {
+              if (action === "delete") return null;
+              const showForExisting = mode === "existing" && !!selectedStation;
+              const showForNew = mode === "new" && location.latitude !== null && location.longitude !== null;
+              if (!showForExisting && !showForNew) return null;
+              return <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} />;
+            }}
+          </form.Subscribe>
+        )}
 
         <form.Subscribe
           selector={(s) => ({

@@ -95,6 +95,14 @@ export function UkeBandBarChart({ data, isLoading }: { data?: StatsPermitRow[]; 
   return <BandBarChartCard title={t("charts.byBand")} chartData={chartData} operators={operators} locale={i18n.language} />;
 }
 
+export function InternalBandStationsBarChart({ data, isLoading }: { data?: InternalPermitRow[]; isLoading: boolean }) {
+  const { t, i18n } = useTranslation("statistics");
+  const { chartData, operators } = useBarData(data, "stations");
+
+  if (isLoading) return <BandBarChartSkeleton />;
+  return <BandBarChartCard title={t("charts.internalStationsByBand")} chartData={chartData} operators={operators} locale={i18n.language} />;
+}
+
 export function InternalBandBarChart({ data, isLoading }: { data?: InternalPermitRow[]; isLoading: boolean }) {
   const { t, i18n } = useTranslation("statistics");
   const { chartData, operators } = useBarData(data, "cells");

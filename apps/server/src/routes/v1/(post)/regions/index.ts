@@ -38,7 +38,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     if (!region) throw new ErrorResponse("FAILED_TO_CREATE");
     await createAuditLog({ action: "regions.create", table_name: "regions", record_id: region.id, old_values: null, new_values: region }, req);
     return res.send({ data: region });
-  } catch {
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("FAILED_TO_CREATE");
   }
 }

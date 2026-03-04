@@ -125,7 +125,26 @@
     "deleted": "Zgłoszenie zostało usunięte",
     "saved": "Zgłoszenie zostało zapisane",
     "approved": "Zgłoszenie zostało zatwierdzone",
-    "rejected": "Zgłoszenie zostało odrzucone"
+    "rejected": "Zgłoszenie zostało odrzucone",
+    "photoUploadFailed": "Zgłoszenie utworzone, ale przesyłanie zdjęć nie powiodło się"
+  },
+  "photos": {
+    "label": "Zdjęcia",
+    "add": "Dodaj zdjęcie",
+    "empty": "Nie dodano jeszcze żadnych zdjęć",
+    "uploadFirst": "Dodaj pierwsze zdjęcie",
+    "remove": "Usuń",
+    "setAsMain": "Ustaw jako główne",
+    "hint": "Do {{max}} zdjęć, maks. {{size}} każde",
+    "uploaded": "Zdjęcia przesłane",
+    "deleted": "Zdjęcie usunięte",
+    "uploadFailed": "Nie udało się przesłać zdjęć",
+    "confirmDelete": "Usunąć to zdjęcie?",
+    "confirmDeleteDesc": "Ta akcja jest nieodwracalna. Zdjęcie zostanie trwale usunięte.",
+    "deleteFailed": "Nie udało się usunąć zdjęcia",
+    "setMainFailed": "Nie udało się zaktualizować głównego zdjęcia",
+    "addNote": "Dodaj notatkę...",
+    "notePlaceholder": "Dodaj notatkę..."
   },
   "mySubmissions": {
     "editTooltip": "Edytuj zgłoszenie",

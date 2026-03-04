@@ -48,6 +48,7 @@ const singleSubmissionSchema = z
     station: proposedStationInsert.optional(),
     location: proposedLocationInsert.optional(),
     cells: z.array(proposedCellInsert).optional(),
+    pending_photos: z.number().int().min(1).optional(),
   })
   .strict();
 
@@ -225,7 +226,9 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
     const hasCellChanges = input.cells && input.cells.length > 0;
 
-    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges)
+    const hasNote = !!input.submitter_note?.trim();
+    const hasPendingPhotos = !!input.pending_photos;
+    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasNote && !hasPendingPhotos)
       throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
   }
 }
@@ -242,7 +245,13 @@ async function processSubmission(
 
   const [submission] = await tx
     .insert(submissions)
-    .values({ submitter_id: userId, station_id: station_id ?? null, type, submitter_note: submitter_note ?? null })
+    .values({
+      submitter_id: userId,
+      station_id: station_id ?? null,
+      type,
+      submitter_note: submitter_note ?? null,
+      pending_photos: input.pending_photos ?? null,
+    })
     .returning();
   if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
 
@@ -360,6 +369,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     const stationIdMap = new Map(resolvedStations.filter(Boolean).map((s) => [s!.id, s!.station_id]));
 
     for (const submission of results) {
+      if (
+        submission.pending_photos &&
+        !submission.proposedStation &&
+        !submission.proposedLocation &&
+        (!submission.cells || submission.cells.length === 0) &&
+        !submission.submitter_note
+      )
+        continue;
+
       const stationStringId = submission.proposedStation?.station_id ?? (submission.station_id ? stationIdMap.get(submission.station_id) : undefined);
 
       void notifyStaffNewSubmission({

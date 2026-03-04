@@ -15,6 +15,9 @@ const InternalDistributionCharts = lazy(() =>
   import("@/features/statistics/components/distributionCharts").then((m) => ({ default: m.InternalDistributionCharts })),
 );
 const UkeBandBarChart = lazy(() => import("@/features/statistics/components/bandBarChart").then((m) => ({ default: m.UkeBandBarChart })));
+const InternalBandStationsBarChart = lazy(() =>
+  import("@/features/statistics/components/bandBarChart").then((m) => ({ default: m.InternalBandStationsBarChart })),
+);
 const InternalBandBarChart = lazy(() => import("@/features/statistics/components/bandBarChart").then((m) => ({ default: m.InternalBandBarChart })));
 const UkeVoivodeshipChart = lazy(() => import("@/features/statistics/components/voivodeshipChart").then((m) => ({ default: m.UkeVoivodeshipChart })));
 const InternalVoivodeshipChart = lazy(() =>
@@ -84,6 +87,9 @@ function StatisticsPage() {
           </Suspense>
           <Suspense fallback={<DistributionSkeleton />}>
             <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
+          </Suspense>
+          <Suspense fallback={<ChartCardSkeleton />}>
+            <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
           </Suspense>
           <Suspense fallback={<ChartCardSkeleton />}>
             <InternalBandBarChart data={permits?.internal} isLoading={permitsLoading} />

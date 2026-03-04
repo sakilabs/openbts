@@ -52,6 +52,7 @@
     "saved": "Stacja została zapisana",
     "noBands": "Brak dostępnych pasm dla {{rat}}",
     "duplicateCid": "Znaleziono duplikat CID w komórkach {{rat}}",
-    "duplicateEnbidClid": "Znaleziono duplikat eNBID+CLID w komórkach LTE"
+    "duplicateEnbidClid": "Znaleziono duplikat eNBID+CLID w komórkach LTE",
+    "photoUploadFailed": "Stacja utworzona, ale przesyłanie zdjęć nie powiodło się"
   }
 }

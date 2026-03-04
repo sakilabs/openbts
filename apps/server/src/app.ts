@@ -88,6 +88,12 @@ export default class App {
           host: req?.hostname,
           reqId: req?.id,
           userId: req?.userSession?.user?.id ?? undefined,
+          request: {
+            query: req?.query,
+            params: req?.params,
+            headers: req?.headers ? { ...req.headers, cookie: undefined, "x-api-key": undefined } : undefined,
+            body: req?.body,
+          },
         });
       }
 

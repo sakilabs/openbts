@@ -31,6 +31,7 @@ export const submissions = SubmissionsSchema.table(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     reviewed_at: timestamp({ withTimezone: true }),
+    pending_photos: integer("pending_photos"),
   },
   (table) => [
     index("submission_station_id_idx").on(table.station_id),
@@ -148,4 +149,18 @@ export const proposedLocations = SubmissionsSchema.table(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("proposed_locations_submission_id_idx").on(t.submission_id)],
+);
+
+export const submissionPhotos = SubmissionsSchema.table(
+  "submission_photos",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    submission_id: uuid("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
+    attachment_id: integer("attachment_id").notNull(),
+    note: varchar("note", { length: 100 }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("submission_photos_submission_id_idx").on(t.submission_id), unique("submission_photos_unique").on(t.submission_id, t.attachment_id)],
 );

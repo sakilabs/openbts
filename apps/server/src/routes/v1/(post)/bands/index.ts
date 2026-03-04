@@ -30,7 +30,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     if (!band) throw new ErrorResponse("FAILED_TO_CREATE");
     await createAuditLog({ action: "bands.create", table_name: "bands", record_id: band.id, old_values: null, new_values: band }, req);
     return res.send({ data: band });
-  } catch {
+  } catch (error) {
+    if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("FAILED_TO_CREATE");
   }
 }

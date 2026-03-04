@@ -81,7 +81,6 @@ function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: It needs to run when debouncedSearch changes
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [debouncedSearch, setPagination]);

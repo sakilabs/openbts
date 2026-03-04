@@ -6,7 +6,7 @@ export interface AdminUser {
   banned?: boolean;
   banReason?: string;
   banExpires?: string;
-  createdAt: string;
+  createdAt: Date;
   image?: string | null;
   username?: string;
 }

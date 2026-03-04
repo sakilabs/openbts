@@ -1,7 +1,9 @@
 {
   "tabs": {
     "specs": "Specyfikacja",
-    "permits": "Pozwolenia UKE"
+    "permits": "Pozwolenia UKE",
+    "comments": "Komentarze",
+    "photos": "Zdjęcia"
   },
   "specs": {
     "basicInfo": "Podstawowe informacje",
@@ -56,5 +58,13 @@
     "placeholder": "Dodaj komentarz...",
     "addImages": "Dodaj obrazy",
     "postComment": "Opublikuj komentarz"
+  },
+  "photos": {
+    "title": "Zdjęcia",
+    "noPhotos": "Brak zdjęć",
+    "noPhotosHint": "Zdjęcia są dodawane po zatwierdzeniu zgłoszeń",
+    "setAsMain": "Ustaw jako główne",
+    "uploadedBy": "Przesłane przez {{username}}",
+    "unknownUser": "Nieznany"
   }
 }

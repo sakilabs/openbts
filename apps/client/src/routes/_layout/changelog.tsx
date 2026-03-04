@@ -35,7 +35,7 @@ function ChangelogPage() {
           </article>
         )}
 
-        {isLoading && <div className="flex items-center justify-center py-12 text-muted-foreground">{t("changelog.loading", "Loading…")}</div>}
+        {isLoading && <div className="flex items-center justify-center py-12 text-muted-foreground">{t("changelog.loading", "Loading...")}</div>}
       </div>
     </main>
   );

@@ -765,6 +765,124 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /stations/{station_id}/photos:
+    get:
+      tags: [Stations]
+      summary: List photos for a station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationPhoto" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Stations]
+      summary: Upload photos for a station (multipart/form-data)
+      description: Accepts interleaved `notes` fields and `files` fields. Each note corresponds to the file at the same index. Max 3 MB per file.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                notes: { type: string, description: "Optional note for the corresponding file (max 100 chars)" }
+                files: { type: string, format: binary }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationPhotoUpload" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /stations/{station_id}/photos/{photo_id}:
+    patch:
+      tags: [Stations]
+      summary: Update a station photo (set as main or update note)
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: photo_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_main: { type: boolean, enum: [true], description: "Set this photo as the main photo" }
+                note: { type: string, maxLength: 100, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [id, is_main, note]
+                    properties:
+                      id: { type: integer }
+                      is_main: { type: boolean }
+                      note: { type: string, nullable: true }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Stations]
+      summary: Delete a station photo
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: photo_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /stations/{station_id}/permits:
     get:
       tags: [Stations]
@@ -1523,6 +1641,135 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /submissions/{id}/photos:
+    get:
+      tags: [Submissions]
+      summary: List photos for a submission
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionPhoto" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Submissions]
+      summary: Upload photos for a submission (multipart/form-data)
+      description: Accepts interleaved `notes` fields and `files` fields. Max 5 photos per submission, max 3 MB per file. Only the submission's owner can upload while status is pending.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                notes: { type: string, description: "Optional note for the corresponding file (max 100 chars)" }
+                files: { type: string, format: binary }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, attachment_uuid, mime_type, createdAt]
+                      properties:
+                        id: { type: integer }
+                        attachment_uuid: { type: string, format: uuid }
+                        mime_type: { type: string }
+                        createdAt: { type: string, format: date-time }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions/{id}/photos/{photo_id}:
+    patch:
+      tags: [Submissions]
+      summary: Update a submission photo note
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: photo_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties:
+                note: { type: string, maxLength: 100 }
+      responses:
+        "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Submissions]
+      summary: Delete a submission photo
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: photo_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /submissions/cleanup:
     post:
       tags: [Submissions]
@@ -1915,7 +2162,7 @@ paths:
           schema: { type: string, enum: [zmP, P] }
         - name: new
           in: query
-          description: Only return radiolines updated within the last N days (1–30). Pass `true` for 30 days.
+          description: Only return radiolines updated within the last N days (1-30). Pass `true` for 30 days.
           schema: { type: string }
       responses:
         "200":
@@ -2216,13 +2463,23 @@ components:
 
     RuntimeSettings:
       type: object
-      required: [enforceAuthForAllRoutes, allowedUnauthenticatedRoutes, disabledRoutes, enableStationComments, submissionsEnabled, announcement]
+      required:
+        [
+          enforceAuthForAllRoutes,
+          allowedUnauthenticatedRoutes,
+          disabledRoutes,
+          enableStationComments,
+          submissionsEnabled,
+          photosEnabled,
+          announcement,
+        ]
       properties:
         enforceAuthForAllRoutes: { type: boolean }
         allowedUnauthenticatedRoutes: { type: array, items: { type: string } }
         disabledRoutes: { type: array, items: { type: string } }
         enableStationComments: { type: boolean }
         submissionsEnabled: { type: boolean }
+        photosEnabled: { type: boolean }
         announcement:
           type: object
           required: [message, enabled, type]
@@ -2238,12 +2495,51 @@ components:
         disabledRoutes: { type: array, items: { type: string } }
         enableStationComments: { type: boolean }
         submissionsEnabled: { type: boolean }
+        photosEnabled: { type: boolean }
         announcement:
           type: object
           properties:
             message: { type: string }
             enabled: { type: boolean }
             type: { type: string, enum: [info, warning, error] }
+
+    PhotoAuthor:
+      type: object
+      nullable: true
+      properties:
+        uuid: { type: string, format: uuid }
+        username: { type: string }
+        name: { type: string }
+    StationPhoto:
+      type: object
+      required: [id, attachment_uuid, mime_type, is_main, note, createdAt, author]
+      properties:
+        id: { type: integer }
+        attachment_uuid: { type: string, format: uuid }
+        mime_type: { type: string }
+        is_main: { type: boolean }
+        note: { type: string, maxLength: 100, nullable: true }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: "#/components/schemas/PhotoAuthor" }
+    StationPhotoUpload:
+      type: object
+      required: [id, attachment_uuid, mime_type, is_main, createdAt]
+      properties:
+        id: { type: integer }
+        attachment_uuid: { type: string, format: uuid }
+        mime_type: { type: string }
+        is_main: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    SubmissionPhoto:
+      type: object
+      required: [id, attachment_uuid, mime_type, note, createdAt, author]
+      properties:
+        id: { type: integer }
+        attachment_uuid: { type: string, format: uuid }
+        mime_type: { type: string }
+        note: { type: string, maxLength: 100, nullable: true }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: "#/components/schemas/PhotoAuthor" }
 
     Band:
       type: object
@@ -2672,6 +2968,7 @@ components:
             proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
             proposedLocation: { $ref: "#/components/schemas/ProposedLocation", nullable: true }
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" }, nullable: true }
+            pending_photos: { type: integer, nullable: true, description: "Number of photos expected to be uploaded after submission creation" }
     SubmissionUpdate:
       description: In `cells[].details`, do not send cid_long (UMTS), ecid (LTE) or nci (NR); they are computed on the server.
       type: object
