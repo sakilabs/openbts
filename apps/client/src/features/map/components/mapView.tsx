@@ -25,7 +25,7 @@ const UkePermitDetailsDialog = lazy(() =>
 
 const POLAND_BOUNDS: [[number, number], [number, number]] = [
   [14.0, 48.9],
-  [24.2, 55.0],
+  [24.2, 55.5],
 ];
 
 const MAP_POSITION_KEY = "map:position";

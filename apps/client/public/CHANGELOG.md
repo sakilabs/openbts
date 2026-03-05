@@ -7,10 +7,12 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Submission approval no longer updates `location_id` on station when it was not changed by submitter
 - Fixed marking notification as read
+- UKE importer now checks for bands with duplex `null` instead of selecting one with duplex
 
 ### 🚀 Enhancements
 
 - Renamed `NB-IoT` to just `IoT` in LTE since it's implemented like this, Orange: `LTE-M` & `NB-IoT`, T-Mobile: `NB-IoT`, Plus: `NB-IoT` and Play has no LPWAN. This just clarifies things.
+- Resized Poland Bounds so you can see stations at Baltic Sea
 
 # 2026-03-04
 
