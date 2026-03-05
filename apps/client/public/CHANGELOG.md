@@ -3,6 +3,11 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 # 2026-03-05
 
+### 🩹 Fixes
+
+- Submission approval no longer updates `location_id` on station when it was not changed by submitter
+- Fixed marking notification as read
+
 ### 🚀 Enhancements
 
 - Renamed `NB-IoT` to just `IoT` in LTE since it's implemented like this, Orange: `LTE-M` & `NB-IoT`, T-Mobile: `NB-IoT`, Plus: `NB-IoT` and Play has no LPWAN. This just clarifies things.

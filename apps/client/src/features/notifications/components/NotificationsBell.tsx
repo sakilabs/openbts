@@ -19,7 +19,7 @@ function NotificationItem({ notification, onRead }: { notification: Notification
   const reviewerNote = notification.metadata?.reviewer_note as string | undefined;
   const submitterName = notification.metadata?.submitter_name as string | undefined;
 
-  const handleSelect = () => {
+  const handleRead = () => {
     if (!notification.readAt) onRead(notification.id);
   };
 
@@ -38,14 +38,14 @@ function NotificationItem({ notification, onRead }: { notification: Notification
 
   if (notification.actionUrl) {
     return (
-      <DropdownMenuItem render={<Link to={notification.actionUrl as "/"} />} className="flex items-start gap-2 py-2" onSelect={handleSelect}>
+      <DropdownMenuItem render={<Link to={notification.actionUrl as "/"} />} className="flex items-start gap-2 py-2" onClick={handleRead}>
         {content}
       </DropdownMenuItem>
     );
   }
 
   return (
-    <DropdownMenuItem className="flex items-start gap-2 py-2" onSelect={handleSelect}>
+    <DropdownMenuItem className="flex items-start gap-2 py-2" onClick={handleRead}>
       {content}
     </DropdownMenuItem>
   );

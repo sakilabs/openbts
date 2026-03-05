@@ -209,20 +209,57 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       }
 
       if (submission.type === "update" && proposedLocation && stationId) {
-        const locationId = await upsertLocation(tx, proposedLocation, req, id);
+        const currentStation = await tx.query.stations.findFirst({
+          where: { id: stationId },
+          columns: { location_id: true },
+        });
 
-        await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
-        await createAuditLog(
-          {
-            action: "stations.update",
-            table_name: "stations",
-            record_id: stationId,
-            new_values: { location_id: locationId },
-            metadata: { submission_id: id },
-          },
-          req,
-          tx,
-        );
+        const currentLocation = currentStation?.location_id
+          ? await tx.query.locations.findFirst({ where: { id: currentStation.location_id } })
+          : null;
+
+        const coordsUnchanged =
+          currentLocation && currentLocation.longitude === proposedLocation.longitude && currentLocation.latitude === proposedLocation.latitude;
+
+        if (coordsUnchanged) {
+          const metadataChanged =
+            currentLocation.region_id !== proposedLocation.region_id ||
+            currentLocation.city !== proposedLocation.city ||
+            currentLocation.address !== proposedLocation.address;
+
+          if (metadataChanged) {
+            await tx
+              .update(locations)
+              .set({ region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address, updatedAt: new Date() })
+              .where(eq(locations.id, currentLocation.id));
+            await createAuditLog(
+              {
+                action: "locations.update",
+                table_name: "locations",
+                record_id: currentLocation.id,
+                old_values: { region_id: currentLocation.region_id, city: currentLocation.city, address: currentLocation.address },
+                new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
+                metadata: { submission_id: id },
+              },
+              req,
+              tx,
+            );
+          }
+        } else {
+          const locationId = await upsertLocation(tx, proposedLocation, req, id);
+          await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
+          await createAuditLog(
+            {
+              action: "stations.update",
+              table_name: "stations",
+              record_id: stationId,
+              new_values: { location_id: locationId },
+              metadata: { submission_id: id },
+            },
+            req,
+            tx,
+          );
+        }
       }
 
       if (submission.type === "update" && proposedStation && (proposedStation.networks_id || proposedStation.mno_name) && stationId) {
