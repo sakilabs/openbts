@@ -1,4 +1,4 @@
-import { count, desc, eq, max } from "drizzle-orm";
+import { and, count, desc, eq, max, or } from "drizzle-orm";
 import { z } from "zod/v4";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
@@ -52,7 +52,12 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
         last_import_date: ukeImportMetadata.last_import_date,
       })
       .from(ukeImportMetadata)
-      .where(eq(ukeImportMetadata.status, "success"))
+      .where(
+        and(
+          eq(ukeImportMetadata.status, "success"),
+          or(eq(ukeImportMetadata.import_type, "permits"), eq(ukeImportMetadata.import_type, "stations")),
+        ),
+      )
       .orderBy(desc(ukeImportMetadata.last_import_date)),
 
     db.select({ value: max(stations.updatedAt) }).from(stations),

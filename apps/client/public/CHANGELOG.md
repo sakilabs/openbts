@@ -8,6 +8,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Submission approval no longer updates `location_id` on station when it was not changed by submitter
 - Fixed marking notification as read
 - UKE importer now checks for bands with duplex `null` instead of selecting one with duplex
+- `/stats` endpoint now returns the UKE permit update date correctly
 
 ### 🚀 Enhancements
 
