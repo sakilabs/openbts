@@ -33,7 +33,6 @@ export async function markAllRead(): Promise<{ updated: number }> {
 export async function markRead(id: string): Promise<Notification> {
   return fetchApiData<Notification>(`notifications/${id}/read`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
   });
 }
 
