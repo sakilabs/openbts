@@ -417,7 +417,7 @@ export async function writeCellsAndDetails(
       enbid: val.cell.lte.enbid,
       clid: val.cell.lte.clid,
       pci: val.cell.lte.pci,
-      supports_nb_iot: val.cell.lte.supports_nb_iot,
+      supports_iot: val.cell.lte.supports_iot,
       createdAt: val.cell.date_added ?? new Date(),
       updatedAt: val.cell.date_updated ?? new Date(),
     }));
@@ -432,9 +432,7 @@ export async function writeCellsAndDetails(
       const insertedKeys = new Set(inserted.map((r) => `${r.cell_id}:${r.enbid}:${r.clid}`));
       const skipped = group.filter((g) => !insertedKeys.has(`${g.cell_id}:${g.enbid}:${g.clid}`));
       for (const g of skipped) {
-        logger.warn(
-          `[lteCells] conflict, skipped: cell_id=${g.cell_id}, tac=${g.tac}, enbid=${g.enbid}, clid=${g.clid}, nb_iot=${g.supports_nb_iot}`,
-        );
+        logger.warn(`[lteCells] conflict, skipped: cell_id=${g.cell_id}, tac=${g.tac}, enbid=${g.enbid}, clid=${g.clid}, nb_iot=${g.supports_iot}`);
       }
     }
   }

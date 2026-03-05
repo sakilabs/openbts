@@ -115,7 +115,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
           sql`EXISTS (
 						SELECT 1 FROM ${lteCells}
 						WHERE ${lteCells.cell_id} = ${fields.id}
-						AND ${lteCells.supports_nb_iot} = true
+						AND ${lteCells.supports_iot} = true
 					)`,
           sql`EXISTS (
 						SELECT 1 FROM ${nrCells}

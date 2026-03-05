@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { WifiConnected01Icon, BatteryLowIcon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
@@ -18,6 +19,7 @@ type CellTableProps = {
 export function CellTable({ rat, cells }: CellTableProps) {
   const { t } = useTranslation(["stationDetails", "common"]);
   const [open, setOpen] = useState(true);
+  const scrollRef = useHorizontalScroll<HTMLDivElement>();
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="border rounded-xl overflow-hidden">
@@ -29,7 +31,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="overflow-x-auto">
+        <div ref={scrollRef} className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
@@ -277,9 +279,9 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
-                        {cell.details?.supports_nb_iot && (
+                        {cell.details?.supports_iot && (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[10px] font-medium">
-                            <HugeiconsIcon icon={WifiConnected01Icon} className="size-3" /> NB-IoT
+                            <HugeiconsIcon icon={WifiConnected01Icon} className="size-3" /> IoT
                           </span>
                         )}
                         {cell.details?.supports_nr_redcap && (

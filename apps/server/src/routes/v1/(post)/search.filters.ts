@@ -146,9 +146,9 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     table: "lteCells",
     buildCondition: buildInArray(lteCells.pci, parseNumbers),
   },
-  supports_nb_iot: {
+  supports_iot: {
     table: "lteCells",
-    buildCondition: buildBooleanEq(lteCells.supports_nb_iot),
+    buildCondition: buildBooleanEq(lteCells.supports_iot),
   },
 
   // nrCells

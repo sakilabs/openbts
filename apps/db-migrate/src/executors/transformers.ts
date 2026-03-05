@@ -78,7 +78,7 @@ export interface PreparedLTEDetails {
   enbid: number;
   clid: number;
   pci: number | null;
-  supports_nb_iot: boolean;
+  supports_iot: boolean;
 }
 export interface PreparedNRDetails {
   nrtac: number | null;
@@ -266,7 +266,7 @@ export function prepareCells(rows: LegacyCellRow[], basestationsById: Map<number
           if (clid < 0) clid = 0;
           if (clid > 255) clid = clid % 256;
           if (enbid === null || clid === null) logger.warn(`[WARN] Skipping LTE cell id=${cell.id}: enbid=${enbid}, clid=${clid} (both required)`);
-          out.push({ ...base, rat, lte: { tac, enbid, clid, pci: null, supports_nb_iot: false } });
+          out.push({ ...base, rat, lte: { tac, enbid, clid, pci: null, supports_iot: false } });
         }
         break;
       case "NR":

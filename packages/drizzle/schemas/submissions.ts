@@ -89,7 +89,7 @@ export const proposedLTECells = SubmissionsSchema.table(
     enbid: integer("enbid").notNull(),
     clid: integer("clid").notNull(),
     pci: integer("pci"),
-    supports_nb_iot: boolean("supports_nb_iot").default(false),
+    supports_iot: boolean("supports_iot").default(false),
   },
   (t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`), check("pci_check", sql`${t.pci} BETWEEN 0 AND 503`)],
 );

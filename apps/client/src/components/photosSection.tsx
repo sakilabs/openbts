@@ -84,7 +84,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
       void invalidate();
       setEditingNoteId(null);
     },
-    onError: () => toast.error(t("photos.noteFailed", { defaultValue: "Failed to update note" })),
+    onError: () => toast.error(t("photos.noteFailed")),
   });
 
   const setMainMutation = useMutation({
@@ -227,7 +227,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
                             if (e.key === "Escape") setEditingNoteId(null);
                           }}
                           maxLength={100}
-                          placeholder={t("photos.notePlaceholder", { defaultValue: "Add note..." })}
+                          placeholder={t("photos.notePlaceholder")}
                           className="flex-1 min-w-0 text-[11px] px-1.5 py-0.5 rounded border bg-background"
                         />
                         <button
@@ -252,7 +252,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
                         className="px-2 pb-1.5 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-full text-left truncate"
                       >
                         <HugeiconsIcon icon={PencilEdit02Icon} className="size-3 shrink-0" />
-                        <span className="truncate">{photo.note || t("photos.addNote", { defaultValue: "Add note..." })}</span>
+                        <span className="truncate">{photo.note || t("photos.addNote")}</span>
                       </button>
                     )}
                   </div>

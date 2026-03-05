@@ -69,7 +69,7 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
             <DiffOldValueCell value={d.pci} />
           </td>
           <td className={cellClassName}>
-            <DiffOldValueCell value={d.supports_nb_iot} />
+            <DiffOldValueCell value={d.supports_iot} />
           </td>
         </>
       );

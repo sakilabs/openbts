@@ -1,4 +1,5 @@
 import { memo, useState, useEffect, useRef, useCallback } from "react";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon, DeletePutBackIcon } from "@hugeicons/core-free-icons";
@@ -30,6 +31,7 @@ type CellDetailsFormProps = {
 };
 
 export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellErrors, onCellsChange }: CellDetailsFormProps) {
+  const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const {
     t,
     tStation,
@@ -53,7 +55,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
           {cells.length === 0 ? (
             <div className="px-4 py-6 text-center text-sm text-muted-foreground">{t("stations:cells.noCells")}</div>
           ) : (
-            <div className="overflow-x-auto custom-scrollbar">
+            <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-sm">
                 <CellsTableHeaders rat={rat} tStation={tStation} />
                 <tbody>

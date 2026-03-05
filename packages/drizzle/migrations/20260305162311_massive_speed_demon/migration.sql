@@ -94,7 +94,7 @@ CREATE TABLE "lte_cells" (
 	"ecid" integer GENERATED ALWAYS AS (("lte_cells"."enbid" * 256) + "lte_cells"."clid") STORED NOT NULL,
 	"pci" integer,
 	"earfcn" integer,
-	"supports_nb_iot" boolean DEFAULT false,
+	"supports_iot" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "lte_cells_enbid_clid_unique" UNIQUE("cell_id","enbid","clid"),
@@ -494,7 +494,7 @@ CREATE TABLE "submissions"."proposed_lte_cells" (
 	"enbid" integer NOT NULL,
 	"clid" integer NOT NULL,
 	"pci" integer,
-	"supports_nb_iot" boolean DEFAULT false,
+	"supports_iot" boolean DEFAULT false,
 	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
 	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
 );
@@ -590,7 +590,7 @@ CREATE INDEX "locations_point_gist" ON "locations" USING gist ("point");--> stat
 CREATE INDEX "locations_idx" ON "locations" ("id");--> statement-breakpoint
 CREATE INDEX "locations_created_at_idx" ON "locations" ("createdAt");--> statement-breakpoint
 CREATE INDEX "locations_updated_at_idx" ON "locations" ("updatedAt");--> statement-breakpoint
-CREATE INDEX "lte_cells_nb_iot_true_idx" ON "lte_cells" ("enbid","clid") WHERE "supports_nb_iot" = true;--> statement-breakpoint
+CREATE INDEX "lte_cells_iot_true_idx" ON "lte_cells" ("enbid","clid") WHERE "supports_iot" = true;--> statement-breakpoint
 CREATE INDEX "lte_cells_enbid_trgm_idx" ON "lte_cells" USING gin (("enbid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "lte_cells_ecid_trgm_idx" ON "lte_cells" USING gin (("ecid"::text) gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "nr_cells_redcap_true_idx" ON "nr_cells" ("gnbid","clid") WHERE "supports_nr_redcap" = true;--> statement-breakpoint

@@ -128,8 +128,8 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
           />
           <td className="px-1.5 py-1">
             <Checkbox
-              checked={(d.supports_nb_iot as boolean) ?? false}
-              onCheckedChange={(checked) => onDetailChange("supports_nb_iot", checked === true)}
+              checked={(d.supports_iot as boolean) ?? false}
+              onCheckedChange={(checked) => onDetailChange("supports_iot", checked === true)}
               disabled={disabled}
             />
           </td>

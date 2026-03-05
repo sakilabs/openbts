@@ -21,7 +21,7 @@ export type LTECellDetails = {
   enbid: number;
   clid: number;
   pci?: number;
-  supports_nb_iot?: boolean;
+  supports_iot?: boolean;
 };
 
 export type NRType = "nsa" | "sa";

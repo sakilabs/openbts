@@ -100,7 +100,7 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                     value={notes[idx] ?? ""}
                     onChange={(e) => updateNote(idx, e.target.value)}
                     maxLength={100}
-                    placeholder={t("photos.notePlaceholder", { defaultValue: "Add note…" })}
+                    placeholder={t("photos.notePlaceholder")}
                     className="w-full px-2 py-1.5 text-[11px] bg-transparent border-t placeholder:text-muted-foreground/50 focus:outline-none"
                   />
                 </div>

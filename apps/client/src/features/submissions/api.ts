@@ -122,11 +122,11 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
 const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
   GSM: ["lac", "cid", "e_gsm"],
   UMTS: ["lac", "arfcn", "rnc", "cid"],
-  LTE: ["tac", "enbid", "clid", "pci", "supports_nb_iot"],
+  LTE: ["tac", "enbid", "clid", "pci", "supports_iot"],
   NR: ["type", "nrtac", "gnbid", "clid", "pci", "supports_nr_redcap"],
 };
 
-const BOOLEAN_DETAIL_KEYS = new Set(["e_gsm", "supports_nb_iot", "supports_nr_redcap"]);
+const BOOLEAN_DETAIL_KEYS = new Set(["e_gsm", "supports_iot", "supports_nr_redcap"]);
 
 export function pickCellDetails(rat: RatType | undefined, details: Partial<CellFormDetails> | undefined): Partial<CellFormDetails> | undefined {
   if (!details) return undefined;

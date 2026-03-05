@@ -73,7 +73,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "lte_clid:", description: "LTE Cell Local ID", availableOn: ["map", "stations"] },
   { key: "tac:", description: "LTE Tracking Area Code", availableOn: ["map", "stations"] },
   { key: "lte_pci:", description: "LTE PCI", availableOn: ["map", "stations"] },
-  { key: "supports_nb_iot:", description: "Supports NB-IoT (true, false)", availableOn: ["map", "stations"] },
+  { key: "supports_iot:", description: "Supports NB-IoT (true, false)", availableOn: ["map", "stations"] },
 
   // NR (5G) cell filters
   { key: "gnbid:", description: "5G gNodeB ID", availableOn: ["map", "stations"] },

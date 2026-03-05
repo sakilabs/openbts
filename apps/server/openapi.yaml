@@ -1875,7 +1875,7 @@ paths:
         - **cells**: band, rat, is_confirmed
         - **gsmCells**: lac, cid
         - **umtsCells**: rnc, umts_cid, cid_long, umts_lac
-        - **lteCells**: enbid, ecid, lte_clid, tac, supports_nb_iot
+        - **lteCells**: enbid, ecid, lte_clid, tac, supports_iot
         - **nrCells**: gnbid, nci, nr_clid, nrtac, supports_nr_redcap
         - **locations**: region (3-letter codes)
         - **extraIdentifiers**: networks_id, networks_name, mno_name
@@ -2766,7 +2766,7 @@ components:
         enbid: { type: integer }
         clid: { type: integer }
         ecid: { type: integer }
-        supports_nb_iot: { type: boolean, nullable: true }
+        supports_iot: { type: boolean, nullable: true }
     NrCellDetails:
       type: object
       properties:
@@ -2792,7 +2792,7 @@ components:
         tac: { type: integer, nullable: true }
         enbid: { type: integer }
         clid: { type: integer }
-        supports_nb_iot: { type: boolean, nullable: true }
+        supports_iot: { type: boolean, nullable: true }
     NrCellDetailsInsert:
       description: NR cell details for create/update. Do not send nci; it is computed server-side from gnbid, gnbid_length and clid.
       type: object

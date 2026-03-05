@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "a7549b5f-7798-47f5-8402-6b6e36c9c7ef",
+  "id": "486cb896-bd05-4d14-999c-340cb5556980",
   "prevIds": [
     "b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"
   ],
@@ -1194,7 +1194,7 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "supports_nb_iot",
+      "name": "supports_iot",
       "entityType": "columns",
       "schema": "public",
       "table": "lte_cells"
@@ -5062,7 +5062,7 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "supports_nb_iot",
+      "name": "supports_iot",
       "entityType": "columns",
       "schema": "submissions",
       "table": "proposed_lte_cells"
@@ -6223,11 +6223,11 @@
         }
       ],
       "isUnique": false,
-      "where": "\"supports_nb_iot\" = true",
+      "where": "\"supports_iot\" = true",
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "lte_cells_nb_iot_true_idx",
+      "name": "lte_cells_iot_true_idx",
       "entityType": "indexes",
       "schema": "public",
       "table": "lte_cells"

@@ -296,7 +296,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 if (d)
                   await tx
                     .insert(lteCells)
-                    .values({ cell_id: newCell.id, tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, supports_nb_iot: d.supports_nb_iot });
+                    .values({ cell_id: newCell.id, tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, supports_iot: d.supports_iot });
                 break;
               }
               case "NR": {
@@ -366,7 +366,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 if (d)
                   await tx
                     .update(lteCells)
-                    .set({ tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, supports_nb_iot: d.supports_nb_iot })
+                    .set({ tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, supports_iot: d.supports_iot })
                     .where(eq(lteCells.cell_id, targetCellId));
                 break;
               }

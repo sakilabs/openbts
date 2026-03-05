@@ -104,7 +104,7 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
               tac: d.tac ?? null,
               enbid: d.enbid,
               clid: d.clid,
-              supports_nb_iot: d.supports_nb_iot ?? null,
+              supports_iot: d.supports_iot ?? null,
             } as z.infer<typeof lteCellsSchema>;
           }
           break;
