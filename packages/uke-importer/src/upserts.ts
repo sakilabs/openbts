@@ -1,4 +1,5 @@
 import { bands, regions, ukeLocations, ukeOperators, type ratEnum, type BandVariant } from "@openbts/drizzle";
+import { and, inArray, isNull } from "drizzle-orm";
 import { db } from "@openbts/drizzle/db";
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
@@ -52,9 +53,18 @@ export async function upsertBands(
   }
 
   if (unique.length) {
-    const existing = await db.query.bands.findMany({
-      where: { value: { in: unique.map((k) => k.value) } },
-    });
+    const existing = await db
+      .select()
+      .from(bands)
+      .where(
+        and(
+          inArray(
+            bands.value,
+            unique.map((k) => k.value),
+          ),
+          isNull(bands.duplex),
+        ),
+      );
 
     const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.variant}`));
     const existingNames = new Set(existing.map((b) => b.name));
@@ -77,9 +87,18 @@ export async function upsertBands(
       );
     }
 
-    const allRows = await db.query.bands.findMany({
-      where: { value: { in: unique.map((k) => k.value) } },
-    });
+    const allRows = await db
+      .select()
+      .from(bands)
+      .where(
+        and(
+          inArray(
+            bands.value,
+            unique.map((k) => k.value),
+          ),
+          isNull(bands.duplex),
+        ),
+      );
 
     const map = new Map<string, number>();
     for (const r of allRows) map.set(`${r.rat}:${r.value}:${r.variant}`, r.id);
