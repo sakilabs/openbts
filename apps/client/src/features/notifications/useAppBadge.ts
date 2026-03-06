@@ -33,6 +33,7 @@ export function useAppBadge() {
   });
 
   const badgeCount = isPrivileged ? (pendingQuery.data ?? 0) : (notificationsQuery.data?.totalUnread ?? 0);
+  const dataUpdatedAt = isPrivileged ? pendingQuery.dataUpdatedAt : notificationsQuery.dataUpdatedAt;
 
   useEffect(() => {
     if (!("setAppBadge" in navigator)) return;
@@ -41,7 +42,7 @@ export function useAppBadge() {
     } else {
       void navigator.clearAppBadge();
     }
-  }, [badgeCount]);
+  }, [badgeCount, dataUpdatedAt]);
 
   useEffect(() => {
     if (!session?.user && "clearAppBadge" in navigator) {
