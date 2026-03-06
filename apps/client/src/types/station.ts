@@ -167,6 +167,7 @@ export type LocationInfo = {
   id: number;
   city?: string;
   address?: string;
+  region?: string;
   latitude: number;
   longitude: number;
 };

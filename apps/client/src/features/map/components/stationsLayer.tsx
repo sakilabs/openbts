@@ -251,6 +251,7 @@ export function StationsLayer({
       id: ukeLocation.id,
       city: ukeLocation.city ?? undefined,
       address: ukeLocation.address ?? undefined,
+      region: ukeLocation.region?.name,
       latitude: ukeLocation.latitude,
       longitude: ukeLocation.longitude,
     };
@@ -280,7 +281,13 @@ export function StationsLayer({
       if (source === "uke") {
         const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === locationId);
         const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
-        showPopup(coordinates, { id: locationId, city, address, latitude: lat, longitude: lng }, null, ukeStations, source as StationSource);
+        showPopup(
+          coordinates,
+          { id: locationId, city, address, region: ukeLocation?.region?.name, latitude: lat, longitude: lng },
+          null,
+          ukeStations,
+          source as StationSource,
+        );
         onPopupLocationChange({ locationId, source: source as StationSource });
         return;
       }
@@ -290,6 +297,7 @@ export function StationsLayer({
         id: locationId,
         city: locationData?.city ?? city,
         address: locationData?.address ?? address,
+        region: locationData?.region?.name,
         latitude: lat,
         longitude: lng,
       };
@@ -335,7 +343,11 @@ export function StationsLayer({
 
       if (entries.length === 0) return null;
 
-      return <StationHoverTooltipContent city={data.city} address={data.address} stations={entries} />;
+      const region = isUke
+        ? (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === data.locationId)?.region?.name
+        : locations.find((loc) => loc.id === data.locationId)?.region?.name;
+
+      return <StationHoverTooltipContent city={data.city} address={data.address} region={region} stations={entries} />;
     },
     [locations],
   );

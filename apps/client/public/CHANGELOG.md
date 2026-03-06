@@ -17,6 +17,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Photo grids are now scrollable when there are many images
 - Added a quick "Edit location" link inside the location picker on the station edit page
 - Search on `/admin/locations` now uses API instead of being client-side
+- Added region name to location's hover and popup
 
 ### 🏡 Chore
 

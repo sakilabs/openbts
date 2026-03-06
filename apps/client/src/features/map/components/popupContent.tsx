@@ -108,7 +108,10 @@ export const PopupContent = memo(function PopupContent({
   return (
     <div className="w-72 text-sm">
       <div className="px-3 py-2 border-b border-border/50">
-        <h3 className="font-medium text-sm leading-tight pr-4">{location.city}</h3>
+        <h3 className="font-medium text-sm leading-tight pr-4">
+          {location.city}
+          {location.region && <span className="font-normal text-[10px] text-muted-foreground ml-1">· {location.region}</span>}
+        </h3>
         {location.address && <p className="text-[11px] text-muted-foreground">{location.address}</p>}
       </div>
 

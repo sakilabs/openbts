@@ -9,19 +9,28 @@ export type StationHoverEntry = {
 type StationHoverTooltipContentProps = {
   city?: string;
   address?: string;
+  region?: string;
   stations: StationHoverEntry[];
 };
 
 const MAX_VISIBLE = 5;
 
-export const StationHoverTooltipContent = memo(function StationHoverTooltipContent({ city, address, stations }: StationHoverTooltipContentProps) {
+export const StationHoverTooltipContent = memo(function StationHoverTooltipContent({
+  city,
+  address,
+  region,
+  stations,
+}: StationHoverTooltipContentProps) {
   const shown = stations.slice(0, MAX_VISIBLE);
   const remaining = stations.length - MAX_VISIBLE;
 
   return (
-    <div className="w-56 text-sm">
+    <div className="w-72 text-sm">
       <div className="px-3 py-2 border-b border-border/50">
-        <h3 className="font-medium text-sm leading-tight">{city || "Unknown"}</h3>
+        <h3 className="font-medium text-sm leading-tight">
+          {city || "Unknown"}
+          {region && <span className="font-normal text-[10px] text-muted-foreground ml-1">· {region}</span>}
+        </h3>
         {address && <p className="text-[11px] text-muted-foreground">{address}</p>}
       </div>
 

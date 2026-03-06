@@ -221,6 +221,7 @@ function MapViewInner() {
           id: ukeLocation?.id ?? station.id,
           city: ukeLocation?.city ?? station.location?.city,
           address: ukeLocation?.address ?? station.location?.address,
+          region: ukeLocation?.region?.name ?? station.location?.region?.name,
           latitude: lat,
           longitude: lng,
         };
@@ -233,6 +234,7 @@ function MapViewInner() {
         id: station.location_id,
         city: station.location?.city,
         address: station.location?.address,
+        region: station.location?.region?.name,
         latitude: lat,
         longitude: lng,
       };

@@ -2,8 +2,15 @@ import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine, Lo
 import { RAT_ORDER } from "./constants";
 import { isPermitExpired } from "@/lib/dateUtils";
 
-export function toLocationInfo(loc: { id: number; city?: string; address?: string; latitude: number; longitude: number }): LocationInfo {
-  return { id: loc.id, city: loc.city, address: loc.address, latitude: loc.latitude, longitude: loc.longitude };
+export function toLocationInfo(loc: {
+  id: number;
+  city?: string;
+  address?: string;
+  latitude: number;
+  longitude: number;
+  region?: { name: string };
+}): LocationInfo {
+  return { id: loc.id, city: loc.city, address: loc.address, region: loc.region?.name, latitude: loc.latitude, longitude: loc.longitude };
 }
 
 const DEG_TO_RAD = Math.PI / 180;
