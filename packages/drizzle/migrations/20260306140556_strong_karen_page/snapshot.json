@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "486cb896-bd05-4d14-999c-340cb5556980",
+  "id": "deeb3ca7-0004-47ab-8450-f8108f3dfa1f",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -98,6 +98,9 @@
         "station_photos.create",
         "station_photos.update",
         "station_photos.delete",
+        "location_photos.create",
+        "location_photos.update",
+        "location_photos.delete",
         "submission_photos.create",
         "submission_photos.update",
         "submission_photos.delete",
@@ -316,6 +319,12 @@
     },
     {
       "isRlsEnabled": false,
+      "name": "location_photos",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
       "name": "notifications",
       "entityType": "tables",
       "schema": "public"
@@ -340,7 +349,7 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "station_photos",
+      "name": "station_photo_selections",
       "entityType": "tables",
       "schema": "public"
     },
@@ -3734,6 +3743,106 @@
       "table": "audit_logs"
     },
     {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": {
+        "type": "always",
+        "name": "location_photos_id_seq",
+        "increment": "1",
+        "startWith": "1",
+        "minValue": "1",
+        "maxValue": "2147483647",
+        "cache": 1,
+        "cycle": false
+      },
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "location_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "attachment_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "submission_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uploaded_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "varchar(100)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "createdAt",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -4180,7 +4289,7 @@
       "generated": null,
       "identity": {
         "type": "always",
-        "name": "station_photos_id_seq",
+        "name": "station_photo_selections_id_seq",
         "increment": "1",
         "startWith": "1",
         "minValue": "1",
@@ -4191,7 +4300,7 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "type": "integer",
@@ -4204,7 +4313,7 @@
       "name": "station_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "type": "integer",
@@ -4214,36 +4323,10 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "attachment_id",
+      "name": "location_photo_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "station_photos"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "submission_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "station_photos"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "uploaded_by",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "type": "boolean",
@@ -4256,33 +4339,7 @@
       "name": "is_main",
       "entityType": "columns",
       "schema": "public",
-      "table": "station_photos"
-    },
-    {
-      "type": "varchar(100)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "note",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "station_photos"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "createdAt",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "type": "uuid",
@@ -7538,6 +7595,27 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "location_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "location_photos_location_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "user_id",
           "isExpression": false,
           "asc": true,
@@ -7753,10 +7831,10 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "station_photos_station_id_idx",
+      "name": "station_photo_selections_station_id_idx",
       "entityType": "indexes",
       "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "nameExplicit": true,
@@ -8465,6 +8543,45 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["location_id"],
+      "schemaTo": "public",
+      "tableTo": "locations",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "location_photos_location_id_locations_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["attachment_id"],
+      "schemaTo": "public",
+      "tableTo": "attachments",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "location_photos_attachment_id_attachments_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["uploaded_by"],
+      "schemaTo": "auth",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "location_photos_uploaded_by_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "auth",
       "tableTo": "users",
@@ -8536,36 +8653,23 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "station_photos_station_id_stations_id_fkey",
+      "name": "station_photo_selections_station_id_stations_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "nameExplicit": false,
-      "columns": ["attachment_id"],
+      "columns": ["location_photo_id"],
       "schemaTo": "public",
-      "tableTo": "attachments",
+      "tableTo": "location_photos",
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "station_photos_attachment_id_attachments_id_fkey",
+      "name": "station_photo_selections_DlZfTLiFS2ZA_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "station_photos"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["uploaded_by"],
-      "schemaTo": "auth",
-      "tableTo": "users",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "name": "station_photos_uploaded_by_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "station_photos"
+      "table": "station_photo_selections"
     },
     {
       "nameExplicit": false,
@@ -9033,6 +9137,14 @@
     {
       "columns": ["id"],
       "nameExplicit": false,
+      "name": "location_photos_pkey",
+      "schema": "public",
+      "table": "location_photos",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
       "name": "notifications_pkey",
       "schema": "public",
       "table": "notifications",
@@ -9065,9 +9177,9 @@
     {
       "columns": ["id"],
       "nameExplicit": false,
-      "name": "station_photos_pkey",
+      "name": "station_photo_selections_pkey",
       "schema": "public",
-      "table": "station_photos",
+      "table": "station_photo_selections",
       "entityType": "pks"
     },
     {
@@ -9302,12 +9414,21 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["station_id", "attachment_id"],
+      "columns": ["location_id", "attachment_id"],
       "nullsNotDistinct": false,
-      "name": "station_photos_station_attachment_unique",
+      "name": "location_photos_location_attachment_unique",
       "entityType": "uniques",
       "schema": "public",
-      "table": "station_photos"
+      "table": "location_photos"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["station_id", "location_photo_id"],
+      "nullsNotDistinct": false,
+      "name": "station_photo_selections_unique",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "station_photo_selections"
     },
     {
       "nameExplicit": true,

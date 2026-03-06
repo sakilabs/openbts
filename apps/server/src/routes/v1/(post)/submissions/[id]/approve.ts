@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, and } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -21,7 +21,8 @@ import {
   nrCells,
   extraIdentificators,
   submissionPhotos,
-  stationPhotos,
+  locationPhotos,
+  stationPhotoSelections,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -472,22 +473,50 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       if (stationId && submission.type !== "delete") {
         const photos = await tx.query.submissionPhotos.findMany({ where: { submission_id: id } });
         if (photos.length > 0) {
-          const existingMain = await tx.query.stationPhotos.findFirst({
-            where: { station_id: stationId, is_main: true },
-          });
-          await tx
-            .insert(stationPhotos)
-            .values(
-              photos.map((p, i) => ({
-                station_id: stationId!,
-                attachment_id: p.attachment_id,
-                submission_id: id,
-                uploaded_by: submission.submitter_id,
-                is_main: !existingMain && i === 0,
-                note: p.note,
-              })),
-            )
-            .onConflictDoNothing();
+          const station = await tx.query.stations.findFirst({ where: { id: stationId }, columns: { location_id: true } });
+          if (station?.location_id) {
+            await tx
+              .insert(locationPhotos)
+              .values(
+                photos.map((p) => ({
+                  location_id: station.location_id!,
+                  attachment_id: p.attachment_id,
+                  submission_id: id,
+                  uploaded_by: submission.submitter_id,
+                  note: p.note,
+                })),
+              )
+              .onConflictDoNothing();
+
+            const locationPhotoRows = await tx
+              .select({ id: locationPhotos.id })
+              .from(locationPhotos)
+              .where(
+                and(
+                  eq(locationPhotos.location_id, station.location_id!),
+                  inArray(
+                    locationPhotos.attachment_id,
+                    photos.map((p) => p.attachment_id),
+                  ),
+                ),
+              );
+
+            if (locationPhotoRows.length > 0) {
+              const existingMain = await tx.query.stationPhotoSelections.findFirst({
+                where: { station_id: stationId, is_main: true },
+              });
+              await tx
+                .insert(stationPhotoSelections)
+                .values(
+                  locationPhotoRows.map((lp, i) => ({
+                    station_id: stationId!,
+                    location_photo_id: lp.id,
+                    is_main: !existingMain && i === 0,
+                  })),
+                )
+                .onConflictDoNothing();
+            }
+          }
         }
       }
 

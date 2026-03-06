@@ -163,7 +163,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
                 ) : null}
               </div>
             ) : (
-              <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-96 overflow-y-auto">
                 {photos.map((photo, idx) => (
                   <div key={photo.id} className="relative group rounded-lg overflow-hidden border bg-muted">
                     <div className="relative aspect-square">

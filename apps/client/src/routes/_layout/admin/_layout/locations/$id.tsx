@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import { fetchLocationDetail } from "@/features/admin/locations/api";
+import { LocationPhotosSection } from "@/features/admin/locations/components/LocationPhotosSection";
 import { usePatchLocationMutation, useDeleteLocationMutation } from "@/features/admin/locations/mutations";
 import { showApiError } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
@@ -253,6 +254,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
           </div>
 
           <div className="w-full lg:flex-1 space-y-2">
+            <LocationPhotosSection locationId={location.id} />
             <div className="border rounded-xl overflow-hidden">
               <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">

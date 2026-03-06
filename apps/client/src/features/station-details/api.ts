@@ -5,7 +5,7 @@ export const fetchStation = (id: number) => fetchApiData<Station>(`stations/${id
 export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`);
 
 export type StationPhoto = {
-  id: number;
+  id: number; // locationPhotos.id
   attachment_uuid: string;
   mime_type: string;
   is_main: boolean;
@@ -14,31 +14,42 @@ export type StationPhoto = {
   author: { uuid: string; username: string; name: string } | null;
 };
 
+export type LocationPhoto = {
+  id: number;
+  attachment_uuid: string;
+  mime_type: string;
+  note: string | null;
+  createdAt: string;
+  author: { uuid: string; username: string; name: string } | null;
+};
+
 export const fetchStationPhotos = (stationId: number) => fetchApiData<StationPhoto[]>(`stations/${stationId}/photos`);
 
-export async function setMainPhoto(stationId: number, photoId: number): Promise<void> {
-  await fetchJson(`${API_BASE}/stations/${stationId}/photos/${photoId}`, {
-    method: "PATCH",
+export const fetchLocationPhotos = (locationId: number) => fetchApiData<LocationPhoto[]>(`locations/${locationId}/photos`);
+
+export async function setStationPhotoSelection(stationId: number, selected: number[], mainId: number | null): Promise<void> {
+  await fetchJson(`${API_BASE}/stations/${stationId}/photos`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ is_main: true }),
+    body: JSON.stringify({ selected, main_id: mainId }),
   });
 }
 
-export async function updatePhotoNote(stationId: number, photoId: number, note: string): Promise<void> {
-  await fetchJson(`${API_BASE}/stations/${stationId}/photos/${photoId}`, {
+export async function uploadLocationPhotos(locationId: number, files: File[]): Promise<LocationPhoto[]> {
+  const formData = new FormData();
+  for (const file of files) formData.append("files", file);
+  const res = await fetchJson<{ data: LocationPhoto[] }>(`${API_BASE}/locations/${locationId}/photos`, { method: "POST", body: formData });
+  return res.data;
+}
+
+export async function updateLocationPhotoNote(locationId: number, photoId: number, note: string): Promise<void> {
+  await fetchJson(`${API_BASE}/locations/${locationId}/photos/${photoId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
   });
 }
 
-export async function deleteStationPhoto(stationId: number, photoId: number): Promise<void> {
-  await fetchJson(`${API_BASE}/stations/${stationId}/photos/${photoId}`, { method: "DELETE" });
-}
-
-export async function uploadStationPhotos(stationId: number, files: File[]): Promise<StationPhoto[]> {
-  const formData = new FormData();
-  for (const file of files) formData.append("files", file);
-  const res = await fetchJson<{ data: StationPhoto[] }>(`${API_BASE}/stations/${stationId}/photos`, { method: "POST", body: formData });
-  return res.data;
+export async function deleteLocationPhoto(locationId: number, photoId: number): Promise<void> {
+  await fetchJson(`${API_BASE}/locations/${locationId}/photos/${photoId}`, { method: "DELETE" });
 }

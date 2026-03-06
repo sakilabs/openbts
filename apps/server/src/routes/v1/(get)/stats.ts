@@ -53,10 +53,7 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
       })
       .from(ukeImportMetadata)
       .where(
-        and(
-          eq(ukeImportMetadata.status, "success"),
-          or(eq(ukeImportMetadata.import_type, "permits"), eq(ukeImportMetadata.import_type, "stations")),
-        ),
+        and(eq(ukeImportMetadata.status, "success"), or(eq(ukeImportMetadata.import_type, "permits"), eq(ukeImportMetadata.import_type, "stations"))),
       )
       .orderBy(desc(ukeImportMetadata.last_import_date)),
 

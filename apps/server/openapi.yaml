@@ -19,6 +19,7 @@ tags:
   - name: Regions
   - name: Locations
   - name: Submissions
+  - name: Notifications
   - name: Deleted Entries
   - name: Search
   - name: Audit Logs
@@ -768,7 +769,8 @@ paths:
   /stations/{station_id}/photos:
     get:
       tags: [Stations]
-      summary: List photos for a station
+      summary: List selected photos for a station
+      description: Returns location photos that have been explicitly selected for this station, including which one is marked as main.
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
       responses:
@@ -784,63 +786,31 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
-    post:
+    put:
       tags: [Stations]
-      summary: Upload photos for a station (multipart/form-data)
-      description: Accepts interleaved `notes` fields and `files` fields. Each note corresponds to the file at the same index. Max 3 MB per file.
+      summary: Replace photo selection for a station
+      description: Atomically replaces the full set of location photos assigned to this station. All provided IDs must belong to the station's location.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                notes: { type: string, description: "Optional note for the corresponding file (max 100 chars)" }
-                files: { type: string, format: binary }
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [data]
-                properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/StationPhotoUpload" } }
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-        "429": { $ref: "#/components/responses/TooManyRequests" }
-        "500": { $ref: "#/components/responses/InternalServerError" }
-
-  /stations/{station_id}/photos/{photo_id}:
-    patch:
-      tags: [Stations]
-      summary: Update a station photo (set as main or update note)
-      security:
-        - ApiKeyAuth: []
-        - CookieAuth: []
-      parameters:
-        - $ref: "#/components/parameters/StationIdPath"
-        - name: photo_id
-          in: path
-          required: true
-          schema: { type: integer }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [selected]
               properties:
-                is_main: { type: boolean, enum: [true], description: "Set this photo as the main photo" }
-                note: { type: string, maxLength: 100, nullable: true }
+                selected:
+                  type: array
+                  items: { type: integer }
+                  description: IDs of location_photos to assign to this station
+                main_id:
+                  type: integer
+                  nullable: true
+                  description: ID of the location_photo to mark as main
       responses:
         "200":
           description: OK
@@ -852,31 +822,10 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [id, is_main, note]
+                    required: [updated]
                     properties:
-                      id: { type: integer }
-                      is_main: { type: boolean }
-                      note: { type: string, nullable: true }
+                      updated: { type: integer }
         "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "403": { $ref: "#/components/responses/Forbidden" }
-        "404": { $ref: "#/components/responses/NotFound" }
-        "429": { $ref: "#/components/responses/TooManyRequests" }
-        "500": { $ref: "#/components/responses/InternalServerError" }
-    delete:
-      tags: [Stations]
-      summary: Delete a station photo
-      security:
-        - ApiKeyAuth: []
-        - CookieAuth: []
-      parameters:
-        - $ref: "#/components/parameters/StationIdPath"
-        - name: photo_id
-          in: path
-          required: true
-          schema: { type: integer }
-      responses:
-        "204": { description: No Content }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -1412,6 +1361,135 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /locations/{location_id}/photos:
+    get:
+      tags: [Locations]
+      summary: List photos for a location
+      parameters:
+        - name: location_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/LocationPhoto" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Locations]
+      summary: Upload photos for a location (multipart/form-data)
+      description: Accepts interleaved `notes` fields and `files` fields. Each note corresponds to the file at the same index. Max 3 MB per file.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: location_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                notes: { type: string, description: "Optional note for the corresponding file (max 100 chars)" }
+                files: { type: string, format: binary }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/LocationPhoto" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /locations/{location_id}/photos/{photo_id}:
+    patch:
+      tags: [Locations]
+      summary: Update a location photo note
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: location_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: photo_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 100, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [id, note]
+                    properties:
+                      id: { type: integer }
+                      note: { type: string, nullable: true }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Locations]
+      summary: Delete a location photo
+      description: Also removes all station photo selections referencing this photo via cascade.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: location_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: photo_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /submissions:
     get:
       tags: [Submissions]
@@ -1794,6 +1872,85 @@ paths:
                       cleaned: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications for the current user
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalUnread, total]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+                  totalUnread: { type: integer }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /notifications/read-all:
+    put:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      security:
+        - CookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [updated]
+                    properties:
+                      updated: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark a single notification as read
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/Notification" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -2512,23 +2669,39 @@ components:
         name: { type: string }
     StationPhoto:
       type: object
+      description: A location photo selected for display on a station, with is_main indicating the station's primary photo.
       required: [id, attachment_uuid, mime_type, is_main, note, createdAt, author]
       properties:
-        id: { type: integer }
+        id: { type: integer, description: "ID of the location_photo record" }
         attachment_uuid: { type: string, format: uuid }
         mime_type: { type: string }
         is_main: { type: boolean }
         note: { type: string, maxLength: 100, nullable: true }
         createdAt: { type: string, format: date-time }
         author: { $ref: "#/components/schemas/PhotoAuthor" }
-    StationPhotoUpload:
+    LocationPhoto:
       type: object
-      required: [id, attachment_uuid, mime_type, is_main, createdAt]
+      description: A photo belonging to a location, shared across all stations at that location.
+      required: [id, attachment_uuid, mime_type, note, createdAt, author]
       properties:
         id: { type: integer }
         attachment_uuid: { type: string, format: uuid }
         mime_type: { type: string }
-        is_main: { type: boolean }
+        note: { type: string, maxLength: 100, nullable: true }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: "#/components/schemas/PhotoAuthor" }
+    Notification:
+      type: object
+      required: [id, userId, type, title, submissionId, metadata, actionUrl, readAt, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        type: { type: string, enum: [submission_approved, submission_rejected, new_submission] }
+        title: { type: string }
+        submissionId: { type: string, format: uuid, nullable: true }
+        metadata: { type: object, nullable: true, additionalProperties: true }
+        actionUrl: { type: string, nullable: true }
+        readAt: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
     SubmissionPhoto:
       type: object

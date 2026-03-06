@@ -34,7 +34,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseD
 
 const readAllNotifications: Route<object, ResponseData> = {
   url: "/notifications/read-all",
-  method: "POST",
+  method: "PUT",
   schema: schemaRoute,
   handler,
 };

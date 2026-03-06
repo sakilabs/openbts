@@ -27,7 +27,7 @@ export async function fetchNotifications(params?: { limit?: number; offset?: num
 }
 
 export async function markAllRead(): Promise<{ updated: number }> {
-  return postApiData<{ updated: number }>("notifications/read-all", {});
+  return fetchJson<{ updated: number }>(`${API_BASE}/notifications/read-all`, { method: "PUT" });
 }
 
 export async function markRead(id: string): Promise<Notification> {

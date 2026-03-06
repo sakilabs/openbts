@@ -17,6 +17,7 @@ type PushPayload = {
   title?: string;
   metadata?: { station_id?: string; reviewer_note?: string; submitter_name?: string; submission_type?: string };
   actionUrl?: string;
+  notificationId?: string;
 };
 
 self.addEventListener("push", (event) => {
@@ -36,7 +37,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(data.title ?? "OpenBTS", {
       body: lines.join("\n") || undefined,
       icon: "/pwa-192x192.png",
-      data: { actionUrl: data.actionUrl },
+      data: { actionUrl: data.actionUrl, notificationId: data.notificationId },
     }),
   );
 });
@@ -44,12 +45,20 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   const evt = event as NotificationEvent;
   evt.notification.close();
-  const url: string = (evt.notification.data as { actionUrl?: string })?.actionUrl ?? "/";
+  const data = evt.notification.data as { actionUrl?: string; notificationId?: string };
+  const url: string = data?.actionUrl ?? "/";
+  const notificationId: string | undefined = data?.notificationId;
+
   evt.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      const existing = clients.find((c) => c.url.includes(self.location.origin));
-      if (existing) return existing.focus().then(() => existing.navigate(url));
-      return self.clients.openWindow(url);
-    }),
+    Promise.all([
+      notificationId
+        ? fetch(`/api/v1/notifications/${notificationId}/read`, { method: "PATCH", credentials: "include" }).catch(() => {})
+        : Promise.resolve(),
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        const existing = clients.find((c) => c.url.includes(self.location.origin));
+        if (existing) return existing.focus().then(() => existing.navigate(url));
+        return self.clients.openWindow(url);
+      }),
+    ]),
   );
 });

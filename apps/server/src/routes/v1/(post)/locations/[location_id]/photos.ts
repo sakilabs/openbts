@@ -9,7 +9,7 @@ import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { attachments, stationPhotos } from "@openbts/drizzle";
+import { attachments, locationPhotos } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -26,20 +26,19 @@ async function ensureUploadDir() {
 }
 
 const schemaRoute = {
-  params: z.object({ station_id: z.coerce.number() }),
+  params: z.object({ location_id: z.coerce.number() }),
   response: {
     201: z.object({
-      data: z.array(z.object({ id: z.number(), attachment_uuid: z.string(), mime_type: z.string(), is_main: z.boolean(), createdAt: z.string() })),
+      data: z.array(z.object({ id: z.number(), attachment_uuid: z.string(), mime_type: z.string(), createdAt: z.string() })),
     }),
   },
 };
 
-type ReqParams = { Params: { station_id: number } };
-type RequestData = ReqParams;
-type PhotoItem = { id: number; attachment_uuid: string; mime_type: string; is_main: boolean; createdAt: string };
+type ReqParams = { Params: { location_id: number } };
+type PhotoItem = { id: number; attachment_uuid: string; mime_type: string; createdAt: string };
 
-async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<PhotoItem[]>>) {
-  const { station_id } = req.params;
+async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<PhotoItem[]>>) {
+  const { location_id } = req.params;
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
@@ -49,8 +48,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   const isMultipart = (req.headers["content-type"] ?? "").includes("multipart/form-data");
   if (!isMultipart) throw new ErrorResponse("BAD_REQUEST");
 
-  const station = await db.query.stations.findFirst({ where: { id: station_id } });
-  if (!station) throw new ErrorResponse("NOT_FOUND");
+  const location = await db.query.locations.findFirst({ where: { id: location_id } });
+  if (!location) throw new ErrorResponse("NOT_FOUND");
 
   await ensureUploadDir();
 
@@ -79,8 +78,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       await pipeline(filePart.file, transform, createWriteStream(filePath));
       const stats = await fs.stat(filePath);
 
-      const existingMain = await db.query.stationPhotos.findFirst({ where: { station_id, is_main: true } });
-      const isFirstPhoto = insertedRows.length === 0 && !existingMain;
       const note = notes[insertedRows.length]?.trim().slice(0, 100) || null;
 
       const [newAttachment] = await db
@@ -90,8 +87,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       if (!newAttachment) throw new ErrorResponse("FAILED_TO_CREATE");
 
       const [photoRow] = await db
-        .insert(stationPhotos)
-        .values({ station_id, attachment_id: newAttachment.id, uploaded_by: session.user.id, is_main: isFirstPhoto, note })
+        .insert(locationPhotos)
+        .values({ location_id, attachment_id: newAttachment.id, uploaded_by: session.user.id, note })
         .onConflictDoNothing()
         .returning();
       if (!photoRow) throw new ErrorResponse("FAILED_TO_CREATE");
@@ -100,7 +97,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         id: photoRow.id,
         attachment_uuid: fileUuid,
         mime_type: "image/webp",
-        is_main: photoRow.is_main,
         createdAt: photoRow.createdAt.toISOString(),
       });
     }
@@ -116,17 +112,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     throw new ErrorResponse("INTERNAL_SERVER_ERROR");
   }
 
-  await createAuditLog({ action: "station_photos.create", table_name: "station_photos", record_id: station_id, new_values: insertedRows }, req);
+  await createAuditLog({ action: "location_photos.create", table_name: "location_photos", record_id: location_id, new_values: insertedRows }, req);
 
   return res.code(201).send({ data: insertedRows });
 }
 
-const uploadStationPhotos: Route<RequestData, PhotoItem[]> = {
-  url: "/stations/:station_id/photos",
+const uploadLocationPhotos: Route<ReqParams, PhotoItem[]> = {
+  url: "/locations/:location_id/photos",
   method: "POST",
   schema: schemaRoute,
   config: { permissions: ["update:stations"] },
   handler,
 };
 
-export default uploadStationPhotos;
+export default uploadLocationPhotos;

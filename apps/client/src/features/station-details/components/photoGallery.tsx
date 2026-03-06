@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Image01Icon, Cancel01Icon, ArrowLeft01Icon, ArrowRight01Icon, StarIcon, Note02Icon } from "@hugeicons/core-free-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
-import { fetchStationPhotos, setMainPhoto, type StationPhoto } from "../api";
+import { fetchStationPhotos, setStationPhotoSelection, type StationPhoto } from "../api";
 
 type Props = { stationId: number; isAdmin: boolean };
 
@@ -45,7 +45,12 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
   });
 
   const setMainMutation = useMutation({
-    mutationFn: ({ photoId }: { photoId: number }) => setMainPhoto(stationId, photoId),
+    mutationFn: ({ photoId }: { photoId: number }) =>
+      setStationPhotoSelection(
+        stationId,
+        (photos ?? []).map((p) => p.id),
+        photoId,
+      ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["station-photos", stationId] }),
   });
 

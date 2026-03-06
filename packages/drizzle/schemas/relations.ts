@@ -30,11 +30,12 @@ import {
   apikeys,
   attachments,
   auditLogs,
+  locationPhotos,
   notifications,
   passkeys,
   pushSubscriptions,
   stationComments,
-  stationPhotos,
+  stationPhotoSelections,
   twoFactors,
   userLists,
   users,
@@ -80,8 +81,9 @@ export const relations = defineRelations(
     notifications,
     passkeys,
     pushSubscriptions,
+    locationPhotos,
     stationComments,
-    stationPhotos,
+    stationPhotoSelections,
     twoFactors,
     userLists,
     users,
@@ -400,15 +402,29 @@ export const relations = defineRelations(
         optional: false,
       }),
     },
-    stationPhotos: {
-      station: helpers.one.stations({
-        from: helpers.stationPhotos.station_id,
-        to: helpers.stations.id,
+
+    locationPhotos: {
+      location: helpers.one.locations({
+        from: helpers.locationPhotos.location_id,
+        to: helpers.locations.id,
         optional: false,
       }),
       uploadedBy: helpers.one.users({
-        from: helpers.stationPhotos.uploaded_by,
+        from: helpers.locationPhotos.uploaded_by,
         to: helpers.users.id,
+      }),
+      selections: helpers.many.stationPhotoSelections(),
+    },
+    stationPhotoSelections: {
+      station: helpers.one.stations({
+        from: helpers.stationPhotoSelections.station_id,
+        to: helpers.stations.id,
+        optional: false,
+      }),
+      locationPhoto: helpers.one.locationPhotos({
+        from: helpers.stationPhotoSelections.location_photo_id,
+        to: helpers.locationPhotos.id,
+        optional: false,
       }),
     },
     proposedStations: {

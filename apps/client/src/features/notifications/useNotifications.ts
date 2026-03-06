@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchNotifications, markAllRead as apiMarkAllRead, markRead as apiMarkRead } from "./api";
 import { authClient } from "@/lib/authClient";
+import type { NotificationsResponse } from "./api";
 
 export function useNotifications() {
   const { data: session } = authClient.useSession();
@@ -17,12 +18,49 @@ export function useNotifications() {
 
   const markAllMutation = useMutation({
     mutationFn: apiMarkAllRead,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<NotificationsResponse>(["notifications"]);
+      queryClient.setQueryData<NotificationsResponse>(["notifications"], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          totalUnread: 0,
+          data: old.data.map((n) => ({ ...n, readAt: n.readAt ?? new Date().toISOString() })),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(["notifications"], context.previous);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 
   const markReadMutation = useMutation({
     mutationFn: apiMarkRead,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<NotificationsResponse>(["notifications"]);
+      queryClient.setQueryData<NotificationsResponse>(["notifications"], (old) => {
+        if (!old) return old;
+        const wasUnread = old.data.some((n) => n.id === id && !n.readAt);
+        return {
+          ...old,
+          totalUnread: wasUnread ? Math.max(0, old.totalUnread - 1) : old.totalUnread,
+          data: old.data.map((n) => (n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n)),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(["notifications"], context.previous);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 
   return {

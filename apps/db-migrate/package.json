@@ -14,7 +14,7 @@
     "@openbts/drizzle": "workspace:*",
     "cli-progress": "3.12.0",
     "dotenv": "17.3.1",
-    "drizzle-orm": "1.0.0-beta.15-859cf75",
+    "drizzle-orm": "1.0.0-beta.16-ea816b6",
     "node-sql-parser": "5.4.0",
     "ora": "9.3.0",
     "papaparse": "5.5.3",

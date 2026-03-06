@@ -1,6 +1,25 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-06
+
+### 🩹 Fixes
+
+- Fixed PWA app badge showing stale unread count after tapping a push notification
+- Fixed notification mark-as-read optimistic update not decrementing badge correctly
+
+### 🚀 Enhancements
+
+- Photos are now stored per **location** instead of per station - no more uploading the same photo to multiple stations at the same location
+- Each station can independently select which location photos to display, with one marked as main
+- Photos can be uploaded directly from the admin station edit page and are automatically assigned to that station; the first photo at a new location is auto-set as main
+- Photo grids are now scrollable when there are many images
+
+### 🏡 Chore
+
+- Audit log updated to track `location_photos` actions
+- Added missing i18n keys for photo selection UI
+
 # 2026-03-05
 
 ### 🩹 Fixes

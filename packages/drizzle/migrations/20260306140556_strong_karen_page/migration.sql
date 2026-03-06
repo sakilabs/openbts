@@ -11,7 +11,7 @@ CREATE TYPE "station_status" AS ENUM('published', 'inactive', 'pending');--> sta
 CREATE TYPE "uke_permission_type" AS ENUM('zmP', 'P');--> statement-breakpoint
 CREATE TYPE "rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> statement-breakpoint
 CREATE TYPE "api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
-CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'submissions.cleanup', 'settings.update', 'station_comments.create', 'station_comments.delete', 'station_photos.create', 'station_photos.update', 'station_photos.delete', 'submission_photos.create', 'submission_photos.update', 'submission_photos.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
+CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'submissions.cleanup', 'settings.update', 'station_comments.create', 'station_comments.delete', 'station_photos.create', 'station_photos.update', 'station_photos.delete', 'location_photos.create', 'location_photos.update', 'location_photos.delete', 'submission_photos.create', 'submission_photos.update', 'submission_photos.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
 CREATE TYPE "audit_source" AS ENUM('api', 'import', 'system');--> statement-breakpoint
 CREATE TYPE "notification_type" AS ENUM('submission_approved', 'submission_rejected', 'new_submission');--> statement-breakpoint
 CREATE TYPE "role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
@@ -361,6 +361,17 @@ CREATE TABLE "audit_logs" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "location_photos" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "location_photos_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"location_id" integer NOT NULL,
+	"attachment_id" integer NOT NULL,
+	"submission_id" uuid,
+	"uploaded_by" uuid,
+	"note" varchar(100),
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "location_photos_location_attachment_unique" UNIQUE("location_id","attachment_id")
+);
+--> statement-breakpoint
 CREATE TABLE "notifications" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
 	"user_id" uuid NOT NULL,
@@ -407,16 +418,12 @@ CREATE TABLE "station_comments" (
 	CONSTRAINT "station_comments_content_len" CHECK (char_length("content") BETWEEN 1 AND 10000)
 );
 --> statement-breakpoint
-CREATE TABLE "station_photos" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "station_photos_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+CREATE TABLE "station_photo_selections" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "station_photo_selections_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"station_id" integer NOT NULL,
-	"attachment_id" integer NOT NULL,
-	"submission_id" uuid,
-	"uploaded_by" uuid,
+	"location_photo_id" integer NOT NULL,
 	"is_main" boolean DEFAULT false NOT NULL,
-	"note" varchar(100),
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "station_photos_station_attachment_unique" UNIQUE("station_id","attachment_id")
+	CONSTRAINT "station_photo_selections_unique" UNIQUE("station_id","location_photo_id")
 );
 --> statement-breakpoint
 CREATE TABLE "auth"."two_factors" (
@@ -651,6 +658,7 @@ CREATE INDEX "audit_logs_action_idx" ON "audit_logs" ("action");--> statement-br
 CREATE INDEX "audit_logs_table_name_created_idx" ON "audit_logs" ("table_name","createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_action_created_idx" ON "audit_logs" ("action","createdAt");--> statement-breakpoint
 CREATE INDEX "audit_logs_invoked_by_created_idx" ON "audit_logs" ("invoked_by","createdAt");--> statement-breakpoint
+CREATE INDEX "location_photos_location_id_idx" ON "location_photos" ("location_id");--> statement-breakpoint
 CREATE INDEX "notifications_user_id_idx" ON "notifications" ("user_id");--> statement-breakpoint
 CREATE INDEX "notifications_created_at_idx" ON "notifications" ("createdAt");--> statement-breakpoint
 CREATE INDEX "notifications_user_read_idx" ON "notifications" ("user_id","readAt");--> statement-breakpoint
@@ -660,7 +668,7 @@ CREATE INDEX "push_subscriptions_user_id_idx" ON "push_subscriptions" ("user_id"
 CREATE INDEX "station_comments_station_id_idx" ON "station_comments" ("station_id");--> statement-breakpoint
 CREATE INDEX "station_comments_user_id_idx" ON "station_comments" ("user_id");--> statement-breakpoint
 CREATE INDEX "station_comments_station_created_idx" ON "station_comments" ("station_id","createdAt");--> statement-breakpoint
-CREATE INDEX "station_photos_station_id_idx" ON "station_photos" ("station_id");--> statement-breakpoint
+CREATE INDEX "station_photo_selections_station_id_idx" ON "station_photo_selections" ("station_id");--> statement-breakpoint
 CREATE INDEX "twoFactors_secret_idx" ON "auth"."two_factors" ("secret");--> statement-breakpoint
 CREATE INDEX "twoFactors_userId_idx" ON "auth"."two_factors" ("user_id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" ("created_by");--> statement-breakpoint
@@ -706,14 +714,16 @@ ALTER TABLE "umts_cells" ADD CONSTRAINT "umts_cells_cell_id_cells_id_fkey" FOREI
 ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_author_id_users_id_fkey" FOREIGN KEY ("author_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_invoked_by_users_id_fkey" FOREIGN KEY ("invoked_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "location_photos" ADD CONSTRAINT "location_photos_location_id_locations_id_fkey" FOREIGN KEY ("location_id") REFERENCES "locations"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "location_photos" ADD CONSTRAINT "location_photos_attachment_id_attachments_id_fkey" FOREIGN KEY ("attachment_id") REFERENCES "attachments"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "location_photos" ADD CONSTRAINT "location_photos_uploaded_by_users_id_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "auth"."passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "push_subscriptions" ADD CONSTRAINT "push_subscriptions_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "station_comments" ADD CONSTRAINT "station_comments_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
-ALTER TABLE "station_photos" ADD CONSTRAINT "station_photos_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE;--> statement-breakpoint
-ALTER TABLE "station_photos" ADD CONSTRAINT "station_photos_attachment_id_attachments_id_fkey" FOREIGN KEY ("attachment_id") REFERENCES "attachments"("id") ON DELETE CASCADE;--> statement-breakpoint
-ALTER TABLE "station_photos" ADD CONSTRAINT "station_photos_uploaded_by_users_id_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;--> statement-breakpoint
+ALTER TABLE "station_photo_selections" ADD CONSTRAINT "station_photo_selections_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "station_photo_selections" ADD CONSTRAINT "station_photo_selections_DlZfTLiFS2ZA_fkey" FOREIGN KEY ("location_photo_id") REFERENCES "location_photos"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "auth"."two_factors" ADD CONSTRAINT "two_factors_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "user_lists" ADD CONSTRAINT "user_lists_created_by_users_id_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_cells" ADD CONSTRAINT "proposed_cells_submission_id_submissions_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint

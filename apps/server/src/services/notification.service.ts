@@ -23,20 +23,23 @@ export interface CreateNotificationParams {
 export async function createAndDeliverNotification(params: CreateNotificationParams): Promise<void> {
   const { userId, type, title, submissionId, metadata, actionUrl } = params;
 
-  await db.insert(notifications).values({
-    userId,
-    type,
-    title,
-    submissionId: submissionId ?? null,
-    metadata: metadata ?? null,
-    actionUrl: actionUrl ?? null,
-  });
+  const [inserted] = await db
+    .insert(notifications)
+    .values({
+      userId,
+      type,
+      title,
+      submissionId: submissionId ?? null,
+      metadata: metadata ?? null,
+      actionUrl: actionUrl ?? null,
+    })
+    .returning({ id: notifications.id });
 
   const subs = await db.query.pushSubscriptions.findMany({
     where: { userId },
   });
 
-  const payload = JSON.stringify({ title, metadata, actionUrl });
+  const payload = JSON.stringify({ title, metadata, actionUrl, notificationId: inserted?.id });
 
   await deliverPush(subs, payload);
 }
@@ -80,22 +83,43 @@ export async function notifyStaffNewSubmission(params: {
   };
   const actionUrl = "/admin/submissions";
 
-  await db.insert(notifications).values(
-    staffUsers.map((u) => ({
-      userId: u.id,
-      type: "new_submission" as const,
-      title,
-      submissionId: params.submissionId,
-      metadata,
-      actionUrl,
-    })),
-  );
+  const insertedNotifications = await db
+    .insert(notifications)
+    .values(
+      staffUsers.map((u) => ({
+        userId: u.id,
+        type: "new_submission" as const,
+        title,
+        submissionId: params.submissionId,
+        metadata,
+        actionUrl,
+      })),
+    )
+    .returning({ id: notifications.id, userId: notifications.userId });
 
   const staffIds = staffUsers.map((u) => u.id);
   const allSubs = await db
-    .select({ endpoint: pushSubscriptions.endpoint, p256dh: pushSubscriptions.p256dh, auth: pushSubscriptions.auth })
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+      userId: pushSubscriptions.userId,
+    })
     .from(pushSubscriptions)
     .where(inArray(pushSubscriptions.userId, staffIds));
 
-  await deliverPush(allSubs, JSON.stringify({ title, metadata, actionUrl }));
+  const notifByUser = new Map(insertedNotifications.map((n) => [n.userId, n.id]));
+  const subsByUser = new Map<string, { endpoint: string; p256dh: string; auth: string }[]>();
+  for (const sub of allSubs) {
+    const existing = subsByUser.get(sub.userId) ?? [];
+    existing.push({ endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth });
+    subsByUser.set(sub.userId, existing);
+  }
+
+  await Promise.allSettled(
+    insertedNotifications.map((notif) => {
+      const userSubs = subsByUser.get(notif.userId) ?? [];
+      return deliverPush(userSubs, JSON.stringify({ title, metadata, actionUrl, notificationId: notif.id }));
+    }),
+  );
 }

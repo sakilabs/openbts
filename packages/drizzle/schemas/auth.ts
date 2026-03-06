@@ -1,6 +1,6 @@
 import { boolean, check, index, integer, jsonb, pgEnum, pgSchema, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
-import { stations } from "./bts.ts";
+import { locations, stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const NotificationType = pgEnum("notification_type", ["submission_approved", "submission_rejected", "new_submission"]);
@@ -38,6 +38,9 @@ export const AuditAction = pgEnum("audit_action", [
   "station_photos.create",
   "station_photos.update",
   "station_photos.delete",
+  "location_photos.create",
+  "location_photos.update",
+  "location_photos.delete",
   "submission_photos.create",
   "submission_photos.update",
   "submission_photos.delete",
@@ -362,24 +365,41 @@ export const pushSubscriptions = pgTable(
   (t) => [index("push_subscriptions_user_id_idx").on(t.userId)],
 );
 
-export const stationPhotos = pgTable(
-  "station_photos",
+export const locationPhotos = pgTable(
+  "location_photos",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
-    station_id: integer("station_id")
+    location_id: integer("location_id")
       .notNull()
-      .references(() => stations.id, { onDelete: "cascade" }),
+      .references(() => locations.id, { onDelete: "cascade" }),
     attachment_id: integer("attachment_id")
       .notNull()
       .references(() => attachments.id, { onDelete: "cascade" }),
     submission_id: uuid("submission_id"),
     uploaded_by: uuid("uploaded_by").references(() => users.id, { onDelete: "set null" }),
-    is_main: boolean("is_main").notNull().default(false),
     note: varchar("note", { length: 100 }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("station_photos_station_id_idx").on(t.station_id),
-    unique("station_photos_station_attachment_unique").on(t.station_id, t.attachment_id),
+    index("location_photos_location_id_idx").on(t.location_id),
+    unique("location_photos_location_attachment_unique").on(t.location_id, t.attachment_id),
+  ],
+);
+
+export const stationPhotoSelections = pgTable(
+  "station_photo_selections",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    station_id: integer("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    location_photo_id: integer("location_photo_id")
+      .notNull()
+      .references(() => locationPhotos.id, { onDelete: "cascade" }),
+    is_main: boolean("is_main").notNull().default(false),
+  },
+  (t) => [
+    index("station_photo_selections_station_id_idx").on(t.station_id),
+    unique("station_photo_selections_unique").on(t.station_id, t.location_photo_id),
   ],
 );

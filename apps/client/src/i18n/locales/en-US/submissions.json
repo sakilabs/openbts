@@ -144,7 +144,13 @@
     "deleteFailed": "Failed to delete photo",
     "setMainFailed": "Failed to update main photo",
     "addNote": "Add note...",
-    "notePlaceholder": "Add note..."
+    "notePlaceholder": "Add note...",
+    "noteFailed": "Failed to save note",
+    "selectionCount": "({{selected}}/{{total}} selected)",
+    "saveSelection": "Save selection",
+    "selectionSaved": "Photo selection saved",
+    "selectionFailed": "Failed to save photo selection",
+    "emptyLocation": "No photos at this location yet."
   },
   "mySubmissions": {
     "editTooltip": "Edit submission",

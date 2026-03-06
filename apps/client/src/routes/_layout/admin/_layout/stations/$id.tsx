@@ -20,9 +20,9 @@ import { shallowEqual } from "@/lib/shallowEqual";
 import { StationDetailHeader } from "@/features/admin/stations/components/stationDetailHeader";
 import { StationInfoForm } from "@/features/admin/stations/components/stationInfoForm";
 import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
-import { StationPhotosSection } from "@/features/admin/stations/components/stationPhotosSection";
+import { StationPhotoSelector } from "@/features/admin/stations/components/StationPhotoSelector";
 import { PhotoUploadSection } from "@/features/submissions/components/photoUploadSection";
-import { uploadStationPhotos } from "@/features/station-details/api";
+import { uploadLocationPhotos, setStationPhotoSelection } from "@/features/station-details/api";
 import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
 
@@ -418,10 +418,18 @@ function StationDetailForm({
       {
         onSuccess: async (result) => {
           if (result.mode === "create") {
-            if (photos.length > 0) {
-              await uploadStationPhotos(result.station.id, photos).catch(() => {
-                toast.error(t("toast.photoUploadFailed"));
-              });
+            if (photos.length > 0 && result.station.location_id) {
+              await uploadLocationPhotos(result.station.location_id, photos)
+                .then((uploaded) =>
+                  setStationPhotoSelection(
+                    result.station.id,
+                    uploaded.map((p) => p.id),
+                    uploaded[0]?.id ?? null,
+                  ),
+                )
+                .catch(() => {
+                  toast.error(t("toast.photoUploadFailed"));
+                });
             }
             toast.success(t("toast.created"));
             void navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
@@ -562,7 +570,7 @@ function StationDetailForm({
             {isCreateMode ? (
               <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} />
             ) : (
-              station && <StationPhotosSection stationId={station.id} />
+              station?.location?.id && <StationPhotoSelector stationId={station.id} locationId={station.location.id} />
             )}
           </div>
 

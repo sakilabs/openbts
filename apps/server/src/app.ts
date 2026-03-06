@@ -77,7 +77,7 @@ export default class App {
       const message = err.message || "An internal server error occurred.";
       const code = err.code || "INTERNAL_SERVER_ERROR";
 
-      if (statusCode !== 404) {
+      if (statusCode !== 404 && statusCode !== 429) {
         logger.error(err.code, {
           ...serializeError(err),
           statusCode,

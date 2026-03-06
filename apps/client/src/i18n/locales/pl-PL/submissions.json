@@ -144,7 +144,13 @@
     "deleteFailed": "Nie udało się usunąć zdjęcia",
     "setMainFailed": "Nie udało się zaktualizować głównego zdjęcia",
     "addNote": "Dodaj notatkę...",
-    "notePlaceholder": "Dodaj notatkę..."
+    "notePlaceholder": "Dodaj notatkę...",
+    "noteFailed": "Nie udało się zapisać notatki",
+    "selectionCount": "({{selected}}/{{total}} zaznaczonych)",
+    "saveSelection": "Zapisz wybór",
+    "selectionSaved": "Wybór zdjęć zapisany",
+    "selectionFailed": "Nie udało się zapisać wyboru zdjęć",
+    "emptyLocation": "Brak zdjęć w tej lokalizacji."
   },
   "mySubmissions": {
     "editTooltip": "Edytuj zgłoszenie",
