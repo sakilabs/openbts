@@ -25,6 +25,12 @@ export class BackendUnavailableError extends Error {
   }
 }
 
+export class RateLimitError extends Error {
+  constructor() {
+    super("You have made too many requests. Please try again later.");
+  }
+}
+
 type FetchOptions = RequestInit & {
   allowedErrors?: number[];
 };
@@ -36,6 +42,10 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 
   if (!response.ok) {
     if (allowedErrors?.includes(response.status)) return null as unknown as T;
+
+    if (response.status === 429) {
+      throw new RateLimitError();
+    }
 
     if (response.status === 502 || response.status === 503 || response.status === 504) {
       throw new BackendUnavailableError(response.status);
@@ -80,6 +90,7 @@ export async function postApiData<T, B = unknown>(endpoint: string, body: B): Pr
 }
 
 export function showApiError(error: unknown) {
+  if (error instanceof RateLimitError) return;
   if (error instanceof ApiResponseError) {
     for (const err of error.errors) {
       toast.error(err.message || err.code);

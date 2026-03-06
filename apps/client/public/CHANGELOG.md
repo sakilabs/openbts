@@ -7,6 +7,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Fixed PWA app badge showing stale unread count after tapping a push notification
 - Fixed notification mark-as-read optimistic update not decrementing badge correctly
+- Rate-limited responses (HTTP 429) are no longer retried and now show a single toast notification
 
 ### 🚀 Enhancements
 
