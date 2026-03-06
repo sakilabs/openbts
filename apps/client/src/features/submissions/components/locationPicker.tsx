@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Location01Icon, Loading01Icon } from "@hugeicons/core-free-icons";
+import { Location01Icon, Loading01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -119,6 +120,7 @@ type LocationPickerProps = {
   onUkeStationSelect?: (station: UkeStation) => void;
   locationDiffs?: { coords: boolean; city: boolean; address: boolean } | null;
   currentLocation?: Location | null;
+  showEditLocationLink?: boolean;
 };
 
 export function LocationPicker({
@@ -129,6 +131,7 @@ export function LocationPicker({
   onUkeStationSelect,
   locationDiffs,
   currentLocation,
+  showEditLocationLink,
 }: LocationPickerProps) {
   const { t } = useTranslation(["submissions", "common"]);
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
@@ -184,6 +187,15 @@ export function LocationPicker({
         <div className="flex items-center gap-2">
           <HugeiconsIcon icon={Location01Icon} className="size-4 text-primary" />
           <span className="font-semibold text-sm">{t("locationPicker.title")}</span>
+          {showEditLocationLink && currentLocation?.id && (
+            <Link
+              to={`/admin/locations/${currentLocation.id}` as "/"}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <HugeiconsIcon icon={PencilEdit01Icon} className="size-3" />
+              {t("locationPicker.editLocation")}
+            </Link>
+          )}
         </div>
         {onUkeStationSelect && (
           <label htmlFor="enable-uke-locations" className="flex items-center gap-1.5 cursor-pointer">

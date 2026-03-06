@@ -9,7 +9,7 @@ import { OperatorSelect } from "@/components/operator-select";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
-import type { Operator, UkeStation, LocationWithStations } from "@/types/station";
+import type { Operator, UkeStation, LocationWithStations, Location } from "@/types/station";
 
 type StationInfoFormProps = {
   stationId: string;
@@ -34,6 +34,8 @@ type StationInfoFormProps = {
   onNetworksNameChange?: (value: string) => void;
   mnoName?: string;
   onMnoNameChange?: (value: string) => void;
+  currentLocation?: Location | null;
+  showEditLocationLink?: boolean;
 };
 
 export function StationInfoForm({
@@ -59,6 +61,8 @@ export function StationInfoForm({
   onNetworksNameChange,
   mnoName,
   onMnoNameChange,
+  currentLocation,
+  showEditLocationLink,
 }: StationInfoFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
@@ -145,6 +149,8 @@ export function StationInfoForm({
         onLocationChange={onLocationChange}
         onExistingLocationSelect={onExistingLocationSelect}
         onUkeStationSelect={onUkeStationSelect}
+        currentLocation={currentLocation}
+        showEditLocationLink={showEditLocationLink}
       />
     </div>
   );

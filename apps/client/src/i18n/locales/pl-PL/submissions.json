@@ -27,7 +27,8 @@
     "nearbyLocations": "Pobliskie stacje",
     "createNewLocation": "Utwórz tutaj nową lokalizację",
     "showUkeLocations": "Pokaż lokalizacje UKE",
-    "selectStation": "Wybierz stację do importu"
+    "selectStation": "Wybierz stację do importu",
+    "editLocation": "Edytuj lokalizację"
   },
   "header": {
     "reject": "Odrzuć zgłoszenie",

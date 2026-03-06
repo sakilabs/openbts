@@ -564,6 +564,8 @@ function StationDetailForm({
               onNetworksNameChange={(v) => dispatch({ type: "SET_NETWORKS_NAME", payload: v })}
               mnoName={mnoName}
               onMnoNameChange={(v) => dispatch({ type: "SET_MNO_NAME", payload: v })}
+              currentLocation={station?.location ?? null}
+              showEditLocationLink={!isCreateMode}
             />
 
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
