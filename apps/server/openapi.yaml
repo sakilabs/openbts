@@ -1242,6 +1242,13 @@ paths:
         - name: new
           in: query
           schema: { type: boolean, default: false }
+        - name: search
+          in: query
+          description: Search by city, address, or station ID (partial match)
+          schema: { type: string, maxLength: 100 }
+        - name: orphaned
+          in: query
+          schema: { type: boolean, default: false }
         - name: sort
           in: query
           schema: { type: string, enum: [asc, desc], default: desc }

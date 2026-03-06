@@ -70,7 +70,7 @@ const schemaRoute = {
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 type StationData = z.infer<typeof stationResponseSchema>;
-type ResponseBody = { data: StationData[]; totalCount: number };
+type ResponseBody = z.infer<typeof responseSchema>;
 
 const CACHE_TTL = 30;
 
@@ -101,10 +101,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const operatorIds = operatorRows.map((r) => r.id);
   const regionIds = regionsRows.map((r) => r.id);
 
-  const notAssigned = sql`NOT EXISTS (SELECT 1 FROM ${stationsPermits} WHERE ${stationsPermits.permit_id} = ${ukePermits.id})`;
-
   const buildBaseConditions = (): SQL<unknown>[] => {
-    const conditions: SQL<unknown>[] = [notAssigned];
+    const conditions: SQL<unknown>[] = [sql`NOT EXISTS (SELECT 1 FROM ${stationsPermits} WHERE ${stationsPermits.permit_id} = ${ukePermits.id})`];
     if (operatorIds.length) conditions.push(inArray(ukePermits.operator_id, operatorIds));
     if (regionIds.length) {
       conditions.push(
@@ -115,22 +113,23 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   };
 
   try {
-    const [countResult, stationIdRows] = await Promise.all([
-      db
-        .select({ count: countDistinct(ukePermits.station_id) })
-        .from(ukePermits)
-        .where(and(...buildBaseConditions())),
-      db
-        .select({ station_id: ukePermits.station_id })
-        .from(ukePermits)
-        .where(and(...buildBaseConditions()))
-        .groupBy(ukePermits.station_id)
-        .orderBy(sql`MAX(${ukePermits.id}) DESC`)
-        .limit(limit)
-        .offset(offset),
-    ]);
+    const countResult = await db
+      .select({ count: countDistinct(ukePermits.station_id) })
+      .from(ukePermits)
+      .where(and(...buildBaseConditions()));
 
     const totalCount = countResult[0]?.count ?? 0;
+    if (!totalCount) return res.send({ data: [], totalCount: 0 });
+
+    const stationIdRows = await db
+      .select({ station_id: ukePermits.station_id })
+      .from(ukePermits)
+      .where(and(...buildBaseConditions()))
+      .groupBy(ukePermits.station_id)
+      .orderBy(sql`MAX(${ukePermits.id}) DESC`)
+      .limit(limit)
+      .offset(offset);
+
     const stationIds = stationIdRows.map((r) => r.station_id);
     if (!stationIds.length) return res.send({ data: [], totalCount });
 
@@ -201,7 +200,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .leftJoin(regions, eq(regions.id, ukeLocations.region_id))
       .leftJoin(bands, eq(bands.id, ukePermits.band_id))
       .where(
-        and(notAssigned, inArray(ukePermits.station_id, stationIds), ...(operatorIds.length ? [inArray(ukePermits.operator_id, operatorIds)] : [])),
+        and(
+          sql`NOT EXISTS (SELECT 1 FROM ${stationsPermits} WHERE ${stationsPermits.permit_id} = ${ukePermits.id})`,
+          inArray(ukePermits.station_id, stationIds),
+          ...(operatorIds.length ? [inArray(ukePermits.operator_id, operatorIds)] : []),
+        ),
       )
       .groupBy(ukePermits.station_id)
       .orderBy(sql`MAX(${ukePermits.id}) DESC`);

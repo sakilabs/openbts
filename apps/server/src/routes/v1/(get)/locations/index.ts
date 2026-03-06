@@ -70,6 +70,7 @@ const schemaRoute = {
         const n = Number(val);
         return n >= 1 && n <= 30 ? n : null;
       }),
+    search: z.string().max(100).optional(),
     orphaned: z.coerce.boolean().optional().default(false),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
     sortBy: z.enum(["id", "updatedAt", "createdAt"]).optional(),
@@ -103,6 +104,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     bands: bandValues,
     regions: regionNames,
     new: recentDays,
+    search,
     orphaned,
     sort,
     sortBy,
@@ -234,6 +236,18 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const buildLocationConditions = (locFields: typeof locations) => {
     const conditions: ReturnType<typeof sql>[] = [];
 
+    if (search) {
+      const like = `%${search}%`;
+      conditions.push(sql`(
+        ${locFields.city} ILIKE ${like}
+        OR ${locFields.address} ILIKE ${like}
+        OR EXISTS (
+          SELECT 1 FROM ${stations}
+          WHERE ${stations.location_id} = ${locFields.id}
+          AND ${stations.station_id} LIKE ${like}
+        )
+      )`);
+    }
     if (envelope) conditions.push(sql`ST_Intersects(${locFields.point}, ${envelope})`);
     if (regionIds.length) {
       conditions.push(

@@ -15,6 +15,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Photos can be uploaded directly from the admin station edit page and are automatically assigned to that station; the first photo at a new location is auto-set as main
 - Photo grids are now scrollable when there are many images
 - Added a quick "Edit location" link inside the location picker on the station edit page
+- Search on `/admin/locations` now uses API instead of being client-side
 
 ### 🏡 Chore
 

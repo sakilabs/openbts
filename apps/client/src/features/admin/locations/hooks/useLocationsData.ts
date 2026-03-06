@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { fetchLocationsList } from "../api";
 import type { LocationSortBy, LocationSortDirection } from "@/types/station";
 
@@ -113,8 +114,10 @@ export function useLocationsData() {
     return selectedRegions.map((id) => regions.find((r) => r.id === id)?.code).filter((code): code is string => Boolean(code));
   }, [selectedRegions, regions]);
 
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+
   const { data, fetchNextPage, hasNextPage, isLoading, isFetching } = useInfiniteQuery({
-    queryKey: ["admin-locations-list", FETCH_LIMIT, filters.operators, selectedRegionCodes, sort, sortBy],
+    queryKey: ["admin-locations-list", FETCH_LIMIT, filters.operators, selectedRegionCodes, sort, sortBy, debouncedSearch],
     queryFn: ({ pageParam }) =>
       fetchLocationsList({
         page: pageParam,
@@ -124,6 +127,7 @@ export function useLocationsData() {
         sort,
         sortBy,
         orphaned: true,
+        search: debouncedSearch || undefined,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -133,17 +137,9 @@ export function useLocationsData() {
     refetchOnMount: "always",
   });
 
-  const allLocations = useMemo(() => {
+  const locations = useMemo(() => {
     return data?.pages.flatMap((page) => page.data) ?? [];
   }, [data]);
-
-  const locations = useMemo(() => {
-    if (!searchQuery.trim()) return allLocations;
-    const q = searchQuery.toLowerCase();
-    return allLocations.filter(
-      (loc) => loc.city?.toLowerCase().includes(q) || loc.address?.toLowerCase().includes(q) || loc.id.toString().includes(q),
-    );
-  }, [allLocations, searchQuery]);
 
   const totalLocations = useMemo(() => {
     if (!data?.pages.length) return undefined;
