@@ -368,6 +368,7 @@ CREATE TABLE "location_photos" (
 	"submission_id" uuid,
 	"uploaded_by" uuid,
 	"note" varchar(100),
+	"taken_at" timestamp with time zone,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "location_photos_location_attachment_unique" UNIQUE("location_id","attachment_id")
 );
@@ -559,6 +560,7 @@ CREATE TABLE "submissions"."submission_photos" (
 	"submission_id" uuid NOT NULL,
 	"attachment_id" integer NOT NULL,
 	"note" varchar(100),
+	"taken_at" timestamp with time zone,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "submission_photos_unique" UNIQUE("submission_id","attachment_id")
 );

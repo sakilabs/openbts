@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "deeb3ca7-0004-47ab-8450-f8108f3dfa1f",
+  "id": "8a9dcb1c-d3df-4933-b2f6-f1559dcd3103",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -3832,6 +3832,19 @@
     {
       "type": "timestamp with time zone",
       "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "taken_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "location_photos"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": "now()",
@@ -5591,6 +5604,19 @@
       "generated": null,
       "identity": null,
       "name": "note",
+      "entityType": "columns",
+      "schema": "submissions",
+      "table": "submission_photos"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "taken_at",
       "entityType": "columns",
       "schema": "submissions",
       "table": "submission_photos"

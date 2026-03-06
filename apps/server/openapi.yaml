@@ -109,9 +109,12 @@ paths:
                       lastUpdated:
                         type: object
                         properties:
-                          stations: { type: string, format: date-time, nullable: true }
-                          stations_permits: { type: string, format: date-time, nullable: true }
-                          radiolines: { type: string, format: date-time, nullable: true }
+                          stations:
+                            { type: string, format: date-time, nullable: true }
+                          stations_permits:
+                            { type: string, format: date-time, nullable: true }
+                          radiolines:
+                            { type: string, format: date-time, nullable: true }
                       counts:
                         type: object
                         properties:
@@ -142,7 +145,14 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [total_permits, total_unique_stations, by_rat, by_operator, internal]
+                    required:
+                      [
+                        total_permits,
+                        total_unique_stations,
+                        by_rat,
+                        by_operator,
+                        internal,
+                      ]
                     properties:
                       total_permits: { type: integer }
                       total_unique_stations: { type: integer }
@@ -181,7 +191,8 @@ paths:
                         items: { $ref: "#/components/schemas/PermitsByBandUKE" }
                       internal:
                         type: array
-                        items: { $ref: "#/components/schemas/PermitsByBandInternal" }
+                        items:
+                          { $ref: "#/components/schemas/PermitsByBandInternal" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
   /stats/permits/history:
@@ -244,7 +255,8 @@ paths:
                         items: { $ref: "#/components/schemas/VoivodeshipUKE" }
                       internal:
                         type: array
-                        items: { $ref: "#/components/schemas/VoivodeshipInternal" }
+                        items:
+                          { $ref: "#/components/schemas/VoivodeshipInternal" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
   /cells:
@@ -267,7 +279,12 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetailsAndBand" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        { $ref: "#/components/schemas/CellWithDetailsAndBand" },
+                    }
         "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -307,7 +324,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: ["2.0", "2.1", "3.0-dec", "3.0-hex", "4.0", "ntm", "netmonitor"]
+            enum:
+              ["2.0", "2.1", "3.0-dec", "3.0-hex", "4.0", "ntm", "netmonitor"]
             default: "4.0"
         - name: operators
           in: query
@@ -348,7 +366,8 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/CellWithStationBandDetails" }
+                  data:
+                    { $ref: "#/components/schemas/CellWithStationBandDetails" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -401,7 +420,11 @@ paths:
         - name: bounds
           in: query
           description: "bbox as lat1,lon1,lat2,lon2"
-          schema: { type: string, pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$" }
+          schema:
+            {
+              type: string,
+              pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$",
+            }
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 1000, default: 150 }
@@ -439,7 +462,11 @@ paths:
                 type: object
                 required: [data, totalCount]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/StationWithCells" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/StationWithCells" },
+                    }
                   totalCount: { type: integer }
         "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -547,7 +574,12 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetailsAndBand" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        { $ref: "#/components/schemas/CellWithDetailsAndBand" },
+                    }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -564,7 +596,11 @@ paths:
               type: object
               required: [cells]
               properties:
-                cells: { type: array, items: { $ref: "#/components/schemas/CellCreate" } }
+                cells:
+                  {
+                    type: array,
+                    items: { $ref: "#/components/schemas/CellCreate" },
+                  }
       responses:
         "200":
           description: OK
@@ -574,7 +610,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/CellWithDetails" },
+                    }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
@@ -609,7 +649,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/CellWithDetails" },
+                    }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
@@ -705,7 +749,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/StationComment" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/StationComment" },
+                    }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -726,7 +774,12 @@ paths:
               required: [content]
               properties:
                 content: { type: string }
-                file: { type: string, format: binary, description: "Optional image attachment" }
+                file:
+                  {
+                    type: string,
+                    format: binary,
+                    description: "Optional image attachment",
+                  }
       responses:
         "201":
           description: Created
@@ -782,7 +835,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/StationPhoto" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/StationPhoto" },
+                    }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -847,7 +904,14 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperator" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        {
+                          $ref: "#/components/schemas/UkePermitWithBandOperator",
+                        },
+                    }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -871,7 +935,8 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/UkePermitWithBandOperator" }
+                  data:
+                    { $ref: "#/components/schemas/UkePermitWithBandOperator" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -920,7 +985,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/Operator" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/Operator" },
+                    }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     post:
@@ -1022,7 +1091,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/Band" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/Band" },
+                    }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     post:
@@ -1124,7 +1197,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/Region" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/Region" },
+                    }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
     post:
@@ -1220,7 +1297,11 @@ paths:
       parameters:
         - name: bounds
           in: query
-          schema: { type: string, pattern: "^-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*$" }
+          schema:
+            {
+              type: string,
+              pattern: "^-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*$",
+            }
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 1000, default: 500 }
@@ -1264,7 +1345,14 @@ paths:
                 type: object
                 required: [data, totalCount]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/LocationWithRegionStations" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        {
+                          $ref: "#/components/schemas/LocationWithRegionStations",
+                        },
+                    }
                   totalCount: { type: integer }
         "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -1320,7 +1408,8 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/LocationWithRegionStations" }
+                  data:
+                    { $ref: "#/components/schemas/LocationWithRegionStations" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -1386,7 +1475,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/LocationPhoto" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/LocationPhoto" },
+                    }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -1409,7 +1502,11 @@ paths:
             schema:
               type: object
               properties:
-                notes: { type: string, description: "Optional note for the corresponding file (max 100 chars)" }
+                notes:
+                  {
+                    type: string,
+                    description: "Optional note for the corresponding file (max 100 chars)",
+                  }
                 files: { type: string, format: binary }
       responses:
         "200":
@@ -1420,7 +1517,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/LocationPhoto" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/LocationPhoto" },
+                    }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1431,7 +1532,8 @@ paths:
   /locations/{location_id}/photos/{photo_id}:
     patch:
       tags: [Locations]
-      summary: Update a location photo note
+      summary: Update a location photo
+      description: Updates note and/or taken_at for a photo. At least one field must be provided.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1452,6 +1554,13 @@ paths:
               type: object
               properties:
                 note: { type: string, maxLength: 100, nullable: true }
+                taken_at:
+                  {
+                    type: string,
+                    format: date-time,
+                    nullable: true,
+                    description: "Date the photo was taken (ISO 8601)",
+                  }
       responses:
         "200":
           description: OK
@@ -1463,10 +1572,12 @@ paths:
                 properties:
                   data:
                     type: object
-                    required: [id, note]
+                    required: [id, note, taken_at]
                     properties:
                       id: { type: integer }
                       note: { type: string, nullable: true }
+                      taken_at:
+                        { type: string, format: date-time, nullable: true }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1534,7 +1645,14 @@ paths:
                 type: object
                 required: [data, totalCount]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionWithRelations" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        {
+                          $ref: "#/components/schemas/SubmissionWithRelations",
+                        },
+                    }
                   totalCount: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1567,7 +1685,14 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionCreateResponse" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        {
+                          $ref: "#/components/schemas/SubmissionCreateResponse",
+                        },
+                    }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1747,7 +1872,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionPhoto" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/SubmissionPhoto" },
+                    }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -1772,7 +1901,18 @@ paths:
             schema:
               type: object
               properties:
-                notes: { type: string, description: "Optional note for the corresponding file (max 100 chars)" }
+                notes:
+                  {
+                    type: string,
+                    description: "Optional note for the corresponding file (max 100 chars)",
+                  }
+                takenAts:
+                  {
+                    type: string,
+                    format: date-time,
+                    nullable: true,
+                    description: "Optional ISO 8601 datetime when the corresponding photo was taken",
+                  }
                 files: { type: string, format: binary }
       responses:
         "201":
@@ -1822,9 +1962,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [note]
+              description: At least one field (note or taken_at) must be provided
               properties:
                 note: { type: string, maxLength: 100 }
+                taken_at: { type: string, format: date-time, nullable: true }
       responses:
         "204": { description: No Content }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -1904,7 +2045,11 @@ paths:
                 type: object
                 required: [data, totalUnread, total]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/Notification" },
+                    }
                   totalUnread: { type: integer }
                   total: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -2022,10 +2167,16 @@ paths:
                       total_deleted: { type: integer }
                       by_source:
                         type: array
-                        items: { $ref: "#/components/schemas/DeletedEntriesBySource" }
+                        items:
+                          {
+                            $ref: "#/components/schemas/DeletedEntriesBySource",
+                          }
                       by_import:
                         type: array
-                        items: { $ref: "#/components/schemas/DeletedEntriesByImport" }
+                        items:
+                          {
+                            $ref: "#/components/schemas/DeletedEntriesByImport",
+                          }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
   /search:
@@ -2052,7 +2203,12 @@ paths:
           schema: { type: string, enum: [asc, desc], default: desc }
         - name: sortBy
           in: query
-          schema: { type: string, enum: [station_id, updatedAt, createdAt], default: updatedAt }
+          schema:
+            {
+              type: string,
+              enum: [station_id, updatedAt, createdAt],
+              default: updatedAt,
+            }
       requestBody:
         required: true
         content:
@@ -2071,7 +2227,12 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/StationSearchResult" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        { $ref: "#/components/schemas/StationSearchResult" },
+                    }
         "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -2122,7 +2283,11 @@ paths:
                 type: object
                 required: [data, totalCount]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/AuditLogWithUser" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/AuditLogWithUser" },
+                    }
                   totalCount: { type: integer }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -2193,7 +2358,12 @@ paths:
                 type: object
                 required: [data, totalCount]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/UkeLocationWithPermits" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        { $ref: "#/components/schemas/UkeLocationWithPermits" },
+                    }
                   totalCount: { type: integer }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -2205,7 +2375,11 @@ paths:
       parameters:
         - name: bounds
           in: query
-          schema: { type: string, pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$" }
+          schema:
+            {
+              type: string,
+              pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$",
+            }
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, default: 150 }
@@ -2239,7 +2413,14 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperatorLocation" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        {
+                          $ref: "#/components/schemas/UkePermitWithBandOperatorLocation",
+                        },
+                    }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -2258,7 +2439,10 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/UkePermitWithBandOperatorLocation" }
+                  data:
+                    {
+                      $ref: "#/components/schemas/UkePermitWithBandOperatorLocation",
+                    }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -2294,7 +2478,8 @@ paths:
                 properties:
                   data:
                     type: array
-                    items: { $ref: "#/components/schemas/UnassignedPermitStation" }
+                    items:
+                      { $ref: "#/components/schemas/UnassignedPermitStation" }
                   totalCount: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -2308,7 +2493,11 @@ paths:
       parameters:
         - name: bounds
           in: query
-          schema: { type: string, pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$" }
+          schema:
+            {
+              type: string,
+              pattern: "^-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+,-?\\d+\\.\\d+$",
+            }
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 1000, default: 150 }
@@ -2337,7 +2526,12 @@ paths:
                 type: object
                 required: [data, totalCount]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/UkeRadiolineResponse" } }
+                  data:
+                    {
+                      type: array,
+                      items:
+                        { $ref: "#/components/schemas/UkeRadiolineResponse" },
+                    }
                   totalCount: { type: integer }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -2355,7 +2549,11 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/UkeOperator" } }
+                  data:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/UkeOperator" },
+                    }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -2579,7 +2777,14 @@ components:
                     items:
                       properties:
                         code:
-                          enum: [INTERNAL_SERVER_ERROR, FAILED_TO_CREATE, FAILED_TO_UPDATE, FAILED_TO_DELETE, AUTH_FAILURE]
+                          enum:
+                            [
+                              INTERNAL_SERVER_ERROR,
+                              FAILED_TO_CREATE,
+                              FAILED_TO_UPDATE,
+                              FAILED_TO_DELETE,
+                              AUTH_FAILURE,
+                            ]
           example:
             errors:
               - code: INTERNAL_SERVER_ERROR
@@ -2677,33 +2882,73 @@ components:
     StationPhoto:
       type: object
       description: A location photo selected for display on a station, with is_main indicating the station's primary photo.
-      required: [id, attachment_uuid, mime_type, is_main, note, createdAt, author]
+      required:
+        [
+          id,
+          attachment_uuid,
+          mime_type,
+          is_main,
+          note,
+          taken_at,
+          createdAt,
+          author,
+        ]
       properties:
         id: { type: integer, description: "ID of the location_photo record" }
         attachment_uuid: { type: string, format: uuid }
         mime_type: { type: string }
         is_main: { type: boolean }
         note: { type: string, maxLength: 100, nullable: true }
+        taken_at:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            description: "Date the photo was taken",
+          }
         createdAt: { type: string, format: date-time }
         author: { $ref: "#/components/schemas/PhotoAuthor" }
     LocationPhoto:
       type: object
       description: A photo belonging to a location, shared across all stations at that location.
-      required: [id, attachment_uuid, mime_type, note, createdAt, author]
+      required:
+        [id, attachment_uuid, mime_type, note, taken_at, createdAt, author]
       properties:
         id: { type: integer }
         attachment_uuid: { type: string, format: uuid }
         mime_type: { type: string }
         note: { type: string, maxLength: 100, nullable: true }
+        taken_at:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            description: "Date the photo was taken",
+          }
         createdAt: { type: string, format: date-time }
         author: { $ref: "#/components/schemas/PhotoAuthor" }
     Notification:
       type: object
-      required: [id, userId, type, title, submissionId, metadata, actionUrl, readAt, createdAt]
+      required:
+        [
+          id,
+          userId,
+          type,
+          title,
+          submissionId,
+          metadata,
+          actionUrl,
+          readAt,
+          createdAt,
+        ]
       properties:
         id: { type: string, format: uuid }
         userId: { type: string, format: uuid }
-        type: { type: string, enum: [submission_approved, submission_rejected, new_submission] }
+        type:
+          {
+            type: string,
+            enum: [submission_approved, submission_rejected, new_submission],
+          }
         title: { type: string }
         submissionId: { type: string, format: uuid, nullable: true }
         metadata: { type: object, nullable: true, additionalProperties: true }
@@ -2712,12 +2957,14 @@ components:
         createdAt: { type: string, format: date-time }
     SubmissionPhoto:
       type: object
-      required: [id, attachment_uuid, mime_type, note, createdAt, author]
+      required:
+        [id, attachment_uuid, mime_type, note, taken_at, createdAt, author]
       properties:
         id: { type: integer }
         attachment_uuid: { type: string, format: uuid }
         mime_type: { type: string }
         note: { type: string, maxLength: 100, nullable: true }
+        taken_at: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
         author: { $ref: "#/components/schemas/PhotoAuthor" }
 
@@ -2823,7 +3070,12 @@ components:
         - type: object
           properties:
             region: { $ref: "#/components/schemas/Region" }
-            stations: { type: array, items: { $ref: "#/components/schemas/StationWithCellsAndOperator" } }
+            stations:
+              {
+                type: array,
+                items:
+                  { $ref: "#/components/schemas/StationWithCellsAndOperator" },
+              }
 
     CellWithBand:
       allOf:
@@ -2836,9 +3088,17 @@ components:
         - $ref: "#/components/schemas/Station"
         - type: object
           properties:
-            cells: { type: array, items: { $ref: "#/components/schemas/CellWithBand" } }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/CellWithBand" },
+              }
             operator: { $ref: "#/components/schemas/Operator", nullable: true }
-            extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
+            extra_identificators:
+              {
+                $ref: "#/components/schemas/ExtraIdentificators",
+                nullable: true,
+              }
 
     StationRecord:
       type: object
@@ -2865,7 +3125,8 @@ components:
         is_confirmed: { type: boolean, nullable: true }
         operator: { $ref: "#/components/schemas/Operator", nullable: true }
         location: { $ref: "#/components/schemas/Location", nullable: true }
-        extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
+        extra_identificators:
+          { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
     StationWithOperator:
       allOf:
         - $ref: "#/components/schemas/Station"
@@ -2889,25 +3150,46 @@ components:
         operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
-        cells: { type: array, items: { $ref: "#/components/schemas/CellCreate" } }
+        cells:
+          { type: array, items: { $ref: "#/components/schemas/CellCreate" } }
     StationWithCells:
       allOf:
         - $ref: "#/components/schemas/Station"
         - type: object
           properties:
-            cells: { type: array, items: { $ref: "#/components/schemas/CellWithBandAndDetails" } }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/CellWithBandAndDetails" },
+              }
             location: { $ref: "#/components/schemas/LocationWithRegion" }
             operator: { $ref: "#/components/schemas/Operator", nullable: true }
-            extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
+            extra_identificators:
+              {
+                $ref: "#/components/schemas/ExtraIdentificators",
+                nullable: true,
+              }
     StationSearchResult:
       allOf:
         - $ref: "#/components/schemas/Station"
         - type: object
           properties:
-            cells: { type: array, items: { $ref: "#/components/schemas/CellWithDetails" } }
-            location: { $ref: "#/components/schemas/LocationWithRegion", nullable: true }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/CellWithDetails" },
+              }
+            location:
+              {
+                $ref: "#/components/schemas/LocationWithRegion",
+                nullable: true,
+              }
             operator: { $ref: "#/components/schemas/Operator", nullable: true }
-            extra_identificators: { $ref: "#/components/schemas/ExtraIdentificators", nullable: true }
+            extra_identificators:
+              {
+                $ref: "#/components/schemas/ExtraIdentificators",
+                nullable: true,
+              }
     LocationWithRegion:
       allOf:
         - $ref: "#/components/schemas/Location"
@@ -3003,21 +3285,24 @@ components:
           properties:
             station: { $ref: "#/components/schemas/Station", nullable: true }
             band: { $ref: "#/components/schemas/Band", nullable: true }
-            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+            details:
+              { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellWithDetailsAndBand:
       allOf:
         - $ref: "#/components/schemas/CellBase"
         - type: object
           properties:
             band: { $ref: "#/components/schemas/Band" }
-            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+            details:
+              { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellWithBandAndDetails:
       allOf:
         - $ref: "#/components/schemas/CellBase"
         - type: object
           properties:
             band: { $ref: "#/components/schemas/Band" }
-            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+            details:
+              { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellWithStationBandDetails:
       allOf:
         - $ref: "#/components/schemas/CellBase"
@@ -3025,7 +3310,8 @@ components:
           properties:
             station: { $ref: "#/components/schemas/Station" }
             band: { $ref: "#/components/schemas/Band" }
-            details: { $ref: "#/components/schemas/CellDetails", nullable: true }
+            details:
+              { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellCreate:
       description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
       type: object
@@ -3054,7 +3340,16 @@ components:
         station_id: { type: integer }
         user_id: { type: string, format: uuid }
         content: { type: string }
-        attachments: { type: array, items: { type: object, properties: { uuid: { type: string }, type: { type: string } } }, nullable: true }
+        attachments:
+          {
+            type: array,
+            items:
+              {
+                type: object,
+                properties: { uuid: { type: string }, type: { type: string } },
+              },
+            nullable: true,
+          }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
@@ -3079,9 +3374,19 @@ components:
         station_id: { type: integer, nullable: true }
         type: { type: string, enum: [new, update, delete] }
         submitter_note: { type: string, nullable: true }
-        station: { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
-        location: { $ref: "#/components/schemas/ProposedLocationInsert", nullable: true }
-        cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellInsert" }, nullable: true }
+        station:
+          { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
+        location:
+          {
+            $ref: "#/components/schemas/ProposedLocationInsert",
+            nullable: true,
+          }
+        cells:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/ProposedCellInsert" },
+            nullable: true,
+          }
     ProposedStationInsert:
       type: object
       properties:
@@ -3112,7 +3417,8 @@ components:
         rat: { type: string, enum: [GSM, UMTS, LTE, NR], nullable: true }
         notes: { type: string, nullable: true }
         operation: { type: string, enum: [added, updated, removed] }
-        details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
+        details:
+          { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
     SubmissionWithRelations:
       allOf:
         - $ref: "#/components/schemas/Submission"
@@ -3120,9 +3426,15 @@ components:
           properties:
             station: { $ref: "#/components/schemas/Station", nullable: true }
             submitter: { $ref: "#/components/schemas/UserPublic" }
-            reviewer: { $ref: "#/components/schemas/UserPublic", nullable: true }
-            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
-            proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
+            reviewer:
+              { $ref: "#/components/schemas/UserPublic", nullable: true }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/ProposedCellWithDetails" },
+              }
+            proposedStation:
+              { $ref: "#/components/schemas/ProposedStation", nullable: true }
     SubmissionFull:
       allOf:
         - $ref: "#/components/schemas/Submission"
@@ -3130,34 +3442,67 @@ components:
           properties:
             station: { $ref: "#/components/schemas/Station", nullable: true }
             submitter: { $ref: "#/components/schemas/UserFull" }
-            reviewer: { $ref: "#/components/schemas/UserPublic", nullable: true }
-            proposedLocation: { $ref: "#/components/schemas/ProposedLocation", nullable: true }
-            proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
-            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+            reviewer:
+              { $ref: "#/components/schemas/UserPublic", nullable: true }
+            proposedLocation:
+              { $ref: "#/components/schemas/ProposedLocation", nullable: true }
+            proposedStation:
+              { $ref: "#/components/schemas/ProposedStation", nullable: true }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/ProposedCellWithDetails" },
+              }
     SubmissionWithCells:
       allOf:
         - $ref: "#/components/schemas/Submission"
         - type: object
           properties:
-            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/ProposedCellWithDetails" },
+              }
     SubmissionCreateResponse:
       allOf:
         - $ref: "#/components/schemas/Submission"
         - type: object
           properties:
-            proposedStation: { $ref: "#/components/schemas/ProposedStation", nullable: true }
-            proposedLocation: { $ref: "#/components/schemas/ProposedLocation", nullable: true }
-            cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" }, nullable: true }
-            pending_photos: { type: integer, nullable: true, description: "Number of photos expected to be uploaded after submission creation" }
+            proposedStation:
+              { $ref: "#/components/schemas/ProposedStation", nullable: true }
+            proposedLocation:
+              { $ref: "#/components/schemas/ProposedLocation", nullable: true }
+            cells:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/ProposedCellWithDetails" },
+                nullable: true,
+              }
+            pending_photos:
+              {
+                type: integer,
+                nullable: true,
+                description: "Number of photos expected to be uploaded after submission creation",
+              }
     SubmissionUpdate:
       description: In `cells[].details`, do not send cid_long (UMTS), ecid (LTE) or nci (NR); they are computed on the server.
       type: object
       properties:
         review_notes: { type: string, nullable: true }
         submitter_note: { type: string, nullable: true }
-        station: { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
-        location: { $ref: "#/components/schemas/ProposedLocationInsert", nullable: true }
-        cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellUpdate" }, nullable: true }
+        station:
+          { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
+        location:
+          {
+            $ref: "#/components/schemas/ProposedLocationInsert",
+            nullable: true,
+          }
+        cells:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/ProposedCellUpdate" },
+            nullable: true,
+          }
     ProposedCellWithDetails:
       type: object
       properties:
@@ -3285,7 +3630,11 @@ components:
             band: { $ref: "#/components/schemas/Band" }
             operator: { $ref: "#/components/schemas/Operator" }
             location: { $ref: "#/components/schemas/UkeLocation" }
-            sectors: { type: array, items: { $ref: "#/components/schemas/UkePermitSector" } }
+            sectors:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/UkePermitSector" },
+              }
     UkePermitBase:
       type: object
       properties:
@@ -3321,7 +3670,12 @@ components:
         - type: object
           properties:
             region: { $ref: "#/components/schemas/Region" }
-            permits: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperator" } }
+            permits:
+              {
+                type: array,
+                items:
+                  { $ref: "#/components/schemas/UkePermitWithBandOperator" },
+              }
     UkeOperator:
       type: object
       properties:
@@ -3413,8 +3767,16 @@ components:
       properties:
         total_stations: { type: integer }
         total_cells: { type: integer }
-        by_rat: { type: array, items: { $ref: "#/components/schemas/InternalStatsByRat" } }
-        by_operator: { type: array, items: { $ref: "#/components/schemas/InternalStatsByOperator" } }
+        by_rat:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/InternalStatsByRat" },
+          }
+        by_operator:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/InternalStatsByOperator" },
+          }
     PermitsByBandUKE:
       type: object
       properties:
@@ -3554,7 +3916,8 @@ components:
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
-        details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
+        details:
+          { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
 
     # Extra identifiers schemas
     ExtraIdentificators:
@@ -3584,8 +3947,25 @@ components:
           items:
             type: object
             properties:
-              key: { type: string, enum: [stations, radiolines, permits, prune_associations, cleanup_orphaned_uke_locations, associate, cleanup] }
-              status: { type: string, enum: [pending, running, success, skipped, error] }
+              key:
+                {
+                  type: string,
+                  enum:
+                    [
+                      stations,
+                      radiolines,
+                      permits,
+                      prune_associations,
+                      cleanup_orphaned_uke_locations,
+                      associate,
+                      cleanup,
+                    ],
+                }
+              status:
+                {
+                  type: string,
+                  enum: [pending, running, success, skipped, error],
+                }
               startedAt: { type: string, nullable: true }
               finishedAt: { type: string, nullable: true }
         error: { type: string, nullable: true }

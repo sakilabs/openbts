@@ -76,6 +76,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const [originalState, setOriginalState] = useState<OriginalState>({});
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
+  const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
 
   const isEditMode = !!editSubmissionId;
 
@@ -188,12 +189,18 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       if (photos.length > 0) {
         const submissionId = isEditMode && editSubmissionId ? editSubmissionId : data.id;
         const isPhotosOnly = !!data.pending_photos;
-        void uploadSubmissionPhotos(submissionId, photos, photoNotes).catch(() => {
+        void uploadSubmissionPhotos(
+          submissionId,
+          photos,
+          photoNotes,
+          photoTakenAts.map((d) => d?.toISOString() ?? null),
+        ).catch(() => {
           toast.error(t("toast.photoUploadFailed"));
           if (isPhotosOnly) void deleteSubmission(submissionId).catch(() => undefined);
         });
         setPhotos([]);
         setPhotoNotes([]);
+        setPhotoTakenAts([]);
       }
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
       if (isEditMode) {
@@ -540,6 +547,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     setPhotos,
     photoNotes,
     setPhotoNotes,
+    photoTakenAts,
+    setPhotoTakenAts,
     handlers: {
       handleModeChange,
       handleActionChange,

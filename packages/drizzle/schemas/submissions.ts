@@ -160,6 +160,7 @@ export const submissionPhotos = SubmissionsSchema.table(
       .references(() => submissions.id, { onDelete: "cascade" }),
     attachment_id: integer("attachment_id").notNull(),
     note: varchar("note", { length: 100 }),
+    taken_at: timestamp("taken_at", { withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("submission_photos_submission_id_idx").on(t.submission_id), unique("submission_photos_unique").on(t.submission_id, t.attachment_id)],

@@ -34,6 +34,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
     setPhotos,
     photoNotes,
     setPhotoNotes,
+    photoTakenAts,
+    setPhotoTakenAts,
     handlers: {
       handleModeChange,
       handleActionChange,
@@ -157,7 +159,18 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
               const showForExisting = mode === "existing" && !!selectedStation;
               const showForNew = mode === "new" && location.latitude !== null && location.longitude !== null;
               if (!showForExisting && !showForNew) return null;
-              return <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} />;
+
+              return (
+                <PhotoUploadSection
+                  photos={photos}
+                  onPhotosChange={setPhotos}
+                  notes={photoNotes}
+                  onNotesChange={setPhotoNotes}
+                  takenAts={photoTakenAts}
+                  onTakenAtsChange={setPhotoTakenAts}
+                  editSubmissionId={editSubmissionId}
+                />
+              );
             }}
           </form.Subscribe>
         )}

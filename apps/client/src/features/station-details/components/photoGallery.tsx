@@ -2,7 +2,16 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Image01Icon, Cancel01Icon, ArrowLeft01Icon, ArrowRight01Icon, StarIcon, Note02Icon } from "@hugeicons/core-free-icons";
+import {
+  Image01Icon,
+  Cancel01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  StarIcon,
+  Note02Icon,
+  Upload04Icon,
+  Camera01Icon,
+} from "@hugeicons/core-free-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { fetchStationPhotos, setStationPhotoSelection, type StationPhoto } from "../api";
@@ -12,24 +21,24 @@ type Props = { stationId: number; isAdmin: boolean };
 function PhotoMeta({ photo, locale, showNote }: { photo: StationPhoto; locale: string; showNote?: boolean }) {
   const { t } = useTranslation("stationDetails");
   const username = photo.author?.username ?? t("photos.unknownUser");
-  const date = new Date(photo.createdAt).toLocaleDateString(locale, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 
   return (
-    <>
-      <span className="truncate font-medium">@{username}</span>
-      <span className="opacity-70">·</span>
-      <span className="tabular-nums shrink-0">{date}</span>
-      {showNote && photo.note ? (
-        <>
-          <span className="opacity-70">·</span>
-          <span className="italic truncate opacity-70">{photo.note}</span>
-        </>
+    <div className="flex items-center gap-2.5">
+      <span className="font-medium">@{username}</span>
+      <div className="flex items-center gap-1.5">
+        <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
+        <span className="tabular-nums">
+          {new Date(photo.createdAt).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" })}
+        </span>
+      </div>
+      {photo.taken_at ? (
+        <div className="flex items-center gap-1.5">
+          <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
+          <span className="tabular-nums">{new Date(photo.taken_at).toLocaleDateString(locale, { year: "numeric", month: "short" })}</span>
+        </div>
       ) : null}
-    </>
+      {showNote && photo.note ? <span className="italic opacity-70">{photo.note}</span> : null}
+    </div>
   );
 }
 
@@ -162,7 +171,7 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
               alt=""
               className="max-w-full max-h-[calc(90vh-2rem)] object-contain rounded-lg"
             />
-            <div className="flex items-center gap-2 text-white/80 text-xs">
+            <div className="flex items-center text-white/80 text-xs">
               <PhotoMeta photo={activePhoto} locale={i18n.language} showNote />
             </div>
           </div>

@@ -28,7 +28,6 @@ function useRegionBarData(rows: { operator: { name: string }; region: { name: st
       regionMap.set(row.region.name, existing);
     }
 
-    // Compute total per region and sort descending
     const chartData = [...regionMap.values()]
       .map((row) => {
         const total = Object.entries(row).reduce((sum, [k, v]) => (k !== "region" && typeof v === "number" ? sum + v : sum), 0);

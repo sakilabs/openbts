@@ -10,6 +10,7 @@ export type StationPhoto = {
   mime_type: string;
   is_main: boolean;
   note: string | null;
+  taken_at: string | null;
   createdAt: string;
   author: { uuid: string; username: string; name: string } | null;
 };
@@ -19,6 +20,7 @@ export type LocationPhoto = {
   attachment_uuid: string;
   mime_type: string;
   note: string | null;
+  taken_at: string | null;
   createdAt: string;
   author: { uuid: string; username: string; name: string } | null;
 };
@@ -47,6 +49,14 @@ export async function updateLocationPhotoNote(locationId: number, photoId: numbe
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
+  });
+}
+
+export async function updateLocationPhotoTakenAt(locationId: number, photoId: number, takenAt: string | null): Promise<void> {
+  await fetchJson(`${API_BASE}/locations/${locationId}/photos/${photoId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ taken_at: takenAt }),
   });
 }
 

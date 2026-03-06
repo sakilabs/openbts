@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowDown01Icon,
+  Camera01Icon,
   Delete02Icon,
   Image01Icon,
   StarIcon,
@@ -15,6 +16,8 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   AlertDialog,
@@ -34,6 +37,7 @@ export type Photo = {
   id: number;
   attachment_uuid: string;
   note: string | null;
+  taken_at?: string | null;
   createdAt: string;
   author: { uuid: string; username: string; name: string } | null;
   is_main?: boolean;
@@ -44,19 +48,21 @@ type Props = {
   fetchFn: () => Promise<Photo[]>;
   deleteFn: (id: number) => Promise<void>;
   updateNoteFn: (id: number, note: string) => Promise<void>;
+  updateTakenAtFn?: (id: number, takenAt: string | null) => Promise<void>;
   setMainFn?: (id: number) => Promise<void>;
   uploadFn?: (files: File[]) => Promise<unknown>;
   hideWhenEmpty?: boolean;
 };
 
-export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMainFn, uploadFn, hideWhenEmpty }: Props) {
+export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updateTakenAtFn, setMainFn, uploadFn, hideWhenEmpty }: Props) {
   const { t, i18n } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [deletePhotoId, setDeletePhotoId] = useState<number | null>(null);
-  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
-  const [noteValue, setNoteValue] = useState("");
+  const [editingPhotoId, setEditingPhotoId] = useState<number | null>(null);
+  const [editNote, setEditNote] = useState("");
+  const [editTakenAt, setEditTakenAt] = useState<Date | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data: photos = [], isLoading } = useQuery({
@@ -78,11 +84,28 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
     onError: () => toast.error(t("photos.deleteFailed")),
   });
 
-  const noteMutation = useMutation({
-    mutationFn: ({ id, note }: { id: number; note: string }) => updateNoteFn(id, note),
+  const editMutation = useMutation({
+    mutationFn: async ({
+      id,
+      note,
+      takenAt,
+      originalNote,
+      originalTakenAt,
+    }: {
+      id: number;
+      note: string;
+      takenAt: string | null;
+      originalNote: string;
+      originalTakenAt: string | null;
+    }) => {
+      const ops: Promise<void>[] = [];
+      if (note !== originalNote) ops.push(updateNoteFn(id, note));
+      if (updateTakenAtFn && takenAt !== originalTakenAt) ops.push(updateTakenAtFn(id, takenAt));
+      if (ops.length > 0) await Promise.all(ops);
+    },
     onSuccess: () => {
       void invalidate();
-      setEditingNoteId(null);
+      setEditingPhotoId(null);
     },
     onError: () => toast.error(t("photos.noteFailed")),
   });
@@ -114,6 +137,12 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
   const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
   const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
   const activePhoto = lightboxIndex !== null ? (photos[lightboxIndex] ?? null) : null;
+
+  function openEdit(photo: Photo) {
+    setEditingPhotoId(photo.id);
+    setEditNote(photo.note ?? "");
+    setEditTakenAt(photo.taken_at ? new Date(photo.taken_at) : null);
+  }
 
   function confirmDelete() {
     if (deletePhotoId === null) return;
@@ -209,52 +238,81 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
                       </div>
                     </div>
 
-                    <div className="px-2 py-1 text-[11px] text-muted-foreground">
-                      <p className="truncate font-medium">@{photo.author?.username ?? "-"}</p>
-                      <p className="tabular-nums">
-                        {new Date(photo.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
-                      </p>
-                    </div>
-
-                    {editingNoteId === photo.id ? (
-                      <div className="px-2 pb-1.5 flex items-center gap-1">
-                        <input
-                          autoFocus
-                          value={noteValue}
-                          onChange={(e) => setNoteValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") noteMutation.mutate({ id: photo.id, note: noteValue });
-                            if (e.key === "Escape") setEditingNoteId(null);
-                          }}
-                          maxLength={100}
-                          placeholder={t("photos.notePlaceholder")}
-                          className="flex-1 min-w-0 text-[11px] px-1.5 py-0.5 rounded border bg-background"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => noteMutation.mutate({ id: photo.id, note: noteValue })}
-                          disabled={noteMutation.isPending}
-                          className="p-0.5 text-primary hover:text-primary/80"
-                        >
-                          <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
-                        </button>
-                        <button type="button" onClick={() => setEditingNoteId(null)} className="p-0.5 text-muted-foreground hover:text-foreground">
-                          <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
-                        </button>
+                    <div className="px-2 pt-1.5 pb-1 text-[10px] flex items-start justify-between gap-1">
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <HugeiconsIcon icon={Upload04Icon} className="size-2.5 shrink-0" />
+                          <span className="tabular-nums truncate">
+                            {new Date(photo.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
+                          </span>
+                        </div>
+                        {photo.taken_at ? (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <HugeiconsIcon icon={Camera01Icon} className="size-2.5 shrink-0" />
+                            <span className="tabular-nums truncate">
+                              {new Date(photo.taken_at).toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
+                            </span>
+                          </div>
+                        ) : null}
+                        {photo.note ? <p className="truncate italic text-muted-foreground">{photo.note}</p> : null}
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingNoteId(photo.id);
-                          setNoteValue(photo.note ?? "");
+                      <Popover
+                        open={editingPhotoId === photo.id}
+                        onOpenChange={(open) => {
+                          if (!open) setEditingPhotoId(null);
                         }}
-                        className="px-2 pb-1.5 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-full text-left truncate"
                       >
-                        <HugeiconsIcon icon={PencilEdit02Icon} className="size-3 shrink-0" />
-                        <span className="truncate">{photo.note || t("photos.addNote")}</span>
-                      </button>
-                    )}
+                        <PopoverTrigger
+                          type="button"
+                          onClick={() => openEdit(photo)}
+                          className="mt-0.5 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                        >
+                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3" />
+                        </PopoverTrigger>
+                        <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
+                            <input
+                              autoFocus
+                              value={editNote}
+                              onChange={(e) => setEditNote(e.target.value)}
+                              maxLength={100}
+                              placeholder={t("photos.notePlaceholder")}
+                              className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
+                            />
+                          </div>
+                          {updateTakenAtFn ? (
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
+                              <DatePickerInput value={editTakenAt} onChange={setEditTakenAt} />
+                            </div>
+                          ) : null}
+                          <div className="flex items-center justify-end gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => setEditingPhotoId(null)}>
+                              <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+                              {t("common:actions.cancel")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                editMutation.mutate({
+                                  id: photo.id,
+                                  note: editNote,
+                                  takenAt: editTakenAt?.toISOString() ?? null,
+                                  originalNote: photo.note ?? "",
+                                  originalTakenAt: photo.taken_at ?? null,
+                                })
+                              }
+                              disabled={editMutation.isPending}
+                            >
+                              {editMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
+                              {t("common:actions.save")}
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                 ))}
 
@@ -338,14 +396,23 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, setMa
               alt={activePhoto.note ?? ""}
               className="max-w-full max-h-[calc(90vh-4rem)] object-contain rounded-lg"
             />
-            <div className="flex items-center gap-2 text-white/80 text-xs">
+            <div className="flex items-center gap-2.5 text-white/80 text-xs">
               <span className="font-medium">@{activePhoto.author?.username ?? "-"}</span>
-              {activePhoto.note ? (
-                <>
-                  <span className="opacity-50">·</span>
-                  <span className="italic opacity-70">{activePhoto.note}</span>
-                </>
+              <div className="flex items-center gap-1.5">
+                <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
+                <span className="tabular-nums">
+                  {new Date(activePhoto.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
+                </span>
+              </div>
+              {activePhoto.taken_at ? (
+                <div className="flex items-center gap-1.5">
+                  <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
+                  <span className="tabular-nums">
+                    {new Date(activePhoto.taken_at).toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
+                  </span>
+                </div>
               ) : null}
+              {activePhoto.note ? <span className="italic opacity-70">{activePhoto.note}</span> : null}
             </div>
           </div>
         </div>

@@ -484,6 +484,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                   submission_id: id,
                   uploaded_by: submission.submitter_id,
                   note: p.note,
+                  taken_at: p.taken_at,
                 })),
               )
               .onConflictDoNothing();
@@ -543,9 +544,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       ? ((await db.query.stations.findFirst({ where: { id: resolvedStationId }, columns: { station_id: true } }))?.station_id ?? null)
       : null;
 
-    void rebuildStationsPermitsAssociations().catch((e) =>
-      logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
-    );
+    if (submission.type === "new") {
+      void rebuildStationsPermitsAssociations().catch((e) =>
+        logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
+      );
+    }
 
     await createAuditLog(
       {

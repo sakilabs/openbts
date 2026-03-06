@@ -20,6 +20,7 @@ const schemaRoute = {
           mime_type: z.string(),
           is_main: z.boolean(),
           note: z.string().nullable(),
+          taken_at: z.string().nullable(),
           createdAt: z.string(),
           author: z.object({ uuid: z.string(), username: z.string(), name: z.string() }).nullable(),
         }),
@@ -35,6 +36,7 @@ type PhotoItem = {
   mime_type: string;
   is_main: boolean;
   note: string | null;
+  taken_at: string | null;
   createdAt: string;
   author: { uuid: string; username: string; name: string } | null;
 };
@@ -52,6 +54,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       mime_type: attachments.mime_type,
       is_main: stationPhotoSelections.is_main,
       note: locationPhotos.note,
+      taken_at: locationPhotos.taken_at,
       createdAt: locationPhotos.createdAt,
       author_uuid: users.id,
       author_username: users.username,
@@ -71,6 +74,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       mime_type: r.mime_type,
       is_main: r.is_main,
       note: r.note,
+      taken_at: r.taken_at?.toISOString() ?? null,
       createdAt: r.createdAt.toISOString(),
       author: r.author_uuid && r.author_username && r.author_name ? { uuid: r.author_uuid, username: r.author_username, name: r.author_name } : null,
     })),

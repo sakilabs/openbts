@@ -378,6 +378,7 @@ export const locationPhotos = pgTable(
     submission_id: uuid("submission_id"),
     uploaded_by: uuid("uploaded_by").references(() => users.id, { onDelete: "set null" }),
     note: varchar("note", { length: 100 }),
+    taken_at: timestamp("taken_at", { withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

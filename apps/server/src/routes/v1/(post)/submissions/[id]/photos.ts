@@ -72,12 +72,14 @@ async function handler(
   const savedPaths: string[] = [];
   const insertedRows: { id: number; attachment_uuid: string; mime_type: string; createdAt: Date }[] = [];
   const notes: string[] = [];
+  const takenAts: (string | null)[] = [];
 
   try {
     for await (const part of req.parts({ limits: { fileSize: MAX_FILE_SIZE_BYTES } })) {
       const anyPart = part as unknown as { type: string; fieldname?: string; value?: string; file?: unknown };
       if (anyPart.type === "field") {
         if (anyPart.fieldname === "notes") notes.push(anyPart.value ?? "");
+        if (anyPart.fieldname === "takenAts") takenAts.push(anyPart.value || null);
         continue;
       }
       if (anyPart.type !== "file" || !anyPart.file) continue;
@@ -111,7 +113,9 @@ async function handler(
 
       const fileIndex = insertedRows.length;
       const note = notes[fileIndex]?.trim().slice(0, 100) || null;
-      const [photoRow] = await db.insert(submissionPhotos).values({ submission_id: id, attachment_id: newAttachment.id, note }).returning();
+      const takenAtRaw = takenAts[fileIndex];
+      const taken_at = takenAtRaw ? new Date(takenAtRaw) : null;
+      const [photoRow] = await db.insert(submissionPhotos).values({ submission_id: id, attachment_id: newAttachment.id, note, taken_at }).returning();
       if (!photoRow) throw new ErrorResponse("FAILED_TO_CREATE");
 
       insertedRows.push({ id: photoRow.id, attachment_uuid: fileUuid, mime_type: "image/webp", createdAt: photoRow.createdAt });

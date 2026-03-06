@@ -198,6 +198,7 @@ export type SubmissionPhoto = {
   attachment_uuid: string;
   mime_type: string;
   note: string | null;
+  taken_at: string | null;
   createdAt: string;
   author: { uuid: string; username: string; name: string } | null;
 };
@@ -218,10 +219,19 @@ export async function updateSubmissionPhotoNote(submissionId: string, photoId: n
   });
 }
 
-export async function uploadSubmissionPhotos(submissionId: string, files: File[], notes?: string[]): Promise<void> {
+export async function updateSubmissionPhotoTakenAt(submissionId: string, photoId: number, takenAt: string | null): Promise<void> {
+  await fetchJson(`${API_BASE}/submissions/${submissionId}/photos/${photoId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ taken_at: takenAt }),
+  });
+}
+
+export async function uploadSubmissionPhotos(submissionId: string, files: File[], notes?: string[], takenAts?: (string | null)[]): Promise<void> {
   const formData = new FormData();
   for (let i = 0; i < files.length; i++) {
     formData.append("notes", notes?.[i] ?? "");
+    formData.append("takenAts", takenAts?.[i] ?? "");
     formData.append("files", files[i]);
   }
   await fetchJson(`${API_BASE}/submissions/${submissionId}/photos`, {

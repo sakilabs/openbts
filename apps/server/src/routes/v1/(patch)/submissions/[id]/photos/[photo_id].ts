@@ -13,15 +13,19 @@ import type { JSONBody, Route } from "../../../../../../interfaces/routes.interf
 
 const schemaRoute = {
   params: z.object({ id: z.string(), photo_id: z.coerce.number() }),
-  body: z.object({ note: z.string().max(100) }),
+  body: z
+    .object({
+      note: z.string().max(100).optional(),
+      taken_at: z.iso.datetime().nullable().optional(),
+    })
+    .refine((b) => b.note !== undefined || b.taken_at !== undefined, { message: "At least one field required" }),
   response: { 204: z.object({}) },
 };
 
-type ReqParams = { Params: { id: string; photo_id: number }; Body: { note: string } };
+type ReqParams = { Params: { id: string; photo_id: number }; Body: { note?: string; taken_at?: string | null } };
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<Record<never, never>>>) {
   const { id, photo_id } = req.params;
-  const { note } = req.body;
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
@@ -36,9 +40,13 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const photo = await db.query.submissionPhotos.findFirst({ where: { id: photo_id, submission_id: id } });
   if (!photo) throw new ErrorResponse("NOT_FOUND");
 
+  const setClause: Record<string, unknown> = {};
+  if (req.body.note !== undefined) setClause.note = req.body.note.trim() || null;
+  if (req.body.taken_at !== undefined) setClause.taken_at = req.body.taken_at ? new Date(req.body.taken_at) : null;
+
   await db
     .update(submissionPhotos)
-    .set({ note: note.trim() || null })
+    .set(setClause)
     .where(and(eq(submissionPhotos.id, photo_id), eq(submissionPhotos.submission_id, id)));
 
   await createAuditLog(
@@ -47,7 +55,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       table_name: "submission_photos",
       record_id: photo_id,
       old_values: photo,
-      new_values: { note: note.trim() || null },
+      new_values: setClause,
     },
     req,
   );

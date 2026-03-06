@@ -1,5 +1,11 @@
 import { PhotosSection } from "@/components/photosSection";
-import { fetchLocationPhotos, uploadLocationPhotos, updateLocationPhotoNote, deleteLocationPhoto } from "@/features/station-details/api";
+import {
+  fetchLocationPhotos,
+  uploadLocationPhotos,
+  updateLocationPhotoNote,
+  updateLocationPhotoTakenAt,
+  deleteLocationPhoto,
+} from "@/features/station-details/api";
 
 type Props = { locationId: number };
 
@@ -10,6 +16,7 @@ export function LocationPhotosSection({ locationId }: Props) {
       fetchFn={() => fetchLocationPhotos(locationId)}
       deleteFn={(id) => deleteLocationPhoto(locationId, id)}
       updateNoteFn={(id, note) => updateLocationPhotoNote(locationId, id, note)}
+      updateTakenAtFn={(id, takenAt) => updateLocationPhotoTakenAt(locationId, id, takenAt)}
       uploadFn={(files) => uploadLocationPhotos(locationId, files)}
     />
   );
