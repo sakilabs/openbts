@@ -1,11 +1,10 @@
 import { z } from "zod/v4";
-import { pipeline } from "node:stream/promises";
-import { createWriteStream } from "node:fs";
 import path from "node:path";
 import fs from "node:fs/promises";
 import sharp from "sharp";
 
 import db from "../../../../../database/psql.js";
+import { isHeic, decodeHeicToRaw } from "../../../../../utils/image.js";
 import { ErrorResponse } from "../../../../../errors.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
@@ -73,9 +72,24 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       const filePath = path.join(UPLOAD_DIR, filename);
       savedPaths.push(filePath);
 
-      const transform = sharp().rotate().resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true }).webp({ quality: 82 });
+      const chunks: Buffer[] = [];
+      for await (const chunk of filePart.file) chunks.push(chunk as Buffer);
+      const inputBuffer = Buffer.concat(chunks);
 
-      await pipeline(filePart.file, transform, createWriteStream(filePath));
+      let sharpInput: sharp.SharpInput;
+      let sharpOptions: sharp.SharpOptions | undefined;
+      if (isHeic(filePart.mimetype)) {
+        const { data, width, height } = await decodeHeicToRaw(inputBuffer);
+        sharpInput = data;
+        sharpOptions = { raw: { width, height, channels: 4 } };
+      } else sharpInput = inputBuffer;
+
+      const outputBuffer = await sharp(sharpInput, sharpOptions)
+        .rotate()
+        .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
+      await fs.writeFile(filePath, outputBuffer);
       const stats = await fs.stat(filePath);
 
       const note = notes[insertedRows.length]?.trim().slice(0, 100) || null;

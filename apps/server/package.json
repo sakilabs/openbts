@@ -32,6 +32,7 @@
     "fastify": "5.8.1",
     "fastify-type-provider-zod": "6.1.0",
     "figlet": "1.10.0",
+    "libheif-js": "1.19.8",
     "nanoid": "5.1.6",
     "postgres": "3.4.8",
     "redis": "5.11.0",
@@ -45,7 +46,6 @@
     "@types/figlet": "1.7.0",
     "@types/json-schema": "7.0.15",
     "@types/node": "24.3.0",
-    "@types/sharp": "0.32.0",
     "@types/web-push": "3.6.4",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
