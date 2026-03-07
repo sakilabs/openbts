@@ -376,6 +376,8 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     };
   }, [styles, mapStyle]);
 
+  const initialStyleRef = useRef({ dark: mapStyles.dark, light: mapStyles.light });
+
   const handleSetMapStyle = useCallback((style: MapStyle) => {
     setMapStyle(style);
     localStorage.setItem("map-style", style);
@@ -393,7 +395,8 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const initialStyle = resolvedTheme === "dark" ? mapStyles.dark : mapStyles.light;
+    const initStyles = initialStyleRef.current;
+    const initialStyle = resolvedTheme === "dark" ? initStyles.dark : initStyles.light;
     currentStyleRef.current = initialStyle;
 
     const map = new MapLibreGL.Map({
@@ -457,7 +460,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
       map.remove();
       dispatchMap({ type: "TEARDOWN" });
     };
-  }, [projection, clearStyleTimeout, mapStyles.dark, mapStyles.light, resolvedTheme, viewport]);
+  }, [projection, clearStyleTimeout, resolvedTheme, viewport]);
 
   useEffect(() => {
     if (!mapInstance || !isControlled || !viewport) return;
