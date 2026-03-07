@@ -6,6 +6,7 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { userLists } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -63,6 +64,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       throw new ErrorResponse("FAILED_TO_UPDATE");
     });
   if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+  await createAuditLog({ action: "user_lists.update", table_name: "user_lists", record_id: updated.id, old_values: list, new_values: updated }, req);
 
   return res.send({ data: updated });
 }

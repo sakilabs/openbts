@@ -5,6 +5,7 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { userLists } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -39,6 +40,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
     .catch(() => {
       throw new ErrorResponse("FAILED_TO_DELETE");
     });
+
+  await createAuditLog({ action: "user_lists.delete", table_name: "user_lists", record_id: list.id, old_values: list }, req);
 
   return res.status(204).send();
 }

@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { userLists } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -51,6 +52,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       throw new ErrorResponse("FAILED_TO_CREATE");
     });
   if (!created) throw new ErrorResponse("FAILED_TO_CREATE");
+
+  await createAuditLog({ action: "user_lists.create", table_name: "user_lists", record_id: created.id, new_values: created }, req);
 
   return res.send({ data: created });
 }
