@@ -10,7 +10,8 @@
     "editLocation": "Edytuj lokalizację",
     "settings": "Ustawienia",
     "ukeImport": "Import UKE",
-    "ukePermits": "Nieprzypisane pozwolenia UKE"
+    "ukePermits": "Nieprzypisane pozwolenia UKE",
+    "lists": "Listy"
   },
   "settings": {
     "title": "Ustawienia systemowe",
@@ -56,7 +57,12 @@
     "announcementTypeError": "Błąd",
     "enableAnnouncement": "Włącz ogłoszenie",
     "announcementEnabled": "Ogłoszenie jest widoczne dla wszystkich użytkowników",
-    "announcementDisabled": "Ogłoszenie jest ukryte"
+    "announcementDisabled": "Ogłoszenie jest ukryte",
+    "userLists": "Listy użytkowników",
+    "userListsDesc": "Pozwól użytkownikom tworzyć i udostępniać listy stacji",
+    "enableUserLists": "Włącz listy użytkowników",
+    "userListsEnabled": "Użytkownicy mogą tworzyć i udostępniać listy",
+    "userListsDisabled": "Listy użytkowników są wyłączone"
   },
   "users": {
     "table": {
@@ -66,6 +72,24 @@
       "status": "Status",
       "created": "Utworzono"
     }
+  },
+  "lists": {
+    "table": {
+      "name": "Nazwa",
+      "createdBy": "Utworzono przez",
+      "visibility": "Widoczność",
+      "public": "Publiczna",
+      "private": "Prywatna",
+      "stations": "Stacje",
+      "radiolines": "Radiolinie",
+      "created": "Utworzono",
+      "empty": "Nie znaleziono list",
+      "emptyHint": "Brak list pasujących do wyszukiwania"
+    },
+    "confirmDeleteTitle": "Usuń listę",
+    "confirmDeleteDesc": "Czy na pewno chcesz usunąć \"{{name}}\"? Tej operacji nie można cofnąć.",
+    "deleteSuccess": "Lista została usunięta",
+    "deleteError": "Nie udało się usunąć listy"
   },
   "locations": {
     "title": "Lokalizacje"

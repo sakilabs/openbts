@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { lazy, memo, Suspense, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight02Icon, Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
@@ -20,12 +20,13 @@ import {
 import type { DuplexRadioLink } from "../utils";
 import { cn } from "@/lib/utils";
 
+const AddToListPopover = lazy(() => import("@/features/lists/components/addToListPopover").then((m) => ({ default: m.AddToListPopover })));
+
 function PopupShareButton({ link }: { link: DuplexRadioLink }) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = buildRadiolineShareUrl(link);
-
   const handleShare = useCallback(() => {
+    const shareUrl = buildRadiolineShareUrl(link);
     if (navigator.share) {
       const operatorName = link.directions[0].operator?.name ?? "";
       void navigator
@@ -49,7 +50,7 @@ function PopupShareButton({ link }: { link: DuplexRadioLink }) {
       .catch((error) => {
         console.error("Failed to copy:", error);
       });
-  }, [link, shareUrl]);
+  }, [link]);
 
   return (
     <button
@@ -70,10 +71,16 @@ function PopupShareButton({ link }: { link: DuplexRadioLink }) {
 type RadioLinePopupContentProps = {
   link: DuplexRadioLink;
   coordinates: [number, number];
+  showAddToList?: boolean;
   onOpenDetails: (link: DuplexRadioLink) => void;
 };
 
-export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link, coordinates, onOpenDetails }: RadioLinePopupContentProps) {
+export const RadioLinePopupContent = memo(function RadioLinePopupContent({
+  link,
+  coordinates,
+  showAddToList = false,
+  onOpenDetails,
+}: RadioLinePopupContentProps) {
   const { t } = useTranslation(["main", "common"]);
   const { preferences } = usePreferences();
 
@@ -131,6 +138,21 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
             const isForward = dir.tx.latitude === link.a.latitude && dir.tx.longitude === link.a.longitude;
             const dirCalcSpeed =
               dir.link.ch_width && dir.link.modulation_type ? calculateRadiolineSpeed(dir.link.ch_width, dir.link.modulation_type) : null;
+            const dirSpeedBadge = (() => {
+              if (dirCalcSpeed != null)
+                return (
+                  <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[8px] font-mono font-medium text-emerald-600 border border-emerald-500/20">
+                    {formatSpeed(dirCalcSpeed)}
+                  </span>
+                );
+              if (dir.link.bandwidth)
+                return (
+                  <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
+                    {formatBandwidth(dir.link.bandwidth)}
+                  </span>
+                );
+              return null;
+            })();
             return (
               <div key={dir.id} className="flex items-start gap-1.5">
                 {link.directions.length > 1 && (
@@ -154,15 +176,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
                       {dir.link.ch_width} MHz
                     </span>
                   )}
-                  {dirCalcSpeed != null ? (
-                    <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[8px] font-mono font-medium text-emerald-600 border border-emerald-500/20">
-                      {formatSpeed(dirCalcSpeed)}
-                    </span>
-                  ) : dir.link.bandwidth ? (
-                    <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
-                      {formatBandwidth(dir.link.bandwidth)}
-                    </span>
-                  ) : null}
+                  {dirSpeedBadge}
                   {dirExpired && <span className="size-1.5 rounded-full bg-destructive shrink-0 mt-1" title={t("common:status.expired")} />}
                 </div>
               </div>
@@ -171,10 +185,15 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
         </div>
       </button>
 
-      <div className="px-3 py-1.5 border-t border-border/50 flex items-center justify-between">
-        <span className="text-[10px] text-muted-foreground font-mono">
+      <div className="px-3 py-1.5 border-t border-border/50 flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground font-mono flex-1">
           GPS: {formatCoordinates(coordinates[1], coordinates[0], preferences.gpsFormat)}
         </span>
+        {showAddToList && (
+          <Suspense>
+            <AddToListPopover radiolineIds={link.directions.map((d) => d.id)} />
+          </Suspense>
+        )}
         <PopupShareButton link={link} />
       </div>
     </div>

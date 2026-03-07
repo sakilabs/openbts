@@ -442,10 +442,12 @@ CREATE TABLE "user_lists" (
 	"is_public" boolean DEFAULT false,
 	"created_by" uuid NOT NULL,
 	"stations" jsonb NOT NULL,
+	"radiolines" jsonb DEFAULT '[]' NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "user_lists_creator_name_unique" UNIQUE("created_by","name"),
-	CONSTRAINT "user_lists_stations_is_array" CHECK (jsonb_typeof("stations") = 'array')
+	CONSTRAINT "user_lists_stations_is_array" CHECK (jsonb_typeof("stations") = 'array'),
+	CONSTRAINT "user_lists_radiolines_is_array" CHECK (jsonb_typeof("radiolines") = 'array')
 );
 --> statement-breakpoint
 CREATE TABLE "auth"."users" (
@@ -675,6 +677,7 @@ CREATE INDEX "twoFactors_secret_idx" ON "auth"."two_factors" ("secret");--> stat
 CREATE INDEX "twoFactors_userId_idx" ON "auth"."two_factors" ("user_id");--> statement-breakpoint
 CREATE INDEX "user_lists_created_by_idx" ON "user_lists" ("created_by");--> statement-breakpoint
 CREATE INDEX "user_lists_stations_gin" ON "user_lists" USING gin ("stations");--> statement-breakpoint
+CREATE INDEX "user_lists_radiolines_gin" ON "user_lists" USING gin ("radiolines");--> statement-breakpoint
 CREATE INDEX "users_email_idx" ON "auth"."users" ("email");--> statement-breakpoint
 CREATE INDEX "proposed_cells_submission_id_idx" ON "submissions"."proposed_cells" ("submission_id");--> statement-breakpoint
 CREATE INDEX "proposed_locations_submission_id_idx" ON "submissions"."proposed_locations" ("submission_id");--> statement-breakpoint

@@ -4,7 +4,6 @@ import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
 import { getRuntimeSettings, updateRuntimeSettings, type RuntimeSettings } from "../../../services/settings.service.js";
 import { createAuditLog } from "../../../services/auditLog.service.js";
-import { ErrorResponse } from "../../../errors.js";
 import { settingsDataSchema } from "../(get)/settings.js";
 
 type ReqBody = { Body: Partial<RuntimeSettings> };
@@ -18,6 +17,7 @@ const schemaRoute = {
       disabledRoutes: z.array(z.string().min(1)).optional(),
       enableStationComments: z.boolean().optional(),
       submissionsEnabled: z.boolean().optional(),
+      enableUserLists: z.boolean().optional(),
       photosEnabled: z.boolean().optional(),
       announcement: z
         .object({
@@ -35,7 +35,6 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<Response>>) {
   const patch = req.body;
-  if (!patch || typeof patch !== "object") throw new ErrorResponse("BAD_REQUEST");
   const oldSettings = getRuntimeSettings();
   const updated = await updateRuntimeSettings(patch);
   await createAuditLog(

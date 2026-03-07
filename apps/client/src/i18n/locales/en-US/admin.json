@@ -10,7 +10,8 @@
     "editLocation": "Edit Location",
     "settings": "Settings",
     "ukeImport": "UKE Import",
-    "ukePermits": "Unassigned UKE Permits"
+    "ukePermits": "Unassigned UKE Permits",
+    "lists": "Lists"
   },
   "settings": {
     "title": "System Settings",
@@ -56,7 +57,12 @@
     "announcementTypeError": "Error",
     "enableAnnouncement": "Enable announcement",
     "announcementEnabled": "Announcement is visible to all users",
-    "announcementDisabled": "Announcement is hidden"
+    "announcementDisabled": "Announcement is hidden",
+    "userLists": "User Lists",
+    "userListsDesc": "Allow users to create and share station lists",
+    "enableUserLists": "Enable user lists",
+    "userListsEnabled": "Users can create and share lists",
+    "userListsDisabled": "User lists are disabled"
   },
   "users": {
     "table": {
@@ -66,6 +72,24 @@
       "status": "Status",
       "created": "Created"
     }
+  },
+  "lists": {
+    "table": {
+      "name": "Name",
+      "createdBy": "Created By",
+      "visibility": "Visibility",
+      "public": "Public",
+      "private": "Private",
+      "stations": "Stations",
+      "radiolines": "Radiolines",
+      "created": "Created",
+      "empty": "No lists found",
+      "emptyHint": "No lists matching your search"
+    },
+    "confirmDeleteTitle": "Delete List",
+    "confirmDeleteDesc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "deleteSuccess": "List deleted successfully",
+    "deleteError": "Failed to delete list"
   },
   "locations": {
     "title": "Locations"

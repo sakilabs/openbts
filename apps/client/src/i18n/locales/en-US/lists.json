@@ -1,0 +1,21 @@
+{
+  "empty": "You haven't created any lists yet.",
+  "noLists": "No lists yet",
+  "create": "Create List",
+  "name": "Name",
+  "description": "Description",
+  "stationCount": "{{count}} stations",
+  "radiolineCount": "{{count}} radio lines",
+  "public": "Public",
+  "private": "Private",
+  "deleteConfirm": "Are you sure you want to delete this list?",
+  "deleteConfirmDescription": "This action cannot be undone.",
+  "copied": "Link copied to clipboard",
+  "created": "List created",
+  "deleted": "List deleted",
+  "updated": "List updated",
+  "addToList": "Add to list",
+  "createNew": "Create new list",
+  "togglePublic": "Make public",
+  "togglePrivate": "Make private"
+}

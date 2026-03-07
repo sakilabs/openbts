@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
 import { useMap } from "@/components/ui/map";
 import { useRadioLinesLayer } from "../hooks/useRadioLinesLayer";
@@ -9,6 +10,7 @@ import type { RadioLine } from "@/types/station";
 import type { DuplexRadioLink } from "../utils";
 import { groupRadioLinesIntoLinks } from "../utils";
 import { usePreferences } from "@/hooks/usePreferences";
+import { queryClient } from "@/lib/queryClient";
 
 const RadioLineDetailsDialog = lazy(() =>
   import("@/features/station-details/components/radioLineDetailsDialog").then((m) => ({ default: m.RadioLineDetailsDialog })),
@@ -20,10 +22,11 @@ const EMPTY_ENDPOINTS: GeoJSON.FeatureCollection = { type: "FeatureCollection", 
 type RadioLinesLayerProps = {
   radioLines: RadioLine[];
   pendingRadiolineId?: number | null;
+  showAddToList?: boolean;
   onPendingRadiolineConsumed?: (id: null) => void;
 };
 
-export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPendingRadiolineConsumed }: RadioLinesLayerProps) {
+export default function RadioLinesLayer({ radioLines, pendingRadiolineId, showAddToList, onPendingRadiolineConsumed }: RadioLinesLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
   const [selectedLink, setSelectedLink] = useState<DuplexRadioLink | null>(null);
@@ -65,7 +68,11 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPend
       const root = createRoot(container);
       popupRootRef.current = root;
 
-      root.render(<RadioLinePopupContent link={link} coordinates={coordinates} onOpenDetails={handleOpenDetails} />);
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <RadioLinePopupContent link={link} coordinates={coordinates} showAddToList={showAddToList} onOpenDetails={handleOpenDetails} />
+        </QueryClientProvider>,
+      );
 
       const popup = new MapLibreGL.Popup({
         closeButton: true,
@@ -79,7 +86,7 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPend
 
       popupRef.current = popup;
     },
-    [map, cleanupPopup, handleOpenDetails],
+    [map, cleanupPopup, handleOpenDetails, showAddToList],
   );
 
   useRadioLinesLayer({
@@ -98,8 +105,9 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPend
   }, [pendingRadiolineId, duplexLinks]);
 
   const [lastHandledPendingId, setLastHandledPendingId] = useState<number | null>(null);
-  if (pendingRadiolineId !== lastHandledPendingId) {
-    setLastHandledPendingId(pendingRadiolineId ?? null);
+  const normalizedPendingId = pendingRadiolineId ?? null;
+  if (normalizedPendingId !== lastHandledPendingId) {
+    setLastHandledPendingId(normalizedPendingId);
     if (pendingMatch) setSelectedLink(pendingMatch);
   }
 
@@ -111,7 +119,7 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, onPend
 
   return (
     <Suspense fallback={null}>
-      {selectedLink && <RadioLineDetailsDialog key={selectedLink.groupId} link={selectedLink} onClose={handleCloseDetails} />}
+      {selectedLink ? <RadioLineDetailsDialog key={selectedLink.groupId} link={selectedLink} onClose={handleCloseDetails} /> : null}
     </Suspense>
   );
 }

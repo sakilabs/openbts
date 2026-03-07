@@ -12,6 +12,8 @@ import { useMapPopup } from "../hooks/useMapPopup";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { showApiError } from "@/lib/api";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useSettings } from "@/hooks/useSettings";
+import { authClient } from "@/lib/authClient";
 import { useWakeLock } from "../hooks/useWakeLock";
 
 const RadioLinesLayer = lazy(() => import("./radioLinesLayer"));
@@ -91,6 +93,9 @@ function MapViewInner() {
   const { map, isLoaded } = useMap();
   const { bounds, zoom, isMoving } = useMapBounds({ map, isLoaded });
   const { preferences } = usePreferences();
+  const { data: runtimeSettings } = useSettings();
+  const { data: session } = authClient.useSession();
+  const showAddToList = !!session?.user && !!runtimeSettings?.enableUserLists;
   const [filters, setFiltersState] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
@@ -131,6 +136,7 @@ function MapViewInner() {
     cleanup: cleanupPopup,
   } = useMapPopup({
     map,
+    showAddToList,
     onOpenStationDetails: handleOpenStationDetails,
     onOpenUkeStationDetails: handleOpenUkeStationDetails,
     onClose: handlePopupClose,
@@ -297,7 +303,12 @@ function MapViewInner() {
       />
       {filters.showRadiolines ? (
         <Suspense fallback={null}>
-          <RadioLinesLayer radioLines={radioLines} pendingRadiolineId={pendingRadiolineId} onPendingRadiolineConsumed={handlePendingRadiolineId} />
+          <RadioLinesLayer
+            radioLines={radioLines}
+            pendingRadiolineId={pendingRadiolineId}
+            showAddToList={showAddToList}
+            onPendingRadiolineConsumed={handlePendingRadiolineId}
+          />
         </Suspense>
       ) : null}
       <MapControls showLocate showCompass showScale showFullscreen />
@@ -317,7 +328,7 @@ function MapViewInner() {
 }
 
 export default function MapView() {
-  const saved = loadMapPosition();
+  const [saved] = useState(() => loadMapPosition());
   return (
     <LibreMap center={saved?.center ?? POLAND_CENTER} zoom={saved?.zoom ?? 7} maxBounds={POLAND_BOUNDS} minZoom={5}>
       <MapViewInner />

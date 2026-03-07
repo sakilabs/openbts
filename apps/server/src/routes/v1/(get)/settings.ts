@@ -12,6 +12,7 @@ export const settingsDataSchema = z.object({
   disabledRoutes: z.array(z.string().min(1)),
   enableStationComments: z.boolean(),
   submissionsEnabled: z.boolean(),
+  enableUserLists: z.boolean(),
   photosEnabled: z.boolean(),
   announcement: z.object({
     message: z.string(),

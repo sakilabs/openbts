@@ -19,11 +19,13 @@ import {
   SentIcon,
   Settings02Icon,
   SecurityLockIcon,
+  TaskDaily01Icon,
   Upload04Icon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
+import { NavLists } from "./nav-lists";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AuthDialog } from "@/components/auth/authDialog";
@@ -91,6 +93,7 @@ const adminNavConfig = [
       { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor", "moderator"], icon: SentIcon },
       { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor", "moderator"], icon: FileAttachmentIcon },
       { titleKey: "items.ukeImport", url: "/admin/uke-import", allowedRoles: ["admin"], icon: Upload04Icon },
+      { titleKey: "items.lists", url: "/admin/lists", allowedRoles: ["admin"], icon: TaskDaily01Icon, requiresSetting: "enableUserLists" as const },
       { titleKey: "items.auditLogs", url: "/admin/audit-logs", allowedRoles: ["admin"], icon: Note01Icon },
       { titleKey: "items.settings", url: "/admin/settings", allowedRoles: ["admin"], icon: Settings02Icon },
     ],
@@ -111,7 +114,7 @@ function translateNav(config: typeof navMainConfig, t: (key: string) => string) 
   }));
 }
 
-export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation("nav");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const { data: session } = authClient.useSession();
@@ -133,10 +136,11 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         icon: section.icon,
         items: section.items
           .filter((item) => item.allowedRoles.includes(userRole))
+          .filter((item) => !item.requiresSetting || !!settings?.[item.requiresSetting])
           .map((item) => ({ title: t(item.titleKey), url: item.url, icon: item.icon })),
       }))
       .filter((section) => section.items.length > 0);
-  }, [isAdmin, userRole, t]);
+  }, [isAdmin, userRole, t, settings]);
 
   const location = useLocation();
 
@@ -159,6 +163,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navItems} />
         {authNavItems.length > 0 && <NavMain items={authNavItems} />}
+        {session?.user && settings?.enableUserLists && <NavLists />}
         {adminNavItems.length > 0 && <NavMain items={adminNavItems} />}
         <NavMain items={infoNavItems} />
       </SidebarContent>

@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { lazy, memo, Suspense, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
@@ -9,11 +9,14 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import type { LocationInfo, StationWithoutCells, StationSource, UkeStation } from "@/types/station";
 
+const AddToListPopover = lazy(() => import("@/features/lists/components/addToListPopover").then((m) => ({ default: m.AddToListPopover })));
+
 type PopupContentProps = {
   location: LocationInfo;
   stations: StationWithoutCells[] | null;
   ukeStations?: UkeStation[] | null;
   source: StationSource;
+  showAddToList?: boolean;
   onOpenStationDetails: (id: number) => void;
   onOpenUkeStationDetails: (station: UkeStation) => void;
 };
@@ -94,6 +97,7 @@ export const PopupContent = memo(function PopupContent({
   stations,
   ukeStations,
   source,
+  showAddToList = false,
   onOpenStationDetails,
   onOpenUkeStationDetails,
 }: PopupContentProps) {
@@ -105,6 +109,113 @@ export const PopupContent = memo(function PopupContent({
   const isLoading = !items;
   const isEmpty = !isLoading && items.length === 0;
 
+  function renderContent() {
+    if (isLoading) {
+      return (
+        <>
+          <StationSkeleton />
+          <StationSkeleton />
+        </>
+      );
+    }
+    if (isEmpty) {
+      return <div className="px-3 py-4 text-center text-muted-foreground text-xs">{isUkeSource ? t("popup.noPermits") : t("popup.noStations")}</div>;
+    }
+    if (isUkeSource && ukeStations) {
+      return ukeStations.map((station) => {
+        const mnc = station.operator?.mnc;
+        const operatorName = station.operator?.name || t("unknownOperator");
+        const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
+        const bands = getPermitBands(station.permits);
+
+        return (
+          <button
+            type="button"
+            key={station.station_id}
+            className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
+            onClick={() => onOpenUkeStationDetails(station)}
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
+              <span className="font-medium text-xs" style={{ color }}>
+                {operatorName}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
+              {bands.map((band) => (
+                <span
+                  key={band}
+                  className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+                >
+                  {band}
+                </span>
+              ))}
+              <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
+                {station.permits.length} {station.permits.length === 1 ? t("stationDetails:permits.permit") : t("stationDetails:permits.permits")}
+              </span>
+            </div>
+          </button>
+        );
+      });
+    }
+    if (stations) {
+      return stations.map((station) => {
+        const mnc = station.operator?.mnc;
+        const operatorName = station.operator?.name || t("unknownOperator");
+        const stationId = station.station_id;
+        const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
+        const hasCells = station.cells !== undefined;
+        const bands = hasCells && station.cells?.length ? getStationBands(station.cells) : [];
+
+        return (
+          <div key={station.id} className="relative border-b border-border/30 last:border-0">
+            <button
+              type="button"
+              className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer"
+              onClick={() => onOpenStationDetails(station.id)}
+            >
+              <div className="flex items-center gap-1.5">
+                <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
+                <span className="font-medium text-xs" style={{ color }}>
+                  {operatorName}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{stationId}</span>
+                {station.extra_identificators?.networks_id && (
+                  <span className="text-[10px] text-muted-foreground font-mono">N!{station.extra_identificators.networks_id}</span>
+                )}
+              </div>
+              {hasCells ? (
+                bands.length > 0 ? (
+                  <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
+                    {bands.map((band) => (
+                      <span
+                        key={band}
+                        className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+                      >
+                        {band}
+                      </span>
+                    ))}
+                  </div>
+                ) : null
+              ) : (
+                <TechBadgesSkeleton />
+              )}
+            </button>
+            {showAddToList && (
+              <div className="absolute top-2 right-2">
+                <Suspense>
+                  <AddToListPopover stationId={station.id} />
+                </Suspense>
+              </div>
+            )}
+          </div>
+        );
+      });
+    }
+    return null;
+  }
+
   return (
     <div className="w-72 text-sm">
       <div className="px-3 py-2 border-b border-border/50">
@@ -115,98 +226,7 @@ export const PopupContent = memo(function PopupContent({
         {location.address && <p className="text-[11px] text-muted-foreground">{location.address}</p>}
       </div>
 
-      <div className="max-h-54 overflow-y-auto custom-scrollbar">
-        {isLoading ? (
-          <>
-            <StationSkeleton />
-            <StationSkeleton />
-          </>
-        ) : isEmpty ? (
-          <div className="px-3 py-4 text-center text-muted-foreground text-xs">{isUkeSource ? t("popup.noPermits") : t("popup.noStations")}</div>
-        ) : isUkeSource && ukeStations ? (
-          ukeStations.map((station) => {
-            const mnc = station.operator?.mnc;
-            const operatorName = station.operator?.name || t("unknownOperator");
-            const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
-            const bands = getPermitBands(station.permits);
-
-            return (
-              <button
-                type="button"
-                key={station.station_id}
-                className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
-                onClick={() => onOpenUkeStationDetails(station)}
-              >
-                <div className="flex items-center gap-1.5">
-                  <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
-                  <span className="font-medium text-xs" style={{ color }}>
-                    {operatorName}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-mono">{station.station_id}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-                  {bands.map((band) => (
-                    <span
-                      key={band}
-                      className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
-                    >
-                      {band}
-                    </span>
-                  ))}
-                  <span className="px-1 py-px rounded-md bg-muted text-[8px] font-mono font-medium text-muted-foreground border border-border/50">
-                    {station.permits.length} {station.permits.length === 1 ? t("stationDetails:permits.permit") : t("stationDetails:permits.permits")}
-                  </span>
-                </div>
-              </button>
-            );
-          })
-        ) : stations ? (
-          stations.map((station) => {
-            const mnc = station.operator?.mnc;
-            const operatorName = station.operator?.name || t("unknownOperator");
-            const stationId = station.station_id;
-            const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
-            const hasCells = station.cells !== undefined;
-            const bands = hasCells && station.cells?.length ? getStationBands(station.cells) : [];
-
-            return (
-              <button
-                type="button"
-                key={station.id}
-                className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
-                onClick={() => onOpenStationDetails(station.id)}
-              >
-                <div className="flex items-center gap-1.5">
-                  <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
-                  <span className="font-medium text-xs" style={{ color }}>
-                    {operatorName}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{stationId}</span>
-                  {station.extra_identificators?.networks_id && (
-                    <span className="text-[10px] text-muted-foreground font-mono">N!{station.extra_identificators.networks_id}</span>
-                  )}
-                </div>
-                {hasCells ? (
-                  bands.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-                      {bands.map((band) => (
-                        <span
-                          key={band}
-                          className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
-                        >
-                          {band}
-                        </span>
-                      ))}
-                    </div>
-                  )
-                ) : (
-                  <TechBadgesSkeleton />
-                )}
-              </button>
-            );
-          })
-        ) : null}
-      </div>
+      <div className="max-h-54 overflow-y-auto custom-scrollbar">{renderContent()}</div>
 
       <div className="px-3 py-1.5 border-t border-border/50 flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground font-mono">

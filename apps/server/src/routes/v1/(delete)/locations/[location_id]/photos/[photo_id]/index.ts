@@ -37,7 +37,6 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 
   const attachment = await db.query.attachments.findFirst({ where: { id: photo.attachment_id } });
 
-  // Cascade deletes stationPhotoSelections automatically via FK
   await db.delete(locationPhotos).where(and(eq(locationPhotos.id, photo_id), eq(locationPhotos.location_id, location_id)));
 
   if (attachment) {

@@ -1,0 +1,137 @@
+import { lazy, Suspense, useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { TaskDaily01Icon, Add01Icon, AirportTowerIcon, SignalFull02Icon } from "@hugeicons/core-free-icons";
+
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Spinner } from "@/components/ui/spinner";
+import { useUserLists } from "@/features/lists/hooks/useUserLists";
+import { updateList } from "@/features/lists/api";
+import type { UserListSummary } from "@/features/lists/api";
+import { cn } from "@/lib/utils";
+
+const CreateListDialog = lazy(() => import("./createListDialog").then((m) => ({ default: m.CreateListDialog })));
+
+type AddToListPopoverProps = {
+  stationId?: number;
+  radiolineIds?: number[];
+};
+
+export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverProps) {
+  const { t } = useTranslation(["lists", "common"]);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useUserLists();
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ uuid, data }: { uuid: string; data: { stations?: number[]; radiolines?: number[] } }) => updateList(uuid, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["user-lists"] });
+      toast.success(t("lists:updated"));
+    },
+    onError: () => {
+      toast.error(t("common:errors.generic", "Something went wrong"));
+    },
+  });
+
+  function handleToggle(list: UserListSummary) {
+    if (stationId) {
+      const inList = list.stations.includes(stationId);
+      const stations = inList ? list.stations.filter((id) => id !== stationId) : [...list.stations, stationId];
+      toggleMutation.mutate({ uuid: list.uuid, data: { stations } });
+    } else if (radiolineIds) {
+      const radiolineSet = new Set(radiolineIds);
+      const allInList = radiolineIds.every((id) => list.radiolines.includes(id));
+      const radiolines = allInList ? list.radiolines.filter((id) => !radiolineSet.has(id)) : [...new Set([...list.radiolines, ...radiolineIds])];
+      toggleMutation.mutate({ uuid: list.uuid, data: { radiolines } });
+    }
+  }
+
+  function isChecked(list: UserListSummary) {
+    if (stationId) return list.stations.includes(stationId);
+    if (radiolineIds) return radiolineIds.every((id) => list.radiolines.includes(id));
+    return false;
+  }
+
+  const lists = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  const icon = stationId ? AirportTowerIcon : SignalFull02Icon;
+
+  function renderContent() {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-5">
+          <Spinner className="size-4" />
+        </div>
+      );
+    }
+    if (lists.length === 0) {
+      return <p className="px-3 py-3 text-xs text-muted-foreground text-center">{t("lists:noLists")}</p>;
+    }
+    return lists.map((list) => {
+      const checked = isChecked(list);
+      const isToggling = toggleMutation.isPending && toggleMutation.variables?.uuid === list.uuid;
+      return (
+        <button
+          key={list.uuid}
+          type="button"
+          onClick={() => handleToggle(list)}
+          disabled={toggleMutation.isPending}
+          className={cn(
+            "w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors",
+            "hover:bg-muted/60 disabled:opacity-60",
+            checked && "bg-primary/5",
+          )}
+        >
+          {isToggling ? (
+            <Spinner className="size-4 shrink-0" />
+          ) : (
+            <Checkbox checked={checked} tabIndex={-1} className="shrink-0 pointer-events-none" />
+          )}
+          <span className={cn("text-xs truncate leading-none", checked ? "font-medium text-foreground" : "text-foreground/80")}>{list.name}</span>
+        </button>
+      );
+    });
+  }
+
+  return (
+    <>
+      <Popover>
+        <PopoverTrigger
+          render={<button type="button" className="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0" />}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        >
+          <HugeiconsIcon icon={TaskDaily01Icon} className="size-3 text-muted-foreground" />
+        </PopoverTrigger>
+
+        <PopoverContent align="end" className="w-60 p-0 gap-0 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/60 bg-muted/30">
+            <HugeiconsIcon icon={icon} className="size-3 text-muted-foreground shrink-0" />
+            <span className="text-xs font-semibold text-foreground leading-none">{t("lists:addToList")}</span>
+          </div>
+
+          <div>{renderContent()}</div>
+
+          <div className="border-t border-border/60">
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            >
+              <HugeiconsIcon icon={Add01Icon} className="size-3 shrink-0" />
+              {t("lists:createNew")}
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {createOpen ? (
+        <Suspense>
+          <CreateListDialog open={createOpen} onOpenChange={setCreateOpen} initialStationId={stationId} initialRadiolineIds={radiolineIds} />
+        </Suspense>
+      ) : null}
+    </>
+  );
+}

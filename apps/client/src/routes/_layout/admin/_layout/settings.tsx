@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type ReactNode, type KeyboardEvent } from "react";
+import { useState, useMemo, useCallback, useEffect, type ReactNode, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -12,6 +12,7 @@ import {
   DatabaseIcon,
   Alert02Icon,
   Image01Icon,
+  TaskDaily01Icon,
 } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -157,6 +158,7 @@ function AdminSettingsPage() {
             enableStationComments: false,
             submissionsEnabled: true,
             photosEnabled: true,
+            enableUserLists: false,
             announcement: { message: "", enabled: false, type: "info" as const },
           },
     [settings, patch],
@@ -169,11 +171,18 @@ function AdminSettingsPage() {
       formData.enableStationComments !== settings.enableStationComments ||
       formData.submissionsEnabled !== settings.submissionsEnabled ||
       formData.photosEnabled !== settings.photosEnabled ||
+      formData.enableUserLists !== settings.enableUserLists ||
       JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes) ||
       JSON.stringify(formData.disabledRoutes) !== JSON.stringify(settings.disabledRoutes) ||
       JSON.stringify(formData.announcement) !== JSON.stringify(settings.announcement)
     );
   }, [settings, formData]);
+
+  useEffect(() => {
+    if (!showSaveSuccess) return;
+    const id = setTimeout(() => setShowSaveSuccess(false), 3000);
+    return () => clearTimeout(id);
+  }, [showSaveSuccess]);
 
   const mutation = useMutation({
     mutationFn: patchSettings,
@@ -181,7 +190,6 @@ function AdminSettingsPage() {
       queryClient.setQueryData(["admin-settings"], newSettings);
       setPatch({});
       setShowSaveSuccess(true);
-      setTimeout(() => setShowSaveSuccess(false), 3000);
     },
   });
 
@@ -209,6 +217,9 @@ function AdminSettingsPage() {
       }
       if (formData.photosEnabled !== settings.photosEnabled) {
         patch.photosEnabled = formData.photosEnabled;
+      }
+      if (formData.enableUserLists !== settings.enableUserLists) {
+        patch.enableUserLists = formData.enableUserLists;
       }
       if (JSON.stringify(formData.allowedUnauthenticatedRoutes) !== JSON.stringify(settings.allowedUnauthenticatedRoutes)) {
         patch.allowedUnauthenticatedRoutes = formData.allowedUnauthenticatedRoutes;
@@ -253,6 +264,28 @@ function AdminSettingsPage() {
     );
   }
 
+  let saveBar: React.ReactNode = null;
+  if (showSaveSuccess) {
+    saveBar = (
+      <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600">
+        <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" />
+        <span className="text-sm font-medium">{t("common:actions.saved")}</span>
+      </div>
+    );
+  } else if (hasChanges) {
+    saveBar = (
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={handleReset}>
+          {t("common:actions.revert", "Reset")}
+        </Button>
+        <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
+          {mutation.isPending && <Spinner className="size-4 mr-2" />}
+          {t("common:actions.saveChanges")}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
@@ -261,22 +294,7 @@ function AdminSettingsPage() {
           <p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
         </div>
 
-        {showSaveSuccess ? (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600">
-            <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" />
-            <span className="text-sm font-medium">{t("common:actions.saved")}</span>
-          </div>
-        ) : hasChanges ? (
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              {t("common:actions.revert", "Reset")}
-            </Button>
-            <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
-              {mutation.isPending && <Spinner className="size-4 mr-2" />}
-              {t("common:actions.saveChanges")}
-            </Button>
-          </div>
-        ) : null}
+        {saveBar}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -376,6 +394,22 @@ function AdminSettingsPage() {
                   </p>
                 </div>
                 <Toggle checked={formData.photosEnabled} onChange={(checked) => setPatch((prev) => ({ ...prev, photosEnabled: checked }))} />
+              </div>
+            </SettingsCard>
+
+            <SettingsCard
+              icon={<HugeiconsIcon icon={TaskDaily01Icon} className="size-4" />}
+              title={t("settings.userLists")}
+              description={t("settings.userListsDesc")}
+            >
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <p className="text-sm font-medium">{t("settings.enableUserLists")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formData.enableUserLists ? t("settings.userListsEnabled") : t("settings.userListsDisabled")}
+                  </p>
+                </div>
+                <Toggle checked={formData.enableUserLists} onChange={(checked) => setPatch((prev) => ({ ...prev, enableUserLists: checked }))} />
               </div>
             </SettingsCard>
           </div>

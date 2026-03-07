@@ -38,6 +38,8 @@ type MapSearchOverlayProps = {
   onFiltersChange: (filters: StationFilters) => void;
   onLocationSelect?: (lat: number, lon: number) => void;
   onStationSelect?: (station: Station) => void;
+  hideSource?: boolean;
+  hideAPIFilters?: boolean;
 };
 
 export const MapSearchOverlay = memo(function MapSearchOverlay({
@@ -55,6 +57,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   onFiltersChange,
   onLocationSelect,
   onStationSelect,
+  hideSource = false,
+  hideAPIFilters = false,
 }: MapSearchOverlayProps) {
   const { t } = useTranslation("main");
   const [showFilters, setShowFilters] = useState(false);
@@ -107,7 +111,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     activeFilterCount,
   } = useFilterHandlers({ filters, uniqueBandValues, onFiltersChange });
 
-  const searchKeyword = parseFilters(debouncedQuery).remainingText;
+  const searchKeyword = useMemo(() => parseFilters(debouncedQuery).remainingText, [debouncedQuery]);
 
   const shouldSearchOsm = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
@@ -163,7 +167,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   }
 
   function handleToggleFilters() {
-    setShowFilters(!showFilters);
+    setShowFilters((prev) => !prev);
   }
 
   return (
@@ -226,6 +230,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               onSelectAllBands={handleSelectAllBands}
               onClearAllBands={handleClearAllBands}
               onClearFilters={handleClearFilters}
+              hideSource={hideSource}
+              hideAPIFilters={hideAPIFilters}
             />
           </fieldset>
         )}
@@ -268,6 +274,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                 onClearAllBands={handleClearAllBands}
                 onClearFilters={handleClearFilters}
                 isSheet
+                hideSource={hideSource}
+                hideAPIFilters={hideAPIFilters}
               />
             </div>
           </SheetContent>

@@ -4,7 +4,8 @@
     "contribute": "Zgłoszenia",
     "settings": "Ustawienia",
     "admin": "Admin",
-    "info": "Informacje"
+    "info": "Informacje",
+    "lists": "Moje listy"
   },
   "items": {
     "mapView": "Widok mapy",
@@ -22,12 +23,16 @@
     "settings": "Ustawienia",
     "ukePermits": "Nieprzypisane pozwolenia UKE",
     "ukeImport": "Import UKE",
+    "lists": "Listy",
     "auditLogs": "Dziennik zdarzeń",
     "deletedEntries": "Usunięte wpisy",
     "statistics": "Statystyki",
     "about": "O serwisie",
     "contact": "Kontakt",
-    "tos": "Regulamin"
+    "tos": "Regulamin",
+    "myLists": "Moje listy",
+    "sharedList": "Udostępniona lista",
+    "viewAllLists": "Pokaż wszystkie"
   },
   "secondary": {
     "settings": "Ustawienia",

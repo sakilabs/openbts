@@ -1,17 +1,32 @@
 import { useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
 import type { StationSource, LocationInfo, StationWithoutCells, UkeStation } from "@/types/station";
+import { queryClient } from "@/lib/queryClient";
 import { PopupContent } from "../components/popupContent";
 
 type UseMapPopupArgs = {
   map: maplibregl.Map | null;
+  showAddToList?: boolean;
   onOpenStationDetails: (id: number, source: StationSource) => void;
   onOpenUkeStationDetails: (station: UkeStation) => void;
   onClose?: () => void;
 };
 
-export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails, onClose }: UseMapPopupArgs) {
+type UseMapPopupReturn = {
+  showPopup: (
+    coordinates: [number, number],
+    location: LocationInfo,
+    stations: StationWithoutCells[] | null,
+    ukeStations: UkeStation[] | null,
+    source: StationSource,
+  ) => void;
+  updatePopupStations: (location: LocationInfo, stations: StationWithoutCells[], source: StationSource) => void;
+  cleanup: () => void;
+};
+
+export function useMapPopup({ map, showAddToList, onOpenStationDetails, onOpenUkeStationDetails, onClose }: UseMapPopupArgs): UseMapPopupReturn {
   const popupRef = useRef<MapLibreGL.Popup | null>(null);
   const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
@@ -20,23 +35,26 @@ export function useMapPopup({ map, onOpenStationDetails, onOpenUkeStationDetails
       if (!popupRootRef.current) return;
 
       popupRootRef.current.render(
-        <PopupContent
-          location={location}
-          stations={stations}
-          ukeStations={ukeStations ?? undefined}
-          source={source}
-          onOpenStationDetails={(id) => {
-            onOpenStationDetails(id, source);
-            popupRef.current?.remove();
-          }}
-          onOpenUkeStationDetails={(station) => {
-            onOpenUkeStationDetails(station);
-            popupRef.current?.remove();
-          }}
-        />,
+        <QueryClientProvider client={queryClient}>
+          <PopupContent
+            location={location}
+            stations={stations}
+            ukeStations={ukeStations ?? undefined}
+            source={source}
+            showAddToList={showAddToList}
+            onOpenStationDetails={(id) => {
+              onOpenStationDetails(id, source);
+              popupRef.current?.remove();
+            }}
+            onOpenUkeStationDetails={(station) => {
+              onOpenUkeStationDetails(station);
+              popupRef.current?.remove();
+            }}
+          />
+        </QueryClientProvider>,
       );
     },
-    [onOpenStationDetails, onOpenUkeStationDetails],
+    [showAddToList, onOpenStationDetails, onOpenUkeStationDetails],
   );
 
   const showPopup = useCallback(

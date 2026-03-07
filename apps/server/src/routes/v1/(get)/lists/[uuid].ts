@@ -1,0 +1,242 @@
+import { z } from "zod/v4";
+import { inArray } from "drizzle-orm";
+import { createSelectSchema } from "drizzle-orm/zod";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { stations, ukeRadiolines, userLists, cells, bands, locations, regions, operators } from "@openbts/drizzle";
+
+import type { FastifyRequest } from "fastify/types/request.js";
+import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+
+const manufacturerSchema = z.object({ id: z.number(), name: z.string() });
+const equipmentTypeSchema = z.object({ id: z.number(), name: z.string(), manufacturer: manufacturerSchema.optional() });
+const txSchema = z.object({
+  longitude: z.number(),
+  latitude: z.number(),
+  height: z.number(),
+  eirp: z.number().optional(),
+  antenna_attenuation: z.number().optional(),
+  transmitter: z.object({ type: equipmentTypeSchema.optional() }).optional(),
+  antenna: z
+    .object({
+      type: equipmentTypeSchema.optional(),
+      gain: z.number().optional(),
+      height: z.number().optional(),
+    })
+    .optional(),
+});
+const rxSchema = z.object({
+  longitude: z.number(),
+  latitude: z.number(),
+  height: z.number(),
+  type: equipmentTypeSchema.optional(),
+  gain: z.number().optional(),
+  height_antenna: z.number().optional(),
+  noise_figure: z.number().optional(),
+  atpc_attenuation: z.number().optional(),
+});
+const linkSchema = z.object({
+  freq: z.number(),
+  ch_num: z.number().optional(),
+  plan_symbol: z.string().optional(),
+  ch_width: z.number().optional(),
+  polarization: z.string().optional(),
+  modulation_type: z.string().optional(),
+  bandwidth: z.string().optional(),
+});
+const operatorSchema = createSelectSchema(operators).extend({
+  parent_id: z.number().nullable().optional(),
+  mnc: z.number().nullable().optional(),
+});
+const regionSchema = createSelectSchema(regions);
+const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
+const bandsSchema = createSelectSchema(bands);
+const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
+const cellResponseSchema = cellsSchema.extend({ band: bandsSchema });
+const stationResponseSchema = stationsSchema.extend({
+  cells: z.array(cellResponseSchema),
+  location: locationSchema.extend({ region: regionSchema }),
+  operator: operatorSchema,
+});
+const radioLineResponseSchema = z.object({
+  id: z.number(),
+  tx: txSchema,
+  rx: rxSchema,
+  link: linkSchema,
+  operator: operatorSchema.optional(),
+  permit: z.object({
+    number: z.string().optional(),
+    decision_type: z.string().optional(),
+    expiry_date: z.date(),
+  }),
+  updatedAt: z.date(),
+  createdAt: z.date(),
+});
+type RadioLineResponse = z.infer<typeof radioLineResponseSchema>;
+
+const schemaRoute = {
+  params: z.object({
+    uuid: z.string(),
+  }),
+  response: {
+    200: z.object({
+      data: z.object({
+        id: z.number(),
+        uuid: z.string(),
+        name: z.string(),
+        description: z.string().nullable(),
+        is_public: z.boolean().nullable(),
+        stations: z.array(stationResponseSchema),
+        radiolines: z.array(radioLineResponseSchema),
+        createdAt: z.date(),
+        updatedAt: z.date(),
+      }),
+    }),
+  },
+};
+
+type ReqParams = { Params: { uuid: string } };
+type ResponseBody = z.infer<(typeof schemaRoute.response)["200"]>;
+
+function mapType(t: { id: number; name: string; manufacturer: { id: number; name: string } | null } | null | undefined) {
+  return t
+    ? {
+        id: t.id,
+        name: t.name,
+        manufacturer: t.manufacturer ? { id: t.manufacturer.id, name: t.manufacturer.name } : undefined,
+      }
+    : undefined;
+}
+
+async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseBody>>) {
+  if (!getRuntimeSettings().enableUserLists) throw new ErrorResponse("FORBIDDEN");
+
+  const { uuid } = req.params;
+
+  const list = await db.query.userLists.findFirst({
+    where: { uuid },
+  });
+  if (!list) throw new ErrorResponse("NOT_FOUND");
+
+  if (!list.is_public) {
+    if (!req.userSession) throw new ErrorResponse("UNAUTHORIZED");
+    const userId = req.userSession.user.id;
+    const isAdmin = await verifyPermissions(userId, { user_lists: ["read"] });
+    if (!isAdmin && userId !== list.created_by) throw new ErrorResponse("FORBIDDEN");
+  }
+
+  const stationIds = (list.stations as number[]) ?? [];
+  const radiolineIds = (list.radiolines as number[]) ?? [];
+
+  const [stationsData, radiolinesData] = await Promise.all([
+    stationIds.length
+      ? db.query.stations.findMany({
+          columns: {
+            status: false,
+            operator_id: false,
+            location_id: false,
+          },
+          with: {
+            cells: {
+              columns: { band_id: false },
+              with: { band: true },
+            },
+            location: { columns: { point: false, region_id: false }, with: { region: true } },
+            operator: true,
+          },
+          where: {
+            id: { in: stationIds },
+          },
+        })
+      : [],
+    radiolineIds.length
+      ? db.query.ukeRadiolines.findMany({
+          columns: {
+            operator_id: false,
+          },
+          with: {
+            operator: true,
+            txTransmitterType: { with: { manufacturer: true } },
+            txAntennaType: { with: { manufacturer: true } },
+            rxAntennaType: { with: { manufacturer: true } },
+          },
+          where: {
+            id: { in: radiolineIds },
+          },
+        })
+      : [],
+  ]);
+
+  const mappedRadiolines: RadioLineResponse[] = radiolinesData.map((radioLine) => ({
+    id: radioLine.id,
+    tx: {
+      longitude: radioLine.tx_longitude,
+      latitude: radioLine.tx_latitude,
+      height: radioLine.tx_height,
+      eirp: radioLine.tx_eirp ?? undefined,
+      antenna_attenuation: radioLine.tx_antenna_attenuation ?? undefined,
+      transmitter: { type: mapType(radioLine.txTransmitterType) },
+      antenna: {
+        type: mapType(radioLine.txAntennaType),
+        gain: radioLine.tx_antenna_gain ?? undefined,
+        height: radioLine.tx_antenna_height ?? undefined,
+      },
+    },
+    rx: {
+      longitude: radioLine.rx_longitude,
+      latitude: radioLine.rx_latitude,
+      height: radioLine.rx_height,
+      type: mapType(radioLine.rxAntennaType),
+      gain: radioLine.rx_antenna_gain ?? undefined,
+      height_antenna: radioLine.rx_antenna_height ?? undefined,
+      noise_figure: radioLine.rx_noise_figure ?? undefined,
+      atpc_attenuation: radioLine.rx_atpc_attenuation ?? undefined,
+    },
+    link: {
+      freq: radioLine.freq,
+      ch_num: radioLine.ch_num ?? undefined,
+      plan_symbol: radioLine.plan_symbol ?? undefined,
+      ch_width: radioLine.ch_width ?? undefined,
+      polarization: radioLine.polarization ?? undefined,
+      modulation_type: radioLine.modulation_type ?? undefined,
+      bandwidth: radioLine.bandwidth ?? undefined,
+    },
+    operator: radioLine.operator ?? undefined,
+    permit: {
+      number: radioLine.permit_number ?? undefined,
+      decision_type: radioLine.decision_type ?? undefined,
+      expiry_date: radioLine.expiry_date,
+    },
+    updatedAt: radioLine.updatedAt,
+    createdAt: radioLine.createdAt,
+  }));
+
+  return res.send({
+    data: {
+      id: list.id,
+      uuid: list.uuid,
+      name: list.name,
+      description: list.description,
+      is_public: list.is_public,
+      stations: stationsData,
+      radiolines: mappedRadiolines,
+      createdAt: list.createdAt,
+      updatedAt: list.updatedAt,
+    },
+  });
+}
+
+const getListByUuid: Route<ReqParams, ResponseBody> = {
+  url: "/lists/:uuid",
+  method: "GET",
+  config: { permissions: ["read:lists"], allowGuestAccess: true },
+  schema: schemaRoute,
+  handler,
+};
+
+export default getListByUuid;

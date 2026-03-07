@@ -15,21 +15,19 @@ function MySubmissionsPage() {
 
   return (
     <RequireAuth>
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <h1 className="text-xl font-bold tracking-tight">{t("userPage.title")}</h1>
-              <p className="text-muted-foreground text-sm">{t("userPage.description")}</p>
-            </div>
-            <Button size="sm" nativeButton={false} render={<Link to="/submission" />}>
-              <HugeiconsIcon icon={Add01Icon} className="size-4" />
-              {t("submitNew")}
-            </Button>
+      <main className="flex-1 flex flex-col min-h-0 p-6 gap-6">
+        <div className="flex items-start justify-between gap-4 shrink-0">
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold tracking-tight">{t("userPage.title")}</h1>
+            <p className="text-muted-foreground text-sm">{t("userPage.description")}</p>
           </div>
-          <MySubmissions />
+          <Button size="sm" nativeButton={false} render={<Link to="/submission" />}>
+            <HugeiconsIcon icon={Add01Icon} className="size-4" />
+            {t("submitNew")}
+          </Button>
         </div>
-      </div>
+        <MySubmissions />
+      </main>
     </RequireAuth>
   );
 }

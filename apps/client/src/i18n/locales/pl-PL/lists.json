@@ -1,0 +1,21 @@
+{
+  "empty": "Nie utworzyłeś jeszcze żadnych list.",
+  "noLists": "Brak list",
+  "create": "Utwórz listę",
+  "name": "Nazwa",
+  "description": "Opis",
+  "stationCount": "{{count}} stacji",
+  "radiolineCount": "{{count}} radiolinii",
+  "public": "Publiczna",
+  "private": "Prywatna",
+  "deleteConfirm": "Czy na pewno chcesz usunąć tę listę?",
+  "deleteConfirmDescription": "Tej operacji nie można cofnąć.",
+  "copied": "Link skopiowany do schowka",
+  "created": "Lista utworzona",
+  "deleted": "Lista usunięta",
+  "updated": "Lista zaktualizowana",
+  "addToList": "Dodaj do listy",
+  "createNew": "Utwórz nową listę",
+  "togglePublic": "Ustaw jako publiczną",
+  "togglePrivate": "Ustaw jako prywatną"
+}

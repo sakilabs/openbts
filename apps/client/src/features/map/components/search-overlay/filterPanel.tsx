@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, type RefObject } from "react";
+import { type Dispatch, type SetStateAction, useState, useCallback, useMemo, useRef, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
@@ -41,7 +41,7 @@ type OperatorsSectionProps = {
   otherOperators: Operator[];
   hasSelectedOther: boolean;
   showOtherOperators: boolean;
-  setShowOtherOperators: (show: boolean) => void;
+  setShowOtherOperators: Dispatch<SetStateAction<boolean>>;
   onToggleOperator: (mnc: number) => void;
   radiolineOperatorsList: UkeOperator[];
   radiolineOperatorsChipsRef: RefObject<HTMLDivElement | null>;
@@ -63,6 +63,14 @@ function OperatorsSection({
   const { t } = useTranslation(["main", "common"]);
   const radiolineOpMap = useMemo(() => new Map(radiolineOperatorsList.map((o) => [o.id, o])), [radiolineOperatorsList]);
 
+  const comboboxValue = useMemo(
+    () =>
+      (filters.radiolineOperators ?? [])
+        .map((id) => radiolineOperatorsList.find((op) => op.id === id))
+        .filter((op): op is UkeOperator => op !== undefined),
+    [filters.radiolineOperators, radiolineOperatorsList],
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
@@ -81,7 +89,7 @@ function OperatorsSection({
         <div className="mt-1.5">
           <button
             type="button"
-            onClick={() => setShowOtherOperators(!showOtherOperators)}
+            onClick={() => setShowOtherOperators((prev) => !prev)}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-1.5 py-1 transition-colors w-full"
           >
             <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", showOtherOperators && "rotate-180")} />
@@ -109,7 +117,7 @@ function OperatorsSection({
           <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("filters.radiolineOperator")}</h4>
           <Combobox
             multiple
-            value={(filters.radiolineOperators ?? []).map((id) => radiolineOperatorsList.find((op) => op.id === id)).filter(Boolean) as UkeOperator[]}
+            value={comboboxValue}
             onValueChange={(values) => onFiltersChange({ ...filters, radiolineOperators: values.map((v) => v.id) })}
             items={radiolineOperatorsList}
             itemToStringLabel={(op) => op.name}
@@ -271,6 +279,8 @@ type FilterPanelProps = {
   onClearAllBands: () => void;
   onClearFilters: () => void;
   isSheet?: boolean;
+  hideSource?: boolean;
+  hideAPIFilters?: boolean;
 };
 
 export function FilterPanel({
@@ -289,6 +299,8 @@ export function FilterPanel({
   onClearAllBands,
   onClearFilters,
   isSheet = false,
+  hideSource = false,
+  hideAPIFilters = false,
 }: FilterPanelProps) {
   const { t, i18n } = useTranslation(["main", "common", "stations"]);
   const [showOtherOperators, setShowOtherOperators] = useState(false);
@@ -354,117 +366,125 @@ export function FilterPanel({
         </div>
       </div>
 
-      <div>
-        <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">{t("filters.dataSource")}</h4>
-        <ButtonGroup className="w-full">
-          {dataSources.map((src) => (
-            <Button
-              key={src.id}
-              variant={filters.source === src.id ? "default" : "outline"}
-              className="flex-1"
-              onClick={() => {
-                const newSource = src.id as StationSource;
-                const targetRatValues = new Set((newSource === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((r) => r.value as string));
-                onFiltersChange({
-                  ...filters,
-                  source: newSource,
-                  rat: filters.rat.filter((r) => targetRatValues.has(r)),
-                });
-              }}
-            >
-              <HugeiconsIcon icon={src.icon} className="size-4" />
-              <span>{src.label}</span>
-            </Button>
-          ))}
-        </ButtonGroup>
-      </div>
+      {!hideSource && (
+        <div>
+          <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">{t("filters.dataSource")}</h4>
+          <ButtonGroup className="w-full">
+            {dataSources.map((src) => (
+              <Button
+                key={src.id}
+                variant={filters.source === src.id ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => {
+                  const newSource = src.id as StationSource;
+                  const targetRatValues = new Set((newSource === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((r) => r.value as string));
+                  onFiltersChange({
+                    ...filters,
+                    source: newSource,
+                    rat: filters.rat.filter((r) => targetRatValues.has(r)),
+                  });
+                }}
+              >
+                <HugeiconsIcon icon={src.icon} className="size-4" />
+                <span>{src.label}</span>
+              </Button>
+            ))}
+          </ButtonGroup>
+        </div>
+      )}
 
-      <RecentDaysFilter filters={filters} onRecentDaysChange={onRecentDaysChange} />
+      {!hideAPIFilters && <RecentDaysFilter filters={filters} onRecentDaysChange={onRecentDaysChange} />}
 
-      <OperatorsSection
-        filters={filters}
-        topOperators={topOperators}
-        otherOperators={otherOperators}
-        hasSelectedOther={hasSelectedOther}
-        showOtherOperators={showOtherOperators}
-        setShowOtherOperators={setShowOtherOperators}
-        onToggleOperator={onToggleOperator}
-        radiolineOperatorsList={radiolineOperatorsList}
-        radiolineOperatorsChipsRef={radiolineOperatorsChipsRef}
-        onFiltersChange={onFiltersChange}
-      />
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.standard")}</h4>
-          <div className="flex gap-1">
-            <button type="button" onClick={onSelectAllRats} className="text-xs text-primary underline-offset-4 hover:underline">
-              {t("common:status.all")}
-            </button>
-            <span className="text-muted-foreground">/</span>
-            <button
-              type="reset"
-              onClick={onClearAllRats}
-              className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-            >
-              {t("common:labels.none")}
-            </button>
+      {!hideAPIFilters && (
+        <OperatorsSection
+          filters={filters}
+          topOperators={topOperators}
+          otherOperators={otherOperators}
+          hasSelectedOther={hasSelectedOther}
+          showOtherOperators={showOtherOperators}
+          setShowOtherOperators={setShowOtherOperators}
+          onToggleOperator={onToggleOperator}
+          radiolineOperatorsList={radiolineOperatorsList}
+          radiolineOperatorsChipsRef={radiolineOperatorsChipsRef}
+          onFiltersChange={onFiltersChange}
+        />
+      )}
+      {!hideAPIFilters && (
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.standard")}</h4>
+            <div className="flex gap-1">
+              <button type="button" onClick={onSelectAllRats} className="text-xs text-primary underline-offset-4 hover:underline">
+                {t("common:status.all")}
+              </button>
+              <span className="text-muted-foreground">/</span>
+              <button
+                type="reset"
+                onClick={onClearAllRats}
+                className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+              >
+                {t("common:labels.none")}
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {(filters.source === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((rat) => (
+              <button
+                type="button"
+                key={rat.value}
+                onClick={() => onToggleRat(rat.value)}
+                className={cn(
+                  "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-all border",
+                  filters.rat.includes(rat.value)
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
+                )}
+              >
+                <span className="text-xs opacity-70">{rat.gen}</span>
+                <span>{rat.label}</span>
+              </button>
+            ))}
           </div>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {(filters.source === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((rat) => (
-            <button
-              type="button"
-              key={rat.value}
-              onClick={() => onToggleRat(rat.value)}
-              className={cn(
-                "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-all border",
-                filters.rat.includes(rat.value)
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
-              )}
-            >
-              <span className="text-xs opacity-70">{rat.gen}</span>
-              <span>{rat.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.band")} (MHz)</h4>
-          <div className="flex gap-1">
-            <button type="button" onClick={onSelectAllBands} className="text-xs text-primary underline-offset-4 hover:underline">
-              {t("common:status.all")}
-            </button>
-            <span className="text-muted-foreground">/</span>
-            <button
-              type="reset"
-              onClick={onClearAllBands}
-              className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-            >
-              {t("common:labels.none")}
-            </button>
+      {!hideAPIFilters && (
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("common:labels.band")} (MHz)</h4>
+            <div className="flex gap-1">
+              <button type="button" onClick={onSelectAllBands} className="text-xs text-primary underline-offset-4 hover:underline">
+                {t("common:status.all")}
+              </button>
+              <span className="text-muted-foreground">/</span>
+              <button
+                type="reset"
+                onClick={onClearAllBands}
+                className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+              >
+                {t("common:labels.none")}
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {uniqueBandValues.map((value) => (
+              <button
+                type="button"
+                key={value}
+                onClick={() => onToggleBand(value)}
+                className={cn(
+                  "px-2.5 py-0.5 rounded-full text-xs font-mono transition-all border",
+                  filters.bands.includes(value)
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
+                )}
+              >
+                {value === 0 ? t("stations:cells.unknownBand") : value}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {uniqueBandValues.map((value) => (
-            <button
-              type="button"
-              key={value}
-              onClick={() => onToggleBand(value)}
-              className={cn(
-                "px-2.5 py-0.5 rounded-full text-xs font-mono transition-all border",
-                filters.bands.includes(value)
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
-              )}
-            >
-              {value === 0 ? t("stations:cells.unknownBand") : value}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {activeFilterCount > 0 && (
         <div className="pt-2 border-t">

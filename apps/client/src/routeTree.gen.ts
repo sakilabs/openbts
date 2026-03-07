@@ -17,11 +17,14 @@ import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submissio
 import { Route as LayoutStatisticsRouteImport } from './routes/_layout/statistics'
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
 import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferences'
+import { Route as LayoutListsRouteImport } from './routes/_layout/lists'
 import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/deleted-entries'
 import { Route as LayoutContactRouteImport } from './routes/_layout/contact'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
 import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
 import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
+import { Route as LayoutListsIndexRouteImport } from './routes/_layout/lists/index'
+import { Route as LayoutListsUuidRouteImport } from './routes/_layout/lists/$uuid'
 import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_layout'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
 import { Route as LayoutAccountSettingsRouteImport } from './routes/_layout/account/settings'
@@ -33,6 +36,7 @@ import { Route as LayoutAdminLayoutUsersIndexRouteImport } from './routes/_layou
 import { Route as LayoutAdminLayoutSubmissionsIndexRouteImport } from './routes/_layout/admin/_layout/submissions/index'
 import { Route as LayoutAdminLayoutStationsIndexRouteImport } from './routes/_layout/admin/_layout/stations/index'
 import { Route as LayoutAdminLayoutLocationsIndexRouteImport } from './routes/_layout/admin/_layout/locations/index'
+import { Route as LayoutAdminLayoutListsIndexRouteImport } from './routes/_layout/admin/_layout/lists/index'
 import { Route as LayoutAdminLayoutUsersIdRouteImport } from './routes/_layout/admin/_layout/users/$id'
 import { Route as LayoutAdminLayoutSubmissionsIdRouteImport } from './routes/_layout/admin/_layout/submissions/$id'
 import { Route as LayoutAdminLayoutStationsIdRouteImport } from './routes/_layout/admin/_layout/stations/$id'
@@ -77,6 +81,11 @@ const LayoutPreferencesRoute = LayoutPreferencesRouteImport.update({
   path: '/preferences',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutListsRoute = LayoutListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutDeletedEntriesRoute = LayoutDeletedEntriesRouteImport.update({
   id: '/deleted-entries',
   path: '/deleted-entries',
@@ -101,6 +110,16 @@ const LayoutAboutRoute = LayoutAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutListsIndexRoute = LayoutListsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutListsRoute,
+} as any)
+const LayoutListsUuidRoute = LayoutListsUuidRouteImport.update({
+  id: '/$uuid',
+  path: '/$uuid',
+  getParentRoute: () => LayoutListsRoute,
 } as any)
 const LayoutAdminLayoutRoute = LayoutAdminLayoutRouteImport.update({
   id: '/admin/_layout',
@@ -166,6 +185,12 @@ const LayoutAdminLayoutLocationsIndexRoute =
     path: '/locations/',
     getParentRoute: () => LayoutAdminLayoutRoute,
   } as any)
+const LayoutAdminLayoutListsIndexRoute =
+  LayoutAdminLayoutListsIndexRouteImport.update({
+    id: '/lists/',
+    path: '/lists/',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
 const LayoutAdminLayoutUsersIdRoute =
   LayoutAdminLayoutUsersIdRouteImport.update({
     id: '/users/$id',
@@ -199,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/clf-export': typeof LayoutClfExportRoute
   '/contact': typeof LayoutContactRoute
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
+  '/lists': typeof LayoutListsRouteWithChildren
   '/preferences': typeof LayoutPreferencesRoute
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
@@ -207,6 +233,8 @@ export interface FileRoutesByFullPath {
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/admin': typeof LayoutAdminLayoutRouteWithChildren
+  '/lists/$uuid': typeof LayoutListsUuidRoute
+  '/lists/': typeof LayoutListsIndexRoute
   '/admin/audit-logs': typeof LayoutAdminLayoutAuditLogsRoute
   '/admin/settings': typeof LayoutAdminLayoutSettingsRoute
   '/admin/uke-import': typeof LayoutAdminLayoutUkeImportRoute
@@ -215,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/admin/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
   '/admin/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
   '/admin/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/admin/lists/': typeof LayoutAdminLayoutListsIndexRoute
   '/admin/locations/': typeof LayoutAdminLayoutLocationsIndexRoute
   '/admin/stations/': typeof LayoutAdminLayoutStationsIndexRoute
   '/admin/submissions/': typeof LayoutAdminLayoutSubmissionsIndexRoute
@@ -236,6 +265,8 @@ export interface FileRoutesByTo {
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/admin': typeof LayoutAdminLayoutRouteWithChildren
+  '/lists/$uuid': typeof LayoutListsUuidRoute
+  '/lists': typeof LayoutListsIndexRoute
   '/admin/audit-logs': typeof LayoutAdminLayoutAuditLogsRoute
   '/admin/settings': typeof LayoutAdminLayoutSettingsRoute
   '/admin/uke-import': typeof LayoutAdminLayoutUkeImportRoute
@@ -244,6 +275,7 @@ export interface FileRoutesByTo {
   '/admin/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
   '/admin/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
   '/admin/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/admin/lists': typeof LayoutAdminLayoutListsIndexRoute
   '/admin/locations': typeof LayoutAdminLayoutLocationsIndexRoute
   '/admin/stations': typeof LayoutAdminLayoutStationsIndexRoute
   '/admin/submissions': typeof LayoutAdminLayoutSubmissionsIndexRoute
@@ -258,6 +290,7 @@ export interface FileRoutesById {
   '/_layout/clf-export': typeof LayoutClfExportRoute
   '/_layout/contact': typeof LayoutContactRoute
   '/_layout/deleted-entries': typeof LayoutDeletedEntriesRoute
+  '/_layout/lists': typeof LayoutListsRouteWithChildren
   '/_layout/preferences': typeof LayoutPreferencesRoute
   '/_layout/stations': typeof LayoutStationsRoute
   '/_layout/statistics': typeof LayoutStatisticsRoute
@@ -267,6 +300,8 @@ export interface FileRoutesById {
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/_layout/admin/_layout': typeof LayoutAdminLayoutRouteWithChildren
+  '/_layout/lists/$uuid': typeof LayoutListsUuidRoute
+  '/_layout/lists/': typeof LayoutListsIndexRoute
   '/_layout/admin/_layout/audit-logs': typeof LayoutAdminLayoutAuditLogsRoute
   '/_layout/admin/_layout/settings': typeof LayoutAdminLayoutSettingsRoute
   '/_layout/admin/_layout/uke-import': typeof LayoutAdminLayoutUkeImportRoute
@@ -275,6 +310,7 @@ export interface FileRoutesById {
   '/_layout/admin/_layout/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
   '/_layout/admin/_layout/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
   '/_layout/admin/_layout/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/_layout/admin/_layout/lists/': typeof LayoutAdminLayoutListsIndexRoute
   '/_layout/admin/_layout/locations/': typeof LayoutAdminLayoutLocationsIndexRoute
   '/_layout/admin/_layout/stations/': typeof LayoutAdminLayoutStationsIndexRoute
   '/_layout/admin/_layout/submissions/': typeof LayoutAdminLayoutSubmissionsIndexRoute
@@ -290,6 +326,7 @@ export interface FileRouteTypes {
     | '/clf-export'
     | '/contact'
     | '/deleted-entries'
+    | '/lists'
     | '/preferences'
     | '/stations'
     | '/statistics'
@@ -298,6 +335,8 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/account/submissions'
     | '/admin'
+    | '/lists/$uuid'
+    | '/lists/'
     | '/admin/audit-logs'
     | '/admin/settings'
     | '/admin/uke-import'
@@ -306,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin/stations/$id'
     | '/admin/submissions/$id'
     | '/admin/users/$id'
+    | '/admin/lists/'
     | '/admin/locations/'
     | '/admin/stations/'
     | '/admin/submissions/'
@@ -327,6 +367,8 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/account/submissions'
     | '/admin'
+    | '/lists/$uuid'
+    | '/lists'
     | '/admin/audit-logs'
     | '/admin/settings'
     | '/admin/uke-import'
@@ -335,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin/stations/$id'
     | '/admin/submissions/$id'
     | '/admin/users/$id'
+    | '/admin/lists'
     | '/admin/locations'
     | '/admin/stations'
     | '/admin/submissions'
@@ -348,6 +391,7 @@ export interface FileRouteTypes {
     | '/_layout/clf-export'
     | '/_layout/contact'
     | '/_layout/deleted-entries'
+    | '/_layout/lists'
     | '/_layout/preferences'
     | '/_layout/stations'
     | '/_layout/statistics'
@@ -357,6 +401,8 @@ export interface FileRouteTypes {
     | '/_layout/account/settings'
     | '/_layout/account/submissions'
     | '/_layout/admin/_layout'
+    | '/_layout/lists/$uuid'
+    | '/_layout/lists/'
     | '/_layout/admin/_layout/audit-logs'
     | '/_layout/admin/_layout/settings'
     | '/_layout/admin/_layout/uke-import'
@@ -365,6 +411,7 @@ export interface FileRouteTypes {
     | '/_layout/admin/_layout/stations/$id'
     | '/_layout/admin/_layout/submissions/$id'
     | '/_layout/admin/_layout/users/$id'
+    | '/_layout/admin/_layout/lists/'
     | '/_layout/admin/_layout/locations/'
     | '/_layout/admin/_layout/stations/'
     | '/_layout/admin/_layout/submissions/'
@@ -434,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutPreferencesRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/lists': {
+      id: '/_layout/lists'
+      path: '/lists'
+      fullPath: '/lists'
+      preLoaderRoute: typeof LayoutListsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/deleted-entries': {
       id: '/_layout/deleted-entries'
       path: '/deleted-entries'
@@ -468,6 +522,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/about'
       preLoaderRoute: typeof LayoutAboutRouteImport
       parentRoute: typeof LayoutRoute
+    }
+    '/_layout/lists/': {
+      id: '/_layout/lists/'
+      path: '/'
+      fullPath: '/lists/'
+      preLoaderRoute: typeof LayoutListsIndexRouteImport
+      parentRoute: typeof LayoutListsRoute
+    }
+    '/_layout/lists/$uuid': {
+      id: '/_layout/lists/$uuid'
+      path: '/$uuid'
+      fullPath: '/lists/$uuid'
+      preLoaderRoute: typeof LayoutListsUuidRouteImport
+      parentRoute: typeof LayoutListsRoute
     }
     '/_layout/admin/_layout': {
       id: '/_layout/admin/_layout'
@@ -546,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminLayoutLocationsIndexRouteImport
       parentRoute: typeof LayoutAdminLayoutRoute
     }
+    '/_layout/admin/_layout/lists/': {
+      id: '/_layout/admin/_layout/lists/'
+      path: '/lists'
+      fullPath: '/admin/lists/'
+      preLoaderRoute: typeof LayoutAdminLayoutListsIndexRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
+    }
     '/_layout/admin/_layout/users/$id': {
       id: '/_layout/admin/_layout/users/$id'
       path: '/users/$id'
@@ -577,6 +652,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LayoutListsRouteChildren {
+  LayoutListsUuidRoute: typeof LayoutListsUuidRoute
+  LayoutListsIndexRoute: typeof LayoutListsIndexRoute
+}
+
+const LayoutListsRouteChildren: LayoutListsRouteChildren = {
+  LayoutListsUuidRoute: LayoutListsUuidRoute,
+  LayoutListsIndexRoute: LayoutListsIndexRoute,
+}
+
+const LayoutListsRouteWithChildren = LayoutListsRoute._addFileChildren(
+  LayoutListsRouteChildren,
+)
+
 interface LayoutAdminLayoutRouteChildren {
   LayoutAdminLayoutAuditLogsRoute: typeof LayoutAdminLayoutAuditLogsRoute
   LayoutAdminLayoutSettingsRoute: typeof LayoutAdminLayoutSettingsRoute
@@ -586,6 +675,7 @@ interface LayoutAdminLayoutRouteChildren {
   LayoutAdminLayoutStationsIdRoute: typeof LayoutAdminLayoutStationsIdRoute
   LayoutAdminLayoutSubmissionsIdRoute: typeof LayoutAdminLayoutSubmissionsIdRoute
   LayoutAdminLayoutUsersIdRoute: typeof LayoutAdminLayoutUsersIdRoute
+  LayoutAdminLayoutListsIndexRoute: typeof LayoutAdminLayoutListsIndexRoute
   LayoutAdminLayoutLocationsIndexRoute: typeof LayoutAdminLayoutLocationsIndexRoute
   LayoutAdminLayoutStationsIndexRoute: typeof LayoutAdminLayoutStationsIndexRoute
   LayoutAdminLayoutSubmissionsIndexRoute: typeof LayoutAdminLayoutSubmissionsIndexRoute
@@ -601,6 +691,7 @@ const LayoutAdminLayoutRouteChildren: LayoutAdminLayoutRouteChildren = {
   LayoutAdminLayoutStationsIdRoute: LayoutAdminLayoutStationsIdRoute,
   LayoutAdminLayoutSubmissionsIdRoute: LayoutAdminLayoutSubmissionsIdRoute,
   LayoutAdminLayoutUsersIdRoute: LayoutAdminLayoutUsersIdRoute,
+  LayoutAdminLayoutListsIndexRoute: LayoutAdminLayoutListsIndexRoute,
   LayoutAdminLayoutLocationsIndexRoute: LayoutAdminLayoutLocationsIndexRoute,
   LayoutAdminLayoutStationsIndexRoute: LayoutAdminLayoutStationsIndexRoute,
   LayoutAdminLayoutSubmissionsIndexRoute:
@@ -617,6 +708,7 @@ interface LayoutRouteChildren {
   LayoutClfExportRoute: typeof LayoutClfExportRoute
   LayoutContactRoute: typeof LayoutContactRoute
   LayoutDeletedEntriesRoute: typeof LayoutDeletedEntriesRoute
+  LayoutListsRoute: typeof LayoutListsRouteWithChildren
   LayoutPreferencesRoute: typeof LayoutPreferencesRoute
   LayoutStationsRoute: typeof LayoutStationsRoute
   LayoutStatisticsRoute: typeof LayoutStatisticsRoute
@@ -634,6 +726,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutClfExportRoute: LayoutClfExportRoute,
   LayoutContactRoute: LayoutContactRoute,
   LayoutDeletedEntriesRoute: LayoutDeletedEntriesRoute,
+  LayoutListsRoute: LayoutListsRouteWithChildren,
   LayoutPreferencesRoute: LayoutPreferencesRoute,
   LayoutStationsRoute: LayoutStationsRoute,
   LayoutStatisticsRoute: LayoutStatisticsRoute,

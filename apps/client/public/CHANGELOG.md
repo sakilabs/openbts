@@ -9,6 +9,12 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Added **User Lists** - create and manage curated collections of stations and radiolines
+  - Lists can be public or private; public lists are shareable via a link and have a dedicated map view at `/lists/$uuid`
+  - Lists appear in the sidebar with collapsible quick-access navigation; create new lists directly from there
+  - "Add to list" button now appears in station and radioline map popups
+  - Admins can view and manage all user lists at `/admin/lists` (requires `enableUserLists` setting to be enabled)
+- My Submissions page now uses virtualised rendering with paginated API fetching instead of loading all submissions at once
 - Accepted submissions are now fully locked. Photos can no longer be edited or deleted once a submission is approved
 - Admin station edit page now supports editing photo notes and taken-at dates, matching the locations page
 - Photo cards on the station edit page now display the author, upload date, taken-at date and note, matching the locations page

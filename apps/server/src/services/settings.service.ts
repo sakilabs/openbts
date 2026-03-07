@@ -14,6 +14,7 @@ export interface RuntimeSettings {
   disabledRoutes: NonEmptyString[];
   enableStationComments: boolean;
   submissionsEnabled: boolean;
+  enableUserLists: boolean;
   photosEnabled: boolean;
   announcement: Announcement;
 }
@@ -27,6 +28,7 @@ const defaultSettings: RuntimeSettings = {
   disabledRoutes: [],
   enableStationComments: false,
   submissionsEnabled: true,
+  enableUserLists: false,
   photosEnabled: true,
   announcement: { message: "", enabled: false, type: "info" },
 };
@@ -49,6 +51,7 @@ function isSettings(obj: unknown): obj is RuntimeSettings {
     candidate.disabledRoutes.every(isNonEmptyString) &&
     typeof candidate.enableStationComments === "boolean" &&
     typeof candidate.submissionsEnabled === "boolean" &&
+    typeof candidate.enableUserLists === "boolean" &&
     typeof candidate.photosEnabled === "boolean" &&
     candidate.announcement !== null &&
     typeof candidate.announcement === "object" &&
@@ -64,6 +67,7 @@ function deepMergeSettings(base: RuntimeSettings, patch: Partial<RuntimeSettings
   if (typeof patch.enableStationComments === "boolean") next.enableStationComments = patch.enableStationComments;
   if (typeof patch.submissionsEnabled === "boolean") next.submissionsEnabled = patch.submissionsEnabled;
   if (typeof patch.photosEnabled === "boolean") next.photosEnabled = patch.photosEnabled;
+  if (typeof patch.enableUserLists === "boolean") next.enableUserLists = patch.enableUserLists;
   if (Array.isArray(patch.allowedUnauthenticatedRoutes))
     next.allowedUnauthenticatedRoutes = patch.allowedUnauthenticatedRoutes.filter(isNonEmptyString) as NonEmptyString[];
   if (Array.isArray(patch.disabledRoutes)) next.disabledRoutes = patch.disabledRoutes.filter(isNonEmptyString) as NonEmptyString[];
@@ -113,8 +117,7 @@ export async function updateRuntimeSettings(patch: Partial<RuntimeSettings>): Pr
   const next = deepMergeSettings(inMemorySettings, patch);
   inMemorySettings = next;
   const json = JSON.stringify(next);
-  await redis.set(SETTINGS_KEY, json);
-  await redis.publish(CHANNEL, json);
+  await Promise.all([redis.set(SETTINGS_KEY, json), redis.publish(CHANNEL, json)]);
   return next;
 }
 

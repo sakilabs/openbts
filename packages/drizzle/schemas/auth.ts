@@ -111,9 +111,7 @@ export const accounts = AuthSchema.table(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => {
-    return [index("accounts_user_id_idx").on(table.userId)];
-  },
+  (t) => [index("accounts_user_id_idx").on(t.userId)],
 );
 
 export const verificationTokens = AuthSchema.table("verification_tokens", {
@@ -250,6 +248,10 @@ export const userLists = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
     stations: jsonb("stations").$type<number[]>().notNull(),
+    radiolines: jsonb("radiolines")
+      .$type<number[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
@@ -258,6 +260,8 @@ export const userLists = pgTable(
     index("user_lists_stations_gin").using("gin", t.stations),
     unique("user_lists_creator_name_unique").on(t.created_by, t.name),
     check("user_lists_stations_is_array", sql`jsonb_typeof(${t.stations}) = 'array'`),
+    index("user_lists_radiolines_gin").using("gin", t.radiolines),
+    check("user_lists_radiolines_is_array", sql`jsonb_typeof(${t.radiolines}) = 'array'`),
   ],
 );
 

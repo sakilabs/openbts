@@ -1,46 +1,26 @@
 import type { ReactNode } from "react";
 import { createRootRoute, Outlet, Link as RouterLink, useNavigate } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
 import { AuthUIProvider } from "@daveyplate/better-auth-ui";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { BackendStatusProvider } from "@/components/backend-status";
-import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { ReloadPrompt } from "@/components/reload-prompt";
-import { BackendUnavailableError, RateLimitError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
+import { queryClient } from "@/lib/queryClient";
 import i18n from "@/i18n/config";
 import "@/index.css";
 
-function AuthLink({ href, ...props }: { href: string; className?: string; children: ReactNode }) {
+type AuthLinkProps = { href: string; className?: string; children: ReactNode };
+type AppProvidersProps = { children: ReactNode };
+
+function AuthLink({ href, ...props }: AuthLinkProps) {
   return <RouterLink to={href} {...props} />;
 }
 
-function onRateLimitError(error: Error) {
-  if (error instanceof RateLimitError) toast.error(error.message);
-}
-
-const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: onRateLimitError }),
-  mutationCache: new MutationCache({ onError: onRateLimitError }),
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 10,
-      refetchOnWindowFocus: false,
-      retry: (failureCount, error) => {
-        if (error instanceof BackendUnavailableError) return false;
-        if (error instanceof RateLimitError) return false;
-        return failureCount < 3;
-      },
-      throwOnError: (error) => error instanceof BackendUnavailableError,
-    },
-  },
-});
-
-function AppProviders({ children }: { children: ReactNode }) {
+function AppProviders({ children }: AppProvidersProps) {
   const navigate = useNavigate();
 
   return (

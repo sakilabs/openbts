@@ -4,7 +4,8 @@
     "contribute": "Submissions",
     "settings": "Settings",
     "admin": "Admin",
-    "info": "Information"
+    "info": "Information",
+    "lists": "My Lists"
   },
   "items": {
     "mapView": "Map View",
@@ -22,12 +23,16 @@
     "settings": "Settings",
     "ukePermits": "Unassigned UKE Permits",
     "ukeImport": "UKE Import",
+    "lists": "Lists",
     "auditLogs": "Audit Logs",
     "deletedEntries": "Deleted Entries",
     "statistics": "Statistics",
     "about": "About",
     "contact": "Contact",
-    "tos": "Terms of Service"
+    "tos": "Terms of Service",
+    "myLists": "My Lists",
+    "sharedList": "Shared List",
+    "viewAllLists": "View all"
   },
   "secondary": {
     "settings": "Settings",

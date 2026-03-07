@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "8a9dcb1c-d3df-4933-b2f6-f1559dcd3103",
+  "id": "116c289d-4ffe-475f-92e2-b26ab0351250",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -4507,6 +4507,19 @@
       "table": "user_lists"
     },
     {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "radiolines",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "user_lists"
+    },
+    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -7950,6 +7963,27 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "radiolines",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "gin",
+      "concurrently": false,
+      "name": "user_lists_radiolines_gin",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "user_lists"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "email",
           "isExpression": false,
           "asc": true,
@@ -9691,6 +9725,13 @@
     {
       "value": "jsonb_typeof(\"stations\") = 'array'",
       "name": "user_lists_stations_is_array",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "user_lists"
+    },
+    {
+      "value": "jsonb_typeof(\"radiolines\") = 'array'",
+      "name": "user_lists_radiolines_is_array",
       "entityType": "checks",
       "schema": "public",
       "table": "user_lists"

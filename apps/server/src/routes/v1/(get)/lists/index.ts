@@ -1,0 +1,145 @@
+import { z } from "zod/v4";
+import { and, count, desc, eq, ilike } from "drizzle-orm";
+import { createSelectSchema } from "drizzle-orm/zod";
+
+import db from "../../../../database/psql.js";
+import { ErrorResponse } from "../../../../errors.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { userLists, users } from "@openbts/drizzle";
+
+import type { FastifyRequest } from "fastify/types/request.js";
+import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+
+const userListsSchema = createSelectSchema(userLists);
+const usersSchema = createSelectSchema(users).pick({ id: true, name: true, username: true });
+
+const createdBySchema = usersSchema.pick({ name: true, username: true }).partial().extend({ uuid: z.string() });
+
+const listItemSchema = userListsSchema
+  .pick({ id: true, uuid: true, name: true, description: true, is_public: true, createdAt: true, updatedAt: true })
+  .extend({
+    stations: z.array(z.number()),
+    radiolines: z.array(z.number()),
+    stationCount: z.number(),
+    radiolineCount: z.number(),
+    createdBy: createdBySchema,
+  });
+
+const schemaRoute = {
+  querystring: z.object({
+    limit: z.coerce.number().min(1).max(100).optional().default(50),
+    page: z.coerce.number().min(1).default(1),
+    search: z.string().optional(),
+  }),
+  response: {
+    200: z.object({
+      data: z.array(listItemSchema),
+      totalCount: z.number(),
+    }),
+  },
+};
+
+type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
+type ResponseBody = z.infer<(typeof schemaRoute.response)["200"]>;
+
+async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
+  if (!getRuntimeSettings().enableUserLists) throw new ErrorResponse("FORBIDDEN");
+  if (!req.userSession) throw new ErrorResponse("UNAUTHORIZED");
+
+  const { limit, page, search } = req.query;
+  const offset = (page - 1) * limit;
+  const userId = req.userSession.user.id;
+
+  const isAdmin = await verifyPermissions(userId, { user_lists: ["read"] });
+
+  const whereClause = and(isAdmin ? undefined : eq(userLists.created_by, userId), search ? ilike(userLists.name, `%${search}%`) : undefined);
+
+  const countQuery = db.select({ count: count() }).from(userLists).where(whereClause);
+
+  if (isAdmin) {
+    const [countResult, rows] = await Promise.all([
+      countQuery,
+      db
+        .select({
+          id: userLists.id,
+          uuid: userLists.uuid,
+          name: userLists.name,
+          description: userLists.description,
+          is_public: userLists.is_public,
+          stations: userLists.stations,
+          radiolines: userLists.radiolines,
+          created_by: userLists.created_by,
+          createdAt: userLists.createdAt,
+          updatedAt: userLists.updatedAt,
+          createdByName: users.name,
+          createdByUsername: users.username,
+        })
+        .from(userLists)
+        .leftJoin(users, eq(userLists.created_by, users.id))
+        .where(whereClause)
+        .orderBy(desc(userLists.createdAt))
+        .limit(limit)
+        .offset(offset),
+    ]);
+
+    const totalCount = countResult[0]?.count ?? 0;
+    const data = rows.map((row) => {
+      const stations = (row.stations as number[]) ?? [];
+      const radiolines = (row.radiolines as number[]) ?? [];
+      return {
+        id: row.id,
+        uuid: row.uuid,
+        name: row.name,
+        description: row.description,
+        is_public: row.is_public,
+        stations,
+        radiolines,
+        stationCount: stations.length,
+        radiolineCount: radiolines.length,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        createdBy: { uuid: row.created_by, ...(row.createdByName ? { name: row.createdByName, username: row.createdByUsername ?? null } : {}) },
+      };
+    });
+
+    return res.send({ data, totalCount });
+  }
+
+  const [countResult, rows] = await Promise.all([
+    countQuery,
+    db.select().from(userLists).where(whereClause).orderBy(desc(userLists.createdAt)).limit(limit).offset(offset),
+  ]);
+
+  const totalCount = countResult[0]?.count ?? 0;
+  const data = rows.map((row) => {
+    const stations = (row.stations as number[]) ?? [];
+    const radiolines = (row.radiolines as number[]) ?? [];
+    return {
+      id: row.id,
+      uuid: row.uuid,
+      name: row.name,
+      description: row.description,
+      is_public: row.is_public,
+      stations,
+      radiolines,
+      stationCount: stations.length,
+      radiolineCount: radiolines.length,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      createdBy: { uuid: row.created_by },
+    };
+  });
+
+  return res.send({ data, totalCount });
+}
+
+const getLists: Route<ReqQuery, ResponseBody> = {
+  url: "/lists",
+  method: "GET",
+  schema: schemaRoute,
+  handler,
+};
+
+export default getLists;

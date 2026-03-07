@@ -108,7 +108,6 @@ export async function notifyStaffNewSubmission(params: {
     .from(pushSubscriptions)
     .where(inArray(pushSubscriptions.userId, staffIds));
 
-  const notifByUser = new Map(insertedNotifications.map((n) => [n.userId, n.id]));
   const subsByUser = new Map<string, { endpoint: string; p256dh: string; auth: string }[]>();
   for (const sub of allSubs) {
     const existing = subsByUser.get(sub.userId) ?? [];
