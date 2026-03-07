@@ -196,8 +196,10 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   useEffect(() => {
     if (!popupLocationData || !activePopupLocation) return;
     if (popupLocationData.id !== activePopupLocation.locationId) return;
-    updatePopupStations(toLocationInfo(popupLocationData), popupLocationData.stations as StationWithoutCells[], activePopupLocation.source);
-  }, [popupLocationData, activePopupLocation, updatePopupStations]);
+    const listStationIds = new Set(listData?.stations.map((s) => s.id) ?? []);
+    const filteredStations = (popupLocationData.stations as StationWithoutCells[]).filter((s) => listStationIds.has(s.id));
+    updatePopupStations(toLocationInfo(popupLocationData), filteredStations, activePopupLocation.source);
+  }, [popupLocationData, activePopupLocation, updatePopupStations, listData]);
 
   const popupActions = useMemo(
     () => ({
