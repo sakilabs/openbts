@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Mail01Icon, GithubIcon, Globe02Icon, Alert02Icon, SentIcon } from "@hugeicons/core-free-icons";
+import { Mail01Icon, GithubIcon, Alert02Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { APP_NAME } from "@/lib/api";
 
 interface ContactLink {
   icon: typeof Mail01Icon;
@@ -25,15 +24,9 @@ const teamMembers: TeamMember[] = [
   {
     name: "Krzysztof Niemczyk",
     role: "Administrator bazy danych i serwisu",
-    description: "Kwestie związane z danymi lokalizacji, zagadnienia merytoryczne, sugestie rozwoju, zapytania odnośnie potencjalnej współpracy.",
+    description: "Kwestie merytoryczne związane z danymi w bazie, zapytania odnośnie potencjalnej współpracy.",
     initials: "KN",
     links: [{ icon: Mail01Icon, label: "k.niemczyk@btsearch.pl", href: "mailto:k.niemczyk@btsearch.pl" }],
-  },
-  {
-    name: "Dawid Lorenz",
-    role: "Pomysłodawca i założyciel BTSearch",
-    initials: "DL",
-    links: [{ icon: Mail01Icon, label: "d.lorenz@btsearch.pl", href: "mailto:d.lorenz@btsearch.pl" }],
   },
   {
     name: "ririxi",

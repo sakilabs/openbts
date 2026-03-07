@@ -446,7 +446,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               isFormDisabled={isFormDisabled}
               isDeleteSubmission={isDeleteSubmission}
             />
-            <SubmissionPhotosSection submissionId={submission.id} />
+            <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} />
           </div>
 
           <div className="w-full lg:flex-3 min-w-0 space-y-2">

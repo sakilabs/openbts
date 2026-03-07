@@ -17,7 +17,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 import { showApiError } from "@/lib/api";
+import { useScrolled } from "@/hooks/useScrolled";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { useDeleteStationMutation } from "@/features/admin/stations/mutations";
 import type { Operator, Station } from "@/types/station";
@@ -47,6 +49,8 @@ export function StationDetailHeader({
   const navigate = useNavigate();
   const deleteMutation = useDeleteStationMutation();
 
+  const { ref: headerRef, scrolled } = useScrolled();
+
   const handleDelete = () => {
     if (!station) return;
     deleteMutation.mutate(station.id, {
@@ -62,7 +66,11 @@ export function StationDetailHeader({
 
   return (
     <div
-      className="shrink-0 border-b bg-background px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm"
+      ref={headerRef}
+      className={cn(
+        "shrink-0 border-b px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 transition-[background-color,border-color,box-shadow] duration-150",
+        scrolled ? "bg-background shadow-[0_1px_3px_rgba(0,0,0,0.06)]" : "bg-transparent border-transparent shadow-none",
+      )}
       style={{
         borderTopWidth: "3px",
         borderTopColor: selectedOperator ? getOperatorColor(selectedOperator.mnc) : "transparent",

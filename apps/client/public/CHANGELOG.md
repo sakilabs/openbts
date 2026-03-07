@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-07
+
+### 🩹 Fixes
+
+- Lightbox overlays in photo galleries no longer leave a small uncovered gap at the bottom of the screen
+
+### 🚀 Enhancements
+
+- Accepted submissions are now fully locked. Photos can no longer be edited or deleted once a submission is approved
+- Admin station edit page now supports editing photo notes and taken-at dates, matching the locations page
+- Photo cards on the station edit page now display the author, upload date, taken-at date and note, matching the locations page
+- Page headers on `/admin/stations/$id` and `/admin/locations/$id` now blend into the page when at the top and gain a background and shadow when scrolled
+
 # 2026-03-06
 
 ### 🩹 Fixes

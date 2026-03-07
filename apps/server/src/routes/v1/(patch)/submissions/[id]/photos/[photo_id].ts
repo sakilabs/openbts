@@ -33,9 +33,10 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 
   const submission = await db.query.submissions.findFirst({ where: { id }, columns: { id: true, submitter_id: true, status: true } });
   if (!submission) throw new ErrorResponse("NOT_FOUND");
+  if (submission.status !== "pending") throw new ErrorResponse("FORBIDDEN");
 
   const isSubmitter = submission.submitter_id === session.user.id;
-  if (!hasAdminPermission && (!isSubmitter || submission.status !== "pending")) throw new ErrorResponse("FORBIDDEN");
+  if (!hasAdminPermission && !isSubmitter) throw new ErrorResponse("FORBIDDEN");
 
   const photo = await db.query.submissionPhotos.findFirst({ where: { id: photo_id, submission_id: id } });
   if (!photo) throw new ErrorResponse("NOT_FOUND");

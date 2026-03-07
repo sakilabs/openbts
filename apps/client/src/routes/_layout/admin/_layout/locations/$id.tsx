@@ -25,7 +25,9 @@ import { LocationPicker } from "@/features/submissions/components/locationPicker
 import { fetchLocationDetail } from "@/features/admin/locations/api";
 import { LocationPhotosSection } from "@/features/admin/locations/components/LocationPhotosSection";
 import { usePatchLocationMutation, useDeleteLocationMutation } from "@/features/admin/locations/mutations";
+import { cn } from "@/lib/utils";
 import { showApiError } from "@/lib/api";
+import { useScrolled } from "@/hooks/useScrolled";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 
@@ -95,6 +97,8 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
 
   const patchMutation = usePatchLocationMutation(location.id);
   const deleteMutation = useDeleteLocationMutation();
+
+  const { ref: headerRef, scrolled } = useScrolled();
 
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {
     setLocationForm((prev) => ({ ...prev, ...patch }));
@@ -175,7 +179,13 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {headerTopStyle && <div className="shrink-0 h-0.75" style={headerTopStyle} />}
-      <div className="shrink-0 border-b bg-background px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm">
+      <div
+        ref={headerRef}
+        className={cn(
+          "shrink-0 border-b px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 transition-[background-color,border-color,box-shadow] duration-150",
+          scrolled ? "bg-background shadow-[0_1px_3px_rgba(0,0,0,0.06)]" : "bg-transparent border-transparent shadow-none",
+        )}
+      >
         <Button
           variant="ghost"
           size="sm"

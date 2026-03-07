@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { APP_NAME } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Timeline,
   TimelineContent,
@@ -37,11 +37,6 @@ const historyEvents = [
     content: "Uruchomienie Galerii BTS umożliwiającej nadsyłanie zdjęć stacji bazowych w Polsce i nie tylko.",
   },
   {
-    date: "Marzec 2006",
-    title: "Nowy hosting",
-    content: "Przeniesienie serwisu na nowe konto hostingowe dzięki uprzejmości portalu telekomunikacyjnego TELEPOLIS.PL.",
-  },
-  {
     date: "Styczeń 2007",
     title: "Rejestracja domeny",
     content: "Rejestracja domeny btsearch.pl.",
@@ -64,6 +59,12 @@ const historyEvents = [
     content:
       'Uruchomienie serwisu BTSearch "v2" łączącego mapę lokalizacji BTS / UKE oraz bazę danych z wyszukiwarką stacji bazowych pod jednym dachem. Pierwsza gruntowna modernizacja serwisu od ponad 13 lat.',
   },
+  {
+    date: "Kwiecień 2026",
+    title: "BTSearch v3",
+    content:
+      "Po kolejnych 13 latach, dzięki wybitnemu zaangażowaniu świeżej krwi ze społeczności open source w osobie “ririxi”, powstaje nowoczesna, responsywna i rozbudowana o szereg nowych funkcjonalności trzecia generacja serwisu BTSearch. To szczególny kamień milowy dla serwisu także z uwagi na udostępnienie publicznego API, umożliwiającego wykorzystanie danych BTSearch w aplikacjach zewnętrznych.",
+  },
 ];
 
 const aboutContent = `Serwis ${APP_NAME} dedykowany jest w głównej mierze osobom pasjonującym się technologiami powiązanymi z sieciami komórkowymi, a w szczególności z warstwą radiową tychże sieci. Serwis, a zwłaszcza mapa lokalizacji, może stanowić także pożyteczne kompendium wiedzy dla wszystkich osób zainteresowanych lokalizacjami nadajników BTS w Polsce i potencjalną dostępnością usług w ich okolicach.
@@ -80,16 +81,17 @@ const authors = [
   {
     name: "Dawid Lorenz",
     initials: "DL",
-    description:
-      'Pomysłodawca i ojciec założyciel BTSearch. Aktualnie nie pracuje na bieżąco nad serwisem, aczkolwiek BTSearch "v2" to jego dzieło. ;)',
+    description: "Pomysłodawca i ojciec założyciel BTSearch. Aktualnie nie pracuje na bieżąco nad serwisem.",
+  },
+  {
+    name: "ririxi",
+    initials: "R",
+    image: "https://github.com/rxri.png",
+    description: "Opiekun techniczny projektu, odpowiedzialny za rozwój i utrzymanie serwisu oraz kwestie techniczne.",
   },
 ];
 
-const contributorsNote = `Wśród osób, które wspierały rozwój BTSearch w przeszłości znajdują się **Dominik Boryś** oraz **Tomasz Wasiak**. Autorem logotypu jest **Sławomir Salicki**. Nieocenioną pomocą przy wdrażaniu "v2" służył **Marek Matulka**. **Dziękujemy!**`;
-
-const thanksContent = `Przede wszystkim serdecznie dziękujemy wszystkim "łowcom BTS-ów", którzy bezinteresownie przysyłali dane o stacjach bazowych i bez których baza danych BTSearch byłaby po prostu pusta.
-
-Dziękujemy serwisowi telekomunikacyjnemu [TELEPOLIS.PL](https://telepolis.pl) za udostępnienie hostingu.`;
+const thanksContent = `Przede wszystkim serdecznie dziękujemy wszystkim "łowcom BTS-ów", którzy bezinteresownie przysyłali dane o stacjach bazowych i bez których baza danych BTSearch byłaby po prostu pusta.`;
 
 function AboutPage() {
   return (
@@ -127,6 +129,7 @@ function AboutPage() {
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <Avatar size="lg">
+                      {author.image && <AvatarImage src={author.image} alt={author.name} />}
                       <AvatarFallback>{author.initials}</AvatarFallback>
                     </Avatar>
                     <CardTitle>{author.name}</CardTitle>
@@ -138,9 +141,6 @@ function AboutPage() {
               </Card>
             ))}
           </div>
-          <article className={markdownClasses}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{contributorsNote}</ReactMarkdown>
-          </article>
         </section>
 
         <section className="space-y-4">
