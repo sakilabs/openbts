@@ -172,7 +172,7 @@ export type LocationInfo = {
   longitude: number;
 };
 
-export type LocationWithStations = LocationInfo & {
+export type LocationWithStations = Omit<LocationInfo, "region"> & {
   updatedAt: string;
   createdAt: string;
   region: Region;

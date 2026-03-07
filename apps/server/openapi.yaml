@@ -24,6 +24,7 @@ tags:
   - name: Search
   - name: Audit Logs
   - name: UKE
+  - name: Lists
 
 paths:
   /health:
@@ -2443,6 +2444,148 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /lists:
+    get:
+      tags: [Lists]
+      summary: List user lists
+      description: Returns lists owned by the authenticated user. Admins with `user_lists:read` permission see all lists.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UserListSummary" } }
+                  totalCount: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    post:
+      tags: [Lists]
+      summary: Create a user list
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserListCreate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UserListRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /lists/{uuid}:
+    get:
+      tags: [Lists]
+      summary: Get list by UUID with full station and radioline data
+      description: Public lists are accessible without authentication. Private lists require authentication and ownership (or admin `user_lists:read` permission).
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UserListDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    patch:
+      tags: [Lists]
+      summary: Update a user list
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserListPatch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/UserListRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Lists]
+      summary: Delete a user list
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: No Content
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -3603,3 +3746,80 @@ components:
               startedAt: { type: string, nullable: true }
               finishedAt: { type: string, nullable: true }
         error: { type: string, nullable: true }
+
+    # User Lists schemas
+    UserListSummary:
+      type: object
+      required: [id, uuid, name, is_public, stations, radiolines, stationCount, radiolineCount, createdBy, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        is_public: { type: boolean, nullable: true }
+        stations: { type: array, items: { type: integer }, description: Array of station IDs }
+        radiolines: { type: array, items: { type: integer }, description: Array of radioline IDs }
+        stationCount: { type: integer }
+        radiolineCount: { type: integer }
+        createdBy:
+          type: object
+          required: [uuid]
+          properties:
+            uuid: { type: string, format: uuid }
+            name: { type: string }
+            username: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UserListDetail:
+      type: object
+      required: [id, uuid, name, is_public, stations, radiolines, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        is_public: { type: boolean, nullable: true }
+        stations:
+          type: array
+          items: { $ref: "#/components/schemas/StationWithCellsAndOperator" }
+        radiolines:
+          type: array
+          items: { $ref: "#/components/schemas/UkeRadiolineResponse" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UserListRecord:
+      type: object
+      description: Raw database record for a user list as returned by create/update operations.
+      required: [id, uuid, name, is_public, created_by, stations, radiolines, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        is_public: { type: boolean, nullable: true }
+        created_by: { type: string, format: uuid }
+        stations: { type: array, items: { type: integer } }
+        radiolines: { type: array, items: { type: integer } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UserListCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        is_public: { type: boolean, nullable: true }
+        stations: { type: array, items: { type: integer } }
+        radiolines: { type: array, items: { type: integer } }
+
+    UserListPatch:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        is_public: { type: boolean, nullable: true }
+        stations: { type: array, items: { type: integer } }
+        radiolines: { type: array, items: { type: integer } }

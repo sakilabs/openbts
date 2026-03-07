@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState, type JSX } from "react";
 import { useQuery } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
 
@@ -14,7 +14,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
 import type { LocationsResponse } from "@/features/map/api";
 import type { LocationWithStations, StationSource, StationFilters, StationWithoutCells, UkeStation, RadioLine, Station } from "@/types/station";
-import { POLAND_CENTER } from "@/features/map/constants";
+import { POLAND_CENTER, POLAND_BOUNDS } from "@/features/map/constants";
 
 const RadioLinesLayer = lazy(() => import("@/features/map/components/radioLinesLayer"));
 const StationDetailsDialog = lazy(() =>
@@ -43,7 +43,7 @@ type DetailState = {
 
 type DetailAction = { type: "OPEN"; id: number; source: StationSource } | { type: "CLOSE" };
 
-function detailReducer(state: DetailState, action: DetailAction): DetailState {
+function detailReducer(_state: DetailState, action: DetailAction): DetailState {
   if (action.type === "OPEN") return { selectedStation: { id: action.id, source: action.source } };
   return { selectedStation: null };
 }
@@ -87,8 +87,8 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
           id: locId,
           latitude: station.location.latitude,
           longitude: station.location.longitude,
-          city: station.location.city,
-          address: station.location.address,
+          city: station.location.city ?? undefined,
+          address: station.location.address ?? undefined,
           region: station.location.region,
           updatedAt: station.location.updatedAt,
           createdAt: station.location.createdAt,
@@ -158,11 +158,11 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
           id: locationId,
           latitude: lat,
           longitude: lng,
-          city: station.location?.city ?? null,
-          address: station.location?.address ?? null,
-          region: station.location?.region ?? null,
-          updatedAt: station.location?.updatedAt ?? new Date(),
-          createdAt: station.location?.createdAt ?? new Date(),
+          city: station.location?.city ?? undefined,
+          address: station.location?.address ?? undefined,
+          region: station.location?.region ?? { id: 0, name: "", code: "" },
+          updatedAt: station.location?.updatedAt ?? new Date().toISOString(),
+          createdAt: station.location?.createdAt ?? new Date().toISOString(),
           stations: [station as unknown as StationWithoutCells],
         };
         setTempLocations((prev) => [...prev.filter((l) => l.id !== locationId), tempLoc]);
@@ -281,7 +281,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
 
 export function ListMapView({ uuid }: { uuid: string }): JSX.Element {
   return (
-    <LibreMap center={POLAND_CENTER} zoom={6}>
+    <LibreMap center={POLAND_CENTER} zoom={6} maxBounds={POLAND_BOUNDS} minZoom={5}>
       <ListMapInner uuid={uuid} />
     </LibreMap>
   );

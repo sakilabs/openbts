@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
-import { POLAND_CENTER } from "../constants";
+import { POLAND_CENTER, POLAND_BOUNDS } from "../constants";
 import { StationsLayer, DEFAULT_FILTERS, loadMapFilters, saveMapFilters } from "./stationsLayer";
 import type { StationFilters, StationSource, Station, LocationInfo, StationWithoutCells, UkeStation, UkeLocationWithPermits } from "@/types/station";
 import { MapSearchOverlay } from "./search-overlay";
@@ -24,11 +24,6 @@ const StationDetailsDialog = lazy(() =>
 const UkePermitDetailsDialog = lazy(() =>
   import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
 );
-
-const POLAND_BOUNDS: [[number, number], [number, number]] = [
-  [14.0, 48.9],
-  [24.2, 55.8],
-];
 
 const MAP_POSITION_KEY = "map:position";
 

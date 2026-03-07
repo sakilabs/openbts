@@ -1,4 +1,5 @@
 import { API_BASE, fetchJson } from "@/lib/api";
+import type { Station, RadioLine } from "@/types/station";
 
 export type UserListSummary = {
   id: number;
@@ -21,23 +22,8 @@ export type UserListDetail = {
   name: string;
   description: string | null;
   is_public: boolean | null;
-  stations: Array<{
-    id: number;
-    station_id: number;
-    cells: Array<{ id: number; band: { id: number; name: string } | null }>;
-    location: { latitude: number; longitude: number; region: { id: number; name: string } };
-    operator: { id: number; name: string; mnc?: string };
-  }>;
-  radiolines: Array<{
-    id: number;
-    tx: { longitude: number; latitude: number; height: number };
-    rx: { longitude: number; latitude: number; height: number };
-    link: { freq: number; ch_width?: number; polarization?: string };
-    operator?: { id: number; name: string };
-    permit: { number?: string; decision_type?: string; expiry_date: string };
-    updatedAt: string;
-    createdAt: string;
-  }>;
+  stations: Station[];
+  radiolines: RadioLine[];
   createdAt: string;
   updatedAt: string;
 };

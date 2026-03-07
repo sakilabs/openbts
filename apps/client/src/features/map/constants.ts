@@ -7,6 +7,10 @@ export const SOURCE_ID = "stations-source";
 export const POINT_LAYER_ID = "stations-layer";
 
 export const POLAND_CENTER: [number, number] = [19.9, 52.0];
+export const POLAND_BOUNDS: [[number, number], [number, number]] = [
+  [14.0, 48.9],
+  [24.2, 55.8],
+];
 
 export const PICKER_SOURCE_ID = "picker-locations-source";
 export const PICKER_CIRCLE_LAYER_ID = "picker-locations-circle";
