@@ -20,6 +20,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - List map view source switcher is re-enabled - toggle between internal and UKE to see only your list's stations or UKE locations
 - Cell editor tables now support horizontal mouse-wheel scrolling so all columns remain accessible on narrow screens
 - Theme provider now automatically detects system theme changes when set to "System"
+- Cells export endpoint rewritten to use explicit JOINs instead of correlated EXISTS subqueries, improving query performance
 
 # 2026-03-07
 

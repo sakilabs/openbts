@@ -80,7 +80,9 @@ const getLocationPhotos: Route<ReqParams, PhotoItem[]> = {
   url: "/locations/:location_id/photos",
   method: "GET",
   schema: schemaRoute,
-  config: { permissions: [] },
+  config: {
+    allowGuestAccess: true,
+  },
   handler,
 };
 
