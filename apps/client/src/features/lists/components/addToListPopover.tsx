@@ -8,6 +8,7 @@ import { TaskDaily01Icon, Add01Icon, AirportTowerIcon, SignalFull02Icon } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/authClient";
 import { useUserLists } from "@/features/lists/hooks/useUserLists";
 import { updateList } from "@/features/lists/api";
 import type { UserListSummary } from "@/features/lists/api";
@@ -23,6 +24,7 @@ type AddToListPopoverProps = {
 export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverProps) {
   const { t } = useTranslation(["lists", "common"]);
   const queryClient = useQueryClient();
+  const { data: session } = authClient.useSession();
   const { data, isLoading } = useUserLists();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -56,7 +58,10 @@ export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverPr
     return false;
   }
 
-  const lists = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
+  const lists = useMemo(
+    () => data?.pages.flatMap((p) => p.data).filter((l) => l.createdBy.uuid === session?.user?.id) ?? [],
+    [data, session?.user?.id],
+  );
   const icon = stationId ? AirportTowerIcon : SignalFull02Icon;
 
   function renderContent() {

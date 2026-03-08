@@ -73,7 +73,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 const updateList: Route<RequestData, ResponseData> = {
   url: "/lists/:uuid",
   method: "PATCH",
-  config: { permissions: ["write:lists"] },
   schema: schemaRoute,
   handler,
 };

@@ -234,7 +234,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 const getListByUuid: Route<ReqParams, ResponseBody> = {
   url: "/lists/:uuid",
   method: "GET",
-  config: { permissions: ["read:lists"], allowGuestAccess: true },
+  config: { allowGuestAccess: true },
   schema: schemaRoute,
   handler,
 };

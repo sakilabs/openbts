@@ -9,8 +9,12 @@ import {
   proposedStations,
   proposedLocations,
   notifications,
+  submissionPhotos,
+  attachments,
 } from "@openbts/drizzle";
 import { z } from "zod/v4";
+import path from "node:path";
+import fs from "node:fs/promises";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
@@ -21,6 +25,8 @@ import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { Route, EmptyResponse } from "../../../../interfaces/routes.interface.js";
+
+const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 
 const schemaRoute = {
   params: z.object({
@@ -54,6 +60,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
   if (!hasAdminPermission && submission.status !== "pending")
     throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be deleted" });
 
+  let attachmentUuids: string[] = [];
+
   try {
     await db.transaction(async (tx) => {
       const cellsBase = await tx.query.proposedCells.findMany({
@@ -80,12 +88,31 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
         tx.delete(notifications).where(eq(notifications.submissionId, id)),
       ]);
 
+      const photos = await tx.query.submissionPhotos.findMany({
+        where: { submission_id: id },
+        columns: { attachment_id: true },
+      });
+      const attachmentIds = photos.map((p) => p.attachment_id).filter((n): n is number => n !== null && n !== undefined);
+
+      await tx.delete(submissionPhotos).where(eq(submissionPhotos.submission_id, id));
+
+      if (attachmentIds.length > 0) {
+        const rows = await tx.query.attachments.findMany({
+          where: { id: { in: attachmentIds } },
+          columns: { id: true, uuid: true },
+        });
+        attachmentUuids = rows.map((r) => r.uuid);
+        await tx.delete(attachments).where(inArray(attachments.id, attachmentIds));
+      }
+
       await tx.delete(submissions).where(eq(submissions.id, id));
     });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("FAILED_TO_DELETE");
   }
+
+  await Promise.all(attachmentUuids.map((uuid) => fs.unlink(path.join(UPLOAD_DIR, `${uuid}.webp`)).catch(() => {})));
 
   await createAuditLog(
     {

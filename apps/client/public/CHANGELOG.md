@@ -1,6 +1,18 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-08
+
+### 🩹 Fixes
+
+- Deleting a submission now also deletes its attached photos and frees the files from disk
+- "Add to List" popover now only shows lists owned by the current user, consistent with the `/lists` page
+
+### 🚀 Enhancements
+
+- User lists are now limited to 10 per user
+- Station popup list height increased so 4+ stations no longer trigger a scrollbar
+
 # 2026-03-07
 
 ### 🩹 Fixes

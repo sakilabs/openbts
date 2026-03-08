@@ -49,7 +49,6 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 const deleteList: Route<ReqParams, void> = {
   url: "/lists/:uuid",
   method: "DELETE",
-  config: { permissions: ["delete:lists"] },
   schema: schemaRoute,
   handler,
 };

@@ -16,6 +16,7 @@ const permissionSchema = {
   bands: ["read", "create", "update", "delete"],
   users: ["create", "list", "set-role", "ban", "impersonate", "delete", "set-password"],
   session: ["list", "delete", "revoke"],
+  user_lists: ["read", "create", "update", "delete"],
 } as const;
 
 type PermissionSchema = typeof permissionSchema;

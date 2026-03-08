@@ -28,6 +28,7 @@ export const userRole = accessControl.newRole({
   settings: ["read"],
   deleted_entries: ["read"],
   uke_permits: ["read"],
+  user_lists: ["create"],
 });
 
 export const editorRole = accessControl.newRole({

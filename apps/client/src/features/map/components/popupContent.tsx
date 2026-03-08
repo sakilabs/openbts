@@ -226,7 +226,7 @@ export const PopupContent = memo(function PopupContent({
         {location.address && <p className="text-[11px] text-muted-foreground">{location.address}</p>}
       </div>
 
-      <div className="max-h-54 overflow-y-auto custom-scrollbar">{renderContent()}</div>
+      <div className="max-h-72 overflow-y-auto custom-scrollbar">{renderContent()}</div>
 
       <div className="px-3 py-1.5 border-t border-border/50 flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground font-mono">

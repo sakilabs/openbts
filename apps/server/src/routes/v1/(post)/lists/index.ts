@@ -1,5 +1,6 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
+import { count, eq } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
@@ -40,6 +41,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const userId = req.userSession.user.id;
 
+  const [listCountRow] = await db.select({ count: count() }).from(userLists).where(eq(userLists.created_by, userId));
+  if ((listCountRow?.count ?? 0) >= 10) throw new ErrorResponse("BAD_REQUEST", { message: "You have reached the maximum limit of 10 lists" });
+
   const [created] = await db
     .insert(userLists)
     .values({
@@ -61,7 +65,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 const createList: Route<ReqBody, ResponseData> = {
   url: "/lists",
   method: "POST",
-  config: { permissions: ["write:lists"] },
+  config: { permissions: ["create:user_lists"] },
   schema: schemaRoute,
   handler,
 };

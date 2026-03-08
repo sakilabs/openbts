@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "nav-collapsed-state";
+const DEFAULT_OPEN_KEYS = new Set(["stations", "info"]);
 
 type NavSubItem = {
   title: string;
@@ -37,7 +38,7 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
   const getInitialState = useCallback(() => {
     if (typeof window === "undefined") {
       return items.reduce<Record<string, boolean>>((acc, item) => {
-        acc[item.key] = item.items?.some((sub) => sub.url === location.pathname) ?? false;
+        acc[item.key] = DEFAULT_OPEN_KEYS.has(item.key) || (item.items?.some((sub) => sub.url === location.pathname) ?? false);
         return acc;
       }, {});
     }
@@ -48,7 +49,7 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
       }
     } catch {}
     return items.reduce<Record<string, boolean>>((acc, item) => {
-      acc[item.key] = item.items?.some((sub) => sub.url === location.pathname) ?? false;
+      acc[item.key] = DEFAULT_OPEN_KEYS.has(item.key) || (item.items?.some((sub) => sub.url === location.pathname) ?? false);
       return acc;
     }, {});
   }, [items, location.pathname]);
