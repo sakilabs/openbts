@@ -88,7 +88,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <TooltipTrigger>
                           <span className="cursor-help">LongCID</span>
                         </TooltipTrigger>
-                        <TooltipContent>Long Cell ID ((RNC * 65536) + CID)</TooltipContent>
+                        <TooltipContent>Long Cell ID · (RNC * 65536) + CID</TooltipContent>
                       </Tooltip>
                     </th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">
@@ -132,7 +132,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <TooltipTrigger>
                           <span className="cursor-help">E-CID</span>
                         </TooltipTrigger>
-                        <TooltipContent>Enhanced CID ((eNBID * 256) + CLID)</TooltipContent>
+                        <TooltipContent>Enhanced CID · (eNBID * 256) + CLID</TooltipContent>
                       </Tooltip>
                     </th>
                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">

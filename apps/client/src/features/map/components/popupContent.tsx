@@ -1,12 +1,15 @@
 import { lazy, memo, Suspense, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Share08Icon, Tick02Icon, Image01Icon } from "@hugeicons/core-free-icons";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { getStationBands, getPermitBands } from "../utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import { Lightbox } from "@/components/lightbox";
+import { fetchLocationPhotos } from "@/features/station-details/api";
 import type { LocationInfo, StationWithoutCells, StationSource, UkeStation } from "@/types/station";
 
 const AddToListPopover = lazy(() => import("@/features/lists/components/addToListPopover").then((m) => ({ default: m.AddToListPopover })));
@@ -89,6 +92,37 @@ function PopupShareButton({ location, source }: { location: LocationInfo; source
         <HugeiconsIcon icon={Share08Icon} className="size-3 text-muted-foreground" />
       )}
     </button>
+  );
+}
+
+function PopupPhotosButton({ locationId }: { locationId: number }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const { data: photos = [] } = useQuery({
+    queryKey: ["location-photos", locationId],
+    queryFn: () => fetchLocationPhotos(locationId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
+  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
+
+  if (photos.length === 0) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setLightboxIndex(0)}
+        className="flex items-center gap-0.5 p-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
+        aria-label={`View ${photos.length} photos`}
+      >
+        <HugeiconsIcon icon={Image01Icon} className="size-3 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground tabular-nums">{photos.length}</span>
+      </button>
+      <Lightbox photos={photos} index={lightboxIndex} onClose={closeLightbox} onPrev={prev} onNext={next} />
+    </>
   );
 }
 
@@ -232,7 +266,15 @@ export const PopupContent = memo(function PopupContent({
         <span className="text-[10px] text-muted-foreground font-mono">
           GPS: {formatCoordinates(location.latitude, location.longitude, preferences.gpsFormat)}
         </span>
-        <PopupShareButton location={location} source={source} />
+        <div className="flex items-center gap-1.5">
+          <PopupPhotosButton locationId={location.id} />
+          {isUkeSource && showAddToList && (
+            <Suspense>
+              <AddToListPopover ukeLocationId={location.id} />
+            </Suspense>
+          )}
+          <PopupShareButton location={location} source={source} />
+        </div>
       </div>
     </div>
   );

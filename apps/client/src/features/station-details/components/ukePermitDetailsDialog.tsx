@@ -36,7 +36,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
   const { t } = useTranslation(["stationDetails", "common"]);
   const { preferences } = usePreferences();
   const location = useLocation();
-  const isOnMap = location.pathname === "/";
+  const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
   const { data: settings } = useSettings();
   const { data: session } = authClient.useSession();
   const userRole = session?.user?.role as string | undefined;

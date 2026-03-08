@@ -1,5 +1,5 @@
 import { API_BASE, fetchJson } from "@/lib/api";
-import type { Station, RadioLine } from "@/types/station";
+import type { Station, RadioLine, UkeLocationWithPermits } from "@/types/station";
 
 export type UserListSummary = {
   id: number;
@@ -7,7 +7,7 @@ export type UserListSummary = {
   name: string;
   description: string | null;
   is_public: boolean | null;
-  stations: number[];
+  stations: { internal: number[]; uke: number[] };
   radiolines: number[];
   stationCount: number;
   radiolineCount: number;
@@ -24,14 +24,27 @@ export type UserListDetail = {
   is_public: boolean | null;
   stations: Station[];
   radiolines: RadioLine[];
+  ukeLocations: UkeLocationWithPermits[];
   createdAt: string;
   updatedAt: string;
 };
 
 type ListsResponse = { data: UserListSummary[]; totalCount: number };
 type ListDetailResponse = { data: UserListDetail };
-type CreateListBody = { name: string; description?: string; is_public?: boolean; stations: number[]; radiolines?: number[] };
-type UpdateListBody = Partial<{ name: string; description: string; is_public: boolean; stations: number[]; radiolines: number[] }>;
+type CreateListBody = {
+  name: string;
+  description?: string;
+  is_public?: boolean;
+  stations: { internal: number[]; uke: number[] };
+  radiolines?: number[];
+};
+type UpdateListBody = Partial<{
+  name: string;
+  description: string;
+  is_public: boolean;
+  stations: { internal: number[]; uke: number[] };
+  radiolines: number[];
+}>;
 
 export async function fetchUserLists(limit = 50, page = 1, search?: string): Promise<ListsResponse> {
   const params = new URLSearchParams({ limit: String(limit), page: String(page) });

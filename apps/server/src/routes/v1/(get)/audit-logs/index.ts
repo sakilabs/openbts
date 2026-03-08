@@ -1,4 +1,4 @@
-import { count, and, eq, gte, lte } from "drizzle-orm";
+import { sql, count, and, eq, gte, lte, inArray } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -18,7 +18,7 @@ const schemaRoute = {
     offset: z.coerce.number().min(0).default(0),
     table_name: z.string().optional(),
     record_id: z.coerce.number().optional(),
-    action: z.enum(AuditAction.enumValues).optional(),
+    actions: z.string().optional(),
     invoked_by: z.string().optional(),
     from: z.string().optional(),
     to: z.string().optional(),
@@ -43,40 +43,33 @@ type AuditLogWithUser = z.infer<typeof auditLogSchema> & {
 type ResponseBody = { data: AuditLogWithUser[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit, offset, table_name, record_id, action, invoked_by, from, to, sort } = req.query;
+  const { limit, offset, table_name, record_id, actions, invoked_by, from, to, sort } = req.query;
 
-  const conditions = [];
-  if (table_name) conditions.push(eq(auditLogs.table_name, table_name));
-  if (record_id !== undefined) conditions.push(eq(auditLogs.record_id, record_id));
-  if (action) conditions.push(eq(auditLogs.action, action));
-  if (invoked_by) conditions.push(eq(auditLogs.invoked_by, invoked_by));
-  if (from) conditions.push(gte(auditLogs.createdAt, new Date(from)));
-  if (to) conditions.push(lte(auditLogs.createdAt, new Date(to)));
+  const actionList = actions
+    ? actions.split(",").filter((a): a is (typeof AuditAction.enumValues)[number] => AuditAction.enumValues.includes(a as never))
+    : [];
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const buildConditions = (fields: typeof auditLogs) => {
+    const conditions = [];
+    if (table_name) conditions.push(eq(fields.table_name, table_name));
+    if (record_id !== undefined) conditions.push(eq(fields.record_id, record_id));
+    if (actionList.length === 1) conditions.push(eq(fields.action, actionList[0]!));
+    else if (actionList.length > 1) conditions.push(inArray(fields.action, actionList));
+    if (invoked_by) conditions.push(eq(fields.invoked_by, invoked_by));
+    if (from) conditions.push(gte(fields.createdAt, new Date(from)));
+    if (to) conditions.push(lte(fields.createdAt, new Date(to)));
+    return conditions;
+  };
+
+  const countConditions = buildConditions(auditLogs);
+  const whereClause = countConditions.length > 0 ? and(...countConditions) : undefined;
   const [totalCount] = await db.select({ count: count() }).from(auditLogs).where(whereClause);
 
   const rows = await db.query.auditLogs.findMany({
     limit,
     offset,
     orderBy: { createdAt: sort },
-    where:
-      conditions.length > 0
-        ? {
-            ...(table_name && { table_name }),
-            ...(record_id !== undefined && { record_id }),
-            ...(action && { action }),
-            ...(invoked_by && { invoked_by }),
-            ...(from || to
-              ? {
-                  createdAt: {
-                    ...(from && { gte: new Date(from) }),
-                    ...(to && { lte: new Date(to) }),
-                  },
-                }
-              : {}),
-          }
-        : undefined,
+    where: countConditions.length > 0 ? { RAW: (fields) => and(...buildConditions(fields)) ?? sql`true` } : undefined,
     with: {
       user: {
         columns: {

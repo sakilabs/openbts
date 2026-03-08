@@ -14,7 +14,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const updateSchema = createUpdateSchema(userLists, {
-  stations: z.array(z.number()).optional(),
+  stations: z.object({ internal: z.array(z.number()), uke: z.array(z.number()) }).optional(),
   radiolines: z.array(z.number()).optional(),
 }).omit({
   uuid: true,

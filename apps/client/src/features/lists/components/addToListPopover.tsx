@@ -19,9 +19,10 @@ const CreateListDialog = lazy(() => import("./createListDialog").then((m) => ({ 
 type AddToListPopoverProps = {
   stationId?: number;
   radiolineIds?: number[];
+  ukeLocationId?: number;
 };
 
-export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverProps) {
+export function AddToListPopover({ stationId, radiolineIds, ukeLocationId }: AddToListPopoverProps) {
   const { t } = useTranslation(["lists", "common"]);
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
@@ -41,9 +42,13 @@ export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverPr
 
   function handleToggle(list: UserListSummary) {
     if (stationId) {
-      const inList = list.stations.includes(stationId);
-      const stations = inList ? list.stations.filter((id) => id !== stationId) : [...list.stations, stationId];
-      toggleMutation.mutate({ uuid: list.uuid, data: { stations } });
+      const inList = list.stations.internal.includes(stationId);
+      const internal = inList ? list.stations.internal.filter((id) => id !== stationId) : [...list.stations.internal, stationId];
+      toggleMutation.mutate({ uuid: list.uuid, data: { stations: { internal, uke: list.stations.uke } } });
+    } else if (ukeLocationId) {
+      const inList = list.stations.uke.includes(ukeLocationId);
+      const uke = inList ? list.stations.uke.filter((id) => id !== ukeLocationId) : [...list.stations.uke, ukeLocationId];
+      toggleMutation.mutate({ uuid: list.uuid, data: { stations: { internal: list.stations.internal, uke } } });
     } else if (radiolineIds) {
       const radiolineSet = new Set(radiolineIds);
       const allInList = radiolineIds.every((id) => list.radiolines.includes(id));
@@ -53,7 +58,8 @@ export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverPr
   }
 
   function isChecked(list: UserListSummary) {
-    if (stationId) return list.stations.includes(stationId);
+    if (stationId) return list.stations.internal.includes(stationId);
+    if (ukeLocationId) return list.stations.uke.includes(ukeLocationId);
     if (radiolineIds) return radiolineIds.every((id) => list.radiolines.includes(id));
     return false;
   }
@@ -62,7 +68,7 @@ export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverPr
     () => data?.pages.flatMap((p) => p.data).filter((l) => l.createdBy.uuid === session?.user?.id) ?? [],
     [data, session?.user?.id],
   );
-  const icon = stationId ? AirportTowerIcon : SignalFull02Icon;
+  const icon = stationId || ukeLocationId ? AirportTowerIcon : SignalFull02Icon;
 
   function renderContent() {
     if (isLoading) {
@@ -134,7 +140,13 @@ export function AddToListPopover({ stationId, radiolineIds }: AddToListPopoverPr
 
       {createOpen ? (
         <Suspense>
-          <CreateListDialog open={createOpen} onOpenChange={setCreateOpen} initialStationId={stationId} initialRadiolineIds={radiolineIds} />
+          <CreateListDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            initialStationId={stationId}
+            initialRadiolineIds={radiolineIds}
+            initialUkeLocationId={ukeLocationId}
+          />
         </Suspense>
       ) : null}
     </>

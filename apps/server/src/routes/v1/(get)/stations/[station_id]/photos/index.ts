@@ -85,7 +85,9 @@ const getStationPhotos: Route<ReqParams, PhotoItem[]> = {
   url: "/stations/:station_id/photos",
   method: "GET",
   schema: schemaRoute,
-  config: { permissions: [] },
+  config: {
+    allowGuestAccess: true,
+  },
   handler,
 };
 

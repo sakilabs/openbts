@@ -13,7 +13,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const insertSchema = createInsertSchema(userLists, {
-  stations: z.array(z.number()),
+  stations: z.object({ internal: z.array(z.number()), uke: z.array(z.number()) }),
   radiolines: z.array(z.number()),
 }).omit({
   uuid: true,

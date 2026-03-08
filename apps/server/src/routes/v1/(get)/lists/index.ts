@@ -20,7 +20,7 @@ const createdBySchema = usersSchema.pick({ name: true, username: true }).partial
 const listItemSchema = userListsSchema
   .pick({ id: true, uuid: true, name: true, description: true, is_public: true, createdAt: true, updatedAt: true })
   .extend({
-    stations: z.array(z.number()),
+    stations: z.object({ internal: z.array(z.number()), uke: z.array(z.number()) }),
     radiolines: z.array(z.number()),
     stationCount: z.number(),
     radiolineCount: z.number(),
@@ -86,7 +86,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
     const totalCount = countResult[0]?.count ?? 0;
     const data = rows.map((row) => {
-      const stations = (row.stations as number[]) ?? [];
+      const stations = (row.stations as { internal: number[]; uke: number[] }) ?? { internal: [], uke: [] };
       const radiolines = (row.radiolines as number[]) ?? [];
       return {
         id: row.id,
@@ -96,7 +96,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         is_public: row.is_public,
         stations,
         radiolines,
-        stationCount: stations.length,
+        stationCount: stations.internal.length + stations.uke.length,
         radiolineCount: radiolines.length,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
@@ -114,7 +114,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   const totalCount = countResult[0]?.count ?? 0;
   const data = rows.map((row) => {
-    const stations = (row.stations as number[]) ?? [];
+    const stations = (row.stations as { internal: number[]; uke: number[] }) ?? { internal: [], uke: [] };
     const radiolines = (row.radiolines as number[]) ?? [];
     return {
       id: row.id,
@@ -124,7 +124,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       is_public: row.is_public,
       stations,
       radiolines,
-      stationCount: stations.length,
+      stationCount: stations.internal.length + stations.uke.length,
       radiolineCount: radiolines.length,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

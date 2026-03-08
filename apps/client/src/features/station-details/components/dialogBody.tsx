@@ -62,7 +62,7 @@ export function StationDetailsBody({
   const { data: settings } = useSettings();
   const { preferences } = usePreferences();
   const location = useLocation();
-  const isOnMap = location.pathname === "/";
+  const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }),
     [i18n.language],

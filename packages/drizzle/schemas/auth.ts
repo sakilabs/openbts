@@ -247,7 +247,7 @@ export const userLists = pgTable(
     created_by: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
-    stations: jsonb("stations").$type<number[]>().notNull(),
+    stations: jsonb("stations").$type<{ internal: number[]; uke: number[] }>().notNull(),
     radiolines: jsonb("radiolines")
       .$type<number[]>()
       .notNull()
@@ -257,9 +257,8 @@ export const userLists = pgTable(
   },
   (t) => [
     index("user_lists_created_by_idx").on(t.created_by),
-    index("user_lists_stations_gin").using("gin", t.stations),
     unique("user_lists_creator_name_unique").on(t.created_by, t.name),
-    check("user_lists_stations_is_array", sql`jsonb_typeof(${t.stations}) = 'array'`),
+    check("user_lists_stations_is_object", sql`jsonb_typeof(${t.stations}) = 'object'`),
     index("user_lists_radiolines_gin").using("gin", t.radiolines),
     check("user_lists_radiolines_is_array", sql`jsonb_typeof(${t.radiolines}) = 'array'`),
   ],

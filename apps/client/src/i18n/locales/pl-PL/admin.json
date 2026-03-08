@@ -153,6 +153,10 @@
     "filters": {
       "allEntities": "Wszystkie tabele",
       "allActions": "Wszystkie akcje",
+      "actionsCount_one": "{{count, number}} akcja",
+      "actionsCount_few": "{{count, number}} akcje",
+      "actionsCount_many": "{{count, number}} akcji",
+      "actionsCount_other": "{{count, number}} akcji",
       "dateFrom": "Od",
       "dateTo": "Do",
       "recordId": "ID rekordu",

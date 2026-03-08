@@ -20,6 +20,9 @@ const RadioLinesLayer = lazy(() => import("@/features/map/components/radioLinesL
 const StationDetailsDialog = lazy(() =>
   import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
 );
+const UkePermitDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
+);
 
 type ListInfoBannerProps = { name: string; description?: string };
 
@@ -48,8 +51,6 @@ function detailReducer(_state: DetailState, action: DetailAction): DetailState {
   return { selectedStation: null };
 }
 
-function handleOpenUkeStationDetails(_station: UkeStation): void {}
-
 function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   const { map, isLoaded } = useMap();
   const { zoom } = useMapBounds({ map, isLoaded });
@@ -60,18 +61,18 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
 
   const [filters, setFiltersState] = useState<StationFilters>(() => {
     const saved = loadMapFilters() ?? DEFAULT_FILTERS;
-    return { ...saved, source: "internal", showStations: true };
+    return { ...saved, showStations: true };
   });
   const setFilters = useCallback((update: StationFilters | ((prev: StationFilters) => StationFilters)) => {
     setFiltersState((prev) => {
       const next = typeof update === "function" ? update(prev) : update;
-      const locked = { ...next, source: "internal" as const };
-      saveMapFilters(locked);
-      return locked;
+      saveMapFilters(next);
+      return next;
     });
   }, []);
 
   const [detailState, dispatchDetail] = useReducer(detailReducer, { selectedStation: null });
+  const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
   const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [tempLocations, setTempLocations] = useState<LocationWithStations[]>([]);
@@ -105,20 +106,32 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
     return { data: Array.from(locationMap.values()), totalCount: listData.stations.length };
   }, [listData, tempLocations]);
 
+  const ukeLocations = listData?.ukeLocations;
+  const ukeLocationsResponse = useMemo<LocationsResponse | undefined>(() => {
+    if (!ukeLocations?.length) return undefined;
+    return { data: ukeLocations as unknown as LocationsResponse["data"], totalCount: ukeLocations.length };
+  }, [ukeLocations]);
+
+  const listStations = listData?.stations;
+  const listRadiolines = listData?.radiolines;
   useEffect(() => {
-    if (!map || !isLoaded || !listData) return;
+    if (!map || !isLoaded || !listStations) return;
     const bounds = new MapLibreGL.LngLatBounds();
-    for (const station of listData.stations) {
+    for (const station of listStations) {
       if (station.location) bounds.extend([station.location.longitude, station.location.latitude]);
     }
-    for (const rl of listData.radiolines) {
+    for (const rl of listRadiolines ?? []) {
       bounds.extend([rl.tx.longitude, rl.tx.latitude]);
       bounds.extend([rl.rx.longitude, rl.rx.latitude]);
     }
+    for (const loc of ukeLocations ?? []) {
+      bounds.extend([loc.longitude, loc.latitude]);
+    }
     if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 80, maxZoom: 14 });
-  }, [map, isLoaded, listData]);
+  }, [map, isLoaded, listStations, listRadiolines, ukeLocations]);
 
   const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN", id, source }), []);
+  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => setSelectedUkeStation(station), []);
   const handlePopupClose = useCallback(() => {
     setActivePopupLocation(null);
     setTempLocations([]);
@@ -189,7 +202,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   const { data: popupLocationData } = useQuery({
     queryKey: locationQueryKey(activePopupLocation?.locationId ?? 0, DEFAULT_FILTERS),
     queryFn: () => fetchLocationWithStations(activePopupLocation?.locationId ?? 0, DEFAULT_FILTERS),
-    enabled: !!activePopupLocation,
+    enabled: !!activePopupLocation && activePopupLocation.source === "internal",
     staleTime: 1000 * 60 * 2,
   });
 
@@ -216,10 +229,10 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       openDetails: handleOpenStationDetails,
       openUkeDetails: handleOpenUkeStationDetails,
     }),
-    [handleOpenStationDetails],
+    [handleOpenStationDetails, handleOpenUkeStationDetails],
   );
 
-  const stationCount = listData?.stations.length ?? 0;
+  const stationCount = (listData?.stations.length ?? 0) + (listData?.ukeLocations?.length ?? 0);
   const radiolineCount = listData?.radiolines.length ?? 0;
 
   return (
@@ -237,7 +250,6 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
         onFiltersChange={setFilters}
         onLocationSelect={handleLocationSelect}
         onStationSelect={handleStationSelect}
-        hideSource
         hideAPIFilters
       />
 
@@ -252,7 +264,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       <StationsLayer
         filters={filters}
         onFiltersChange={setFilters}
-        locationsResponse={locationsResponse}
+        locationsResponse={filters.source === "uke" ? ukeLocationsResponse : locationsResponse}
         zoom={zoom}
         onActiveMarkerChange={setActiveMarker}
         stationActions={stationActions}
@@ -276,6 +288,10 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
             onClose={() => dispatchDetail({ type: "CLOSE" })}
           />
         ) : null}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {selectedUkeStation ? <UkePermitDetailsDialog station={selectedUkeStation} onClose={() => setSelectedUkeStation(null)} /> : null}
       </Suspense>
     </>
   );

@@ -7,11 +7,18 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Deleting a submission now also deletes its attached photos and frees the files from disk
 - "Add to List" popover now only shows lists owned by the current user, consistent with the `/lists` page
+- Opening a station or UKE permit dialog while already on the list map view no longer shows a redundant "Show on Map" button
+- Fixed UKE source popup on the list map view triggering an unnecessary internal location fetch
 
 ### 🚀 Enhancements
 
 - User lists are now limited to 10 per user
 - Station popup list height increased so 4+ stations no longer trigger a scrollbar
+- Station map popups now show a photo count button in the footer - click it to browse all photos at that location in a lightbox
+- Audit log action filter is now a multi-select dropdown - pick any combination of actions to filter by instead of only one at a time
+- **UKE locations can now be saved to user lists** - "Add to List" button now appears in UKE location popups on the map
+- List map view source switcher is re-enabled - toggle between internal and UKE to see only your list's stations or UKE locations
+- Cell editor tables now support horizontal mouse-wheel scrolling so all columns remain accessible on narrow screens
 
 # 2026-03-07
 

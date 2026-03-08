@@ -19,7 +19,7 @@
     "notesPlaceholder": "e.g. picocell",
     "addCell": "Add Cell",
     "confirmCells": "Confirm cells",
-    "noRats": "No cells found for this station. Add RATs to add cells",
+    "noRats": "No cells found for this station. Select one of the RATs to add cells",
     "noStationCells": "No cells found for this station",
     "noCells": "No cells. Click \"Add Cell\" to create",
     "diffAdded": "new",

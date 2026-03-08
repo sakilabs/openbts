@@ -154,6 +154,8 @@
     "filters": {
       "allEntities": "All Tables",
       "allActions": "All Actions",
+      "actionsCount_one": "{{count, number}} action",
+      "actionsCount_other": "{{count, number}} actions",
       "dateFrom": "From",
       "dateTo": "To",
       "recordId": "Record ID",

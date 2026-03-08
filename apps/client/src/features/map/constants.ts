@@ -49,17 +49,17 @@ export const UKE_RAT_OPTIONS = [
 
 export const FILTER_KEYWORDS: FilterKeyword[] = [
   // Station filters
-  { key: "bts_id:", description: "Search station ID (partial match)", availableOn: ["map", "stations"] },
-  { key: "mnc:", description: "Filter by operator MNC code", availableOn: ["map"] },
+  { key: "bts_id:", description: "Station ID (partial match)", availableOn: ["map", "stations"] },
+  { key: "mnc:", description: "Operator MNC code", availableOn: ["map"] },
 
   // Location filters
-  { key: "city:", description: "Filter by city name (partial match)", availableOn: ["map", "stations"] },
-  { key: "region:", description: "Filter by region code (e.g., MAZ, SL, WP)", availableOn: [] },
+  { key: "city:", description: "City name (partial match)", availableOn: ["map", "stations"] },
+  { key: "region:", description: "Region code (e.g., MAZ, SL, WP)", availableOn: [] },
 
   // Cell filters
-  { key: "band:", description: "Filter by frequency in MHz (e.g., 800, 1800, 2100)", availableOn: ["map"] },
-  { key: "rat:", description: "Filter by standard (GSM, UMTS, LTE, NR)", availableOn: ["map"] },
-  { key: "is_confirmed:", description: "Filter by confirmation status (true, false)", availableOn: ["map", "stations"] },
+  { key: "band:", description: "Frequency in MHz (e.g., 800, 1800, 2100)", availableOn: ["map"] },
+  { key: "rat:", description: "Standard (GSM, UMTS, LTE, NR)", availableOn: ["map"] },
+  { key: "is_confirmed:", description: "Confirmation status (true, false)", availableOn: ["map", "stations"] },
 
   // GSM cell filters
   { key: "lac:", description: "GSM Location Area Code", availableOn: ["map", "stations"] },
@@ -76,7 +76,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "ecid:", description: "LTE E-UTRAN Cell ID", availableOn: ["map", "stations"] },
   { key: "lte_clid:", description: "LTE Cell Local ID", availableOn: ["map", "stations"] },
   { key: "tac:", description: "LTE Tracking Area Code", availableOn: ["map", "stations"] },
-  { key: "lte_pci:", description: "LTE PCI", availableOn: ["map", "stations"] },
+  { key: "lte_pci:", description: "LTE Physical Cell ID", availableOn: ["map", "stations"] },
   { key: "supports_iot:", description: "Supports NB-IoT (true, false)", availableOn: ["map", "stations"] },
 
   // NR (5G) cell filters
@@ -84,7 +84,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "nci:", description: "5G NR Cell Identity", availableOn: ["map", "stations"] },
   { key: "nr_clid:", description: "5G Cell Local ID", availableOn: ["map", "stations"] },
   { key: "nrtac:", description: "5G Tracking Area Code", availableOn: ["map", "stations"] },
-  { key: "nr_pci:", description: "5G PCI", availableOn: ["map", "stations"] },
+  { key: "nr_pci:", description: "5G Physical Cell ID", availableOn: ["map", "stations"] },
   { key: "supports_nr_redcap:", description: "Supports NR RedCap (true, false)", availableOn: ["map", "stations"] },
 
   // Extra Identificators filters

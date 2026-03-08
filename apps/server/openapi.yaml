@@ -2108,9 +2108,10 @@ paths:
         - name: record_id
           in: query
           schema: { type: integer }
-        - name: action
+        - name: actions
           in: query
-          schema: { $ref: "#/components/schemas/AuditAction" }
+          description: Comma-separated list of audit actions to filter by (e.g. `stations.create,stations.delete`)
+          schema: { type: string }
         - name: invoked_by
           in: query
           schema: { type: string, format: uuid }
@@ -3748,6 +3749,14 @@ components:
         error: { type: string, nullable: true }
 
     # User Lists schemas
+    UserListStations:
+      type: object
+      description: Station IDs grouped by source
+      required: [internal, uke]
+      properties:
+        internal: { type: array, items: { type: integer }, description: Internal station IDs }
+        uke: { type: array, items: { type: integer }, description: UKE location IDs }
+
     UserListSummary:
       type: object
       required: [id, uuid, name, is_public, stations, radiolines, stationCount, radiolineCount, createdBy, createdAt, updatedAt]
@@ -3757,9 +3766,9 @@ components:
         name: { type: string }
         description: { type: string, nullable: true }
         is_public: { type: boolean, nullable: true }
-        stations: { type: array, items: { type: integer }, description: Array of station IDs }
+        stations: { $ref: "#/components/schemas/UserListStations" }
         radiolines: { type: array, items: { type: integer }, description: Array of radioline IDs }
-        stationCount: { type: integer }
+        stationCount: { type: integer, description: "Total count: internal stations + UKE locations" }
         radiolineCount: { type: integer }
         createdBy:
           type: object
@@ -3773,7 +3782,7 @@ components:
 
     UserListDetail:
       type: object
-      required: [id, uuid, name, is_public, stations, radiolines, createdAt, updatedAt]
+      required: [id, uuid, name, is_public, stations, radiolines, ukeLocations, createdAt, updatedAt]
       properties:
         id: { type: integer }
         uuid: { type: string, format: uuid }
@@ -3783,9 +3792,14 @@ components:
         stations:
           type: array
           items: { $ref: "#/components/schemas/StationWithCellsAndOperator" }
+          description: Full internal station objects
         radiolines:
           type: array
           items: { $ref: "#/components/schemas/UkeRadiolineResponse" }
+        ukeLocations:
+          type: array
+          items: { $ref: "#/components/schemas/UkeLocationWithPermits" }
+          description: Full UKE location objects with permits
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
@@ -3800,7 +3814,7 @@ components:
         description: { type: string, nullable: true }
         is_public: { type: boolean, nullable: true }
         created_by: { type: string, format: uuid }
-        stations: { type: array, items: { type: integer } }
+        stations: { $ref: "#/components/schemas/UserListStations" }
         radiolines: { type: array, items: { type: integer } }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -3812,7 +3826,7 @@ components:
         name: { type: string }
         description: { type: string, nullable: true }
         is_public: { type: boolean, nullable: true }
-        stations: { type: array, items: { type: integer } }
+        stations: { $ref: "#/components/schemas/UserListStations" }
         radiolines: { type: array, items: { type: integer } }
 
     UserListPatch:
@@ -3821,5 +3835,5 @@ components:
         name: { type: string }
         description: { type: string, nullable: true }
         is_public: { type: boolean, nullable: true }
-        stations: { type: array, items: { type: integer } }
+        stations: { $ref: "#/components/schemas/UserListStations" }
         radiolines: { type: array, items: { type: integer } }

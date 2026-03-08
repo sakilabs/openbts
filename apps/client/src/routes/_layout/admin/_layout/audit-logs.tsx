@@ -1,17 +1,19 @@
-import { useReducer, useMemo, useCallback } from "react";
+import { useReducer, useMemo, useCallback, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AlertCircleIcon, Search01Icon, Cancel01Icon, Sorting05Icon } from "@hugeicons/core-free-icons";
+import { AlertCircleIcon, Search01Icon, Cancel01Icon, Sorting05Icon, ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
 import { AuditLogDetailSheet } from "@/features/admin/audit-logs/components/audit-log-detail-sheet";
@@ -32,7 +34,7 @@ const columnHelper = createColumnHelper<AuditLogEntry>();
 
 type AuditLogsFilterState = {
   tableFilter: string;
-  actionFilter: string;
+  actionsFilter: string[];
   dateFrom: string;
   dateTo: string;
   sort: "asc" | "desc";
@@ -43,7 +45,7 @@ function auditLogsFilterReducer(
   state: AuditLogsFilterState,
   action:
     | { type: "SET_TABLE_FILTER"; payload: string }
-    | { type: "SET_ACTION_FILTER"; payload: string }
+    | { type: "SET_ACTIONS_FILTER"; payload: string[] }
     | { type: "SET_DATE_FROM"; payload: string }
     | { type: "SET_DATE_TO"; payload: string }
     | { type: "SET_SORT"; payload: "asc" | "desc" }
@@ -53,8 +55,8 @@ function auditLogsFilterReducer(
   switch (action.type) {
     case "SET_TABLE_FILTER":
       return { ...state, tableFilter: action.payload };
-    case "SET_ACTION_FILTER":
-      return { ...state, actionFilter: action.payload };
+    case "SET_ACTIONS_FILTER":
+      return { ...state, actionsFilter: action.payload };
     case "SET_DATE_FROM":
       return { ...state, dateFrom: action.payload };
     case "SET_DATE_TO":
@@ -64,7 +66,7 @@ function auditLogsFilterReducer(
     case "SET_SELECTED_ENTRY":
       return { ...state, selectedEntry: action.payload };
     case "CLEAR_FILTERS":
-      return { ...state, tableFilter: "", actionFilter: "", dateFrom: "", dateTo: "" };
+      return { ...state, tableFilter: "", actionsFilter: [], dateFrom: "", dateTo: "" };
     default:
       return state;
   }
@@ -72,19 +74,83 @@ function auditLogsFilterReducer(
 
 const initialFilterState: AuditLogsFilterState = {
   tableFilter: "",
-  actionFilter: "",
+  actionsFilter: [],
   dateFrom: "",
   dateTo: "",
   sort: "desc",
   selectedEntry: null,
 };
 
+function ActionsFilterButton({
+  value,
+  onChange,
+  t,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  t: ReturnType<typeof useTranslation<["admin", "common"]>>["t"];
+}) {
+  const [open, setOpen] = useState(false);
+
+  function toggle(action: string) {
+    onChange(value.includes(action) ? value.filter((a) => a !== action) : [...value, action]);
+  }
+
+  const label = value.length === 0 ? t("auditLogs.filters.allActions") : t("auditLogs.filters.actionsCount", { count: value.length });
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className={cn(
+          "h-8 rounded-lg border bg-transparent px-2.5 text-sm transition-colors flex items-center gap-2 min-w-42.5",
+          "border-input dark:bg-input/30 dark:hover:bg-input/50 hover:bg-muted",
+          value.length > 0 ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        <span className="truncate">{label}</span>
+        <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 shrink-0 ml-auto transition-transform", open && "rotate-180")} />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 p-0 max-h-96 overflow-y-auto">
+        {value.length > 0 && (
+          <div className="px-3 py-2 border-b flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t("auditLogs.filters.actionsCount", { count: value.length })}</span>
+            <button type="button" onClick={() => onChange([])} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t("common:actions.clear")}
+            </button>
+          </div>
+        )}
+        {ACTION_GROUPS.map((group, i) => (
+          <div key={group.label}>
+            {i > 0 && <div className="h-px bg-border mx-1" />}
+            <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</div>
+            {group.actions.map((action) => {
+              const checked = value.includes(action);
+              return (
+                <button
+                  key={action}
+                  type="button"
+                  onClick={() => toggle(action)}
+                  className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-muted/50 transition-colors text-left"
+                >
+                  <Checkbox checked={checked} className="pointer-events-none" />
+                  <span className="text-xs font-mono">{action.split(".").pop()}</span>
+                  {checked && <HugeiconsIcon icon={Tick02Icon} className="size-3 text-primary ml-auto" />}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function AdminAuditLogsPage() {
   "use no memo";
   const { t, i18n } = useTranslation(["admin", "common"]);
 
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
-  const { tableFilter, actionFilter, dateFrom, dateTo, sort, selectedEntry } = filterState;
+  const { tableFilter, actionsFilter, dateFrom, dateTo, sort, selectedEntry } = filterState;
 
   const { containerRef, pagination, setPagination } = useTablePagination({
     rowHeight: 64,
@@ -94,8 +160,8 @@ function AdminAuditLogsPage() {
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
-  const hasActiveFilters = !!(tableFilter || actionFilter || dateFrom || dateTo);
-  const activeFilterCount = [tableFilter, actionFilter, dateFrom, dateTo].filter(Boolean).length;
+  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo);
+  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo].filter(Boolean).length;
 
   const clearAllFilters = useCallback(() => {
     dispatchFilter({ type: "CLEAR_FILTERS" });
@@ -103,14 +169,14 @@ function AdminAuditLogsPage() {
   }, [resetPage]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "audit-logs", pagination.pageIndex, pagination.pageSize, tableFilter, actionFilter, dateFrom, dateTo, sort],
+    queryKey: ["admin", "audit-logs", pagination.pageIndex, pagination.pageSize, tableFilter, actionsFilter, dateFrom, dateTo, sort],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
       params.set("offset", (pagination.pageIndex * pagination.pageSize).toString());
       params.set("sort", sort);
       if (tableFilter) params.set("table_name", tableFilter);
-      if (actionFilter) params.set("action", actionFilter);
+      if (actionsFilter.length > 0) params.set("actions", actionsFilter.join(","));
       if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
       if (dateTo) {
         const to = new Date(dateTo);
@@ -273,31 +339,14 @@ function AdminAuditLogsPage() {
             </SelectContent>
           </Select>
 
-          <Select
-            value={actionFilter}
-            onValueChange={(v) => {
-              dispatchFilter({ type: "SET_ACTION_FILTER", payload: v === "__all__" ? "" : (v as string) });
+          <ActionsFilterButton
+            t={t}
+            value={actionsFilter}
+            onChange={(v) => {
+              dispatchFilter({ type: "SET_ACTIONS_FILTER", payload: v });
               resetPage();
             }}
-          >
-            <SelectTrigger className="min-w-42.5">
-              <SelectValue placeholder={t("auditLogs.filters.allActions")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">{t("auditLogs.filters.allActions")}</SelectItem>
-              {ACTION_GROUPS.map((group, i) => (
-                <SelectGroup key={group.label}>
-                  {i > 0 && <SelectSeparator />}
-                  <SelectLabel>{group.label}</SelectLabel>
-                  {group.actions.map((action) => (
-                    <SelectItem key={action} value={action}>
-                      <span className="font-mono text-xs">{action.split(".").pop()}</span>
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              ))}
-            </SelectContent>
-          </Select>
+          />
 
           <DatePickerButton
             value={dateFrom}

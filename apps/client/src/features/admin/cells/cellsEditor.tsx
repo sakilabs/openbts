@@ -10,6 +10,7 @@ import { RAT_ICONS, RAT_ORDER, ratToGenLabel } from "./rat";
 import { getTableHeaders } from "./cellsTableHeaders";
 import { CellEditRow } from "./cellEditRow";
 import type { CellDraftBase } from "./cellEditRow";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 
 export type DiffBadges = {
   added?: number;
@@ -57,6 +58,55 @@ export type CellsEditorProps<T extends CellDraftBase> = {
 
   readOnly?: boolean;
 };
+
+type RatTableProps<T extends CellDraftBase> = {
+  cells: T[];
+  headers: string[];
+  bands: Band[];
+  getCellProps?: CellsEditorProps<T>["getCellProps"];
+  renderAfterRow?: CellsEditorProps<T>["renderAfterRow"];
+  onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
+  onDeleteCell: (localId: string) => void;
+};
+
+function RatTable<T extends CellDraftBase>({ cells, headers, bands, getCellProps, renderAfterRow, onCellChange, onDeleteCell }: RatTableProps<T>) {
+  const scrollRef = useHorizontalScroll<HTMLDivElement>();
+  return (
+    <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b bg-muted/30">
+            {headers.map((h) => (
+              <th key={h} className="px-4 py-2 text-left font-medium text-muted-foreground text-xs">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {cells.map((cell) => {
+            const cellProps = getCellProps?.(cell) ?? {};
+            return (
+              <Fragment key={cell._localId}>
+                <CellEditRow
+                  localCell={cell}
+                  bands={bands}
+                  disabled={cellProps.disabled}
+                  leftBorderClass={cellProps.leftBorderClass}
+                  showDelete={cellProps.showDelete}
+                  rowClassName={cellProps.rowClassName}
+                  onChange={onCellChange}
+                  onDelete={onDeleteCell}
+                />
+                {renderAfterRow?.(cell)}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function CellsEditor<T extends CellDraftBase>({
   cellsByRat,
@@ -173,39 +223,15 @@ export function CellsEditor<T extends CellDraftBase>({
                   {cellsForRat.length === 0 ? (
                     <div className="px-3 py-4 text-center text-sm text-muted-foreground">{t("stations:cells.noCells")}</div>
                   ) : (
-                    <div className="overflow-x-auto custom-scrollbar">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-muted/30">
-                            {headers.map((h) => (
-                              <th key={h} className="px-4 py-2 text-left font-medium text-muted-foreground text-xs">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cellsForRat.map((cell) => {
-                            const cellProps = getCellProps?.(cell) ?? {};
-                            return (
-                              <Fragment key={cell._localId}>
-                                <CellEditRow
-                                  localCell={cell}
-                                  bands={bands}
-                                  disabled={cellProps.disabled}
-                                  leftBorderClass={cellProps.leftBorderClass}
-                                  showDelete={cellProps.showDelete}
-                                  rowClassName={cellProps.rowClassName}
-                                  onChange={onCellChange}
-                                  onDelete={onDeleteCell}
-                                />
-                                {renderAfterRow?.(cell)}
-                              </Fragment>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                    <RatTable
+                      cells={cellsForRat}
+                      headers={headers}
+                      bands={bands}
+                      getCellProps={getCellProps}
+                      renderAfterRow={renderAfterRow}
+                      onCellChange={onCellChange}
+                      onDeleteCell={onDeleteCell}
+                    />
                   )}
                 </CollapsibleContent>
               </div>

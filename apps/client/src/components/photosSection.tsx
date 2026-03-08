@@ -1,5 +1,4 @@
 import { useRef, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -13,8 +12,6 @@ import {
   PencilEdit02Icon,
   Tick02Icon,
   Cancel01Icon,
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
@@ -32,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { Lightbox } from "@/components/lightbox";
 
 export type Photo = {
   id: number;
@@ -134,11 +131,8 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
   });
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  useEscapeKey(closeLightbox, lightboxIndex !== null);
-
   const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
   const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
-  const activePhoto = lightboxIndex !== null ? (photos[lightboxIndex] ?? null) : null;
 
   function openEdit(photo: Photo) {
     setEditingPhotoId(photo.id);
@@ -363,69 +357,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
         </AlertDialogContent>
       </AlertDialog>
 
-      {lightboxIndex !== null && activePhoto
-        ? createPortal(
-            <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90" onClick={closeLightbox}>
-              <button
-                type="button"
-                className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                onClick={closeLightbox}
-              >
-                <HugeiconsIcon icon={Cancel01Icon} className="size-6" />
-              </button>
-              {photos.length > 1 ? (
-                <>
-                  <button
-                    type="button"
-                    className="absolute left-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      prev();
-                    }}
-                  >
-                    <HugeiconsIcon icon={ArrowLeft01Icon} className="size-6" />
-                  </button>
-                  <button
-                    type="button"
-                    className="absolute right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      next();
-                    }}
-                  >
-                    <HugeiconsIcon icon={ArrowRight01Icon} className="size-6" />
-                  </button>
-                </>
-              ) : null}
-              <div className="flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-                <img
-                  src={`/uploads/${activePhoto.attachment_uuid}.webp`}
-                  alt={activePhoto.note ?? ""}
-                  className="max-w-full max-h-[calc(90vh-4rem)] object-contain rounded-lg"
-                />
-                <div className="flex items-center gap-2.5 text-white/80 text-xs">
-                  <span className="font-medium">@{activePhoto.author?.username ?? "-"}</span>
-                  <div className="flex items-center gap-1.5">
-                    <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
-                    <span className="tabular-nums">
-                      {new Date(activePhoto.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
-                    </span>
-                  </div>
-                  {activePhoto.taken_at ? (
-                    <div className="flex items-center gap-1.5">
-                      <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
-                      <span className="tabular-nums">
-                        {new Date(activePhoto.taken_at).toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
-                      </span>
-                    </div>
-                  ) : null}
-                  {activePhoto.note ? <span className="italic opacity-70">{activePhoto.note}</span> : null}
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
+      <Lightbox photos={photos} index={lightboxIndex} onClose={closeLightbox} onPrev={prev} onNext={next} />
     </>
   );
 }

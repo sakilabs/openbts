@@ -6,14 +6,42 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { stations, ukeRadiolines, userLists, cells, bands, locations, regions, operators } from "@openbts/drizzle";
+import {
+  stations,
+  ukeRadiolines,
+  userLists,
+  cells,
+  bands,
+  locations,
+  regions,
+  operators,
+  ukeLocations,
+  ukePermits,
+  radioLinesManufacturers,
+  radiolinesAntennaTypes,
+} from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const manufacturerSchema = z.object({ id: z.number(), name: z.string() });
-const equipmentTypeSchema = z.object({ id: z.number(), name: z.string(), manufacturer: manufacturerSchema.optional() });
+const ukePermitResponseSchema = createSelectSchema(ukePermits)
+  .omit({ operator_id: true, location_id: true, band_id: true })
+  .extend({
+    band: createSelectSchema(bands).nullable(),
+    operator: createSelectSchema(operators).nullable(),
+  });
+const ukeLocationResponseSchema = createSelectSchema(ukeLocations)
+  .omit({ point: true, region_id: true })
+  .extend({
+    region: createSelectSchema(regions),
+    permits: z.array(ukePermitResponseSchema),
+  });
+
+const manufacturerSchema = createSelectSchema(radioLinesManufacturers);
+const equipmentTypeSchema = createSelectSchema(radiolinesAntennaTypes)
+  .omit({ manufacturer_id: true })
+  .extend({ manufacturer: manufacturerSchema.optional() });
 const txSchema = z.object({
   longitude: z.number(),
   latitude: z.number(),
@@ -85,17 +113,13 @@ const schemaRoute = {
   }),
   response: {
     200: z.object({
-      data: z.object({
-        id: z.number(),
-        uuid: z.string(),
-        name: z.string(),
-        description: z.string().nullable(),
-        is_public: z.boolean().nullable(),
-        stations: z.array(stationResponseSchema),
-        radiolines: z.array(radioLineResponseSchema),
-        createdAt: z.date(),
-        updatedAt: z.date(),
-      }),
+      data: createSelectSchema(userLists)
+        .omit({ created_by: true, stations: true, radiolines: true })
+        .extend({
+          stations: z.array(stationResponseSchema),
+          radiolines: z.array(radioLineResponseSchema),
+          ukeLocations: z.array(ukeLocationResponseSchema),
+        }),
     }),
   },
 };
@@ -130,10 +154,12 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     if (!isAdmin && userId !== list.created_by) throw new ErrorResponse("FORBIDDEN");
   }
 
-  const stationIds = (list.stations as number[]) ?? [];
+  const stationsObj = (list.stations as { internal: number[]; uke: number[] }) ?? { internal: [], uke: [] };
+  const stationIds = stationsObj.internal ?? [];
+  const ukeLocationIds = stationsObj.uke ?? [];
   const radiolineIds = (list.radiolines as number[]) ?? [];
 
-  const [stationsData, radiolinesData] = await Promise.all([
+  const [stationsData, radiolinesData, ukeLocationsData] = await Promise.all([
     stationIds.length
       ? db.query.stations.findMany({
           columns: {
@@ -168,6 +194,19 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
           where: {
             id: { in: radiolineIds },
           },
+        })
+      : [],
+    ukeLocationIds.length
+      ? db.query.ukeLocations.findMany({
+          columns: { point: false, region_id: false },
+          with: {
+            region: true,
+            permits: {
+              columns: { location_id: false },
+              with: { band: true, operator: true },
+            },
+          },
+          where: { id: { in: ukeLocationIds } },
         })
       : [],
   ]);
@@ -225,6 +264,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       is_public: list.is_public,
       stations: stationsData,
       radiolines: mappedRadiolines,
+      ukeLocations: ukeLocationsData,
       createdAt: list.createdAt,
       updatedAt: list.updatedAt,
     },

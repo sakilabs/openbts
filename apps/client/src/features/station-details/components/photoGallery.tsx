@@ -1,20 +1,10 @@
 import { useState, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Image01Icon,
-  Cancel01Icon,
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
-  StarIcon,
-  Note02Icon,
-  Upload04Icon,
-  Camera01Icon,
-} from "@hugeicons/core-free-icons";
+import { Image01Icon, StarIcon, Note02Icon, Upload04Icon, Camera01Icon } from "@hugeicons/core-free-icons";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { Lightbox } from "@/components/lightbox";
 import { fetchStationPhotos, setStationPhotoSelection, type StationPhoto } from "../api";
 
 type Props = { stationId: number; isAdmin: boolean };
@@ -65,8 +55,6 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
   });
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-
-  useEscapeKey(closeLightbox, lightboxIndex !== null);
 
   if (isLoading) {
     return (
@@ -133,54 +121,7 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
         ))}
       </div>
 
-      {lightboxIndex !== null && activePhoto
-        ? createPortal(
-            <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90" onClick={closeLightbox}>
-              <button
-                type="button"
-                className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                onClick={closeLightbox}
-              >
-                <HugeiconsIcon icon={Cancel01Icon} className="size-6" />
-              </button>
-              {photos.length > 1 ? (
-                <>
-                  <button
-                    type="button"
-                    className="absolute left-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      prev();
-                    }}
-                  >
-                    <HugeiconsIcon icon={ArrowLeft01Icon} className="size-6" />
-                  </button>
-                  <button
-                    type="button"
-                    className="absolute right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      next();
-                    }}
-                  >
-                    <HugeiconsIcon icon={ArrowRight01Icon} className="size-6" />
-                  </button>
-                </>
-              ) : null}
-              <div className="flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-                <img
-                  src={`/uploads/${activePhoto.attachment_uuid}.webp`}
-                  alt=""
-                  className="max-w-full max-h-[calc(90vh-2rem)] object-contain rounded-lg"
-                />
-                <div className="flex items-center text-white/80 text-xs">
-                  <PhotoMeta photo={activePhoto} locale={i18n.language} showNote />
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
+      <Lightbox photos={photos} index={lightboxIndex} onClose={closeLightbox} onPrev={prev} onNext={next} />
     </>
   );
 }
