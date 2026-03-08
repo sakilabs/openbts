@@ -134,37 +134,44 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     }
 
     if (bandIds.length || nonIotRats.length || iotRequested) {
-      const cellConditions: ReturnType<typeof sql>[] = [];
+      const cellExistsConditions: ReturnType<typeof sql>[] = [];
+
       if (bandIds.length) {
-        cellConditions.push(
-          sql`${cells.band_id} = ANY(ARRAY[${sql.join(
+        cellExistsConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          WHERE ${cells.station_id} = ${stationFields.id}
+          AND ${cells.band_id} = ANY(ARRAY[${sql.join(
             bandIds.map((id) => sql`${id}`),
             sql`,`,
-          )}]::int4[])`,
-        );
-      }
-      if (nonIotRats.length) {
-        cellConditions.push(
-          sql`${cells.rat} IN (${sql.join(
-            nonIotRats.map((r) => sql`${r}`),
-            sql`,`,
-          )})`,
-        );
-      }
-      if (iotRequested) {
-        cellConditions.push(sql`(
-          EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = ${cells.id} AND lc.supports_iot = true)
-          OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = ${cells.id} AND nc.supports_nr_redcap = true)
+          )}]::int4[])
         )`);
       }
 
-      const cellWhere = cellConditions.length > 1 ? sql`(${sql.join(cellConditions, sql` AND `)})` : cellConditions[0];
+      if (nonIotRats.length) {
+        cellExistsConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          WHERE ${cells.station_id} = ${stationFields.id}
+          AND ${cells.rat} IN (${sql.join(
+            nonIotRats.map((r) => sql`${r}`),
+            sql`,`,
+          )})
+        )`);
+      }
 
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${cells}
-        WHERE ${cells.station_id} = ${stationFields.id}
-        AND ${cellWhere}
-      )`);
+      if (iotRequested) {
+        cellExistsConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          WHERE ${cells.station_id} = ${stationFields.id}
+          AND (
+            EXISTS (SELECT 1 FROM lte_cells lc WHERE lc.cell_id = ${cells.id} AND lc.supports_iot = true)
+            OR EXISTS (SELECT 1 FROM nr_cells nc WHERE nc.cell_id = ${cells.id} AND nc.supports_nr_redcap = true)
+          )
+        )`);
+      }
+
+      const cellWhere = cellExistsConditions.length > 1 ? sql`(${sql.join(cellExistsConditions, sql` OR `)})` : cellExistsConditions[0];
+
+      conditions.push(cellWhere!);
     }
 
     if (cutoff)

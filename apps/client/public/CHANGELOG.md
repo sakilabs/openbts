@@ -9,6 +9,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - "Add to List" popover now only shows lists owned by the current user, consistent with the `/lists` page
 - Opening a station or UKE permit dialog while already on the list map view no longer shows a redundant "Show on Map" button
 - Fixed UKE source popup on the list map view triggering an unnecessary internal location fetch
+- Fixed location detail filter query so band, RAT and IoT filters are evaluated independently instead of requiring a single cell to match all at once
 
 ### 🚀 Enhancements
 
