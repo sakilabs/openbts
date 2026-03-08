@@ -19,6 +19,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - **UKE locations can now be saved to user lists** - "Add to List" button now appears in UKE location popups on the map
 - List map view source switcher is re-enabled - toggle between internal and UKE to see only your list's stations or UKE locations
 - Cell editor tables now support horizontal mouse-wheel scrolling so all columns remain accessible on narrow screens
+- Theme provider now automatically detects system theme changes when set to "System"
 
 # 2026-03-07
 
