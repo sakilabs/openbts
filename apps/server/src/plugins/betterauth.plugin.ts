@@ -96,7 +96,7 @@ export const auth = betterAuth({
       apiKeyHeaders: ["authorization"],
       enableMetadata: true,
       permissions: {
-        defaultPermissions: async (referenceId: string, ctx: GenericEndpointContext) => {
+        defaultPermissions: async (_referenceId: string, _ctx: GenericEndpointContext) => {
           return {
             cells: ["read"],
             stations: ["read"],

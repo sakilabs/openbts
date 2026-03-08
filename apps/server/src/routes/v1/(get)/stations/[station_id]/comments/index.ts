@@ -4,13 +4,18 @@ import { z } from "zod/v4";
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../../services/settings.service.js";
-import { stationComments } from "@openbts/drizzle";
+import { stationComments, users } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 
 const stationCommentSelectSchema = createSelectSchema(stationComments);
+const userSelectSchema = createSelectSchema(users).pick({ id: true, username: true, displayUsername: true, name: true, image: true });
+
+const commentWithAuthorSchema = stationCommentSelectSchema.extend({
+  author: userSelectSchema.nullable(),
+});
 
 const schemaRoute = {
   params: z.object({
@@ -18,13 +23,13 @@ const schemaRoute = {
   }),
   response: {
     200: z.object({
-      data: z.array(stationCommentSelectSchema),
+      data: z.array(commentWithAuthorSchema),
     }),
   },
 };
 
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
-type ResponseData = z.infer<typeof stationCommentSelectSchema>[];
+type ResponseData = z.infer<typeof commentWithAuthorSchema>[];
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { station_id } = req.params;
@@ -44,7 +49,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
         RAW: (fields, { eq }) => eq(fields.station_id, station_id),
       },
       with: {
-        author: true,
+        author: {
+          columns: { id: true, username: true, displayUsername: true, name: true, image: true },
+        },
       },
       orderBy: { createdAt: "desc" },
     });

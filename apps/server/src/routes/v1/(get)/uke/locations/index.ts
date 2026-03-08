@@ -99,7 +99,7 @@ type ResponseData = z.infer<typeof ukeLocationsSchema> & {
   region: z.infer<typeof regionsSchema>;
   permits: PermitData[];
 };
-type ResponseBody = { data: ResponseData[]; totalCount: number };
+type ResponseBody = z.infer<typeof responseSchema>;
 
 const CACHE_TTL = 30;
 

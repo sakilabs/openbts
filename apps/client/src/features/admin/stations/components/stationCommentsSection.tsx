@@ -76,7 +76,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
               {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3 p-4">
                   <Avatar className="size-8 shrink-0">
-                    {comment.author?.avatar_url && <AvatarImage src={comment.author.avatar_url} alt={comment.author.name} />}
+                    {comment.author?.image && <AvatarImage src={comment.author.image} alt={comment.author.name} />}
                     <AvatarFallback>
                       <HugeiconsIcon icon={UserIcon} className="size-4" />
                     </AvatarFallback>
@@ -86,6 +86,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{comment.author?.name ?? `User #${comment.author_id}`}</span>
+                        {comment.author?.displayUsername && <span className="text-xs text-muted-foreground">@{comment.author.displayUsername}</span>}
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <HugeiconsIcon icon={Calendar03Icon} className="size-3" />
                           {new Date(comment.createdAt).toLocaleDateString(i18n.language)}
@@ -110,7 +111,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
                         {comment.attachments.map((attachment) => (
                           <div key={attachment.uuid} className="relative size-16 rounded-md overflow-hidden border bg-muted">
                             {attachment.type.startsWith("image") ? (
-                              <img src={`${API_BASE}/attachments/${attachment.uuid}`} alt="" className="size-full object-cover" />
+                              <img src={`/uploads/${attachment.uuid}.webp`} alt="" className="size-full object-cover" />
                             ) : (
                               <div className="flex items-center justify-center size-full">
                                 <HugeiconsIcon icon={Image01Icon} className="size-5 text-muted-foreground" />

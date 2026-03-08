@@ -20,7 +20,6 @@ import {
   lteCells,
   nrCells,
   extraIdentificators,
-  submissionPhotos,
   locationPhotos,
   stationPhotoSelections,
 } from "@openbts/drizzle";

@@ -706,7 +706,7 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/StationComment" } }
+                  data: { type: array, items: { $ref: "#/components/schemas/StationCommentWithAuthor" } }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -727,7 +727,11 @@ paths:
               required: [content]
               properties:
                 content: { type: string }
-                file: { type: string, format: binary, description: "Optional image attachment" }
+                files:
+                  type: array
+                  items: { type: string, format: binary }
+                  maxItems: 5
+                  description: "Optional image attachments (max 5)"
       responses:
         "201":
           description: Created
@@ -3215,6 +3219,20 @@ components:
         attachments: { type: array, items: { type: object, properties: { uuid: { type: string }, type: { type: string } } }, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+    StationCommentWithAuthor:
+      allOf:
+        - $ref: "#/components/schemas/StationComment"
+        - type: object
+          properties:
+            author:
+              nullable: true
+              type: object
+              properties:
+                id: { type: string, format: uuid }
+                username: { type: string, nullable: true }
+                displayUsername: { type: string, nullable: true }
+                name: { type: string, nullable: true }
+                image: { type: string, nullable: true }
 
     Submission:
       type: object

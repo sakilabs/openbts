@@ -40,6 +40,8 @@ async function postComment(stationId: number, content: string, files: File[]) {
   return response.json();
 }
 
+const MAX_PHOTOS = 5;
+
 export function AddCommentForm({ stationId }: AddCommentFormProps) {
   const { t } = useTranslation("stationDetails");
   const [content, setContent] = useState("");
@@ -65,13 +67,16 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter((file) => file.type.startsWith("image/"));
 
-    const newImages: ImagePreview[] = validFiles.map((file) => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-
-    setImages((prev) => [...prev, ...newImages]);
+    setImages((prev) => {
+      const remaining = MAX_PHOTOS - prev.length;
+      const filesToAdd = validFiles.slice(0, remaining);
+      const newImages: ImagePreview[] = filesToAdd.map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      return [...prev, ...newImages];
+    });
 
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
@@ -131,9 +136,18 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleAddImages} className="hidden" />
-          <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={mutation.isPending}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={mutation.isPending || images.length >= MAX_PHOTOS}
+          >
             <HugeiconsIcon icon={ImageAdd01Icon} className="size-4" />
-            <span>{t("comments.addImages")}</span>
+            <span>
+              {t("comments.addImages")}
+              {images.length > 0 && ` (${images.length}/${MAX_PHOTOS})`}
+            </span>
           </Button>
         </div>
 

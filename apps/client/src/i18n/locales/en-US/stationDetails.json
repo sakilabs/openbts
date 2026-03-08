@@ -57,7 +57,10 @@
     "file": "File",
     "placeholder": "Add a comment...",
     "addImages": "Add images",
-    "postComment": "Post comment"
+    "postComment": "Post comment",
+    "deleteConfirm": "Delete comment",
+    "deleteDescription": "Are you sure you want to delete this comment? This action cannot be undone.",
+    "deleted": "Comment deleted"
   },
   "photos": {
     "title": "Photos",

@@ -14,6 +14,7 @@ const statement = {
   uke_permits_orphaned: ["read"],
   uke_permits: ["read"],
   user_lists: ["read", "create", "update", "delete"],
+  comments: ["read", "create", "delete"],
 } as const;
 
 export const accessControl = createAccessControl(statement);
@@ -42,6 +43,7 @@ export const editorRole = accessControl.newRole({
   deleted_entries: ["read"],
   uke_permits: ["read"],
   uke_permits_orphaned: ["read"],
+  comments: ["delete"],
 });
 
 export const modRole = accessControl.newRole({
@@ -61,4 +63,5 @@ export const adminRole = accessControl.newRole({
   uke_permits: ["read"],
   uke_permits_orphaned: ["read"],
   user_lists: ["read", "create", "update", "delete"],
+  comments: ["read", "create", "delete"],
 });

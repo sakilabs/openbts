@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -27,6 +28,16 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
   const { i18n } = useTranslation();
 
   useEscapeKey(onClose, index !== null);
+
+  useEffect(() => {
+    if (index === null || photos.length <= 1) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") onPrev();
+      else if (e.key === "ArrowRight") onNext();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [index, photos.length, onPrev, onNext]);
 
   const activePhoto = index !== null ? (photos[index] ?? null) : null;
 

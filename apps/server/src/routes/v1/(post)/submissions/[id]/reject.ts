@@ -9,7 +9,7 @@ import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
 import { logger } from "../../../../../utils/logger.js";
-import { submissions, stations } from "@openbts/drizzle";
+import { submissions } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";

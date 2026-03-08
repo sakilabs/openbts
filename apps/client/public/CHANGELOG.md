@@ -10,6 +10,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Opening a station or UKE permit dialog while already on the list map view no longer shows a redundant "Show on Map" button
 - Fixed UKE source popup on the list map view triggering an unnecessary internal location fetch
 - Fixed location detail filter query so band, RAT and IoT filters are evaluated independently instead of requiring a single cell to match all at once
+- Fixed backdrop blur on station dialog disappearing when switching to the `Comments` tab
 
 ### 🚀 Enhancements
 
@@ -22,6 +23,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Cell editor tables now support horizontal mouse-wheel scrolling so all columns remain accessible on narrow screens
 - Theme provider now automatically detects system theme changes when set to "System"
 - Cells export endpoint rewritten to use explicit JOINs instead of correlated EXISTS subqueries, improving query performance
+- Station comments now support up to 5 image attachments per comment
+- Users can now delete their own comments in the station Comments tab
 
 # 2026-03-07
 

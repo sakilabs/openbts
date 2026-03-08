@@ -264,8 +264,10 @@ export type StationComment = {
   updatedAt: string;
   attachments?: CommentAttachment[];
   author?: {
-    id: number;
+    id: string;
+    username: string | null;
+    displayUsername: string | null;
     name: string;
-    avatar_url: string | null;
+    image: string | null;
   };
 };

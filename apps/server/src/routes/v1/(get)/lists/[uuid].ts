@@ -1,5 +1,4 @@
 import { z } from "zod/v4";
-import { inArray } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 
 import db from "../../../../database/psql.js";
@@ -8,7 +7,6 @@ import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
 import {
   stations,
-  ukeRadiolines,
   userLists,
   cells,
   bands,

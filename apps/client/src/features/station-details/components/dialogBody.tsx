@@ -11,6 +11,7 @@ import {
   Link01Icon,
   Location01Icon,
   MapsLocation01Icon,
+  Message01Icon,
   Note01Icon,
   RefreshIcon,
   SignalFull02Icon,
@@ -298,9 +299,9 @@ export function StationDetailsBody({
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <section>
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
-                      <HugeiconsIcon icon={RefreshIcon} className="size-4" /> {t("comments.title")}
+                      <HugeiconsIcon icon={Message01Icon} className="size-4" /> {t("comments.title")}
                     </h3>
-                    <CommentsList stationId={stationId} />
+                    <CommentsList stationId={stationId} isAdmin={isAdmin} />
                   </section>
                 </div>
               )}

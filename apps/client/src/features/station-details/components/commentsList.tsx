@@ -1,10 +1,26 @@
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Calendar03Icon, AlertCircleIcon, UserIcon, Message01Icon, Image01Icon } from "@hugeicons/core-free-icons";
+import { Calendar03Icon, AlertCircleIcon, UserIcon, Message01Icon, Image01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 import type { StationComment } from "@/types/station";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchApiData, API_BASE } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Lightbox, type LightboxPhoto } from "@/components/lightbox";
+import { fetchApiData, API_BASE, showApiError } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
 import { AddCommentForm } from "./addCommentForm";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -15,10 +31,14 @@ const fetchComments = (stationId: number) =>
 
 type CommentsListProps = {
   stationId: number;
+  isAdmin?: boolean;
 };
 
-export function CommentsList({ stationId }: CommentsListProps) {
-  const { t, i18n } = useTranslation("stationDetails");
+export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) {
+  const { t, i18n } = useTranslation(["stationDetails", "common"]);
+  const { data: session } = authClient.useSession();
+  const currentUserId = session?.user?.id;
+  const queryClient = useQueryClient();
   const {
     data: comments = [],
     isLoading,
@@ -29,6 +49,51 @@ export function CommentsList({ stationId }: CommentsListProps) {
     enabled: !!stationId,
     staleTime: 1000 * 60 * 5,
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      const response = await fetch(`${API_BASE}/stations/${stationId}/comments/${commentId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to delete comment");
+    },
+    onSuccess: () => {
+      toast.success(t("stationDetails:comments.deleted"));
+      return queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
+    },
+    onError: (error) => showApiError(error),
+  });
+
+  const [lightbox, setLightbox] = useState<{ commentId: number; index: number } | null>(null);
+
+  const lightboxComment = lightbox ? comments.find((c) => c.id === lightbox.commentId) : null;
+  const lightboxPhotos: LightboxPhoto[] = lightboxComment
+    ? (lightboxComment.attachments
+        ?.filter((a) => a.type.startsWith("image/"))
+        .map((a) => ({
+          attachment_uuid: a.uuid,
+          note: null,
+          createdAt: lightboxComment.createdAt,
+          author: lightboxComment.author
+            ? {
+                uuid: lightboxComment.author.id,
+                username: lightboxComment.author.displayUsername ?? lightboxComment.author.username ?? "",
+                name: lightboxComment.author.name,
+              }
+            : null,
+        })) ?? [])
+    : [];
+
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+  const prevPhoto = useCallback(
+    () => setLightbox((prev) => (prev ? { ...prev, index: (prev.index - 1 + lightboxPhotos.length) % lightboxPhotos.length } : null)),
+    [lightboxPhotos.length],
+  );
+  const nextPhoto = useCallback(
+    () => setLightbox((prev) => (prev ? { ...prev, index: (prev.index + 1) % lightboxPhotos.length } : null)),
+    [lightboxPhotos.length],
+  );
 
   if (isLoading) {
     return (
@@ -62,7 +127,7 @@ export function CommentsList({ stationId }: CommentsListProps) {
           {comments.map((comment) => (
             <div key={comment.id} className="flex gap-4">
               <Avatar className="size-9 shrink-0 border">
-                <AvatarImage src={comment.author?.avatar_url || ""} />
+                <AvatarImage src={comment.author?.image || ""} />
                 <AvatarFallback>
                   <HugeiconsIcon icon={UserIcon} className="size-4 opacity-50" />
                 </AvatarFallback>
@@ -70,35 +135,72 @@ export function CommentsList({ stationId }: CommentsListProps) {
 
               <div className="flex-1 space-y-1.5">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-bold">{comment.author?.name}</span>
-                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <HugeiconsIcon icon={Calendar03Icon} className="size-3" />
-                    {new Date(comment.createdAt).toLocaleDateString(i18n.language)}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-sm font-bold truncate">{comment.author?.name}</span>
+                    {comment.author?.displayUsername && (
+                      <span className="text-xs text-muted-foreground truncate">@{comment.author.displayUsername}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <HugeiconsIcon icon={Calendar03Icon} className="size-3" />
+                      {new Date(comment.createdAt).toLocaleDateString(i18n.language)}
+                    </span>
+                    {(isAdmin || comment.author?.id === currentUserId) && (
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="size-6 p-0 text-muted-foreground hover:text-destructive"
+                              disabled={deleteMutation.isPending}
+                            />
+                          }
+                        >
+                          <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{t("stationDetails:comments.deleteConfirm")}</AlertDialogTitle>
+                            <AlertDialogDescription>{t("stationDetails:comments.deleteDescription")}</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
+                            <AlertDialogAction variant="destructive" onClick={() => deleteMutation.mutate(comment.id)}>
+                              {t("common:actions.delete")}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
                 </div>
                 <div className="p-3.5 rounded-2xl rounded-tl-none bg-muted/20 border text-sm leading-relaxed space-y-3">
                   <p>{comment.content}</p>
 
                   {comment.attachments && comment.attachments.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
-                      {comment.attachments.map((attachment) => (
-                        <a
-                          key={attachment.uuid}
-                          href={`${API_BASE}/attachments/${attachment.uuid}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group relative rounded-lg overflow-hidden border bg-muted/20 hover:border-primary/50 transition-colors"
-                        >
-                          {attachment.type.startsWith("image/") ? (
-                            <img src={`${API_BASE}/attachments/${attachment.uuid}`} alt="Attachment" className="size-20 object-cover" />
-                          ) : (
-                            <div className="size-20 flex flex-col items-center justify-center gap-1 text-muted-foreground">
-                              <HugeiconsIcon icon={Image01Icon} className="size-6" />
-                              <span className="text-[10px]">{t("comments.file")}</span>
-                            </div>
-                          )}
-                        </a>
-                      ))}
+                      {comment.attachments.map((attachment, attachmentIndex) =>
+                        attachment.type.startsWith("image/") ? (
+                          <button
+                            type="button"
+                            key={attachment.uuid}
+                            onClick={() => setLightbox({ commentId: comment.id, index: attachmentIndex })}
+                            className="group relative rounded-lg overflow-hidden border bg-muted/20 hover:border-primary/50 transition-colors cursor-pointer"
+                          >
+                            <img src={`/uploads/${attachment.uuid}.webp`} alt="Attachment" className="size-20 object-cover" />
+                          </button>
+                        ) : (
+                          <div
+                            key={attachment.uuid}
+                            className="size-20 flex flex-col items-center justify-center gap-1 text-muted-foreground rounded-lg border bg-muted/20"
+                          >
+                            <HugeiconsIcon icon={Image01Icon} className="size-6" />
+                            <span className="text-[10px]">{t("comments.file")}</span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   )}
                 </div>
@@ -109,6 +211,7 @@ export function CommentsList({ stationId }: CommentsListProps) {
       )}
       {comments.length > 0 && <div className="border-t" />}
       <AddCommentForm stationId={stationId} />
+      <Lightbox photos={lightboxPhotos} index={lightbox?.index ?? null} onClose={closeLightbox} onPrev={prevPhoto} onNext={nextPhoto} />
     </div>
   );
 }

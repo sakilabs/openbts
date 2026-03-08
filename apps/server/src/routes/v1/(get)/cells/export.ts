@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { and, or, inArray, eq, sql } from "drizzle-orm";
+import { and, or, inArray, eq } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
 import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";

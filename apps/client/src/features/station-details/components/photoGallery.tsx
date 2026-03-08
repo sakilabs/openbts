@@ -79,8 +79,6 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
   const prev = () => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null));
   const next = () => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null));
 
-  const activePhoto = lightboxIndex !== null ? photos[lightboxIndex] : null;
-
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

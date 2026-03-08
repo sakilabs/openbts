@@ -1,11 +1,11 @@
 import { z } from "zod/v4";
 import { createSelectSchema } from "drizzle-orm/zod";
-import { pipeline } from "node:stream/promises";
-import { createWriteStream } from "node:fs";
 import path from "node:path";
 import fs from "node:fs/promises";
+import sharp from "sharp";
 
 import db from "../../../../../../database/psql.js";
+import { isHeic, decodeHeicToRaw } from "../../../../../../utils/image.js";
 import { ErrorResponse } from "../../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../../services/settings.service.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
@@ -69,19 +69,37 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         if ((part as MultipartFile).type === "file" && (part as MultipartFile).file) {
           const filePart = part as MultipartFile;
           const mimetype: string = filePart.mimetype;
-          if (!mimetype.startsWith("image/") && !mimetype.startsWith("video/") && mimetype !== "application/pdf")
-            throw new ErrorResponse("BAD_REQUEST");
-          const fileExtension = path.extname(filePart.filename ?? "");
+          if (!mimetype.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
+          if ((validatedAttachments as { uuid: string; type: string }[]).length >= 5)
+            throw new ErrorResponse("BAD_REQUEST", { message: "Maximum 5 photos per comment" });
           const fileUuid = crypto.randomUUID();
-          const uniqueFilename = `${fileUuid}${fileExtension}`;
-          const filePath = path.join(UPLOAD_DIR, uniqueFilename);
+          const filename = `${fileUuid}.webp`;
+          const filePath = path.join(UPLOAD_DIR, filename);
           savedPaths.push(filePath);
-          await pipeline(filePart.file, createWriteStream(filePath));
+
+          const chunks: Buffer[] = [];
+          for await (const chunk of filePart.file) chunks.push(chunk as Buffer);
+          const inputBuffer = Buffer.concat(chunks);
+
+          let sharpInput: sharp.SharpInput;
+          let sharpOptions: sharp.SharpOptions | undefined;
+          if (isHeic(mimetype)) {
+            const { data, width, height } = await decodeHeicToRaw(inputBuffer);
+            sharpInput = data;
+            sharpOptions = { raw: { width, height, channels: 4 } };
+          } else sharpInput = inputBuffer;
+
+          const outputBuffer = await sharp(sharpInput, sharpOptions)
+            .rotate()
+            .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 82 })
+            .toBuffer();
+          await fs.writeFile(filePath, outputBuffer);
           const stats = await fs.stat(filePath);
-          const fileSize = stats.size;
+
           const [newAttachment] = await db
             .insert(attachments)
-            .values({ uuid: fileUuid, name: filePart.filename ?? uniqueFilename, author_id: userId, mime_type: mimetype, size: fileSize })
+            .values({ uuid: fileUuid, name: filePart.filename ?? filename, author_id: userId, mime_type: "image/webp", size: stats.size })
             .returning();
           if (!newAttachment) throw new ErrorResponse("FAILED_TO_CREATE");
           (validatedAttachments as { uuid: string; type: string }[]).push({ uuid: newAttachment.uuid, type: newAttachment.mime_type });
