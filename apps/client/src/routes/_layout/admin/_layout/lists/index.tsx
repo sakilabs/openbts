@@ -95,7 +95,7 @@ function AdminListsPage() {
         size: 180,
         cell: ({ getValue }) => {
           const by = getValue();
-          if (!by?.name) return <span className="text-muted-foreground italic text-xs">—</span>;
+          if (!by?.name) return <span className="text-muted-foreground italic text-xs">-</span>;
           return (
             <div className="flex items-center gap-2 min-w-0">
               <Avatar className="size-6 shrink-0">

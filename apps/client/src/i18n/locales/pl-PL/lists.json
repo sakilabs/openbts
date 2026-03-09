@@ -21,5 +21,7 @@
   "addToList": "Dodaj do listy",
   "createNew": "Utwórz nową listę",
   "togglePublic": "Ustaw jako publiczną",
-  "togglePrivate": "Ustaw jako prywatną"
+  "togglePrivate": "Ustaw jako prywatną",
+  "rename": "Zmień nazwę",
+  "editList": "Edytuj listę"
 }

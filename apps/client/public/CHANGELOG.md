@@ -1,6 +1,16 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-09
+
+### 🩹 Fixes
+
+- Fixed `operator_id` missing from submission payload when editing extra identificators on a station loaded from the station detail page, causing a validation error on `POST /submissions`
+
+### 🚀 Enhancements
+
+- User lists can now be renamed - use the new **Rename** option in the list's dropdown menu on `/lists` to edit the name and description
+
 # 2026-03-08
 
 ### 🩹 Fixes

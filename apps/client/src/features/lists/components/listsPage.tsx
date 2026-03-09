@@ -15,12 +15,14 @@ import {
   AirportTowerIcon,
   SignalFull02Icon,
   Calendar03Icon,
+  PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 
 import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -32,6 +34,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useUserLists } from "@/features/lists/hooks/useUserLists";
 import { deleteList, updateList } from "@/features/lists/api";
@@ -48,6 +52,9 @@ export function ListsPageContent() {
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useUserLists();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<UserListSummary | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const lists = useMemo<UserListSummary[]>(
     () => data?.pages.flatMap((p) => p.data).filter((l) => l.createdBy.uuid === session?.user?.id) ?? [],
@@ -98,6 +105,31 @@ export function ListsPageContent() {
       toast.success(t("lists:updated"));
     },
   });
+
+  const renameMutation = useMutation({
+    mutationFn: ({ uuid, name, description }: { uuid: string; name: string; description?: string }) =>
+      updateList(uuid, { name, description }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["user-lists"] });
+      toast.success(t("lists:updated"));
+      setEditTarget(null);
+    },
+  });
+
+  function openEdit(list: UserListSummary) {
+    setEditName(list.name);
+    setEditDescription(list.description ?? "");
+    setEditTarget(list);
+  }
+
+  function handleRename() {
+    if (!editTarget || !editName.trim()) return;
+    renameMutation.mutate({
+      uuid: editTarget.uuid,
+      name: editName.trim(),
+      description: editDescription.trim() || undefined,
+    });
+  }
 
   function handleShare(list: UserListSummary) {
     const url = `${window.location.origin}/lists/${list.uuid}`;
@@ -160,6 +192,10 @@ export function ListsPageContent() {
                           <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(list)}>
+                            <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
+                            {t("lists:rename")}
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleShare(list)}>
                             <HugeiconsIcon icon={Share08Icon} strokeWidth={2} />
                             {t("common:actions.share")}
@@ -238,6 +274,43 @@ export function ListsPageContent() {
         )}
 
       {renderContent()}
+
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("lists:editList")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-list-name">{t("lists:name")}</Label>
+              <Input
+                id="edit-list-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRename()}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-list-description">{t("lists:description")}</Label>
+              <Input
+                id="edit-list-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder={t("common:placeholder.optional")}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTarget(null)}>
+              {t("common:actions.cancel")}
+            </Button>
+            <Button onClick={handleRename} disabled={!editName.trim() || renameMutation.isPending}>
+              {renameMutation.isPending ? <Spinner /> : t("common:actions.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>

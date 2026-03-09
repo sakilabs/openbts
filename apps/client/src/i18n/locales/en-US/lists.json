@@ -19,5 +19,7 @@
   "addToList": "Add to list",
   "createNew": "Create new list",
   "togglePublic": "Make public",
-  "togglePrivate": "Make private"
+  "togglePrivate": "Make private",
+  "rename": "Rename",
+  "editList": "Edit list"
 }

@@ -98,7 +98,7 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
     id: station.id,
     station_id: station.station_id,
     location_id: station.location_id,
-    operator_id: station.operator_id,
+    operator_id: station.operator?.id ?? null,
     notes: station.notes,
     updatedAt: station.updatedAt,
     createdAt: station.createdAt,
