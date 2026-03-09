@@ -44,7 +44,8 @@ export type ErrorCode =
   | "ALREADY_LOGGED_IN"
   | "INSUFFICIENT_PERMISSIONS"
   | "TOO_MANY_REQUESTS"
-  | "DUPLICATE_ENTRY";
+  | "DUPLICATE_ENTRY"
+  | "TWO_FACTOR_REQUIRED";
 
 interface ErrorDefinition {
   message: string;
@@ -111,5 +112,9 @@ const errors: Record<ErrorCode, ErrorDefinition> = {
   DUPLICATE_ENTRY: {
     message: "A duplicate entry already exists.",
     statusCode: 409,
+  },
+  TWO_FACTOR_REQUIRED: {
+    message: "Two-factor authentication must be enabled to access this resource.",
+    statusCode: 403,
   },
 };

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { fetchJson, API_BASE } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +28,15 @@ function AdminUserDetailPage() {
       });
       if (result.error) throw result.error;
       return result.data?.users?.[0] as unknown as AdminUser | undefined;
+    },
+    enabled: !!userId,
+  });
+
+  const { data: hasPassword } = useQuery({
+    queryKey: ["admin", "user-has-password", userId],
+    queryFn: async () => {
+      const res = await fetchJson<{ data: { hasPassword: boolean } }>(`${API_BASE}/account/password?userId=${userId}`);
+      return res.data.hasPassword;
     },
     enabled: !!userId,
   });
@@ -79,7 +89,7 @@ function AdminUserDetailPage() {
       <div className="p-4 space-y-4">
         <UserDetailHeader user={userData} />
         <UserInfoCard user={userData} />
-        <ManageUserCard user={userData} />
+        <ManageUserCard user={userData} hasPassword={hasPassword} />
         <SessionsCard userId={userId} sessions={sessions ?? []} />
         <DangerZoneCard user={userData} />
       </div>

@@ -200,7 +200,15 @@ function TotpVerifyForm({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
-function SignInForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwitchView: () => void }) {
+function SignInForm({
+  onSuccess,
+  onSwitchView,
+  onTwoFactorRequired,
+}: {
+  onSuccess: () => void;
+  onSwitchView: () => void;
+  onTwoFactorRequired: () => void;
+}) {
   const { t } = useTranslation("auth");
   const [error, setError] = useState<string | null>(null);
 
@@ -209,18 +217,22 @@ function SignInForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
     onSubmit: async ({ value }) => {
       setError(null);
 
-      const { error: signInError } = await authClient.signIn.email({
-        email: value.email,
-        password: value.password,
-      });
-
-      if (signInError) {
-        setError(signInError.message ?? "An unexpected error occurred");
-        return;
-      }
-
-      toast.success(t("signIn.success"));
-      onSuccess();
+      await authClient.signIn.email(
+        { email: value.email, password: value.password },
+        {
+          onSuccess(ctx) {
+            if ((ctx.data as { twoFactorRedirect?: boolean })?.twoFactorRedirect) {
+              onTwoFactorRequired();
+              return;
+            }
+            toast.success(t("signIn.success"));
+            onSuccess();
+          },
+          onError(ctx) {
+            setError(ctx.error.message ?? "An unexpected error occurred");
+          },
+        },
+      );
     },
   });
 
@@ -477,7 +489,7 @@ export function AuthDialog({ open, onOpenChange, forced = false }: AuthDialogPro
         {view === "totp" ? (
           <TotpVerifyForm onSuccess={handleSuccess} />
         ) : view === "signIn" ? (
-          <SignInForm onSuccess={handleSuccess} onSwitchView={() => setView("signUp")} />
+          <SignInForm onSuccess={handleSuccess} onSwitchView={() => setView("signUp")} onTwoFactorRequired={() => setView("totp")} />
         ) : (
           <SignUpForm onSuccess={handleSuccess} onSwitchView={() => setView("signIn")} />
         )}

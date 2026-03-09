@@ -36,6 +36,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
 import { useSettings } from "@/hooks/useSettings";
+import { useWindowControlsOverlay } from "@/hooks/useWindowControlsOverlay";
 
 const navMainConfig = [
   {
@@ -119,6 +120,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const { data: session } = authClient.useSession();
   const { data: settings } = useSettings();
+  const isWCO = useWindowControlsOverlay();
 
   const navItems = useMemo(() => translateNav(navMainConfig, t), [t]);
   const infoNavItems = useMemo(() => translateNav(infoNavConfig, t), [t]);
@@ -146,20 +148,22 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar variant="inset" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="/" />}>
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{APP_NAME}</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      {!isWCO && (
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" render={<Link to="/" />}>
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">{APP_NAME}</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+      )}
       <SidebarContent>
         <NavMain items={navItems} />
         {authNavItems.length > 0 && <NavMain items={authNavItems} />}

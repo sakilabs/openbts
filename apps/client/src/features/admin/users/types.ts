@@ -9,6 +9,8 @@ export interface AdminUser {
   createdAt: Date;
   image?: string | null;
   username?: string;
+  twoFactorEnabled?: boolean;
+  forceTotp?: boolean;
 }
 
 export interface Session {

@@ -191,17 +191,26 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   },
   city: {
     table: "locations",
-    buildCondition: buildLikeAny(locations.city),
+    buildCondition: (value: FilterValue) => {
+      const values = parseStrings(value);
+      const conditions = values.map((val) => sql`${val} <% ${locations.city} OR ${locations.city} ILIKE ${`%${val}%`}`);
+      return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
+    },
+  },
+  address: {
+    table: "locations",
+    buildCondition: (value: FilterValue) => {
+      const values = parseStrings(value);
+      const conditions = values.map((val) => sql`${val} <% ${locations.address} OR ${locations.address} ILIKE ${`%${val}%`}`);
+      return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
+    },
   },
 
   // extraIdentificators
   networks_id: {
     table: "extraIdentificators",
     buildCondition: (value: FilterValue) => {
-      const values = String(value)
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const values = parseStrings(value);
       const conditions = values.map((val) => sql`CAST(${extraIdentificators.networks_id} AS TEXT) ILIKE ${`%${val}%`}`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },

@@ -28,6 +28,7 @@ function AppProviders({ children }: AppProvidersProps) {
       authClient={authClient}
       navigate={(path) => navigate({ to: path })}
       replace={(path) => navigate({ to: path, replace: true })}
+      basePath="/account"
       Link={AuthLink}
       onSessionChange={() => queryClient.invalidateQueries()}
       social={{

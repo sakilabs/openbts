@@ -4,6 +4,20 @@ import { ErrorResponse } from "../errors.js";
 import { getRuntimeSettings } from "../services/settings.service.js";
 
 import type { FastifyReply, FastifyRequest } from "fastify";
+
+const TWO_FACTOR_ALLOWED = [
+  "/api/v1/auth/get-session",
+  "/api/v1/settings",
+  "/api/v1/auth/two-factor/enable",
+  "/api/v1/auth/two-factor/disable",
+  "/api/v1/auth/two-factor/get-totp-uri",
+  "/api/v1/auth/two-factor/verify-totp",
+  "/api/v1/auth/two-factor/send-otp",
+  "/api/v1/auth/two-factor/verify-otp",
+  "/api/v1/auth/two-factor/generate-backup-codes",
+  "/api/v1/auth/two-factor/verify-backup-code",
+  "/api/v1/auth/two-factor/view-backup-codes",
+];
 import type { Route } from "../interfaces/routes.interface.js";
 import type { ApiToken } from "../interfaces/fastify.interface.js";
 
@@ -26,6 +40,9 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
     if (!user && !allowGuest) throw new ErrorResponse("UNAUTHORIZED");
 
     req.userSession = user;
+
+    const isTwoFactorRoute = TWO_FACTOR_ALLOWED.some((p) => url?.startsWith(p));
+    if (!isTwoFactorRoute && user?.user.forceTotp && !user.user.twoFactorEnabled) throw new ErrorResponse("TWO_FACTOR_REQUIRED");
   }
 
   if (authHeader) {

@@ -464,7 +464,8 @@ CREATE TABLE "auth"."users" (
 	"banned" boolean DEFAULT false,
 	"banReason" text,
 	"banExpires" timestamp with time zone,
-	"two_factor_enabled" boolean DEFAULT false
+	"two_factor_enabled" boolean DEFAULT false,
+	"force_totp" boolean DEFAULT false
 );
 --> statement-breakpoint
 CREATE TABLE "auth"."verification_tokens" (

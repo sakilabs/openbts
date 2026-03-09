@@ -58,11 +58,67 @@
   },
   "security": {
     "title": "Bezpieczeństwo",
-    "description": "Hasło, klucze dostępu i uwierzytelnianie"
+    "description": "Hasło, klucze dostępu i uwierzytelnianie",
+    "passwordless": {
+      "title": "Konto bez hasła",
+      "description": "Usuń hasło i loguj się wyłącznie za pomocą kluczy dostępu.",
+      "remove": "Usuń hasło",
+      "removing": "Usuwanie...",
+      "success": "Hasło zostało usunięte. Możesz teraz logować się wyłącznie za pomocą kluczy dostępu.",
+      "noPassword": "Brak hasła. Logowanie tylko przez klucze dostępu.",
+      "requiresPasskey": "Musisz mieć co najmniej jeden klucz dostępu, zanim usuniesz hasło."
+    }
   },
   "apiKeys": {
     "title": "Klucze API",
-    "description": "Zarządzaj kluczami do dostępu programistycznego"
+    "description": "Zarządzaj kluczami do dostępu programistycznego",
+    "columns": {
+      "name": "Nazwa",
+      "key": "Klucz",
+      "expires": "Wygasa",
+      "rateLimit": "Limit zapytań"
+    },
+    "created": "Utworzono {{date}}",
+    "expiresNever": "Nigdy",
+    "keysUsed": "{{count}} z {{max}} kluczy użytych",
+    "createKey": "Utwórz klucz API",
+    "revokeKey": "Unieważnij",
+    "revoking": "Unieważnianie...",
+    "revokeConfirmTitle": "Unieważnij klucz API",
+    "revokeConfirmDescription": "Czy na pewno chcesz unieważnić \"{{name}}\"? Tej akcji nie można cofnąć, a wszystkie aplikacje używające tego klucza przestaną działać.",
+    "revokeSuccess": "Klucz API został unieważniony",
+    "noKeys": "Brak kluczy API",
+    "noKeysDescription": "Utwórz klucz API, aby programistycznie korzystać z API OpenBTS.",
+    "dialog": {
+      "title": "Utwórz klucz API",
+      "description": "Ten klucz będzie miał dostęp tylko do odczytu publicznych endpointów API.",
+      "nameLabel": "Nazwa",
+      "namePlaceholder": "np. Serwer produkcyjny",
+      "expiresLabel": "Wygasa za",
+      "expiresOptions": {
+        "1d": "1 dzień",
+        "3d": "3 dni",
+        "7d": "7 dni",
+        "30d": "30 dni",
+        "90d": "90 dni",
+        "1y": "1 rok",
+        "never": "Nigdy"
+      },
+      "cancel": "Anuluj",
+      "create": "Utwórz klucz",
+      "creating": "Tworzenie..."
+    },
+    "success": {
+      "title": "Klucz został utworzony",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano!",
+      "warning": "Przechowuj ten klucz w bezpiecznym miejscu. Nie będziesz mógł go ponownie wyświetlić po zamknięciu tego okna.",
+      "done": "Gotowe"
+    },
+    "errors": {
+      "createFailed": "Nie udało się utworzyć klucza API",
+      "nameRequired": "Nazwa jest wymagana"
+    }
   },
   "sessions": {
     "title": "Sesje",
@@ -71,5 +127,57 @@
   "dangerZone": {
     "title": "Strefa zagrożenia",
     "description": "Trwałe usunięcie konta i wszystkich powiązanych danych"
+  },
+  "twoFactor": {
+    "steps": {
+      "confirm": "Potwierdź",
+      "scan": "Skanuj",
+      "verify": "Weryfikuj",
+      "done": "Gotowe"
+    },
+    "titles": {
+      "enableTwoFactor": "Włącz uwierzytelnianie dwuskładnikowe",
+      "scanQrCode": "Zeskanuj kod QR",
+      "verifyYourApp": "Zweryfikuj aplikację",
+      "allSet": "Gotowe!"
+    },
+    "stepProgress": "Krok {{current}} z {{total}} - {{label}}",
+    "backToSettings": "Powrót do ustawień",
+    "init": {
+      "heading": "Potwierdź swoją tożsamość",
+      "description": "Wprowadź aktualne hasło, aby rozpocząć konfigurację.",
+      "passwordLabel": "Aktualne hasło",
+      "passwordPlaceholder": "Wprowadź hasło",
+      "submitting": "Włączanie...",
+      "continue": "Kontynuuj",
+      "errorEnable": "Nie udało się włączyć uwierzytelniania dwuskładnikowego.",
+      "errorNoUri": "Nie otrzymano URI TOTP. Spróbuj ponownie."
+    },
+    "scan": {
+      "hint": "Otwórz aplikację uwierzytelniającą i zeskanuj",
+      "manualSetup": "Ręczna konfiguracja",
+      "secretKey": "Klucz tajny",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano!",
+      "issuer": "Wydawca",
+      "period": "Okres",
+      "digits": "Ilość cyfr",
+      "backupCodesTitle": "Zapisz kody zapasowe",
+      "backupCodesDescription": "Wygenerowano 8 jednorazowych kodów zapasowych. Przechowuj je w bezpiecznym miejscu. Będziesz ich potrzebować, jeśli stracisz dostęp do aplikacji uwierzytelniającej.",
+      "continue": "Kod został zeskanowany",
+      "securityNote": "Twój klucz tajny jest zaszyfrowany i nigdy nie jest udostępniany. Ten kod QR jest wyświetlany tylko raz."
+    },
+    "verify": {
+      "heading": "Zweryfikuj aplikację",
+      "description": "Wprowadź 6-cyfrowy kod z aplikacji uwierzytelniającej, aby potwierdzić konfigurację.",
+      "errorInvalid": "Nieprawidłowy kod. Spróbuj ponownie.",
+      "submitting": "Weryfikacja...",
+      "submit": "Zweryfikuj i zakończ"
+    },
+    "success": {
+      "heading": "Uwierzytelnianie dwuskładnikowe jest aktywne",
+      "description": "Twoje konto jest teraz chronione dodatkową warstwą zabezpieczeń. Będziesz potrzebować aplikacji uwierzytelniającej przy każdym logowaniu.",
+      "enabled": "Uwierzytelnianie dwuskładnikowe włączone"
+    }
   }
 }

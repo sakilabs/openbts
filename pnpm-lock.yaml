@@ -96,6 +96,9 @@ importers:
       maplibre-gl:
         specifier: 5.19.0
         version: 5.19.0
+      qr-code-styling:
+        specifier: 1.9.2
+        version: 1.9.2
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -7031,8 +7034,15 @@ packages:
     resolution: {integrity: sha512-KTqnxsgGiQ6ZAzZCVlJH5eOjSnvlyEgx1m8bkRJfOhmGRqfo5KLvmAlACQkrjEtOQ4B7wF9TdSLIs9O90MX9xA==}
     engines: {node: '>=16.0.0'}
 
+  qr-code-styling@1.9.2:
+    resolution: {integrity: sha512-RgJaZJ1/RrXJ6N0j7a+pdw3zMBmzZU4VN2dtAZf8ZggCfRB5stEQ3IoDNGaNhYY3nnZKYlYSLl5YkfWN5dPutg==}
+    engines: {node: '>=18.18.0'}
+
   qr.js@0.0.0:
     resolution: {integrity: sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==}
+
+  qrcode-generator@1.5.2:
+    resolution: {integrity: sha512-pItrW0Z9HnDBnFmgiNrY1uxRdri32Uh9EjNYLPVC2zZ3ZRIIEqBoDgm4DkvDwNNDHTK7FNkmr8zAa77BYc9xNw==}
 
   qs@6.15.0:
     resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
@@ -11806,7 +11816,7 @@ snapshots:
 
   '@types/mssql@9.1.9(@azure/core-client@1.10.1)':
     dependencies:
-      '@types/node': 20.19.13
+      '@types/node': 24.10.9
       tarn: 3.0.2
       tedious: 19.2.1(@azure/core-client@1.10.1)
     transitivePeerDependencies:
@@ -11833,7 +11843,7 @@ snapshots:
 
   '@types/pg@8.18.0':
     dependencies:
-      '@types/node': 24.3.0
+      '@types/node': 24.10.9
       pg-protocol: 1.12.0
       pg-types: 2.2.0
 
@@ -11847,7 +11857,7 @@ snapshots:
 
   '@types/readable-stream@4.0.23':
     dependencies:
-      '@types/node': 20.19.13
+      '@types/node': 24.10.9
 
   '@types/resolve@1.20.2': {}
 
@@ -15042,7 +15052,13 @@ snapshots:
 
   pvutils@1.1.5: {}
 
+  qr-code-styling@1.9.2:
+    dependencies:
+      qrcode-generator: 1.5.2
+
   qr.js@0.0.0: {}
+
+  qrcode-generator@1.5.2: {}
 
   qs@6.15.0:
     dependencies:
@@ -15871,7 +15887,7 @@ snapshots:
       '@azure/identity': 4.13.0
       '@azure/keyvault-keys': 4.10.0(@azure/core-client@1.10.1)
       '@js-joda/core': 5.7.0
-      '@types/node': 20.19.13
+      '@types/node': 24.10.9
       bl: 6.1.6
       iconv-lite: 0.6.3
       js-md4: 0.3.2
@@ -15887,7 +15903,7 @@ snapshots:
       '@azure/identity': 4.13.0
       '@azure/keyvault-keys': 4.10.0(@azure/core-client@1.10.1)
       '@js-joda/core': 5.7.0
-      '@types/node': 20.19.13
+      '@types/node': 24.10.9
       bl: 6.1.6
       iconv-lite: 0.7.2
       js-md4: 0.3.2

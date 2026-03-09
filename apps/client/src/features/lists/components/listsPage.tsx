@@ -107,8 +107,7 @@ export function ListsPageContent() {
   });
 
   const renameMutation = useMutation({
-    mutationFn: ({ uuid, name, description }: { uuid: string; name: string; description?: string }) =>
-      updateList(uuid, { name, description }),
+    mutationFn: ({ uuid, name, description }: { uuid: string; name: string; description?: string }) => updateList(uuid, { name, description }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["user-lists"] });
       toast.success(t("lists:updated"));

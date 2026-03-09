@@ -9,13 +9,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/components/ui/spinner";
 import type { AdminUser } from "@/features/admin/users/types";
 import { SectionHeader } from "./common";
 
 const ROLES = ["user", "editor", "moderator", "admin"] as const;
 
-export function ManageUserCard({ user }: { user: AdminUser }) {
+function ForceTotpDescription({ hasPassword, twoFactorEnabled }: { hasPassword?: boolean; twoFactorEnabled?: boolean }) {
+  if (!hasPassword) return "Cannot force 2FA - user has no password set. Set a password first.";
+  if (twoFactorEnabled) return "User must keep 2FA active - they'll be blocked if it's ever disabled.";
+  return "User does not have 2FA enabled yet.";
+}
+
+export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPassword?: boolean }) {
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -55,6 +62,19 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
     onSuccess: () => {
       toast.success("Password updated successfully");
       setNewPassword("");
+      return invalidateAll();
+    },
+    onError: (error) => showApiError(error),
+  });
+
+  const forceTotpMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const result = await authClient.admin.updateUser({ userId: user.id, data: { forceTotp: enabled } as Record<string, unknown> });
+      if (result.error) throw result.error;
+    },
+    onSuccess: () => {
+      toast.success("Force 2FA setting updated");
+      return invalidateAll();
     },
     onError: (error) => showApiError(error),
   });
@@ -86,7 +106,13 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
           <div className="space-y-2">
             <Label>Update Name</Label>
             <div className="flex items-center gap-2">
-              <Input placeholder={user.name} value={editName} onChange={(e) => setEditName(e.target.value)} className="max-w-xs" />
+              <Input
+                placeholder={user.name}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="max-w-xs"
+                autoComplete="name"
+              />
               <Button onClick={() => updateNameMutation.mutate()} disabled={updateNameMutation.isPending || !editName.trim()}>
                 {updateNameMutation.isPending ? <Spinner /> : "Update"}
               </Button>
@@ -102,11 +128,26 @@ export function ManageUserCard({ user }: { user: AdminUser }) {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="max-w-xs"
+                autoComplete="new-password"
               />
               <Button onClick={() => setPasswordMutation.mutate()} disabled={setPasswordMutation.isPending || !newPassword}>
                 {setPasswordMutation.isPending ? <Spinner /> : "Set Password"}
               </Button>
             </div>
+          </div>
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-0.5">
+              <Label>Force 2FA</Label>
+              <p className="text-xs text-muted-foreground">
+                <ForceTotpDescription hasPassword={hasPassword} twoFactorEnabled={user.twoFactorEnabled} />
+              </p>
+            </div>
+            <Switch
+              checked={!!user.forceTotp}
+              onCheckedChange={(checked) => forceTotpMutation.mutate(checked)}
+              disabled={forceTotpMutation.isPending || !hasPassword}
+            />
           </div>
         </CardContent>
       </Card>

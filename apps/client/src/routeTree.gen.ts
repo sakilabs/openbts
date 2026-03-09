@@ -26,6 +26,7 @@ import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
 import { Route as LayoutListsIndexRouteImport } from './routes/_layout/lists/index'
 import { Route as LayoutListsUuidRouteImport } from './routes/_layout/lists/$uuid'
 import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_layout'
+import { Route as LayoutAccountTwoFactorRouteImport } from './routes/_layout/account/two-factor'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
 import { Route as LayoutAccountSettingsRouteImport } from './routes/_layout/account/settings'
 import { Route as LayoutAdminLayoutUkePermitsRouteImport } from './routes/_layout/admin/_layout/uke-permits'
@@ -124,6 +125,11 @@ const LayoutListsUuidRoute = LayoutListsUuidRouteImport.update({
 const LayoutAdminLayoutRoute = LayoutAdminLayoutRouteImport.update({
   id: '/admin/_layout',
   path: '/admin',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAccountTwoFactorRoute = LayoutAccountTwoFactorRouteImport.update({
+  id: '/account/two-factor',
+  path: '/account/two-factor',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAccountSubmissionsRoute =
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/tos': typeof LayoutTosRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
+  '/account/two-factor': typeof LayoutAccountTwoFactorRoute
   '/admin': typeof LayoutAdminLayoutRouteWithChildren
   '/lists/$uuid': typeof LayoutListsUuidRoute
   '/lists/': typeof LayoutListsIndexRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
+  '/account/two-factor': typeof LayoutAccountTwoFactorRoute
   '/admin': typeof LayoutAdminLayoutRouteWithChildren
   '/lists/$uuid': typeof LayoutListsUuidRoute
   '/lists': typeof LayoutListsIndexRoute
@@ -299,6 +307,7 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
+  '/_layout/account/two-factor': typeof LayoutAccountTwoFactorRoute
   '/_layout/admin/_layout': typeof LayoutAdminLayoutRouteWithChildren
   '/_layout/lists/$uuid': typeof LayoutListsUuidRoute
   '/_layout/lists/': typeof LayoutListsIndexRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/tos'
     | '/account/settings'
     | '/account/submissions'
+    | '/account/two-factor'
     | '/admin'
     | '/lists/$uuid'
     | '/lists/'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account/settings'
     | '/account/submissions'
+    | '/account/two-factor'
     | '/admin'
     | '/lists/$uuid'
     | '/lists'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/_layout/'
     | '/_layout/account/settings'
     | '/_layout/account/submissions'
+    | '/_layout/account/two-factor'
     | '/_layout/admin/_layout'
     | '/_layout/lists/$uuid'
     | '/_layout/lists/'
@@ -542,6 +554,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof LayoutAdminLayoutRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/account/two-factor': {
+      id: '/_layout/account/two-factor'
+      path: '/account/two-factor'
+      fullPath: '/account/two-factor'
+      preLoaderRoute: typeof LayoutAccountTwoFactorRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/account/submissions': {
@@ -717,6 +736,7 @@ interface LayoutRouteChildren {
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutAccountSettingsRoute: typeof LayoutAccountSettingsRoute
   LayoutAccountSubmissionsRoute: typeof LayoutAccountSubmissionsRoute
+  LayoutAccountTwoFactorRoute: typeof LayoutAccountTwoFactorRoute
   LayoutAdminLayoutRoute: typeof LayoutAdminLayoutRouteWithChildren
 }
 
@@ -735,6 +755,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutAccountSettingsRoute: LayoutAccountSettingsRoute,
   LayoutAccountSubmissionsRoute: LayoutAccountSubmissionsRoute,
+  LayoutAccountTwoFactorRoute: LayoutAccountTwoFactorRoute,
   LayoutAdminLayoutRoute: LayoutAdminLayoutRouteWithChildren,
 }
 

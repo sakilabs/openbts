@@ -117,8 +117,11 @@ const sortStations = (arr: StationWithCells[], sortBy: "station_id" | "updatedAt
   });
 };
 
-const combineConditions = (conditions: SQL[]): SQL | undefined =>
-  conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : and(...conditions);
+function combineConditions(conditions: SQL[]): SQL | undefined {
+  if (conditions.length === 0) return undefined;
+  if (conditions.length === 1) return conditions[0];
+  return and(...conditions);
+}
 
 const queryRatTableStationIds = async (grouped: GroupedFilters): Promise<number[]> => {
   const queries = ratTables
@@ -299,14 +302,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   }
 
   if (stationMap.size < limit) {
-    const cityMatches = await db
+    const cityAndAddressMatches = await db
       .selectDistinct({ id: stations.id })
       .from(stations)
       .innerJoin(locations, eq(stations.location_id, locations.id))
-      .where(and(ne(stations.status, "inactive"), sql`${locations.city} ILIKE ${`%${searchQuery}%`}`))
+      .where(and(ne(stations.status, "inactive"), or(sql`${searchQuery} <% ${locations.city}`, sql`${searchQuery} <% ${locations.address}`)))
+      .orderBy(sql`GREATEST(word_similarity(${searchQuery}, ${locations.city}), word_similarity(${searchQuery}, ${locations.address})) DESC`)
       .limit(limit);
 
-    const missingCityIds = cityMatches
+    const missingCityIds = cityAndAddressMatches
       .map((r) => r.id)
       .filter((id) => !stationMap.has(id))
       .slice(0, limit - stationMap.size);

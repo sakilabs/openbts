@@ -57,6 +57,7 @@ export default defineConfig({
         short_name: "OpenBTS",
         description: "Map and data explorer for BT stations",
         theme_color: "#0c0c0c",
+        display_override: ["window-controls-overlay"],
         shortcuts: [
           {
             name: "Map",

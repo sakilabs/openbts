@@ -10,6 +10,17 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🚀 Enhancements
 
 - User lists can now be renamed - use the new **Rename** option in the list's dropdown menu on `/lists` to edit the name and description
+- Added two-factor authentication (TOTP) setup flow at `/account/two-factor`
+- Sign-in now detects a pending 2FA challenge and routes directly to the TOTP verification step without a full page reload
+- Admins can force TOTP on any user - users with **Force 2FA** enabled are blocked from the API with `403 TWO_FACTOR_REQUIRED` until 2FA is active; toggle is available on the admin user detail page
+- API key management is now live on `/account/settings` (again) - create, view, and revoke personal API keys; rate-limit usage bar shows consumption per window
+- Users can go passwordless. New **Remove password** option in Security settings removes your password once at least one passkey is registered
+- `GET /account/api-keys` returns the authenticated user's API keys including per-key rate-limit usage (used / max / reset)
+- `GET /account/password` returns whether the current user (or a target user for admins via `?userId=`) has a password-based credential
+- `DELETE /account/password` removes the credential-based password; requires at least one passkey to be registered
+- `POST /search`: city matching now uses PostgreSQL trigram similarity (`word_similarity`) scored and ordered, and also matches against the `address` column
+- Added `address:` filter keyword for explicit address partial-match filtering on the map and stations page
+- PWA (desktop): sidebar logo is hidden and the header becomes a native title-bar drag region when the Window Controls Overlay is active
 
 # 2026-03-08
 

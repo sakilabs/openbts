@@ -72,6 +72,7 @@ export const users = AuthSchema.table(
     banReason: text("banReason"),
     banExpires: timestamp({ withTimezone: true }),
     twoFactorEnabled: boolean("two_factor_enabled").default(false),
+    forceTotp: boolean("force_totp").default(false),
   },
   (table) => [index("users_email_idx").on(table.email)],
 );

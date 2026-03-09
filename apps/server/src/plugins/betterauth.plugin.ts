@@ -27,6 +27,18 @@ export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown
 
 export const auth = betterAuth({
   appName: APP_NAME,
+  user: {
+    additionalFields: {
+      forceTotp: {
+        type: "boolean" as const,
+        defaultValue: false,
+        input: false,
+      },
+    },
+    deleteUser: {
+      enabled: true,
+    },
+  },
   advanced: {
     cookiePrefix: "openbts",
     database: {
@@ -156,9 +168,6 @@ export const auth = betterAuth({
       await redis.del(`auth:${key}`);
     },
   },
-  deleteUser: {
-    enabled: true,
-  },
   trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com"],
   // disabledPaths: PUBLIC_ROUTES,
 });
@@ -172,6 +181,27 @@ async function beforeAuthHook(
     }
   >,
 ) {
+  if (ctx.path.startsWith("/admin/set-user-password")) {
+    const userId = ctx.body?.userId as string | undefined;
+    const newPassword = ctx.body?.newPassword as string | undefined;
+    if (!userId || !newPassword) throw new APIError("BAD_REQUEST", { message: "userId and newPassword are required." });
+
+    const existingAccount = await db.query.accounts.findFirst({
+      where: { AND: [{ userId }, { providerId: "credential" }] },
+    });
+
+    if (!existingAccount) {
+      const hashedPassword = await hash(newPassword, ARGON2_OPTIONS);
+      await db.insert(schema.accounts).values({
+        userId,
+        accountId: userId,
+        providerId: "credential",
+        password: hashedPassword,
+      });
+      return { context: ctx };
+    }
+  }
+
   if (ctx.path.startsWith("/api-key/create")) {
     const session = await getSessionFromCtx(ctx);
 

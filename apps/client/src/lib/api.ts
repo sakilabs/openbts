@@ -31,6 +31,12 @@ export class RateLimitError extends Error {
   }
 }
 
+export class TwoFactorRequiredError extends Error {
+  constructor() {
+    super("Two-factor authentication must be enabled to access this resource.");
+  }
+}
+
 type FetchOptions = RequestInit & {
   allowedErrors?: number[];
 };
@@ -63,9 +69,10 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 
     try {
       const errorData = await response.json();
+      if (errorData.errors?.[0]?.code === "TWO_FACTOR_REQUIRED") throw new TwoFactorRequiredError();
       if (errorData.errors?.length) throw new ApiResponseError(response.status, errorData.errors);
     } catch (e) {
-      if (e instanceof ApiResponseError) throw e;
+      if (e instanceof ApiResponseError || e instanceof TwoFactorRequiredError) throw e;
     }
 
     throw new Error(`Request failed: ${response.status}`);

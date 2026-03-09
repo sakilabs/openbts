@@ -54,6 +54,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
 
   // Location filters
   { key: "city:", description: "City name (partial match)", availableOn: ["map", "stations"] },
+  { key: "address:", description: "Address (partial match)", availableOn: ["map", "stations"] },
   { key: "region:", description: "Region code (e.g., MAZ, SL, WP)", availableOn: [] },
 
   // Cell filters
