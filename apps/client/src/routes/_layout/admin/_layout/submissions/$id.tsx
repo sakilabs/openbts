@@ -23,6 +23,7 @@ import { AdminReviewCard } from "@/features/admin/submissions/components/adminRe
 import { SubmissionDiffDetailCells } from "@/features/admin/submissions/components/submissionDiffRowCells";
 import { useSaveSubmissionMutation, useApproveSubmissionMutation, useRejectSubmissionMutation } from "@/features/admin/submissions/mutations";
 import { SubmissionPhotosSection } from "@/features/admin/submissions/components/submissionPhotosSection";
+import { SubmissionLocationPhotoSelectionsSection } from "@/features/admin/submissions/components/submissionLocationPhotoSelectionsSection";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -446,6 +447,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               isFormDisabled={isFormDisabled}
               isDeleteSubmission={isDeleteSubmission}
             />
+            <SubmissionLocationPhotoSelectionsSection photos={submission.locationPhotoSelections} />
             <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} />
           </div>
 

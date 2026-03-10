@@ -3,7 +3,6 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { accounts } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";

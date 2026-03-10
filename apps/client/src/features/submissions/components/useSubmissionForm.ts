@@ -77,6 +77,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
+  const [locationPhotoIds, setLocationPhotoIds] = useState<number[]>([]);
 
   const isEditMode = !!editSubmissionId;
 
@@ -117,6 +118,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       mnoName: string | null,
     ): boolean => {
       if (photos.length > 0) return true;
+      if (locationPhotoIds.length > 0) return true;
       if (hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState, isEditMode)) return true;
       if (mode === "existing") {
         if (networksId !== (originalState.networksId ?? null)) return true;
@@ -125,7 +127,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       }
       return false;
     },
-    [originalState, isEditMode, photos.length],
+    [originalState, isEditMode, photos.length, locationPhotoIds.length],
   );
 
   const form = useForm({
@@ -174,6 +176,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         location: hasLocation && !isDeleteMode ? value.location : undefined,
         cells: isDeleteMode ? [] : cells,
         pending_photos: photos.length > 0 ? photos.length : undefined,
+        location_photo_ids: !isNewStation && !isDeleteMode && locationPhotoIds.length > 0 ? locationPhotoIds : undefined,
       });
     },
   });
@@ -207,6 +210,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
       } else {
         form.reset();
+        setLocationPhotoIds([]);
       }
       setShowErrors(false);
     },
@@ -549,6 +553,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     setPhotoNotes,
     photoTakenAts,
     setPhotoTakenAts,
+    locationPhotoIds,
+    setLocationPhotoIds,
     handlers: {
       handleModeChange,
       handleActionChange,

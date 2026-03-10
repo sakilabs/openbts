@@ -50,6 +50,7 @@ import {
   proposedStations,
   proposedUMTSCells,
   submissionPhotos,
+  submissionLocationPhotoSelections,
 } from "./submissions.ts";
 
 export const relations = defineRelations(
@@ -96,6 +97,7 @@ export const relations = defineRelations(
     proposedStations,
     proposedUMTSCells,
     submissionPhotos,
+    submissionLocationPhotoSelections,
     ukeImportMetadata,
     deletedEntries,
     statsSnapshots,
@@ -394,11 +396,24 @@ export const relations = defineRelations(
       }),
       proposedCells: helpers.many.proposedCells(),
       photos: helpers.many.submissionPhotos(),
+      locationPhotoSelections: helpers.many.submissionLocationPhotoSelections(),
     },
     submissionPhotos: {
       submission: helpers.one.submissions({
         from: helpers.submissionPhotos.submission_id,
         to: helpers.submissions.id,
+        optional: false,
+      }),
+    },
+    submissionLocationPhotoSelections: {
+      submission: helpers.one.submissions({
+        from: helpers.submissionLocationPhotoSelections.submission_id,
+        to: helpers.submissions.id,
+        optional: false,
+      }),
+      locationPhoto: helpers.one.locationPhotos({
+        from: helpers.submissionLocationPhotoSelections.location_photo_id,
+        to: helpers.locationPhotos.id,
         optional: false,
       }),
     },

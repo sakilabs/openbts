@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "7b1e40a4-9eb7-4a13-8435-8369931fe63c",
+  "id": "688af8fe-2738-42f1-87f4-68320c1fa142",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -416,6 +416,12 @@
     {
       "isRlsEnabled": false,
       "name": "proposed_umts_cells",
+      "entityType": "tables",
+      "schema": "submissions"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "submission_location_photo_selections",
       "entityType": "tables",
       "schema": "submissions"
     },
@@ -5574,6 +5580,32 @@
       "table": "proposed_umts_cells"
     },
     {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "submission_id",
+      "entityType": "columns",
+      "schema": "submissions",
+      "table": "submission_location_photo_selections"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "location_photo_id",
+      "entityType": "columns",
+      "schema": "submissions",
+      "table": "submission_location_photo_selections"
+    },
+    {
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -8926,6 +8958,32 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
+      "name": "submission_location_photo_selections_SehhFYcBuZac_fkey",
+      "entityType": "fks",
+      "schema": "submissions",
+      "table": "submission_location_photo_selections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["location_photo_id"],
+      "schemaTo": "public",
+      "tableTo": "location_photos",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "submission_location_photo_selections_ZpF2y9rVXtAs_fkey",
+      "entityType": "fks",
+      "schema": "submissions",
+      "table": "submission_location_photo_selections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["submission_id"],
+      "schemaTo": "submissions",
+      "tableTo": "submissions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
       "name": "submission_photos_submission_id_submissions_id_fkey",
       "entityType": "fks",
       "schema": "submissions",
@@ -8969,6 +9027,14 @@
       "entityType": "fks",
       "schema": "submissions",
       "table": "submissions"
+    },
+    {
+      "columns": ["submission_id", "location_photo_id"],
+      "nameExplicit": false,
+      "name": "submission_location_photo_selections_pkey",
+      "entityType": "pks",
+      "schema": "submissions",
+      "table": "submission_location_photo_selections"
     },
     {
       "columns": ["id"],

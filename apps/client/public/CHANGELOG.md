@@ -9,6 +9,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed missing `takenAts`/`onTakenAtsChange` props on the photo upload section of the admin station create page
 - Fixed searching via longcid/ecid/nci without explicit filter
 
+### 🚀 Enhancements
+
+- Added ability for submitters to select photos to the station from the already uploaded ones on `/submission`
+
 # 2026-03-09
 
 ### 🩹 Fixes

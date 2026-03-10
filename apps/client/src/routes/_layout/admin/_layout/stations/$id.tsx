@@ -571,7 +571,14 @@ function StationDetailForm({
 
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
             {isCreateMode ? (
-              <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} takenAts={photoTakenAts} onTakenAtsChange={setPhotoTakenAts} />
+              <PhotoUploadSection
+                photos={photos}
+                onPhotosChange={setPhotos}
+                notes={photoNotes}
+                onNotesChange={setPhotoNotes}
+                takenAts={photoTakenAts}
+                onTakenAtsChange={setPhotoTakenAts}
+              />
             ) : (
               station?.location?.id && <StationPhotoSelector stationId={station.id} locationId={station.location.id} />
             )}

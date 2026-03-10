@@ -11,6 +11,7 @@ import { SubmitSection } from "./submitSection";
 import { CellsSection } from "./cellsSection";
 import { ExtraIdentificatorsSection } from "./extraIdentificatorsSection";
 import { PhotoUploadSection } from "./photoUploadSection";
+import { SubmissionLocationPhotoSelector } from "./submissionLocationPhotoSelector";
 import { useSubmissionForm } from "./useSubmissionForm";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -36,6 +37,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
     setPhotoNotes,
     photoTakenAts,
     setPhotoTakenAts,
+    locationPhotoIds,
+    setLocationPhotoIds,
     handlers: {
       handleModeChange,
       handleActionChange,
@@ -156,10 +159,31 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
           >
             {({ mode, selectedStation, location, action }) => {
               if (action === "delete") return null;
-              const showForExisting = mode === "existing" && !!selectedStation;
-              const showForNew = mode === "new" && location.latitude !== null && location.longitude !== null;
-              if (!showForExisting && !showForNew) return null;
 
+              if (mode === "existing" && selectedStation) {
+                return (
+                  <>
+                    <SubmissionLocationPhotoSelector
+                      stationId={selectedStation.id}
+                      locationId={selectedStation.location_id}
+                      selectedIds={locationPhotoIds}
+                      onSelectionChange={setLocationPhotoIds}
+                    />
+                    <PhotoUploadSection
+                      photos={photos}
+                      onPhotosChange={setPhotos}
+                      notes={photoNotes}
+                      onNotesChange={setPhotoNotes}
+                      takenAts={photoTakenAts}
+                      onTakenAtsChange={setPhotoTakenAts}
+                      editSubmissionId={editSubmissionId}
+                    />
+                  </>
+                );
+              }
+
+              const showForNew = mode === "new" && location.latitude !== null && location.longitude !== null;
+              if (!showForNew) return null;
               return (
                 <PhotoUploadSection
                   photos={photos}

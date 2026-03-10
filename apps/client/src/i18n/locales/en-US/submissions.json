@@ -154,7 +154,10 @@
     "saveSelection": "Save selection",
     "selectionSaved": "Photo selection saved",
     "selectionFailed": "Failed to save photo selection",
-    "emptyLocation": "No photos at this location yet."
+    "emptyLocation": "No photos at this location yet.",
+    "uploadBelow": "Upload new photos below.",
+    "alreadyAssigned": "Assigned",
+    "selectedLocationPhotos": "Photos selected by submitter"
   },
   "mySubmissions": {
     "editTooltip": "Edit submission",

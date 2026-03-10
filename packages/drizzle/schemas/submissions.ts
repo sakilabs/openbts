@@ -1,5 +1,19 @@
-import { boolean, check, doublePrecision, index, integer, pgEnum, pgSchema, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
-import { users } from "./auth.ts";
+import {
+  boolean,
+  check,
+  doublePrecision,
+  index,
+  integer,
+  pgEnum,
+  pgSchema,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+import { users, locationPhotos } from "./auth.ts";
 import { bands, cells, NRType, operators, ratEnum, regions, stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
@@ -164,4 +178,17 @@ export const submissionPhotos = SubmissionsSchema.table(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("submission_photos_submission_id_idx").on(t.submission_id), unique("submission_photos_unique").on(t.submission_id, t.attachment_id)],
+);
+
+export const submissionLocationPhotoSelections = SubmissionsSchema.table(
+  "submission_location_photo_selections",
+  {
+    submission_id: uuid("submission_id")
+      .notNull()
+      .references(() => submissions.id, { onDelete: "cascade" }),
+    location_photo_id: integer("location_photo_id")
+      .notNull()
+      .references(() => locationPhotos.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.submission_id, t.location_photo_id] })],
 );

@@ -7,7 +7,10 @@ import {
   proposedNRCells,
   proposedStations,
   proposedLocations,
+  submissionLocationPhotoSelections,
+  locationPhotos,
 } from "@openbts/drizzle";
+import { inArray, eq, and, count } from "drizzle-orm";
 import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -49,6 +52,7 @@ const singleSubmissionSchema = z
     location: proposedLocationInsert.optional(),
     cells: z.array(proposedCellInsert).optional(),
     pending_photos: z.number().int().min(1).optional(),
+    location_photo_ids: z.array(z.number().int()).max(50).optional(),
   })
   .strict();
 
@@ -185,6 +189,17 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
   if (input.cells && input.cells.length > 0) validateCellDuplicates(input.cells);
 
+  if (type === "update" && input.location_photo_ids && input.location_photo_ids.length > 0) {
+    if (!targetStation?.location?.id)
+      throw new ErrorResponse("BAD_REQUEST", { message: "Cannot validate location_photo_ids: station has no location" });
+    const [countRow] = await db
+      .select({ value: count() })
+      .from(locationPhotos)
+      .where(and(inArray(locationPhotos.id, input.location_photo_ids), eq(locationPhotos.location_id, targetStation.location.id)));
+    if ((countRow?.value ?? 0) !== input.location_photo_ids.length)
+      throw new ErrorResponse("BAD_REQUEST", { message: "One or more location_photo_ids are invalid or do not belong to this station's location" });
+  }
+
   const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
   if (operatorId && input.cells && input.cells.length > 0) {
     for (const cell of input.cells) {
@@ -228,7 +243,8 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
     const hasNote = !!input.submitter_note?.trim();
     const hasPendingPhotos = !!input.pending_photos;
-    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasNote && !hasPendingPhotos)
+    const hasLocationPhotoSelections = (input.location_photo_ids?.length ?? 0) > 0;
+    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasNote && !hasPendingPhotos && !hasLocationPhotoSelections)
       throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
   }
 }
@@ -258,6 +274,12 @@ async function processSubmission(
   if (stationData) await tx.insert(proposedStations).values({ ...stationData, submission_id: submission.id, is_confirmed: false });
 
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
+
+  if (input.location_photo_ids && input.location_photo_ids.length > 0) {
+    await tx
+      .insert(submissionLocationPhotoSelections)
+      .values(input.location_photo_ids.map((photoId) => ({ submission_id: submission.id, location_photo_id: photoId })));
+  }
 
   if (proposedCellsInput && proposedCellsInput.length > 0) {
     /* eslint-disable no-await-in-loop */

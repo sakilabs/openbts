@@ -3257,6 +3257,15 @@ components:
         station: { $ref: "#/components/schemas/ProposedStationInsert", nullable: true }
         location: { $ref: "#/components/schemas/ProposedLocationInsert", nullable: true }
         cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellInsert" }, nullable: true }
+        pending_photos: { type: integer, nullable: true, description: "Number of photos expected to be uploaded after submission creation" }
+        location_photo_ids:
+          {
+            type: array,
+            items: { type: integer },
+            maxItems: 50,
+            nullable: true,
+            description: "IDs of location photos the submitter wants assigned to the station",
+          }
     ProposedStationInsert:
       type: object
       properties:

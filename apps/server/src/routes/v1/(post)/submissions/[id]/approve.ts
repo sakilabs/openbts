@@ -22,6 +22,7 @@ import {
   extraIdentificators,
   locationPhotos,
   stationPhotoSelections,
+  submissionLocationPhotoSelections,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -516,6 +517,25 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 )
                 .onConflictDoNothing();
             }
+          }
+        }
+      }
+
+      if (stationId && submission.type !== "delete") {
+        const sid = stationId;
+        const locationPhotoSels = await tx.query.submissionLocationPhotoSelections.findMany({ where: { submission_id: id } });
+        if (locationPhotoSels.length > 0) {
+          const requestedIds = locationPhotoSels.map((s) => s.location_photo_id);
+          const existingRows = await tx
+            .select({ location_photo_id: stationPhotoSelections.location_photo_id })
+            .from(stationPhotoSelections)
+            .where(and(eq(stationPhotoSelections.station_id, sid), inArray(stationPhotoSelections.location_photo_id, requestedIds)));
+          const existingIds = new Set(existingRows.map((r) => r.location_photo_id));
+          const toInsert = locationPhotoSels.filter((s) => !existingIds.has(s.location_photo_id));
+          if (toInsert.length > 0) {
+            await tx
+              .insert(stationPhotoSelections)
+              .values(toInsert.map((s) => ({ station_id: sid, location_photo_id: s.location_photo_id, is_main: false })));
           }
         }
       }

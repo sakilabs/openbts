@@ -84,6 +84,7 @@ export type SubmissionFormData = {
   location?: ProposedLocationForm;
   cells: CellPayload[];
   pending_photos?: number;
+  location_photo_ids?: number[];
 };
 
 export type SubmissionMode = "existing" | "new";

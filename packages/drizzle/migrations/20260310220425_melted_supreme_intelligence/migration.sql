@@ -558,6 +558,12 @@ CREATE TABLE "submissions"."proposed_umts_cells" (
 	"cid" integer NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "submissions"."submission_location_photo_selections" (
+	"submission_id" uuid,
+	"location_photo_id" integer,
+	CONSTRAINT "submission_location_photo_selections_pkey" PRIMARY KEY("submission_id","location_photo_id")
+);
+--> statement-breakpoint
 CREATE TABLE "submissions"."submission_photos" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "submissions"."submission_photos_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"submission_id" uuid NOT NULL,
@@ -744,6 +750,8 @@ ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_
 ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_target_station_id_stations_id_fkey" FOREIGN KEY ("target_station_id") REFERENCES "stations"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_stations" ADD CONSTRAINT "proposed_stations_operator_id_operators_id_fkey" FOREIGN KEY ("operator_id") REFERENCES "operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."proposed_umts_cells" ADD CONSTRAINT "proposed_umts_cells_proposed_cell_id_proposed_cells_id_fkey" FOREIGN KEY ("proposed_cell_id") REFERENCES "submissions"."proposed_cells"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "submissions"."submission_location_photo_selections" ADD CONSTRAINT "submission_location_photo_selections_SehhFYcBuZac_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "submissions"."submission_location_photo_selections" ADD CONSTRAINT "submission_location_photo_selections_ZpF2y9rVXtAs_fkey" FOREIGN KEY ("location_photo_id") REFERENCES "location_photos"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."submission_photos" ADD CONSTRAINT "submission_photos_submission_id_submissions_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"."submissions"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_station_id_stations_id_fkey" FOREIGN KEY ("station_id") REFERENCES "stations"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint
 ALTER TABLE "submissions"."submissions" ADD CONSTRAINT "submissions_submitter_id_users_id_fkey" FOREIGN KEY ("submitter_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;--> statement-breakpoint

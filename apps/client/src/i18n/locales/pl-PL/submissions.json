@@ -154,7 +154,10 @@
     "saveSelection": "Zapisz wybór",
     "selectionSaved": "Wybór zdjęć zapisany",
     "selectionFailed": "Nie udało się zapisać wyboru zdjęć",
-    "emptyLocation": "Brak zdjęć w tej lokalizacji."
+    "emptyLocation": "Brak zdjęć w tej lokalizacji.",
+    "uploadBelow": "Prześlij nowe zdjęcia poniżej.",
+    "alreadyAssigned": "Przypisane",
+    "selectedLocationPhotos": "Wybrane zdjęcia przez zgłaszającego"
   },
   "mySubmissions": {
     "editTooltip": "Edytuj zgłoszenie",

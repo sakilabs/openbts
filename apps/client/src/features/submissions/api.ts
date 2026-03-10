@@ -175,6 +175,7 @@ function buildSubmissionPayload(data: SubmissionFormData): Record<string, unknow
     }));
   }
   if (data.pending_photos) payload.pending_photos = data.pending_photos;
+  if (data.location_photo_ids?.length) payload.location_photo_ids = data.location_photo_ids;
 
   return payload;
 }
