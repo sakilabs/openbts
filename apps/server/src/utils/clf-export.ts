@@ -42,7 +42,7 @@ const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: nu
   26002: {
     800: { fdd: 6375 },
     900: { fdd: 3686 },
-    1800: { fdd: 1599 },
+    1800: { fdd: 1575 },
     2100: { fdd: 225 },
     2600: { fdd: 3175, tdd: NTM_UNKNOWN },
   },
@@ -50,7 +50,7 @@ const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: nu
     700: { fdd: 9310 },
     800: { fdd: 6200 },
     900: { fdd: 3764 },
-    1800: { fdd: 1749 },
+    1800: { fdd: 1725 },
     2100: { fdd: 75 },
     2600: { fdd: 3025, tdd: NTM_UNKNOWN },
   },

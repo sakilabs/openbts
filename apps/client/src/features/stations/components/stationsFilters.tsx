@@ -86,7 +86,7 @@ export function StationsFilters({
     applyAutocomplete,
     clearSearch,
     removeFilter,
-  } = useSearchState({ filterKeywords: stationsFilterKeywords, parseFilters });
+  } = useSearchState({ filterKeywords: stationsFilterKeywords, parseFilters, initialValue: parentSearchQuery });
 
   const searchDebounceRef = useRef<number | null>(null);
 

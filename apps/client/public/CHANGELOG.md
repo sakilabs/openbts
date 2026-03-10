@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-10
+
+### 🩹 Fixes
+
+- Fixed `/stations` page discarding the `q` query parameter on load — navigating to `/stations?q=...` now correctly pre-fills and preserves the search query
+- Fixed missing `takenAts`/`onTakenAtsChange` props on the photo upload section of the admin station create page
+
 # 2026-03-09
 
 ### 🩹 Fixes

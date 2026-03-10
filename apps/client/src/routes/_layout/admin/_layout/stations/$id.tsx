@@ -246,6 +246,7 @@ function StationDetailForm({
 
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
+  const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
 
   const saveMutation = useSaveStationMutation();
 
@@ -570,7 +571,7 @@ function StationDetailForm({
 
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
             {isCreateMode ? (
-              <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} />
+              <PhotoUploadSection photos={photos} onPhotosChange={setPhotos} notes={photoNotes} onNotesChange={setPhotoNotes} takenAts={photoTakenAts} onTakenAtsChange={setPhotoTakenAts} />
             ) : (
               station?.location?.id && <StationPhotoSelector stationId={station.id} locationId={station.location.id} />
             )}

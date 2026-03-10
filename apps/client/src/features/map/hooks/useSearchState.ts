@@ -10,6 +10,7 @@ type UseSearchStateArgs = {
     filters: ParsedFilter[];
     remainingText: string;
   };
+  initialValue?: string;
 };
 
 function computeOverlay(input: string, hasMatches: boolean): OverlayType {
@@ -46,9 +47,15 @@ function getUrlHashQueryParam(key: string): string | null {
   return params.get(key);
 }
 
-export function useSearchState({ filterKeywords, parseFilters }: UseSearchStateArgs) {
-  const [inputValue, setInputValue] = useState("");
-  const [parsedFilters, setParsedFilters] = useState<ParsedFilter[]>([]);
+export function useSearchState({ filterKeywords, parseFilters, initialValue }: UseSearchStateArgs) {
+  const [inputValue, setInputValue] = useState(() => {
+    if (!initialValue) return "";
+    return parseFilters(initialValue).remainingText;
+  });
+  const [parsedFilters, setParsedFilters] = useState<ParsedFilter[]>(() => {
+    if (!initialValue) return [];
+    return parseFilters(initialValue).filters;
+  });
   const [isFocused, setIsFocused] = useState(false);
   const [activeOverlay, setActiveOverlay] = useState<OverlayType>(null);
 
