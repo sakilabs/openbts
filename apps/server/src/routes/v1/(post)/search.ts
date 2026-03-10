@@ -141,10 +141,10 @@ const queryRatTableStationIds = async (grouped: GroupedFilters): Promise<number[
 };
 
 const buildNumericSearchCondition = (columns: readonly unknown[], numericQuery: number, likeQuery: string) =>
-  or(...columns.flatMap((col) => [sql`${col} = ${numericQuery}`, sql`CAST(${col} AS TEXT) LIKE ${likeQuery}`]));
+  or(...columns.flatMap((col) => [sql`CAST(${col} AS TEXT) = ${numericQuery.toString()}`, sql`CAST(${col} AS TEXT) LIKE ${likeQuery}`]));
 
 const searchNumericInRatTables = async (numericQuery: number, likeQuery: string): Promise<number[]> => {
-  const [gsmMatches, umtsMatches, lteMatches, nrMatches] = await Promise.all([
+  const results = await Promise.allSettled([
     db
       .select({ stationId: cells.station_id })
       .from(gsmCells)
@@ -167,7 +167,7 @@ const searchNumericInRatTables = async (numericQuery: number, likeQuery: string)
       .where(buildNumericSearchCondition(numSearchCols.nr, numericQuery, likeQuery)),
   ]);
 
-  return [...gsmMatches, ...umtsMatches, ...lteMatches, ...nrMatches].map((r) => r.stationId);
+  return results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).map((r) => r.stationId);
 };
 
 const fetchStations = async (where?: SQL, limit?: number) => {
@@ -301,7 +301,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     }
   }
 
-  if (stationMap.size < limit) {
+  if (stationMap.size < limit && !/^\d+$/.test(searchQuery)) {
     const cityAndAddressMatches = await db
       .selectDistinct({ id: stations.id })
       .from(stations)

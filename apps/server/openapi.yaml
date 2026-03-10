@@ -3141,7 +3141,6 @@ components:
       properties:
         nrtac: { type: integer, nullable: true }
         gnbid: { type: integer, nullable: true }
-        gnbid_length: { type: integer, nullable: true }
         clid: { type: integer, nullable: true }
         pci: { type: integer, nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }

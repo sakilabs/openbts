@@ -78,7 +78,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "lte_clid:", description: "LTE Cell Local ID", availableOn: ["map", "stations"] },
   { key: "tac:", description: "LTE Tracking Area Code", availableOn: ["map", "stations"] },
   { key: "lte_pci:", description: "LTE Physical Cell ID", availableOn: ["map", "stations"] },
-  { key: "supports_iot:", description: "Supports NB-IoT (true, false)", availableOn: ["map", "stations"] },
+  { key: "supports_iot:", description: "Supports IoT (true, false)", availableOn: ["map", "stations"] },
 
   // NR (5G) cell filters
   { key: "gnbid:", description: "5G gNodeB ID", availableOn: ["map", "stations"] },
@@ -86,12 +86,12 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "nr_clid:", description: "5G Cell Local ID", availableOn: ["map", "stations"] },
   { key: "nrtac:", description: "5G Tracking Area Code", availableOn: ["map", "stations"] },
   { key: "nr_pci:", description: "5G Physical Cell ID", availableOn: ["map", "stations"] },
-  { key: "supports_nr_redcap:", description: "Supports NR RedCap (true, false)", availableOn: ["map", "stations"] },
+  { key: "supports_nr_redcap:", description: "Supports RedCap (true, false)", availableOn: ["map", "stations"] },
 
   // Extra Identificators filters
-  { key: "networks_id:", description: "Search by NetWorks ID", availableOn: ["map", "stations"] },
-  { key: "networks_name:", description: "Search by NetWorks name", availableOn: ["map", "stations"] },
-  { key: "mno_name:", description: "Search by MNO name", availableOn: ["map", "stations"] },
+  { key: "networks_id:", description: "NetWorks ID", availableOn: ["map", "stations"] },
+  { key: "networks_name:", description: "NetWorks name", availableOn: ["map", "stations"] },
+  { key: "mno_name:", description: "MNO name", availableOn: ["map", "stations"] },
 ];
 
 export const FILTER_REGEX = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|([^\s]+))(?=\s|$)/gi;

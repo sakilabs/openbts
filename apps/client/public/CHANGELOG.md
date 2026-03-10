@@ -7,6 +7,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Fixed `/stations` page discarding the `q` query parameter on load — navigating to `/stations?q=...` now correctly pre-fills and preserves the search query
 - Fixed missing `takenAts`/`onTakenAtsChange` props on the photo upload section of the admin station create page
+- Fixed searching via longcid/ecid/nci without explicit filter
 
 # 2026-03-09
 
