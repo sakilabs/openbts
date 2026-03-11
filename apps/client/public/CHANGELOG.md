@@ -9,6 +9,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed filters sheet on `/stations` auto-focusing the search input on open, which caused the autocomplete list to appear immediately
 - Fixed stale `photos.length` closure in lightbox prev/next callbacks across multiple components
 
+### 🚀 Enhancements
+
+- UKE importer now uses the date from the imported file name as `createdAt` and `updatedAt` for permits and radiolines instead of the current timestamp
+
 # 2026-03-10
 
 ### 🩹 Fixes

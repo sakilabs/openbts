@@ -203,6 +203,7 @@ async function processOperatorFile(
   operatorKey: string,
   operatorId: number,
   regionIds: Map<string, number>,
+  fileDate: Date,
 ): Promise<{ rowCount: number; insertedCount: number }> {
   logger.log(`Reading file for ${operatorKey}`);
 
@@ -316,14 +317,14 @@ async function processOperatorFile(
     });
 
     if (chunkRows.length >= CHUNK_SIZE) {
-      const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys);
+      const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys, fileDate);
       insertedCount += inserted;
       chunkRows = [];
     }
   }
 
   if (chunkRows.length > 0) {
-    const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys);
+    const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys, fileDate);
     insertedCount += inserted;
   }
 
@@ -331,7 +332,13 @@ async function processOperatorFile(
   return { rowCount: rowCount - 1, insertedCount };
 }
 
-async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Map<string, number>, fileBandKeys: Set<string>): Promise<number> {
+async function processChunk(
+  rows: ParsedRow[],
+  operatorId: number,
+  regionIds: Map<string, number>,
+  fileBandKeys: Set<string>,
+  fileDate: Date,
+): Promise<number> {
   const bandKeysArray: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: "commercial" | "railway" }> = [];
   for (const key of fileBandKeys) {
     const [rat, valueStr, variant] = key.split(":");
@@ -375,6 +382,8 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
           expiry_date: new Date("2099-12-31T23:59:59Z"),
           band_id: bandId,
           source: "device_registry" as const,
+          createdAt: fileDate,
+          updatedAt: fileDate,
         },
         sector: {
           azimuth: r.azimuth,
@@ -399,7 +408,6 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
   const uniquePermits = Array.from(deduplicatedPermitsMap.entries());
 
   let insertedCount = 0;
-  const date = new Date();
   for (const group of chunk(uniquePermits, BATCH_SIZE)) {
     if (group.length) {
       const permitRows = group.map(([, permit]) => permit);
@@ -416,7 +424,7 @@ async function processChunk(rows: ParsedRow[], operatorId: number, regionIds: Ma
             ukePermits.decision_type,
             ukePermits.expiry_date,
           ],
-          set: { updatedAt: date, source: "device_registry" },
+          set: { updatedAt: fileDate, source: "device_registry" },
         })
         .returning({
           id: ukePermits.id,
@@ -500,7 +508,7 @@ export async function importPermitDevices(): Promise<boolean> {
   const regionIds = await upsertRegions(regionItems);
 
   logger.log("Downloading all files...");
-  const downloadedFiles: Array<{ filePath: string; operatorKey: string; operatorId: number }> = [];
+  const downloadedFiles: Array<{ filePath: string; operatorKey: string; operatorId: number; fileDate: Date }> = [];
 
   for (const l of newLinks) {
     const operatorName = PERMIT_FILE_OPERATOR_MAP[l.operatorKey];
@@ -517,11 +525,16 @@ export async function importPermitDevices(): Promise<boolean> {
 
     const fileName = `${(l.text || path.basename(new url.URL(l.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
     const filePath = path.join(DOWNLOAD_DIR, fileName);
+    const fileDateStr = l.href
+      .split("/")
+      .pop()
+      ?.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
+    const fileDate = fileDateStr ? new Date(fileDateStr) : importStartTime;
 
     logger.log(`Downloading: ${fileName}`);
     await downloadFile(l.href, filePath);
 
-    downloadedFiles.push({ filePath, operatorKey: l.operatorKey, operatorId });
+    downloadedFiles.push({ filePath, operatorKey: l.operatorKey, operatorId, fileDate });
   }
 
   logger.log(`Downloaded ${downloadedFiles.length} files`);
@@ -529,9 +542,9 @@ export async function importPermitDevices(): Promise<boolean> {
   let totalRows = 0;
   let totalInserted = 0;
 
-  for (const { filePath, operatorKey, operatorId } of downloadedFiles) {
+  for (const { filePath, operatorKey, operatorId, fileDate } of downloadedFiles) {
     try {
-      const result = await processOperatorFile(filePath, operatorKey, operatorId, regionIds);
+      const result = await processOperatorFile(filePath, operatorKey, operatorId, regionIds, fileDate);
       totalRows += result.rowCount;
       totalInserted += result.insertedCount;
     } finally {

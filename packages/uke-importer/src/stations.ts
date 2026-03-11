@@ -57,6 +57,12 @@ function parseBandFromLabel(
   return { rat, value: bandValue, variant: "commercial" };
 }
 
+function extractDateFromFileName(href: string): Date {
+  const fileName = href.split("/").pop() ?? "";
+  const dateStr = fileName.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
+  return dateStr ? new Date(dateStr) : new Date();
+}
+
 async function insertUkePermits(
   raws: RawUkeData[],
   bandMap: Map<string, number>,
@@ -66,6 +72,7 @@ async function insertUkePermits(
     label: string,
   ) => { rat: (typeof ratEnum.enumValues)[number]; value: number; variant: (typeof BandVariant.enumValues)[number] } | null,
   fileLabel: string,
+  fileDate: Date,
 ): Promise<void> {
   const bandKey = labelToBandKey(fileLabel);
   if (!bandKey) {
@@ -107,6 +114,8 @@ async function insertUkePermits(
         expiry_date: permitDate,
         band_id: bandId,
         source: "permits" as const,
+        createdAt: fileDate,
+        updatedAt: fileDate,
       };
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
@@ -125,7 +134,7 @@ async function insertUkePermits(
             ukePermits.decision_type,
             ukePermits.expiry_date,
           ],
-          set: { updatedAt: new Date(), source: "permits" },
+          set: { updatedAt: fileDate, source: "permits" },
         });
     }
   }
@@ -169,7 +178,7 @@ export async function importStations(): Promise<boolean> {
 
   const operatorNamesSet = new Set<string>();
   const locationItems: Array<{ regionName: string; city: string | null; address: string | null; lon: number; lat: number }> = [];
-  const fileRows: Array<{ label: string; rows: RawUkeData[] }> = [];
+  const fileRows: Array<{ label: string; rows: RawUkeData[]; fileDate: Date }> = [];
 
   let totalCount = 0;
   for (const l of newLinks) {
@@ -180,7 +189,7 @@ export async function importStations(): Promise<boolean> {
     const rows = readSheetAsJson<RawUkeData>(filePath);
     logger.log(`Read ${rows.length} rows`);
     totalCount += rows.length;
-    fileRows.push({ label: l.text, rows });
+    fileRows.push({ label: l.text, rows, fileDate: extractDateFromFileName(l.href) });
     for (const r of rows) {
       const fullOp = String(r["Nazwa Operatora"] || "").trim();
       if (fullOp) operatorNamesSet.add(fullOp);
@@ -211,7 +220,7 @@ export async function importStations(): Promise<boolean> {
   logger.log("Inserting permits...");
   for (const fr of fileRows) {
     logger.log(`Processing: ${fr.label} (${fr.rows.length} rows)`);
-    await insertUkePermits(fr.rows, bandMap, operatorIdByName, locationIdByLonLat, parseBandFromLabel, fr.label);
+    await insertUkePermits(fr.rows, bandMap, operatorIdByName, locationIdByLonLat, parseBandFromLabel, fr.label, fr.fileDate);
   }
 
   const importMetadataId = await recordImportMetadata("stations", links, "success");

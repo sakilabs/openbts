@@ -67,6 +67,11 @@ export async function importRadiolines(): Promise<boolean> {
   console.log(`[radiolines] Found ${manufNames.size} manufacturers, ${antTypeTuples.size} antenna types, ${txTypeTuples.size} transmitter types`);
 
   const importStartTime = new Date();
+  const fileNameDateStr = first.href
+    .split("/")
+    .pop()
+    ?.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
+  const fileDate = fileNameDateStr ? new Date(fileNameDateStr) : importStartTime;
 
   console.log("[radiolines] Upserting manufacturers...");
   const manufArr = Array.from(manufNames).filter((s) => s.length > 0);
@@ -205,6 +210,8 @@ export async function importRadiolines(): Promise<boolean> {
       decision_type: (r.Rodz_dec === "zmP" ? "zmP" : "P") as "zmP" | "P",
       issue_date: parseExcelDate(r.Data_wydania),
       expiry_date: parseExcelDate(r["Data_ważn_pozw/dec"]),
+      createdAt: fileDate,
+      updatedAt: fileDate,
     };
   });
 
@@ -227,7 +234,7 @@ export async function importRadiolines(): Promise<boolean> {
             ukeRadiolines.ch_num,
           ],
           set: {
-            updatedAt: new Date(),
+            updatedAt: fileDate,
             decision_type: sql.raw("excluded.decision_type"),
             issue_date: sql.raw("excluded.issue_date"),
             expiry_date: sql.raw("excluded.expiry_date"),
