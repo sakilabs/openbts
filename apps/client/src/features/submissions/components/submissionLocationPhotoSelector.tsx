@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -29,14 +29,13 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
     staleTime: 1000 * 60 * 5,
   });
 
-  // Pre-populate selection with currently assigned photos
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (!loadingStation && stationPhotos.length > 0 && selectedIds.length === 0) {
+    if (!loadingStation && stationPhotos.length > 0 && !initializedRef.current) {
+      initializedRef.current = true;
       onSelectionChange(stationPhotos.map((p) => p.id));
     }
-    // Only run when station photos load
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingStation]);
+  }, [loadingStation, stationPhotos, onSelectionChange]);
 
   const assignedIds = new Set(stationPhotos.map((p) => p.id));
   const selectedSet = new Set(selectedIds);

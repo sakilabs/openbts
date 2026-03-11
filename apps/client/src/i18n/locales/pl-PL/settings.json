@@ -104,14 +104,11 @@
         "1y": "1 rok",
         "never": "Nigdy"
       },
-      "cancel": "Anuluj",
       "create": "Utwórz klucz",
       "creating": "Tworzenie..."
     },
     "success": {
       "title": "Klucz został utworzony",
-      "copy": "Kopiuj",
-      "copied": "Skopiowano!",
       "warning": "Przechowuj ten klucz w bezpiecznym miejscu. Nie będziesz mógł go ponownie wyświetlić po zamknięciu tego okna.",
       "done": "Gotowe"
     },
@@ -130,7 +127,6 @@
   },
   "twoFactor": {
     "steps": {
-      "confirm": "Potwierdź",
       "scan": "Skanuj",
       "verify": "Weryfikuj",
       "done": "Gotowe"
@@ -157,8 +153,6 @@
       "hint": "Otwórz aplikację uwierzytelniającą i zeskanuj",
       "manualSetup": "Ręczna konfiguracja",
       "secretKey": "Klucz tajny",
-      "copy": "Kopiuj",
-      "copied": "Skopiowano!",
       "issuer": "Wydawca",
       "period": "Okres",
       "digits": "Ilość cyfr",

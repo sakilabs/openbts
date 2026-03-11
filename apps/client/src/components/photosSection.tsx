@@ -130,9 +130,12 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
     onError: () => toast.error(t("photos.uploadFailed")),
   });
 
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
-  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
+  const photosLengthRef = useRef(photos.length);
+  photosLengthRef.current = photos.length;
+
+  const closeLightbox = () => setLightboxIndex(null);
+  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photosLengthRef.current) % photosLengthRef.current : null)), []);
+  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photosLengthRef.current : null)), []);
 
   function openEdit(photo: Photo) {
     setEditingPhotoId(photo.id);

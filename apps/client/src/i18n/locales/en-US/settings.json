@@ -104,14 +104,11 @@
         "1y": "1 year",
         "never": "Never"
       },
-      "cancel": "Cancel",
       "create": "Create Key",
       "creating": "Creating..."
     },
     "success": {
       "title": "Key created successfully",
-      "copy": "Copy",
-      "copied": "Copied!",
       "warning": "Store this key securely. You won't be able to view it again after closing this dialog.",
       "done": "Done"
     },
@@ -130,7 +127,6 @@
   },
   "twoFactor": {
     "steps": {
-      "confirm": "Confirm",
       "scan": "Scan",
       "verify": "Verify",
       "done": "Done"
@@ -157,8 +153,6 @@
       "hint": "Open your authenticator app and scan",
       "manualSetup": "Manual setup",
       "secretKey": "Secret Key",
-      "copy": "Copy",
-      "copied": "Copied!",
       "issuer": "Issuer",
       "period": "Period",
       "digits": "Digits",

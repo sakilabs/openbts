@@ -131,7 +131,7 @@ function CreateKeyDialog({
   onOpenChange: (open: boolean) => void;
   onCreated: (key: string) => void;
 }) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const [name, setName] = useState("");
   const [expiresIn, setExpiresIn] = useState("7d");
 
@@ -206,7 +206,7 @@ function CreateKeyDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t("apiKeys.dialog.cancel")}
+            {t("common:actions.cancel")}
           </Button>
           <Button onClick={() => createMutation.mutate()} disabled={!name.trim() || createMutation.isPending}>
             {createMutation.isPending ? (
@@ -225,7 +225,7 @@ function CreateKeyDialog({
 }
 
 export function ApiKeysCard({ userId }: { userId: string }) {
-  const { t, i18n } = useTranslation("settings");
+  const { t, i18n } = useTranslation(["settings", "common"]);
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
@@ -365,7 +365,7 @@ export function ApiKeysCard({ userId }: { userId: string }) {
             <AlertDialogDescription>{t("apiKeys.revokeConfirmDescription", { name: revokeTarget?.name ?? "Unnamed" })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("apiKeys.dialog.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={revokeMutation.isPending}

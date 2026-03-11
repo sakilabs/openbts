@@ -109,6 +109,7 @@ export function SearchInput({
 
         {(query || parsedFilters.length > 0) && !isSearching && (
           <button
+            onPointerDown={(e) => e.preventDefault()}
             onClick={onClearSearch}
             className={cn("p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0", !mobileExpanded && !isFocused && "hidden md:block")}
             type="button"

@@ -69,7 +69,7 @@ function extractSecret(totpURI: string): string {
 }
 
 const STEPS: { id: Step; labelKey: string; titleKey: string }[] = [
-  { id: "init", labelKey: "twoFactor.steps.confirm", titleKey: "twoFactor.titles.enableTwoFactor" },
+  { id: "init", labelKey: "common:actions.confirm", titleKey: "twoFactor.titles.enableTwoFactor" },
   { id: "scan", labelKey: "twoFactor.steps.scan", titleKey: "twoFactor.titles.scanQrCode" },
   { id: "verify", labelKey: "twoFactor.steps.verify", titleKey: "twoFactor.titles.verifyYourApp" },
   { id: "success", labelKey: "twoFactor.steps.done", titleKey: "twoFactor.titles.allSet" },
@@ -84,7 +84,7 @@ function getStepMeta(step: Step): (typeof STEPS)[number] {
 }
 
 function StepIndicator({ current }: { current: Step }) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const currentIdx = getStepIndex(current);
 
   return (
@@ -117,7 +117,7 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 function InitStep({ onSuccess }: { onSuccess: (totpURI: string) => void }) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -196,7 +196,7 @@ function ScanStep({
   period: number;
   onNext: () => void;
 }) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const secret = extractSecret(totpURI);
   const normalizedURI = normalizeTotpURI(totpURI);
   const [copied, setCopied] = useState(false);
@@ -244,7 +244,7 @@ function ScanStep({
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
               >
                 <HugeiconsIcon icon={Copy01Icon} className="size-3.5" />
-                {copied ? t("twoFactor.scan.copied") : t("twoFactor.scan.copy")}
+                {copied ? t("common:actions.copied") : t("common:actions.copy")}
               </button>
             </div>
           </div>
@@ -287,7 +287,7 @@ function ScanStep({
 }
 
 function VerifyStep({ onSuccess }: { onSuccess: () => void }) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -354,7 +354,7 @@ function VerifyStep({ onSuccess }: { onSuccess: () => void }) {
 }
 
 function SuccessStep() {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
@@ -393,7 +393,7 @@ function parseTotpMeta(uri: string): { issuer: string; digits: number; period: n
 }
 
 function TwoFactorPage() {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const { data: session, isPending } = authClient.useSession();
   const { totpURI: urlTotpURI } = Route.useSearch();
 

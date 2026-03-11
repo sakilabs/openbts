@@ -1,6 +1,14 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-11
+
+### 🩹 Fixes
+
+- Fixed map view search clear button on mobile being unclickable; tapping it no longer collapses the search instead of clearing it
+- Fixed filters sheet on `/stations` auto-focusing the search input on open, which caused the autocomplete list to appear immediately
+- Fixed stale `photos.length` closure in lightbox prev/next callbacks across multiple components
+
 # 2026-03-10
 
 ### 🩹 Fixes

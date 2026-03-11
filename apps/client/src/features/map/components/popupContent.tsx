@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useState, useCallback } from "react";
+import { lazy, memo, Suspense, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -104,9 +104,12 @@ function PopupPhotosButton({ locationId }: { locationId: number }) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
-  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
+  const photosLengthRef = useRef(photos.length);
+  photosLengthRef.current = photos.length;
+
+  const closeLightbox = () => setLightboxIndex(null);
+  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photosLengthRef.current) % photosLengthRef.current : null)), []);
+  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photosLengthRef.current : null)), []);
 
   if (photos.length === 0) return null;
 

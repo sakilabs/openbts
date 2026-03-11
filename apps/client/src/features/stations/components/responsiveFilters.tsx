@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { StationsFilters } from "@/features/stations/components/stationsFilters";
@@ -35,6 +36,7 @@ export function ResponsiveFilters({
   totalStations,
 }: ResponsiveFiltersProps) {
   const { t } = useTranslation("stations");
+  const sheetFocusRef = useRef<HTMLDivElement>(null);
 
   const filterProps = {
     filters,
@@ -57,7 +59,8 @@ export function ResponsiveFilters({
       </div>
 
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent side="left" className="w-72 p-0" initialFocus={sheetFocusRef}>
+          <div ref={sheetFocusRef} tabIndex={-1} className="sr-only" />
           <SheetHeader className="border-b px-4 py-3">
             <SheetTitle>{t("common:labels.filters")}</SheetTitle>
           </SheetHeader>
