@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ComponentProps, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,8 +62,8 @@ function BandBarChartCard({
             <CartesianGrid vertical={false} />
             <XAxis dataKey="band" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
             <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString(locale)} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartTooltip content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
+            <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} />} />
             {operators.map((op) => (
               <Bar key={op.name} dataKey={op.name} fill={op.color} />
             ))}

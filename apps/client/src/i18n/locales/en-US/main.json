@@ -15,7 +15,8 @@
   },
   "searchResults": {
     "locations": "Geographic Locations",
-    "stations": "Base Stations"
+    "stations": "Base Stations",
+    "found": "found"
   },
   "popup": {
     "loading": "Loading stations...",

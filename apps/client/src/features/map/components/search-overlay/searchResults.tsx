@@ -24,7 +24,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
   const hasResults = osmResults.length > 0 || stationResults.length > 0;
 
   return (
-    <div className="border-t bg-background animate-in fade-in slide-in-from-top-1 duration-150 max-h-[70vh] overflow-y-auto custom-scrollbar rounded-b-2xl shadow-2xl">
+    <div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-[70vh] overflow-y-auto custom-scrollbar">
       <div className="flex flex-col">
         {isLoading && (
           <div className="p-8 flex flex-col items-center justify-center text-muted-foreground gap-3">
@@ -48,8 +48,9 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
             <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
               <HugeiconsIcon icon={MapsIcon} className="size-3.5 text-primary" />
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.locations")}</span>
-              <span className="ml-auto text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50">
-                {t("search.found", { count: osmResults.length })}
+              <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
+                <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{osmResults.length}</span>
+                <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 uppercase tracking-wide">{t("searchResults.found")}</span>
               </span>
             </div>
             <div className="p-1 space-y-0.5">
@@ -86,8 +87,9 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
             <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
               <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 text-primary" />
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.stations")}</span>
-              <span className="ml-auto text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50">
-                {t("search.found", { count: stationResults.length })}
+              <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
+                <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{stationResults.length}</span>
+                <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 uppercase tracking-wide">{t("searchResults.found")}</span>
               </span>
             </div>
             <div className="p-1 space-y-0.5">

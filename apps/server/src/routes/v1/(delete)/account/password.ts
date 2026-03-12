@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { accounts, passkeys } from "@openbts/drizzle";
+import { accounts } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify";
 import type { EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";

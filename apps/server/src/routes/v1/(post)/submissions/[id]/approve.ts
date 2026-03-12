@@ -22,7 +22,6 @@ import {
   extraIdentificators,
   locationPhotos,
   stationPhotoSelections,
-  submissionLocationPhotoSelections,
 } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";

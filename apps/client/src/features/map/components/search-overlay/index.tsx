@@ -172,7 +172,12 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   return (
     <>
-      <div className={cn("absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-105 z-10", showFilters && "z-20")}>
+      <div
+        className={cn(
+          "absolute top-4 left-4 right-4 md:left-auto md:right-4 md:w-105 z-10",
+          (showFilters || showResults || showAutocomplete) && "z-20",
+        )}
+      >
         <SearchInput
           containerRef={containerRef}
           inputRef={inputRef}

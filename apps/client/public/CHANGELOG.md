@@ -1,6 +1,18 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-12
+
+### 🩹 Fixes
+
+- Fixed `POST /search` crashing with a PostgreSQL error when searching by city or address - `SELECT DISTINCT` with a `word_similarity` `ORDER BY` is now correctly handled
+- Fixed search results and autocomplete dropdown appearing behind map controls on the mapview
+
+### 🚀 Enhancements
+
+- Search results and autocomplete dropdown now float as a separate panel (matching the filter panel style) instead of being visually attached to the search input
+- Result section headers now show a split-pill badge with the match count highlighted in the accent color
+
 # 2026-03-11
 
 ### 🩹 Fixes

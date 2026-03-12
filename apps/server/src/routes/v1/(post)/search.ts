@@ -303,7 +303,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   if (stationMap.size < limit && !/^\d+$/.test(searchQuery)) {
     const cityAndAddressMatches = await db
-      .selectDistinct({ id: stations.id })
+      .select({ id: stations.id })
       .from(stations)
       .innerJoin(locations, eq(stations.location_id, locations.id))
       .where(and(ne(stations.status, "inactive"), or(sql`${searchQuery} <% ${locations.city}`, sql`${searchQuery} <% ${locations.address}`)))

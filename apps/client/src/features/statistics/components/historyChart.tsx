@@ -1,5 +1,4 @@
-import type { ComponentProps } from "react";
-import { useMemo, useState } from "react";
+import React, { type ComponentProps, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -124,8 +123,8 @@ function BandHistoryCard({ band, locale }: { band: BandChartData; locale: string
             <CartesianGrid vertical={false} />
             <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => v.toLocaleString(locale)} />
-            <ChartTooltip content={<HistoryTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartTooltip content={(props) => <HistoryTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
+            <ChartLegend content={(props) => <ChartLegendContent {...(props as React.ComponentProps<typeof ChartLegendContent>)} />} />
             {band.operators.map((op) => (
               <Line key={op.name} type="monotone" dataKey={op.name} stroke={op.color} strokeWidth={2} dot={false} />
             ))}

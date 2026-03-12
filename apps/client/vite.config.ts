@@ -104,6 +104,9 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       output: {
+        comments: {
+          annotation: true,
+        },
         codeSplitting: {
           groups: [
             {

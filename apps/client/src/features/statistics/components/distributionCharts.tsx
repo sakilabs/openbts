@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ComponentProps, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PieChart, Pie, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,8 +32,10 @@ function DonutChart({ title, data, locale }: { title: string; data: { name: stri
                 <Cell key={entry.name} fill={entry.fill} />
               ))}
             </Pie>
-            <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
-            <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+            <ChartTooltip
+              content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} nameKey="name" hideLabel />}
+            />
+            <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} nameKey="name" />} />
           </PieChart>
         </ChartContainer>
       </CardContent>

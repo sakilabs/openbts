@@ -12,7 +12,7 @@ export function AutocompleteDropdown({ options, onSelect }: AutocompleteDropdown
   if (options.length === 0) return null;
 
   return (
-    <div className="border-t bg-background animate-in fade-in slide-in-from-top-1 duration-150 max-h-64 overflow-y-auto custom-scrollbar">
+    <div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-64 overflow-y-auto custom-scrollbar">
       <div className="px-2 py-2">
         <p className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t("autocomplete.availableFilters")}</p>
         <div className="space-y-0.5">
