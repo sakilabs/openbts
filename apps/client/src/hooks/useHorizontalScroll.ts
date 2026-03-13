@@ -11,6 +11,8 @@ export function useHorizontalScroll<T extends HTMLElement>() {
       if (!el) return;
       const canScrollX = el.scrollWidth > el.clientWidth;
       if (!canScrollX) return;
+      // let trackpad horizontal swipes pass through natively
+      if (e.deltaX !== 0) return;
       e.preventDefault();
       el.scrollLeft += e.deltaY;
     }

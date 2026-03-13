@@ -41,7 +41,7 @@ function AppLayout() {
   useAppBadge();
   useTwoFactorRedirect();
 
-  const isWCO = useWindowControlsOverlay();
+  const { visible: isWCO } = useWindowControlsOverlay();
 
   const currentRoute = [...matches]
     .reverse()

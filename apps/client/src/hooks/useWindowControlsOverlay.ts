@@ -9,11 +9,18 @@ interface WindowControlsOverlay extends EventTarget {
 declare global {
   interface Navigator {
     readonly windowControlsOverlay?: WindowControlsOverlay;
+    readonly userAgentData?: { readonly platform: string };
   }
 }
 
-export function useWindowControlsOverlay(): boolean {
+function detectMacOS(): boolean {
+  if (navigator.userAgentData) return navigator.userAgentData.platform === "macOS";
+  return /Mac OS X/.test(navigator.userAgent);
+}
+
+export function useWindowControlsOverlay(): { visible: boolean; isMacOS: boolean } {
   const [visible, setVisible] = useState(() => navigator.windowControlsOverlay?.visible ?? false);
+  const isMacOS = detectMacOS();
 
   useEffect(() => {
     const overlay = navigator.windowControlsOverlay;
@@ -23,5 +30,5 @@ export function useWindowControlsOverlay(): boolean {
     return () => overlay.removeEventListener("geometrychange", handler);
   }, []);
 
-  return visible;
+  return { visible, isMacOS };
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentProps } from "react";
+import React, { useMemo, useState, type ComponentProps } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AddCircleIcon,
@@ -120,7 +120,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const { data: session } = authClient.useSession();
   const { data: settings } = useSettings();
-  const isWCO = useWindowControlsOverlay();
+  const { visible: isWCO, isMacOS } = useWindowControlsOverlay();
 
   const navItems = useMemo(() => translateNav(navMainConfig, t), [t]);
   const infoNavItems = useMemo(() => translateNav(infoNavConfig, t), [t]);
@@ -148,7 +148,9 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar variant="inset" {...props}>
-      {!isWCO && (
+      {isWCO && isMacOS ? (
+        <SidebarHeader style={{ height: "env(titlebar-area-height, 3rem)", WebkitAppRegion: "drag", appRegion: "drag" } as React.CSSProperties} />
+      ) : !isWCO ? (
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -163,7 +165,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-      )}
+      ) : null}
       <SidebarContent>
         <NavMain items={navItems} />
         {authNavItems.length > 0 && <NavMain items={authNavItems} />}
