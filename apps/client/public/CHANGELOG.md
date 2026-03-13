@@ -7,6 +7,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Fixed horizontal scroll hook not working correctly with trackpad. Native horizontal swipes (`deltaX`) now pass through to the browser instead of being swallowed
 - Fixed WCO sidebar on macOS overlapping the traffic light buttons. Sidebar now reserves a drag-region spacer matching the titlebar height
+- Fixed region filter on `/admin/locations` having no effect; server was matching region codes against the `name` column instead of `code`
 
 # 2026-03-12
 

@@ -149,7 +149,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       ? db.query.regions.findMany({
           columns: { id: true },
           where: {
-            name: {
+            code: {
               in: regionNames,
             },
           },
