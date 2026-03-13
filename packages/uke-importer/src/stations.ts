@@ -3,7 +3,7 @@ import path from "node:path";
 import url from "node:url";
 
 import { ukePermits, stationsPermits, deletedEntries, type ratEnum, type BandVariant } from "@openbts/drizzle";
-import { and, inArray, lt, eq } from "drizzle-orm";
+import { and, lt, eq } from "drizzle-orm";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import {
   chunk,
@@ -142,7 +142,6 @@ async function insertUkePermits(
 
 export async function importStations(): Promise<boolean> {
   logger.log("Starting stations import...");
-  const importStartTime = new Date();
   logger.log("Scraping file links from:", STATIONS_URL);
   const unfiltered = await scrapeXlsxLinks(STATIONS_URL);
   const links = unfiltered;
@@ -226,38 +225,35 @@ export async function importStations(): Promise<boolean> {
   const importMetadataId = await recordImportMetadata("stations", links, "success");
 
   logger.log("Deleting stale station permits...");
-  const processedBandIds = fileRows
-    .map((fr) => parseBandFromLabel(fr.label))
-    .filter((b): b is NonNullable<typeof b> => b !== null)
-    .map((b) => bandMap.get(`${b.rat}:${b.value}:${b.variant}`))
-    .filter((id): id is number => id !== undefined);
+  let staleCount = 0;
+  for (const fr of fileRows) {
+    const parsed = parseBandFromLabel(fr.label);
+    if (!parsed) continue;
+    const bandId = bandMap.get(`${parsed.rat}:${parsed.value}:${parsed.variant}`);
+    if (!bandId) continue;
 
-  const stalePermits =
-    processedBandIds.length > 0
-      ? await db
-          .select()
-          .from(ukePermits)
-          .where(and(eq(ukePermits.source, "permits"), inArray(ukePermits.band_id, processedBandIds), lt(ukePermits.updatedAt, importStartTime)))
-      : [];
+    const stale = await db
+      .select()
+      .from(ukePermits)
+      .where(and(eq(ukePermits.source, "permits"), eq(ukePermits.band_id, bandId), lt(ukePermits.updatedAt, fr.fileDate)));
 
-  if (stalePermits.length > 0) {
-    for (const group of chunk(stalePermits, BATCH_SIZE)) {
-      await db.insert(deletedEntries).values(
-        group.map((row) => ({
-          source_table: "uke_permits",
-          source_id: row.id,
-          source_type: "permits",
-          data: row,
-          import_id: importMetadataId,
-        })),
-      );
+    if (stale.length > 0) {
+      for (const group of chunk(stale, BATCH_SIZE)) {
+        await db.insert(deletedEntries).values(
+          group.map((row) => ({
+            source_table: "uke_permits",
+            source_id: row.id,
+            source_type: "permits",
+            data: row,
+            import_id: importMetadataId,
+          })),
+        );
+      }
+      await db.delete(ukePermits).where(and(eq(ukePermits.source, "permits"), eq(ukePermits.band_id, bandId), lt(ukePermits.updatedAt, fr.fileDate)));
+      staleCount += stale.length;
     }
-
-    await db
-      .delete(ukePermits)
-      .where(and(eq(ukePermits.source, "permits"), inArray(ukePermits.band_id, processedBandIds), lt(ukePermits.updatedAt, importStartTime)));
   }
-  logger.log(`Deleted ${stalePermits.length} stale station permits`);
+  logger.log(`Deleted ${staleCount} stale station permits`);
 
   logger.log("Import completed successfully");
   return true;

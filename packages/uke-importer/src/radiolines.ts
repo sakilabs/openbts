@@ -66,12 +66,11 @@ export async function importRadiolines(): Promise<boolean> {
   }
   console.log(`[radiolines] Found ${manufNames.size} manufacturers, ${antTypeTuples.size} antenna types, ${txTypeTuples.size} transmitter types`);
 
-  const importStartTime = new Date();
   const fileNameDateStr = first.href
     .split("/")
     .pop()
     ?.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
-  const fileDate = fileNameDateStr ? new Date(fileNameDateStr) : importStartTime;
+  const fileDate = fileNameDateStr ? new Date(fileNameDateStr) : new Date();
 
   console.log("[radiolines] Upserting manufacturers...");
   const manufArr = Array.from(manufNames).filter((s) => s.length > 0);
@@ -246,7 +245,7 @@ export async function importRadiolines(): Promise<boolean> {
   const importMetadataId = await recordImportMetadata("radiolines", links, "success");
 
   console.log("[radiolines] Archiving and deleting stale radiolines...");
-  const staleRadiolines = await db.select().from(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, importStartTime));
+  const staleRadiolines = await db.select().from(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, fileDate));
 
   if (staleRadiolines.length > 0) {
     for (const group of chunk(staleRadiolines, BATCH_SIZE)) {
@@ -261,7 +260,7 @@ export async function importRadiolines(): Promise<boolean> {
       );
     }
 
-    await db.delete(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, importStartTime));
+    await db.delete(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, fileDate));
   }
 
   console.log(`[radiolines] Deleted ${staleRadiolines.length} stale radiolines`);

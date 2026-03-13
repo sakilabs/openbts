@@ -15,7 +15,7 @@ import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
 import { db } from "@openbts/drizzle/db";
-import { and, eq, inArray, lt } from "drizzle-orm/sql/expressions/conditions";
+import { and, eq, lt } from "drizzle-orm/sql/expressions/conditions";
 
 function getRegionByTeryt(teryt: string): { name: string; code: string } | null {
   return REGION_BY_TERYT_PREFIX[teryt] ?? null;
@@ -462,7 +462,6 @@ async function processChunk(
 
 export async function importPermitDevices(): Promise<boolean> {
   logger.log("Starting import from device registry...");
-  const importStartTime = new Date();
   logger.log("Scraping file links from:", PERMITS_DEVICES_URL);
   const links = await scrapePermitDeviceLinks(PERMITS_DEVICES_URL);
   logger.log(`Found ${links.length} files:`, links.map((l) => l.operatorKey).join(", "));
@@ -529,7 +528,7 @@ export async function importPermitDevices(): Promise<boolean> {
       .split("/")
       .pop()
       ?.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
-    const fileDate = fileDateStr ? new Date(fileDateStr) : importStartTime;
+    const fileDate = fileDateStr ? new Date(fileDateStr) : new Date();
 
     logger.log(`Downloading: ${fileName}`);
     await downloadFile(l.href, filePath);
@@ -559,44 +558,32 @@ export async function importPermitDevices(): Promise<boolean> {
   const importMetadataId = await recordImportMetadata("permits", linksForCheck, "success");
 
   logger.log("Deleting stale device registry permits...");
-  const processedOperatorIds = [...new Set(downloadedFiles.map((f) => f.operatorId))];
-  const stalePermits =
-    processedOperatorIds.length > 0
-      ? await db
-          .select()
-          .from(ukePermits)
-          .where(
-            and(
-              eq(ukePermits.source, "device_registry"),
-              inArray(ukePermits.operator_id, processedOperatorIds),
-              lt(ukePermits.updatedAt, importStartTime),
-            ),
-          )
-      : [];
+  let staleCount = 0;
+  for (const { operatorId, fileDate } of downloadedFiles) {
+    const stale = await db
+      .select()
+      .from(ukePermits)
+      .where(and(eq(ukePermits.source, "device_registry"), eq(ukePermits.operator_id, operatorId), lt(ukePermits.updatedAt, fileDate)));
 
-  if (stalePermits.length > 0) {
-    for (const group of chunk(stalePermits, BATCH_SIZE)) {
-      await db.insert(deletedEntries).values(
-        group.map((row) => ({
-          source_table: "uke_permits",
-          source_id: row.id,
-          source_type: "device_registry",
-          data: row,
-          import_id: importMetadataId,
-        })),
-      );
+    if (stale.length > 0) {
+      for (const group of chunk(stale, BATCH_SIZE)) {
+        await db.insert(deletedEntries).values(
+          group.map((row) => ({
+            source_table: "uke_permits",
+            source_id: row.id,
+            source_type: "device_registry",
+            data: row,
+            import_id: importMetadataId,
+          })),
+        );
+      }
+      await db
+        .delete(ukePermits)
+        .where(and(eq(ukePermits.source, "device_registry"), eq(ukePermits.operator_id, operatorId), lt(ukePermits.updatedAt, fileDate)));
+      staleCount += stale.length;
     }
-    await db
-      .delete(ukePermits)
-      .where(
-        and(
-          eq(ukePermits.source, "device_registry"),
-          inArray(ukePermits.operator_id, processedOperatorIds),
-          lt(ukePermits.updatedAt, importStartTime),
-        ),
-      );
   }
-  logger.log(`Deleted ${stalePermits.length} stale device registry permits`);
+  logger.log(`Deleted ${staleCount} stale device registry permits`);
 
   logger.log("Import completed successfully");
   return true;
