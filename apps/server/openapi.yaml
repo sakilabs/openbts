@@ -3098,16 +3098,16 @@ components:
       properties:
         lac: { type: integer, nullable: true }
         arfcn: { type: integer, nullable: true }
-        rnc: { type: integer }
-        cid: { type: integer }
-        cid_long: { type: integer }
+        rnc: { type: integer, nullable: true }
+        cid: { type: integer, nullable: true }
+        cid_long: { type: integer, nullable: true }
     LteCellDetails:
       type: object
       properties:
         tac: { type: integer, nullable: true }
-        enbid: { type: integer }
-        clid: { type: integer }
-        ecid: { type: integer }
+        enbid: { type: integer, nullable: true }
+        clid: { type: integer, nullable: true }
+        ecid: { type: integer, nullable: true }
         supports_iot: { type: boolean, nullable: true }
     NrCellDetails:
       type: object
@@ -3118,6 +3118,7 @@ components:
         clid: { type: integer, nullable: true }
         nci: { type: integer, nullable: true }
         pci: { type: integer, nullable: true }
+        type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     UmtsCellDetailsInsert:
       description: UMTS cell details for create/update. Do not send cid_long; it is computed server-side from rnc and cid.
@@ -3143,6 +3144,7 @@ components:
         gnbid: { type: integer, nullable: true }
         clid: { type: integer, nullable: true }
         pci: { type: integer, nullable: true }
+        type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     CellDetailsInsert:
       description: Cell RAT-specific payload for create/update. Omit server-calculated fields (cid_long for UMTS, ecid for LTE, nci for NR).
