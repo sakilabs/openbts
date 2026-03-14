@@ -5,6 +5,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
+- Fixed band and RAT filters on the map being evaluated independently (OR) instead of combined (AND) for internal database stations
 - Fixed "Taken at" date picker dropdown appearing behind the notes/taken-at popover on `/admin/stations/$id`
 
 ### 🚀 Enhancements

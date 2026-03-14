@@ -189,32 +189,42 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     if (bandIds.length || nonIotRats.length || iotRequested) {
       const cellExistsConditions: ReturnType<typeof sql>[] = [];
 
-      if (bandIds.length) {
+      if (bandIds.length || nonIotRats.length) {
+        const cellAndConditions: ReturnType<typeof sql>[] = [];
+        if (bandIds.length) {
+          cellAndConditions.push(
+            sql`${cells.band_id} = ANY(ARRAY[${sql.join(
+              bandIds.map((id) => sql`${id}`),
+              sql`,`,
+            )}]::int4[])`,
+          );
+        }
+        if (nonIotRats.length) {
+          cellAndConditions.push(
+            sql`${cells.rat} IN (${sql.join(
+              nonIotRats.map((r) => sql`${r}`),
+              sql`,`,
+            )})`,
+          );
+        }
         cellExistsConditions.push(sql`EXISTS (
 					SELECT 1 FROM ${cells}
 					WHERE ${cells.station_id} = ${stationFields.id}
-					AND ${cells.band_id} = ANY(ARRAY[${sql.join(
-            bandIds.map((id) => sql`${id}`),
-            sql`,`,
-          )}]::int4[])
-				)`);
-      }
-
-      if (nonIotRats.length) {
-        cellExistsConditions.push(sql`EXISTS (
-					SELECT 1 FROM ${cells}
-					WHERE ${cells.station_id} = ${stationFields.id}
-					AND ${cells.rat} IN (${sql.join(
-            nonIotRats.map((r) => sql`${r}`),
-            sql`,`,
-          )})
+					AND ${sql.join(cellAndConditions, sql` AND `)}
 				)`);
       }
 
       if (iotRequested) {
+        const iotBandCond = bandIds.length
+          ? sql`AND ${cells.band_id} = ANY(ARRAY[${sql.join(
+              bandIds.map((id) => sql`${id}`),
+              sql`,`,
+            )}]::int4[])`
+          : sql``;
         cellExistsConditions.push(sql`EXISTS (
 					SELECT 1 FROM ${cells}
 					WHERE ${cells.station_id} = ${stationFields.id}
+					${iotBandCond}
 					AND (
 						EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_iot} = true)
 						OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
@@ -275,41 +285,48 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       if (bandIds.length || nonIotRats.length || iotRequested) {
         const existsClauses: ReturnType<typeof sql>[] = [];
 
-        if (bandIds.length) {
+        if (bandIds.length || nonIotRats.length) {
+          const cellAndConditions: ReturnType<typeof sql>[] = [];
+          if (bandIds.length) {
+            cellAndConditions.push(
+              sql`${cells.band_id} = ANY(ARRAY[${sql.join(
+                bandIds.map((id) => sql`${id}`),
+                sql`,`,
+              )}]::int4[])`,
+            );
+          }
+          if (nonIotRats.length) {
+            cellAndConditions.push(
+              sql`${cells.rat} IN (${sql.join(
+                nonIotRats.map((r) => sql`${r}`),
+                sql`,`,
+              )})`,
+            );
+          }
           existsClauses.push(sql`EXISTS (
 						SELECT 1
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
 						${operatorCond}
-						AND ${cells.band_id} = ANY(ARRAY[${sql.join(
-              bandIds.map((id) => sql`${id}`),
-              sql`,`,
-            )}]::int4[])
-					)`);
-        }
-
-        if (nonIotRats.length) {
-          existsClauses.push(sql`EXISTS (
-						SELECT 1
-						FROM ${stations}
-						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
-						WHERE ${stations.location_id} = ${locFields.id}
-						${operatorCond}
-						AND ${cells.rat} IN (${sql.join(
-              nonIotRats.map((r) => sql`${r}`),
-              sql`,`,
-            )})
+						AND ${sql.join(cellAndConditions, sql` AND `)}
 					)`);
         }
 
         if (iotRequested) {
+          const iotBandCond = bandIds.length
+            ? sql`AND ${cells.band_id} = ANY(ARRAY[${sql.join(
+                bandIds.map((id) => sql`${id}`),
+                sql`,`,
+              )}]::int4[])`
+            : sql``;
           existsClauses.push(sql`EXISTS (
 						SELECT 1
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
 						${operatorCond}
+						${iotBandCond}
 						AND (
 							EXISTS (SELECT 1 FROM ${lteCells} WHERE ${lteCells.cell_id} = ${cells.id} AND ${lteCells.supports_iot} = true)
 							OR EXISTS (SELECT 1 FROM ${nrCells} WHERE ${nrCells.cell_id} = ${cells.id} AND ${nrCells.supports_nr_redcap} = true)
