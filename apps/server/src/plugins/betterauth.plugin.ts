@@ -1,17 +1,17 @@
 import { fromNodeHeaders } from "better-auth/node";
-import { betterAuth, type AuthContext, type MiddlewareContext, type MiddlewareOptions, type GenericEndpointContext } from "better-auth";
+import { betterAuth, type GenericEndpointContext } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { admin, multiSession, twoFactor, username } from "better-auth/plugins";
 import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
-import { createAuthMiddleware, getSessionFromCtx, APIError } from "better-auth/api";
 import { hash, verify } from "@node-rs/argon2";
 import * as schema from "@openbts/drizzle";
 
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
-import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
+import { APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
 import { accessControl, adminRole, editorRole, modRole, userRole } from "./auth/permissions.js";
+import { beforeAuthHook, afterAuthHook } from "./auth/hooks.js";
 
 import type { FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
@@ -90,7 +90,8 @@ export const auth = betterAuth({
   },
   experimental: { joins: true },
   hooks: {
-    before: createAuthMiddleware(beforeAuthHook),
+    before: beforeAuthHook,
+    after: afterAuthHook,
   },
   plugins: [
     admin({
@@ -171,78 +172,6 @@ export const auth = betterAuth({
   trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com"],
   // disabledPaths: PUBLIC_ROUTES,
 });
-
-async function beforeAuthHook(
-  ctx: MiddlewareContext<
-    MiddlewareOptions,
-    AuthContext & {
-      returned?: unknown;
-      responseHeaders?: Headers;
-    }
-  >,
-) {
-  if (ctx.path.startsWith("/admin/set-user-password")) {
-    const userId = ctx.body?.userId as string | undefined;
-    const newPassword = ctx.body?.newPassword as string | undefined;
-    if (!userId || !newPassword) throw new APIError("BAD_REQUEST", { message: "userId and newPassword are required." });
-
-    const existingAccount = await db.query.accounts.findFirst({
-      where: { AND: [{ userId }, { providerId: "credential" }] },
-    });
-
-    if (!existingAccount) {
-      const hashedPassword = await hash(newPassword, ARGON2_OPTIONS);
-      await db.insert(schema.accounts).values({
-        userId,
-        accountId: userId,
-        providerId: "credential",
-        password: hashedPassword,
-      });
-      return { context: ctx };
-    }
-  }
-
-  if (ctx.path.startsWith("/api-key/create")) {
-    const session = await getSessionFromCtx(ctx);
-
-    if (!session) {
-      throw new APIError("UNAUTHORIZED", {
-        message: "Unauthorized access to this endpoint.",
-      });
-    }
-
-    const keys = await db.query.apikeys.findMany({
-      where: { referenceId: session.user.id },
-    });
-
-    if (keys.length >= API_KEYS_LIMIT && session.user.role !== "admin") {
-      throw new APIError("FORBIDDEN", {
-        message: "You have reached the maximum number of API keys. Please delete an existing key before creating a new one.",
-      });
-    }
-
-    if (session.user.role !== "admin") {
-      const cooldownKey = `auth:apikey-cooldown:${session.user.id}`;
-      const cooldown = await redis.get(cooldownKey);
-
-      if (cooldown) {
-        const ttl = await redis.ttl(cooldownKey);
-        const daysLeft = Math.ceil(ttl / 86400);
-        throw new APIError("TOO_MANY_REQUESTS", {
-          message: `You can only create one API key every 7 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
-        });
-      }
-
-      await redis.setEx(cooldownKey, API_KEY_COOLDOWN_SECONDS, "1");
-    }
-
-    if (ctx.body?.metadata) {
-      throw new APIError("BAD_REQUEST", {
-        message: "Metadata is not allowed when creating API keys.",
-      });
-    }
-  }
-}
 
 export function getCurrentUser(req: FastifyRequest) {
   return auth.api.getSession({ headers: fromNodeHeaders(req.headers) });

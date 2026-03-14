@@ -1,6 +1,17 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-14
+
+### 🩹 Fixes
+
+- Fixed "Taken at" date picker dropdown appearing behind the notes/taken-at popover on `/admin/stations/$id`
+
+### 🚀 Enhancements
+
+- Passwordless users can now set a password directly from Security settings. The new password card prompts for passkey re-authentication first, then lets you choose a new password
+- You can now use `POST /account/password` to set a password on a passwordless account; requires a valid passkey verification token (obtained via passkey sign-in within the last 5 minutes)
+
 # 2026-03-13
 
 ### 🩹 Fixes
@@ -37,7 +48,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
-- Fixed `/stations` page discarding the `q` query parameter on load — navigating to `/stations?q=...` now correctly pre-fills and preserves the search query
+- Fixed `/stations` page discarding the `q` query parameter on load - navigating to `/stations?q=...` now correctly pre-fills and preserves the search query
 - Fixed missing `takenAts`/`onTakenAtsChange` props on the photo upload section of the admin station create page
 - Fixed searching via longcid/ecid/nci without explicit filter
 

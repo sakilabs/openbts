@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createRootRoute, Outlet, Link as RouterLink, useNavigate } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet, Link as RouterLink, useNavigate } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
 import { AuthUIProvider } from "@daveyplate/better-auth-ui";
@@ -51,6 +51,7 @@ function RootComponent() {
         <ThemeProvider defaultTheme="system" storageKey="ui-theme">
           <BackendStatusProvider queryClient={queryClient}>
             <AppProviders>
+              <HeadContent />
               <Outlet />
             </AppProviders>
           </BackendStatusProvider>
@@ -62,4 +63,13 @@ function RootComponent() {
 
 export const Route = createRootRoute({
   component: RootComponent,
+  head: () => ({
+    scripts: [
+      {
+        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX",
+        async: true,
+        crossOrigin: "anonymous",
+      },
+    ],
+  }),
 });

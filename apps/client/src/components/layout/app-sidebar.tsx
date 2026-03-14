@@ -35,6 +35,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
+import { GoogleAd } from "@/components/ui/google-ad";
 import { useSettings } from "@/hooks/useSettings";
 import { useWindowControlsOverlay } from "@/hooks/useWindowControlsOverlay";
 
@@ -201,6 +202,9 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           )}
           {session?.user && <NavUser data={session} />}
+          <SidebarMenuItem>
+            <GoogleAd adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="XXXXXXXXXX" adFormat="rectangle" className="w-full" />
+          </SidebarMenuItem>
           <div className="flex items-center justify-between px-2 py-1 text-[10px] text-muted-foreground">
             {(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (
               <div

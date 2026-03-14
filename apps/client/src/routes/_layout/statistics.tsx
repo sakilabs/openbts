@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { UkeKpiCards, InternalKpiCards } from "@/features/statistics/components/kpiCards";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GoogleAd } from "@/components/ui/google-ad";
 import { statsSummaryQueryOptions, statsPermitsQueryOptions, statsVoivodeshipsQueryOptions } from "@/features/statistics/queries";
 import { operatorsQueryOptions } from "@/features/shared/queries";
 
@@ -64,6 +65,8 @@ function StatisticsPage() {
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
+
+        <GoogleAd adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="XXXXXXXXXX" adFormat="horizontal" className="w-full" />
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">{t("stationDetails:tabs.permits")}</h2>

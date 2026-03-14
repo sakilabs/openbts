@@ -19,11 +19,13 @@ export function DatePickerInput({ value, onChange, className }: Props) {
 
   const monthNames = Array.from({ length: 12 }, (_, i) => new Date(2000, i, 1).toLocaleDateString(i18n.language, { month: "long" }));
 
-  function handleMonth(m: string) {
+  function handleMonth(m: string | null) {
+    if (m === null) return;
     onChange(new Date(Date.UTC(Number(year) || CURRENT_YEAR, Number(m), 1)));
   }
 
-  function handleYear(y: string) {
+  function handleYear(y: string | null) {
+    if (y === null) return;
     onChange(new Date(Date.UTC(Number(y), Number(month) || 0, 1)));
   }
 
@@ -33,7 +35,7 @@ export function DatePickerInput({ value, onChange, className }: Props) {
         <SelectTrigger className="flex-1 min-w-0">
           <SelectValue>{month !== "" ? monthNames[Number(month)] : undefined}</SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent positionerClassName="z-300">
           {monthNames.map((name, i) => (
             <SelectItem key={i} value={String(i)}>
               {name}
@@ -46,7 +48,7 @@ export function DatePickerInput({ value, onChange, className }: Props) {
         <SelectTrigger className="flex-1 min-w-0">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent positionerClassName="z-300">
           {YEARS.map((y) => (
             <SelectItem key={y} value={String(y)}>
               {y}

@@ -23,10 +23,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<EmptyResponse>) {
     });
   }
 
-  await db
-    .update(accounts)
-    .set({ password: null })
-    .where(and(eq(accounts.userId, session.user.id), eq(accounts.providerId, "credential")));
+  await db.delete(accounts).where(and(eq(accounts.userId, session.user.id), eq(accounts.providerId, "credential")));
 
   return res.status(204).send();
 }

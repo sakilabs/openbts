@@ -175,7 +175,7 @@ function CreateKeyDialog({
 
           <div className="space-y-1.5">
             <Label>{t("apiKeys.dialog.expiresLabel")}</Label>
-            <Select value={expiresIn} onValueChange={setExpiresIn}>
+            <Select value={expiresIn} onValueChange={(v) => v && setExpiresIn(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

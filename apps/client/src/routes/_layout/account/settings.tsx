@@ -3,19 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, SecurityLockIcon, ComputerIcon, Alert02Icon, Key01Icon } from "@hugeicons/core-free-icons";
-import {
-  AccountSettingsCards,
-  ChangePasswordCard,
-  DeleteAccountCard,
-  PasskeysCard,
-  ProvidersCard,
-  SessionsCard,
-  TwoFactorCard,
-} from "@daveyplate/better-auth-ui";
+import { AccountSettingsCards, DeleteAccountCard, PasskeysCard, ProvidersCard, SessionsCard, TwoFactorCard } from "@daveyplate/better-auth-ui";
+import { PasswordCard } from "@/components/account/passwordCard";
 import { authClient } from "@/lib/authClient";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { ApiKeysCard } from "@/components/account/api-keys-card";
+import { ApiKeysCard } from "@/components/account/apikeysCard";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -33,7 +26,7 @@ function SectionHeader({ icon, title, description }: { icon: typeof UserIcon; ti
   );
 }
 
-function PasswordlessToggle({ userId }: { userId: string }) {
+function PasswordSection({ userId }: { userId: string }) {
   const { t } = useTranslation("settings");
   const qc = useQueryClient();
 
@@ -57,39 +50,30 @@ function PasswordlessToggle({ userId }: { userId: string }) {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const hasPassword = passwordStatus?.hasPassword;
+  const hasPassword = passwordStatus?.hasPassword ?? null;
   const hasPasskey = (passkeys?.length ?? 0) > 0;
 
-  if (!hasPassword) {
-    return (
-      <div className="rounded-xl border bg-card p-4">
-        <p className="text-sm font-medium">{t("security.passwordless.title")}</p>
-        <p className="text-xs text-muted-foreground mt-1.5">{t("security.passwordless.noPassword")}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-sm font-medium leading-none">{t("security.passwordless.title")}</p>
-          <p className="text-xs text-muted-foreground mt-1.5">
-            {!hasPasskey ? t("security.passwordless.requiresPasskey") : t("security.passwordless.description")}
-          </p>
+    <>
+      {hasPassword !== null ? <PasswordCard userId={userId} hasPassword={hasPassword} /> : null}
+
+      {hasPassword ? (
+        <div className="rounded-xl border bg-card p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium leading-none">{t("security.passwordless.title")}</p>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                {!hasPasskey ? t("security.passwordless.requiresPasskey") : t("security.passwordless.description")}
+              </p>
+            </div>
+            <Button size="sm" variant="destructive" disabled={!hasPasskey || removeMutation.isPending} onClick={() => removeMutation.mutate()}>
+              {removeMutation.isPending ? <Spinner /> : null}
+              {t(removeMutation.isPending ? "security.passwordless.removing" : "security.passwordless.remove")}
+            </Button>
+          </div>
         </div>
-        <Button size="sm" variant="destructive" disabled={!hasPasskey || removeMutation.isPending} onClick={() => removeMutation.mutate()}>
-          {removeMutation.isPending ? (
-            <>
-              <Spinner />
-              {t("security.passwordless.removing")}
-            </>
-          ) : (
-            t("security.passwordless.remove")
-          )}
-        </Button>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }
 
@@ -119,11 +103,10 @@ function AccountSettingsPage() {
           <section className="space-y-0">
             <SectionHeader icon={SecurityLockIcon} title={t("security.title")} description={t("security.description")} />
             <div className="space-y-3">
-              <ChangePasswordCard />
+              <PasswordSection userId={session.user.id} />
               <TwoFactorCard />
               <PasskeysCard />
               <ProvidersCard />
-              <PasswordlessToggle userId={session.user.id} />
             </div>
           </section>
         </div>

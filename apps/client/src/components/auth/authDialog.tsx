@@ -349,20 +349,18 @@ function SignUpForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
         <DialogTitle>{t("signUp.title")}</DialogTitle>
         <DialogDescription>{t("signUp.description")}</DialogDescription>
       </DialogHeader>
-      <div className="space-y-4 mt-4">
-        <OAuthButtons />
-        <OAuthDivider />
+      <div className="space-y-3">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
             void form.handleSubmit();
           }}
-          className="space-y-4"
+          className="space-y-3"
         >
           <form.Field name="name">
             {(field) => (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="sign-up-name">{t("signUp.name")}</Label>
                 <Input
                   id="sign-up-name"
@@ -380,7 +378,7 @@ function SignUpForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
           </form.Field>
           <form.Field name="username">
             {(field) => (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="sign-up-username">{t("signUp.username")}</Label>
                 <Input
                   id="sign-up-username"
@@ -398,7 +396,7 @@ function SignUpForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
           </form.Field>
           <form.Field name="email">
             {(field) => (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="sign-up-email">{t("signUp.email")}</Label>
                 <Input
                   id="sign-up-email"
@@ -416,7 +414,7 @@ function SignUpForm({ onSuccess, onSwitchView }: { onSuccess: () => void; onSwit
           </form.Field>
           <form.Field name="password">
             {(field) => (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="sign-up-password">{t("signUp.password")}</Label>
                 <Input
                   id="sign-up-password"
