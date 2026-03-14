@@ -25,7 +25,7 @@ export function useAppBadge() {
   });
 
   const notificationsQuery = useQuery({
-    queryKey: ["notifications"],
+    queryKey: ["notifications-badge"],
     queryFn: () => fetchNotifications({ limit: 1, offset: 0 }),
     refetchInterval: 30_000,
     staleTime: 10_000,

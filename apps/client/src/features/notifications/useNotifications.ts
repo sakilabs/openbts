@@ -36,6 +36,7 @@ export function useNotifications() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications-badge"] });
     },
   });
 
@@ -60,6 +61,7 @@ export function useNotifications() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications-badge"] });
     },
   });
 
