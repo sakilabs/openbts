@@ -146,6 +146,7 @@ export async function resolveAllCells<TStation>(inputCells: CellInput[], maps: L
   for (let i = 0; i < inputCells.length; i++) {
     const cell = inputCells[i];
     if (cell) results.push(resolveCell(cell, maps));
+    // eslint-disable-next-line no-await-in-loop
     if (i % YIELD_EVERY === 0 && i > 0) await setImmediate();
   }
   return results;

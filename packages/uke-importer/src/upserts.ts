@@ -159,6 +159,7 @@ export async function upsertUkeLocations(
 
   const map = new Map<string, number>();
   for (const group of chunk(uniq, BATCH_SIZE)) {
+    // eslint-disable-next-line no-await-in-loop
     const rows = await db
       .select({ id: ukeLocations.id, longitude: ukeLocations.longitude, latitude: ukeLocations.latitude })
       .from(ukeLocations)
@@ -174,6 +175,7 @@ export async function upsertUkeLocations(
   const toInsert = uniq.filter((it) => !map.has(`${it.lon}:${it.lat}`));
   if (toInsert.length) {
     for (const group of chunk(toInsert, BATCH_SIZE)) {
+      // eslint-disable-next-line no-await-in-loop
       const inserted = await db
         .insert(ukeLocations)
         .values(

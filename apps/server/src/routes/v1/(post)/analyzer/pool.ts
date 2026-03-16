@@ -38,7 +38,10 @@ class AnalyzerWorkerPool {
     worker.on("message", ({ success, result, error }: { success: boolean; result?: string; error?: string }) => {
       const task = entry.pending;
       entry.pending = null;
-      if (task) success && result !== undefined ? task.resolve(result) : task.reject(new Error(error ?? "Worker failed"));
+      if (task) {
+        if (success && result !== undefined) task.resolve(result);
+        else task.reject(new Error(error ?? "Worker failed"));
+      }
 
       this.dispatch();
     });

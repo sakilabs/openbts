@@ -33,7 +33,7 @@
     "fastify-type-provider-zod": "6.1.0",
     "figlet": "1.11.0",
     "libheif-js": "1.19.8",
-    "nanoid": "5.1.6",
+    "nanoid": "5.1.7",
     "postgres": "3.4.8",
     "redis": "5.11.0",
     "sharp": "0.34.5",
