@@ -74,6 +74,15 @@ export const CellEditRow = memo(function CellEditRow({
     onChange(localCell._localId, { details: next });
   };
 
+  const handleDetailsBulkChange = (changes: Record<string, number | boolean | string | undefined>) => {
+    const next = { ...localCell.details };
+    for (const [field, value] of Object.entries(changes)) {
+      if (value === undefined) delete next[field];
+      else next[field] = value;
+    }
+    onChange(localCell._localId, { details: next });
+  };
+
   return (
     <tr className={cn("border-b last:border-0 hover:bg-muted/20", rowClassName)}>
       <td className={cn("px-3 py-1", leftBorderClass)}>
@@ -123,6 +132,7 @@ export const CellEditRow = memo(function CellEditRow({
         details={localCell.details}
         disabled={disabled}
         onDetailChange={handleDetailChange}
+        onDetailsBulkChange={handleDetailsBulkChange}
       />
       <td className="px-3 py-1">
         <Input

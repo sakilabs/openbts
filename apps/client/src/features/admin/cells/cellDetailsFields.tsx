@@ -16,9 +16,10 @@ type CellDetailsFieldsProps = {
   detailErrors?: Record<string, string>;
   disabled?: boolean;
   onDetailChange: (field: string, value: number | boolean | string | undefined) => void;
+  onDetailsBulkChange?: (changes: Record<string, number | boolean | string | undefined>) => void;
 };
 
-export function CellDetailsFields({ rat, bandValue, details, detailErrors, disabled, onDetailChange }: CellDetailsFieldsProps) {
+export function CellDetailsFields({ rat, bandValue, details, detailErrors, disabled, onDetailChange, onDetailsBulkChange }: CellDetailsFieldsProps) {
   const d = details;
   switch (rat) {
     case "GSM":
@@ -155,15 +156,17 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             <Select
               value={nrType}
               onValueChange={(value) => {
-                onDetailChange("type", value as "nsa" | "sa");
-                if (value === "nsa") {
-                  onDetailChange("nrtac", undefined);
-                  onDetailChange("clid", undefined);
-                  onDetailChange("gnbid", undefined);
-                  onDetailChange("pci", undefined);
-                  onDetailChange("arfcn", undefined);
-                  onDetailChange("supports_nr_redcap", undefined);
-                }
+                if (value === "nsa")
+                  onDetailsBulkChange?.({
+                    type: "nsa",
+                    nrtac: undefined,
+                    clid: undefined,
+                    gnbid: undefined,
+                    pci: undefined,
+                    arfcn: undefined,
+                    supports_nr_redcap: undefined,
+                  });
+                else onDetailChange("type", value as "nsa" | "sa");
               }}
               disabled={disabled}
             >
