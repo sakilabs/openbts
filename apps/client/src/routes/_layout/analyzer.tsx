@@ -71,7 +71,7 @@ function formatFileSize(bytes: number): string {
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const MAX_CELLS = 15_000;
+const MAX_CELLS = 20_000;
 
 const MNC_NAMES: Record<number, string> = {
   26001: "Plus",

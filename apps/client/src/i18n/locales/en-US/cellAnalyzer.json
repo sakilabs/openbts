@@ -4,7 +4,7 @@
   },
   "file": {
     "dropHint": "Drop a file here or click to select",
-    "constraints": "NetMonster (.ntm) or NetMonitor (.csv) · max 10 MB · up to 15 000 rows",
+    "constraints": "NetMonster (.ntm) or NetMonitor (.csv) · max 10 MB · up to 20 000 rows",
     "format": "Format: {{format}}",
     "rowCount": "{{count}} cells parsed",
     "parsing": "Parsing...",

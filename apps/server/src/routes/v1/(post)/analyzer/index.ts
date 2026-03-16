@@ -11,7 +11,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 import { groupCellsByMnc, pairKey, type CellInput, type AnalyzerResult, type LookupMaps } from "./logic.js";
 import { analyzerPool } from "./pool.js";
 
-const MAX_CELLS = 15_000;
+const MAX_CELLS = 20_000;
 const BATCH_SIZE = 200;
 const CACHE_TTL_S = 5 * 60;
 
