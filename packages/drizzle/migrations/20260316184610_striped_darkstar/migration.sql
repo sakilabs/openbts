@@ -529,6 +529,7 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 	"gnbid_length" integer DEFAULT 24,
 	"clid" integer,
 	"pci" integer,
+	"arfcn" integer,
 	"type" "nr_type" NOT NULL,
 	"supports_nr_redcap" boolean DEFAULT false
 );

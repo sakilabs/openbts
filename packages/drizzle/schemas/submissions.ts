@@ -117,6 +117,7 @@ export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {
   gnbid_length: integer("gnbid_length").default(24),
   clid: integer("clid"),
   pci: integer("pci"),
+  arfcn: integer("arfcn"),
   type: NRType("type").notNull(),
   supports_nr_redcap: boolean("supports_nr_redcap").default(false),
 });

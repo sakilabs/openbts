@@ -34,7 +34,20 @@ const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ crea
 const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true }).strict();
 const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true }).strict();
 const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true }).strict();
-const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true }).strict();
+const nrInsertSchema = createInsertSchema(proposedNRCells)
+  .omit({ proposed_cell_id: true })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.type === "nsa") {
+      for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+        if (data[field] !== null && data[field] !== undefined)
+          ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
+      }
+      if (data.supports_nr_redcap === true) {
+        ctx.addIssue({ code: "custom", message: "supports_nr_redcap must not be set for NSA NR cells", path: ["supports_nr_redcap"] });
+      }
+    }
+  });
 const proposedCellInsert = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
   .extend({

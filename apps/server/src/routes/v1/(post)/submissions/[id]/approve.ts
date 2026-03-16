@@ -346,6 +346,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                     gnbid_length: d.gnbid ? d.gnbid.toString(2).length : undefined,
                     clid: d.clid,
                     pci: d.pci,
+                    arfcn: d.arfcn,
                     type: d.type,
                     supports_nr_redcap: d.supports_nr_redcap,
                   });
@@ -418,6 +419,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                       gnbid_length: d.gnbid ? d.gnbid.toString(2).length : d.gnbid_length,
                       clid: d.clid,
                       pci: d.pci,
+                      arfcn: d.arfcn,
                       supports_nr_redcap: d.supports_nr_redcap,
                     })
                     .where(eq(nrCells.cell_id, targetCellId));

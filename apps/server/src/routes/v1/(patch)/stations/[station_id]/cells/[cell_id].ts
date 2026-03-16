@@ -27,7 +27,19 @@ const cellDetailsSchema = z.union([gsmCellsSelectSchema, umtsCellsSelectSchema, 
 const gsmCellsUpdateSchema = createUpdateSchema(gsmCells).strict();
 const umtsCellsUpdateSchema = createUpdateSchema(umtsCells).strict();
 const lteCellsUpdateSchema = createUpdateSchema(lteCells).strict();
-const nrCellsUpdateSchema = createUpdateSchema(nrCells).strict();
+const nrCellsUpdateSchema = createUpdateSchema(nrCells)
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.type === "nsa") {
+      for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+        if (data[field] !== null && data[field] !== undefined)
+          ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
+      }
+      if (data.supports_nr_redcap === true) {
+        ctx.addIssue({ code: "custom", message: "supports_nr_redcap must not be set for NSA NR cells", path: ["supports_nr_redcap"] });
+      }
+    }
+  });
 const requestSchema = cellsUpdateSchema.extend({
   details: z.union([gsmCellsUpdateSchema, umtsCellsUpdateSchema, lteCellsUpdateSchema, nrCellsUpdateSchema]).optional(),
 });
@@ -63,6 +75,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     where: {
       AND: [{ id: cell_id }, { station_id: station_id }],
     },
+    with: { nr: true },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
 
@@ -76,6 +89,20 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       const d = req.body.details as z.infer<typeof lteCellsUpdateSchema>;
       if (d.enbid !== undefined && d.clid !== undefined) {
         await checkLTEDuplicate(d.enbid, d.clid, station.operator_id, cell_id);
+      }
+    }
+  }
+
+  if (req.body.details && cell.rat === "NR") {
+    const nrDetails = req.body.details as z.infer<typeof nrCellsUpdateSchema>;
+    if (nrDetails.type === undefined && cell.nr?.type === "nsa") {
+      for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+        if (nrDetails[field] !== null && nrDetails[field] !== undefined) {
+          throw new ErrorResponse("BAD_REQUEST", { message: `${field} must not be set for NSA NR cells` });
+        }
+      }
+      if (nrDetails.supports_nr_redcap === true) {
+        throw new ErrorResponse("BAD_REQUEST", { message: "supports_nr_redcap must not be set for NSA NR cells" });
       }
     }
   }

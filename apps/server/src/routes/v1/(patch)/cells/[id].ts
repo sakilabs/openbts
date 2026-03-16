@@ -88,6 +88,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         if (d.enbid !== undefined && d.clid !== undefined) await checkLTEDuplicate(d.enbid, d.clid, operatorId, id);
       }
     }
+
+    if (cell.rat === "NR") {
+      const nrDetails = req.body.details as z.infer<typeof nrUpdateSchema>;
+      const effectiveType = nrDetails.type ?? cell.nr?.type;
+      if (effectiveType === "nsa") {
+        for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+          if (nrDetails[field] !== null && nrDetails[field] !== undefined)
+            throw new ErrorResponse("BAD_REQUEST", { message: `${field} must not be set for NSA NR cells` });
+        }
+        if (nrDetails.supports_nr_redcap === true)
+          throw new ErrorResponse("BAD_REQUEST", { message: "supports_nr_redcap must not be set for NSA NR cells" });
+      }
+    }
   }
 
   try {
