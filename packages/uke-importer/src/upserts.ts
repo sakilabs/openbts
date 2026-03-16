@@ -1,5 +1,5 @@
 import { bands, regions, ukeLocations, ukeOperators, type ratEnum, type BandVariant } from "@openbts/drizzle";
-import { and, inArray, isNull } from "drizzle-orm";
+import { and, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@openbts/drizzle/db";
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
@@ -14,29 +14,21 @@ const UKE_OPERATOR_NAME_MAP: Record<string, string> = {
 
 export async function upsertRegions(items: Array<{ name: string; code: string }>): Promise<Map<string, number>> {
   const unique = Array.from(new Map(items.filter((i) => i.name && i.code).map((i) => [i.name, i])).values());
+  if (!unique.length) return new Map();
 
-  if (unique.length) {
-    const existing = await db.query.regions.findMany({
-      where: { name: { in: unique.map((r) => r.name) } },
-    });
+  const existing = await db.query.regions.findMany({ where: { name: { in: unique.map((r) => r.name) } } });
+  const map = new Map<string, number>(existing.map((r) => [r.name, r.id]));
 
-    const existingNames = new Set(existing.map((r) => r.name));
-    const toInsert = unique.filter((r) => !existingNames.has(r.name));
-
-    if (toInsert.length) {
-      await db.insert(regions).values(toInsert.map((region) => ({ name: region.name, code: region.code })));
-    }
-
-    const allRows = await db.query.regions.findMany({
-      where: { name: { in: unique.map((region) => region.name) } },
-    });
-
-    const map = new Map<string, number>();
-    for (const r of allRows) map.set(r.name, r.id);
-    return map;
+  const toInsert = unique.filter((r) => !map.has(r.name));
+  if (toInsert.length) {
+    const inserted = await db
+      .insert(regions)
+      .values(toInsert.map((r) => ({ name: r.name, code: r.code })))
+      .returning({ id: regions.id, name: regions.name });
+    for (const r of inserted) map.set(r.name, r.id);
   }
 
-  return new Map<string, number>();
+  return map;
 }
 
 export async function upsertBands(
@@ -52,60 +44,47 @@ export async function upsertBands(
     unique.push(k);
   }
 
-  if (unique.length) {
-    const existing = await db
-      .select()
-      .from(bands)
-      .where(
-        and(
-          inArray(
-            bands.value,
-            unique.map((k) => k.value),
-          ),
-          isNull(bands.duplex),
+  if (!unique.length) return new Map();
+
+  const existing = await db
+    .select()
+    .from(bands)
+    .where(
+      and(
+        inArray(
+          bands.value,
+          unique.map((k) => k.value),
         ),
-      );
+        isNull(bands.duplex),
+      ),
+    );
 
-    const existingKeys = new Set(existing.map((b) => `${b.rat}:${b.value}:${b.variant}`));
-    const existingNames = new Set(existing.map((b) => b.name));
-    const toInsert = unique.filter((k) => {
-      if (existingKeys.has(`${k.rat}:${k.value}:${k.variant}`)) return false;
-      const name = k.variant === "railway" ? `GSM-R ${k.value}` : `${k.rat} ${k.value}`;
-      if (existingNames.has(name)) return false;
-      return true;
-    });
+  const map = new Map<string, number>(existing.map((b) => [`${b.rat}:${b.value}:${b.variant}`, b.id]));
+  const existingNames = new Set(existing.map((b) => b.name));
 
-    if (toInsert.length) {
-      await db.insert(bands).values(
-        toInsert.map((band) => ({
-          rat: band.rat,
-          value: band.value,
+  const toInsert = unique.filter((k) => {
+    if (map.has(`${k.rat}:${k.value}:${k.variant}`)) return false;
+    const name = k.variant === "railway" ? `GSM-R ${k.value}` : `${k.rat} ${k.value}`;
+    return !existingNames.has(name);
+  });
+
+  if (toInsert.length) {
+    const inserted = await db
+      .insert(bands)
+      .values(
+        toInsert.map((b) => ({
+          rat: b.rat,
+          value: b.value,
           duplex: null,
-          name: band.variant === "railway" ? `GSM-R ${band.value}` : `${band.rat} ${band.value}`,
-          variant: band.variant,
+          name: b.variant === "railway" ? `GSM-R ${b.value}` : `${b.rat} ${b.value}`,
+          variant: b.variant,
         })),
-      );
-    }
-
-    const allRows = await db
-      .select()
-      .from(bands)
-      .where(
-        and(
-          inArray(
-            bands.value,
-            unique.map((k) => k.value),
-          ),
-          isNull(bands.duplex),
-        ),
-      );
-
-    const map = new Map<string, number>();
-    for (const r of allRows) map.set(`${r.rat}:${r.value}:${r.variant}`, r.id);
-    return map;
+      )
+      .returning({ id: bands.id, rat: bands.rat, value: bands.value, variant: bands.variant });
+    for (const r of inserted) map.set(`${r.rat}:${r.value}:${r.variant}`, r.id);
   }
 
-  return new Map<string, number>();
+  return map;
 }
 
 export async function getOperators(rawNames: string[]): Promise<Map<string, number>> {
@@ -119,23 +98,15 @@ export async function getOperators(rawNames: string[]): Promise<Map<string, numb
 
   const uniqueMappedNames = [...new Set(prepared.map((p) => p.mappedName))];
 
-  const existingOperators = uniqueMappedNames.length
-    ? await db.query.operators.findMany({
-        where: { name: { in: uniqueMappedNames } },
-      })
-    : [];
+  const existingOperators = uniqueMappedNames.length ? await db.query.operators.findMany({ where: { name: { in: uniqueMappedNames } } }) : [];
 
-  const operatorIdByName = new Map<string, number>();
-  for (const op of existingOperators) {
-    operatorIdByName.set(op.name, op.id);
-  }
+  const operatorIdByName = new Map(existingOperators.map((op) => [op.name, op.id]));
 
   const map = new Map<string, number>();
   for (const p of prepared) {
     const operatorId = operatorIdByName.get(p.mappedName);
     if (operatorId) map.set(p.originalName, operatorId);
   }
-
   return map;
 }
 
@@ -153,29 +124,22 @@ export async function upsertUkeOperators(rawNames: string[]): Promise<Map<string
   }
 
   const values = Array.from(uniqueByName.values());
+  if (!values.length) return new Map();
 
-  if (values.length) {
-    const existing = await db.query.ukeOperators.findMany({
-      where: { full_name: { in: values.map((v) => v.full_name) } },
-    });
+  const existing = await db.query.ukeOperators.findMany({ where: { full_name: { in: values.map((v) => v.full_name) } } });
+  const map = new Map<string, number>(existing.map((o) => [o.name, o.id]));
+  const existingFullNames = new Set(existing.map((o) => o.full_name));
 
-    const existingFullNames = new Set(existing.map((o) => o.full_name));
-    const toInsert = values.filter((v) => !existingFullNames.has(v.full_name));
-
-    if (toInsert.length) {
-      await db.insert(ukeOperators).values(toInsert.map((op) => ({ name: op.name, full_name: op.full_name })));
-    }
-
-    const allRows = await db.query.ukeOperators.findMany({
-      where: { name: { in: values.map((v) => v.name) } },
-    });
-
-    const map = new Map<string, number>();
-    for (const r of allRows) map.set(r.name, r.id);
-    return map;
+  const toInsert = values.filter((v) => !existingFullNames.has(v.full_name));
+  if (toInsert.length) {
+    const inserted = await db
+      .insert(ukeOperators)
+      .values(toInsert.map((op) => ({ name: op.name, full_name: op.full_name })))
+      .returning({ id: ukeOperators.id, name: ukeOperators.name });
+    for (const r of inserted) map.set(r.name, r.id);
   }
 
-  return new Map<string, number>();
+  return map;
 }
 
 export async function upsertUkeLocations(
@@ -185,27 +149,34 @@ export async function upsertUkeLocations(
   const uniq: typeof items = [];
   const seen = new Set<string>();
   for (const it of items) {
-    const id = `${it.lon}:${it.lat}`;
-    if (seen.has(id)) continue;
-    seen.add(id);
+    const key = `${it.lon}:${it.lat}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     uniq.push(it);
   }
 
-  if (uniq.length) {
-    const latLong = uniq.map((l) => ({ lat: l.lat, lon: l.lon }));
-    const existing = await db.query.ukeLocations.findMany({
-      where: {
-        AND: [{ longitude: { in: latLong.map((l) => l.lon) } }, { latitude: { in: latLong.map((l) => l.lat) } }],
-      },
-    });
+  if (!uniq.length) return new Map();
 
-    const existingCoords = new Set(existing.map((l) => `${l.longitude}:${l.latitude}`));
-    const toInsert = uniq.filter((it) => !existingCoords.has(`${it.lon}:${it.lat}`));
+  const map = new Map<string, number>();
+  for (const group of chunk(uniq, BATCH_SIZE)) {
+    const rows = await db
+      .select({ id: ukeLocations.id, longitude: ukeLocations.longitude, latitude: ukeLocations.latitude })
+      .from(ukeLocations)
+      .where(
+        sql`(${ukeLocations.longitude}, ${ukeLocations.latitude}) IN (${sql.join(
+          group.map((l) => sql`(${l.lon}::double precision, ${l.lat}::double precision)`),
+          sql`, `,
+        )})`,
+      );
+    for (const r of rows) map.set(`${r.longitude}:${r.latitude}`, r.id);
+  }
 
-    if (toInsert.length) {
-      for (const group of chunk(toInsert, BATCH_SIZE)) {
-        // eslint-disable-next-line no-await-in-loop
-        await db.insert(ukeLocations).values(
+  const toInsert = uniq.filter((it) => !map.has(`${it.lon}:${it.lat}`));
+  if (toInsert.length) {
+    for (const group of chunk(toInsert, BATCH_SIZE)) {
+      const inserted = await db
+        .insert(ukeLocations)
+        .values(
           group.map((loc) => ({
             region_id: regionIds.get(loc.regionName) ?? 0,
             city: loc.city ?? undefined,
@@ -213,20 +184,12 @@ export async function upsertUkeLocations(
             longitude: loc.lon,
             latitude: loc.lat,
           })),
-        );
-      }
+        )
+        .onConflictDoNothing()
+        .returning({ id: ukeLocations.id, longitude: ukeLocations.longitude, latitude: ukeLocations.latitude });
+      for (const r of inserted) map.set(`${r.longitude}:${r.latitude}`, r.id);
     }
-
-    const allRows = await db.query.ukeLocations.findMany({
-      where: {
-        AND: [{ longitude: { in: latLong.map((l) => l.lon) } }, { latitude: { in: latLong.map((l) => l.lat) } }],
-      },
-    });
-
-    const map = new Map<string, number>();
-    for (const r of allRows) map.set(`${r.longitude}:${r.latitude}`, r.id);
-    return map;
   }
 
-  return new Map<string, number>();
+  return map;
 }

@@ -8,6 +8,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Added **EARFCN** field for LTE cells and **ARFCN** for NR SA cells in the cell editor and cell details view
 - NR cells switched to **NSA** type now disable SA-only fields (TAC, CLID, gNBID, PCI, ARFCN, RedCap); fields with an existing value stay editable so data can still be corrected or cleared
 - Added new **Log analyzer** page (`/analyzer`). You can cross-check NetMonster or NetMonitor log exports against the internal database to identify matches, mismatches and unrecognised cells
+- UKE device registry importer now reads **"Nazwa stacji"** from any operator that provides it and automatically syncs it as the station's `mno_name` in the database
+- Optimized the UKE importer a little
 
 ### 🩹 Fixes
 

@@ -5,7 +5,7 @@ import { unlinkSync } from "node:fs";
 import readline from "node:readline";
 import XLSX from "xlsx";
 
-import { ukePermits, ukePermitSectors, deletedEntries, type ratEnum } from "@openbts/drizzle";
+import { ukePermits, ukePermitSectors, deletedEntries, extraIdentificators, stations, type ratEnum } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP } from "./config.ts";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
 
@@ -15,7 +15,16 @@ import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
 import { db } from "@openbts/drizzle/db";
-import { and, eq, lt } from "drizzle-orm/sql/expressions/conditions";
+import { and, eq, inArray, lt } from "drizzle-orm/sql/expressions/conditions";
+
+const voivodeshipCache = new Map<string, string | null>();
+function findVoivodeshipCached(lon: number, lat: number): string | null {
+  const key = `${lon}:${lat}`;
+  if (voivodeshipCache.has(key)) return voivodeshipCache.get(key)!;
+  const result = findVoivodeshipByTeryt(lon, lat);
+  voivodeshipCache.set(key, result);
+  return result;
+}
 
 function getRegionByTeryt(teryt: string): { name: string; code: string } | null {
   return REGION_BY_TERYT_PREFIX[teryt] ?? null;
@@ -63,6 +72,7 @@ interface ColumnIndices {
   nrAlternatywny: number;
   rodzajWniosku: number;
   idStacji: number;
+  nazwastacji?: number;
   miejscowosc: number;
   ulica: number;
   nrDomu: number;
@@ -91,6 +101,9 @@ function findColumnIndices(headerCells: string[]): ColumnIndices | null {
         break;
       case "id stacji":
         indices.idStacji = i;
+        break;
+      case "nazwa stacji":
+        indices.nazwastacji = i;
         break;
       case "miejscowość":
       case "miejscowosc":
@@ -183,6 +196,7 @@ function parseCSVLine(line: string): string[] {
 
 interface ParsedRow {
   stationId: string;
+  mnoName: string | null;
   lon: number;
   lat: number;
   regionName: string;
@@ -196,6 +210,19 @@ interface ParsedRow {
   elevation: number | null;
   antennaType: "indoor" | "outdoor" | null;
   antennaHeight: number | null;
+}
+
+function buildBandKeysArray(
+  fileBandKeys: Set<string>,
+): Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: "commercial" | "railway" }> {
+  const result: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: "commercial" | "railway" }> = [];
+  for (const key of fileBandKeys) {
+    const [rat, valueStr, variant] = key.split(":");
+    const value = Number(valueStr);
+    if (rat && Number.isFinite(value) && variant)
+      result.push({ rat: rat as (typeof ratEnum.enumValues)[number], value, variant: variant as "commercial" | "railway" });
+  }
+  return result;
 }
 
 async function processOperatorFile(
@@ -226,6 +253,9 @@ async function processOperatorFile(
   let cols: ColumnIndices | null = null;
   let chunkRows: ParsedRow[] = [];
   const fileBandKeys = new Set<string>();
+  const stationMnoNames = new Map<string, string>();
+  let bandMap = new Map<string, number>();
+  let lastUpsertedBandKeyCount = 0;
   const CHUNK_SIZE = 1000;
 
   for await (const line of rl) {
@@ -268,7 +298,7 @@ async function processOperatorFile(
     const bandKey = `${bandInfo.rat}:${bandInfo.value}:commercial`;
     fileBandKeys.add(bandKey);
 
-    const terytCode = findVoivodeshipByTeryt(lon, lat);
+    const terytCode = findVoivodeshipCached(lon, lat);
     if (!terytCode) {
       logger.warn(`Could not determine region from GPS coordinates (${lon}, ${lat}) for station ${stationId}`);
       continue;
@@ -299,8 +329,12 @@ async function processOperatorFile(
     const rawTypKomorki = cols.typKomorki !== undefined ? (cells[cols.typKomorki] ?? "").trim().toLowerCase() : null;
     const antennaType = rawTypKomorki === "w" ? ("indoor" as const) : rawTypKomorki === "z" ? ("outdoor" as const) : null;
 
+    const rawNazwaStacji = cols.nazwastacji !== undefined ? (cells[cols.nazwastacji] ?? "").trim() : null;
+    if (rawNazwaStacji && !stationMnoNames.has(stationId)) stationMnoNames.set(stationId, rawNazwaStacji);
+
     chunkRows.push({
       stationId,
+      mnoName: rawNazwaStacji || null,
       lon,
       lat,
       regionName,
@@ -317,15 +351,64 @@ async function processOperatorFile(
     });
 
     if (chunkRows.length >= CHUNK_SIZE) {
-      const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys, fileDate);
+      if (fileBandKeys.size > lastUpsertedBandKeyCount) {
+        bandMap = await upsertBands(buildBandKeysArray(fileBandKeys));
+        lastUpsertedBandKeyCount = fileBandKeys.size;
+      }
+      const inserted = await processChunk(chunkRows, operatorId, regionIds, bandMap, fileDate);
       insertedCount += inserted;
       chunkRows = [];
     }
   }
 
   if (chunkRows.length > 0) {
-    const inserted = await processChunk(chunkRows, operatorId, regionIds, fileBandKeys, fileDate);
+    if (fileBandKeys.size > lastUpsertedBandKeyCount) {
+      bandMap = await upsertBands(buildBandKeysArray(fileBandKeys));
+    }
+    const inserted = await processChunk(chunkRows, operatorId, regionIds, bandMap, fileDate);
     insertedCount += inserted;
+  }
+
+  if (stationMnoNames.size > 0) {
+    logger.log(`Syncing ${stationMnoNames.size} mno_name entries to extra_identificators...`);
+    const stationIdStrings = Array.from(stationMnoNames.keys());
+    const matchingStations = await db
+      .select({ id: stations.id, station_id: stations.station_id })
+      .from(stations)
+      .where(and(inArray(stations.station_id, stationIdStrings), eq(stations.operator_id, operatorId)));
+
+    const toInsert = matchingStations
+      .map((s) => ({ station_id: s.id, mno_name: stationMnoNames.get(s.station_id) ?? null }))
+      .filter((v): v is { station_id: number; mno_name: string } => v.mno_name !== null);
+
+    if (toInsert.length > 0) {
+      const internalStationIds = toInsert.map((v) => v.station_id);
+      const existing = await db
+        .select({ id: extraIdentificators.id, station_id: extraIdentificators.station_id, mno_name: extraIdentificators.mno_name })
+        .from(extraIdentificators)
+        .where(inArray(extraIdentificators.station_id, internalStationIds));
+
+      const existingByStationId = new Map(existing.map((e) => [e.station_id, e]));
+
+      const toInsertNew: typeof toInsert = [];
+      const updatePromises: Promise<unknown>[] = [];
+      for (const v of toInsert) {
+        const existingRow = existingByStationId.get(v.station_id);
+        if (!existingRow) {
+          toInsertNew.push(v);
+        } else if (existingRow.mno_name !== v.mno_name) {
+          updatePromises.push(
+            db.update(extraIdentificators).set({ mno_name: v.mno_name, updatedAt: new Date() }).where(eq(extraIdentificators.id, existingRow.id)),
+          );
+        }
+      }
+      if (updatePromises.length) await Promise.all(updatePromises);
+
+      for (const group of chunk(toInsertNew, BATCH_SIZE)) {
+        await db.insert(extraIdentificators).values(group);
+      }
+      logger.log(`Synced mno_name: ${toInsertNew.length} inserted, ${toInsert.length - toInsertNew.length} already existed`);
+    }
   }
 
   logger.log(`Done: ${rowCount - 1} data rows, ${insertedCount} permits inserted`);
@@ -336,18 +419,9 @@ async function processChunk(
   rows: ParsedRow[],
   operatorId: number,
   regionIds: Map<string, number>,
-  fileBandKeys: Set<string>,
+  bandMap: Map<string, number>,
   fileDate: Date,
 ): Promise<number> {
-  const bandKeysArray: Array<{ rat: (typeof ratEnum.enumValues)[number]; value: number; variant: "commercial" | "railway" }> = [];
-  for (const key of fileBandKeys) {
-    const [rat, valueStr, variant] = key.split(":");
-    const value = Number(valueStr);
-    if (rat && Number.isFinite(value) && variant)
-      bandKeysArray.push({ rat: rat as (typeof ratEnum.enumValues)[number], value, variant: variant as "commercial" | "railway" });
-  }
-  const bandMap = await upsertBands(bandKeysArray);
-
   const locationItems = rows.map((r) => ({
     regionName: r.regionName,
     city: r.city,
@@ -507,34 +581,32 @@ export async function importPermitDevices(): Promise<boolean> {
   const regionIds = await upsertRegions(regionItems);
 
   logger.log("Downloading all files...");
-  const downloadedFiles: Array<{ filePath: string; operatorKey: string; operatorId: number; fileDate: Date }> = [];
-
-  for (const l of newLinks) {
-    const operatorName = PERMIT_FILE_OPERATOR_MAP[l.operatorKey];
-    if (!operatorName) {
-      logger.warn(`Unknown operator key: ${l.operatorKey}`);
-      continue;
-    }
-
-    const operatorId = operatorIds.get(operatorName);
-    if (!operatorId) {
-      logger.warn(`Operator not found in database: ${operatorName}`);
-      continue;
-    }
-
-    const fileName = `${(l.text || path.basename(new url.URL(l.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
-    const filePath = path.join(DOWNLOAD_DIR, fileName);
-    const fileDateStr = l.href
-      .split("/")
-      .pop()
-      ?.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
-    const fileDate = fileDateStr ? new Date(fileDateStr) : new Date();
-
-    logger.log(`Downloading: ${fileName}`);
-    await downloadFile(l.href, filePath);
-
-    downloadedFiles.push({ filePath, operatorKey: l.operatorKey, operatorId, fileDate });
-  }
+  const downloadedFiles = (
+    await Promise.all(
+      newLinks.map(async (l) => {
+        const operatorName = PERMIT_FILE_OPERATOR_MAP[l.operatorKey];
+        if (!operatorName) {
+          logger.warn(`Unknown operator key: ${l.operatorKey}`);
+          return null;
+        }
+        const operatorId = operatorIds.get(operatorName);
+        if (!operatorId) {
+          logger.warn(`Operator not found in database: ${operatorName}`);
+          return null;
+        }
+        const fileName = `${(l.text || path.basename(new url.URL(l.href).pathname)).replace(/\s+/g, "_").replace("_plik_XLSX", "")}.xlsx`;
+        const filePath = path.join(DOWNLOAD_DIR, fileName);
+        const fileDateStr = l.href
+          .split("/")
+          .pop()
+          ?.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
+        const fileDate = fileDateStr ? new Date(fileDateStr) : new Date();
+        logger.log(`Downloading: ${fileName}`);
+        await downloadFile(l.href, filePath);
+        return { filePath, operatorKey: l.operatorKey, operatorId, fileDate };
+      }),
+    )
+  ).filter((f): f is NonNullable<typeof f> => f !== null);
 
   logger.log(`Downloaded ${downloadedFiles.length} files`);
 
