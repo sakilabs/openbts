@@ -165,7 +165,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
                   <>
                     <SubmissionLocationPhotoSelector
                       stationId={selectedStation.id}
-                      locationId={selectedStation.location_id}
+                      locationId={selectedStation.location?.id}
                       selectedIds={locationPhotoIds}
                       onSelectionChange={setLocationPhotoIds}
                     />

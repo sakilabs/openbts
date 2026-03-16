@@ -16,6 +16,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - `/statistics` page now loads significantly faster - charts below the fold are deferred until scrolled into view
 - Fixed hover tooltip appearing on a marker whose popup is already open
 - Fixed NR cell type switcher getting stuck when switching from SA back to NSA
+- Fixed photos not loading on `/submission` after selecting a station via search
 
 # 2026-03-14
 

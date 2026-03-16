@@ -331,17 +331,15 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               case "LTE": {
                 const d = proposed.lte;
                 if (d)
-                  await tx
-                    .insert(lteCells)
-                    .values({
-                      cell_id: newCell.id,
-                      tac: d.tac,
-                      enbid: d.enbid,
-                      clid: d.clid,
-                      pci: d.pci,
-                      earfcn: d.earfcn,
-                      supports_iot: d.supports_iot,
-                    });
+                  await tx.insert(lteCells).values({
+                    cell_id: newCell.id,
+                    tac: d.tac,
+                    enbid: d.enbid,
+                    clid: d.clid,
+                    pci: d.pci,
+                    earfcn: d.earfcn,
+                    supports_iot: d.supports_iot,
+                  });
                 break;
               }
               case "NR": {

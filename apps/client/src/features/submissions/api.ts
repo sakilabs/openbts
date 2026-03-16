@@ -27,7 +27,7 @@ export type SearchCell = {
 export type SearchStation = {
   id: number;
   station_id: string;
-  location_id: number;
+  location_id?: number;
   operator_id: number;
   notes: string | null;
   updatedAt: string;
