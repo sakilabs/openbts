@@ -33,7 +33,8 @@
     "myLists": "Moje listy",
     "sharedList": "Udostępniona lista",
     "viewAllLists": "Pokaż wszystkie",
-    "analyzer": "Analizator logów"
+    "analyzer": "Analizator logów",
+    "apiDocs": "Dokumentacja API"
   },
   "secondary": {
     "settings": "Ustawienia",

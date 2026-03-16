@@ -86,7 +86,7 @@ export class RateLimitService {
    * @returns Rate limit key or null if fingerprint generation fails
    */
   generateKey(req: FastifyRequest, useRouteKey = false): string | null {
-    const route = req.routeOptions.url?.replace("/", "") ?? "unknown";
+    const route = useRouteKey ? (req.url ?? req.routeOptions.url ?? "unknown").split("?")[0] : "";
 
     if (req.apiToken) {
       const tokenId = req.apiToken.id;
@@ -132,7 +132,7 @@ export class RateLimitService {
    * @returns Rate limit configuration for the route or null if not found
    */
   private getRouteRateLimit(req: FastifyRequest): RateLimitTier | null {
-    const url = req.routeOptions?.url ?? req.url;
+    const url = (req.url ?? req.routeOptions?.url ?? "").split("?")[0];
     if (!url || !this.options.routes.length) return null;
 
     const routeConfig = this.options.routes.find((route) => {
@@ -203,32 +203,25 @@ export class RateLimitService {
       };
     }
 
-    const current = await this.redis.get(key);
-    const count = current ? Number.parseInt(current, 10) : 0;
+    const [newCount, ttlResult] = (await this.redis.multi().incr(key).ttl(key).exec()) as unknown as [number, number];
+    if (newCount === 1) await this.redis.expire(key, rateLimit.window);
 
-    if (count >= rateLimit.max) {
-      const ttl = await this.redis.ttl(key);
-      const retryAfter = ttl > 0 ? ttl : rateLimit.window;
-      const resetTime = Math.floor(Date.now() / 1000) + retryAfter;
+    const ttl = newCount === 1 ? rateLimit.window : ttlResult > 0 ? ttlResult : rateLimit.window;
+    const resetTime = Math.floor(Date.now() / 1000) + ttl;
 
+    if (newCount > rateLimit.max) {
       return {
         allowed: false,
         remaining: 0,
         limit: rateLimit.max,
         reset: resetTime,
-        retryAfter,
+        retryAfter: ttl,
       };
     }
 
-    const newCount = await this.redis.incr(key);
-    if (newCount === 1) await this.redis.expire(key, rateLimit.window);
-
-    const ttl = await this.redis.ttl(key);
-    const resetTime = Math.floor(Date.now() / 1000) + (ttl > 0 ? ttl : rateLimit.window);
-
     return {
       allowed: true,
-      remaining: rateLimit.max - count - 1,
+      remaining: rateLimit.max - newCount,
       limit: rateLimit.max,
       reset: resetTime,
     };

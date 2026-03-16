@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import path from "node:path";
 import fs from "node:fs/promises";
 import sharp from "sharp";
+import { fileTypeFromBuffer } from "file-type";
 
 import db from "../../../../../database/psql.js";
 import { isHeic, decodeHeicToRaw } from "../../../../../utils/image.js";
@@ -75,6 +76,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       const chunks: Buffer[] = [];
       for await (const chunk of filePart.file) chunks.push(chunk as Buffer);
       const inputBuffer = Buffer.concat(chunks);
+
+      const detected = await fileTypeFromBuffer(inputBuffer);
+      if (!detected || !detected.mime.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
 
       let sharpInput: sharp.SharpInput;
       let sharpOptions: sharp.SharpOptions | undefined;

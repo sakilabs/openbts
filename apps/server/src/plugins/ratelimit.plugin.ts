@@ -12,14 +12,15 @@ declare module "fastify" {
 }
 
 export const registerRateLimit = (fastify: FastifyZodInstance) => {
-  const rateLimitService = new RateLimitService(redis);
+  const rateLimitService = new RateLimitService(redis, {
+    routes: [{ url: "/api/v1/auth/sign-in", max: 20, window: 300 }],
+  });
 
   fastify.decorate("rateLimitService", rateLimitService);
   fastify.addHook("preHandler", async (req: FastifyRequest, res: FastifyReply) => {
     const result = await rateLimitService.processRequest(req);
     if (!result) {
-      if (!req.userSession && !req.apiToken) throw new ErrorResponse("TOO_MANY_REQUESTS");
-      return;
+      throw new ErrorResponse("TOO_MANY_REQUESTS");
     }
 
     if (!result.allowed) {

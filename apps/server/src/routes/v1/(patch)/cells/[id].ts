@@ -17,6 +17,7 @@ const cellsUpdateSchema = createUpdateSchema(cells)
     createdAt: true,
     updatedAt: true,
   })
+  .extend({ rat: z.enum(["GSM", "CDMA", "UMTS", "LTE", "NR"]).optional() })
   .strict();
 const cellsSelectSchema = createSelectSchema(cells);
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true }).strict();

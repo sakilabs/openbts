@@ -33,7 +33,8 @@
     "myLists": "My Lists",
     "sharedList": "Shared List",
     "viewAllLists": "View all",
-    "analyzer": "Log Analyzer"
+    "analyzer": "Log Analyzer",
+    "apiDocs": "API Docs"
   },
   "secondary": {
     "settings": "Settings",

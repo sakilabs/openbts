@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import path from "node:path";
 import fs from "node:fs/promises";
 import sharp from "sharp";
+import { fileTypeFromBuffer } from "file-type";
 
 import db from "../../../../../database/psql.js";
 import { isHeic, decodeHeicToRaw } from "../../../../../utils/image.js";
@@ -96,6 +97,9 @@ async function handler(
       for await (const chunk of filePart.file) chunks.push(chunk as Buffer);
       const inputBuffer = Buffer.concat(chunks);
 
+      const detected = await fileTypeFromBuffer(inputBuffer);
+      if (!detected || !detected.mime.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
+
       let sharpInput: sharp.SharpInput;
       let sharpOptions: sharp.SharpOptions | undefined;
       if (isHeic(filePart.mimetype)) {
@@ -128,7 +132,12 @@ async function handler(
       const fileIndex = insertedRows.length;
       const note = notes[fileIndex]?.trim().slice(0, 100) || null;
       const takenAtRaw = takenAts[fileIndex];
-      const taken_at = takenAtRaw ? new Date(takenAtRaw) : null;
+      let taken_at: Date | null = null;
+      if (takenAtRaw) {
+        const parsed = new Date(takenAtRaw);
+        if (isNaN(parsed.getTime())) throw new ErrorResponse("BAD_REQUEST", { message: "Invalid takenAt date" });
+        taken_at = parsed;
+      }
       const [photoRow] = await db.insert(submissionPhotos).values({ submission_id: id, attachment_id: newAttachment.id, note, taken_at }).returning();
       if (!photoRow) throw new ErrorResponse("FAILED_TO_CREATE");
 

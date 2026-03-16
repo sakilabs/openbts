@@ -21,6 +21,7 @@ const DEFAULT_OPEN_KEYS = new Set(["stations", "info"]);
 type NavSubItem = {
   title: string;
   url: string;
+  href?: string;
   icon?: IconSvgElement;
 };
 
@@ -85,8 +86,11 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
                   <CollapsibleContent>
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.url}>
-                          <SidebarMenuSubButton render={<Link to={subItem.url} />} isActive={location.pathname === subItem.url}>
+                        <SidebarMenuSubItem key={subItem.href ?? subItem.url}>
+                          <SidebarMenuSubButton
+                            render={subItem.href ? <a href={subItem.href} target="_blank" rel="noopener noreferrer" /> : <Link to={subItem.url} />}
+                            isActive={!subItem.href && location.pathname === subItem.url}
+                          >
                             {subItem.icon && <HugeiconsIcon icon={subItem.icon} className="size-3.5" />}
                             <span>{subItem.title}</span>
                           </SidebarMenuSubButton>

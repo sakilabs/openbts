@@ -13,8 +13,8 @@ const schemaRoute = {
   body: z
     .object({
       enforceAuthForAllRoutes: z.boolean().optional(),
-      allowedUnauthenticatedRoutes: z.array(z.string().min(1)).optional(),
-      disabledRoutes: z.array(z.string().min(1)).optional(),
+      allowedUnauthenticatedRoutes: z.array(z.string().regex(/^\/api\/v1\/.+/, "Must be a specific path under /api/v1/")).optional(),
+      disabledRoutes: z.array(z.string().regex(/^\/api\/v1\/.+/, "Must be a specific path under /api/v1/")).optional(),
       enableStationComments: z.boolean().optional(),
       submissionsEnabled: z.boolean().optional(),
       enableUserLists: z.boolean().optional(),

@@ -126,10 +126,10 @@ export const auth = betterAuth({
     username({
       minUsernameLength: 3,
       maxUsernameLength: 25,
-      // usernameValidator: (username) => {
-      // 	if (["admin", "administrator", "mod", "moderator"].includes(username)) return false;
-      // 	return true;
-      // },
+      usernameValidator: (username) => {
+        if (["admin", "administrator", "mod", "moderator"].includes(username)) return false;
+        return true;
+      },
     }),
     passkey({
       rpID: process.env.NODE_ENV === "production" ? "openbts.sakilabs.com" : "localhost",

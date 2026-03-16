@@ -321,7 +321,7 @@ paths:
           schema: { type: string }
         - name: rat
           in: query
-          description: Comma-separated RATs (GSM, UMTS, LTE, NR, IOT)
+          description: Comma-separated RATs (GSM, UMTS, LTE, NR, IOT) — IOT selects cells with RedCap/IoT support
           schema: { type: string }
         - name: bands
           in: query
@@ -3310,22 +3310,22 @@ components:
             band: { $ref: "#/components/schemas/Band" }
             details: { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellCreate:
-      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
+      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server. RAT `IOT` is reserved for UKE permits and cannot be used here.
       type: object
       required: [station_id, band_id, rat]
       properties:
         station_id: { type: integer }
         band_id: { type: integer }
-        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
         details: { $ref: "#/components/schemas/CellDetailsInsert" }
     CellUpdate:
-      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
+      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server. RAT `IOT` is reserved for UKE permits and cannot be used here.
       type: object
       properties:
         band_id: { type: integer }
-        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
         details: { $ref: "#/components/schemas/CellDetailsInsert" }
@@ -3857,7 +3857,7 @@ components:
       properties:
         cell_id: { type: integer }
         band_id: { type: integer }
-        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
         details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, type ComponentProps } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
   AddCircleIcon,
   AirportTowerIcon,
@@ -80,6 +80,7 @@ const infoNavConfig = [
       { titleKey: "items.about", url: "/about", icon: InformationCircleIcon },
       { titleKey: "items.contact", url: "/contact", icon: Mail01Icon },
       { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },
+      { titleKey: "items.apiDocs", url: "#", href: "/api/v1/docs", icon: FileSearchIcon },
     ],
   },
 ];
@@ -104,7 +105,10 @@ const adminNavConfig = [
   },
 ];
 
-function translateNav(config: typeof navMainConfig, t: (key: string) => string) {
+type NavConfigItem = { titleKey: string; url: string; href?: string; icon: IconSvgElement };
+type NavConfigSection = { titleKey: string; key: string; url: string; icon: IconSvgElement; items: NavConfigItem[] };
+
+function translateNav(config: NavConfigSection[], t: (key: string) => string) {
   return config.map((section) => ({
     title: t(section.titleKey),
     key: section.key,
@@ -113,6 +117,7 @@ function translateNav(config: typeof navMainConfig, t: (key: string) => string) 
     items: section.items.map((item) => ({
       title: t(item.titleKey),
       url: item.url,
+      href: item.href,
       icon: item.icon,
     })),
   }));

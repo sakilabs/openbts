@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
 import debug from "debug";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import staticServe from "@fastify/static";
+import scalarReference from "@scalar/fastify-api-reference";
 import { serializerCompiler, validatorCompiler, hasZodFastifySchemaValidationErrors, type ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { dlogger } from "./config.js";
@@ -147,6 +150,19 @@ export default class App {
 
   private initControllers(): void {
     this.dlogger("Registering controllers");
+    this.fastify.register(scalarReference, {
+      routePrefix: "/api/v1/docs",
+      configuration: {
+        title: "OpenBTS API Documentation",
+        url: "/api/v1/openapi.yaml",
+      },
+    });
+    this.fastify.register(staticServe, {
+      root: resolve(process.cwd(), "static"),
+      prefix: "/",
+      serve: false,
+    });
+    this.fastify.get("/api/v1/openapi.yaml", (_req, res) => res.sendFile("openapi.yaml"));
     this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
   }
 

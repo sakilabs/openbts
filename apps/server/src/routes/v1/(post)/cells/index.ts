@@ -28,6 +28,7 @@ const cellsInsertSchema = createInsertSchema(cells)
     createdAt: true,
     updatedAt: true,
   })
+  .extend({ rat: z.enum(["GSM", "CDMA", "UMTS", "LTE", "NR"]) })
   .strict();
 const gsmInsertSchema = createInsertSchema(gsmCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
 const umtsInsertSchema = createInsertSchema(umtsCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
