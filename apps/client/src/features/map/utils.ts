@@ -39,6 +39,7 @@ export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLoc
 
   const overrideLocation = ukeLocation
     ? {
+        id: ukeLocation.id,
         city: ukeLocation.city,
         address: ukeLocation.address,
         latitude: ukeLocation.latitude,

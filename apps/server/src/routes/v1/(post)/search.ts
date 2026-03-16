@@ -11,14 +11,14 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
 
-const stationsSelectSchema = createSelectSchema(stations).omit({ status: true });
+const stationsSelectSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSelectSchema = createSelectSchema(cells);
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
 const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true });
 const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
-const locationSelectSchema = createSelectSchema(locations).omit({ point: true });
+const locationSelectSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionSelectSchema = createSelectSchema(regions);
 const operatorsSelectSchema = createSelectSchema(operators);
 const extraIdentificatorsSchema = createSelectSchema(extraIdentificators).omit({ station_id: true });
@@ -76,11 +76,11 @@ const schemaRoute = {
 const stationQueryConfig = {
   with: {
     cells: { with: { gsm: true, umts: true, lte: true, nr: true } },
-    location: { with: { region: true }, columns: { point: false } },
+    location: { with: { region: true }, columns: { point: false, region_id: false } },
     operator: true,
     extra_identificators: { columns: { station_id: false } },
   },
-  columns: { status: false },
+  columns: { status: false, operator_id: false, location_id: false },
 } as const;
 
 const ratTables = [

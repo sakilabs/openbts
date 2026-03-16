@@ -8,6 +8,7 @@ import {
   Delete02Icon,
   Download04Icon,
   FileAttachmentIcon,
+  FileSearchIcon,
   GitBranchIcon,
   InformationCircleIcon,
   LegalDocument01Icon,
@@ -51,6 +52,7 @@ const navMainConfig = [
       { titleKey: "items.statistics", url: "/statistics", icon: AnalyticsUpIcon },
       { titleKey: "items.deletedEntries", url: "/deleted-entries", icon: Delete02Icon },
       { titleKey: "items.clfExport", url: "/clf-export", icon: Download04Icon },
+      { titleKey: "items.analyzer", url: "/analyzer", icon: FileSearchIcon },
     ],
   },
 ];
@@ -203,7 +205,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
           )}
           {session?.user && <NavUser data={session} />}
           <SidebarMenuItem>
-            <GoogleAd adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="XXXXXXXXXX" adFormat="rectangle" className="w-full" />
+            <GoogleAd adSlot="XXXXXXXXXX" adFormat="rectangle" className="w-full" />
           </SidebarMenuItem>
           <div className="flex items-center justify-between px-2 py-1 text-[10px] text-muted-foreground">
             {(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (

@@ -126,6 +126,14 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             disabled={disabled}
             onDetailChange={onDetailChange}
           />
+          <DetailInputCell
+            field="earfcn"
+            placeholder="EARFCN"
+            value={(d.earfcn as number) ?? ""}
+            error={!!detailErrors?.earfcn}
+            disabled={disabled}
+            onDetailChange={onDetailChange}
+          />
           <td className="px-1.5 py-1">
             <Checkbox
               checked={(d.supports_iot as boolean) ?? false}
@@ -140,10 +148,25 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
       const nrType = (d.type as "nsa" | "sa") ?? "nsa";
       const nrTypeLabel = NR_TYPE_OPTIONS.find((opt) => opt.value === nrType)?.label ?? "NSA";
       const nci = calculateComputedValues("nci", d);
+      const nsaLock = (val: unknown) => disabled || (nrType !== "sa" && (val === null || val === undefined));
       return (
         <>
           <td className="px-1.5 py-1">
-            <Select value={nrType} onValueChange={(value) => onDetailChange("type", value as "nsa" | "sa")} disabled={disabled}>
+            <Select
+              value={nrType}
+              onValueChange={(value) => {
+                onDetailChange("type", value as "nsa" | "sa");
+                if (value === "nsa") {
+                  onDetailChange("nrtac", undefined);
+                  onDetailChange("clid", undefined);
+                  onDetailChange("gnbid", undefined);
+                  onDetailChange("pci", undefined);
+                  onDetailChange("arfcn", undefined);
+                  onDetailChange("supports_nr_redcap", undefined);
+                }
+              }}
+              disabled={disabled}
+            >
               <SelectTrigger className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")}>
                 <SelectValue>{nrTypeLabel}</SelectValue>
               </SelectTrigger>
@@ -161,7 +184,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             placeholder="TAC"
             value={(d.nrtac as number) ?? ""}
             error={!!detailErrors?.nrtac}
-            disabled={disabled}
+            disabled={nsaLock(d.nrtac)}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -169,7 +192,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             placeholder="CLID"
             value={(d.clid as number) ?? ""}
             error={!!detailErrors?.clid}
-            disabled={disabled}
+            disabled={nsaLock(d.clid)}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -177,7 +200,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             placeholder="gNBID"
             value={(d.gnbid as number) ?? ""}
             error={!!detailErrors?.gnbid}
-            disabled={disabled}
+            disabled={nsaLock(d.gnbid)}
             onDetailChange={onDetailChange}
           />
           <DetailComputedCell value={nci} />
@@ -186,14 +209,22 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             placeholder="PCI"
             value={(d.pci as number) ?? ""}
             error={!!detailErrors?.pci}
-            disabled={disabled}
+            disabled={nsaLock(d.pci)}
+            onDetailChange={onDetailChange}
+          />
+          <DetailInputCell
+            field="arfcn"
+            placeholder="ARFCN"
+            value={(d.arfcn as number) ?? ""}
+            error={!!detailErrors?.arfcn}
+            disabled={nsaLock(d.arfcn)}
             onDetailChange={onDetailChange}
           />
           <td className="px-1.5 py-1">
             <Checkbox
               checked={(d.supports_nr_redcap as boolean) ?? false}
               onCheckedChange={(checked) => onDetailChange("supports_nr_redcap", checked === true)}
-              disabled={disabled}
+              disabled={disabled || (nrType !== "sa" && d.supports_nr_redcap !== true)}
             />
           </td>
         </>

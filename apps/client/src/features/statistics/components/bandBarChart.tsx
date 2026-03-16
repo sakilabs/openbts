@@ -65,7 +65,7 @@ function BandBarChartCard({
             <ChartTooltip content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
             <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} />} />
             {operators.map((op) => (
-              <Bar key={op.name} dataKey={op.name} fill={op.color} />
+              <Bar key={op.name} dataKey={op.name} fill={op.color} isAnimationActive={false} />
             ))}
           </BarChart>
         </ChartContainer>

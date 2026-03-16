@@ -7,7 +7,6 @@ import { redis } from "../../database/redis.js";
 import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, ARGON2_OPTIONS } from "../../constants.js";
 
 import type { AuthContext, MiddlewareContext, MiddlewareOptions } from "better-auth";
-import { auth } from "../betterauth.plugin.ts";
 
 type HookCtx = MiddlewareContext<MiddlewareOptions, AuthContext & { returned?: unknown; responseHeaders?: Headers }>;
 
@@ -76,7 +75,7 @@ const beforeHandlers: Array<{ path: string; handler: (ctx: HookCtx) => Promise<u
 export const beforeAuthHook = createAuthMiddleware(async (ctx) => {
   for (const { path, handler } of beforeHandlers) {
     if (ctx.path.startsWith(path)) {
-      return await handler(ctx as HookCtx);
+      return handler(ctx as HookCtx);
     }
   }
 });

@@ -179,24 +179,28 @@ export const relations = defineRelations(
       cell: helpers.one.cells({
         from: helpers.gsmCells.cell_id,
         to: helpers.cells.id,
+        optional: false,
       }),
     },
     umtsCells: {
       cell: helpers.one.cells({
         from: helpers.umtsCells.cell_id,
         to: helpers.cells.id,
+        optional: false,
       }),
     },
     lteCells: {
       cell: helpers.one.cells({
         from: helpers.lteCells.cell_id,
         to: helpers.cells.id,
+        optional: false,
       }),
     },
     nrCells: {
       cell: helpers.one.cells({
         from: helpers.nrCells.cell_id,
         to: helpers.cells.id,
+        optional: false,
       }),
     },
     userLists: {

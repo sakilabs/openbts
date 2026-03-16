@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search02Icon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+
 import { cn, toggleValue } from "@/lib/utils";
 import { Checkbox as UICheckbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -20,6 +21,8 @@ import { useSearchState } from "@/features/map/hooks/useSearchState";
 import { AutocompleteDropdown } from "@/features/map/components/search-overlay/autocompleteDropdown";
 import { FILTER_KEYWORDS } from "@/features/map/constants";
 import { parseFilters } from "@/features/map/filters";
+import { GoogleAd } from "@/components/ui/google-ad";
+
 import type { Operator, Region, StationFilters } from "@/types/station";
 
 const RAT_OPTIONS = [
@@ -339,6 +342,8 @@ export function StationsFilters({
             </ComboboxContent>
           </Combobox>
         </div>
+
+        <GoogleAd adSlot="XXXXXXXXXX" adFormat="rectangle" className="w-full" />
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
           {totalStations !== undefined

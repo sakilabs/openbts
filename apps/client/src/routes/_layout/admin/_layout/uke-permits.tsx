@@ -12,6 +12,8 @@ import { useUnassignedPermitsData } from "@/features/admin/uke-permits/hooks/use
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import type { UkeStation } from "@/types/station";
 
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+
 function subscribeToHeaderActions(callback: () => void) {
   const id = requestAnimationFrame(callback);
   return () => cancelAnimationFrame(id);
@@ -27,11 +29,7 @@ function AdminUkePermitsPage() {
     () => null,
   );
 
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const data = useUnassignedPermitsData({ pagination, setPagination });
 

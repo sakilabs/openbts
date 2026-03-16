@@ -161,6 +161,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       if (d.clid !== undefined && d.clid > 255) errors.clid = "validation.clidRangeInvalid";
       optionalNonNegative("pci", d.pci);
       if (d.pci !== undefined && d.pci > 503) errors.pci = "validation.pciRangeInvalid";
+      optionalNonNegative("earfcn", d.earfcn);
       break;
     }
     case "NR": {
@@ -172,6 +173,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("gnbid", d.gnbid);
       optionalNonNegative("clid", d.clid);
       optionalNonNegative("pci", d.pci);
+      if (d.type === "sa") optionalNonNegative("arfcn", d.arfcn);
       break;
     }
   }

@@ -17,6 +17,8 @@ import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions
 import type { SubmissionListItem } from "@/features/admin/submissions/types";
 import { formatShortDate } from "@/lib/format";
 
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+
 const columnHelper = createColumnHelper<SubmissionListItem>();
 
 function AdminSubmissionsListPage() {
@@ -50,11 +52,7 @@ function AdminSubmissionsListPage() {
     localStorage.setItem("admin:submissions:type", v);
   }, []);
 
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, stationIdFilter, userIdFilter],

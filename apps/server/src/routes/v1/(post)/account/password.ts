@@ -9,7 +9,6 @@ import { ARGON2_OPTIONS } from "../../../../constants.js";
 import { passkeyVerifiedKey } from "../../../../plugins/auth/hooks.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
-import type { RouteGenericInterface } from "fastify/types/route.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
 

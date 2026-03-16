@@ -1,0 +1,51 @@
+{
+  "page": {
+    "description": "Import a NetMonster (.ntm) or NetMonitor file and cross-check cells against the database"
+  },
+  "file": {
+    "dropHint": "Drop a file here or click to select",
+    "constraints": "NetMonster (.ntm) or NetMonitor (.csv) · max 10 MB · up to 15 000 rows",
+    "format": "Format: {{format}}",
+    "rowCount": "{{count}} cells parsed",
+    "parsing": "Parsing...",
+    "changeFile": "Change file"
+  },
+  "button": {
+    "analyze": "Analyze {{count}} cells",
+    "analyzing": "Analyzing..."
+  },
+  "table": {
+    "identifiers": "Identifiers",
+    "description": "Description",
+    "location": "DB Location"
+  },
+  "status": {
+    "found": "Found",
+    "probable": "Probable",
+    "notFound": "No data",
+    "unsupported": "Unsupported (5G)"
+  },
+  "stats": {
+    "found": "found",
+    "probable": "probable",
+    "notFound": "not found",
+    "unsupported": "unsupported"
+  },
+  "filter": {
+    "anyWarning": "Any warning"
+  },
+  "warning": {
+    "lacMismatch": "LAC changed",
+    "rncMismatch": "RNC changed",
+    "tacMismatch": "TAC changed",
+    "pciMismatch": "PCI mismatch",
+    "enbidOnly": "Matched by eNBID only",
+    "dbValue": "Value from database"
+  },
+  "errors": {
+    "fileTooLarge": "File too large (max 10 MB)",
+    "invalidFileType": "Unsupported file type",
+    "noValidRows": "No valid rows found in file",
+    "truncated": "File truncated to {{count}} rows"
+  }
+}

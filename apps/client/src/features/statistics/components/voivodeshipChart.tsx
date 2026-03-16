@@ -72,7 +72,14 @@ function VoivodeshipBarCard({
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
             {operators.map((op, i) => (
-              <Bar key={op.name} dataKey={op.name} fill={op.color} stackId="stack" radius={i === operators.length - 1 ? [0, 4, 4, 0] : 0}>
+              <Bar
+                key={op.name}
+                dataKey={op.name}
+                fill={op.color}
+                stackId="stack"
+                radius={i === operators.length - 1 ? [0, 4, 4, 0] : 0}
+                isAnimationActive={false}
+              >
                 {i === operators.length - 1 && (
                   <LabelList
                     dataKey="_total"

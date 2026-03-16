@@ -21,6 +21,7 @@ export type LTECellDetails = {
   enbid: number;
   clid: number;
   pci?: number;
+  earfcn?: number;
   supports_iot?: boolean;
 };
 
@@ -33,6 +34,7 @@ export type NRCellDetails = {
   clid?: number;
   nci?: number;
   pci?: number;
+  arfcn?: number;
   supports_nr_redcap?: boolean;
 };
 

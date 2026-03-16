@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, startTransition, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -51,6 +51,29 @@ function DistributionSkeleton() {
   );
 }
 
+function WhenVisible({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startTransition(() => setVisible(true));
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div ref={ref}>{visible ? children : fallback}</div>;
+}
+
 function StatisticsPage() {
   const { t } = useTranslation("statistics");
   const { data: summary, isLoading: summaryLoading } = useQuery(statsSummaryQueryOptions());
@@ -66,7 +89,7 @@ function StatisticsPage() {
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
 
-        <GoogleAd adClient="ca-pub-XXXXXXXXXXXXXXXX" adSlot="XXXXXXXXXX" adFormat="horizontal" className="w-full" />
+        <GoogleAd adSlot="XXXXXXXXXX" adFormat="horizontal" className="w-full" />
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">{t("stationDetails:tabs.permits")}</h2>
@@ -74,37 +97,53 @@ function StatisticsPage() {
           <Suspense fallback={<DistributionSkeleton />}>
             <UkeDistributionCharts data={summary} isLoading={summaryLoading} />
           </Suspense>
-          <Suspense fallback={<ChartCardSkeleton />}>
-            <UkeBandBarChart data={permits?.uke} isLoading={permitsLoading} />
-          </Suspense>
-          <Suspense fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
-            <UkeVoivodeshipChart data={voivodeships?.uke} isLoading={voivodeshipsLoading} />
-          </Suspense>
+          <WhenVisible fallback={<ChartCardSkeleton />}>
+            <Suspense fallback={<ChartCardSkeleton />}>
+              <UkeBandBarChart data={permits?.uke} isLoading={permitsLoading} />
+            </Suspense>
+          </WhenVisible>
+          <WhenVisible fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
+            <Suspense fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
+              <UkeVoivodeshipChart data={voivodeships?.uke} isLoading={voivodeshipsLoading} />
+            </Suspense>
+          </WhenVisible>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">{t("main:stats.internalData")}</h2>
           <InternalKpiCards data={summary} isLoading={summaryLoading} />
-          <Suspense fallback={<ChartCardSkeleton />}>
-            <InternalOperatorStationsChart data={summary} isLoading={summaryLoading} />
-          </Suspense>
-          <Suspense fallback={<DistributionSkeleton />}>
-            <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
-          </Suspense>
-          <Suspense fallback={<ChartCardSkeleton />}>
-            <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
-          </Suspense>
-          <Suspense fallback={<ChartCardSkeleton />}>
-            <InternalBandBarChart data={permits?.internal} isLoading={permitsLoading} />
-          </Suspense>
-          <Suspense fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
-            <InternalVoivodeshipChart data={voivodeships?.internal} isLoading={voivodeshipsLoading} />
-          </Suspense>
+          <WhenVisible fallback={<ChartCardSkeleton />}>
+            <Suspense fallback={<ChartCardSkeleton />}>
+              <InternalOperatorStationsChart data={summary} isLoading={summaryLoading} />
+            </Suspense>
+          </WhenVisible>
+          <WhenVisible fallback={<DistributionSkeleton />}>
+            <Suspense fallback={<DistributionSkeleton />}>
+              <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
+            </Suspense>
+          </WhenVisible>
+          <WhenVisible fallback={<ChartCardSkeleton />}>
+            <Suspense fallback={<ChartCardSkeleton />}>
+              <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
+            </Suspense>
+          </WhenVisible>
+          <WhenVisible fallback={<ChartCardSkeleton />}>
+            <Suspense fallback={<ChartCardSkeleton />}>
+              <InternalBandBarChart data={permits?.internal} isLoading={permitsLoading} />
+            </Suspense>
+          </WhenVisible>
+          <WhenVisible fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
+            <Suspense fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
+              <InternalVoivodeshipChart data={voivodeships?.internal} isLoading={voivodeshipsLoading} />
+            </Suspense>
+          </WhenVisible>
         </section>
 
-        <Suspense fallback={<ChartCardSkeleton />}>
-          <HistoryChart operators={operators} />
-        </Suspense>
+        <WhenVisible fallback={<ChartCardSkeleton />}>
+          <Suspense fallback={<ChartCardSkeleton />}>
+            <HistoryChart operators={operators} />
+          </Suspense>
+        </WhenVisible>
       </div>
     </main>
   );

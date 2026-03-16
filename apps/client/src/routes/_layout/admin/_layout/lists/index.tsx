@@ -27,6 +27,8 @@ import { useTablePagination } from "@/hooks/useTablePageSize";
 import { fetchUserLists, deleteList, type UserListSummary } from "@/features/lists/api";
 import { formatShortDate } from "@/lib/format";
 
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+
 const columnHelper = createColumnHelper<UserListSummary>();
 
 function AdminListsPage() {
@@ -35,11 +37,7 @@ function AdminListsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);

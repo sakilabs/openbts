@@ -27,7 +27,7 @@ function DonutChart({ title, data, locale }: { title: string; data: { name: stri
       <CardContent>
         <ChartContainer config={config} locale={locale} className="mx-auto aspect-4/5 max-h-85">
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} paddingAngle={2}>
+            <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} paddingAngle={2} isAnimationActive={false}>
               {data.map((entry) => (
                 <Cell key={entry.name} fill={entry.fill} />
               ))}

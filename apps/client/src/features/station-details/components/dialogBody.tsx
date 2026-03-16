@@ -4,7 +4,6 @@ import type { Station } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   InformationCircleIcon,
-  Building02Icon,
   Calendar03Icon,
   Globe02Icon,
   Image01Icon,
@@ -178,11 +177,6 @@ export function StationDetailsBody({
                         <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
                         <span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
                         <span className="text-sm font-medium">{station.location.region?.name || "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
-                        <span className="text-sm text-muted-foreground">{t("common:labels.operator")}:</span>
-                        <span className="text-sm font-medium">{station.operator.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />

@@ -32,7 +32,8 @@
     "tos": "Terms of Service",
     "myLists": "My Lists",
     "sharedList": "Shared List",
-    "viewAllLists": "View all"
+    "viewAllLists": "View all",
+    "analyzer": "Log Analyzer"
   },
   "secondary": {
     "settings": "Settings",

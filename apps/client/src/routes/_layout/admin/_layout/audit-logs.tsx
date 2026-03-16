@@ -19,6 +19,8 @@ import { DatePickerButton } from "@/features/admin/audit-logs/components/date-pi
 import { AuditLogDetailSheet } from "@/features/admin/audit-logs/components/audit-log-detail-sheet";
 import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "../../../../features/admin/audit-logs/constants";
 
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+
 function formatAuditDate(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleDateString(locale, {
     month: "short",
@@ -152,11 +154,7 @@ function AdminAuditLogsPage() {
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
   const { tableFilter, actionsFilter, dateFrom, dateTo, sort, selectedEntry } = filterState;
 
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 

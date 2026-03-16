@@ -63,13 +63,18 @@ function RootComponent() {
 
 export const Route = createRootRoute({
   component: RootComponent,
-  head: () => ({
-    scripts: [
-      {
-        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX",
-        async: true,
-        crossOrigin: "anonymous",
-      },
-    ],
-  }),
+  head: () => {
+    const adClient = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
+    return {
+      scripts: adClient
+        ? [
+            {
+              src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClient}`,
+              async: true,
+              crossOrigin: "anonymous" as const,
+            },
+          ]
+        : [],
+    };
+  },
 });

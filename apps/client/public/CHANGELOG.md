@@ -1,6 +1,18 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-16
+
+### 🚀 Enhancements
+
+- Added **EARFCN** field for LTE cells and **ARFCN** for NR SA cells in the cell editor and cell details view
+- NR cells switched to **NSA** type now disable SA-only fields (TAC, CLID, gNBID, PCI, ARFCN, RedCap); fields with an existing value stay editable so data can still be corrected or cleared
+- Added new **Log analyzer** page (`/analyzer`). You can cross-check NetMonster or NetMonitor log exports against the internal database to identify matches, mismatches and unrecognised cells
+
+### 🩹 Fixes
+
+- `/statistics` page now loads significantly faster - charts below the fold are deferred until scrolled into view
+
 # 2026-03-14
 
 ### 🩹 Fixes

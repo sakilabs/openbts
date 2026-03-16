@@ -14,6 +14,8 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { authClient } from "@/lib/authClient";
 import type { AdminUser } from "@/features/admin/users/types";
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 36, paginationHeight: 40 };
+
 const columnHelper = createColumnHelper<AdminUser>();
 
 function useColumns() {
@@ -73,11 +75,7 @@ function AdminUsersPage() {
   const navigate = useNavigate();
   const { t } = useTranslation("admin");
   const columns = useColumns();
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 36,
-    paginationHeight: 40,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
 

@@ -32,7 +32,8 @@
     "tos": "Regulamin",
     "myLists": "Moje listy",
     "sharedList": "Udostępniona lista",
-    "viewAllLists": "Pokaż wszystkie"
+    "viewAllLists": "Pokaż wszystkie",
+    "analyzer": "Analizator logów"
   },
   "secondary": {
     "settings": "Ustawienia",

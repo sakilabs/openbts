@@ -22,6 +22,7 @@ import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/delet
 import { Route as LayoutContactRouteImport } from './routes/_layout/contact'
 import { Route as LayoutClfExportRouteImport } from './routes/_layout/clf-export'
 import { Route as LayoutChangelogRouteImport } from './routes/_layout/changelog'
+import { Route as LayoutAnalyzerRouteImport } from './routes/_layout/analyzer'
 import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
 import { Route as LayoutListsIndexRouteImport } from './routes/_layout/lists/index'
 import { Route as LayoutListsUuidRouteImport } from './routes/_layout/lists/$uuid'
@@ -105,6 +106,11 @@ const LayoutClfExportRoute = LayoutClfExportRouteImport.update({
 const LayoutChangelogRoute = LayoutChangelogRouteImport.update({
   id: '/changelog',
   path: '/changelog',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAnalyzerRoute = LayoutAnalyzerRouteImport.update({
+  id: '/analyzer',
+  path: '/analyzer',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAboutRoute = LayoutAboutRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/share-target': typeof ShareTargetRoute
   '/about': typeof LayoutAboutRoute
+  '/analyzer': typeof LayoutAnalyzerRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
   '/contact': typeof LayoutContactRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/share-target': typeof ShareTargetRoute
   '/about': typeof LayoutAboutRoute
+  '/analyzer': typeof LayoutAnalyzerRoute
   '/changelog': typeof LayoutChangelogRoute
   '/clf-export': typeof LayoutClfExportRoute
   '/contact': typeof LayoutContactRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRouteWithChildren
   '/share-target': typeof ShareTargetRoute
   '/_layout/about': typeof LayoutAboutRoute
+  '/_layout/analyzer': typeof LayoutAnalyzerRoute
   '/_layout/changelog': typeof LayoutChangelogRoute
   '/_layout/clf-export': typeof LayoutClfExportRoute
   '/_layout/contact': typeof LayoutContactRoute
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/'
     | '/share-target'
     | '/about'
+    | '/analyzer'
     | '/changelog'
     | '/clf-export'
     | '/contact'
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
   to:
     | '/share-target'
     | '/about'
+    | '/analyzer'
     | '/changelog'
     | '/clf-export'
     | '/contact'
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/_layout'
     | '/share-target'
     | '/_layout/about'
+    | '/_layout/analyzer'
     | '/_layout/changelog'
     | '/_layout/clf-export'
     | '/_layout/contact'
@@ -526,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/changelog'
       fullPath: '/changelog'
       preLoaderRoute: typeof LayoutChangelogRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/analyzer': {
+      id: '/_layout/analyzer'
+      path: '/analyzer'
+      fullPath: '/analyzer'
+      preLoaderRoute: typeof LayoutAnalyzerRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/about': {
@@ -723,6 +742,7 @@ const LayoutAdminLayoutRouteWithChildren =
 
 interface LayoutRouteChildren {
   LayoutAboutRoute: typeof LayoutAboutRoute
+  LayoutAnalyzerRoute: typeof LayoutAnalyzerRoute
   LayoutChangelogRoute: typeof LayoutChangelogRoute
   LayoutClfExportRoute: typeof LayoutClfExportRoute
   LayoutContactRoute: typeof LayoutContactRoute
@@ -742,6 +762,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAboutRoute: LayoutAboutRoute,
+  LayoutAnalyzerRoute: LayoutAnalyzerRoute,
   LayoutChangelogRoute: LayoutChangelogRoute,
   LayoutClfExportRoute: LayoutClfExportRoute,
   LayoutContactRoute: LayoutContactRoute,

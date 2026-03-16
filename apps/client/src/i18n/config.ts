@@ -15,6 +15,7 @@ import enUSDeletedEntries from "./locales/en-US/deletedEntries.json";
 import enUSStatistics from "./locales/en-US/statistics.json";
 import enUSNotifications from "./locales/en-US/notifications.json";
 import enUSLists from "./locales/en-US/lists.json";
+import enUSCellAnalyzer from "./locales/en-US/cellAnalyzer.json";
 
 import plPLCommon from "./locales/pl-PL/common.json";
 import plPLStations from "./locales/pl-PL/stations.json";
@@ -30,6 +31,7 @@ import plPLDeletedEntries from "./locales/pl-PL/deletedEntries.json";
 import plPLStatistics from "./locales/pl-PL/statistics.json";
 import plPLNotifications from "./locales/pl-PL/notifications.json";
 import plPLLists from "./locales/pl-PL/lists.json";
+import plPLCellAnalyzer from "./locales/pl-PL/cellAnalyzer.json";
 
 export const defaultNS = "common";
 export const resources = {
@@ -48,6 +50,7 @@ export const resources = {
     statistics: enUSStatistics,
     notifications: enUSNotifications,
     lists: enUSLists,
+    cellAnalyzer: enUSCellAnalyzer,
   },
   "pl-PL": {
     common: plPLCommon,
@@ -64,6 +67,7 @@ export const resources = {
     statistics: plPLStatistics,
     notifications: plPLNotifications,
     lists: plPLLists,
+    cellAnalyzer: plPLCellAnalyzer,
   },
 } as const;
 
@@ -106,6 +110,7 @@ void i18n.use(initReactI18next).init({
     "statistics",
     "notifications",
     "lists",
+    "ntmAnalyzer",
   ],
   interpolation: {
     escapeValue: false,

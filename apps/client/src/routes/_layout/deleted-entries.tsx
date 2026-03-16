@@ -41,6 +41,8 @@ const SOURCE_TYPE_LABELS: Record<string, string> = {
   radiolines: "Radiolines",
 };
 
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+
 const columnHelper = createColumnHelper<DeletedEntry>();
 
 type FilterState = {
@@ -104,11 +106,7 @@ function DeletedEntriesPage() {
   const [filterState, dispatchFilter] = useReducer(filterReducer, initialFilterState);
   const { sourceTable, sourceType, dateFrom, dateTo, search, sort, selectedEntry } = filterState;
 
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 

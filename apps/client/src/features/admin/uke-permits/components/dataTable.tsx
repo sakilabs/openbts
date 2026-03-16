@@ -1,4 +1,4 @@
-import { useMemo, useCallback, type Dispatch, type SetStateAction, type RefObject } from "react";
+import { useMemo, useCallback, type Dispatch, type Ref, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
@@ -17,7 +17,7 @@ interface UnassignedPermitsDataTableProps {
   onOpenDetails?: (station: UkeStation) => void;
   onViewOnMap?: (station: UkeStation) => void;
   totalItems: number;
-  containerRef: RefObject<HTMLDivElement | null>;
+  containerRef: Ref<HTMLDivElement>;
   pagination: PaginationState;
   setPagination: Dispatch<SetStateAction<PaginationState>>;
 }

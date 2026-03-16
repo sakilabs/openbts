@@ -7,6 +7,8 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { createStationsColumns } from "./stationsColumns";
 import type { Station, StationSortBy, StationSortDirection } from "@/types/station";
 
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+
 interface StationsDataTableProps {
   data: Station[];
   isLoading?: boolean;
@@ -38,11 +40,7 @@ export function StationsDataTable({
   const { t, i18n } = useTranslation("main");
   const { t: tCommon } = useTranslation("common");
 
-  const { containerRef, pagination, setPagination } = useTablePagination({
-    rowHeight: 64,
-    headerHeight: 40,
-    paginationHeight: 45,
-  });
+  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const columns = useMemo(
     () => createStationsColumns({ t: tCommon, locale: i18n.language, isSearchActive, sort, sortBy, onSort }),

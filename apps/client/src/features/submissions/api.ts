@@ -129,8 +129,8 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
 const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
   GSM: ["lac", "cid", "e_gsm"],
   UMTS: ["lac", "arfcn", "rnc", "cid"],
-  LTE: ["tac", "enbid", "clid", "pci", "supports_iot"],
-  NR: ["type", "nrtac", "gnbid", "clid", "pci", "supports_nr_redcap"],
+  LTE: ["tac", "enbid", "clid", "pci", "earfcn", "supports_iot"],
+  NR: ["type", "nrtac", "gnbid", "clid", "pci", "arfcn", "supports_nr_redcap"],
 };
 
 const BOOLEAN_DETAIL_KEYS = new Set(["e_gsm", "supports_iot", "supports_nr_redcap"]);

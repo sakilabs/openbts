@@ -143,6 +143,14 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <TooltipContent>Physical Cell ID</TooltipContent>
                       </Tooltip>
                     </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">EARFCN</span>
+                        </TooltipTrigger>
+                        <TooltipContent>E-UTRA Absolute Radio Frequency Channel Number</TooltipContent>
+                      </Tooltip>
+                    </th>
                   </>
                 )}
                 {rat === "NR" && (
@@ -185,6 +193,14 @@ export function CellTable({ rat, cells }: CellTableProps) {
                           <span className="cursor-help">PCI</span>
                         </TooltipTrigger>
                         <TooltipContent>Physical Cell ID</TooltipContent>
+                      </Tooltip>
+                    </th>
+                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="cursor-help">ARFCN</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Absolute Radio Frequency Channel Number</TooltipContent>
                       </Tooltip>
                     </th>
                   </>
@@ -254,6 +270,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.ecid ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.earfcn ?? "-"}</td>
                       </>
                     )}
                     {rat === "NR" && (
@@ -263,6 +280,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.type === "sa" ? (cell.details?.arfcn ?? "-") : "-"}</td>
                       </>
                     )}
                     <td className="px-4 py-2">

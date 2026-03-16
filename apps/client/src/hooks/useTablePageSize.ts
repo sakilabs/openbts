@@ -1,4 +1,4 @@
-import { useRef, useState, useLayoutEffect } from "react";
+import { useCallback, useRef, useState } from "react";
 
 interface UseTablePageSizeOptions {
   rowHeight?: number;
@@ -16,28 +16,33 @@ interface PaginationState {
 export function useTablePagination(options: UseTablePageSizeOptions = {}) {
   const { rowHeight = 52, headerHeight = 48, paginationHeight = 52, minRows = 5, maxRows = 100 } = options;
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const [pagination, setPagination] = useState<PaginationState>(() => ({ pageIndex: 0, pageSize: minRows }));
+  const observerRef = useRef<ResizeObserver | null>(null);
 
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  const containerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
 
-    const calculatePageSize = () => {
-      const availableHeight = container.clientHeight - headerHeight - paginationHeight;
-      const possibleRows = Math.floor(availableHeight / rowHeight);
-      const clampedRows = Math.max(minRows, Math.min(possibleRows, maxRows));
+      if (!node) return;
 
-      setPagination((prev) => (prev.pageSize === clampedRows ? prev : { ...prev, pageSize: clampedRows }));
-    };
+      const calculatePageSize = () => {
+        const availableHeight = node.clientHeight - headerHeight - paginationHeight;
+        const possibleRows = Math.floor(availableHeight / rowHeight);
+        const clampedRows = Math.max(minRows, Math.min(possibleRows, maxRows));
 
-    calculatePageSize();
+        setPagination((prev) => (prev.pageSize === clampedRows ? prev : { ...prev, pageSize: clampedRows }));
+      };
 
-    const resizeObserver = new ResizeObserver(calculatePageSize);
-    resizeObserver.observe(container);
+      calculatePageSize();
 
-    return () => resizeObserver.disconnect();
-  }, [rowHeight, headerHeight, paginationHeight, minRows, maxRows]);
+      observerRef.current = new ResizeObserver(calculatePageSize);
+      observerRef.current.observe(node);
+    },
+    [rowHeight, headerHeight, paginationHeight, minRows, maxRows],
+  );
 
   return { containerRef, pagination, setPagination };
 }

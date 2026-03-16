@@ -126,7 +126,7 @@ function BandHistoryCard({ band, locale }: { band: BandChartData; locale: string
             <ChartTooltip content={(props) => <HistoryTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
             <ChartLegend content={(props) => <ChartLegendContent {...(props as React.ComponentProps<typeof ChartLegendContent>)} />} />
             {band.operators.map((op) => (
-              <Line key={op.name} type="monotone" dataKey={op.name} stroke={op.color} strokeWidth={2} dot={false} />
+              <Line key={op.name} type="monotone" dataKey={op.name} stroke={op.color} strokeWidth={2} dot={false} isAnimationActive={false} />
             ))}
           </LineChart>
         </ChartContainer>

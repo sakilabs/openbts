@@ -306,9 +306,7 @@ export function ApiKeysCard({ userId }: { userId: string }) {
                           <p className="text-xs text-muted-foreground">{t("apiKeys.created", { date: formatDate(key.createdAt) })}</p>
                         </td>
                         <td className="px-4 py-2.5">
-                          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-mono">
-                            {key.start ?? "•••"}…
-                          </span>
+                          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-mono">{key.start ?? "-"}</span>
                         </td>
                         <td className="px-4 py-2.5">
                           {key.expiresAt ? (

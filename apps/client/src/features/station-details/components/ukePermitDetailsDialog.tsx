@@ -1,15 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Add01Icon,
-  Cancel01Icon,
-  Globe02Icon,
-  Link01Icon,
-  Location01Icon,
-  Building02Icon,
-  Tag01Icon,
-  MapsLocation01Icon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, Globe02Icon, Link01Icon, Location01Icon, Tag01Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { Link, useLocation } from "@tanstack/react-router";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
@@ -152,14 +143,6 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                     <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
                     <span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
                     <span className="text-sm font-medium">{station.location.region.name}</span>
-                  </div>
-                )}
-
-                {station.operator && (
-                  <div className="flex items-center gap-2">
-                    <HugeiconsIcon icon={Building02Icon} className="size-4 text-muted-foreground shrink-0" />
-                    <span className="text-sm text-muted-foreground">{t("common:labels.operator")}:</span>
-                    <span className="text-sm font-medium">{station.operator.name}</span>
                   </div>
                 )}
 
