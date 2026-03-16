@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "8f9f4179-2cd4-4864-8a17-451ab2230539",
+  "id": "9b246e5f-d27a-46a4-b5f5-db9d103d85a9",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -5089,6 +5089,19 @@
       "generated": null,
       "identity": null,
       "name": "pci",
+      "entityType": "columns",
+      "schema": "submissions",
+      "table": "proposed_lte_cells"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "earfcn",
       "entityType": "columns",
       "schema": "submissions",
       "table": "proposed_lte_cells"

@@ -96,7 +96,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <TooltipTrigger>
                           <span className="cursor-help">UARFCN</span>
                         </TooltipTrigger>
-                        <TooltipContent>Absolute Radio Frequency Channel Number</TooltipContent>
+                        <TooltipContent>UTRA Absolute Radio Frequency Channel Number</TooltipContent>
                       </Tooltip>
                     </th>
                   </>

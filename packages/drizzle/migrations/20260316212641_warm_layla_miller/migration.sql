@@ -505,6 +505,7 @@ CREATE TABLE "submissions"."proposed_lte_cells" (
 	"enbid" integer NOT NULL,
 	"clid" integer NOT NULL,
 	"pci" integer,
+	"earfcn" integer,
 	"supports_iot" boolean DEFAULT false,
 	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
 	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
