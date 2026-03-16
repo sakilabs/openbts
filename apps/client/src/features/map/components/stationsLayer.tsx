@@ -95,6 +95,7 @@ type StationsLayerProps = {
   stationActions: StationActions;
   popupActions: PopupActions;
   onRadiolineIdFromUrl?: (id: number) => void;
+  activePopupLocationId?: number | null;
 };
 
 export function StationsLayer({
@@ -106,6 +107,7 @@ export function StationsLayer({
   stationActions,
   popupActions,
   onRadiolineIdFromUrl,
+  activePopupLocationId,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
@@ -319,6 +321,8 @@ export function StationsLayer({
 
   const renderHoverTooltip = useCallback(
     (data: { locationId: number; city?: string; address?: string; source: string }) => {
+      if (data.locationId === activePopupLocationId) return null;
+
       const isUke = data.source === "uke";
 
       let entries: Array<{ name: string; color: string; stationId: string }>;
@@ -349,7 +353,7 @@ export function StationsLayer({
 
       return <StationHoverTooltipContent city={data.city} address={data.address} region={region} stations={entries} />;
     },
-    [locations],
+    [locations, activePopupLocationId],
   );
 
   useMapLayer({

@@ -185,7 +185,6 @@ export async function upsertUkeLocations(
             latitude: loc.lat,
           })),
         )
-        .onConflictDoNothing()
         .returning({ id: ukeLocations.id, longitude: ukeLocations.longitude, latitude: ukeLocations.latitude });
       for (const r of inserted) map.set(`${r.longitude}:${r.latitude}`, r.id);
     }

@@ -295,6 +295,7 @@ function MapViewInner() {
         stationActions={stationActions}
         popupActions={popupActions}
         onRadiolineIdFromUrl={handlePendingRadiolineId}
+        activePopupLocationId={activePopupLocation?.locationId}
       />
       {filters.showRadiolines ? (
         <Suspense fallback={null}>

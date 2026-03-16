@@ -14,6 +14,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🩹 Fixes
 
 - `/statistics` page now loads significantly faster - charts below the fold are deferred until scrolled into view
+- Fixed hover tooltip appearing on a marker whose popup is already open
 
 # 2026-03-14
 
