@@ -484,6 +484,7 @@ function AnalyzerPage() {
                 <Link
                   to="/"
                   hash={`map=16/${station.location.latitude}/${station.location.longitude}?source=internal&location=${station.location.id}`}
+                  target="_blank"
                   className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <HugeiconsIcon icon={Location01Icon} className="size-3 shrink-0" />
@@ -700,7 +701,7 @@ function AnalyzerPage() {
               <DataTable.Header />
               <tbody className="[&_tr:last-child]:border-0">
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className={cn("h-[60px] border-b transition-colors", rowBg(row.original.result))}>
+                  <tr key={row.id} className={cn("h-15 border-b transition-colors", rowBg(row.original.result))}>
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-2 py-1 align-middle overflow-hidden" style={{ width: cell.column.getSize() }}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
