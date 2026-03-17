@@ -276,7 +276,6 @@ paths:
     post:
       tags: [Cells]
       summary: Create cell
-      description: In `details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -317,11 +316,11 @@ paths:
           schema: { type: string }
         - name: regions
           in: query
-          description: Comma-separated 3-letter region codes
+          description: Comma-separated 3-letter region codes from /regions endpoint ("code" variable)
           schema: { type: string }
         - name: rat
           in: query
-          description: Comma-separated RATs (GSM, UMTS, LTE, NR, IOT) — IOT selects cells with RedCap/IoT support
+          description: Comma-separated RATs (GSM, UMTS, LTE, NR, IOT) - IOT selects cells with RedCap/IoT support
           schema: { type: string }
         - name: bands
           in: query
@@ -1552,7 +1551,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Create submission(s) (single object or array of 1-10)
-      description: In each item's `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server. If any of the items in the array is invalid or will throw an error, the entire request will be rejected with an error and no submissions will be created.
+      description: If any of the items in the array is invalid or will throw an error, the entire request will be rejected with an error and no submissions will be created.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1614,7 +1613,6 @@ paths:
     patch:
       tags: [Submissions]
       summary: Update submission
-      description: In `cells[].details`, do not send **cid_long** (UMTS), **ecid** (LTE) or **nci** (NR); they are computed on the server.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -3239,7 +3237,7 @@ components:
         type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     UmtsCellDetailsInsert:
-      description: UMTS cell details for create/update. Do not send cid_long; it is computed server-side from rnc and cid.
+      description: UMTS cell details for create/update.
       type: object
       properties:
         lac: { type: integer, nullable: true }
@@ -3247,7 +3245,7 @@ components:
         rnc: { type: integer }
         cid: { type: integer }
     LteCellDetailsInsert:
-      description: LTE cell details for create/update. Do not send ecid; it is computed server-side from enbid and clid.
+      description: LTE cell details for create/update.
       type: object
       properties:
         tac: { type: integer, nullable: true }
@@ -3256,7 +3254,7 @@ components:
         earfcn: { type: integer, nullable: true }
         supports_iot: { type: boolean, nullable: true }
     NrCellDetailsInsert:
-      description: NR cell details for create/update. Do not send nci; it is computed server-side from gnbid, gnbid_length and clid.
+      description: NR cell details for create/update.
       type: object
       properties:
         nrtac: { type: integer, nullable: true }
@@ -3267,7 +3265,7 @@ components:
         type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     CellDetailsInsert:
-      description: Cell RAT-specific payload for create/update. Omit server-calculated fields (cid_long for UMTS, ecid for LTE, nci for NR).
+      description: Cell RAT-specific payload for create/update.
       oneOf:
         - $ref: "#/components/schemas/GsmCellDetails"
         - $ref: "#/components/schemas/UmtsCellDetailsInsert"
@@ -3310,7 +3308,6 @@ components:
             band: { $ref: "#/components/schemas/Band" }
             details: { $ref: "#/components/schemas/CellDetails", nullable: true }
     CellCreate:
-      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server. RAT `IOT` is reserved for UKE permits and cannot be used here.
       type: object
       required: [station_id, band_id, rat]
       properties:
@@ -3321,7 +3318,6 @@ components:
         is_confirmed: { type: boolean, nullable: true }
         details: { $ref: "#/components/schemas/CellDetailsInsert" }
     CellUpdate:
-      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server. RAT `IOT` is reserved for UKE permits and cannot be used here.
       type: object
       properties:
         band_id: { type: integer }
@@ -3370,7 +3366,6 @@ components:
         updatedAt: { type: string, format: date-time }
         reviewed_at: { type: string, format: date-time, nullable: true }
     SubmissionCreateSingle:
-      description: In `cells[].details`, do not send cid_long (UMTS), ecid (LTE) or nci (NR); they are computed on the server.
       type: object
       properties:
         station_id: { type: integer, nullable: true }
@@ -3409,7 +3404,6 @@ components:
         longitude: { type: number }
         latitude: { type: number }
     ProposedCellInsert:
-      description: Do not send cid_long (UMTS), ecid (LTE) or nci (NR) in details; they are computed on the server.
       type: object
       properties:
         target_cell_id: { type: integer, nullable: true }
@@ -3456,7 +3450,6 @@ components:
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" }, nullable: true }
             pending_photos: { type: integer, nullable: true, description: "Number of photos expected to be uploaded after submission creation" }
     SubmissionUpdate:
-      description: In `cells[].details`, do not send cid_long (UMTS), ecid (LTE) or nci (NR); they are computed on the server.
       type: object
       properties:
         review_notes: { type: string, nullable: true }
