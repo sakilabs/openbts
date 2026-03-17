@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useScrolled } from "@/hooks/useScrolled";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 
@@ -29,9 +30,16 @@ type SubmissionDetailHeaderProps = {
 
 export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, onApprove, onReject, onSave }: SubmissionDetailHeaderProps) {
   const { t } = useTranslation(["submissions", "common"]);
+  const { ref: headerRef, scrolled } = useScrolled();
 
   return (
-    <div className="shrink-0 border-b bg-background px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-sm">
+    <div
+      ref={headerRef}
+      className={cn(
+        "shrink-0 border-b px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 transition-[background-color,border-color,box-shadow] duration-150",
+        scrolled ? "bg-background shadow-sm" : "bg-transparent border-transparent shadow-none",
+      )}
+    >
       <div className="flex items-center">
         <Button
           variant="ghost"
