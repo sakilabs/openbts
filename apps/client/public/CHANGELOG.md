@@ -1,6 +1,14 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-17
+
+### 🚀 Enhancements
+
+- All data tables now have a **rows per page** selector in the footer. It defaults to the auto-calculated count that fills the available height, but you can pick a larger value (25, 50, 100, 200) to see more rows with scrolling
+- **Log analyzer** now supports filtering by **operator** - only MNCs present in the loaded file appear as options; selector is disabled when the file contains a single operator
+- Filter selects on the analyzer page now have labels above them for clarity
+
 # 2026-03-16
 
 ### 🚀 Enhancements

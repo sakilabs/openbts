@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -83,6 +83,8 @@ const MNC_NAMES: Record<number, string> = {
 
 const MISMATCH_WARNINGS = new Set(["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch"]);
 
+const ALL_WARNINGS = ["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "enbid_only"] as const;
+
 const WARNING_I18N_KEY: Record<string, string> = {
   enbid_only: "warning.enbidOnly",
 };
@@ -116,6 +118,7 @@ type AnalyzerState = {
   statusFilter: string;
   ratFilter: string;
   warningFilter: string;
+  operatorFilter: string;
 };
 
 type AnalyzerAction =
@@ -126,6 +129,7 @@ type AnalyzerAction =
   | { type: "SET_STATUS_FILTER"; payload: string | null }
   | { type: "SET_RAT_FILTER"; payload: string | null }
   | { type: "SET_WARNING_FILTER"; payload: string | null }
+  | { type: "SET_OPERATOR_FILTER"; payload: string | null }
   | { type: "CLEAR_FILTERS" };
 
 const initialState: AnalyzerState = {
@@ -138,6 +142,7 @@ const initialState: AnalyzerState = {
   statusFilter: "all",
   ratFilter: "all",
   warningFilter: "all",
+  operatorFilter: "all",
 };
 
 function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): AnalyzerState {
@@ -158,8 +163,10 @@ function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): Analyzer
       return { ...state, ratFilter: action.payload ?? "all" };
     case "SET_WARNING_FILTER":
       return { ...state, warningFilter: action.payload ?? "all" };
+    case "SET_OPERATOR_FILTER":
+      return { ...state, operatorFilter: action.payload ?? "all" };
     case "CLEAR_FILTERS":
-      return { ...state, statusFilter: "all", ratFilter: "all", warningFilter: "all" };
+      return { ...state, statusFilter: "all", ratFilter: "all", warningFilter: "all", operatorFilter: "all" };
   }
 }
 
@@ -168,9 +175,9 @@ function AnalyzerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
-  const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter } = state;
+  const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter } = state;
 
-  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((p) => ({ ...p, pageIndex: 0 })), [setPagination]);
 
@@ -215,10 +222,13 @@ function AnalyzerPage() {
     [handleFile],
   );
 
+  const parsedRowsRef = useRef(parsedRows);
+  parsedRowsRef.current = parsedRows;
+
   const mutationFn = useCallback(async () => {
-    const cells = parsedRows!.map(({ description: _d, rawLine: _r, ...cell }) => cell);
+    const cells = parsedRowsRef.current!.map(({ description: _d, rawLine: _r, ...cell }) => cell);
     return postApiData<AnalyzerResult[], { cells: typeof cells }>("analyzer", { cells });
-  }, [parsedRows]);
+  }, []);
 
   const onAnalyzeSuccess = useCallback(
     (data: AnalyzerResult[]) => {
@@ -249,8 +259,6 @@ function AnalyzerPage() {
     return { found, probable, notFound, unsupported };
   }, [results]);
 
-  const ALL_WARNINGS = ["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "enbid_only"] as const;
-
   const warningLabels = useMemo(
     () => ({
       all: t("common:status.all"),
@@ -264,7 +272,7 @@ function AnalyzerPage() {
     [t],
   );
 
-  const hasActiveFilters = statusFilter !== "all" || ratFilter !== "all" || warningFilter !== "all";
+  const hasActiveFilters = statusFilter !== "all" || ratFilter !== "all" || warningFilter !== "all" || operatorFilter !== "all";
 
   const statusLabels = useMemo(
     () => ({
@@ -288,10 +296,22 @@ function AnalyzerPage() {
     [t],
   );
 
+  const availableMncs = useMemo(() => {
+    if (!parsedRows) return [];
+    const seen = new Set<number>();
+    for (const row of parsedRows) seen.add(row.mnc);
+    return [...seen].sort((a, b) => {
+      const nameA = MNC_NAMES[a] ?? String(a);
+      const nameB = MNC_NAMES[b] ?? String(b);
+      return nameA.localeCompare(nameB);
+    });
+  }, [parsedRows]);
+
   const tableData = useMemo<AnalyzerRow[]>(() => {
     if (!parsedRows) return [];
     return parsedRows.reduce<AnalyzerRow[]>((acc, row, index) => {
       if (ratFilter !== "all" && row.rat !== ratFilter) return acc;
+      if (operatorFilter !== "all" && String(row.mnc) !== operatorFilter) return acc;
       const result = results?.[index];
       if (statusFilter !== "all" && results) {
         if (!result || result.status !== statusFilter) return acc;
@@ -306,11 +326,7 @@ function AnalyzerPage() {
       acc.push({ parsedRow: row, index, result });
       return acc;
     }, []);
-  }, [parsedRows, results, statusFilter, ratFilter, warningFilter]);
-
-  useEffect(() => {
-    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
-  }, [tableData.length, setPagination]);
+  }, [parsedRows, results, statusFilter, ratFilter, warningFilter, operatorFilter]);
 
   const columns = useMemo(
     () => [
@@ -501,7 +517,7 @@ function AnalyzerPage() {
         },
       }),
     ],
-    [t],
+    [t, setSelectedStationId],
   );
 
   const table = useReactTable({
@@ -616,67 +632,105 @@ function AnalyzerPage() {
         </div>
 
         {parsedRows && (
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => {
-                dispatch({ type: "SET_STATUS_FILTER", payload: v });
-                resetPage();
-              }}
-              disabled={!results}
-            >
-              <SelectTrigger className="min-w-40">
-                <SelectValue>{statusLabels[statusFilter as keyof typeof statusLabels] ?? statusFilter}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("common:status.all")}</SelectItem>
-                <SelectItem value="found">{t("status.found")}</SelectItem>
-                <SelectItem value="probable">{t("status.probable")}</SelectItem>
-                <SelectItem value="not_found">{t("status.notFound")}</SelectItem>
-                <SelectItem value="unsupported">{t("status.unsupported")}</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap items-end gap-2 shrink-0">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground px-0.5">{t("filter.status")}</span>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => {
+                  dispatch({ type: "SET_STATUS_FILTER", payload: v });
+                  resetPage();
+                }}
+                disabled={!results}
+              >
+                <SelectTrigger className="min-w-40">
+                  <SelectValue>{statusLabels[statusFilter as keyof typeof statusLabels] ?? statusFilter}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("common:status.all")}</SelectItem>
+                  <SelectItem value="found">{t("status.found")}</SelectItem>
+                  <SelectItem value="probable">{t("status.probable")}</SelectItem>
+                  <SelectItem value="not_found">{t("status.notFound")}</SelectItem>
+                  <SelectItem value="unsupported">{t("status.unsupported")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select
-              value={ratFilter}
-              onValueChange={(v) => {
-                dispatch({ type: "SET_RAT_FILTER", payload: v });
-                resetPage();
-              }}
-            >
-              <SelectTrigger className="min-w-32">
-                <SelectValue>{ratLabels[ratFilter as keyof typeof ratLabels] ?? ratFilter}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("common:status.all")}</SelectItem>
-                <SelectItem value="GSM">GSM</SelectItem>
-                <SelectItem value="UMTS">UMTS</SelectItem>
-                <SelectItem value="LTE">LTE</SelectItem>
-                <SelectItem value="NR">NR</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground px-0.5">Standard</span>
+              <Select
+                value={ratFilter}
+                onValueChange={(v) => {
+                  dispatch({ type: "SET_RAT_FILTER", payload: v });
+                  resetPage();
+                }}
+              >
+                <SelectTrigger className="min-w-32">
+                  <SelectValue>{ratLabels[ratFilter as keyof typeof ratLabels] ?? ratFilter}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("common:status.all")}</SelectItem>
+                  <SelectItem value="GSM">GSM</SelectItem>
+                  <SelectItem value="UMTS">UMTS</SelectItem>
+                  <SelectItem value="LTE">LTE</SelectItem>
+                  <SelectItem value="NR">NR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select
-              value={warningFilter}
-              onValueChange={(v) => {
-                dispatch({ type: "SET_WARNING_FILTER", payload: v });
-                resetPage();
-              }}
-              disabled={!results}
-            >
-              <SelectTrigger className="min-w-40">
-                <SelectValue>{warningLabels[warningFilter as keyof typeof warningLabels] ?? warningFilter}</SelectValue>
-              </SelectTrigger>
-              <SelectContent className="min-w-56">
-                <SelectItem value="all">{t("common:status.all")}</SelectItem>
-                <SelectItem value="any">{t("filter.anyWarning")}</SelectItem>
-                {ALL_WARNINGS.map((w) => (
-                  <SelectItem key={w} value={w}>
-                    {warningLabels[w]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground px-0.5">Operator</span>
+              <Select
+                value={operatorFilter}
+                onValueChange={(v) => {
+                  dispatch({ type: "SET_OPERATOR_FILTER", payload: v });
+                  resetPage();
+                }}
+                disabled={availableMncs.length <= 1}
+              >
+                <SelectTrigger className="min-w-36">
+                  <SelectValue>
+                    {operatorFilter === "all" ? t("common:status.all") : (MNC_NAMES[Number(operatorFilter)] ?? operatorFilter)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("common:status.all")}</SelectItem>
+                  {availableMncs.map((mnc) => (
+                    <SelectItem key={mnc} value={String(mnc)}>
+                      <div className="flex items-center gap-2">
+                        <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(mnc) }} />
+                        {MNC_NAMES[mnc] ?? mnc}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground px-0.5">{t("filter.warning")}</span>
+              <Select
+                value={warningFilter}
+                onValueChange={(v) => {
+                  dispatch({ type: "SET_WARNING_FILTER", payload: v });
+                  resetPage();
+                }}
+                disabled={!results}
+              >
+                <SelectTrigger className="min-w-40">
+                  <SelectValue>{warningLabels[warningFilter as keyof typeof warningLabels] ?? warningFilter}</SelectValue>
+                </SelectTrigger>
+                <SelectContent className="min-w-56">
+                  <SelectItem value="all">{t("common:status.all")}</SelectItem>
+                  <SelectItem value="any">{t("filter.anyWarning")}</SelectItem>
+                  {ALL_WARNINGS.map((w) => (
+                    <SelectItem key={w} value={w}>
+                      {warningLabels[w]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {hasActiveFilters && (
               <Button
@@ -711,7 +765,7 @@ function AnalyzerPage() {
                 ))}
               </tbody>
               <DataTable.Footer columns={columns.length}>
-                <DataTablePagination table={table} totalItems={tableData.length} showRowsPerPage={false} />
+                <DataTablePagination table={table} totalItems={tableData.length} pageSizeOptions={pageSizeOptions} />
               </DataTable.Footer>
             </DataTable.Table>
           </DataTable.Root>

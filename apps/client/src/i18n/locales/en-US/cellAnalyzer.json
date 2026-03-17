@@ -32,7 +32,9 @@
     "unsupported": "unsupported"
   },
   "filter": {
-    "anyWarning": "Any warning"
+    "anyWarning": "Any warning",
+    "status": "Status",
+    "warning": "Warnings"
   },
   "warning": {
     "lacMismatch": "LAC changed",

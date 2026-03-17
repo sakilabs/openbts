@@ -135,7 +135,7 @@ async function handler(
       let taken_at: Date | null = null;
       if (takenAtRaw) {
         const parsed = new Date(takenAtRaw);
-        if (isNaN(parsed.getTime())) throw new ErrorResponse("BAD_REQUEST", { message: "Invalid takenAt date" });
+        if (Number.isNaN(parsed.getTime())) throw new ErrorResponse("BAD_REQUEST", { message: "Invalid takenAt date" });
         taken_at = parsed;
       }
       const [photoRow] = await db.insert(submissionPhotos).values({ submission_id: id, attachment_id: newAttachment.id, note, taken_at }).returning();

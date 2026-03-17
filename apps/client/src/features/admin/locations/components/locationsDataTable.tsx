@@ -38,7 +38,7 @@ export function LocationsDataTable({
   const { t, i18n } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
 
-  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const columns = useMemo(
     () => createLocationsColumns({ t, tCommon, locale: i18n.language, sort, sortBy, onSort }),
@@ -71,7 +71,7 @@ export function LocationsDataTable({
     isFetchingMore && hasMore && isOnLastLoadedPage && currentPageRows < pagination.pageSize ? pagination.pageSize - currentPageRows : 0;
 
   return (
-    <div ref={containerRef} className="h-full overflow-x-auto overflow-y-hidden">
+    <div ref={containerRef} className="h-full overflow-x-auto overflow-y-auto">
       <DataTable.Root table={table}>
         <DataTable.Table>
           <DataTable.Header />
@@ -90,7 +90,7 @@ export function LocationsDataTable({
             <DataTable.Body onRowClick={onRowClick} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
           )}
           <DataTable.Footer columns={columnCount}>
-            <DataTablePagination table={table} totalItems={totalItems ?? data.length} showRowsPerPage={false} />
+            <DataTablePagination table={table} totalItems={totalItems ?? data.length} pageSizeOptions={pageSizeOptions} />
           </DataTable.Footer>
         </DataTable.Table>
       </DataTable.Root>

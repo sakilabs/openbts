@@ -106,7 +106,7 @@ function DeletedEntriesPage() {
   const [filterState, dispatchFilter] = useReducer(filterReducer, initialFilterState);
   const { sourceTable, sourceType, dateFrom, dateTo, search, sort, selectedEntry } = filterState;
 
-  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
@@ -363,7 +363,7 @@ function DeletedEntriesPage() {
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-hidden">
+      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
         <DataTable.Root table={table}>
           <DataTable.Table>
             <DataTable.Header />
@@ -398,7 +398,7 @@ function DeletedEntriesPage() {
               <DataTable.Body onRowClick={(row: DeletedEntry) => dispatchFilter({ type: "SET_SELECTED_ENTRY", payload: row })} />
             )}
             <DataTable.Footer columns={columns.length}>
-              <DataTablePagination table={table} totalItems={total} showRowsPerPage={false} />
+              <DataTablePagination table={table} totalItems={total} pageSizeOptions={pageSizeOptions} />
             </DataTable.Footer>
           </DataTable.Table>
         </DataTable.Root>

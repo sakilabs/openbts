@@ -1,4 +1,5 @@
 import type { Table } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, ArrowRight01Icon, ArrowLeftDoubleIcon, ArrowRightDoubleIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export function DataTablePagination<TData>({
   totalItems,
   showRowsPerPage = true,
 }: DataTablePaginationProps<TData>) {
+  const { t } = useTranslation("common");
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize = table.getState().pagination.pageSize;
   const pageCount = table.getPageCount();
@@ -42,7 +44,7 @@ export function DataTablePagination<TData>({
       <div className="flex items-center gap-2">
         {showRowsPerPage && (
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm hidden sm:block">Rows</span>
+            <span className="text-muted-foreground text-sm hidden sm:block">{t("pagination.rows")}</span>
             <Select
               value={pageSize}
               onValueChange={(value) => {

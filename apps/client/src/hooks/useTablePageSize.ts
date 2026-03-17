@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 interface UseTablePageSizeOptions {
   rowHeight?: number;
@@ -8,16 +8,41 @@ interface UseTablePageSizeOptions {
   maxRows?: number;
 }
 
-interface PaginationState {
+export interface PaginationState {
   pageIndex: number;
   pageSize: number;
 }
 
+interface InternalState {
+  pageIndex: number;
+  pageSize: number;
+  autoPageSize: number;
+}
+
+const EXTRA_PAGE_SIZE_OPTIONS = [25, 50, 100, 200];
+
 export function useTablePagination(options: UseTablePageSizeOptions = {}) {
   const { rowHeight = 52, headerHeight = 48, paginationHeight = 52, minRows = 5, maxRows = 100 } = options;
 
-  const [pagination, setPagination] = useState<PaginationState>(() => ({ pageIndex: 0, pageSize: minRows }));
+  const isManualRef = useRef(false);
+  const [state, setState] = useState<InternalState>(() => ({
+    pageIndex: 0,
+    pageSize: minRows,
+    autoPageSize: minRows,
+  }));
+
   const observerRef = useRef<ResizeObserver | null>(null);
+
+  const pagination = useMemo(() => ({ pageIndex: state.pageIndex, pageSize: state.pageSize }), [state.pageIndex, state.pageSize]);
+
+  const setPagination = useCallback((updater: PaginationState | ((prev: PaginationState) => PaginationState)) => {
+    setState((prev) => {
+      const prevPag: PaginationState = { pageIndex: prev.pageIndex, pageSize: prev.pageSize };
+      const next = typeof updater === "function" ? updater(prevPag) : updater;
+      if (next.pageSize !== prev.pageSize) isManualRef.current = next.pageSize !== prev.autoPageSize;
+      return { ...prev, pageIndex: next.pageIndex, pageSize: next.pageSize };
+    });
+  }, []);
 
   const containerRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -33,7 +58,11 @@ export function useTablePagination(options: UseTablePageSizeOptions = {}) {
         const possibleRows = Math.floor(availableHeight / rowHeight);
         const clampedRows = Math.max(minRows, Math.min(possibleRows, maxRows));
 
-        setPagination((prev) => (prev.pageSize === clampedRows ? prev : { ...prev, pageSize: clampedRows }));
+        setState((prev) => {
+          const newPageSize = isManualRef.current ? prev.pageSize : clampedRows;
+          if (prev.autoPageSize === clampedRows && prev.pageSize === newPageSize) return prev;
+          return { ...prev, autoPageSize: clampedRows, pageSize: newPageSize };
+        });
       };
 
       calculatePageSize();
@@ -44,5 +73,7 @@ export function useTablePagination(options: UseTablePageSizeOptions = {}) {
     [rowHeight, headerHeight, paginationHeight, minRows, maxRows],
   );
 
-  return { containerRef, pagination, setPagination };
+  const pageSizeOptions = useMemo(() => [...new Set([state.autoPageSize, ...EXTRA_PAGE_SIZE_OPTIONS])].sort((a, b) => a - b), [state.autoPageSize]);
+
+  return { containerRef, pagination, setPagination, autoPageSize: state.autoPageSize, pageSizeOptions };
 }

@@ -37,7 +37,7 @@ function AdminListsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -225,13 +225,13 @@ function AdminListsPage() {
           </div>
         </div>
 
-        <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-hidden">
+        <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
           <DataTable.Root table={table}>
             <DataTable.Table>
               <DataTable.Header />
               {renderTableBody()}
               <DataTable.Footer columns={columns.length}>
-                <DataTablePagination table={table} totalItems={totalCount} showRowsPerPage={false} />
+                <DataTablePagination table={table} totalItems={totalCount} pageSizeOptions={pageSizeOptions} />
               </DataTable.Footer>
             </DataTable.Table>
           </DataTable.Root>

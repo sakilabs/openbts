@@ -29,7 +29,7 @@ function AdminUkePermitsPage() {
     () => null,
   );
 
-  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const data = useUnassignedPermitsData({ pagination, setPagination });
 
@@ -87,6 +87,7 @@ function AdminUkePermitsPage() {
             containerRef={containerRef}
             pagination={pagination}
             setPagination={setPagination}
+            pageSizeOptions={pageSizeOptions}
           />
         </div>
       </div>

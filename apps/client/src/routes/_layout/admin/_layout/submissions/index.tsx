@@ -52,7 +52,7 @@ function AdminSubmissionsListPage() {
     localStorage.setItem("admin:submissions:type", v);
   }, []);
 
-  const { containerRef, pagination, setPagination } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, stationIdFilter, userIdFilter],
@@ -277,7 +277,7 @@ function AdminSubmissionsListPage() {
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-hidden">
+      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
         <DataTable.Root table={table}>
           <DataTable.Table>
             <DataTable.Header />
@@ -312,7 +312,7 @@ function AdminSubmissionsListPage() {
               <DataTable.Body onRowClick={handleRowClick} />
             )}
             <DataTable.Footer columns={columns.length}>
-              <DataTablePagination table={table} totalItems={total} showRowsPerPage={false} />
+              <DataTablePagination table={table} totalItems={total} pageSizeOptions={pageSizeOptions} />
             </DataTable.Footer>
           </DataTable.Table>
         </DataTable.Root>

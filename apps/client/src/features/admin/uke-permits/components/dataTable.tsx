@@ -20,6 +20,7 @@ interface UnassignedPermitsDataTableProps {
   containerRef: Ref<HTMLDivElement>;
   pagination: PaginationState;
   setPagination: Dispatch<SetStateAction<PaginationState>>;
+  pageSizeOptions?: number[];
 }
 
 export function UnassignedPermitsDataTable({
@@ -30,6 +31,7 @@ export function UnassignedPermitsDataTable({
   containerRef,
   pagination,
   setPagination,
+  pageSizeOptions,
 }: UnassignedPermitsDataTableProps) {
   "use no memo";
   const { t } = useTranslation("admin");
@@ -54,7 +56,7 @@ export function UnassignedPermitsDataTable({
   const handleRowClick = useCallback((station: UkeStation) => onOpenDetails?.(station), [onOpenDetails]);
 
   return (
-    <div ref={containerRef} className="h-full overflow-x-auto overflow-y-hidden">
+    <div ref={containerRef} className="h-full overflow-x-auto overflow-y-auto">
       <DataTable.Root table={table}>
         <DataTable.Table>
           <DataTable.Header />
@@ -74,7 +76,7 @@ export function UnassignedPermitsDataTable({
           )}
           <DataTable.Footer columns={columnCount}>
             <div className="sticky left-0">
-              <DataTablePagination table={table} totalItems={totalItems} showRowsPerPage={false} />
+              <DataTablePagination table={table} totalItems={totalItems} pageSizeOptions={pageSizeOptions} />
             </div>
           </DataTable.Footer>
         </DataTable.Table>
