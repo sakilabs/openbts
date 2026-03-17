@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,18 +53,11 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
   const { t, i18n } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const previewUrls = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
 
   const [deleteTarget, setDeleteTarget] = useState<{ type: "existing"; id: number } | { type: "local"; index: number } | null>(null);
-
-  const [editingLocalIndex, setEditingLocalIndex] = useState<number | null>(null);
-  const [editNote, setEditNote] = useState("");
-  const [editTakenAt, setEditTakenAt] = useState<Date | null>(null);
-
-  const [editingExistingId, setEditingExistingId] = useState<number | null>(null);
-  const [editExistingNote, setEditExistingNote] = useState("");
-  const [editExistingTakenAt, setEditExistingTakenAt] = useState<Date | null>(null);
-
+  const [localEditState, setLocalEditState] = useState<{ index: number; note: string; takenAt: Date | null } | null>(null);
+  const [existingEditState, setExistingEditState] = useState<{ id: number; note: string; takenAt: Date | null } | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data: existingPhotos = [], isLoading: isLoadingExisting } = useQuery({
@@ -109,18 +102,14 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
     },
     onSuccess: () => {
       void invalidate();
-      setEditingExistingId(null);
+      setExistingEditState(null);
     },
     onError: () => toast.error(t("photos.noteFailed")),
   });
 
   useEffect(() => {
-    const urls = photos.map((f) => URL.createObjectURL(f));
-    setPreviewUrls(urls);
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [photos]);
+    return () => previewUrls.forEach((url) => URL.revokeObjectURL(url));
+  }, [previewUrls]);
 
   const totalCount = existingPhotos.length + photos.length;
   const remainingSlots = MAX_FILES - totalCount;
@@ -154,26 +143,22 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
   }
 
   function openLocalEdit(idx: number) {
-    setEditingLocalIndex(idx);
-    setEditNote(notes[idx] ?? "");
-    setEditTakenAt(takenAts[idx] ?? null);
+    setLocalEditState({ index: idx, note: notes[idx] ?? "", takenAt: takenAts[idx] ?? null });
   }
 
   function saveLocalEdit() {
-    if (editingLocalIndex === null) return;
+    if (localEditState === null) return;
     const updatedNotes = [...notes];
-    updatedNotes[editingLocalIndex] = editNote;
+    updatedNotes[localEditState.index] = localEditState.note;
     onNotesChange(updatedNotes);
     const updatedTakenAts = [...takenAts];
-    updatedTakenAts[editingLocalIndex] = editTakenAt;
+    updatedTakenAts[localEditState.index] = localEditState.takenAt;
     onTakenAtsChange(updatedTakenAts);
-    setEditingLocalIndex(null);
+    setLocalEditState(null);
   }
 
   function openExistingEdit(photo: SubmissionPhoto) {
-    setEditingExistingId(photo.id);
-    setEditExistingNote(photo.note ?? "");
-    setEditExistingTakenAt(photo.taken_at ? new Date(photo.taken_at) : null);
+    setExistingEditState({ id: photo.id, note: photo.note ?? "", takenAt: photo.taken_at ? new Date(photo.taken_at) : null });
   }
 
   const lightboxItems: LightboxItem[] = [
@@ -208,7 +193,7 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                 icon={ArrowDown01Icon}
                 className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-0 -rotate-90"
               />
-              <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+              <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
               <span className="font-semibold text-sm">{t("photos.label")}</span>
               {!isLoadingExisting ? (
                 <span className="text-xs text-muted-foreground">
@@ -246,8 +231,13 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                         loading="lazy"
                       />
                       <div
+                        role="button"
+                        tabIndex={0}
                         className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-zoom-in"
                         onClick={() => setLightboxIndex(idx)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
+                        }}
                       >
                         <button
                           type="button"
@@ -283,9 +273,9 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                         {photo.note ? <p className="truncate italic text-muted-foreground">{photo.note}</p> : null}
                       </div>
                       <Popover
-                        open={editingExistingId === photo.id}
+                        open={existingEditState?.id === photo.id}
                         onOpenChange={(open) => {
-                          if (!open) setEditingExistingId(null);
+                          if (!open) setExistingEditState(null);
                         }}
                       >
                         <PopoverTrigger
@@ -299,9 +289,11 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                           <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
                             <input
-                              autoFocus
-                              value={editExistingNote}
-                              onChange={(e) => setEditExistingNote(e.target.value)}
+                              value={existingEditState?.note ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setExistingEditState((prev) => (prev ? { ...prev, note: v } : prev));
+                              }}
                               maxLength={100}
                               placeholder={t("photos.notePlaceholder")}
                               className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
@@ -309,10 +301,13 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                           </div>
                           <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                            <DatePickerInput value={editExistingTakenAt} onChange={setEditExistingTakenAt} />
+                            <DatePickerInput
+                              value={existingEditState?.takenAt ?? null}
+                              onChange={(v) => setExistingEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
+                            />
                           </div>
                           <div className="flex items-center justify-end gap-2">
-                            <Button type="button" size="sm" variant="ghost" onClick={() => setEditingExistingId(null)}>
+                            <Button type="button" size="sm" variant="ghost" onClick={() => setExistingEditState(null)}>
                               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
                               {t("common:actions.cancel")}
                             </Button>
@@ -322,8 +317,8 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                               onClick={() =>
                                 editExistingMutation.mutate({
                                   id: photo.id,
-                                  note: editExistingNote,
-                                  takenAt: editExistingTakenAt?.toISOString() ?? null,
+                                  note: existingEditState?.note ?? "",
+                                  takenAt: existingEditState?.takenAt?.toISOString() ?? null,
                                   originalNote: photo.note ?? "",
                                   originalTakenAt: photo.taken_at ?? null,
                                 })
@@ -349,8 +344,13 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                     <div className="relative aspect-square">
                       <img src={previewUrls[idx]} alt={file.name} className="w-full h-full object-cover" />
                       <div
+                        role="button"
+                        tabIndex={0}
                         className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-zoom-in"
                         onClick={() => setLightboxIndex(existingPhotos.length + idx)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") setLightboxIndex(existingPhotos.length + idx);
+                        }}
                       >
                         <button
                           type="button"
@@ -380,9 +380,9 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                         {notes[idx] ? <p className="truncate italic text-muted-foreground">{notes[idx]}</p> : null}
                       </div>
                       <Popover
-                        open={editingLocalIndex === idx}
+                        open={localEditState?.index === idx}
                         onOpenChange={(open) => {
-                          if (!open) setEditingLocalIndex(null);
+                          if (!open) setLocalEditState(null);
                         }}
                       >
                         <PopoverTrigger
@@ -396,9 +396,11 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                           <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
                             <input
-                              autoFocus
-                              value={editNote}
-                              onChange={(e) => setEditNote(e.target.value)}
+                              value={localEditState?.note ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setLocalEditState((prev) => (prev ? { ...prev, note: v } : prev));
+                              }}
                               maxLength={100}
                               placeholder={t("photos.notePlaceholder")}
                               className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
@@ -406,10 +408,13 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                           </div>
                           <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                            <DatePickerInput value={editTakenAt} onChange={setEditTakenAt} />
+                            <DatePickerInput
+                              value={localEditState?.takenAt ?? null}
+                              onChange={(v) => setLocalEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
+                            />
                           </div>
                           <div className="flex items-center justify-end gap-2">
-                            <Button type="button" size="sm" variant="ghost" onClick={() => setEditingLocalIndex(null)}>
+                            <Button type="button" size="sm" variant="ghost" onClick={() => setLocalEditState(null)}>
                               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
                               {t("common:actions.cancel")}
                             </Button>
@@ -463,7 +468,13 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
 
       {lightboxIndex !== null && activeLightbox
         ? createPortal(
-            <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90" onClick={closeLightbox}>
+            <div
+              className="fixed inset-0 z-60 flex items-center justify-center bg-black/90"
+              onClick={closeLightbox}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") closeLightbox();
+              }}
+            >
               <button
                 type="button"
                 className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors"
@@ -495,7 +506,7 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                   </button>
                 </>
               ) : null}
-              <div className="flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+              <div role="presentation" className="flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                 <img
                   src={activeLightbox.type === "existing" ? `/uploads/${activeLightbox.photo.attachment_uuid}.webp` : activeLightbox.url}
                   alt={activeLightbox.type === "existing" ? (activeLightbox.photo.note ?? "") : activeLightbox.name}

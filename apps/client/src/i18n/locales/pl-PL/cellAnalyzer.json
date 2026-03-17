@@ -17,13 +17,13 @@
   "table": {
     "identifiers": "Identyfikatory",
     "description": "Opis",
-    "location": "Lokalizacja w bazie"
+    "location": "Lokalizacja stacji"
   },
   "status": {
     "found": "Znaleziono",
     "probable": "Prawdopodobna",
-    "notFound": "Brak danych",
-    "unsupported": "Nieobsługiwane (5G)"
+    "notFound": "Nie znaleziono",
+    "unsupported": "Nieobsługiwane"
   },
   "stats": {
     "found": "znaleziono",
@@ -40,7 +40,7 @@
     "lacMismatch": "LAC zmieniony",
     "rncMismatch": "RNC zmieniony",
     "tacMismatch": "TAC zmieniony",
-    "pciMismatch": "PCI niezgodny",
+    "pciMismatch": "PCI zmieniony",
     "enbidOnly": "Dopasowano tylko po eNBID",
     "dbValue": "Wartość z bazy danych"
   },
@@ -48,6 +48,6 @@
     "fileTooLarge": "Plik zbyt duży (maks. 10 MB)",
     "invalidFileType": "Nieobsługiwany typ pliku",
     "noValidRows": "Brak poprawnych wierszy w pliku",
-    "truncated": "Plik przycięty do {{count}} wierszy"
+    "truncated": "Plik jest duży — wczytano tylko pierwsze {{count}} wierszy"
   }
 }

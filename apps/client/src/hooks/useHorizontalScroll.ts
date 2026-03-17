@@ -1,24 +1,41 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export function useHorizontalScroll<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+  const ref = useCallback((element: T | null) => {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
+
+    if (!element) return;
+
+    const target = element;
 
     function onWheel(e: WheelEvent) {
-      if (!el) return;
-      const canScrollX = el.scrollWidth > el.clientWidth;
+      const canScrollX = target.scrollWidth > target.clientWidth;
       if (!canScrollX) return;
+
+      const canScrollY = target.scrollHeight > target.clientHeight;
+      if (canScrollY) return;
+
       // let trackpad horizontal swipes pass through natively
       if (e.deltaX !== 0) return;
+
+      const maxScrollLeft = target.scrollWidth - target.clientWidth;
+      const atStart = target.scrollLeft <= 0;
+      const atEnd = target.scrollLeft >= maxScrollLeft;
+      if ((e.deltaY < 0 && atStart) || (e.deltaY > 0 && atEnd)) return;
+
       e.preventDefault();
-      el.scrollLeft += e.deltaY;
+      target.scrollLeft += e.deltaY;
     }
 
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    target.addEventListener("wheel", onWheel, { passive: false });
+    cleanupRef.current = () => target.removeEventListener("wheel", onWheel);
+  }, []);
+
+  useEffect(() => {
+    return () => cleanupRef.current?.();
   }, []);
 
   return ref;

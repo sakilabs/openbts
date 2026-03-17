@@ -108,7 +108,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
         if ((part as MultipartValue).type === "field") {
           const field = part as MultipartValue;
-          if (field.fieldname === "content") content = field.value != null ? String(field.value as string | number | boolean) : "";
+          if (field.fieldname === "content")
+            content = field.value !== null && field.value !== undefined ? String(field.value as string | number | boolean) : "";
         }
       }
     } catch (error) {

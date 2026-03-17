@@ -19,7 +19,7 @@
     "byVoivodeship": "Unikalne stacje wg województwa",
     "internalByVoivodeship": "Stacje wg województwa",
     "history": "Trendy historyczne",
-    "noHistoryData": "Brak danych historycznych. Dane pojawią się po pierwszym imporcie."
+    "noHistoryData": "Brak danych historycznych. Trendy pojawią się, gdy dane zostaną zebrane."
   },
   "filters": {
     "allOperators": "Wszyscy operatorzy",

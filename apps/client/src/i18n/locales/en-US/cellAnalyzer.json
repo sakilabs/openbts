@@ -17,19 +17,19 @@
   "table": {
     "identifiers": "Identifiers",
     "description": "Description",
-    "location": "DB Location"
+    "location": "Station Location"
   },
   "status": {
     "found": "Found",
     "probable": "Probable",
-    "notFound": "No data",
-    "unsupported": "Unsupported (5G)"
+    "notFound": "Not found",
+    "unsupported": "Not supported"
   },
   "stats": {
     "found": "found",
     "probable": "probable",
     "notFound": "not found",
-    "unsupported": "unsupported"
+    "unsupported": "not supported"
   },
   "filter": {
     "anyWarning": "Any warning",
@@ -40,7 +40,7 @@
     "lacMismatch": "LAC changed",
     "rncMismatch": "RNC changed",
     "tacMismatch": "TAC changed",
-    "pciMismatch": "PCI mismatch",
+    "pciMismatch": "PCI changed",
     "enbidOnly": "Matched by eNBID only",
     "dbValue": "Value from database"
   },
@@ -48,6 +48,6 @@
     "fileTooLarge": "File too large (max 10 MB)",
     "invalidFileType": "Unsupported file type",
     "noValidRows": "No valid rows found in file",
-    "truncated": "File truncated to {{count}} rows"
+    "truncated": "File is large — only the first {{count}} rows were loaded"
   }
 }

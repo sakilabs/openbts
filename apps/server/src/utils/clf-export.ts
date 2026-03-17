@@ -154,7 +154,7 @@ export function toCLF30Hex(cell: CellExportData): string | null {
   const rncHex = `0x${(cell.rnc ?? 0).toString(16).toUpperCase().padStart(4, "0")}`;
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
+  const posRat = cell.latitude !== null && cell.latitude !== undefined && cell.longitude !== null && cell.longitude !== undefined ? -1 : 0;
   const description = getDescription(cell) + getTags(cell);
 
   return `${mccmnc};${cidHex};${lacHex};${rncHex};${lat};${lon};${posRat};${description};0`;
@@ -171,7 +171,7 @@ export function toCLF30Dec(cell: CellExportData): string | null {
   const rncDec = (cell.rnc ?? 0).toString().padStart(5, "0");
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
+  const posRat = cell.latitude !== null && cell.latitude !== undefined && cell.longitude !== null && cell.longitude !== undefined ? -1 : 0;
   const description = getDescription(cell) + getTags(cell);
 
   return `${mccmnc};${cidDec};${lacDec};${rncDec};${lat};${lon};${posRat};${description};0`;
@@ -188,7 +188,7 @@ export function toCLF40(cell: CellExportData): string | null {
   const type = 0;
   const lat = cell.latitude ?? 0;
   const lon = cell.longitude ?? 0;
-  const posRat = cell.latitude != null && cell.longitude != null ? -1 : 0;
+  const posRat = cell.latitude !== null && cell.latitude !== undefined && cell.longitude !== null && cell.longitude !== undefined ? -1 : 0;
   const description = getDescription(cell) + getTags(cell);
   const sys = getRatCode(cell.rat);
   const label = `${cell.station_id}_${cellId}`;
@@ -263,7 +263,8 @@ function getTags(cell: CellExportData): string {
     case "LTE": {
       const bandCode = getBandCode("LTE", cell.band_value, cell.band_duplex);
       if (bandCode) tags += ` [${rc}:${cell.station_id}:${bandCode}]`;
-      if (cell.enbid != null && cell.clid != null) tags += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
+      if (cell.enbid !== null && cell.enbid !== undefined && cell.clid !== null && cell.clid !== undefined)
+        tags += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
       if (cell.nr_bands && cell.nr_bands.length > 0) {
         const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
         const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
@@ -336,7 +337,8 @@ export function toNTM(cell: CellExportData): string | null {
       let location = getNTMLocation(cell);
       const bandCode = getBandCode("LTE", cell.band_value, cell.band_duplex);
       if (bandCode) location += ` [${rc}:${cell.station_id}:${bandCode}]`;
-      if (cell.enbid != null && cell.clid != null) location += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
+      if (cell.enbid !== null && cell.enbid !== undefined && cell.clid !== null && cell.clid !== undefined)
+        location += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
       if (cell.nr_bands && cell.nr_bands.length > 0) {
         const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
         const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
@@ -346,7 +348,7 @@ export function toNTM(cell: CellExportData): string | null {
       return `4G;${mcc};${mnc};${ci};${tac};${enb};${NTM_UNKNOWN};${lat};${lon};${location};${earfcn}`;
     }
     case "NR": {
-      const nci = cell.nci != null ? cell.nci : NTM_UNKNOWN;
+      const nci = cell.nci ?? NTM_UNKNOWN;
       const tac = cell.nrtac ?? NTM_UNKNOWN;
       const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
 

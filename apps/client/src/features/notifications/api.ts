@@ -20,8 +20,8 @@ export type NotificationsResponse = {
 
 export async function fetchNotifications(params?: { limit?: number; offset?: number }): Promise<NotificationsResponse> {
   const qs = new URLSearchParams();
-  if (params?.limit != null) qs.set("limit", String(params.limit));
-  if (params?.offset != null) qs.set("offset", String(params.offset));
+  if (params?.limit !== null && params?.limit !== undefined) qs.set("limit", String(params.limit));
+  if (params?.offset !== null && params?.offset !== undefined) qs.set("offset", String(params.offset));
   const query = qs.toString();
   return fetchJson<NotificationsResponse>(`${API_BASE}/notifications${query ? `?${query}` : ""}`);
 }

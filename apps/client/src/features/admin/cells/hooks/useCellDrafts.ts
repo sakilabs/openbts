@@ -12,6 +12,7 @@ type UseCellDraftsOptions<T extends CellDraftBase> = {
   createNewCell: (rat: string, defaultBand: Band) => T;
   onDelete?: (cell: T) => void;
   disabled?: boolean;
+  sortCellsByRat?: boolean;
 };
 
 type UseCellDraftsReturn<T extends CellDraftBase> = {
@@ -34,6 +35,7 @@ export function useCellDrafts<T extends CellDraftBase>({
   createNewCell,
   onDelete,
   disabled,
+  sortCellsByRat = true,
 }: UseCellDraftsOptions<T>): UseCellDraftsReturn<T> {
   const { t } = useTranslation("stations");
 
@@ -54,6 +56,8 @@ export function useCellDrafts<T extends CellDraftBase>({
       if (!grouped[cell.rat]) grouped[cell.rat] = [];
       grouped[cell.rat].push(cell);
     }
+    if (!sortCellsByRat) return grouped;
+
     for (const rat of Object.keys(grouped)) {
       grouped[rat].sort((a, b) => {
         const bandA = bandValueMap.get(a.band_id) ?? 0;
@@ -66,7 +70,7 @@ export function useCellDrafts<T extends CellDraftBase>({
       });
     }
     return grouped;
-  }, [cells, bandValueMap]);
+  }, [cells, bandValueMap, sortCellsByRat]);
 
   const visibleRats = useMemo(() => RAT_ORDER.filter((r) => enabledRats.includes(r)), [enabledRats]);
 

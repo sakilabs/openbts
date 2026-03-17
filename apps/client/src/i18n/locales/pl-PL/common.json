@@ -104,7 +104,7 @@
     "noOperatorsFound": "Nie znaleziono operatorów",
     "noBandsFound": "Nie znaleziono pasm",
     "noRegionsFound": "Nie znaleziono województw",
-    "errorFetching": "Błąd podczas pobierania danych",
+    "errorFetching": "Nie udało się wczytać danych",
     "optional": "Opcjonalnie"
   },
   "status": {
@@ -161,7 +161,7 @@
     "description": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie lub odśwież stronę",
     "tryAgain": "Spróbuj ponownie",
     "reload": "Odśwież stronę",
-    "toast": "Wystąpił błąd podczas przetwarzania twojej akcji. Spróbuj ponownie później (zobacz konsolę po więcej szczegółów)"
+    "toast": "Coś poszło nie tak. Spróbuj ponownie."
   },
   "backendUnavailable": {
     "title": "Serwer niedostępny",
@@ -177,7 +177,7 @@
     "updateDescription": "Odśwież, aby uzyskać najnowsze funkcje i poprawki."
   },
   "forbidden": {
-    "title": "Brak uprawnień",
-    "description": "Nie masz wymaganej roli, aby zobaczyć tę stronę."
+    "title": "Brak dostępu",
+    "description": "Nie masz uprawnień do wyświetlenia tej strony."
   }
 }

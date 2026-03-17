@@ -39,7 +39,7 @@ export function ExtraIdentificatorsSection({
   return (
     <div className="border rounded-xl overflow-hidden">
       <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-        <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
+        <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground" />
         <span className="font-semibold text-sm">Extra Identificators</span>
       </div>
       <div className="p-4 space-y-3">

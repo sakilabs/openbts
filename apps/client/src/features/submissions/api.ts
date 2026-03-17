@@ -7,8 +7,9 @@ export { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api"
 
 export type MySubmissionsResponse = { data: SubmissionRow[]; totalCount: number };
 
-export async function fetchMySubmissions(limit = 20, offset = 0): Promise<MySubmissionsResponse> {
+export async function fetchMySubmissions(limit = 20, offset = 0, submitterId?: string): Promise<MySubmissionsResponse> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (submitterId) params.set("submitter_id", submitterId);
   return fetchJson<MySubmissionsResponse>(`${API_BASE}/submissions?${params.toString()}`);
 }
 

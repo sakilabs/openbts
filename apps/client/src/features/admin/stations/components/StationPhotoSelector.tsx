@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -37,12 +37,13 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [mainId, setMainId] = useState<number | null>(null);
+  const [selectedOverride, setSelectedOverride] = useState<Set<number> | null>(null);
+  const [mainIdOverride, setMainIdOverride] = useState<number | null | "unset">("unset");
 
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editNote, setEditNote] = useState("");
-  const [editTakenAt, setEditTakenAt] = useState<Date | null>(null);
+  const selected = useMemo(() => selectedOverride ?? new Set(stationPhotos.map((p) => p.id)), [selectedOverride, stationPhotos]);
+  const mainId = mainIdOverride === "unset" ? (stationPhotos.find((p) => p.is_main)?.id ?? null) : mainIdOverride;
+
+  const [editState, setEditState] = useState<{ id: number; note: string; takenAt: Date | null } | null>(null);
 
   const editMutation = useMutation({
     mutationFn: async ({
@@ -65,24 +66,15 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["location-photos", locationId] });
-      setEditingId(null);
+      setEditState(null);
     },
     onError: () => toast.error(t("photos.noteFailed")),
   });
 
   function openEdit(photo: LocationPhoto, e: React.MouseEvent) {
     e.stopPropagation();
-    setEditingId(photo.id);
-    setEditNote(photo.note ?? "");
-    setEditTakenAt(photo.taken_at ? new Date(photo.taken_at) : null);
+    setEditState({ id: photo.id, note: photo.note ?? "", takenAt: photo.taken_at ? new Date(photo.taken_at) : null });
   }
-
-  useEffect(() => {
-    if (!loadingStation) {
-      setSelected(new Set(stationPhotos.map((p) => p.id)));
-      setMainId(stationPhotos.find((p) => p.is_main)?.id ?? null);
-    }
-  }, [stationPhotos, loadingStation]);
 
   const isDirty = useMemo(() => {
     const serverIds = new Set(stationPhotos.map((p) => p.id));
@@ -95,6 +87,8 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   const saveMutation = useMutation({
     mutationFn: () => setStationPhotoSelection(stationId, Array.from(selected), mainId),
     onSuccess: () => {
+      setSelectedOverride(null);
+      setMainIdOverride("unset");
       void queryClient.invalidateQueries({ queryKey: ["station-photos", stationId] });
       toast.success(t("photos.selectionSaved"));
     },
@@ -108,6 +102,8 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
       const mergedSelected = [...new Set([...selected, ...newIds])];
       const newMainId = locationPhotos.length === 0 ? (newIds[0] ?? null) : mainId;
       await setStationPhotoSelection(stationId, mergedSelected, newMainId);
+      setSelectedOverride(null);
+      setMainIdOverride("unset");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["location-photos", locationId] }),
         queryClient.invalidateQueries({ queryKey: ["station-photos", stationId] }),
@@ -126,33 +122,30 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   const isLoading = loadingLocation || loadingStation;
 
   function toggleSelect(photo: LocationPhoto) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(photo.id)) {
-        next.delete(photo.id);
-        if (mainId === photo.id) setMainId(null);
-      } else {
-        next.add(photo.id);
-      }
-      return next;
-    });
+    const next = new Set(selected);
+    if (next.has(photo.id)) {
+      next.delete(photo.id);
+      if (mainId === photo.id) setMainIdOverride(null);
+    } else {
+      next.add(photo.id);
+    }
+    setSelectedOverride(next);
   }
 
   function setMain(photoId: number) {
-    setMainId(photoId);
-    setSelected((prev) => {
-      if (prev.has(photoId)) return prev;
-      const next = new Set(prev);
+    setMainIdOverride(photoId);
+    if (!selected.has(photoId)) {
+      const next = new Set(selected);
       next.add(photoId);
-      return next;
-    });
+      setSelectedOverride(next);
+    }
   }
 
   if (isLoading) {
     return (
       <div className="border rounded-xl overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.label")}</span>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -166,7 +159,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
     return (
       <div className="border rounded-xl overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.label")}</span>
         </div>
         <div className="flex flex-col items-center justify-center py-10 text-sm text-muted-foreground gap-2">
@@ -186,7 +179,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
     <div className="border rounded-xl overflow-hidden">
       <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.label")}</span>
           <span className="text-xs text-muted-foreground">
             {t("photos.selectionCount", { selected: selected.size, total: locationPhotos.length })}
@@ -209,10 +202,15 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
           return (
             <div
               key={photo.id}
+              role="button"
+              tabIndex={0}
               className={`relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
                 isSelected ? "border-primary" : "border-transparent"
               } bg-muted`}
               onClick={() => toggleSelect(photo)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
+              }}
             >
               <div className="relative aspect-square">
                 <img
@@ -265,9 +263,9 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                   {photo.note ? <p className="truncate italic text-muted-foreground">{photo.note}</p> : null}
                 </div>
                 <Popover
-                  open={editingId === photo.id}
+                  open={editState?.id === photo.id}
                   onOpenChange={(open) => {
-                    if (!open) setEditingId(null);
+                    if (!open) setEditState(null);
                   }}
                 >
                   <PopoverTrigger
@@ -281,9 +279,11 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
                       <input
-                        autoFocus
-                        value={editNote}
-                        onChange={(e) => setEditNote(e.target.value)}
+                        value={editState?.note ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setEditState((prev) => (prev ? { ...prev, note: v } : prev));
+                        }}
                         maxLength={100}
                         placeholder={t("photos.notePlaceholder")}
                         className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
@@ -291,10 +291,13 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                      <DatePickerInput value={editTakenAt} onChange={setEditTakenAt} />
+                      <DatePickerInput
+                        value={editState?.takenAt ?? null}
+                        onChange={(v) => setEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
+                      />
                     </div>
                     <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                      <Button size="sm" variant="ghost" onClick={() => setEditState(null)}>
                         <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
                         {t("common:actions.cancel")}
                       </Button>
@@ -303,8 +306,8 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                         onClick={() =>
                           editMutation.mutate({
                             id: photo.id,
-                            note: editNote,
-                            takenAt: editTakenAt?.toISOString() ?? null,
+                            note: editState?.note ?? "",
+                            takenAt: editState?.takenAt?.toISOString() ?? null,
                             originalNote: photo.note ?? "",
                             originalTakenAt: photo.taken_at ?? null,
                           })

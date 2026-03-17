@@ -67,7 +67,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     );
 
     const oldLocationId = station.location_id;
-    if (oldLocationId != null && oldLocationId !== updated.location_id) {
+    if (oldLocationId !== null && oldLocationId !== updated.location_id) {
       try {
         const count = await db.$count(stations, eq(stations.location_id, oldLocationId));
         if (count === 0) {

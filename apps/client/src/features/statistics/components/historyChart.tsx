@@ -65,7 +65,7 @@ function useBandCharts(historyData: StatsHistoryRow[] | undefined): BandChartDat
         for (const op of operators) {
           const cur = sorted[i][op.name] as number | undefined;
           const prev = sorted[i - 1][op.name] as number | undefined;
-          if (cur != null && prev != null && prev !== 0) {
+          if (cur !== undefined && prev !== undefined && prev !== 0) {
             sorted[i][`${op.name}_change`] = ((cur - prev) / prev) * 100;
           }
         }
@@ -88,7 +88,7 @@ function HistoryTooltipContent(props: ComponentProps<typeof ChartTooltipContent>
             <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: item.color }} />
             <span className="text-muted-foreground flex-1">{name}</span>
             <span className="font-mono font-medium tabular-nums">{(value as number).toLocaleString(locale)}</span>
-            {change != null && (
+            {change !== null && change !== undefined ? (
               <span
                 className={cn(
                   "font-mono text-[10px] tabular-nums",
@@ -98,7 +98,7 @@ function HistoryTooltipContent(props: ComponentProps<typeof ChartTooltipContent>
                 {change > 0 ? "+" : ""}
                 {change.toFixed(2)}%
               </span>
-            )}
+            ) : null}
           </div>
         );
       }}

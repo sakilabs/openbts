@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -59,9 +59,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [deletePhotoId, setDeletePhotoId] = useState<number | null>(null);
-  const [editingPhotoId, setEditingPhotoId] = useState<number | null>(null);
-  const [editNote, setEditNote] = useState("");
-  const [editTakenAt, setEditTakenAt] = useState<Date | null>(null);
+  const [editState, setEditState] = useState<{ id: number; note: string; takenAt: Date | null } | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data: photos = [], isLoading } = useQuery({
@@ -71,7 +69,9 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
   });
 
   const queryKeyRef = useRef(queryKey);
-  queryKeyRef.current = queryKey;
+  useLayoutEffect(() => {
+    queryKeyRef.current = queryKey;
+  });
   const invalidate = useCallback(() => queryClient.invalidateQueries({ queryKey: queryKeyRef.current as unknown[] }), [queryClient]);
 
   const deleteMutation = useMutation({
@@ -104,7 +104,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
     },
     onSuccess: () => {
       void invalidate();
-      setEditingPhotoId(null);
+      setEditState(null);
     },
     onError: () => toast.error(t("photos.noteFailed")),
   });
@@ -130,17 +130,12 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
     onError: () => toast.error(t("photos.uploadFailed")),
   });
 
-  const photosLengthRef = useRef(photos.length);
-  photosLengthRef.current = photos.length;
-
   const closeLightbox = () => setLightboxIndex(null);
-  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photosLengthRef.current) % photosLengthRef.current : null)), []);
-  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photosLengthRef.current : null)), []);
+  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
+  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
 
   function openEdit(photo: Photo) {
-    setEditingPhotoId(photo.id);
-    setEditNote(photo.note ?? "");
-    setEditTakenAt(photo.taken_at ? new Date(photo.taken_at) : null);
+    setEditState({ id: photo.id, note: photo.note ?? "", takenAt: photo.taken_at ? new Date(photo.taken_at) : null });
   }
 
   function confirmDelete() {
@@ -167,7 +162,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                 icon={ArrowDown01Icon}
                 className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-0 -rotate-90"
               />
-              <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+              <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
               <span className="font-semibold text-sm">{t("photos.label")}</span>
               {!isLoading ? <span className="text-xs text-muted-foreground">({photos.length})</span> : null}
             </CollapsibleTrigger>
@@ -207,8 +202,13 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                         </span>
                       ) : null}
                       <div
+                        role="button"
+                        tabIndex={0}
                         className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-zoom-in"
                         onClick={() => setLightboxIndex(idx)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
+                        }}
                       >
                         {!readOnly && setMainFn && !photo.is_main ? (
                           <Button
@@ -260,9 +260,9 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                       </div>
                       {!readOnly ? (
                         <Popover
-                          open={editingPhotoId === photo.id}
+                          open={editState?.id === photo.id}
                           onOpenChange={(open) => {
-                            if (!open) setEditingPhotoId(null);
+                            if (!open) setEditState(null);
                           }}
                         >
                           <PopoverTrigger
@@ -276,9 +276,11 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                             <div className="flex flex-col gap-1.5">
                               <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
                               <input
-                                autoFocus
-                                value={editNote}
-                                onChange={(e) => setEditNote(e.target.value)}
+                                value={editState?.note ?? ""}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setEditState((prev) => (prev ? { ...prev, note: v } : prev));
+                                }}
                                 maxLength={100}
                                 placeholder={t("photos.notePlaceholder")}
                                 className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
@@ -287,11 +289,14 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                             {updateTakenAtFn ? (
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                                <DatePickerInput value={editTakenAt} onChange={setEditTakenAt} />
+                                <DatePickerInput
+                                  value={editState?.takenAt ?? null}
+                                  onChange={(v) => setEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
+                                />
                               </div>
                             ) : null}
                             <div className="flex items-center justify-end gap-2">
-                              <Button size="sm" variant="ghost" onClick={() => setEditingPhotoId(null)}>
+                              <Button size="sm" variant="ghost" onClick={() => setEditState(null)}>
                                 <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
                                 {t("common:actions.cancel")}
                               </Button>
@@ -300,8 +305,8 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                                 onClick={() =>
                                   editMutation.mutate({
                                     id: photo.id,
-                                    note: editNote,
-                                    takenAt: editTakenAt?.toISOString() ?? null,
+                                    note: editState?.note ?? "",
+                                    takenAt: editState?.takenAt?.toISOString() ?? null,
                                     originalNote: photo.note ?? "",
                                     originalTakenAt: photo.taken_at ?? null,
                                   })

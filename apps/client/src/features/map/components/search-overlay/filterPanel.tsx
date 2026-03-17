@@ -11,6 +11,7 @@ import {
   FilterIcon,
   AirportTowerIcon,
   Route02Icon,
+  Fire02Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -278,6 +279,8 @@ type FilterPanelProps = {
   onSelectAllBands: () => void;
   onClearAllBands: () => void;
   onClearFilters: () => void;
+  showHeatmap?: boolean;
+  onToggleHeatmap?: () => void;
   isSheet?: boolean;
   hideSource?: boolean;
   hideAPIFilters?: boolean;
@@ -298,6 +301,8 @@ export function FilterPanel({
   onSelectAllBands,
   onClearAllBands,
   onClearFilters,
+  showHeatmap = false,
+  onToggleHeatmap,
   isSheet = false,
   hideSource = false,
   hideAPIFilters = false,
@@ -341,14 +346,14 @@ export function FilterPanel({
   ];
 
   const handleToggleStations = useCallback(() => {
-    if (!filters.showRadiolines && filters.showStations) return;
+    if (!filters.showRadiolines && !showHeatmap && filters.showStations) return;
     onFiltersChange({ ...filters, showStations: !filters.showStations });
-  }, [filters, onFiltersChange]);
+  }, [filters, showHeatmap, onFiltersChange]);
 
   const handleToggleRadiolines = useCallback(() => {
-    if (!filters.showStations && filters.showRadiolines) return;
+    if (!filters.showStations && !showHeatmap && filters.showRadiolines) return;
     onFiltersChange({ ...filters, showRadiolines: !filters.showRadiolines });
-  }, [filters, onFiltersChange]);
+  }, [filters, showHeatmap, onFiltersChange]);
 
   const filterSections = (
     <div className={cn("space-y-2", isSheet ? "p-4" : "p-4 overflow-y-auto overscroll-contain")}>
@@ -363,6 +368,12 @@ export function FilterPanel({
             <HugeiconsIcon icon={Route02Icon} className="size-3.5 shrink-0" />
             <span className="flex-1 text-left">{t("filters.showRadiolines")}</span>
           </Checkbox>
+          {onToggleHeatmap && (
+            <Checkbox checked={showHeatmap} onChange={onToggleHeatmap}>
+              <HugeiconsIcon icon={Fire02Icon} className="size-3.5 shrink-0" />
+              <span className="flex-1 text-left">Heatmap</span>
+            </Checkbox>
+          )}
         </div>
       </div>
 

@@ -19,7 +19,7 @@
     "byVoivodeship": "Unique Stations per Voivodeship",
     "internalByVoivodeship": "Stations per Voivodeship",
     "history": "Historical Trends",
-    "noHistoryData": "No historical data available yet. Data will appear after the first import."
+    "noHistoryData": "No historical data yet. Trends will appear once data has been collected."
   },
   "filters": {
     "allOperators": "All Operators",

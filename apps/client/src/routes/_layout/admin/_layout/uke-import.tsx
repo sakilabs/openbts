@@ -10,14 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchImportStatus, startImport, type ImportStep, type StepStatus, type JobState } from "@/features/admin/uke-import/api";
 import { i18n } from "@/i18n";
-
-function formatDuration(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
-}
+import { formatDuration } from "@/lib/format";
 
 function StepTimer({ startedAt, finishedAt }: { startedAt?: string; finishedAt?: string }) {
   const [now, setNow] = useState(() => Date.now());

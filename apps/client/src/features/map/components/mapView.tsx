@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
 import { POLAND_CENTER, POLAND_BOUNDS } from "../constants";
@@ -26,6 +26,22 @@ const UkePermitDetailsDialog = lazy(() =>
 );
 
 const MAP_POSITION_KEY = "map:position";
+const MAP_HEATMAP_KEY = "map:heatmap";
+
+function loadHeatmap(): boolean {
+  try {
+    return localStorage.getItem(MAP_HEATMAP_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function saveHeatmap(value: boolean) {
+  try {
+    if (value) localStorage.setItem(MAP_HEATMAP_KEY, "1");
+    else localStorage.removeItem(MAP_HEATMAP_KEY);
+  } catch {}
+}
 
 type SavedMapPosition = { center: [number, number]; zoom: number };
 
@@ -92,6 +108,7 @@ function MapViewInner() {
   const { data: session } = authClient.useSession();
   const showAddToList = !!session?.user && !!runtimeSettings?.enableUserLists;
   const [filters, setFiltersState] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
+  const [showHeatmap, setShowHeatmap] = useState(() => loadHeatmap());
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
 
@@ -151,7 +168,9 @@ function MapViewInner() {
 
   const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
   const locationsRef = useRef(locations);
-  locationsRef.current = locations;
+  useLayoutEffect(() => {
+    locationsRef.current = locations;
+  });
   const locationCount = locations.length;
   const totalCount = locationsResponse?.totalCount ?? 0;
 
@@ -198,7 +217,9 @@ function MapViewInner() {
   );
 
   const filtersRef = useRef(filters);
-  filtersRef.current = filters;
+  useLayoutEffect(() => {
+    filtersRef.current = filters;
+  });
 
   const handleStationSelect = useCallback(
     async (station: Station) => {
@@ -246,6 +267,11 @@ function MapViewInner() {
   );
 
   const handleActiveMarkerClear = useCallback(() => setActiveMarker(null), []);
+  const handleSetHeatmap = useCallback((v: boolean) => {
+    saveHeatmap(v);
+    setShowHeatmap(v);
+  }, []);
+  const handleToggleHeatmap = useCallback(() => handleSetHeatmap(!showHeatmap), [handleSetHeatmap, showHeatmap]);
   const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "CLOSE_STATION" }), []);
   const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
   const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
@@ -285,6 +311,8 @@ function MapViewInner() {
         onFiltersChange={setFilters}
         onLocationSelect={handleLocationSelect}
         onStationSelect={handleStationSelect}
+        showHeatmap={showHeatmap}
+        onToggleHeatmap={handleToggleHeatmap}
       />
       <StationsLayer
         filters={filters}
@@ -296,6 +324,8 @@ function MapViewInner() {
         popupActions={popupActions}
         onRadiolineIdFromUrl={handlePendingRadiolineId}
         activePopupLocationId={activePopupLocation?.locationId}
+        showHeatmap={showHeatmap}
+        onHeatmapChange={handleSetHeatmap}
       />
       {filters.showRadiolines ? (
         <Suspense fallback={null}>

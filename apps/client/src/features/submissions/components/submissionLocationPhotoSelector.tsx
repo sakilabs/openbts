@@ -53,7 +53,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
     return (
       <div className="border rounded-xl overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.label")}</span>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -67,7 +67,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
     return (
       <div className="border rounded-xl overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.label")}</span>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground gap-1.5">
@@ -82,7 +82,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
   return (
     <div className="border rounded-xl overflow-hidden">
       <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-        <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+        <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
         <span className="font-semibold text-sm">{t("photos.label")}</span>
         <span className="text-xs text-muted-foreground">
           {t("photos.selectionCount", { selected: selectedSet.size, total: locationPhotos.length })}
@@ -96,10 +96,15 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
           return (
             <div
               key={photo.id}
+              role="button"
+              tabIndex={0}
               className={`relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
                 isSelected ? "border-primary" : "border-transparent"
               } bg-muted`}
               onClick={() => toggleSelect(photo)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
+              }}
             >
               <div className="relative aspect-square">
                 <img

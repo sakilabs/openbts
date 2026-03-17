@@ -175,12 +175,15 @@ export function hasSubmissionChanges(payload: SubmissionPayload): boolean {
 
   if (payload.location) {
     const { region_id, city, address, longitude, latitude } = payload.location;
-    if (region_id != null || city?.trim() || address?.trim() || longitude != null || latitude != null) return true;
+    if (region_id !== null || city?.trim() || address?.trim() || longitude !== null || latitude !== null) return true;
   }
 
   if (
     payload.cells?.some(
-      (cell) => cell.band_id != null || !!cell.notes?.trim() || (cell.details && Object.values(cell.details).some(isMeaningfulValue)),
+      (cell) =>
+        (cell.band_id !== null && cell.band_id !== undefined) ||
+        !!cell.notes?.trim() ||
+        (cell.details && Object.values(cell.details).some(isMeaningfulValue)),
     )
   )
     return true;

@@ -44,7 +44,15 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
   if (index === null || !activePhoto) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90" onClick={onClose}>
+    <div
+      role="button"
+      tabIndex={0}
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90"
+      onClick={onClose}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClose();
+      }}
+    >
       <button type="button" className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-full transition-colors" onClick={onClose}>
         <HugeiconsIcon icon={Cancel01Icon} className="size-6" />
       </button>
@@ -72,7 +80,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
           </button>
         </>
       ) : null}
-      <div className="flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+      <div role="presentation" className="flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <img
           src={`/uploads/${activePhoto.attachment_uuid}.webp`}
           alt={activePhoto.note ?? ""}

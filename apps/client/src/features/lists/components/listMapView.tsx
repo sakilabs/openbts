@@ -73,9 +73,16 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
 
   const [detailState, dispatchDetail] = useReducer(detailReducer, { selectedStation: null });
   const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
-  const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [tempLocations, setTempLocations] = useState<LocationWithStations[]>([]);
+  const [popupLocationState, setPopupLocationState] = useState<{
+    location: { locationId: number; source: StationSource } | null;
+    tempLocations: LocationWithStations[];
+  }>({ location: null, tempLocations: [] });
+  const activePopupLocation = popupLocationState.location;
+  const setPopupLocation = useCallback(
+    (location: { locationId: number; source: StationSource } | null) => setPopupLocationState((prev) => ({ ...prev, location })),
+    [],
+  );
 
   const locationsResponse = useMemo<LocationsResponse | undefined>(() => {
     if (!listData) return undefined;
@@ -98,13 +105,13 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       }
       locationMap.get(locId)!.stations.push(station as unknown as StationWithoutCells);
     }
-    for (const tempLoc of tempLocations) {
+    for (const tempLoc of popupLocationState.tempLocations) {
       if (!locationMap.has(tempLoc.id)) {
         locationMap.set(tempLoc.id, tempLoc);
       }
     }
     return { data: Array.from(locationMap.values()), totalCount: listData.stations.length };
-  }, [listData, tempLocations]);
+  }, [listData, popupLocationState.tempLocations]);
 
   const ukeLocations = listData?.ukeLocations;
   const ukeLocationsResponse = useMemo<LocationsResponse | undefined>(() => {
@@ -133,8 +140,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN", id, source }), []);
   const handleOpenUkeStationDetails = useCallback((station: UkeStation) => setSelectedUkeStation(station), []);
   const handlePopupClose = useCallback(() => {
-    setActivePopupLocation(null);
-    setTempLocations([]);
+    setPopupLocationState({ location: null, tempLocations: [] });
   }, []);
 
   const {
@@ -178,7 +184,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
           createdAt: station.location?.createdAt ?? new Date().toISOString(),
           stations: [station as unknown as StationWithoutCells],
         };
-        setTempLocations((prev) => [...prev.filter((l) => l.id !== locationId), tempLoc]);
+        setPopupLocationState((prev) => ({ ...prev, tempLocations: [...prev.tempLocations.filter((l) => l.id !== locationId), tempLoc] }));
       }
 
       const locationInfo = {
@@ -193,10 +199,10 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       map.flyTo({ center: [lng, lat], zoom: 16, essential: true, speed: 1.5 });
       void map.once("moveend", () => {
         showPopup([lng, lat], locationInfo, [station as unknown as StationWithoutCells], null, "internal");
-        setActivePopupLocation({ locationId, source: "internal" });
+        setPopupLocation({ locationId, source: "internal" });
       });
     },
-    [map, listData, showPopup],
+    [map, listData, showPopup, setPopupLocation],
   );
 
   const { data: popupLocationData } = useQuery({
@@ -219,9 +225,9 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       show: showPopup,
       updateStations: updatePopupStations,
       cleanup: cleanupPopup,
-      setLocation: setActivePopupLocation,
+      setLocation: setPopupLocation,
     }),
-    [showPopup, updatePopupStations, cleanupPopup],
+    [showPopup, updatePopupStations, cleanupPopup, setPopupLocation],
   );
 
   const stationActions = useMemo(

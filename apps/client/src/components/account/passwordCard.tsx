@@ -29,10 +29,9 @@ interface PasswordFieldProps {
   autoComplete: "current-password" | "new-password";
   placeholder?: string;
   errors?: (string | undefined)[];
-  autoFocus?: boolean;
 }
 
-function PasswordField({ label, value, onChange, onBlur, show, onToggleShow, autoComplete, placeholder, errors, autoFocus }: PasswordFieldProps) {
+function PasswordField({ label, value, onChange, onBlur, show, onToggleShow, autoComplete, placeholder, errors }: PasswordFieldProps) {
   const firstError = errors?.find((e) => e !== undefined);
   const hasError = firstError !== undefined;
   return (
@@ -51,7 +50,6 @@ function PasswordField({ label, value, onChange, onBlur, show, onToggleShow, aut
           onBlur={onBlur}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          autoFocus={autoFocus}
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <button type="button" onClick={onToggleShow} className="text-muted-foreground hover:text-foreground transition-colors shrink-0" tabIndex={-1}>
@@ -123,11 +121,18 @@ export function PasswordCard({ userId, hasPassword }: Props) {
           newPassword: value.newPassword,
           revokeOtherSessions: false,
         });
-        if (error) throw new Error(error.message);
+        if (error) {
+          if (error.message) {
+            toast.error(error.message);
+          } else {
+            toast.error(t("security.password.changeError"));
+          }
+          return;
+        }
         toast.success(t("security.password.changeSuccess"));
         changePasswordForm.reset();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : t("security.password.changeError"));
+      } catch {
+        toast.error(t("security.password.changeError"));
       }
     },
   });
@@ -169,7 +174,6 @@ export function PasswordCard({ userId, hasPassword }: Props) {
                     autoComplete="new-password"
                     placeholder={t("security.password.newPasswordPlaceholder")}
                     errors={field.state.meta.isTouched ? field.state.meta.errors : EMPTY_ERRORS}
-                    autoFocus
                   />
                 )}
               </setPasswordForm.Field>

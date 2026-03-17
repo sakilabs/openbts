@@ -21,27 +21,34 @@ import { cn } from "@/lib/utils";
 
 const NAV_STORAGE_KEY = "nav-collapsed-state";
 
+function readNavState(): boolean {
+  try {
+    const stored = localStorage.getItem(NAV_STORAGE_KEY);
+    if (!stored) return false;
+    return (JSON.parse(stored) as Record<string, boolean>)["lists"] ?? false;
+  } catch {
+    return false;
+  }
+}
+
+function saveNavState(open: boolean) {
+  try {
+    const stored = localStorage.getItem(NAV_STORAGE_KEY);
+    const parsed = stored ? (JSON.parse(stored) as Record<string, boolean>) : {};
+    localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ ...parsed, lists: open }));
+  } catch {}
+}
+
 const CreateListDialog = lazy(() => import("@/features/lists/components/createListDialog").then((m) => ({ default: m.CreateListDialog })));
 
 export const NavLists = memo(function NavLists() {
   const { t } = useTranslation(["nav", "lists"]);
   const location = useLocation();
-  const [open, setOpen] = useState(() => {
-    try {
-      const stored = localStorage.getItem(NAV_STORAGE_KEY);
-      return stored ? ((JSON.parse(stored) as Record<string, boolean>)["lists"] ?? false) : false;
-    } catch {
-      return false;
-    }
-  });
+  const [open, setOpen] = useState(readNavState);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(NAV_STORAGE_KEY);
-      const parsed = stored ? (JSON.parse(stored) as Record<string, boolean>) : {};
-      localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ ...parsed, lists: open }));
-    } catch {}
+    saveNavState(open);
   }, [open]);
 
   const { data: session } = authClient.useSession();

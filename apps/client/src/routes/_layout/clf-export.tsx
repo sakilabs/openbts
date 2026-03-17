@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -26,10 +26,31 @@ import {
 
 import { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
 import { API_BASE } from "@/lib/api";
+import { formatDuration } from "@/lib/format";
 import { cn, toggleValue } from "@/lib/utils";
 import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
 import { EXTENDED_RAT_OPTIONS } from "@/features/shared/rat";
 import type { Operator } from "@/types/station";
+
+async function downloadExport(url: string, format: string): Promise<boolean> {
+  const fileExtension = format === "ntm" ? "ntm" : format === "netmonitor" ? "csv" : "clf";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return false;
+    const blob = await response.blob();
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `cells_export_${format}.${fileExtension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const FORMAT_OPTIONS = [
   { value: "2.0", label: "CLF v2.0" },
@@ -78,14 +99,31 @@ function ClfExportPage() {
     staleTime: 1000 * 60 * 30,
   });
 
-  const uniqueBandValues = [...new Set(bands.map((b) => b.value))].sort((a, b) => a - b);
+  const uniqueBandValues = useMemo(() => [...new Set(bands.map((b) => b.value))].sort((a, b) => a - b), [bands]);
   const sortedOperators = useMemo(() => operators.filter((op) => TOP4_MNCS.includes(op.mnc)), [operators]);
 
   const operatorChipsRef = useRef<HTMLDivElement>(null);
+  const exportStartRef = useRef<number | null>(null);
+  const exportIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [finalDuration, setFinalDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (exportIntervalRef.current) clearInterval(exportIntervalRef.current);
+    };
+  }, []);
 
   const form = useForm({
     defaultValues: INITIAL_VALUES,
     onSubmit: async ({ value }) => {
+      exportStartRef.current = Date.now();
+      setElapsed(0);
+      setFinalDuration(null);
+      exportIntervalRef.current = setInterval(() => {
+        if (exportStartRef.current) setElapsed(Date.now() - exportStartRef.current);
+      }, 500);
+
       const params = new URLSearchParams();
       params.set("format", value.format);
       if (value.operators.length > 0) params.set("operators", value.operators.join(","));
@@ -94,30 +132,16 @@ function ClfExportPage() {
       if (value.bands.length > 0) params.set("bands", value.bands.join(","));
 
       const url = `${API_BASE}/cells/export?${params.toString()}`;
-      const fileExtension = value.format === "ntm" ? "ntm" : value.format === "netmonitor" ? "csv" : "clf";
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        toast.error(t("exportError"));
-        console.error("Export error:", response.status);
-        return;
-      }
-
-      try {
-        const blob = await response.blob();
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.download = `cells_export_${value.format}.${fileExtension}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(downloadUrl);
+      const success = await downloadExport(url, value.format);
+      if (success) {
         toast.success(t("exportSuccess"));
-      } catch (error) {
+      } else {
         toast.error(t("exportError"));
-        console.error("Export error:", error);
       }
+
+      if (exportIntervalRef.current) clearInterval(exportIntervalRef.current);
+      exportIntervalRef.current = null;
+      if (exportStartRef.current) setFinalDuration(Date.now() - exportStartRef.current);
     },
   });
 
@@ -125,7 +149,7 @@ function ClfExportPage() {
     <main className="flex-1 overflow-y-auto p-4">
       <div className="max-w-4xl space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{t("page.title")}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("page.title")}</h1>
           <p className="text-muted-foreground text-sm">{t("page.description")}</p>
         </div>
 
@@ -349,19 +373,25 @@ function ClfExportPage() {
 
           <form.Subscribe selector={(s) => ({ isSubmitting: s.isSubmitting })}>
             {({ isSubmitting }) => (
-              <Button type="submit" disabled={isSubmitting} size="lg" className="w-full md:w-auto">
-                {isSubmitting ? (
-                  <>
-                    <Spinner data-icon="inline-start" />
-                    {t("form.exporting")}
-                  </>
-                ) : (
-                  <>
-                    <HugeiconsIcon icon={Download04Icon} className="size-4" data-icon="inline-start" />
-                    {t("form.export")}
-                  </>
+              <div className="flex items-center gap-3">
+                <Button type="submit" disabled={isSubmitting} size="lg" className="w-full md:w-auto">
+                  {isSubmitting ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      {t("form.exporting")}
+                      <span className="opacity-70 text-xs tabular-nums">{formatDuration(elapsed)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <HugeiconsIcon icon={Download04Icon} className="size-4" data-icon="inline-start" />
+                      {t("form.export")}
+                    </>
+                  )}
+                </Button>
+                {finalDuration !== null && !isSubmitting && (
+                  <span className="text-sm text-muted-foreground tabular-nums">{formatDuration(finalDuration)}</span>
                 )}
-              </Button>
+              </div>
             )}
           </form.Subscribe>
         </form>

@@ -25,7 +25,7 @@ export function RatSelector({ selectedRats, onRatsChange }: RatSelectorProps) {
   return (
     <div className="border rounded-xl overflow-hidden">
       <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-        <HugeiconsIcon icon={SignalFull02Icon} className="size-4 text-primary" />
+        <HugeiconsIcon icon={SignalFull02Icon} className="size-4 text-muted-foreground" />
         <span className="font-semibold text-sm">{t("ratSelector.title")}</span>
       </div>
 

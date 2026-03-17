@@ -58,7 +58,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
               icon={ArrowDown01Icon}
               className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-0 -rotate-90"
             />
-            <HugeiconsIcon icon={Message01Icon} className="size-4 text-primary" />
+            <HugeiconsIcon icon={Message01Icon} className="size-4 text-muted-foreground" />
             <span className="font-semibold text-sm">{t("stationComments.title")}</span>
             <span className="text-xs text-muted-foreground">({comments.length})</span>
           </CollapsibleTrigger>

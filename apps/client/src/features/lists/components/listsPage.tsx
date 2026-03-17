@@ -52,9 +52,7 @@ export function ListsPageContent() {
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useUserLists();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [editTarget, setEditTarget] = useState<UserListSummary | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editDescription, setEditDescription] = useState("");
+  const [editState, setEditState] = useState<{ target: UserListSummary; name: string; description: string } | null>(null);
 
   const lists = useMemo<UserListSummary[]>(
     () => data?.pages.flatMap((p) => p.data).filter((l) => l.createdBy.uuid === session?.user?.id) ?? [],
@@ -111,22 +109,20 @@ export function ListsPageContent() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["user-lists"] });
       toast.success(t("lists:updated"));
-      setEditTarget(null);
+      setEditState(null);
     },
   });
 
   function openEdit(list: UserListSummary) {
-    setEditName(list.name);
-    setEditDescription(list.description ?? "");
-    setEditTarget(list);
+    setEditState({ target: list, name: list.name, description: list.description ?? "" });
   }
 
   function handleRename() {
-    if (!editTarget || !editName.trim()) return;
+    if (!editState || !editState.name.trim()) return;
     renameMutation.mutate({
-      uuid: editTarget.uuid,
-      name: editName.trim(),
-      description: editDescription.trim() || undefined,
+      uuid: editState.target.uuid,
+      name: editState.name.trim(),
+      description: editState.description.trim() || undefined,
     });
   }
 
@@ -136,130 +132,6 @@ export function ListsPageContent() {
   }
 
   const [headerActions] = useState(() => document.getElementById("header-actions"));
-
-  function renderContent() {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-20">
-          <Spinner className="size-6" />
-        </div>
-      );
-    }
-    if (lists.length === 0) {
-      return (
-        <Card>
-          <CardContent>
-            <p className="text-muted-foreground text-center py-8">{t("lists:empty")}</p>
-          </CardContent>
-        </Card>
-      );
-    }
-    return (
-      <div ref={parentRef} className="flex-1 overflow-y-auto">
-        <div
-          style={{
-            height: virtualizer.getTotalSize(),
-            width: "100%",
-            position: "relative",
-          }}
-        >
-          {items.map((virtualItem) => {
-            const list = lists[virtualItem.index];
-            return (
-              <div
-                key={virtualItem.key}
-                data-index={virtualItem.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
-              >
-                <Card size="sm">
-                  <CardContent className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{list.name}</p>
-                        {list.description && <p className="text-muted-foreground text-xs line-clamp-2">{list.description}</p>}
-                      </div>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" />}>
-                          <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(list)}>
-                            <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-                            {t("lists:rename")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleShare(list)}>
-                            <HugeiconsIcon icon={Share08Icon} strokeWidth={2} />
-                            {t("common:actions.share")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              togglePublicMutation.mutate({
-                                uuid: list.uuid,
-                                is_public: !list.is_public,
-                              })
-                            }
-                          >
-                            <HugeiconsIcon icon={list.is_public ? SecurityLockIcon : Globe02Icon} strokeWidth={2} />
-                            {list.is_public ? t("lists:togglePrivate") : t("lists:togglePublic")}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(list.uuid)}>
-                            <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-                            {t("common:actions.delete")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <HugeiconsIcon icon={AirportTowerIcon} className="size-3" />
-                        {t("lists:stationCount", { count: list.stationCount })}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <HugeiconsIcon icon={SignalFull02Icon} className="size-3" />
-                        {t("lists:radiolineCount", { count: list.radiolineCount })}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1",
-                          list.is_public ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
-                        )}
-                      >
-                        <HugeiconsIcon icon={list.is_public ? Globe02Icon : SecurityLockIcon} className="size-3" />
-                        {list.is_public ? t("lists:public") : t("lists:private")}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-muted-foreground">
-                        <HugeiconsIcon icon={Calendar03Icon} className="size-3" />
-                        {new Date(list.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })}
-        </div>
-
-        {isFetchingNextPage && (
-          <div className="flex justify-center py-4">
-            <Spinner className="size-4" />
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl flex flex-col h-full">
@@ -272,9 +144,104 @@ export function ListsPageContent() {
           headerActions,
         )}
 
-      {renderContent()}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Spinner className="size-6" />
+        </div>
+      ) : lists.length === 0 ? (
+        <Card>
+          <CardContent>
+            <p className="text-muted-foreground text-center py-8">{t("lists:empty")}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div ref={parentRef} className="flex-1 overflow-y-auto">
+          <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+            {items.map((virtualItem) => {
+              const list = lists[virtualItem.index];
+              return (
+                <div
+                  key={virtualItem.key}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${virtualItem.start}px)` }}
+                >
+                  <Card size="sm">
+                    <CardContent className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{list.name}</p>
+                          {list.description && <p className="text-muted-foreground text-xs line-clamp-2">{list.description}</p>}
+                        </div>
 
-      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" />}>
+                            <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openEdit(list)}>
+                              <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
+                              {t("lists:rename")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShare(list)}>
+                              <HugeiconsIcon icon={Share08Icon} strokeWidth={2} />
+                              {t("common:actions.share")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => togglePublicMutation.mutate({ uuid: list.uuid, is_public: !list.is_public })}>
+                              <HugeiconsIcon icon={list.is_public ? SecurityLockIcon : Globe02Icon} strokeWidth={2} />
+                              {list.is_public ? t("lists:togglePrivate") : t("lists:togglePublic")}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(list.uuid)}>
+                              <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+                              {t("common:actions.delete")}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <HugeiconsIcon icon={AirportTowerIcon} className="size-3" />
+                          {t("lists:stationCount", { count: list.stationCount })}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <HugeiconsIcon icon={SignalFull02Icon} className="size-3" />
+                          {t("lists:radiolineCount", { count: list.radiolineCount })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1",
+                            list.is_public ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+                          )}
+                        >
+                          <HugeiconsIcon icon={list.is_public ? Globe02Icon : SecurityLockIcon} className="size-3" />
+                          {list.is_public ? t("lists:public") : t("lists:private")}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <HugeiconsIcon icon={Calendar03Icon} className="size-3" />
+                          {new Date(list.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })}
+          </div>
+
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-4">
+              <Spinner className="size-4" />
+            </div>
+          )}
+        </div>
+      )}
+
+      <Dialog open={editState !== null} onOpenChange={(open) => !open && setEditState(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("lists:editList")}</DialogTitle>
@@ -284,27 +251,32 @@ export function ListsPageContent() {
               <Label htmlFor="edit-list-name">{t("lists:name")}</Label>
               <Input
                 id="edit-list-name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                value={editState?.name ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setEditState((prev) => (prev ? { ...prev, name: v } : prev));
+                }}
                 onKeyDown={(e) => e.key === "Enter" && handleRename()}
-                autoFocus
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-list-description">{t("lists:description")}</Label>
               <Input
                 id="edit-list-description"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
+                value={editState?.description ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setEditState((prev) => (prev ? { ...prev, description: v } : prev));
+                }}
                 placeholder={t("common:placeholder.optional")}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTarget(null)}>
+            <Button variant="outline" onClick={() => setEditState(null)}>
               {t("common:actions.cancel")}
             </Button>
-            <Button onClick={handleRename} disabled={!editName.trim() || renameMutation.isPending}>
+            <Button onClick={handleRename} disabled={!editState?.name.trim() || renameMutation.isPending}>
               {renameMutation.isPending ? <Spinner /> : t("common:actions.save")}
             </Button>
           </DialogFooter>

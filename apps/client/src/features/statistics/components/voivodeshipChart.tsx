@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ComponentProps, memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +43,7 @@ function useRegionBarData(rows: { operator: { name: string }; region: { name: st
   }, [rows, valueKey]);
 }
 
-function VoivodeshipBarCard({
+const VoivodeshipBarCard = memo(function VoivodeshipBarCard({
   title,
   chartData,
   operators,
@@ -69,8 +69,8 @@ function VoivodeshipBarCard({
             <CartesianGrid horizontal={false} />
             <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString(locale)} />
             <YAxis type="category" dataKey="region" tick={{ fontSize: 12 }} width={120} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartTooltip content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
+            <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} />} />
             {operators.map((op, i) => (
               <Bar
                 key={op.name}
@@ -96,7 +96,7 @@ function VoivodeshipBarCard({
       </CardContent>
     </Card>
   );
-}
+});
 
 export function VoivodeshipChartSkeleton() {
   return (

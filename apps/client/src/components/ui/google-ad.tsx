@@ -20,6 +20,14 @@ interface GoogleAdProps {
 
 const PRIVILEGED_ROLES = new Set(["admin", "editor", "moderator"]);
 
+function pushAd() {
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch {
+    // adblocker might have blocked it
+  }
+}
+
 export function GoogleAd({ adSlot, adFormat = "auto", className }: GoogleAdProps) {
   const { data: session } = authClient.useSession();
   const initialized = useRef(false);
@@ -27,11 +35,7 @@ export function GoogleAd({ adSlot, adFormat = "auto", className }: GoogleAdProps
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {
-      // adblocker might have blocked it or whatever
-    }
+    pushAd();
   }, []);
 
   if (PRIVILEGED_ROLES.has(session?.user?.role as string) || !AD_CLIENT) return null;

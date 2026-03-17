@@ -42,11 +42,11 @@
     "about": "About"
   },
   "user": {
-    "logout": "Logout",
-    "login": "Login"
+    "logout": "Log out",
+    "login": "Log in"
   },
   "auth": {
     "signIn": "Sign In",
-    "signInHint": "Access your account"
+    "signInHint": "Sign in to submit and track stations"
   }
 }

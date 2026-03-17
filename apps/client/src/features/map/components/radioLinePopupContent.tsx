@@ -120,11 +120,11 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
               {link.linkType}
             </span>
           ) : null}
-          {totalSpeed != null && (
+          {totalSpeed !== null && totalSpeed !== undefined ? (
             <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[8px] font-mono font-semibold text-emerald-600 border border-emerald-500/20">
               {formatSpeed(totalSpeed)}
             </span>
-          )}
+          ) : null}
           {link.isExpired && (
             <span className="px-1 py-px rounded-md bg-destructive/10 text-[8px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
               {t("common:status.expired")}
@@ -139,7 +139,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
             const dirCalcSpeed =
               dir.link.ch_width && dir.link.modulation_type ? calculateRadiolineSpeed(dir.link.ch_width, dir.link.modulation_type) : null;
             const dirSpeedBadge = (() => {
-              if (dirCalcSpeed != null)
+              if (dirCalcSpeed !== null && dirCalcSpeed !== undefined)
                 return (
                   <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[8px] font-mono font-medium text-emerald-600 border border-emerald-500/20">
                     {formatSpeed(dirCalcSpeed)}

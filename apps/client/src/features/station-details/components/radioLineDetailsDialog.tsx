@@ -165,12 +165,12 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   <span className="font-medium text-foreground/90">{formatFrequency(radioLine.link.freq)}</span>
                   {(link.linkType === "FDD" || link.linkType === "2+0 FDD" || link.linkType === "XPIC" || link.linkType === "SD") &&
                     link.directions.length > 1 && <span className="text-xs">+{link.directions.length - 1}</span>}
-                  {totalSpeed != null && (
+                  {totalSpeed !== null ? (
                     <>
                       <span>·</span>
                       <span className="font-medium font-mono text-foreground/90">{formatSpeed(totalSpeed)}</span>
                     </>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -208,26 +208,26 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   value={`${radioLine.link.freq} MHz (${formatFrequency(radioLine.link.freq)})`}
                   mono
                 />
-                {radioLine.link.ch_num != null && (
+                {radioLine.link.ch_num !== null && radioLine.link.ch_num !== undefined ? (
                   <InfoRow icon={HashtagIcon} label={t("radiolines.chNum")} value={String(radioLine.link.ch_num)} mono />
-                )}
-                {radioLine.link.ch_width !== null && (
+                ) : null}
+                {radioLine.link.ch_width !== null && radioLine.link.ch_width !== undefined ? (
                   <InfoRow icon={HorizontalResizeIcon} label={t("radiolines.channelWidth")} value={`${radioLine.link.ch_width} MHz`} mono />
-                )}
-                {radioLine.link.polarization && (
+                ) : null}
+                {radioLine.link.polarization ? (
                   <InfoRow icon={Rotate01Icon} label={t("radiolines.polarization")} value={radioLine.link.polarization} />
-                )}
-                {radioLine.link.modulation_type && (
+                ) : null}
+                {radioLine.link.modulation_type ? (
                   <InfoRow icon={Activity01Icon} label={t("radiolines.modulation")} value={radioLine.link.modulation_type} />
-                )}
-                {dirSpeed != null ? (
+                ) : null}
+                {dirSpeed !== null && dirSpeed !== undefined ? (
                   <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.bandwidth")} value={formatSpeed(dirSpeed)} mono />
-                ) : radioLine.link.bandwidth ? (
+                ) : radioLine.link.bandwidth !== null && radioLine.link.bandwidth !== undefined ? (
                   <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.bandwidth")} value={formatBandwidth(radioLine.link.bandwidth)} />
                 ) : null}
-                {totalSpeed != null && (
+                {totalSpeed !== null ? (
                   <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.totalSpeed")} value={formatSpeed(totalSpeed)} mono />
-                )}
+                ) : null}
               </div>
             </div>
           </div>

@@ -5,11 +5,12 @@ import type { MySubmissionsResponse } from "../api";
 
 const LIMIT = 20;
 
-export function useMySubmissions(): UseInfiniteQueryResult<InfiniteData<MySubmissionsResponse>> {
+export function useMySubmissions(userId?: string): UseInfiniteQueryResult<InfiniteData<MySubmissionsResponse>> {
   return useInfiniteQuery({
-    queryKey: ["my-submissions"],
-    queryFn: ({ pageParam = 0 }) => fetchMySubmissions(LIMIT, pageParam as number),
+    queryKey: ["my-submissions", userId],
+    queryFn: ({ pageParam = 0 }) => fetchMySubmissions(LIMIT, pageParam as number, userId),
     initialPageParam: 0,
+    enabled: !!userId,
     getNextPageParam: (lastPage, allPages) => {
       const fetched = allPages.length * LIMIT;
       return fetched < lastPage.totalCount ? fetched : undefined;

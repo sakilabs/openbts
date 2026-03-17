@@ -282,6 +282,7 @@ function StationDetailForm({
     allBands,
     createNewCell: createNewStationCell,
     onDelete: handleServerCellDelete,
+    sortCellsByRat: false,
   });
 
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {

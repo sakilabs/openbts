@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Camera01Icon, Image01Icon, Upload04Icon } from "@hugeicons/core-free-icons";
@@ -11,12 +11,9 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
   const { t, i18n } = useTranslation("submissions");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const photosLengthRef = useRef(photos.length);
-  photosLengthRef.current = photos.length;
-
   const closeLightbox = () => setLightboxIndex(null);
-  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photosLengthRef.current) % photosLengthRef.current : null)), []);
-  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photosLengthRef.current : null)), []);
+  const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
+  const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
 
   if (photos.length === 0) return null;
 
@@ -24,14 +21,22 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
     <>
       <div className="border rounded-xl overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.selectedLocationPhotos")}</span>
           <span className="text-xs text-muted-foreground">({photos.length})</span>
         </div>
         <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
           {photos.map((photo, idx) => (
             <div key={photo.id} className="group relative rounded-lg overflow-hidden border bg-muted">
-              <div className="relative aspect-square cursor-zoom-in" onClick={() => setLightboxIndex(idx)}>
+              <div
+                role="button"
+                tabIndex={0}
+                className="relative aspect-square cursor-zoom-in"
+                onClick={() => setLightboxIndex(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
+                }}
+              >
                 <img src={`/uploads/${photo.attachment_uuid}.webp`} alt={photo.note ?? ""} className="w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>

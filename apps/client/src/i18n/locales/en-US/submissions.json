@@ -5,7 +5,7 @@
   },
   "detail": {
     "title": "Submission Review",
-    "readOnly": "This submission is read-only. It cannot be edited",
+    "readOnly": "This submission has been reviewed and can no longer be edited.",
     "submitter": "Submitter",
     "createdAt": "Submission Date",
     "noSubmitterNote": "No note from submitter",
@@ -20,7 +20,7 @@
   },
   "locationPicker": {
     "title": "Location",
-    "fetchAddress": "Fetch Address from Nominatim",
+    "fetchAddress": "Auto-fill address",
     "regionPlaceholder": "Select region",
     "cityPlaceholder": "Enter city...",
     "addressPlaceholder": "Enter address...",
@@ -28,7 +28,7 @@
     "createNewLocation": "Create new location here",
     "showUkeLocations": "Show UKE locations",
     "selectStation": "Select a station to import",
-    "editLocation": "Edit location"
+    "editLocation": "Edit"
   },
   "header": {
     "reject": "Reject Submission",
@@ -40,7 +40,7 @@
     "confirmApprove": "Are you sure you want to approve this submission?",
     "confirmApproveDesc": "This action is irreversible. The station submitted in this submission will be added to the database, and the submission will be marked as approved"
   },
-  "deletionBanner": "This submission concerns the deletion of {{stationId}}. Upon approval of this request, the station will be assigned the 'inactive' status",
+  "deletionBanner": "This submission requests deletion of station {{stationId}}. If approved, the station will be marked as inactive.",
   "adminTitle": "Submission Management",
   "adminDescription": "Manage submissions regarding base stations.",
   "submitNew": "Create New Submission",
@@ -121,13 +121,13 @@
     "locationChanged": "Location has been changed"
   },
   "toast": {
-    "submitted": "Submission has been sent",
-    "updated": "Submission has been updated",
-    "deleted": "Submission has been deleted",
-    "saved": "Submission has been saved",
-    "approved": "Submission has been approved",
-    "rejected": "Submission has been rejected",
-    "photoUploadFailed": "Submission created but photo upload failed"
+    "submitted": "Submission sent",
+    "updated": "Submission updated",
+    "deleted": "Submission deleted",
+    "saved": "Submission saved",
+    "approved": "Submission approved",
+    "rejected": "Submission rejected",
+    "photoUploadFailed": "Submission created, but photo upload failed"
   },
   "photos": {
     "label": "Photos",

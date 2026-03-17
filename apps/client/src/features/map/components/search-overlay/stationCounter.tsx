@@ -90,7 +90,7 @@ export function StationCounter({
         </Tooltip>
       )}
       <div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
-        <span className="text-[8px] uppercase font-bold text-primary/80 leading-none whitespace-nowrap">
+        <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none whitespace-nowrap">
           {source === "uke" ? t("stationDetails:tabs.permits") : t("filters.internalDb")}
         </span>
         <div className="w-px h-2 bg-border/60" />

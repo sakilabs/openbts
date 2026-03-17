@@ -74,7 +74,7 @@ export function StationInfoForm({
     <div className="space-y-3">
       <div className="border rounded-xl overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("stationInfo.title")}</span>
         </div>
         <div className="px-4 py-3 space-y-4">
@@ -104,7 +104,7 @@ export function StationInfoForm({
           {showSection && (
             <div className="border-t pt-3 space-y-3">
               <div className="flex items-center gap-2">
-                <HugeiconsIcon icon={Globe02Icon} className="size-4 text-primary" />
+                <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground" />
                 <span className="font-semibold text-sm">Extra Identificators</span>
               </div>
               {showExtraIdsFields && (

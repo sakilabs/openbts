@@ -36,7 +36,7 @@ export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, t }:
     <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
       <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
         <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5 text-muted-foreground group-data-panel-open:rotate-0 -rotate-90" />
-        <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
+        <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-muted-foreground" />
         <span className="font-semibold text-sm">{rat}</span>
         <span className="text-xs text-muted-foreground inline sm:hidden">({cellsCount})</span>
         <span className="text-xs text-muted-foreground hidden sm:inline">({t("stations:cells.cellsCount", { count: cellsCount })})</span>

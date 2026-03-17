@@ -477,6 +477,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       }
       /* eslint-enable no-await-in-loop */
 
+      if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
+
       if (stationId && submission.type !== "delete") {
         const photos = await tx.query.submissionPhotos.findMany({ where: { submission_id: id } });
         if (photos.length > 0) {

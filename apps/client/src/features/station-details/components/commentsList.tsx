@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -67,23 +67,27 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
 
   const [lightbox, setLightbox] = useState<{ commentId: number; index: number } | null>(null);
 
-  const lightboxComment = lightbox ? comments.find((c) => c.id === lightbox.commentId) : null;
-  const lightboxPhotos: LightboxPhoto[] = lightboxComment
-    ? (lightboxComment.attachments
-        ?.filter((a) => a.type.startsWith("image/"))
-        .map((a) => ({
-          attachment_uuid: a.uuid,
-          note: null,
-          createdAt: lightboxComment.createdAt,
-          author: lightboxComment.author
-            ? {
-                uuid: lightboxComment.author.id,
-                username: lightboxComment.author.displayUsername ?? lightboxComment.author.username ?? "",
-                name: lightboxComment.author.name,
-              }
-            : null,
-        })) ?? [])
-    : [];
+  const lightboxComment = useMemo(() => (lightbox ? comments.find((c) => c.id === lightbox.commentId) : null), [lightbox, comments]);
+  const lightboxPhotos: LightboxPhoto[] = useMemo(
+    () =>
+      lightboxComment
+        ? (lightboxComment.attachments
+            ?.filter((a) => a.type.startsWith("image/"))
+            .map((a) => ({
+              attachment_uuid: a.uuid,
+              note: null,
+              createdAt: lightboxComment.createdAt,
+              author: lightboxComment.author
+                ? {
+                    uuid: lightboxComment.author.id,
+                    username: lightboxComment.author.displayUsername ?? lightboxComment.author.username ?? "",
+                    name: lightboxComment.author.name,
+                  }
+                : null,
+            })) ?? [])
+        : [],
+    [lightboxComment],
+  );
 
   const closeLightbox = useCallback(() => setLightbox(null), []);
   const prevPhoto = useCallback(

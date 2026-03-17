@@ -69,7 +69,7 @@ function RateLimitBar({ used, max, reset }: { used: number; max: number; reset: 
         <span className="text-xs tabular-nums">
           {used} / {max}
         </span>
-        {reset != null && used > 0 && <span className="text-[10px] text-muted-foreground tabular-nums">{formatResetTime(reset)}</span>}
+        {reset !== null && used > 0 ? <span className="text-[10px] text-muted-foreground tabular-nums">{formatResetTime(reset)}</span> : null}
       </div>
       <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full transition-all ${isHigh ? "bg-destructive" : "bg-muted-foreground/30"}`} style={{ width: `${pct}%` }} />
@@ -319,7 +319,7 @@ export function ApiKeysCard({ userId }: { userId: string }) {
                           )}
                         </td>
                         <td className="px-4 py-2.5 min-w-24">
-                          {key.rateLimit.max != null ? (
+                          {key.rateLimit.max !== null ? (
                             <RateLimitBar used={key.rateLimit.used} max={key.rateLimit.max} reset={key.rateLimit.reset} />
                           ) : (
                             <span className="text-xs text-muted-foreground">∞</span>
@@ -354,7 +354,7 @@ export function ApiKeysCard({ userId }: { userId: string }) {
 
       <CreateKeyDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={handleCreated} />
 
-      {createdKey != null ? <KeyCreatedDialog apiKey={createdKey} open onClose={() => setCreatedKey(null)} /> : null}
+      {createdKey !== null ? <KeyCreatedDialog apiKey={createdKey} open onClose={() => setCreatedKey(null)} /> : null}
 
       <AlertDialog open={!!revokeTarget} onOpenChange={(open) => !open && setRevokeTarget(null)}>
         <AlertDialogContent>

@@ -161,44 +161,6 @@ function AdminListsPage() {
 
   const handleRowClick = useCallback((list: UserListSummary) => navigate({ to: `/lists/${list.uuid}` }), [navigate]);
 
-  function renderTableBody() {
-    if (isLoading) {
-      return <DataTable.Skeleton rows={pagination.pageSize} columns={columns.length} />;
-    }
-    if (isError) {
-      return (
-        <tbody>
-          <tr>
-            <td colSpan={columns.length} className="h-64 text-center">
-              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                <div className="size-10 rounded-full bg-destructive/5 flex items-center justify-center text-destructive/50 mb-3">
-                  <HugeiconsIcon icon={AlertCircleIcon} className="size-5" />
-                </div>
-                <p>{t("common:error.title")}</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      );
-    }
-    if (lists.length === 0) {
-      return (
-        <tbody>
-          <tr>
-            <td colSpan={columns.length} className="h-64 text-center">
-              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                <HugeiconsIcon icon={ListViewIcon} className="size-10 mb-2 opacity-20" />
-                <p className="font-medium">{t("admin:lists.table.empty")}</p>
-                <p className="text-sm opacity-70">{t("admin:lists.table.emptyHint")}</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      );
-    }
-    return <DataTable.Body onRowClick={handleRowClick} />;
-  }
-
   const table = useReactTable({
     data: lists,
     columns,
@@ -229,7 +191,36 @@ function AdminListsPage() {
           <DataTable.Root table={table}>
             <DataTable.Table>
               <DataTable.Header />
-              {renderTableBody()}
+              {isLoading ? (
+                <DataTable.Skeleton rows={pagination.pageSize} columns={columns.length} />
+              ) : isError ? (
+                <tbody>
+                  <tr>
+                    <td colSpan={columns.length} className="h-64 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <div className="size-10 rounded-full bg-destructive/5 flex items-center justify-center text-destructive/50 mb-3">
+                          <HugeiconsIcon icon={AlertCircleIcon} className="size-5" />
+                        </div>
+                        <p>{t("common:error.title")}</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              ) : lists.length === 0 ? (
+                <tbody>
+                  <tr>
+                    <td colSpan={columns.length} className="h-64 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <HugeiconsIcon icon={ListViewIcon} className="size-10 mb-2 opacity-20" />
+                        <p className="font-medium">{t("admin:lists.table.empty")}</p>
+                        <p className="text-sm opacity-70">{t("admin:lists.table.emptyHint")}</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              ) : (
+                <DataTable.Body onRowClick={handleRowClick} />
+              )}
               <DataTable.Footer columns={columns.length}>
                 <DataTablePagination table={table} totalItems={totalCount} pageSizeOptions={pageSizeOptions} />
               </DataTable.Footer>

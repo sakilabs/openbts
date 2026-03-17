@@ -16,6 +16,50 @@ import { cn } from "@/lib/utils";
 
 const CreateListDialog = lazy(() => import("./createListDialog").then((m) => ({ default: m.CreateListDialog })));
 
+type ListContentProps = {
+  isLoading: boolean;
+  lists: UserListSummary[];
+  isPending: boolean;
+  pendingUuid: string | undefined;
+  handleToggle: (list: UserListSummary) => void;
+  isChecked: (list: UserListSummary) => boolean;
+};
+
+function ListContent({ isLoading, lists, isPending, pendingUuid, handleToggle, isChecked }: ListContentProps) {
+  const { t } = useTranslation("lists");
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-5">
+        <Spinner className="size-4" />
+      </div>
+    );
+  }
+  if (lists.length === 0) {
+    return <p className="px-3 py-3 text-xs text-muted-foreground text-center">{t("noLists")}</p>;
+  }
+  return lists.map((list) => {
+    const checked = isChecked(list);
+    const isToggling = isPending && pendingUuid === list.uuid;
+    return (
+      <button
+        key={list.uuid}
+        type="button"
+        onClick={() => handleToggle(list)}
+        disabled={isPending}
+        className={cn(
+          "w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors",
+          "hover:bg-muted/60 disabled:opacity-60",
+          checked && "bg-primary/5",
+        )}
+      >
+        {isToggling ? <Spinner className="size-4 shrink-0" /> : <Checkbox checked={checked} tabIndex={-1} className="shrink-0 pointer-events-none" />}
+        <span className={cn("text-xs truncate leading-none", checked ? "font-medium text-foreground" : "text-foreground/80")}>{list.name}</span>
+      </button>
+    );
+  });
+}
+
 type AddToListPopoverProps = {
   stationId?: number;
   radiolineIds?: number[];
@@ -70,43 +114,6 @@ export function AddToListPopover({ stationId, radiolineIds, ukeLocationId }: Add
   );
   const icon = stationId || ukeLocationId ? AirportTowerIcon : SignalFull02Icon;
 
-  function renderContent() {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-5">
-          <Spinner className="size-4" />
-        </div>
-      );
-    }
-    if (lists.length === 0) {
-      return <p className="px-3 py-3 text-xs text-muted-foreground text-center">{t("lists:noLists")}</p>;
-    }
-    return lists.map((list) => {
-      const checked = isChecked(list);
-      const isToggling = toggleMutation.isPending && toggleMutation.variables?.uuid === list.uuid;
-      return (
-        <button
-          key={list.uuid}
-          type="button"
-          onClick={() => handleToggle(list)}
-          disabled={toggleMutation.isPending}
-          className={cn(
-            "w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors",
-            "hover:bg-muted/60 disabled:opacity-60",
-            checked && "bg-primary/5",
-          )}
-        >
-          {isToggling ? (
-            <Spinner className="size-4 shrink-0" />
-          ) : (
-            <Checkbox checked={checked} tabIndex={-1} className="shrink-0 pointer-events-none" />
-          )}
-          <span className={cn("text-xs truncate leading-none", checked ? "font-medium text-foreground" : "text-foreground/80")}>{list.name}</span>
-        </button>
-      );
-    });
-  }
-
   return (
     <>
       <Popover>
@@ -123,7 +130,16 @@ export function AddToListPopover({ stationId, radiolineIds, ukeLocationId }: Add
             <span className="text-xs font-semibold text-foreground leading-none">{t("lists:addToList")}</span>
           </div>
 
-          <div>{renderContent()}</div>
+          <div>
+            <ListContent
+              isLoading={isLoading}
+              lists={lists}
+              isPending={toggleMutation.isPending}
+              pendingUuid={toggleMutation.variables?.uuid}
+              handleToggle={handleToggle}
+              isChecked={isChecked}
+            />
+          </div>
 
           <div className="border-t border-border/60">
             <button

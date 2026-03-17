@@ -1,5 +1,13 @@
 import type { TFunction } from "i18next";
 
+export function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 export function formatRelativeTime(dateString: string, t: TFunction): string {
   const date = new Date(dateString);
   const now = new Date();

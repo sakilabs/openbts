@@ -51,7 +51,20 @@ function DistributionSkeleton() {
   );
 }
 
-function WhenVisible({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
+const chartSkeleton = <ChartCardSkeleton />;
+const tallChartSkeleton = <ChartCardSkeleton contentClassName="h-140 w-full" />;
+const distributionSkeleton = <DistributionSkeleton />;
+
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="h-5 w-0.5 rounded-full bg-primary shrink-0" />
+      <h2 className="text-base font-semibold">{children}</h2>
+    </div>
+  );
+}
+
+function LazyChart({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -61,17 +74,28 @@ function WhenVisible({ children, fallback }: { children: ReactNode; fallback: Re
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          startTransition(() => setVisible(true));
           observer.disconnect();
+          if (typeof requestIdleCallback !== "undefined") requestIdleCallback(() => startTransition(() => setVisible(true)), { timeout: 2000 });
+          else startTransition(() => setVisible(true));
         }
       },
-      { rootMargin: "300px" },
+      { rootMargin: "80px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  return <div ref={ref}>{visible ? children : fallback}</div>;
+  return (
+    <div ref={ref}>
+      {visible ? (
+        <Suspense fallback={fallback}>
+          <div className="chart-enter">{children}</div>
+        </Suspense>
+      ) : (
+        fallback
+      )}
+    </div>
+  );
 }
 
 function StatisticsPage() {
@@ -82,68 +106,63 @@ function StatisticsPage() {
   const { data: operators } = useQuery(operatorsQueryOptions());
 
   return (
-    <main className="flex-1 overflow-y-auto p-4">
-      <div className="space-y-8">
+    <main className="flex-1 overflow-y-auto p-6">
+      <div className="space-y-12">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
 
         <GoogleAd adSlot="XXXXXXXXXX" adFormat="horizontal" className="w-full" />
 
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold">{t("stationDetails:tabs.permits")}</h2>
-          <UkeKpiCards data={summary} isLoading={summaryLoading} />
-          <Suspense fallback={<DistributionSkeleton />}>
+        <section className="space-y-6">
+          <div className="space-y-4">
+            <SectionHeader>{t("stationDetails:tabs.permits")}</SectionHeader>
+            <UkeKpiCards data={summary} isLoading={summaryLoading} />
+          </div>
+          <Suspense fallback={distributionSkeleton}>
             <UkeDistributionCharts data={summary} isLoading={summaryLoading} />
           </Suspense>
-          <WhenVisible fallback={<ChartCardSkeleton />}>
-            <Suspense fallback={<ChartCardSkeleton />}>
-              <UkeBandBarChart data={permits?.uke} isLoading={permitsLoading} />
-            </Suspense>
-          </WhenVisible>
-          <WhenVisible fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
-            <Suspense fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
-              <UkeVoivodeshipChart data={voivodeships?.uke} isLoading={voivodeshipsLoading} />
-            </Suspense>
-          </WhenVisible>
+          <LazyChart fallback={chartSkeleton}>
+            <UkeBandBarChart data={permits?.uke} isLoading={permitsLoading} />
+          </LazyChart>
+          <LazyChart fallback={tallChartSkeleton}>
+            <UkeVoivodeshipChart data={voivodeships?.uke} isLoading={voivodeshipsLoading} />
+          </LazyChart>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold">{t("main:stats.internalData")}</h2>
-          <InternalKpiCards data={summary} isLoading={summaryLoading} />
-          <WhenVisible fallback={<ChartCardSkeleton />}>
-            <Suspense fallback={<ChartCardSkeleton />}>
-              <InternalOperatorStationsChart data={summary} isLoading={summaryLoading} />
-            </Suspense>
-          </WhenVisible>
-          <WhenVisible fallback={<DistributionSkeleton />}>
-            <Suspense fallback={<DistributionSkeleton />}>
-              <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
-            </Suspense>
-          </WhenVisible>
-          <WhenVisible fallback={<ChartCardSkeleton />}>
-            <Suspense fallback={<ChartCardSkeleton />}>
-              <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
-            </Suspense>
-          </WhenVisible>
-          <WhenVisible fallback={<ChartCardSkeleton />}>
-            <Suspense fallback={<ChartCardSkeleton />}>
-              <InternalBandBarChart data={permits?.internal} isLoading={permitsLoading} />
-            </Suspense>
-          </WhenVisible>
-          <WhenVisible fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
-            <Suspense fallback={<ChartCardSkeleton contentClassName="h-140 w-full" />}>
-              <InternalVoivodeshipChart data={voivodeships?.internal} isLoading={voivodeshipsLoading} />
-            </Suspense>
-          </WhenVisible>
+        <hr className="border-border" />
+
+        <section className="space-y-6">
+          <div className="space-y-4">
+            <SectionHeader>{t("main:stats.internalData")}</SectionHeader>
+            <InternalKpiCards data={summary} isLoading={summaryLoading} />
+          </div>
+          <LazyChart fallback={chartSkeleton}>
+            <InternalOperatorStationsChart data={summary} isLoading={summaryLoading} />
+          </LazyChart>
+          <LazyChart fallback={distributionSkeleton}>
+            <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
+          </LazyChart>
+          <LazyChart fallback={chartSkeleton}>
+            <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
+          </LazyChart>
+          <LazyChart fallback={chartSkeleton}>
+            <InternalBandBarChart data={permits?.internal} isLoading={permitsLoading} />
+          </LazyChart>
+          <LazyChart fallback={tallChartSkeleton}>
+            <InternalVoivodeshipChart data={voivodeships?.internal} isLoading={voivodeshipsLoading} />
+          </LazyChart>
         </section>
 
-        <WhenVisible fallback={<ChartCardSkeleton />}>
-          <Suspense fallback={<ChartCardSkeleton />}>
+        <hr className="border-border" />
+
+        <section className="space-y-6">
+          <SectionHeader>{t("charts.history")}</SectionHeader>
+          <LazyChart fallback={chartSkeleton}>
             <HistoryChart operators={operators} />
-          </Suspense>
-        </WhenVisible>
+          </LazyChart>
+        </section>
       </div>
     </main>
   );

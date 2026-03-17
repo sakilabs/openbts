@@ -175,7 +175,7 @@ export function CellsEditor<T extends CellDraftBase>({
                       icon={ArrowDown01Icon}
                       className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-0 -rotate-90"
                     />
-                    <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-primary" />
+                    <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-4 text-muted-foreground" />
                     <span className="font-semibold text-sm">{rat}</span>
                     <span className="text-xs text-muted-foreground inline sm:hidden">({cellsForRat.length})</span>
                     <span className="text-xs text-muted-foreground hidden sm:inline">({t("cells.cellsCount", { count: cellsForRat.length })})</span>

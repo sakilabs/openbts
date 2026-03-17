@@ -85,12 +85,17 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
         {photos.map((photo, idx) => (
           <div key={photo.id} className="relative group">
             <img
+              role="button"
+              tabIndex={0}
               src={`/uploads/${photo.attachment_uuid}.webp`}
               alt=""
               loading="lazy"
               decoding="async"
               className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => setLightboxIndex(idx)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
+              }}
             />
             {photo.is_main ? (
               <span className="absolute top-1.5 left-1.5 bg-black/60 text-yellow-400 rounded-full p-1">

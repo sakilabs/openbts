@@ -191,10 +191,10 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <ThemeToggle />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <LanguageSwitcher />
+            <div className="grid grid-cols-2 gap-1">
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
           </SidebarMenuItem>
           {!session?.user && (
             <SidebarMenuItem>

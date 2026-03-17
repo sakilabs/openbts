@@ -23,8 +23,8 @@ function AdminStationsListPage() {
       onRowClick={handleRowClick}
       headerActions={
         <Button size="sm" onClick={() => navigate({ to: "/admin/stations/$id", params: { id: "new" }, search: { uke: undefined } })}>
-          <HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
-          {t("actions.newStation")}
+          <HugeiconsIcon icon={Add01Icon} className="size-4 sm:mr-2" />
+          <span className="hidden sm:inline">{t("actions.newStation")}</span>
         </Button>
       }
     />

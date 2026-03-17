@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -18,9 +18,13 @@ import { detectFormat, parseFile, type FileFormat, type ParsedRow } from "@/lib/
 import type { Operator, Region } from "@/types/station";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { RAT_ICONS } from "@/features/shared/rat";
-import { StationDetailsDialog } from "@/features/station-details/components/stationsDetailsDialog";
+const StationDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
 import { useTablePagination } from "@/hooks/useTablePageSize";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { cn } from "@/lib/utils";
+import { formatDuration } from "@/lib/format";
 
 type AnalyzerLocation = {
   id: number;
@@ -175,9 +179,20 @@ function AnalyzerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
+  const analyzeStartRef = useRef<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [finalDuration, setFinalDuration] = useState<number | null>(null);
   const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter } = state;
-
+  const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollRef(node);
+      containerRef(node);
+    },
+    [containerRef, scrollRef],
+  );
 
   const resetPage = useCallback(() => setPagination((p) => ({ ...p, pageIndex: 0 })), [setPagination]);
 
@@ -232,6 +247,7 @@ function AnalyzerPage() {
 
   const onAnalyzeSuccess = useCallback(
     (data: AnalyzerResult[]) => {
+      if (analyzeStartRef.current) setFinalDuration(Date.now() - analyzeStartRef.current);
       dispatch({ type: "SET_RESULTS", payload: data });
       resetPage();
     },
@@ -240,9 +256,22 @@ function AnalyzerPage() {
 
   const { mutate: handleAnalyze, isPending: isLoading } = useMutation({
     mutationFn,
+    onMutate: () => {
+      analyzeStartRef.current = Date.now();
+      setElapsed(0);
+      setFinalDuration(null);
+    },
     onSuccess: onAnalyzeSuccess,
     onError: showApiError,
   });
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const id = setInterval(() => {
+      if (analyzeStartRef.current) setElapsed(Date.now() - analyzeStartRef.current);
+    }, 500);
+    return () => clearInterval(id);
+  }, [isLoading]);
 
   const stats = useMemo(() => {
     if (!results) return null;
@@ -420,7 +449,7 @@ function AnalyzerPage() {
                 >
                   <span className="mr-0.5 opacity-60">{label}</span>
                   <span className="font-mono font-semibold">{value}</span>
-                  {warn && dbValue != null && (
+                  {warn && dbValue !== null && dbValue !== undefined && (
                     <Tooltip>
                       <TooltipTrigger>
                         <span className="inline-flex items-center">
@@ -517,7 +546,7 @@ function AnalyzerPage() {
         },
       }),
     ],
-    [t, setSelectedStationId],
+    [t],
   );
 
   const table = useReactTable({
@@ -567,7 +596,7 @@ function AnalyzerPage() {
             <div
               className={cn(
                 "border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer",
-                isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30",
+                isDragging ? "border-primary bg-primary/5" : "border-border bg-muted/20 hover:border-primary/60 hover:bg-primary/5",
               )}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -597,6 +626,7 @@ function AnalyzerPage() {
                   <>
                     <Spinner data-icon="inline-start" />
                     {t("button.analyzing")}
+                    <span className="opacity-70 text-xs tabular-nums">{formatDuration(elapsed)}</span>
                   </>
                 ) : (
                   t("button.analyze", { count: parsedRows.length })
@@ -625,6 +655,7 @@ function AnalyzerPage() {
                       {stats.unsupported} {t("stats.unsupported")}
                     </span>
                   )}
+                  {finalDuration !== null ? <span className="text-muted-foreground tabular-nums">{formatDuration(finalDuration)}</span> : null}
                 </div>
               )}
             </div>
@@ -749,9 +780,12 @@ function AnalyzerPage() {
           </div>
         )}
 
-        <div ref={containerRef} className={cn("flex-1 min-h-0 overflow-auto", !parsedRows && "hidden")}>
+        <div
+          ref={mergedRef}
+          className={cn("flex-1 min-h-0 overflow-auto transition-opacity", !parsedRows && "hidden", isLoading && "opacity-50 pointer-events-none")}
+        >
           <DataTable.Root table={table}>
-            <DataTable.Table>
+            <DataTable.Table className="w-max min-w-full">
               <DataTable.Header />
               <tbody className="[&_tr:last-child]:border-0">
                 {table.getRowModel().rows.map((row) => (
@@ -771,7 +805,9 @@ function AnalyzerPage() {
           </DataTable.Root>
         </div>
       </div>
-      <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
+      <Suspense fallback={null}>
+        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
+      </Suspense>
     </RequireAuth>
   );
 }

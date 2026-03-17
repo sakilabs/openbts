@@ -21,11 +21,11 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
   const style = getActionStyle(entry.action);
 
   const stationId =
-    entry.table_name === "stations" && entry.record_id != null
+    entry.table_name === "stations" && entry.record_id !== null
       ? entry.record_id
       : ((entry.metadata?.station_id as number | null | undefined) ?? null);
   const submissionId =
-    entry.table_name === "submissions" && entry.record_id != null
+    entry.table_name === "submissions" && entry.record_id !== null
       ? entry.record_id
       : ((entry.metadata?.submission_id as number | null | undefined) ?? null);
 
@@ -82,11 +82,11 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.columns.source")}</span>
                 <span className="text-sm uppercase">{entry.source ?? "-"}</span>
               </div>
-              {(stationId != null || submissionId != null) && (
+              {(stationId !== null || submissionId !== null) && (
                 <div className="flex flex-col gap-1 col-span-2">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.detail.links")}</span>
                   <div className="flex flex-wrap gap-2">
-                    {stationId != null && (
+                    {stationId !== null && (
                       <Link
                         to="/admin/stations/$id"
                         params={{ id: String(stationId) }}
@@ -97,7 +97,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                         {t("auditLogs.detail.station")} #{stationId}
                       </Link>
                     )}
-                    {submissionId != null && (
+                    {submissionId !== null && (
                       <Link
                         to="/admin/submissions/$id"
                         params={{ id: String(submissionId) }}

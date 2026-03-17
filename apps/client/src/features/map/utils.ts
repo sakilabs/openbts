@@ -131,7 +131,7 @@ const MODULATION_BITS: Record<string, number> = {
 
 export function getModulationBits(modulationType: string): number | null {
   const normalized = modulationType.toUpperCase().replace(MODULATION_NORMALIZE_REGEX, "");
-  if (MODULATION_BITS[normalized] != null) return MODULATION_BITS[normalized];
+  if (MODULATION_BITS[normalized] !== null && MODULATION_BITS[normalized] !== undefined) return MODULATION_BITS[normalized];
 
   if (normalized.includes("QPSK")) return 2;
   if (normalized.includes("BPSK")) return 1;
@@ -158,7 +158,7 @@ export function calculateLinkTotalSpeed(link: DuplexRadioLink): number | null {
   for (const dir of link.directions) {
     if (dir.link.ch_width && dir.link.modulation_type) {
       const speed = calculateRadiolineSpeed(dir.link.ch_width, dir.link.modulation_type);
-      if (speed != null) {
+      if (speed !== null && speed !== undefined) {
         total += speed;
         anyCalculated = true;
       }

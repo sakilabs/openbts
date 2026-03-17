@@ -35,22 +35,20 @@ export function MySubmissions() {
   const { t, i18n } = useTranslation(["submissions", "common"]);
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
+  const userId = session?.user?.id;
 
-  const { data, isLoading, error, isFetchingNextPage, hasNextPage, fetchNextPage } = useMySubmissions();
+  const { data, isLoading, error, isFetchingNextPage, hasNextPage, fetchNextPage } = useMySubmissions(userId);
 
   const deleteMutation = useMutation({
     mutationFn: deleteSubmission,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["my-submissions"] });
+      void queryClient.invalidateQueries({ queryKey: ["my-submissions", userId] });
       toast.success(t("toast.deleted"));
     },
     onError: (error) => showApiError(error),
   });
 
-  const submissions = useMemo<SubmissionRow[]>(
-    () => data?.pages.flatMap((p) => p.data).filter((s) => s.submitter_id === session?.user?.id) ?? [],
-    [data, session?.user?.id],
-  );
+  const submissions = useMemo<SubmissionRow[]>(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -84,9 +82,9 @@ export function MySubmissions() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="divide-y divide-border/50">
         {[1, 2, 3].map((i) => (
-          <div key={`skeleton-${i}`} className="flex items-center gap-4 px-4 py-3 rounded-lg border bg-muted/10">
+          <div key={`skeleton-${i}`} className="flex items-center gap-4 px-3 py-2.5">
             <Skeleton className="h-5 w-14 rounded-full" />
             <Skeleton className="h-4 w-20 rounded" />
             <Skeleton className="h-5 w-16 rounded-full" />
@@ -110,8 +108,8 @@ export function MySubmissions() {
 
   if (submissions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground border rounded-xl bg-muted/10">
-        <HugeiconsIcon icon={SentIcon} className="size-8 mb-2 opacity-20" />
+      <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+        <HugeiconsIcon icon={SentIcon} className="size-8 mb-2 opacity-30" />
         <p className="text-sm font-medium">{t("table.empty")}</p>
         <p className="text-xs mt-1">{t("table.emptyHintUser")}</p>
       </div>
@@ -146,8 +144,8 @@ export function MySubmissions() {
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <div className={cn("group rounded-xl border border-l-4 bg-card transition-colors overflow-hidden", statusCfg.borderClass)}>
-                <div className="flex items-center gap-3 px-4 py-3 min-w-0">
+              <div className="group border-b border-border/50">
+                <div className="flex items-center gap-3 px-3 py-2.5 min-w-0 hover:bg-muted/40 transition-colors">
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border shrink-0",
@@ -161,9 +159,9 @@ export function MySubmissions() {
                   <span className="text-xs font-mono text-muted-foreground hidden sm:inline shrink-0">#{submission.id}</span>
 
                   {submission.station?.station_id ? (
-                    <span className="text-sm font-mono font-medium text-foreground">{submission.station.station_id}</span>
+                    <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.station.station_id}</span>
                   ) : submission.proposedStation?.station_id ? (
-                    <span className="text-sm font-mono font-medium text-foreground">{submission.proposedStation.station_id}</span>
+                    <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.proposedStation.station_id}</span>
                   ) : null}
 
                   <div className="ml-auto flex items-center gap-3">
@@ -211,10 +209,10 @@ export function MySubmissions() {
                 </div>
 
                 {hasNotes && (
-                  <div className="px-4 pb-3 pt-0">
-                    <div className="border-l-4 border-primary/40 bg-primary/5 rounded-r-lg p-2 space-y-1">
-                      <p className="text-[11px] font-semibold text-primary/70 uppercase tracking-wider">{t("detail.reviewerResponse")}</p>
-                      <p className="text-sm leading-relaxed text-foreground">{submission.review_notes}</p>
+                  <div className="px-3 pb-2.5 pt-0">
+                    <div className="bg-muted/60 rounded-lg px-3 py-2.5 space-y-1">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{t("detail.reviewerResponse")}</p>
+                      <p className="text-sm leading-relaxed text-foreground wrap-break-word">{submission.review_notes}</p>
                     </div>
                   </div>
                 )}

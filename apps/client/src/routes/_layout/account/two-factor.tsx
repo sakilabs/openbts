@@ -163,7 +163,6 @@ function InitStep({ onSuccess }: { onSuccess: (totpURI: string) => void }) {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isSubmitting}
               autoComplete="current-password"
-              autoFocus
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

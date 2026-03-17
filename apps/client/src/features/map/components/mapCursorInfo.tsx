@@ -51,7 +51,6 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
   const savedMeasurementsRef = useRef<SavedMeasurement[]>([]);
   const sourcesPopulated = useRef(false);
   const rafRef = useRef<number | null>(null);
-  const onKeyDownRef = useRef<(e: KeyboardEvent) => void>(null!);
   useEffect(() => {
     activeMarkerRef.current = activeMarker;
   }, [activeMarker]);
@@ -91,30 +90,32 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
     );
   }, []);
 
-  onKeyDownRef.current = (e: KeyboardEvent) => {
-    if (e.key === " ") {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      e.preventDefault();
-      const marker = activeMarkerRef.current;
-      const cursor = cursorRef.current;
-      if (!marker || !cursor) return;
-      const measurement = { marker: { lat: marker.latitude, lng: marker.longitude }, cursor };
-      savedMeasurementsRef.current = [...savedMeasurementsRef.current, measurement];
-      updateSavedSources();
-      setLastSaved(measurement);
-      onActiveMarkerClear?.();
-    } else if (e.key === "Escape") {
-      savedMeasurementsRef.current = [];
-      updateSavedSources();
-      setLastSaved(null);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === " ") {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        e.preventDefault();
+        const marker = activeMarkerRef.current;
+        const cursor = cursorRef.current;
+        if (!marker || !cursor) return;
+        const measurement = { marker: { lat: marker.latitude, lng: marker.longitude }, cursor };
+        savedMeasurementsRef.current = [...savedMeasurementsRef.current, measurement];
+        updateSavedSources();
+        setLastSaved(measurement);
+        onActiveMarkerClear?.();
+      } else if (e.key === "Escape") {
+        savedMeasurementsRef.current = [];
+        updateSavedSources();
+        setLastSaved(null);
+      }
+    },
+    [updateSavedSources, onActiveMarkerClear],
+  );
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => onKeyDownRef.current(e);
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;

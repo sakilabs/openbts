@@ -4,7 +4,6 @@ export const SUBMISSION_STATUS = {
   pending: {
     icon: Clock01Icon,
     label: "pending",
-    borderClass: "border-l-amber-500",
     bgClass: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
     iconClass: "text-amber-600 dark:text-amber-400",
     dot: "bg-amber-500",
@@ -13,7 +12,6 @@ export const SUBMISSION_STATUS = {
   approved: {
     icon: Tick02Icon,
     label: "approved",
-    borderClass: "border-l-emerald-500",
     bgClass: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
     iconClass: "text-emerald-600 dark:text-emerald-400",
     dot: "bg-emerald-500",
@@ -22,7 +20,6 @@ export const SUBMISSION_STATUS = {
   rejected: {
     icon: Cancel01Icon,
     label: "rejected",
-    borderClass: "border-l-red-500",
     bgClass: "bg-red-500/10 text-red-700 dark:text-red-400",
     iconClass: "text-red-600 dark:text-red-400",
     dot: "bg-red-500",

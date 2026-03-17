@@ -105,7 +105,7 @@ export function SearchInput({
           />
         </div>
 
-        {isSearching && query.trim() !== "" && <Spinner className="size-4 text-primary shrink-0" />}
+        {isSearching && query.trim() !== "" && <Spinner className="size-4 text-muted-foreground shrink-0" />}
 
         {(query || parsedFilters.length > 0) && !isSearching && (
           <button

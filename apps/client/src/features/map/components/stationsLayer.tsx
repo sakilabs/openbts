@@ -14,6 +14,7 @@ import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 import { useUrlSync } from "../hooks/useURLSync";
 import { useMapLayer } from "../hooks/useMapLayer";
+import { useHeatmapLayer } from "../hooks/useHeatmapLayer";
 import { showApiError } from "@/lib/api";
 import { POINT_LAYER_ID } from "../constants";
 
@@ -96,6 +97,8 @@ type StationsLayerProps = {
   popupActions: PopupActions;
   onRadiolineIdFromUrl?: (id: number) => void;
   activePopupLocationId?: number | null;
+  showHeatmap?: boolean;
+  onHeatmapChange?: (v: boolean) => void;
 };
 
 export function StationsLayer({
@@ -108,6 +111,8 @@ export function StationsLayer({
   popupActions,
   onRadiolineIdFromUrl,
   activePopupLocationId,
+  showHeatmap = false,
+  onHeatmapChange,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
@@ -227,17 +232,35 @@ export function StationsLayer({
     isLoaded,
     filters,
     zoom,
+    showHeatmap,
+    onHeatmapChange: onHeatmapChange ?? (() => {}),
     onInitialize: handleUrlInitialize,
   });
 
   const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
 
   const geoJSON = useMemo(() => {
-    if (!filters.showStations) return EMPTY_GEOJSON;
+    if (!filters.showStations && !showHeatmap) return EMPTY_GEOJSON;
     return filters.source === "uke"
       ? ukeLocationsToGeoJSON(locations as unknown as UkeLocationWithPermits[], filters.source)
       : locationsToGeoJSON(locations, filters.source);
-  }, [locations, filters.source, filters.showStations]);
+  }, [locations, filters.source, filters.showStations, showHeatmap]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const apply = () => {
+      const visibility = filters.showStations ? "visible" : "none";
+      if (map.getLayer(POINT_LAYER_ID)) map.setLayoutProperty(POINT_LAYER_ID, "visibility", visibility);
+      if (map.getLayer(`${POINT_LAYER_ID}-symbol`)) map.setLayoutProperty(`${POINT_LAYER_ID}-symbol`, "visibility", visibility);
+    };
+
+    apply();
+    map.on("styledata", apply);
+    return () => {
+      map.off("styledata", apply);
+    };
+  }, [map, isLoaded, filters.showStations]);
 
   useEffect(() => {
     const locationId = pendingUkeLocationId.current;
@@ -366,6 +389,8 @@ export function StationsLayer({
     renderHoverTooltip: preferences.showMapHoverTooltip ? renderHoverTooltip : undefined,
     pointStyle: preferences.mapPointStyle,
   });
+
+  useHeatmapLayer({ map, isLoaded, enabled: showHeatmap, showStations: filters.showStations });
 
   useEffect(() => cleanupPopup, [cleanupPopup]);
 

@@ -47,6 +47,6 @@
   },
   "auth": {
     "signIn": "Zaloguj się",
-    "signInHint": "Dostęp do konta"
+    "signInHint": "Zaloguj się, by zgłaszać i śledzić stacje"
   }
 }

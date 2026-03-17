@@ -8,6 +8,21 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - All data tables now have a **rows per page** selector in the footer. It defaults to the auto-calculated count that fills the available height, but you can pick a larger value (25, 50, 100, 200) to see more rows with scrolling
 - **Log analyzer** now supports filtering by **operator** - only MNCs present in the loaded file appear as options; selector is disabled when the file contains a single operator
 - Filter selects on the analyzer page now have labels above them for clarity
+- Added **heatmap layer** on the map - toggle it from the filter panel to visualize station density; heatmap fades out as you zoom in when stations are visible
+- **Log analyzer** and **CLF export** now show a live elapsed-time counter while processing
+- `/statistics` page redesigned - new section headers, wider spacing, animated chart entrance and `requestIdleCallback`-based lazy loading for smoother scroll performance
+- KPI cards on `/statistics` now use animated number transitions
+- Redesigned theme with a blue-tinted primary colour palette (light & dark modes)
+- `StationDetailsDialog` is now lazy-loaded on `/stations` and `/analyzer` to reduce initial bundle size
+- My Submissions now scopes queries to the current user's ID for correct cache invalidation
+
+### 🩹 Fixes
+
+- Fixed `autoFocus` on the two-factor password input causing unwanted scroll on mobile
+- Fixed CLF export `posRat` check using loose equality (`!= null`) instead of strict checks, which could mishandle `0` or empty values
+- Fixed CLF export `eNBI`/`CLID` and NR `nci` null checks using the same loose equality pattern
+- Fixed station `updatedAt` not being refreshed when an update submission is approved
+- Fixed interval timer leak in CLF export page when navigating away mid-export
 
 # 2026-03-16
 

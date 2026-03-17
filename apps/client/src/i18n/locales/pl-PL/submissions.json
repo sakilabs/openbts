@@ -5,7 +5,7 @@
   },
   "detail": {
     "title": "Rozpatrywanie zgłoszenia",
-    "readOnly": "To zgłoszenie jest tylko do odczytu. Nie można go edytować",
+    "readOnly": "To zgłoszenie zostało rozpatrzone i nie można go już edytować.",
     "submitter": "Zgłaszający",
     "createdAt": "Data zgłoszenia",
     "noSubmitterNote": "Brak notatki od zgłaszającego",
@@ -20,7 +20,7 @@
   },
   "locationPicker": {
     "title": "Lokalizacja",
-    "fetchAddress": "Pobierz adres z Nominatim",
+    "fetchAddress": "Uzupełnij adres automatycznie",
     "regionPlaceholder": "Wybierz województwo",
     "cityPlaceholder": "Wpisz miasto...",
     "addressPlaceholder": "Wpisz adres...",
@@ -28,7 +28,7 @@
     "createNewLocation": "Utwórz tutaj nową lokalizację",
     "showUkeLocations": "Pokaż lokalizacje UKE",
     "selectStation": "Wybierz stację do importu",
-    "editLocation": "Edytuj lokalizację"
+    "editLocation": "Edytuj"
   },
   "header": {
     "reject": "Odrzuć zgłoszenie",
@@ -40,7 +40,7 @@
     "confirmApprove": "Czy na pewno chcesz zatwierdzić to zgłoszenie?",
     "confirmApproveDesc": "Ta akcja jest nieodwracalna. Stacja zgłoszona w tym zgłoszeniu zostanie dodana do bazy danych, a zgłoszenie zostanie oznaczone jako zatwierdzone"
   },
-  "deletionBanner": "To zgłoszenie dotyczy usunięcia {{stationId}}. Po zatwierdzeniu tej prośby, stacji zostanie przypisany status 'inactive'",
+  "deletionBanner": "To zgłoszenie dotyczy usunięcia stacji {{stationId}}. Po zatwierdzeniu stacja zostanie oznaczona jako nieaktywna.",
   "adminTitle": "Zarządzanie zgłoszeniami",
   "adminDescription": "Zarządzaj zgłoszeniami dotyczącymi stacji bazowych",
   "submitNew": "Utwórz nowe zgłoszenie",
@@ -121,12 +121,12 @@
     "locationChanged": "Lokalizacja została zmieniona"
   },
   "toast": {
-    "submitted": "Zgłoszenie zostało wysłane",
-    "updated": "Zgłoszenie zostało zaktualizowane",
-    "deleted": "Zgłoszenie zostało usunięte",
-    "saved": "Zgłoszenie zostało zapisane",
-    "approved": "Zgłoszenie zostało zatwierdzone",
-    "rejected": "Zgłoszenie zostało odrzucone",
+    "submitted": "Zgłoszenie wysłane",
+    "updated": "Zgłoszenie zaktualizowane",
+    "deleted": "Zgłoszenie usunięte",
+    "saved": "Zgłoszenie zapisane",
+    "approved": "Zgłoszenie zatwierdzone",
+    "rejected": "Zgłoszenie odrzucone",
     "photoUploadFailed": "Zgłoszenie utworzone, ale przesyłanie zdjęć nie powiodło się"
   },
   "photos": {

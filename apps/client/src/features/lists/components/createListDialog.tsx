@@ -82,13 +82,7 @@ export function CreateListDialog({ open, onOpenChange, initialStationId, initial
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="list-name">{t("lists:name")}</Label>
-            <Input
-              id="list-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              autoFocus
-            />
+            <Input id="list-name" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="list-description">{t("lists:description")}</Label>

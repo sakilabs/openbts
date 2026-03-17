@@ -1,9 +1,12 @@
-import { useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { StationsListLayout } from "@/features/stations/components/stationsFilterLayout";
-import { StationDetailsDialog } from "@/features/station-details/components/stationsDetailsDialog";
 import { useStationsData } from "@/features/stations/hooks/useStationsData";
 import type { Station } from "@/types/station";
+
+const StationDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
 
 function StationsListPage() {
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
@@ -12,7 +15,9 @@ function StationsListPage() {
 
   return (
     <StationsListLayout data={data} onRowClick={handleRowClick}>
-      <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
+      <Suspense fallback={null}>
+        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
+      </Suspense>
     </StationsListLayout>
   );
 }

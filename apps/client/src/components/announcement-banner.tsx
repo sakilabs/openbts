@@ -78,7 +78,12 @@ export function AnnouncementBanner() {
             <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 transition-transform", expanded && "rotate-180")} />
           </button>
         )}
-        <button type="button" onClick={handleDismiss} className={cn("rounded-full p-0.5 transition-colors", config.dismissClassName)}>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          aria-label="Dismiss announcement"
+          className={cn("rounded-full p-0.5 transition-colors", config.dismissClassName)}
+        >
           <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
         </button>
       </div>

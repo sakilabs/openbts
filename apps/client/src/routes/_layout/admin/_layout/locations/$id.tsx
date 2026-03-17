@@ -268,7 +268,7 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
             <div className="border rounded-xl overflow-hidden">
               <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-primary" />
+                  <HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-muted-foreground" />
                   <span className="font-semibold text-sm">{t("stations:stationsAtLocation")}</span>
                 </div>
                 <Badge variant="secondary" className="text-xs">

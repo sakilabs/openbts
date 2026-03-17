@@ -111,7 +111,7 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
         const calcSpeed = d.link.ch_width && d.link.modulation_type ? calculateRadiolineSpeed(d.link.ch_width, d.link.modulation_type) : null;
         return {
           freq: formatFrequency(d.link.freq),
-          bandwidth: calcSpeed != null ? formatSpeed(calcSpeed) : d.link.bandwidth ? formatBandwidth(d.link.bandwidth) : null,
+          bandwidth: calcSpeed !== null ? formatSpeed(calcSpeed) : d.link.bandwidth ? formatBandwidth(d.link.bandwidth) : null,
           polarization: d.link.polarization ?? null,
           forward: d.tx.latitude === link.a.latitude && d.tx.longitude === link.a.longitude,
         };
@@ -138,7 +138,7 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
         directionsJson,
         directionCount: link.directions.length,
         linkType: link.linkType,
-        totalSpeed: totalSpeed != null ? formatSpeed(totalSpeed) : null,
+        totalSpeed: totalSpeed !== null && totalSpeed !== undefined ? formatSpeed(totalSpeed) : null,
       },
     });
 

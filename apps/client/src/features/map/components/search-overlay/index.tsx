@@ -40,6 +40,8 @@ type MapSearchOverlayProps = {
   onStationSelect?: (station: Station) => void;
   hideSource?: boolean;
   hideAPIFilters?: boolean;
+  showHeatmap?: boolean;
+  onToggleHeatmap?: () => void;
 };
 
 export const MapSearchOverlay = memo(function MapSearchOverlay({
@@ -59,6 +61,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   onStationSelect,
   hideSource = false,
   hideAPIFilters = false,
+  showHeatmap = false,
+  onToggleHeatmap,
 }: MapSearchOverlayProps) {
   const { t } = useTranslation("main");
   const [showFilters, setShowFilters] = useState(false);
@@ -111,7 +115,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     activeFilterCount,
   } = useFilterHandlers({ filters, uniqueBandValues, onFiltersChange });
 
-  const searchKeyword = useMemo(() => parseFilters(debouncedQuery).remainingText, [debouncedQuery]);
+  const searchKeyword = parseFilters(debouncedQuery).remainingText;
 
   const shouldSearchOsm = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
@@ -237,6 +241,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               onClearFilters={handleClearFilters}
               hideSource={hideSource}
               hideAPIFilters={hideAPIFilters}
+              showHeatmap={showHeatmap}
+              onToggleHeatmap={onToggleHeatmap}
             />
           </fieldset>
         )}

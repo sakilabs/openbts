@@ -109,7 +109,7 @@
     "noOperatorsFound": "No operators found",
     "noBandsFound": "No bands found",
     "noRegionsFound": "No regions found",
-    "errorFetching": "Error fetching data",
+    "errorFetching": "Couldn't load data",
     "optional": "Optional"
   },
   "status": {
@@ -172,10 +172,10 @@
     "description": "An unexpected error occurred. Please try again or refresh the page",
     "tryAgain": "Try again",
     "reload": "Reload page",
-    "toast": "An error occurred while processing your action. Please try again later (check console for details)"
+    "toast": "Something went wrong. Please try again."
   },
   "backendUnavailable": {
-    "title": "Backend Unavailable",
+    "title": "Service Unavailable",
     "description": "The server is currently unavailable. Please try again later."
   },
   "notFound": {
@@ -188,7 +188,7 @@
     "updateDescription": "Reload to get the latest features and fixes."
   },
   "forbidden": {
-    "title": "No permissions",
-    "description": "You don't have the required role to view this page."
+    "title": "Access denied",
+    "description": "You don't have permission to view this page."
   }
 }

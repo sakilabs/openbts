@@ -38,7 +38,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
   if (selected.length > 0) {
-    // Verify all selected location_photo_ids belong to this station's location
     const validPhotos = await db
       .select({ id: locationPhotos.id })
       .from(locationPhotos)
@@ -48,8 +47,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       throw new ErrorResponse("BAD_REQUEST", { message: "Some photos do not belong to this station's location" });
     }
 
-    // Ensure main_id is within the selected set
-    const mainId = main_id != null && selected.includes(main_id) ? main_id : null;
+    const mainId = main_id !== null && main_id !== undefined && selected.includes(main_id) ? main_id : null;
 
     await db.transaction(async (tx) => {
       await tx.delete(stationPhotoSelections).where(eq(stationPhotoSelections.station_id, station_id));

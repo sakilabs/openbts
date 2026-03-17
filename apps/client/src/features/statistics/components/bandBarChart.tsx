@@ -1,4 +1,4 @@
-import { type ComponentProps, useMemo } from "react";
+import { type ComponentProps, memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +36,7 @@ function useBarData(rows: { operator: { name: string }; band: { name: string } }
   }, [rows, valueKey]);
 }
 
-function BandBarChartCard({
+const BandBarChartCard = memo(function BandBarChartCard({
   title,
   chartData,
   operators,
@@ -72,7 +72,7 @@ function BandBarChartCard({
       </CardContent>
     </Card>
   );
-}
+});
 
 export function BandBarChartSkeleton() {
   return (

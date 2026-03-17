@@ -24,7 +24,7 @@ export function AdminReviewCard({ submission, reviewNotes, onReviewNotesChange, 
     return (
       <div className="border rounded-xl overflow-hidden bg-card">
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-          <HugeiconsIcon icon={UserCheck02Icon} className="size-4 text-primary" />
+          <HugeiconsIcon icon={UserCheck02Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("detail.reviewer")}</span>
         </div>
         <div className="px-4 py-3 space-y-4">
@@ -33,9 +33,9 @@ export function AdminReviewCard({ submission, reviewNotes, onReviewNotesChange, 
               <AvatarImage src={reviewer.image ?? undefined} />
               <AvatarFallback>{reviewer.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-1">
-              <p className="text-sm font-medium leading-none">{reviewer.name}</p>
-              <p className="text-xs text-muted-foreground">@{reviewer.displayUsername}</p>
+            <div className="flex-1 min-w-0 space-y-1">
+              <p className="text-sm font-medium leading-none truncate">{reviewer.name}</p>
+              <p className="text-xs text-muted-foreground truncate">@{reviewer.displayUsername}</p>
               {submission.reviewed_at && (
                 <p className="text-[11px] text-muted-foreground/70">
                   {t("detail.reviewedAt")}: {formatFullDate(submission.reviewed_at, i18n.language)}
@@ -46,7 +46,7 @@ export function AdminReviewCard({ submission, reviewNotes, onReviewNotesChange, 
           {submission.review_notes ? (
             <div className="border-l-4 border-primary/40 bg-primary/5 rounded-r-lg p-3 space-y-1">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{t("detail.reviewNotes")}</p>
-              <p className="text-sm leading-relaxed">{submission.review_notes}</p>
+              <p className="text-sm leading-relaxed wrap-break-word">{submission.review_notes}</p>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">{t("detail.noReviewerResponse")}</p>
@@ -59,7 +59,7 @@ export function AdminReviewCard({ submission, reviewNotes, onReviewNotesChange, 
   return (
     <div className="border rounded-xl overflow-hidden bg-card">
       <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-        <HugeiconsIcon icon={UserCheck02Icon} className="size-4 text-primary" />
+        <HugeiconsIcon icon={UserCheck02Icon} className="size-4 text-muted-foreground" />
         <span className="font-semibold text-sm">{t("detail.reviewer")}</span>
       </div>
       <div className="p-4 space-y-2">
