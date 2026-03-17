@@ -69,6 +69,9 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
             <DiffOldValueCell value={d.pci} />
           </td>
           <td className={cellClassName}>
+            <DiffOldValueCell value={d.earfcn} />
+          </td>
+          <td className={cellClassName}>
             <DiffOldValueCell value={d.supports_iot} />
           </td>
         </>
@@ -79,19 +82,25 @@ export function SubmissionDiffDetailCells({ details, rat }: { details: Record<st
       return (
         <>
           <td className={cellClassName}>
+            <DiffOldValueCell value={d.type} />
+          </td>
+          <td className={cellClassName}>
             <DiffOldValueCell value={d.nrtac} />
           </td>
           <td className={cellClassName}>
-            <DiffOldValueCell value={d.gnbid} />
+            <DiffOldValueCell value={d.clid} />
           </td>
           <td className={cellClassName}>
-            <DiffOldValueCell value={d.clid} />
+            <DiffOldValueCell value={d.gnbid} />
           </td>
           <td className={cellClassName}>
             <DiffOldValueCell value={nci} />
           </td>
           <td className={cellClassName}>
             <DiffOldValueCell value={d.pci} />
+          </td>
+          <td className={cellClassName}>
+            <DiffOldValueCell value={d.arfcn} />
           </td>
           <td className={cellClassName}>
             <DiffOldValueCell value={d.supports_nr_redcap} />
