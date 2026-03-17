@@ -380,6 +380,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       if (!targetCell || cell.operation !== "update") return null;
 
       const details = (targetCell.details ?? {}) as Record<string, unknown>;
+      const changedKeys = new Set(Object.keys({ ...details, ...cell.details }).filter((k) => details[k] !== cell.details[k]));
 
       return (
         <tr className="bg-amber-50/40 dark:bg-amber-950/15 border-b last:border-0">
@@ -390,7 +391,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value} MHz</span>
           </td>
           {targetCell.rat !== "GSM" && <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>}
-          <SubmissionDiffDetailCells details={details} rat={targetCell.rat} />
+          <SubmissionDiffDetailCells details={details} rat={targetCell.rat} changedKeys={changedKeys} />
           <td className="px-3 py-1 font-mono text-xs text-muted-foreground truncate max-w-28">{targetCell.notes || "-"}</td>
           <td className="px-3 py-1" />
           <td className="px-3 py-1" />
