@@ -359,7 +359,7 @@ function SuccessStep() {
     <div className="flex flex-1 items-center justify-center">
       <div className="flex flex-col items-center gap-5 max-w-sm text-center">
         <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-8 text-primary" />
+          <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-8 text-muted-foreground" />
         </div>
         <div className="space-y-1.5">
           <p className="text-lg font-semibold">{t("twoFactor.success.heading")}</p>
@@ -423,7 +423,7 @@ function TwoFactorPage() {
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <HugeiconsIcon icon={LockIcon} className="size-4.5 text-primary" />
+            <HugeiconsIcon icon={LockIcon} className="size-4.5 text-muted-foreground" />
           </div>
           <div>
             <p className="text-[17px] font-bold tracking-tight leading-tight">{t(titleKey)}</p>

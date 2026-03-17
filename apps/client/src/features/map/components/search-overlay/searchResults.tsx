@@ -28,7 +28,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
       <div className="flex flex-col">
         {isLoading && (
           <div className="p-8 flex flex-col items-center justify-center text-muted-foreground gap-3">
-            <Spinner className="size-6 text-primary" />
+            <Spinner className="size-6 text-muted-foreground" />
             <p className="text-xs font-medium">{t("search.searching")}</p>
           </div>
         )}
@@ -46,7 +46,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
         {osmResults.length > 0 && !isLoading && (
           <div className="border-b last:border-0">
             <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
-              <HugeiconsIcon icon={MapsIcon} className="size-3.5 text-primary" />
+              <HugeiconsIcon icon={MapsIcon} className="size-3.5 text-muted-foreground" />
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.locations")}</span>
               <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
                 <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{osmResults.length}</span>
@@ -85,7 +85,7 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
         {stationResults.length > 0 && !isLoading && (
           <div>
             <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
-              <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 text-primary" />
+              <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 text-muted-foreground" />
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.stations")}</span>
               <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
                 <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{stationResults.length}</span>

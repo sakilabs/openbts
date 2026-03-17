@@ -136,7 +136,7 @@ function ActionsFilterButton({
                 >
                   <Checkbox checked={checked} className="pointer-events-none" />
                   <span className="text-xs font-mono">{action.split(".").pop()}</span>
-                  {checked && <HugeiconsIcon icon={Tick02Icon} className="size-3 text-primary ml-auto" />}
+                  {checked && <HugeiconsIcon icon={Tick02Icon} className="size-3 text-muted-foreground ml-auto" />}
                 </button>
               );
             })}

@@ -22,7 +22,7 @@ export function ActionSelector({ action, onActionChange }: ActionSelectorProps) 
     >
       <div className="px-4 py-3 bg-muted/30 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <div className={cn("p-1.5 rounded-md", action === "delete" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+          <div className={cn("p-1.5 rounded-md", action === "delete" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-muted-foreground")}>
             <HugeiconsIcon icon={action === "delete" ? Delete02Icon : PencilEdit02Icon} className="size-4" />
           </div>
           <span className="font-semibold text-sm">{t("actionSelector.title")}</span>

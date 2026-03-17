@@ -98,7 +98,7 @@ function ContactPage() {
           <h2 className="text-xl font-semibold">Zgłoszenia lokalizacji BTS</h2>
           <div className="rounded-lg border p-4 space-y-2">
             <div className="flex items-center gap-3">
-              <HugeiconsIcon icon={SentIcon} className="size-5 shrink-0 text-primary" />
+              <HugeiconsIcon icon={SentIcon} className="size-5 shrink-0 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Zgłoszenia nowych lokalizacji i poprawki</p>
                 <p className="text-sm text-muted-foreground">

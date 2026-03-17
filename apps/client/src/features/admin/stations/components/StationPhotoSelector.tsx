@@ -226,7 +226,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                 )}
                 {isSelected && (
                   <div className="absolute top-1 right-1 size-4 rounded-full bg-primary flex items-center justify-center">
-                    <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />
+                    <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-muted-foreground" />
                   </div>
                 )}
                 {isSelected && !isMain && (

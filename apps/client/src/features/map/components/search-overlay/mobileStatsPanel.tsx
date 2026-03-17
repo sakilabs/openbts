@@ -48,7 +48,7 @@ export function MobileStatsPanel({
               {showStations && (
                 <>
                   {isLoading || isFetching ? (
-                    <Spinner className="size-3 text-primary" />
+                    <Spinner className="size-3 text-muted-foreground" />
                   ) : hasMoreLocations ? (
                     <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
                   ) : (
@@ -64,7 +64,7 @@ export function MobileStatsPanel({
                 <>
                   {showStations && <span className="text-[8px] text-muted-foreground leading-none">·</span>}
                   {isRadioLinesFetching ? (
-                    <Spinner className="size-2.5 text-primary" />
+                    <Spinner className="size-2.5 text-muted-foreground" />
                   ) : hasMoreRadioLines ? (
                     <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
                   ) : null}

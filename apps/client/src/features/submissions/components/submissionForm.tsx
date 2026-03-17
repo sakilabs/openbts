@@ -161,14 +161,17 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
               if (action === "delete") return null;
 
               if (mode === "existing" && selectedStation) {
+                const locationId = selectedStation.location?.id;
                 return (
                   <>
-                    <SubmissionLocationPhotoSelector
-                      stationId={selectedStation.id}
-                      locationId={selectedStation.location?.id}
-                      selectedIds={locationPhotoIds}
-                      onSelectionChange={setLocationPhotoIds}
-                    />
+                    {locationId !== undefined ? (
+                      <SubmissionLocationPhotoSelector
+                        stationId={selectedStation.id}
+                        locationId={locationId}
+                        selectedIds={locationPhotoIds}
+                        onSelectionChange={setLocationPhotoIds}
+                      />
+                    ) : null}
                     <PhotoUploadSection
                       photos={photos}
                       onPhotosChange={setPhotos}

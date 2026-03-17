@@ -109,7 +109,7 @@ export function NotificationsBell() {
               onClick={() => void subscribe()}
               className="flex w-full items-center gap-2.5 rounded-md px-1.5 py-2.5 text-left transition-colors hover:bg-accent disabled:opacity-60"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-muted-foreground">
                 <HugeiconsIcon icon={Notification02Icon} size={16} />
               </span>
               <div className="min-w-0">

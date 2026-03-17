@@ -42,7 +42,7 @@ export function ReloadPrompt() {
         <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
       </Button>
       <div className="flex items-center gap-3">
-        <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4 shrink-0 text-primary" />
+        <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4 shrink-0 text-muted-foreground" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">{t("pwa.updateAvailable")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{t("pwa.updateDescription")}</p>

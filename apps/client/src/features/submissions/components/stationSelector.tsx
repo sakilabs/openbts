@@ -62,7 +62,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
     <div className="border rounded-xl bg-card relative">
       <div className="p-2 border-b bg-muted/30 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 px-2">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+          <div className="p-1.5 rounded-md bg-primary/10 text-muted-foreground">
             <HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
           </div>
           <span className="font-semibold text-sm tracking-tight">{t("submissionSelector.title")}</span>

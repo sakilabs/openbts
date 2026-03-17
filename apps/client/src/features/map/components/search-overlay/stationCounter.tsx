@@ -43,7 +43,7 @@ export function StationCounter({
             disabled={!hasMoreLocations}
           >
             {isLoading || isFetching ? (
-              <Spinner className="size-3 text-primary" />
+              <Spinner className="size-3 text-muted-foreground" />
             ) : hasMoreLocations ? (
               <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
             ) : (
@@ -66,7 +66,7 @@ export function StationCounter({
             disabled={!hasMoreRadioLines}
           >
             {isRadioLinesFetching ? (
-              <Spinner className="size-3 text-primary" />
+              <Spinner className="size-3 text-muted-foreground" />
             ) : hasMoreRadioLines ? (
               <div className="size-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
             ) : (
