@@ -23,6 +23,7 @@ import {
   TaskDaily01Icon,
   Upload04Icon,
   UserGroupIcon,
+  FileBracesIcon,
 } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
@@ -80,7 +81,7 @@ const infoNavConfig = [
       { titleKey: "items.about", url: "/about", icon: InformationCircleIcon },
       { titleKey: "items.contact", url: "/contact", icon: Mail01Icon },
       { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },
-      { titleKey: "items.apiDocs", url: "#", href: "/api/v1/docs", icon: FileSearchIcon },
+      { titleKey: "items.apiDocs", url: "#", href: "/api/v1/docs", icon: FileBracesIcon },
     ],
   },
 ];
