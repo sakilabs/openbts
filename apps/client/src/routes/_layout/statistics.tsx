@@ -113,7 +113,7 @@ function StatisticsPage() {
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
 
-        <GoogleAd adSlot="XXXXXXXXXX" adFormat="horizontal" className="w-full" />
+        <GoogleAd adSlot="8438752705" adFormat="horizontal" className="w-full" />
 
         <section className="space-y-6">
           <div className="space-y-4">

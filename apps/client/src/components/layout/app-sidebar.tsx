@@ -216,7 +216,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
           )}
           {session?.user && <NavUser data={session} />}
           <SidebarMenuItem>
-            <GoogleAd adSlot="XXXXXXXXXX" adFormat="rectangle" className="w-full" />
+            <GoogleAd adSlot="5258756297" adFormat="rectangle" className="w-full" />
           </SidebarMenuItem>
           <div className="flex items-center justify-between px-2 py-1 text-[10px] text-muted-foreground">
             {(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (

@@ -343,7 +343,7 @@ export function StationsFilters({
           </Combobox>
         </div>
 
-        <GoogleAd adSlot="XXXXXXXXXX" adFormat="rectangle" className="w-full" />
+        <GoogleAd adSlot="5258756297" adFormat="rectangle" className="w-full" />
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
           {totalStations !== undefined
