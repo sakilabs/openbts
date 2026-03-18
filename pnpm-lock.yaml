@@ -387,6 +387,9 @@ importers:
 
   packages/uke-importer:
     dependencies:
+      '@openbts/drizzle':
+        specifier: workspace:*
+        version: link:../drizzle
       '@turf/boolean-point-in-polygon':
         specifier: 7.3.4
         version: 7.3.4
@@ -415,9 +418,6 @@ importers:
         specifier: 0.18.5
         version: 0.18.5
     devDependencies:
-      '@openbts/drizzle':
-        specifier: workspace:*
-        version: link:../drizzle
       '@openbts/typescript-configs':
         specifier: workspace:*
         version: link:../typescript-configs

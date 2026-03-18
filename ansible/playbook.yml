@@ -1,0 +1,407 @@
+---
+- name: Setup server (Ubuntu 22.04)
+  hosts: all
+  become: true
+  vars:
+    deploy_user: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    openbts_domain: "example.com"
+    vapid_subject: "https://{{ openbts_domain }}"
+    authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICRMnbImm2YfZh73UsaZx+AQI+BUwasFsC44Nne4+4Qu
+
+  pre_tasks:
+
+    - name: Ensure python3 is present (raw bootstrap)
+      raw: apt-get install -y python3
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+  tasks:
+
+    - name: Stop snapd services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - snapd
+        - snapd.socket
+        - snapd.seeded
+      failed_when: false
+
+    - name: Remove snapd packages
+      apt:
+        name: snapd
+        state: absent
+        purge: true
+
+    - name: Remove snapd directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /snap
+        - /var/snap
+        - /var/lib/snapd
+        - /var/cache/snapd
+        - /usr/lib/snapd
+        - /root/snap
+        - "{{ '/home/' + deploy_user + '/snap' }}"
+
+    - name: Pin snapd to prevent reinstall
+      copy:
+        dest: /etc/apt/preferences.d/nosnap.pref
+        content: |
+          Package: snapd
+          Pin: release a=*
+          Pin-Priority: -10
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Update apt cache
+      apt:
+        update_cache: true
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+
+    - name: Remove unused packages
+      apt:
+        autoremove: true
+        purge: true
+
+    - name: Set hostname
+      hostname:
+        name: btsearch
+
+    - name: Update /etc/hosts with new hostname
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "127.0.1.1 btsearch"
+
+    - name: Ensure /etc/apt/keyrings exists
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download nginx signing key
+      get_url:
+        url: https://nginx.org/packages/keys/nginx_signing.key
+        dest: /etc/apt/keyrings/nginx_signing.key
+        mode: "0644"
+
+    - name: Add nginx apt repository
+      copy:
+        dest: /etc/apt/sources.list.d/nginx.sources
+        content: |
+          Types: deb
+          URIs: https://nginx.org/packages/ubuntu/
+          Suites: {{ ansible_distribution_release }}
+          Components: nginx
+          Architectures: amd64
+          Signed-By: /etc/apt/keyrings/nginx_signing.key
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Update apt cache after adding nginx repo
+      apt:
+        update_cache: true
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Ensure sites-enabled directory exists
+      file:
+        path: /etc/nginx/sites-enabled
+        state: directory
+        mode: "0755"
+
+    - name: Enable and start nginx
+      systemd:
+        name: nginx
+        enabled: true
+        state: started
+
+    - name: Install Docker prerequisites
+      apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Download Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Get system architecture
+      command: dpkg --print-architecture
+      register: dpkg_arch
+      changed_when: false
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: >-
+          deb [arch={{ dpkg_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_distribution_release }} stable
+        state: present
+        filename: docker
+
+    - name: Update apt cache after adding Docker repo
+      apt:
+        update_cache: true
+
+    - name: Install Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Enable and start Docker
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Add deploy user to docker group
+      user:
+        name: "{{ deploy_user }}"
+        groups: docker
+        append: true
+
+    - name: Install Python packages
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - python3.12
+          - python3.12-venv
+        state: present
+
+    - name: Install git
+      apt:
+        name:
+          - git
+          - unzip
+        state: present
+
+    - name: Install fnm (Node Version Manager)
+      shell: curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir /usr/local/bin --skip-shell
+      args:
+        creates: /usr/local/bin/fnm
+
+    - name: Configure fnm system-wide via profile.d
+      copy:
+        dest: /etc/profile.d/fnm.sh
+        content: |
+          export FNM_DIR="/usr/local/share/fnm"
+          [ -x /usr/local/bin/fnm ] && eval "$(fnm env --use-on-cd --shell bash)"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install Node.js LTS via fnm
+      shell: fnm install --lts && fnm default lts-latest
+      environment:
+        FNM_DIR: /usr/local/share/fnm
+        PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+      args:
+        creates: /usr/local/share/fnm/node-versions
+
+    - name: Install bun
+      shell: curl -fsSL https://bun.sh/install | bash
+      environment:
+        BUN_INSTALL: /usr/local
+      args:
+        creates: /usr/local/bin/bun
+
+    - name: Install pnpm standalone
+      shell: curl -fsSL https://get.pnpm.io/install.sh | sh -
+      environment:
+        PNPM_HOME: /usr/local/share/pnpm
+        HOME: /root
+      args:
+        creates: /usr/local/share/pnpm/pnpm
+
+    - name: Symlink pnpm to /usr/local/bin
+      file:
+        src: /usr/local/share/pnpm/pnpm
+        dest: /usr/local/bin/pnpm
+        state: link
+
+    - name: Deploy /etc/nginx/nginx.conf
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: "0644"
+        validate: nginx -t -c %s
+      notify: Reload nginx
+
+    - name: Deploy /etc/nginx/conf.d/allow-cloudflare.conf
+      copy:
+        src: files/allow-cloudflare.conf
+        dest: /etc/nginx/conf.d/allow-cloudflare.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Install certbot and nginx plugin via apt
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Setup certbot renewal cron job
+      cron:
+        name: certbot renewal
+        minute: "0"
+        hour: "3"
+        day: "*/2"
+        job: certbot renew --quiet --nginx --deploy-hook "systemctl reload nginx"
+        user: root
+
+    - name: Ensure btsearch user exists
+      user:
+        name: btsearch
+        shell: /bin/bash
+        create_home: true
+        state: present
+
+    - name: Add btsearch to docker group
+      user:
+        name: btsearch
+        groups: docker
+        append: true
+
+    - name: Allow btsearch passwordless sudo
+      copy:
+        dest: /etc/sudoers.d/btsearch
+        content: "btsearch ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: visudo -cf %s
+
+    - name: Add authorized keys for deploy user
+      authorized_key:
+        user: "{{ deploy_user }}"
+        state: present
+        key: "{{ item }}"
+      loop: "{{ authorized_keys }}"
+
+    - name: Add authorized keys for btsearch
+      authorized_key:
+        user: btsearch
+        state: present
+        key: "{{ item }}"
+      loop: "{{ authorized_keys }}"
+
+    - name: Add authorized keys for root
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ item }}"
+      loop: "{{ authorized_keys }}"
+
+    - name: Harden sshd - key-only authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        validate: sshd -t -f %s
+      loop:
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' }
+        - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
+        - { regexp: '^#?UsePAM', line: 'UsePAM no' }
+        - { regexp: '^#?AuthenticationMethods', line: 'AuthenticationMethods publickey' }
+      notify: Restart sshd
+
+    - name: Generate PostgreSQL password
+      set_fact:
+        db_password: "{{ lookup('ansible.builtin.password', '/root/.ansible/openbts_db_password length=32 chars=ascii_letters,digits') }}"
+
+    - name: Generate Redis password
+      set_fact:
+        redis_password: "{{ lookup('ansible.builtin.password', '/root/.ansible/openbts_redis_password length=32 chars=ascii_letters,digits') }}"
+
+    - name: Generate Better Auth secret
+      set_fact:
+        auth_secret: "{{ lookup('ansible.builtin.password', '/root/.ansible/openbts_auth_secret length=64 chars=ascii_letters,digits') }}"
+
+    - name: Clone openbts repository
+      git:
+        repo: https://github.com/sakilabs/openbts.git
+        dest: /opt/openbts
+        version: main
+        update: false
+
+    - name: Deploy docker-compose.override.yml with generated secrets
+      template:
+        src: templates/docker-compose.override.yml.j2
+        dest: /opt/openbts/docker-compose.override.yml
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Write pgbouncer userlist with plaintext password
+      copy:
+        dest: /opt/openbts/docker/pgbouncer/userlist.txt
+        content: "\"user\" \"{{ db_password }}\"\n"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Deploy nginx vhost for openbts
+      template:
+        src: templates/openbts-nginx.conf.j2
+        dest: /etc/nginx/conf.d/openbts.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Display generated credentials
+      debug:
+        msg:
+          - "================================================="
+          - "PostgreSQL password : {{ db_password }}"
+          - "Redis password      : {{ redis_password }}"
+          - "Better Auth secret  : {{ auth_secret }}"
+          - "================================================="
+          - "Edit OAuth and other vars in /opt/openbts/docker-compose.override.yml"
+          - "Then start the app: cd /opt/openbts && docker compose up -d"
+
+  handlers:
+
+    - name: Reload nginx
+      systemd:
+        name: nginx
+        state: reloaded
+
+    - name: Restart sshd
+      systemd:
+        name: sshd
+        state: restarted

@@ -136,7 +136,7 @@ export default class App {
           }
 
           const hostname = new URL(origin).hostname;
-          if (hostname === "localhost" || hostname === "openbts.sakilabs.com") {
+          if (hostname === "localhost" || hostname === "openbts.sakilabs.com" || hostname === "v3beta.btsearch.pl") {
             cb(null, true);
             return;
           }
@@ -169,7 +169,7 @@ export default class App {
   public async listen(port: number): Promise<void> {
     try {
       await this.initServices();
-      await this.fastify.listen({ port, host: "127.0.0.1" });
+      await this.fastify.listen({ port, host: "0.0.0.0" });
       this.dlogger("Server is ready on port %d", port);
     } catch (err) {
       this.dlogger("Error starting server: %O", err);

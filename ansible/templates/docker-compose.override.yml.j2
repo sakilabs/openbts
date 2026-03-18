@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  client:
+    build:
+      args:
+        - VITE_API_URL=https://{{ openbts_domain }}/api/v1
+        - VITE_VAPID_PUBLIC_KEY=
+        - VITE_MAPBOX_ACCESS_TOKEN=
+        - VITE_APP_NAME=OpenBTS
+
+  server:
+    environment:
+      - DATABASE_URL=postgres://user:{{ db_password }}@pgbouncer:6432/openbts
+      - REDIS_URL=redis://default:{{ redis_password }}@redis:6379
+      - BETTER_AUTH_SECRET={{ auth_secret }}
+      - BASE_URL=https://{{ openbts_domain }}
+      - APP_NAME=OpenBTS
+      - WORKERS=4
+      # Fill in your OAuth credentials:
+      - GOOGLE_CLIENT_ID=
+      - GOOGLE_CLIENT_SECRET=
+      - GITHUB_CLIENT_ID=
+      - GITHUB_CLIENT_SECRET=
+      # VAPID push notifications
+      - VAPID_PUBLIC_KEY=
+      - VAPID_PRIVATE_KEY=
+      - VAPID_SUBJECT={{ vapid_subject }}
+      # Optional Axiom logging:
+      - AXIOM_TOKEN=
+      - AXIOM_DATASET=openbts
+
+  postgres:
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD={{ db_password }}
+      - POSTGRES_DB=openbts
+
+  redis:
+    command: redis-server --requirepass {{ redis_password }}
+
+  pgbouncer:
+    ports:
+      - "0.0.0.0:6432:6432"

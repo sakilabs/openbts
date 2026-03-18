@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "Running database migrations..."
-pnpm --filter @openbts/server db:migrate
+cd /app/packages/drizzle && node dist/migrate.js && cd /app
 
 echo "Starting server..."
-exec pnpm --filter @openbts/server start
+exec node /app/apps/server/dist/index.js

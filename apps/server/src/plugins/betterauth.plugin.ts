@@ -169,7 +169,7 @@ export const auth = betterAuth({
       await redis.del(`auth:${key}`);
     },
   },
-  trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com"],
+  trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com", "https://v3beta.btsearch.pl"],
   // disabledPaths: PUBLIC_ROUTES,
 });
 

@@ -26,6 +26,7 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
+    "@openbts/drizzle": "workspace:*",
     "@turf/boolean-point-in-polygon": "7.3.4",
     "@turf/helpers": "7.3.4",
     "cheerio": "1.2.0",
@@ -37,7 +38,6 @@
     "xlsx": "0.18.5"
   },
   "devDependencies": {
-    "@openbts/drizzle": "workspace:*",
     "@openbts/typescript-configs": "workspace:*",
     "@types/geojson": "^7946.0.16",
     "@types/node": "20",

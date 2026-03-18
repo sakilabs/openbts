@@ -17,6 +17,7 @@ node_modules
 
 # Environment
 .env
+docker/pgbouncer/userlist.txt
 .turbo
 
 # Logs
