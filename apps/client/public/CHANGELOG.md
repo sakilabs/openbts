@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-18
+
+### 🚀 Enhancements
+
+- Autocomplete now uses Mapbox Geocoding API instead of OSM Nominatim
+- Added support for `ARFCN`/`UARFCN` in analyzer
+- Added support for ansible
+
+### 🩹 Fixes
+
+- Fixed reading RNC while NetMonitor file is put into analyzer
+- Fixed docker configuration
+
 # 2026-03-17
 
 ### 🚀 Enhancements
