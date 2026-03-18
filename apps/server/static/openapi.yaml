@@ -2116,7 +2116,11 @@ paths:
                           enum: [found, probable, not_found, unsupported]
                         warnings:
                           type: array
-                          items: { type: string, enum: [lac_mismatch, rnc_mismatch, uarfcn_mismatch, tac_mismatch, pci_mismatch, earfcn_mismatch, enbid_only] }
+                          items:
+                            {
+                              type: string,
+                              enum: [lac_mismatch, rnc_mismatch, uarfcn_mismatch, tac_mismatch, pci_mismatch, earfcn_mismatch, enbid_only],
+                            }
                         station:
                           $ref: "#/components/schemas/AnalyzerStation"
                         cell:

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -42,6 +42,7 @@ function AppLayout() {
   useTwoFactorRedirect();
 
   const { visible: isWCO } = useWindowControlsOverlay();
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const currentRoute = [...matches]
     .reverse()
@@ -89,8 +90,12 @@ function AppLayout() {
                   className="flex items-center gap-2 mr-1 shrink-0"
                   style={{ WebkitAppRegion: "no-drag", appRegion: "no-drag" } as React.CSSProperties}
                 >
-                  <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-6 items-center justify-center rounded-md">
-                    <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5" />
+                  <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-6 items-center justify-center rounded-md overflow-hidden">
+                    {logoFailed ? (
+                      <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5" />
+                    ) : (
+                      <img src="/logo.webp" alt={APP_NAME} className="size-full object-contain" onError={() => setLogoFailed(true)} />
+                    )}
                   </div>
                   <span className="font-medium text-sm">{APP_NAME}</span>
                 </Link>

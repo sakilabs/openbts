@@ -127,6 +127,7 @@ function translateNav(config: NavConfigSection[], t: (key: string) => string) {
 export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation("nav");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const { data: session } = authClient.useSession();
   const { data: settings } = useSettings();
   const { visible: isWCO, isMacOS } = useWindowControlsOverlay();
@@ -164,8 +165,12 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" render={<Link to="/" />}>
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                  {logoFailed ? (
+                    <HugeiconsIcon icon={AirportTowerIcon} className="size-4" />
+                  ) : (
+                    <img src="/logo.webp" alt={APP_NAME} className="size-full object-contain" onError={() => setLogoFailed(true)} />
+                  )}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{APP_NAME}</span>

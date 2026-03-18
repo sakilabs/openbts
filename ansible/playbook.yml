@@ -10,7 +10,6 @@
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICRMnbImm2YfZh73UsaZx+AQI+BUwasFsC44Nne4+4Qu
 
   pre_tasks:
-
     - name: Ensure python3 is present (raw bootstrap)
       raw: apt-get install -y python3
       changed_when: false
@@ -19,7 +18,6 @@
       setup:
 
   tasks:
-
     - name: Stop snapd services
       systemd:
         name: "{{ item }}"
@@ -331,12 +329,12 @@
         state: present
         validate: sshd -t -f %s
       loop:
-        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
-        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
-        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' }
-        - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
-        - { regexp: '^#?UsePAM', line: 'UsePAM no' }
-        - { regexp: '^#?AuthenticationMethods', line: 'AuthenticationMethods publickey' }
+        - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
+        - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
+        - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin prohibit-password" }
+        - { regexp: "^#?ChallengeResponseAuthentication", line: "ChallengeResponseAuthentication no" }
+        - { regexp: "^#?UsePAM", line: "UsePAM no" }
+        - { regexp: "^#?AuthenticationMethods", line: "AuthenticationMethods publickey" }
       notify: Restart sshd
 
     - name: Generate PostgreSQL password
@@ -395,7 +393,6 @@
           - "Then start the app: cd /opt/openbts && docker compose up -d"
 
   handlers:
-
     - name: Reload nginx
       systemd:
         name: nginx
