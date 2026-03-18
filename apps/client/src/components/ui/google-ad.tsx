@@ -48,7 +48,7 @@ export function GoogleAd({ adSlot, adFormat = "auto", className }: GoogleAdProps
         data-ad-client={AD_CLIENT}
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
-        data-full-width-responsive="true"
+        data-full-width-responsive={adFormat === "auto" ? "true" : "false"}
       />
     </div>
   );

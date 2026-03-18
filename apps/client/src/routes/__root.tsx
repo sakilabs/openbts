@@ -69,6 +69,9 @@ export const Route = createRootRoute({
       scripts: adClient
         ? [
             {
+              children: `window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);}`,
+            },
+            {
               src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClient}`,
               async: true,
               crossOrigin: "anonymous" as const,
