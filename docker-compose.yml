@@ -9,7 +9,7 @@ services:
         - VITE_API_URL=http://localhost:3030/api/v1
         - VITE_MAPBOX_ACCESS_TOKEN=
         - VITE_APP_NAME=OpenBTS
-        - VITE_COMMIT_SHA=${COMMIT_SHA}
+        - COMMIT_SHA=${COMMIT_SHA}
     ports:
       - "3000:80"
     depends_on:

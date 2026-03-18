@@ -2047,7 +2047,7 @@ paths:
     post:
       tags: [Analyzer]
       summary: Analyze NTM/NetMonster log cells against the database
-      description: Cross-references up to 15,000 parsed cell records against the internal station database. Returns a result for each input cell indicating whether it was found, probably matched, or not found.
+      description: Cross-references up to 20,000 parsed cell records against the internal station database. Returns a result for each input cell indicating whether it was found, probably matched, or not found.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -2062,7 +2062,7 @@ paths:
                 cells:
                   type: array
                   minItems: 1
-                  maxItems: 15000
+                  maxItems: 20000
                   items:
                     oneOf:
                       - type: object
@@ -2079,7 +2079,8 @@ paths:
                           mnc: { type: integer, description: "Combined MCC+MNC (e.g. 26002)" }
                           lac: { type: integer }
                           cid: { type: integer }
-                          rnc: { type: integer }
+                          rnc: { type: integer, nullable: true }
+                          uarfcn: { type: integer }
                       - type: object
                         required: [rat, mnc, tac, enbid, clid, pci]
                         properties:
@@ -2089,6 +2090,7 @@ paths:
                           enbid: { type: integer }
                           clid: { type: integer }
                           pci: { type: integer }
+                          earfcn: { type: integer }
                       - type: object
                         required: [rat, mnc]
                         properties:
@@ -2114,7 +2116,7 @@ paths:
                           enum: [found, probable, not_found, unsupported]
                         warnings:
                           type: array
-                          items: { type: string, enum: [lac_mismatch, rnc_mismatch, tac_mismatch, pci_mismatch, enbid_only] }
+                          items: { type: string, enum: [lac_mismatch, rnc_mismatch, uarfcn_mismatch, tac_mismatch, pci_mismatch, earfcn_mismatch, enbid_only] }
                         station:
                           $ref: "#/components/schemas/AnalyzerStation"
                         cell:
@@ -2132,6 +2134,7 @@ paths:
                                 rnc: { type: integer }
                                 cid: { type: integer }
                                 lac: { type: integer, nullable: true }
+                                arfcn: { type: integer, nullable: true }
                             - type: object
                               required: [rat, enbid]
                               properties:
@@ -2140,6 +2143,7 @@ paths:
                                 clid: { type: integer, nullable: true }
                                 tac: { type: integer, nullable: true }
                                 pci: { type: integer, nullable: true }
+                                earfcn: { type: integer, nullable: true }
                             - type: object
                               required: [rat]
                               properties:
