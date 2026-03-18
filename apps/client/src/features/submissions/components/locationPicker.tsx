@@ -15,7 +15,7 @@ import { POLAND_CENTER, PICKER_LAYER_IDS, PICKER_NEARBY_RADIUS_METERS, PICKER_UK
 import { useMapBounds } from "@/features/map/hooks/useMapBounds";
 import { getOperatorData } from "@/features/map/geojson";
 import { calculateDistance, groupPermitsByStation } from "@/features/map/utils";
-import { reverseGeocode, fetchLocationsInViewport, fetchUkeLocationsInViewport, type NominatimResult } from "../api";
+import { reverseGeocode, fetchLocationsInViewport, fetchUkeLocationsInViewport, type GeocodingResult } from "../api";
 import { regionsQueryOptions } from "@/features/shared/queries";
 import type { LocationWithStations, Region, UkeLocationWithPermits, UkeStation, Location } from "@/types/station";
 import type { ProposedLocationForm } from "../types";
@@ -86,7 +86,7 @@ function ukeLocationsToPickerGeoJSON(locations: UkeLocationWithPermits[]): GeoJS
   return { type: "FeatureCollection", features };
 }
 
-function applyGeocodeResult(result: NominatimResult, regions: Region[], onLocationChange: (patch: Partial<ProposedLocationForm>) => void) {
+function applyGeocodeResult(result: GeocodingResult, regions: Region[], onLocationChange: (patch: Partial<ProposedLocationForm>) => void) {
   const city = result.address.city || result.address.town || result.address.village || result.address.municipality;
   const addressParts = [result.address.road, result.address.house_number].filter(Boolean);
   const address = addressParts.join(" ") || result.display_name?.split(",")[0];

@@ -117,12 +117,12 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   const searchKeyword = parseFilters(debouncedQuery).remainingText;
 
-  const shouldSearchOsm = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
+  const shouldSearchLocations = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
-  const { data: osmResults = [], isLoading: isOsmLoading } = useQuery({
-    queryKey: ["osm-search", searchKeyword],
+  const { data: locationResults = [], isLoading: isLocationSearchLoading } = useQuery({
+    queryKey: ["geocoding-search", searchKeyword],
     queryFn: () => searchLocations(searchKeyword),
-    enabled: shouldSearchOsm,
+    enabled: shouldSearchLocations,
     staleTime: 1000 * 60 * 60,
   });
 
@@ -133,9 +133,9 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     staleTime: 1000 * 60 * 5,
   });
 
-  const isSearching = isOsmLoading || isStationSearchLoading;
+  const isSearching = isLocationSearchLoading || isStationSearchLoading;
   const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
-  const showResults = activeOverlay === "results" && (isSearching || osmResults.length > 0 || stationResults.length > 0);
+  const showResults = activeOverlay === "results" && (isSearching || locationResults.length > 0 || stationResults.length > 0);
 
   function handleFilterPanelBlur(e: FocusEvent) {
     const relatedTarget = e.relatedTarget as Node | null;
@@ -214,7 +214,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           <SearchResults
             show
             isLoading={isSearching}
-            osmResults={osmResults}
+            locationResults={locationResults}
             stationResults={stationResults}
             onLocationSelect={onLocationSelect}
             onStationSelect={onStationSelect}

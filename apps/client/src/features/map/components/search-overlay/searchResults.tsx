@@ -3,25 +3,25 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { MapsIcon, Search01Icon, AirportTowerIcon } from "@hugeicons/core-free-icons";
 import type { Station } from "@/types/station";
 import { getOperatorColor } from "@/lib/operatorUtils";
-import type { OSMResult } from "../../types";
+import type { GeocodingResult } from "@/lib/mapboxGeocoding";
 import { Spinner } from "@/components/ui/spinner";
 
 type SearchResultsProps = {
   show: boolean;
   isLoading: boolean;
-  osmResults: OSMResult[];
+  locationResults: GeocodingResult[];
   stationResults: Station[];
   onLocationSelect?: (lat: number, lon: number) => void;
   onStationSelect?: (station: Station) => void;
   onClose: () => void;
 };
 
-export function SearchResults({ show, isLoading, osmResults, stationResults, onLocationSelect, onStationSelect, onClose }: SearchResultsProps) {
+export function SearchResults({ show, isLoading, locationResults, stationResults, onLocationSelect, onStationSelect, onClose }: SearchResultsProps) {
   const { t } = useTranslation("main");
 
   if (!show) return null;
 
-  const hasResults = osmResults.length > 0 || stationResults.length > 0;
+  const hasResults = locationResults.length > 0 || stationResults.length > 0;
 
   return (
     <div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -43,18 +43,18 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
           </div>
         )}
 
-        {osmResults.length > 0 && !isLoading && (
+        {locationResults.length > 0 && !isLoading && (
           <div className="border-b last:border-0">
             <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
               <HugeiconsIcon icon={MapsIcon} className="size-3.5 text-muted-foreground" />
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.locations")}</span>
               <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
-                <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{osmResults.length}</span>
+                <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{locationResults.length}</span>
                 <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 uppercase tracking-wide">{t("searchResults.found")}</span>
               </span>
             </div>
             <div className="p-1 space-y-0.5">
-              {osmResults.map((result) => (
+              {locationResults.map((result) => (
                 <button
                   type="button"
                   key={result.place_id}
@@ -69,8 +69,9 @@ export function SearchResults({ show, isLoading, osmResults, stationResults, onL
                     <span className="text-sm font-bold line-clamp-1 group-hover:text-primary transition-colors">
                       {result.display_name.split(",")[0]}
                     </span>
-                    {(result.addresstype === "city" || result.type === "city") && (
-                      <span className="text-[8px] uppercase font-black px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    {(result.addresstype === "place" || result.type === "place" || result.type === "locality") && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-700 shadow-sm dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300">
+                        <span className="size-1.5 rounded-full bg-current opacity-80" />
                         {t("common:labels.city")}
                       </span>
                     )}

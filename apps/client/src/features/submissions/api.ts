@@ -1,4 +1,5 @@
 import { fetchApiData, postApiData, fetchJson, API_BASE } from "@/lib/api";
+import { reverseGeocode as reverseGeocodeWithMapbox, type GeocodingResult } from "@/lib/mapboxGeocoding";
 import type { Location, CellDetails, LocationWithStations, Station, Region, Operator, UkeLocationWithPermits } from "@/types/station";
 import type { SubmissionFormData, CellFormDetails, RatType } from "./types";
 import type { SubmissionDetail, SubmissionRow } from "@/features/admin/submissions/types";
@@ -45,29 +46,11 @@ export async function searchStations(query: string): Promise<SearchStation[]> {
   return postApiData<SearchStation[], { query: string }>("search", { query });
 }
 
-export type NominatimResult = {
-  lat: string;
-  lon: string;
-  display_name: string;
-  address: {
-    road?: string;
-    house_number?: string;
-    city?: string;
-    town?: string;
-    village?: string;
-    municipality?: string;
-    state?: string;
-    postcode?: string;
-    country?: string;
-  };
-};
+export type { GeocodingResult };
 
-export async function reverseGeocode(lat: number, lon: number): Promise<NominatimResult | null> {
+export async function reverseGeocode(lat: number, lon: number): Promise<GeocodingResult | null> {
   try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
-    if (!response.ok) return null;
-
-    return response.json();
+    return reverseGeocodeWithMapbox(lat, lon);
   } catch {
     return null;
   }
