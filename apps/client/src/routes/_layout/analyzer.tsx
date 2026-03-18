@@ -51,8 +51,8 @@ type AnalyzerStation = {
 
 type MatchedCell =
   | { rat: "GSM"; lac: number; cid: number }
-  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null }
-  | { rat: "LTE"; enbid: number; clid: number | null; tac: number | null; pci: number | null }
+  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null }
+  | { rat: "LTE"; enbid: number; clid: number | null; tac: number | null; pci: number | null; earfcn: number | null }
   | { rat: "NR" };
 
 type AnalyzerResult = {
@@ -85,9 +85,9 @@ const MNC_NAMES: Record<number, string> = {
   26034: "NetWorks",
 };
 
-const MISMATCH_WARNINGS = new Set(["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch"]);
+const MISMATCH_WARNINGS = new Set(["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "uarfcn_mismatch", "earfcn_mismatch"]);
 
-const ALL_WARNINGS = ["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "enbid_only"] as const;
+const ALL_WARNINGS = ["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "uarfcn_mismatch", "earfcn_mismatch", "enbid_only"] as const;
 
 const WARNING_I18N_KEY: Record<string, string> = {
   enbid_only: "warning.enbidOnly",
@@ -296,6 +296,8 @@ function AnalyzerPage() {
       tac_mismatch: t("warning.tacMismatch"),
       pci_mismatch: t("warning.pciMismatch"),
       rnc_mismatch: t("warning.rncMismatch"),
+      uarfcn_mismatch: t("warning.uarfcnMismatch"),
+      earfcn_mismatch: t("warning.earfcnMismatch"),
       enbid_only: t("warning.enbidOnly"),
     }),
     [t],
@@ -408,7 +410,7 @@ function AnalyzerPage() {
 
           const matched = row.original.result?.cell;
 
-          const ids: { label: string; value: number; dbValue?: number | null; warn?: boolean }[] = (() => {
+          const ids: { label: string; value: number | null; dbValue?: number | null; warn?: boolean }[] = (() => {
             switch (cell.rat) {
               case "GSM":
                 return [
@@ -420,6 +422,16 @@ function AnalyzerPage() {
                   { label: "RNC", value: cell.rnc, dbValue: matched?.rat === "UMTS" ? matched.rnc : null, warn: warnings.includes("rnc_mismatch") },
                   { label: "LAC", value: cell.lac, dbValue: matched?.rat === "UMTS" ? matched.lac : null, warn: warnings.includes("lac_mismatch") },
                   { label: "CID", value: cell.cid },
+                  ...(cell.uarfcn !== undefined
+                    ? [
+                        {
+                          label: "UARFCN",
+                          value: cell.uarfcn,
+                          dbValue: matched?.rat === "UMTS" ? matched.arfcn : null,
+                          warn: warnings.includes("uarfcn_mismatch"),
+                        },
+                      ]
+                    : []),
                 ];
               case "LTE":
                 return [
@@ -427,9 +439,19 @@ function AnalyzerPage() {
                   { label: "CLID", value: cell.clid },
                   { label: "TAC", value: cell.tac, dbValue: matched?.rat === "LTE" ? matched.tac : null, warn: warnings.includes("tac_mismatch") },
                   { label: "PCI", value: cell.pci, dbValue: matched?.rat === "LTE" ? matched.pci : null, warn: warnings.includes("pci_mismatch") },
+                  ...(cell.earfcn !== undefined
+                    ? [
+                        {
+                          label: "EARFCN",
+                          value: cell.earfcn,
+                          dbValue: matched?.rat === "LTE" ? matched.earfcn : null,
+                          warn: warnings.includes("earfcn_mismatch"),
+                        },
+                      ]
+                    : []),
                 ];
               case "NR":
-                return [];
+                return cell.arfcn !== undefined ? [{ label: "ARFCN", value: cell.arfcn }] : [];
             }
           })();
 
@@ -570,7 +592,7 @@ function AnalyzerPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".ntm,.csv,.txt"
+            accept=".ntm,.csv,.txt,.clf"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -756,7 +778,7 @@ function AnalyzerPage() {
                   <SelectItem value="any">{t("filter.anyWarning")}</SelectItem>
                   {ALL_WARNINGS.map((w) => (
                     <SelectItem key={w} value={w}>
-                      {warningLabels[w]}
+                      {warningLabels[w as keyof typeof warningLabels]}
                     </SelectItem>
                   ))}
                 </SelectContent>

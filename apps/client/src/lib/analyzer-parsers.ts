@@ -1,8 +1,8 @@
 export type AnalyzerCell =
   | { rat: "GSM"; mnc: number; lac: number; cid: number }
-  | { rat: "UMTS"; mnc: number; lac: number; cid: number; rnc: number }
-  | { rat: "LTE"; mnc: number; tac: number; enbid: number; clid: number; pci: number }
-  | { rat: "NR"; mnc: number };
+  | { rat: "UMTS"; mnc: number; lac: number; cid: number; rnc: number | null; uarfcn?: number }
+  | { rat: "LTE"; mnc: number; tac: number; enbid: number; clid: number; pci: number; earfcn?: number }
+  | { rat: "NR"; mnc: number; arfcn?: number };
 export type ParsedRow = AnalyzerCell & { description: string; rawLine: string };
 export type FileFormat = "ntm" | "netmonitor";
 
@@ -39,7 +39,8 @@ function parseNtmLine(line: string): ParsedRow | null {
     const lac = Number.parseInt(parts[4], 10);
     const rnc = Number.parseInt(parts[5], 10);
     if (Number.isNaN(cid) || Number.isNaN(lac) || Number.isNaN(rnc)) return null;
-    return { rat: "UMTS", mnc, cid, lac, rnc, description, rawLine: line };
+    const uarfcn = Number.parseInt(parts[10], 10);
+    return { rat: "UMTS", mnc, cid, lac, rnc, ...(Number.isNaN(uarfcn) ? {} : { uarfcn }), description, rawLine: line };
   }
 
   if (rat === "LTE" && parts.length >= 7) {
@@ -48,10 +49,14 @@ function parseNtmLine(line: string): ParsedRow | null {
     const enbid = Number.parseInt(parts[5], 10);
     const pci = Number.parseInt(parts[6], 10);
     if (Number.isNaN(clid) || Number.isNaN(tac) || Number.isNaN(enbid) || Number.isNaN(pci)) return null;
-    return { rat: "LTE", mnc, clid, tac, enbid, pci, description, rawLine: line };
+    const earfcn = Number.parseInt(parts[10], 10);
+    return { rat: "LTE", mnc, clid, tac, enbid, pci, ...(Number.isNaN(earfcn) ? {} : { earfcn }), description, rawLine: line };
   }
 
-  if (rat === "NR") return { rat: "NR", mnc, description, rawLine: line };
+  if (rat === "NR") {
+    const arfcn = Number.parseInt(parts[8], 10);
+    return { rat: "NR", mnc, ...(Number.isNaN(arfcn) ? {} : { arfcn }), description, rawLine: line };
+  }
   return null;
 }
 
@@ -101,7 +106,9 @@ function parseNetMonitorLine(line: string): ParsedRow | null {
     }
     case "UMTS": {
       if (Number.isNaN(lac) || Number.isNaN(cid)) return null;
-      return { rat: "UMTS", mnc, lac, cid, rnc: 0, description, rawLine: line };
+      const rnc = Math.floor(cid / 65536);
+      const shortCid = cid % 65536;
+      return { rat: "UMTS", mnc, lac, cid: shortCid, rnc, description, rawLine: line };
     }
     case "LTE": {
       if (Number.isNaN(lac) || Number.isNaN(cid) || Number.isNaN(psc)) return null;
@@ -131,6 +138,7 @@ export function parseNetMonitorFile(text: string): ParsedRow[] {
 
 export function detectFormat(fileName: string, text: string): FileFormat {
   if (fileName.endsWith(".ntm")) return "ntm";
+  if (fileName.endsWith(".clf")) return "netmonitor";
 
   const firstLine = text
     .split("\n")

@@ -4,7 +4,7 @@
   },
   "file": {
     "dropHint": "Upuść plik tutaj lub kliknij, aby wybrać",
-    "constraints": "NetMonster (.ntm) lub NetMonitor (.csv) · maks. 10 MB · do 20 000 wierszy",
+    "constraints": "NetMonster (.ntm) lub NetMonitor (.csv, .clf) · maks. 10 MB · do 20 000 wierszy",
     "format": "Format: {{format}}",
     "rowCount": "{{count}} komórek",
     "parsing": "Parsowanie...",
@@ -41,6 +41,8 @@
     "rncMismatch": "RNC zmieniony",
     "tacMismatch": "TAC zmieniony",
     "pciMismatch": "PCI zmieniony",
+    "uarfcnMismatch": "UARFCN zmieniony",
+    "earfcnMismatch": "EARFCN zmieniony",
     "enbidOnly": "Dopasowano tylko po eNBID",
     "dbValue": "Wartość z bazy danych"
   },

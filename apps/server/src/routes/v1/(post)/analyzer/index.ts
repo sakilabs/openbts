@@ -32,7 +32,14 @@ type AnalyzerStation = z.infer<typeof analyzerStationSchema>;
 
 const cellInputSchema = z.union([
   z.object({ rat: z.literal("GSM"), mnc: z.number().int(), lac: z.number().int(), cid: z.number().int() }),
-  z.object({ rat: z.literal("UMTS"), mnc: z.number().int(), lac: z.number().int(), cid: z.number().int(), rnc: z.number().int() }),
+  z.object({
+    rat: z.literal("UMTS"),
+    mnc: z.number().int(),
+    lac: z.number().int(),
+    cid: z.number().int(),
+    rnc: z.number().int().nullable(),
+    uarfcn: z.number().int().optional(),
+  }),
   z.object({
     rat: z.literal("LTE"),
     mnc: z.number().int(),
@@ -40,14 +47,22 @@ const cellInputSchema = z.union([
     enbid: z.number().int(),
     clid: z.number().int(),
     pci: z.number().int(),
+    earfcn: z.number().int().optional(),
   }),
   z.object({ rat: z.literal("NR"), mnc: z.number().int() }),
 ]);
 
 const matchedCellSchema = z.union([
   z.object({ rat: z.literal("GSM"), lac: z.number(), cid: z.number() }),
-  z.object({ rat: z.literal("UMTS"), rnc: z.number(), cid: z.number(), lac: z.number().nullable() }),
-  z.object({ rat: z.literal("LTE"), enbid: z.number(), clid: z.number().nullable(), tac: z.number().nullable(), pci: z.number().nullable() }),
+  z.object({ rat: z.literal("UMTS"), rnc: z.number(), cid: z.number(), lac: z.number().nullable(), arfcn: z.number().nullable() }),
+  z.object({
+    rat: z.literal("LTE"),
+    enbid: z.number(),
+    clid: z.number().nullable(),
+    tac: z.number().nullable(),
+    pci: z.number().nullable(),
+    earfcn: z.number().nullable(),
+  }),
   z.object({ rat: z.literal("NR") }),
 ]);
 
@@ -79,9 +94,12 @@ const CELL_COLS = { band_id: false, station_id: false } as const;
 
 async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promise<LookupMaps<AnalyzerStation>> {
   const gsmMap = new Map<string, { station: AnalyzerStation; lac: number; cid: number }>();
-  const umtsRncMap = new Map<string, { station: AnalyzerStation; rnc: number; cid: number; lac: number | null }>();
-  const umtsLacMap = new Map<string, { station: AnalyzerStation; rnc: number; cid: number; lac: number | null }>();
-  const lteMap = new Map<string, { station: AnalyzerStation; enbid: number; clid: number; tac: number | null; pci: number | null }>();
+  const umtsRncMap = new Map<string, { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>();
+  const umtsLacMap = new Map<string, { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>();
+  const lteMap = new Map<
+    string,
+    { station: AnalyzerStation; enbid: number; clid: number; tac: number | null; pci: number | null; earfcn: number | null }
+  >();
   const lteEnbidMap = new Map<string, { station: AnalyzerStation; enbid: number }>();
 
   const promises: Promise<void>[] = [];
@@ -121,6 +139,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
                 rnc: row.rnc,
                 cid: row.cid,
                 lac: row.lac ?? null,
+                arfcn: row.arfcn ?? null,
               });
           }),
       );
@@ -145,6 +164,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
                   rnc: row.rnc,
                   cid: row.cid,
                   lac: row.lac,
+                  arfcn: row.arfcn ?? null,
                 });
             }
           }),
@@ -170,6 +190,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
                 clid: row.clid,
                 tac: row.tac ?? null,
                 pci: row.pci ?? null,
+                earfcn: row.earfcn ?? null,
               });
           }),
       );

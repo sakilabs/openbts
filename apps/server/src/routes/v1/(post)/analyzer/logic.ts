@@ -2,14 +2,14 @@ import { setImmediate } from "node:timers/promises";
 
 export type CellInput =
   | { rat: "GSM"; mnc: number; lac: number; cid: number }
-  | { rat: "UMTS"; mnc: number; lac: number; cid: number; rnc: number }
-  | { rat: "LTE"; mnc: number; tac: number; enbid: number; clid: number; pci: number }
+  | { rat: "UMTS"; mnc: number; lac: number; cid: number; rnc: number | null; uarfcn?: number }
+  | { rat: "LTE"; mnc: number; tac: number; enbid: number; clid: number; pci: number; earfcn?: number }
   | { rat: "NR"; mnc: number };
 
 export type MatchedCell =
   | { rat: "GSM"; lac: number; cid: number }
-  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null }
-  | { rat: "LTE"; enbid: number; clid: number | null; tac: number | null; pci: number | null }
+  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null }
+  | { rat: "LTE"; enbid: number; clid: number | null; tac: number | null; pci: number | null; earfcn: number | null }
   | { rat: "NR" };
 
 export type AnalyzerResult<TStation = unknown> = {
@@ -24,9 +24,9 @@ type PairMap = Map<number, Map<string, Pair>>;
 
 export type LookupMaps<TStation> = {
   gsmMap: Map<string, { station: TStation; lac: number; cid: number }>;
-  umtsRncMap: Map<string, { station: TStation; rnc: number; cid: number; lac: number | null }>;
-  umtsLacMap: Map<string, { station: TStation; rnc: number; cid: number; lac: number | null }>;
-  lteMap: Map<string, { station: TStation; enbid: number; clid: number; tac: number | null; pci: number | null }>;
+  umtsRncMap: Map<string, { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>;
+  umtsLacMap: Map<string, { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>;
+  lteMap: Map<string, { station: TStation; enbid: number; clid: number; tac: number | null; pci: number | null; earfcn: number | null }>;
   lteEnbidMap: Map<string, { station: TStation; enbid: number }>;
 };
 
@@ -64,7 +64,7 @@ export function groupCellsByMnc(inputCells: CellInput[]): CellGroups {
         addPair(gsmByMnc, cell.mnc, cell.lac, cell.cid);
         break;
       case "UMTS":
-        addPair(umtsRncByMnc, cell.mnc, cell.rnc, cell.cid);
+        if (cell.rnc !== null) addPair(umtsRncByMnc, cell.mnc, cell.rnc, cell.cid);
         addPair(umtsLacByMnc, cell.mnc, cell.lac, cell.cid);
         break;
       case "LTE": {
@@ -98,18 +98,24 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
     }
 
     case "UMTS": {
-      const primary = maps.umtsRncMap.get(pairKey(cell.mnc, cell.rnc, cell.cid));
+      const primary = cell.rnc !== null ? maps.umtsRncMap.get(pairKey(cell.mnc, cell.rnc, cell.cid)) : undefined;
       if (primary) {
         const warnings: string[] = [];
         if (primary.lac !== null && primary.lac !== cell.lac) warnings.push("lac_mismatch");
-        return { status: "found", station: primary.station, cell: { rat: "UMTS", rnc: primary.rnc, cid: primary.cid, lac: primary.lac }, warnings };
+        if (cell.uarfcn !== undefined && primary.arfcn !== null && primary.arfcn !== cell.uarfcn) warnings.push("uarfcn_mismatch");
+        return {
+          status: "found",
+          station: primary.station,
+          cell: { rat: "UMTS", rnc: primary.rnc, cid: primary.cid, lac: primary.lac, arfcn: primary.arfcn },
+          warnings,
+        };
       }
       const fallback = maps.umtsLacMap.get(pairKey(cell.mnc, cell.lac, cell.cid));
       if (!fallback) return NOT_FOUND;
       return {
         status: "probable",
         station: fallback.station,
-        cell: { rat: "UMTS", rnc: fallback.rnc, cid: fallback.cid, lac: fallback.lac },
+        cell: { rat: "UMTS", rnc: fallback.rnc, cid: fallback.cid, lac: fallback.lac, arfcn: fallback.arfcn },
         warnings: ["rnc_mismatch"],
       };
     }
@@ -120,10 +126,11 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
         const warnings: string[] = [];
         if (primary.tac !== null && primary.tac !== cell.tac) warnings.push("tac_mismatch");
         if (primary.pci !== null && primary.pci !== cell.pci) warnings.push("pci_mismatch");
+        if (cell.earfcn !== undefined && primary.earfcn !== null && primary.earfcn !== cell.earfcn) warnings.push("earfcn_mismatch");
         return {
           status: "found",
           station: primary.station,
-          cell: { rat: "LTE", enbid: primary.enbid, clid: primary.clid, tac: primary.tac, pci: primary.pci },
+          cell: { rat: "LTE", enbid: primary.enbid, clid: primary.clid, tac: primary.tac, pci: primary.pci, earfcn: primary.earfcn },
           warnings,
         };
       }
@@ -132,7 +139,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "probable",
         station: fallback.station,
-        cell: { rat: "LTE", enbid: fallback.enbid, clid: null, tac: null, pci: null },
+        cell: { rat: "LTE", enbid: fallback.enbid, clid: null, tac: null, pci: null, earfcn: null },
         warnings: ["enbid_only"],
       };
     }
