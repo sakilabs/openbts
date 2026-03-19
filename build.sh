@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-COMMIT_SHA=$(git rev-parse --short HEAD)
+COMMIT_SHA=$(git log --invert-grep --grep="^feat: swap \`OpenBTS\` to \`BTSearch\`" -1 --format="%h")
 
 if [[ "$1" == "client" || "$1" == "server" ]]; then
   SERVICE=$1
