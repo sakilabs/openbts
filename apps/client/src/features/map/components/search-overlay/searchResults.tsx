@@ -1,27 +1,47 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { MapsIcon, Search01Icon, AirportTowerIcon } from "@hugeicons/core-free-icons";
+import { MapsIcon, Search01Icon, AirportTowerIcon, Route02Icon } from "@hugeicons/core-free-icons";
 import type { Station } from "@/types/station";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { GeocodingResult } from "@/lib/mapboxGeocoding";
 import { Spinner } from "@/components/ui/spinner";
+import type { UkeSearchPermitStation, UkeSearchRadioline } from "../../searchApi";
+
+const EMPTY_PERMITS: UkeSearchPermitStation[] = [];
+const EMPTY_RADIOLINES: UkeSearchRadioline[] = [];
 
 type SearchResultsProps = {
   show: boolean;
   isLoading: boolean;
   locationResults: GeocodingResult[];
   stationResults: Station[];
+  permitResults?: UkeSearchPermitStation[];
+  radiolineResults?: UkeSearchRadioline[];
   onLocationSelect?: (lat: number, lon: number) => void;
   onStationSelect?: (station: Station) => void;
+  onUkeStationSelect?: (station: UkeSearchPermitStation) => void;
+  onRadiolineSelect?: (radioline: UkeSearchRadioline) => void;
   onClose: () => void;
 };
 
-export function SearchResults({ show, isLoading, locationResults, stationResults, onLocationSelect, onStationSelect, onClose }: SearchResultsProps) {
+export function SearchResults({
+  show,
+  isLoading,
+  locationResults,
+  stationResults,
+  permitResults = EMPTY_PERMITS,
+  radiolineResults = EMPTY_RADIOLINES,
+  onLocationSelect,
+  onStationSelect,
+  onUkeStationSelect,
+  onRadiolineSelect,
+  onClose,
+}: SearchResultsProps) {
   const { t } = useTranslation("main");
 
   if (!show) return null;
 
-  const hasResults = locationResults.length > 0 || stationResults.length > 0;
+  const hasResults = locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0;
 
   return (
     <div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -138,6 +158,98 @@ export function SearchResults({ show, isLoading, locationResults, stationResults
                   {t("search.showingTop", { shown: 15, total: stationResults.length })}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {permitResults.length > 0 && !isLoading && (
+          <div className="border-t last:border-0">
+            <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
+              <HugeiconsIcon icon={AirportTowerIcon} className="size-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("stationDetails:tabs.permits")}</span>
+              <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
+                <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{permitResults.length}</span>
+                <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 uppercase tracking-wide">{t("searchResults.found")}</span>
+              </span>
+            </div>
+            <div className="p-1 space-y-0.5">
+              {permitResults.map((permit) => (
+                <button
+                  type="button"
+                  key={permit.station_id}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onUkeStationSelect?.(permit);
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
+                >
+                  <div
+                    className="size-2.5 rounded-[2px] shrink-0 shadow-sm border border-white dark:border-gray-800 transition-transform group-hover:scale-125"
+                    style={{ backgroundColor: getOperatorColor(permit.operator?.mnc ?? 0) }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">
+                        {permit.location?.city ?? permit.station_id}
+                      </span>
+                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">{permit.station_id}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[11px] font-medium text-foreground/70 italic">{permit.operator?.name}</span>
+                      {permit.location?.city && (
+                        <>
+                          <span className="text-[11px] text-muted-foreground/50">•</span>
+                          <span className="text-[11px] text-muted-foreground">{permit.location.city}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {radiolineResults.length > 0 && !isLoading && (
+          <div className="border-t last:border-0">
+            <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
+              <HugeiconsIcon icon={Route02Icon} className="size-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.radiolines")}</span>
+              <span className="ml-auto inline-flex items-center overflow-hidden rounded-full ring-1 ring-border/60 text-[9px] font-medium">
+                <span className="bg-primary/15 text-primary font-mono font-black px-1.5 py-0.5 tabular-nums">{radiolineResults.length}</span>
+                <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 uppercase tracking-wide">{t("searchResults.found")}</span>
+              </span>
+            </div>
+            <div className="p-1 space-y-0.5">
+              {radiolineResults.map((radioline) => (
+                <button
+                  type="button"
+                  key={radioline.id}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onRadiolineSelect?.(radioline);
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 truncate min-w-0">
+                        <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">{radioline.tx.city ?? "?"}</span>
+                        <span className="text-[11px] text-muted-foreground/60 shrink-0">↔</span>
+                        <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">{radioline.rx.city ?? "?"}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
+                        {radioline.permit_number}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[11px] font-medium text-foreground/70 italic">{radioline.operator?.name}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}

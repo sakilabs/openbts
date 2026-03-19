@@ -16,6 +16,7 @@
   "searchResults": {
     "locations": "Geographic Locations",
     "stations": "Base Stations",
+    "radiolines": "Radiolines",
     "found": "found"
   },
   "popup": {

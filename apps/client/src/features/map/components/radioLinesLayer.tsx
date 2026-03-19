@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
@@ -104,22 +104,16 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, showAd
     return duplexLinks.find((link) => link.directions.some((d) => d.id === pendingRadiolineId)) ?? null;
   }, [pendingRadiolineId, duplexLinks]);
 
-  const [lastHandledPendingId, setLastHandledPendingId] = useState<number | null>(null);
-  const normalizedPendingId = pendingRadiolineId ?? null;
-  if (normalizedPendingId !== lastHandledPendingId) {
-    setLastHandledPendingId(normalizedPendingId);
-    if (pendingMatch) setSelectedLink(pendingMatch);
-  }
+  const displayedLink = selectedLink ?? pendingMatch;
 
-  useEffect(() => {
-    if (pendingMatch) onPendingRadiolineConsumed?.(null);
-  }, [pendingMatch, onPendingRadiolineConsumed]);
-
-  const handleCloseDetails = useCallback(() => setSelectedLink(null), []);
+  const handleCloseDetails = useCallback(() => {
+    setSelectedLink(null);
+    onPendingRadiolineConsumed?.(null);
+  }, [onPendingRadiolineConsumed]);
 
   return (
     <Suspense fallback={null}>
-      {selectedLink ? <RadioLineDetailsDialog key={selectedLink.groupId} link={selectedLink} onClose={handleCloseDetails} /> : null}
+      {displayedLink ? <RadioLineDetailsDialog key={displayedLink.groupId} link={displayedLink} onClose={handleCloseDetails} /> : null}
     </Suspense>
   );
 }

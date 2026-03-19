@@ -6,7 +6,7 @@ import { FilterIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils.js";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.js";
 import type { Station, StationFilters } from "@/types/station.js";
-import { searchLocations, searchStations } from "../../searchApi.js";
+import { searchLocations, searchStations, searchUkePermits, type UkeSearchPermitStation, type UkeSearchRadioline } from "../../searchApi.js";
 import { operatorsQueryOptions, bandsQueryOptions } from "@/features/shared/queries.js";
 import { AutocompleteDropdown } from "./autocompleteDropdown.js";
 import { FilterPanel } from "./filterPanel.js";
@@ -38,6 +38,8 @@ type MapSearchOverlayProps = {
   onFiltersChange: (filters: StationFilters) => void;
   onLocationSelect?: (lat: number, lon: number) => void;
   onStationSelect?: (station: Station) => void;
+  onUkeStationSelect?: (station: UkeSearchPermitStation) => void;
+  onRadiolineSelect?: (radioline: UkeSearchRadioline) => void;
   hideSource?: boolean;
   hideAPIFilters?: boolean;
   showHeatmap?: boolean;
@@ -59,6 +61,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   onFiltersChange,
   onLocationSelect,
   onStationSelect,
+  onUkeStationSelect,
+  onRadiolineSelect,
   hideSource = false,
   hideAPIFilters = false,
   showHeatmap = false,
@@ -117,7 +121,10 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   const searchKeyword = parseFilters(debouncedQuery).remainingText;
 
-  const shouldSearchLocations = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
+  const isUkeSource = filters.source === "uke";
+
+  const shouldSearchLocations =
+    !isUkeSource && searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
   const { data: locationResults = [], isLoading: isLocationSearchLoading } = useQuery({
     queryKey: ["geocoding-search", searchKeyword],
@@ -126,16 +133,29 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     staleTime: 1000 * 60 * 60,
   });
 
-  const { data: stationResults = [], isLoading: isStationSearchLoading } = useQuery({
-    queryKey: ["station-search", debouncedQuery],
+  const { data: rawStationResults, isLoading: isStationSearchLoading } = useQuery({
+    queryKey: ["station-search", debouncedQuery, filters.source],
     queryFn: () => searchStations(debouncedQuery),
-    enabled: debouncedQuery.trim().length > 0,
+    enabled: !isUkeSource && debouncedQuery.trim().length > 0,
     staleTime: 1000 * 60 * 5,
   });
 
-  const isSearching = isLocationSearchLoading || isStationSearchLoading;
-  const showAutocomplete = activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
-  const showResults = activeOverlay === "results" && (isSearching || locationResults.length > 0 || stationResults.length > 0);
+  const { data: ukeSearchResult, isLoading: isUkeSearchLoading } = useQuery({
+    queryKey: ["uke-search", debouncedQuery, filters.source],
+    queryFn: () => searchUkePermits(debouncedQuery),
+    enabled: isUkeSource && debouncedQuery.trim().length > 0,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const stationResults = isUkeSource ? [] : (rawStationResults ?? []);
+  const permitResults = isUkeSource ? (ukeSearchResult?.stations ?? []) : [];
+  const radiolineResults = isUkeSource ? (ukeSearchResult?.radiolines ?? []) : [];
+
+  const isSearching = isLocationSearchLoading || isStationSearchLoading || isUkeSearchLoading;
+  const showAutocomplete = !isUkeSource && activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
+  const showResults =
+    activeOverlay === "results" &&
+    (isSearching || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0);
 
   function handleFilterPanelBlur(e: FocusEvent) {
     const relatedTarget = e.relatedTarget as Node | null;
@@ -216,8 +236,12 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
             isLoading={isSearching}
             locationResults={locationResults}
             stationResults={stationResults}
+            permitResults={permitResults}
+            radiolineResults={radiolineResults}
             onLocationSelect={onLocationSelect}
             onStationSelect={onStationSelect}
+            onUkeStationSelect={onUkeStationSelect}
+            onRadiolineSelect={onRadiolineSelect}
             onClose={closeOverlay}
           />
         )}

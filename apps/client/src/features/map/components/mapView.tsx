@@ -10,6 +10,7 @@ import { fetchLocations, fetchLocationWithStations, fetchRadioLines } from "../a
 import { locationQueryKey } from "./stationsLayer";
 import { useMapPopup } from "../hooks/useMapPopup";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
+import type { UkeSearchPermitStation, UkeSearchRadioline } from "../searchApi";
 import { showApiError } from "@/lib/api";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
@@ -276,6 +277,27 @@ function MapViewInner() {
   const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
   const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
 
+  const handleUkeStationSelectFromSearch = useCallback(
+    async (station: UkeSearchPermitStation) => {
+      if (!map || !station.location) return;
+      const { latitude: lat, longitude: lng } = station.location;
+      map.flyTo({ center: [lng, lat], zoom: 16, essential: true, speed: 1.5 });
+      await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
+      const location: LocationInfo = { id: station.location.id, city: station.location.city, address: null, latitude: lat, longitude: lng };
+      showPopup([lng, lat], location, null, [station as unknown as UkeStation], "uke");
+      setActivePopupLocation({ locationId: station.location.id, source: "uke" });
+    },
+    [map, showPopup],
+  );
+
+  const handleRadiolineSelectFromSearch = useCallback(
+    (radioline: UkeSearchRadioline) => {
+      handleLocationSelect(radioline.tx.latitude, radioline.tx.longitude);
+      handlePendingRadiolineId(radioline.id);
+    },
+    [handleLocationSelect, handlePendingRadiolineId],
+  );
+
   const popupActions = useMemo(
     () => ({
       show: showPopup,
@@ -311,6 +333,8 @@ function MapViewInner() {
         onFiltersChange={setFilters}
         onLocationSelect={handleLocationSelect}
         onStationSelect={handleStationSelect}
+        onUkeStationSelect={handleUkeStationSelectFromSearch}
+        onRadiolineSelect={handleRadiolineSelectFromSearch}
         showHeatmap={showHeatmap}
         onToggleHeatmap={handleToggleHeatmap}
       />
@@ -327,7 +351,7 @@ function MapViewInner() {
         showHeatmap={showHeatmap}
         onHeatmapChange={handleSetHeatmap}
       />
-      {filters.showRadiolines ? (
+      {filters.showRadiolines || !!pendingRadiolineId ? (
         <Suspense fallback={null}>
           <RadioLinesLayer
             radioLines={radioLines}

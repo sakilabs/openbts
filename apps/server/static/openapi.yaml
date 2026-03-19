@@ -2510,6 +2510,43 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /uke/search:
+    post:
+      tags: [UKE]
+      summary: Search UKE permits and radiolines
+      description: Searches UKE permits by decision_number or station_id and radiolines by permit_number. Results are grouped by station_id for permits and by permit_number for radiolines.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [stations, radiolines]
+                    properties:
+                      stations:
+                        type: array
+                        items: { $ref: "#/components/schemas/UkeSearchStation" }
+                      radiolines:
+                        type: array
+                        items: { $ref: "#/components/schemas/UkeRadiolineSearchResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /uke/import:
     post:
       tags: [UKE]
@@ -3635,6 +3672,29 @@ components:
         id: { type: integer }
         name: { type: string }
         full_name: { type: string }
+    UkeSearchStation:
+      type: object
+      properties:
+        station_id: { type: string }
+        operator: { $ref: "#/components/schemas/Operator", nullable: true }
+        location: { $ref: "#/components/schemas/UkeLocation", nullable: true }
+        permits:
+          type: array
+          items: { $ref: "#/components/schemas/UkePermitBase" }
+    UkeRadiolineEndpoint:
+      type: object
+      properties:
+        city: { type: string, nullable: true }
+        latitude: { type: number }
+        longitude: { type: number }
+    UkeRadiolineSearchResult:
+      type: object
+      properties:
+        id: { type: integer }
+        permit_number: { type: string }
+        operator: { $ref: "#/components/schemas/UkeOperator", nullable: true }
+        tx: { $ref: "#/components/schemas/UkeRadiolineEndpoint" }
+        rx: { $ref: "#/components/schemas/UkeRadiolineEndpoint" }
     UkeRadiolineResponse:
       type: object
       properties:
