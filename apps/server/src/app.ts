@@ -162,6 +162,11 @@ export default class App {
       prefix: "/",
       serve: false,
     });
+    this.fastify.register(staticServe, {
+      root: resolve(process.cwd(), "uploads"),
+      prefix: "/uploads/",
+      decorateReply: false,
+    });
     this.fastify.get("/api/v1/openapi.yaml", (_req, res) => res.sendFile("openapi.yaml"));
     this.fastify.register(APIv1Controller, { prefix: "/api/v1" });
   }

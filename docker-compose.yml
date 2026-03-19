@@ -40,6 +40,8 @@ services:
       # AXIOM HQ logging
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts
+    volumes:
+      - uploads-volume:/app/uploads
     depends_on:
       - postgres
       - redis
@@ -79,3 +81,4 @@ services:
 
 volumes:
   postgres-volume:
+  uploads-volume:
