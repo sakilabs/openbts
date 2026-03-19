@@ -22,7 +22,11 @@ RUN pnpm --filter @openbts/drizzle build && \
     pnpm --filter @openbts/uke-importer build && \
     pnpm --filter @openbts/sora build
 
-FROM node:22-alpine
+FROM oven/bun:alpine
+
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
+ENV PATH="/root/.local/share/pnpm:$PATH"
+RUN pnpm config set manage-package-manager-versions false
 
 WORKDIR /app
 
@@ -38,8 +42,7 @@ COPY --from=builder /app/apps/server/dist ./apps/server/dist
 COPY apps/server/static ./static
 COPY apps/server/docker/docker-entrypoint.sh ./
 
-RUN corepack enable && corepack prepare pnpm@10 --activate && \
-    pnpm install --frozen-lockfile --prod && \
+RUN pnpm install --frozen-lockfile --prod && \
     chmod +x docker-entrypoint.sh
 
 EXPOSE 3030

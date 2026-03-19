@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "Running database migrations..."
-cd /app/packages/drizzle && node dist/migrate.js && cd /app
+cd /app/packages/drizzle && bun dist/migrate.js && cd /app
 
 echo "Starting server..."
-exec node /app/apps/server/dist/index.js
+exec bun --bun /app/apps/server/dist/index.js
