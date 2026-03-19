@@ -46,10 +46,6 @@ export const editorRole = accessControl.newRole({
   comments: ["delete"],
 });
 
-export const modRole = accessControl.newRole({
-  // todo: tbh idk what to put for mod
-});
-
 export const adminRole = accessControl.newRole({
   ...adminAc.statements,
   cells: ["read", "create", "update", "delete"],

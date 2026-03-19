@@ -487,6 +487,6 @@ export const Route = createFileRoute("/_layout/admin/_layout/submissions/$id")({
       { titleKey: "breadcrumbs.admin", path: "/admin/stations", i18nNamespace: "admin" },
       { titleKey: "breadcrumbs.submissions", path: "/admin/submissions", i18nNamespace: "admin" },
     ],
-    allowedRoles: ["admin", "editor", "moderator"],
+    allowedRoles: ["admin", "editor"],
   },
 });

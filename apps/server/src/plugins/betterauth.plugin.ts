@@ -10,7 +10,7 @@ import * as schema from "@openbts/drizzle";
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
 import { APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
-import { accessControl, adminRole, editorRole, modRole, userRole } from "./auth/permissions.js";
+import { accessControl, adminRole, editorRole, userRole } from "./auth/permissions.js";
 import { beforeAuthHook, afterAuthHook } from "./auth/hooks.js";
 
 import type { FastifyRequest } from "fastify";
@@ -100,7 +100,6 @@ export const auth = betterAuth({
       defaultRole: "user" as UserRole,
       roles: {
         admin: adminRole,
-        // moderator: modRole,
         editor: editorRole,
         user: userRole,
       },

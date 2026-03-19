@@ -31,7 +31,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
   const { data: settings } = useSettings();
   const { data: session } = authClient.useSession();
   const userRole = session?.user?.role as string | undefined;
-  const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
+  const isAdmin = userRole === "admin" || userRole === "editor";
   const isLoggedIn = !!session?.user;
 
   useEscapeKey(onClose, !!station);

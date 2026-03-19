@@ -94,10 +94,10 @@ const adminNavConfig = [
     icon: SecurityLockIcon,
     items: [
       { titleKey: "items.users", url: "/admin/users", allowedRoles: ["admin"], icon: UserGroupIcon },
-      { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor", "moderator"], icon: AirportTowerIcon },
-      { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor", "moderator"], icon: Location01Icon },
-      { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor", "moderator"], icon: SentIcon },
-      { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor", "moderator"], icon: FileAttachmentIcon },
+      { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor"], icon: AirportTowerIcon },
+      { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor"], icon: Location01Icon },
+      { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor"], icon: SentIcon },
+      { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor"], icon: FileAttachmentIcon },
       { titleKey: "items.ukeImport", url: "/admin/uke-import", allowedRoles: ["admin"], icon: Upload04Icon },
       { titleKey: "items.lists", url: "/admin/lists", allowedRoles: ["admin"], icon: TaskDaily01Icon, requiresSetting: "enableUserLists" as const },
       { titleKey: "items.auditLogs", url: "/admin/audit-logs", allowedRoles: ["admin"], icon: Note01Icon },
@@ -137,7 +137,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const showAuth = !!(session?.user && settings?.submissionsEnabled);
   const authNavItems = useMemo(() => (showAuth ? translateNav(authNavConfig, t) : []), [t, showAuth]);
   const userRole = session?.user?.role as string | undefined;
-  const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
+  const isAdmin = userRole === "admin" || userRole === "editor";
   const adminNavItems = useMemo(() => {
     if (!isAdmin || !userRole) return [];
     return adminNavConfig

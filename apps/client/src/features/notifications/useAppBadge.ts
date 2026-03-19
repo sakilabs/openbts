@@ -4,7 +4,7 @@ import { authClient } from "@/lib/authClient";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { fetchNotifications } from "./api";
 
-const PRIVILEGED_ROLES = new Set(["admin", "moderator"]);
+const PRIVILEGED_ROLES = new Set(["admin"]);
 
 async function fetchPendingSubmissionsCount(): Promise<number> {
   const result = await fetchJson<{ totalCount: number }>(`${API_BASE}/submissions?status=pending&limit=1&offset=0`);

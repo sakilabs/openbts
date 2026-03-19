@@ -14,7 +14,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { AdminUser } from "@/features/admin/users/types";
 import { SectionHeader } from "./common";
 
-const ROLES = ["user", "editor", "moderator", "admin"] as const;
+const ROLES = ["user", "editor", "admin"] as const;
 
 function ForceTotpDescription({ hasPassword, twoFactorEnabled }: { hasPassword?: boolean; twoFactorEnabled?: boolean }) {
   if (!hasPassword) return "Cannot force 2FA - user has no password set. Set a password first.";

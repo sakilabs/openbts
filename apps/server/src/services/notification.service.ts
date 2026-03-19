@@ -63,7 +63,7 @@ async function deliverPush(subs: { endpoint: string; p256dh: string; auth: strin
   );
 }
 
-const STAFF_ROLES = ["admin", "moderator", "editor"];
+const STAFF_ROLES = ["admin", "editor"];
 
 export async function notifyStaffNewSubmission(params: {
   submissionId: string;

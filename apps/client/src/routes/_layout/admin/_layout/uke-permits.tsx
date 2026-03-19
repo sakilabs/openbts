@@ -119,6 +119,6 @@ export const Route = createFileRoute("/_layout/admin/_layout/uke-permits")({
     titleKey: "breadcrumbs.ukePermits",
     i18nNamespace: "admin",
     breadcrumbs: [{ titleKey: "breadcrumbs.admin", i18nNamespace: "admin" }],
-    allowedRoles: ["admin", "moderator", "editor"],
+    allowedRoles: ["admin", "editor"],
   },
 });

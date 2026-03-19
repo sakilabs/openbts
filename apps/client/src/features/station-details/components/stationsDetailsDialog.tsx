@@ -29,7 +29,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
   const { data: settings } = useSettings();
   const { data: session } = authClient.useSession();
   const userRole = session?.user?.role as string | undefined;
-  const isAdmin = userRole === "admin" || userRole === "editor" || userRole === "moderator";
+  const isAdmin = userRole === "admin" || userRole === "editor";
   const { preferences } = usePreferences();
 
   const {

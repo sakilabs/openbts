@@ -92,7 +92,7 @@ type StationData = z.infer<typeof stationResponseSchema>;
 type ResponseData = z.infer<typeof locationsSchema> & { region: z.infer<typeof regionsSchema>; stations: StationData[] };
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 
-const ORPHANED_ALLOWED_ROLES = new Set(["admin", "editor", "moderator"]);
+const ORPHANED_ALLOWED_ROLES = new Set(["admin", "editor"]);
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
   const {

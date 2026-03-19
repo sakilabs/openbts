@@ -47,7 +47,6 @@ export class RateLimitService {
   private defaultRoles: Required<NonNullable<RateLimitOptions["roles"]>> = {
     guest: { max: 120, window: 300 },
     user: { max: 300, window: 60 },
-    moderator: { max: 1000, window: 60 },
     editor: { max: 1000, window: 60 },
     admin: { max: Number.POSITIVE_INFINITY, window: 60 },
   };

@@ -18,7 +18,7 @@ interface GoogleAdProps {
   className?: string;
 }
 
-const PRIVILEGED_ROLES = new Set(["admin", "editor", "moderator"]);
+const PRIVILEGED_ROLES = new Set(["admin", "editor"]);
 
 function pushAd() {
   try {
