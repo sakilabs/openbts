@@ -9,6 +9,7 @@ import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
+import { computeGnbidLength } from "../../../../../utils/submission.helpers.js";
 import { logger } from "../../../../../utils/logger.js";
 import {
   submissions,
@@ -144,6 +145,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
       let stationId = submission.station_id;
 
+      let resolvedLocationId: number | null = null;
+
       if (submission.type === "new") {
         let locationId: number | null = null;
 
@@ -190,22 +193,22 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               });
           }
         }
+        resolvedLocationId = locationId;
       }
 
       if (submission.type === "update" && proposedLocation && stationId) {
         const currentStation = await tx.query.stations.findFirst({
           where: { id: stationId },
-          columns: { location_id: true },
+          with: { location: true },
         });
 
-        const currentLocation = currentStation?.location_id
-          ? await tx.query.locations.findFirst({ where: { id: currentStation.location_id } })
-          : null;
+        const currentLocation = currentStation?.location ?? null;
 
         const coordsUnchanged =
           currentLocation && currentLocation.longitude === proposedLocation.longitude && currentLocation.latitude === proposedLocation.latitude;
 
         if (coordsUnchanged) {
+          resolvedLocationId = currentLocation.id;
           const metadataChanged =
             currentLocation.region_id !== proposedLocation.region_id ||
             currentLocation.city !== proposedLocation.city ||
@@ -231,6 +234,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           }
         } else {
           const locationId = await upsertLocation(tx, proposedLocation, req, id);
+          resolvedLocationId = locationId;
           await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
           await createAuditLog(
             {
@@ -280,6 +284,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           tx,
         );
       }
+
+      const targetCellIds = proposedCellRows
+        .filter((c) => (c.operation === "update" || c.operation === "delete") && c.target_cell_id)
+        .map((c) => c.target_cell_id!);
+
+      const targetCellsArr =
+        targetCellIds.length > 0
+          ? await tx.query.cells.findMany({
+              where: { id: { in: targetCellIds } },
+              with: { gsm: true, umts: true, lte: true, nr: true },
+            })
+          : [];
+      const targetCellsMap = new Map(targetCellsArr.map((tc) => [tc.id, tc] as const));
 
       /* eslint-disable no-await-in-loop */
       for (const proposed of proposedCellRows) {
@@ -333,7 +350,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                     cell_id: newCell.id,
                     nrtac: d.nrtac,
                     gnbid: d.gnbid,
-                    gnbid_length: d.gnbid ? d.gnbid.toString(2).length : undefined,
+                    gnbid_length: computeGnbidLength(d.gnbid),
                     clid: d.clid,
                     pci: d.pci,
                     arfcn: d.arfcn,
@@ -361,12 +378,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             const targetCellId = proposed.target_cell_id;
             if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot update cell without target_cell_id" });
 
-            const targetCell = await tx.query.cells.findFirst({
-              where: {
-                id: targetCellId,
-              },
-              with: { gsm: true, umts: true, lte: true, nr: true },
-            });
+            const targetCell = targetCellsMap.get(targetCellId);
             if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 
             const cellUpdate: Record<string, unknown> = { updatedAt: new Date() };
@@ -406,7 +418,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                     .set({
                       nrtac: d.nrtac,
                       gnbid: d.gnbid,
-                      gnbid_length: d.gnbid ? d.gnbid.toString(2).length : d.gnbid_length,
+                      gnbid_length: d.gnbid ? computeGnbidLength(d.gnbid) : d.gnbid_length,
                       clid: d.clid,
                       pci: d.pci,
                       arfcn: d.arfcn,
@@ -417,10 +429,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               }
             }
 
-            const updatedCell = await tx.query.cells.findFirst({
-              where: { id: targetCellId },
-              with: { gsm: true, umts: true, lte: true, nr: true },
-            });
+            const updatedCell = {
+              ...targetCell,
+              ...cellUpdate,
+              ...(rat === "GSM" && proposed.gsm ? { gsm: { ...targetCell.gsm, ...proposed.gsm } } : {}),
+              ...(rat === "UMTS" && proposed.umts ? { umts: { ...targetCell.umts, ...proposed.umts } } : {}),
+              ...(rat === "LTE" && proposed.lte ? { lte: { ...targetCell.lte, ...proposed.lte } } : {}),
+              ...(rat === "NR" && proposed.nr ? { nr: { ...targetCell.nr, ...proposed.nr } } : {}),
+            };
 
             await createAuditLog(
               {
@@ -441,12 +457,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             const targetCellId = proposed.target_cell_id;
             if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete cell without target_cell_id" });
 
-            const targetCell = await tx.query.cells.findFirst({
-              where: {
-                id: targetCellId,
-              },
-              with: { gsm: true, umts: true, lte: true, nr: true },
-            });
+            const targetCell = targetCellsMap.get(targetCellId);
             if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 
             await tx.delete(cells).where(eq(cells.id, targetCellId));
@@ -471,13 +482,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         ]);
 
         if (photos.length > 0) {
-          const station = await tx.query.stations.findFirst({ where: { id: sid }, columns: { location_id: true } });
-          if (station?.location_id) {
+          const photoLocationId =
+            resolvedLocationId ?? (await tx.query.stations.findFirst({ where: { id: sid }, columns: { location_id: true } }))?.location_id ?? null;
+          if (photoLocationId) {
             await tx
               .insert(locationPhotos)
               .values(
                 photos.map((p) => ({
-                  location_id: station.location_id!,
+                  location_id: photoLocationId,
                   attachment_id: p.attachment_id,
                   submission_id: id,
                   uploaded_by: submission.submitter_id,
@@ -492,7 +504,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               .from(locationPhotos)
               .where(
                 and(
-                  eq(locationPhotos.location_id, station.location_id!),
+                  eq(locationPhotos.location_id, photoLocationId),
                   inArray(
                     locationPhotos.attachment_id,
                     photos.map((p) => p.attachment_id),
@@ -548,10 +560,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         .returning();
       if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-      return { submission: updated, resolvedStationId: stationId };
+      let stationStringId: string | null = null;
+      if (submission.type === "new" && proposedStation) {
+        stationStringId = proposedStation.station_id ?? null;
+      } else if (stationId) {
+        const stationRow = await tx.query.stations.findFirst({ where: { id: stationId }, columns: { station_id: true } });
+        stationStringId = stationRow?.station_id ?? null;
+      }
+
+      return { submission: updated, resolvedStationId: stationId, stationStringId };
     });
 
-    const { submission: result, resolvedStationId } = transactionResult;
+    const { submission: result, stationStringId } = transactionResult;
 
     if (submission.type === "new") {
       void rebuildStationsPermitsAssociations().catch((e) =>
@@ -559,22 +579,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       );
     }
 
-    const [stationStringId] = await Promise.all([
-      resolvedStationId
-        ? db.query.stations.findFirst({ where: { id: resolvedStationId }, columns: { station_id: true } }).then((r) => r?.station_id ?? null)
-        : Promise.resolve(null),
-      createAuditLog(
-        {
-          action: "submissions.approve",
-          table_name: "submissions",
-          record_id: null,
-          old_values: { status: submission.status },
-          new_values: { status: result.status, reviewer_id: result.reviewer_id, reviewed_at: result.reviewed_at },
-          metadata: { submission_id: id, type: submission.type, station_id: submission.station_id },
-        },
-        req,
-      ),
-    ]);
+    await createAuditLog(
+      {
+        action: "submissions.approve",
+        table_name: "submissions",
+        record_id: null,
+        old_values: { status: submission.status },
+        new_values: { status: result.status, reviewer_id: result.reviewer_id, reviewed_at: result.reviewed_at },
+        metadata: { submission_id: id, type: submission.type, station_id: submission.station_id },
+      },
+      req,
+    );
 
     void createAndDeliverNotification({
       userId: submission.submitter_id,
@@ -591,9 +606,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     return res.send({ data: result });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
-    throw new ErrorResponse("INTERNAL_SERVER_ERROR", {
-      message: error instanceof Error ? error.message : error ? String(error as string | number) : "An unknown error occurred",
-    });
+    if (error instanceof Error) throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: error.message });
+    throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: error ? String(error) : "An unknown error occurred" });
   }
 }
 

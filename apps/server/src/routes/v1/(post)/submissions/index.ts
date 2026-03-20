@@ -1,14 +1,11 @@
 import {
   submissions,
   proposedCells,
-  proposedGSMCells,
-  proposedUMTSCells,
-  proposedLTECells,
-  proposedNRCells,
   proposedStations,
   proposedLocations,
   submissionLocationPhotoSelections,
   locationPhotos,
+  stations,
 } from "@openbts/drizzle";
 import { inArray, eq, and, count } from "drizzle-orm";
 import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
@@ -17,9 +14,18 @@ import { z } from "zod/v4";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicatesBatch } from "../../../../services/cellDuplicateCheck.service.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { notifyStaffNewSubmission } from "../../../../services/notification.service.js";
+import {
+  gsmInsertSchema,
+  umtsInsertSchema,
+  lteInsertSchema,
+  nrInsertSchemaBase,
+  isNonEmpty,
+  validateCellDuplicates,
+  insertProposedCellDetails,
+} from "../../../../utils/submission.helpers.js";
 import { logger } from "../../../../utils/logger.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -31,23 +37,17 @@ const submissionsSelectSchema = createSelectSchema(submissions);
 const submissionsInsertBase = createInsertSchema(submissions).omit({ createdAt: true, updatedAt: true, submitter_id: true });
 const proposedStationInsert = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
-const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true }).strict();
-const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true }).strict();
-const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true }).strict();
-const nrInsertSchema = createInsertSchema(proposedNRCells)
-  .omit({ proposed_cell_id: true })
-  .strict()
-  .superRefine((data, ctx) => {
-    if (data.type === "nsa") {
-      for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
-        if (data[field] !== null && data[field] !== undefined)
-          ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
-      }
-      if (data.supports_nr_redcap === true) {
-        ctx.addIssue({ code: "custom", message: "supports_nr_redcap must not be set for NSA NR cells", path: ["supports_nr_redcap"] });
-      }
+const nrInsertSchema = nrInsertSchemaBase.superRefine((data, ctx) => {
+  if (data.type === "nsa") {
+    for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+      if (data[field] !== null && data[field] !== undefined)
+        ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
     }
-  });
+    if (data.supports_nr_redcap === true) {
+      ctx.addIssue({ code: "custom", message: "supports_nr_redcap must not be set for NSA NR cells", path: ["supports_nr_redcap"] });
+    }
+  }
+});
 const proposedCellInsert = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
   .extend({
@@ -97,43 +97,10 @@ type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
   cells?: z.infer<typeof proposedCellInsert>[];
 };
 
-function isNonEmpty(value: unknown): boolean {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (typeof value === "number") return true;
-  if (typeof value === "boolean") return true;
-  if (Array.isArray(value)) return value.some(isNonEmpty);
-  if (typeof value === "object") return Object.values(value as object).some(isNonEmpty);
-  return false;
-}
-
 function hasMeaningfulChanges(input: SingleSubmission): boolean {
   if (input.type === "delete") return true;
   const { station_id: _, type: __, ...payload } = input;
   return isNonEmpty(payload);
-}
-
-function validateCellDuplicates(cells: NonNullable<SingleSubmission["cells"]>): void {
-  for (const rat of ["GSM", "UMTS"] as const) {
-    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
-    const seen = new Set<number>();
-    for (const cell of ratCells) {
-      const cid = (cell.details as { cid?: number } | undefined)?.cid;
-      if (cid === undefined) continue;
-      if (seen.has(cid)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate CID ${cid} found in ${rat} cells` });
-      seen.add(cid);
-    }
-  }
-
-  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "delete");
-  const seen = new Set<string>();
-  for (const cell of lteCells) {
-    const d = cell.details as { enbid?: number; clid?: number } | undefined;
-    if (d?.enbid === undefined || d?.clid === undefined) continue;
-    const key = `${d.enbid}:${d.clid}`;
-    if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate eNBID+CLID (${d.enbid}+${d.clid}) found in LTE cells` });
-    seen.add(key);
-  }
 }
 
 async function validateSubmission(input: SingleSubmission): Promise<void> {
@@ -204,23 +171,10 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
   const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
   if (operatorId && input.cells && input.cells.length > 0) {
-    await Promise.all(
-      input.cells
-        .filter((cell) => cell.details && cell.operation !== "delete")
-        .map((cell) => {
-          if (cell.rat === "GSM") {
-            const d = cell.details as { lac: number; cid: number };
-            return checkGSMDuplicate(d.lac, d.cid, operatorId, cell.target_cell_id ?? undefined);
-          } else if (cell.rat === "UMTS") {
-            const d = cell.details as { rnc: number; cid: number };
-            return checkUMTSDuplicate(d.rnc, d.cid, operatorId, cell.target_cell_id ?? undefined);
-          } else if (cell.rat === "LTE") {
-            const d = cell.details as { enbid: number; clid: number };
-            return checkLTEDuplicate(d.enbid, d.clid, operatorId, cell.target_cell_id ?? undefined);
-          }
-          return Promise.resolve();
-        }),
-    );
+    const dupEntries = input.cells
+      .filter((cell) => cell.details && cell.operation !== "delete")
+      .map((cell) => ({ rat: cell.rat!, details: cell.details as Record<string, unknown>, excludeCellId: cell.target_cell_id ?? undefined }));
+    if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, operatorId);
   }
 
   if (type === "update" && targetStation) {
@@ -304,32 +258,7 @@ async function processSubmission(
         if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
 
         if (cell.operation !== "delete") {
-          switch (cell.rat) {
-            case "GSM": {
-              const details = cell.details as z.infer<typeof gsmInsertSchema>;
-              await tx.insert(proposedGSMCells).values({ ...details, proposed_cell_id: base.id });
-              break;
-            }
-            case "UMTS": {
-              const details = cell.details as z.infer<typeof umtsInsertSchema>;
-              await tx.insert(proposedUMTSCells).values({ ...details, proposed_cell_id: base.id });
-              break;
-            }
-            case "LTE": {
-              const details = cell.details as z.infer<typeof lteInsertSchema>;
-              await tx.insert(proposedLTECells).values({ ...details, proposed_cell_id: base.id });
-              break;
-            }
-            case "NR": {
-              const details = cell.details as z.infer<typeof nrInsertSchema>;
-              await tx.insert(proposedNRCells).values({
-                ...details,
-                proposed_cell_id: base.id,
-                gnbid_length: details.gnbid ? Number(details.gnbid).toString(2).length : undefined,
-              });
-              break;
-            }
-          }
+          await insertProposedCellDetails(tx, cell.rat, cell.details as Record<string, unknown>, base.id);
         }
       } catch (error) {
         if (error instanceof ErrorResponse) throw error;
@@ -386,12 +315,13 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
     const stationIdsToResolve = results.filter((s) => !s.proposedStation?.station_id && s.station_id).map((s) => s.station_id!);
 
+    const uniqueStationIds = Array.from(new Set(stationIdsToResolve));
     const resolvedStations =
-      stationIdsToResolve.length > 0
-        ? await Promise.all(stationIdsToResolve.map((id) => db.query.stations.findFirst({ where: { id }, columns: { id: true, station_id: true } })))
+      uniqueStationIds.length > 0
+        ? await db.select({ id: stations.id, station_id: stations.station_id }).from(stations).where(inArray(stations.id, uniqueStationIds))
         : [];
 
-    const stationIdMap = new Map(resolvedStations.filter(Boolean).map((s) => [s!.id, s!.station_id]));
+    const stationIdMap = new Map(resolvedStations.map((s) => [s.id, s.station_id]));
 
     for (const submission of results) {
       if (

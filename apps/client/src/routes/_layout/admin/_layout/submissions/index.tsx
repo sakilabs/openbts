@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { PaginationState } from "@/hooks/useTablePageSize";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
@@ -25,6 +26,7 @@ function AdminSubmissionsListPage() {
   "use no memo";
   const { t, i18n } = useTranslation(["submissions", "common"]);
   const navigate = useNavigate();
+  const { page } = Route.useSearch();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">(() => {
     const saved = localStorage.getItem("admin:submissions:status");
@@ -42,17 +44,37 @@ function AdminSubmissionsListPage() {
   const userIdFilterRef = useRef(userIdFilter);
   userIdFilterRef.current = userIdFilter;
 
-  const handleStatusFilter = useCallback((v: typeof statusFilter) => {
-    setStatusFilter(v);
-    localStorage.setItem("admin:submissions:status", v);
-  }, []);
+  const handleStatusFilter = useCallback(
+    (v: typeof statusFilter) => {
+      setStatusFilter(v);
+      localStorage.setItem("admin:submissions:status", v);
+      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
+    },
+    [navigate],
+  );
 
-  const handleTypeFilter = useCallback((v: typeof typeFilter) => {
-    setTypeFilter(v);
-    localStorage.setItem("admin:submissions:type", v);
-  }, []);
+  const handleTypeFilter = useCallback(
+    (v: typeof typeFilter) => {
+      setTypeFilter(v);
+      localStorage.setItem("admin:submissions:type", v);
+      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
+    },
+    [navigate],
+  );
 
-  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination: sizePagination, setPagination: setSizePagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+
+  const pagination = useMemo(() => ({ pageIndex: page, pageSize: sizePagination.pageSize }), [page, sizePagination.pageSize]);
+
+  const setPagination = useCallback(
+    (updater: PaginationState | ((prev: PaginationState) => PaginationState)) => {
+      const next = typeof updater === "function" ? updater(pagination) : updater;
+      if (next.pageSize !== pagination.pageSize) setSizePagination(next);
+      if (next.pageIndex !== pagination.pageIndex)
+        void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: next.pageIndex }), replace: true });
+    },
+    [pagination, setSizePagination, navigate],
+  );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, stationIdFilter, userIdFilter],
@@ -138,7 +160,7 @@ function AdminSubmissionsListPage() {
                     value={stationIdFilterRef.current}
                     onChange={(e) => {
                       setStationIdFilter(e.target.value);
-                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
                     }}
                   />
                 </div>
@@ -178,7 +200,7 @@ function AdminSubmissionsListPage() {
                     value={userIdFilterRef.current}
                     onChange={(e) => {
                       setUserIdFilter(e.target.value);
-                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
                     }}
                   />
                 </div>
@@ -215,7 +237,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
     ],
-    [t, i18n.language, setPagination],
+    [t, i18n.language, navigate],
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);
@@ -322,6 +344,9 @@ function AdminSubmissionsListPage() {
 }
 
 export const Route = createFileRoute("/_layout/admin/_layout/submissions/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    page: typeof search.page === "number" && search.page >= 0 ? Math.floor(search.page) : 0,
+  }),
   component: AdminSubmissionsListPage,
   staticData: {
     titleKey: "breadcrumbs.submissions",

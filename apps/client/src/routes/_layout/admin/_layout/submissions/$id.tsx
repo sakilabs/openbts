@@ -40,6 +40,20 @@ function getOperationBorderClass(operation: string): string | undefined {
 }
 
 function computeInitialCells(submission: SubmissionDetail, currentStation: Station | null): LocalCell[] {
+  if (submission.status !== "pending") {
+    return submission.cells.map((cell) => ({
+      _localId: crypto.randomUUID(),
+      _serverId: cell.id,
+      operation: cell.operation,
+      target_cell_id: cell.target_cell_id,
+      rat: cell.rat ?? "",
+      band_id: cell.band_id ?? 0,
+      is_confirmed: cell.is_confirmed,
+      notes: cell.notes ?? "",
+      details: { ...cell.details },
+    }));
+  }
+
   const proposedTargetIds = new Set(
     submission.cells
       .filter((c) => (c.operation === "update" || c.operation === "delete") && c.target_cell_id !== null)
@@ -140,7 +154,7 @@ function SubmissionDetailPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">{t("common:error.description")}</p>
-          <Button variant="outline" onClick={() => navigate({ to: "/admin/submissions" })}>
+          <Button variant="outline" onClick={() => navigate({ to: "/admin/submissions", search: { page: 0 } })}>
             {t("common:actions.back")}
           </Button>
         </div>
@@ -152,7 +166,6 @@ function SubmissionDetailPage() {
 }
 
 function SubmissionDetailForm({ submission, currentStation }: { submission: SubmissionDetail; currentStation: Station | null }) {
-  const navigate = useNavigate();
   const { t } = useTranslation(["submissions", "common"]);
   const queryClient = useQueryClient();
 
@@ -244,7 +257,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     disabled: isFormDisabled,
   });
 
-  const visibleRats = useMemo(() => (isRejected ? [] : RAT_ORDER.filter((r) => enabledRats.includes(r))), [enabledRats, isRejected]);
+  const visibleRats = useMemo(() => RAT_ORDER.filter((r) => enabledRats.includes(r)), [enabledRats]);
 
   const isProcessing = saveMutation.isPending || approveMutation.isPending || rejectMutation.isPending;
 
@@ -290,7 +303,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       {
         onSuccess: () => {
           toast.success(t("toast.approved"));
-          void navigate({ to: "/admin/submissions" });
+          window.history.back();
         },
         onError: (error) => showApiError(error),
       },
@@ -304,7 +317,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       {
         onSuccess: () => {
           toast.success(t("toast.rejected"));
-          void navigate({ to: "/admin/submissions" });
+          window.history.back();
         },
         onError: (error) => showApiError(error),
       },
@@ -376,8 +389,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
   const renderSubmissionAfterRow = useCallback(
     (cell: LocalCell) => {
+      if (isReadOnly) return null;
       const targetCell = cell.operation === "update" && cell.target_cell_id ? currentCellsMap.get(cell.target_cell_id) : null;
-      if (!targetCell || cell.operation !== "update") return null;
+      if (!targetCell) return null;
 
       const details = (targetCell.details ?? {}) as Record<string, unknown>;
       const changedKeys = new Set(Object.keys({ ...details, ...cell.details }).filter((k) => details[k] !== cell.details[k]));
@@ -398,7 +412,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         </tr>
       );
     },
-    [currentCellsMap, t],
+    [currentCellsMap, isReadOnly, t],
   );
 
   return (
