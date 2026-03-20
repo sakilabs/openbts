@@ -39,6 +39,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.cid as number) ?? ""}
             error={!!detailErrors?.cid}
             disabled={disabled}
+            max={65535}
             onDetailChange={onDetailChange}
           />
           <td className="px-1.5 py-1">
@@ -68,6 +69,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.rnc as number) ?? ""}
             error={!!detailErrors?.rnc}
             disabled={disabled}
+            max={65535}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -76,6 +78,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.cid as number) ?? ""}
             error={!!detailErrors?.cid}
             disabled={disabled}
+            max={65535}
             onDetailChange={onDetailChange}
           />
           <DetailComputedCell value={longCid} />
@@ -108,6 +111,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.enbid as number) ?? ""}
             error={!!detailErrors?.enbid}
             disabled={disabled}
+            max={1048575}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -116,6 +120,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.clid as number) ?? ""}
             error={!!detailErrors?.clid}
             disabled={disabled}
+            max={255}
             onDetailChange={onDetailChange}
           />
           <DetailComputedCell value={eCid} />

@@ -7,15 +7,17 @@ export type DetailInputCellProps = {
   value: number | "";
   error?: boolean;
   disabled?: boolean;
+  max?: number;
   onDetailChange: (field: string, value: number | boolean | undefined) => void;
 };
 
-export function DetailInputCell({ field, placeholder, value, error, disabled, onDetailChange }: DetailInputCellProps) {
+export function DetailInputCell({ field, placeholder, value, error, disabled, max, onDetailChange }: DetailInputCellProps) {
   return (
     <td className="px-1.5 py-1">
       <Input
         type="number"
         min={0}
+        max={max}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onDetailChange(field, e.target.value ? Number.parseInt(e.target.value, 10) : undefined)}

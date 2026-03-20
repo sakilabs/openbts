@@ -8,6 +8,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed map overlay (`StationCounter`, `MapCursorInfo`, `MapStyleSwitcher`) blocking map clicks in transparent areas between elements
 - Fixed submission approval always force-confirming cells regardless of the `is_confirmed` checkbox state set by the admin
 - Fixed `PATCH /submissions/:id` ignoring `is_confirmed` on proposed cells - admins and editors can now set confirmation per cell; regular submitters cannot self-confirm
+- Fixed UMTS UARFCN field not saving due to incorrect field key
+- Added input limits and server-side validation: GSM CID 0-65535, UMTS RNC 0-65535, UMTS CID 0-65535, LTE eNBID 0-1 048 575, LTE CLID 0-255
 
 # 2026-03-19
 

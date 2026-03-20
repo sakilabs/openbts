@@ -26,22 +26,16 @@ const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true }).stri
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true }).strict();
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const gsmUpdateSchema = createUpdateSchema(gsmCells)
-  .omit({
-    createdAt: true,
-    updatedAt: true,
-  })
+  .omit({ createdAt: true, updatedAt: true })
+  .extend({ cid: z.number().int().min(0).max(65535).optional() })
   .strict();
 const umtsUpdateSchema = createUpdateSchema(umtsCells)
-  .omit({
-    createdAt: true,
-    updatedAt: true,
-  })
+  .omit({ createdAt: true, updatedAt: true })
+  .extend({ rnc: z.number().int().min(0).max(65535).optional(), cid: z.number().int().min(0).max(65535).optional() })
   .strict();
 const lteUpdateSchema = createUpdateSchema(lteCells)
-  .omit({
-    createdAt: true,
-    updatedAt: true,
-  })
+  .omit({ createdAt: true, updatedAt: true })
+  .extend({ enbid: z.number().int().min(0).max(1048575).optional(), clid: z.number().int().min(0).max(255).optional() })
   .strict();
 const nrUpdateSchema = createUpdateSchema(nrCells)
   .omit({

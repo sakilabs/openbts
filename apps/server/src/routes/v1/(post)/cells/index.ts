@@ -30,9 +30,18 @@ const cellsInsertSchema = createInsertSchema(cells)
   })
   .extend({ rat: z.enum(["GSM", "CDMA", "UMTS", "LTE", "NR"]) })
   .strict();
-const gsmInsertSchema = createInsertSchema(gsmCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
-const umtsInsertSchema = createInsertSchema(umtsCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
-const lteInsertSchema = createInsertSchema(lteCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
+const gsmInsertSchema = createInsertSchema(gsmCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({ cid: z.number().int().min(0).max(65535) })
+  .strict();
+const umtsInsertSchema = createInsertSchema(umtsCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({ rnc: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
+  .strict();
+const lteInsertSchema = createInsertSchema(lteCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({ enbid: z.number().int().min(0).max(1048575), clid: z.number().int().min(0).max(255) })
+  .strict();
 const nrInsertSchema = createInsertSchema(nrCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
 
 const requestSchema = cellsInsertSchema.extend({

@@ -4,9 +4,18 @@ import { z } from "zod/v4";
 import { proposedCells, proposedGSMCells, proposedUMTSCells, proposedLTECells, proposedNRCells } from "@openbts/drizzle";
 import { ErrorResponse } from "../errors.js";
 
-export const gsmInsertSchema = createInsertSchema(proposedGSMCells).omit({ proposed_cell_id: true }).strict();
-export const umtsInsertSchema = createInsertSchema(proposedUMTSCells).omit({ proposed_cell_id: true }).strict();
-export const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cell_id: true }).strict();
+export const gsmInsertSchema = createInsertSchema(proposedGSMCells)
+  .omit({ proposed_cell_id: true })
+  .extend({ cid: z.number().int().min(0).max(65535) })
+  .strict();
+export const umtsInsertSchema = createInsertSchema(proposedUMTSCells)
+  .omit({ proposed_cell_id: true })
+  .extend({ rnc: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
+  .strict();
+export const lteInsertSchema = createInsertSchema(proposedLTECells)
+  .omit({ proposed_cell_id: true })
+  .extend({ enbid: z.number().int().min(0).max(1048575), clid: z.number().int().min(0).max(255) })
+  .strict();
 export const nrInsertSchemaBase = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true }).strict();
 
 export const gsmSelectSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
