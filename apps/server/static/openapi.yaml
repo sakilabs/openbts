@@ -3456,6 +3456,8 @@ components:
         band_id: { type: integer, nullable: true }
         rat: { type: string, enum: [GSM, UMTS, LTE, NR], nullable: true }
         notes: { type: string, nullable: true }
+        is_confirmed:
+          { type: boolean, nullable: true, description: "Only respected when sent by an admin; regular submitters cannot self-confirm cells" }
         operation: { type: string, enum: [added, updated, removed] }
         details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
     SubmissionWithRelations:

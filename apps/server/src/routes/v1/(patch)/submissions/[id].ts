@@ -37,7 +37,7 @@ const lteInsertSchema = createInsertSchema(proposedLTECells).omit({ proposed_cel
 const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true }).strict();
 
 const cellInputSchema = createInsertSchema(proposedCells)
-  .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true })
+  .omit({ createdAt: true, updatedAt: true, submission_id: true })
   .extend({
     operation: z.enum(["added", "updated", "removed"]).optional(),
     details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
@@ -238,7 +238,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             .values({
               ...cellData,
               submission_id: id,
-              is_confirmed: false,
+              is_confirmed: hasAdminPermission ? (cellData.is_confirmed ?? false) : false,
               operation: mapCellOperation(cell.operation ?? "added"),
             })
             .returning();

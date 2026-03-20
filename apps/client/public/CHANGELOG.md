@@ -1,6 +1,14 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-20
+
+### 🩹 Fixes
+
+- Fixed map overlay (`StationCounter`, `MapCursorInfo`, `MapStyleSwitcher`) blocking map clicks in transparent areas between elements
+- Fixed submission approval always force-confirming cells regardless of the `is_confirmed` checkbox state set by the admin
+- Fixed `PATCH /submissions/:id` ignoring `is_confirmed` on proposed cells - admins and editors can now set confirmation per cell; regular submitters cannot self-confirm
+
 # 2026-03-19
 
 ### 🚀 Enhancements

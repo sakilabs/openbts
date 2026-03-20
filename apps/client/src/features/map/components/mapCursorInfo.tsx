@@ -336,7 +336,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
   }
 
   return (
-    <div className={cn("pointer-events-none select-none invisible md:visible", className)}>
+    <div className={cn("select-none invisible md:visible", className)}>
       <div className="flex items-stretch shadow-xl rounded-lg overflow-hidden border bg-background/95 backdrop-blur-md">
         <div className="px-2.5 py-1.5 flex items-center gap-2 border-r border-border/50">
           <div className="flex items-baseline gap-1.5">

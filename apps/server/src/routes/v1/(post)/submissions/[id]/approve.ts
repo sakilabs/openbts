@@ -312,7 +312,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 band_id: proposed.band_id,
                 rat: proposed.rat,
                 notes: proposed.notes,
-                is_confirmed: true,
+                is_confirmed: proposed.is_confirmed,
               })
               .returning();
             if (!newCell) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create cell" });

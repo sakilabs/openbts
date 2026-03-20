@@ -317,23 +317,25 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         </Sheet>
       )}
 
-      <div className="hidden md:flex absolute top-4 left-4 z-10 flex-col items-start gap-1.5">
-        <StationCounter
-          locationCount={locationCount}
-          totalCount={totalCount}
-          radioLineCount={radioLineCount}
-          radioLineTotalCount={radioLineTotalCount}
-          isRadioLinesFetching={isRadioLinesFetching}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          showStations={filters.showStations}
-          zoom={zoom}
-          source={filters.source}
-        />
+      <div className="hidden md:flex absolute top-4 left-4 z-10 flex-col items-start gap-1.5 pointer-events-none">
+        <div className="pointer-events-auto">
+          <StationCounter
+            locationCount={locationCount}
+            totalCount={totalCount}
+            radioLineCount={radioLineCount}
+            radioLineTotalCount={radioLineTotalCount}
+            isRadioLinesFetching={isRadioLinesFetching}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            showStations={filters.showStations}
+            zoom={zoom}
+            source={filters.source}
+          />
+        </div>
 
         <MapCursorInfo activeMarker={activeMarker} onActiveMarkerClear={onActiveMarkerClear} />
 
-        <div className="relative">
+        <div className="pointer-events-auto">
           <MapStyleSwitcher />
         </div>
       </div>
