@@ -51,7 +51,7 @@ const nrInsertSchema = createInsertSchema(proposedNRCells)
 const proposedCellInsert = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
   .extend({
-    operation: z.enum(["added", "updated", "removed"]).optional(),
+    operation: z.enum(["add", "update", "delete"]).optional(),
     details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
   })
   .strict();
@@ -97,17 +97,6 @@ type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
   cells?: z.infer<typeof proposedCellInsert>[];
 };
 
-function mapCellOperation(op: string): "add" | "update" | "delete" {
-  switch (op) {
-    case "updated":
-      return "update";
-    case "removed":
-      return "delete";
-    default:
-      return "add";
-  }
-}
-
 function isNonEmpty(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === "string") return value.trim().length > 0;
@@ -126,7 +115,7 @@ function hasMeaningfulChanges(input: SingleSubmission): boolean {
 
 function validateCellDuplicates(cells: NonNullable<SingleSubmission["cells"]>): void {
   for (const rat of ["GSM", "UMTS"] as const) {
-    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "removed");
+    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
     const seen = new Set<number>();
     for (const cell of ratCells) {
       const cid = (cell.details as { cid?: number } | undefined)?.cid;
@@ -136,7 +125,7 @@ function validateCellDuplicates(cells: NonNullable<SingleSubmission["cells"]>): 
     }
   }
 
-  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "removed");
+  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "delete");
   const seen = new Set<string>();
   for (const cell of lteCells) {
     const d = cell.details as { enbid?: number; clid?: number } | undefined;
@@ -215,22 +204,23 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
   const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
   if (operatorId && input.cells && input.cells.length > 0) {
-    for (const cell of input.cells) {
-      if (!cell.details || cell.operation === "removed") continue;
-      if (cell.rat === "GSM") {
-        const d = cell.details as { lac: number; cid: number };
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkGSMDuplicate(d.lac, d.cid, operatorId, cell.target_cell_id ?? undefined);
-      } else if (cell.rat === "UMTS") {
-        const d = cell.details as { rnc: number; cid: number };
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkUMTSDuplicate(d.rnc, d.cid, operatorId, cell.target_cell_id ?? undefined);
-      } else if (cell.rat === "LTE") {
-        const d = cell.details as { enbid: number; clid: number };
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkLTEDuplicate(d.enbid, d.clid, operatorId, cell.target_cell_id ?? undefined);
-      }
-    }
+    await Promise.all(
+      input.cells
+        .filter((cell) => cell.details && cell.operation !== "delete")
+        .map((cell) => {
+          if (cell.rat === "GSM") {
+            const d = cell.details as { lac: number; cid: number };
+            return checkGSMDuplicate(d.lac, d.cid, operatorId, cell.target_cell_id ?? undefined);
+          } else if (cell.rat === "UMTS") {
+            const d = cell.details as { rnc: number; cid: number };
+            return checkUMTSDuplicate(d.rnc, d.cid, operatorId, cell.target_cell_id ?? undefined);
+          } else if (cell.rat === "LTE") {
+            const d = cell.details as { enbid: number; clid: number };
+            return checkLTEDuplicate(d.enbid, d.clid, operatorId, cell.target_cell_id ?? undefined);
+          }
+          return Promise.resolve();
+        }),
+    );
   }
 
   if (type === "update" && targetStation) {
@@ -308,12 +298,12 @@ async function processSubmission(
             rat: cell.rat ?? null,
             notes: cell.notes ?? null,
             is_confirmed: false,
-            operation: mapCellOperation(cell.operation ?? "added"),
+            operation: cell.operation ?? "add",
           })
           .returning();
         if (!base) throw new ErrorResponse("FAILED_TO_CREATE");
 
-        if (cell.operation !== "removed") {
+        if (cell.operation !== "delete") {
           switch (cell.rat) {
             case "GSM": {
               const details = cell.details as z.infer<typeof gsmInsertSchema>;

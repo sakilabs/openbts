@@ -53,13 +53,13 @@ export function useSaveSubmissionMutation() {
           cells: payload.localCells
             .filter((lc) => lc.operation !== "unchanged")
             .map((lc) => ({
-              operation: lc.operation === "add" ? "added" : lc.operation === "update" ? "updated" : "removed",
+              operation: lc.operation,
               target_cell_id: lc.target_cell_id,
               band_id: lc.band_id,
               rat: lc.rat,
               is_confirmed: lc.is_confirmed,
               notes: lc.notes || null,
-              details: lc.operation !== "delete" && Object.keys(lc.details).length > 0 ? lc.details : undefined,
+              details: lc.operation === "delete" ? undefined : Object.keys(lc.details).length > 0 ? lc.details : undefined,
             })),
         }),
       });

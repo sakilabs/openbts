@@ -30,7 +30,7 @@ function toCellPayload(cell: ProposedCellForm, operation: CellPayload["operation
     band_id: cell.band_id,
     rat: cell.rat,
     notes: cell.notes ?? null,
-    details: cell.details,
+    details: operation === "delete" ? undefined : cell.details,
   };
 }
 
@@ -48,22 +48,22 @@ export function computeCellPayloads(originalCells: ProposedCellForm[], currentCe
   }
 
   for (const cell of currentCells) {
-    if (cell.existingCellId === undefined) payloads.push(toCellPayload(cell, "added"));
+    if (cell.existingCellId === undefined) payloads.push(toCellPayload(cell, "add"));
     else {
       const original = originalById.get(cell.existingCellId);
-      if (original && isCellModified(cell, original)) payloads.push(toCellPayload(cell, "updated"));
+      if (original && isCellModified(cell, original)) payloads.push(toCellPayload(cell, "update"));
     }
   }
 
   for (const original of originalCells) {
-    if (original.existingCellId !== undefined && !currentExistingIds.has(original.existingCellId)) payloads.push(toCellPayload(original, "removed"));
+    if (original.existingCellId !== undefined && !currentExistingIds.has(original.existingCellId)) payloads.push(toCellPayload(original, "delete"));
   }
 
   return payloads;
 }
 
 export function cellsToPayloads(cells: ProposedCellForm[]): CellPayload[] {
-  return cells.map((cell) => toCellPayload(cell, "added"));
+  return cells.map((cell) => toCellPayload(cell, "add"));
 }
 
 export type CellDiffStatus = "added" | "modified" | "unchanged" | "deleted";

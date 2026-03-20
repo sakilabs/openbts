@@ -3460,7 +3460,7 @@ components:
         notes: { type: string, nullable: true }
         is_confirmed:
           { type: boolean, nullable: true, description: "Only respected when sent by an admin; regular submitters cannot self-confirm cells" }
-        operation: { type: string, enum: [added, updated, removed] }
+        operation: { type: string, enum: [add, update, delete] }
         details: { $ref: "#/components/schemas/CellDetailsInsert", nullable: true }
     SubmissionWithRelations:
       allOf:

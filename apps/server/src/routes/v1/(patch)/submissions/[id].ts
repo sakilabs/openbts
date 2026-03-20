@@ -39,7 +39,7 @@ const nrInsertSchema = createInsertSchema(proposedNRCells).omit({ proposed_cell_
 const cellInputSchema = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true })
   .extend({
-    operation: z.enum(["added", "updated", "removed"]).optional(),
+    operation: z.enum(["add", "update", "delete"]).optional(),
     details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
   });
 
@@ -83,17 +83,6 @@ type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof responseSchema>;
 type ExistingSubmission = NonNullable<Awaited<ReturnType<typeof db.query.submissions.findFirst>>>;
 
-function mapCellOperation(op: string): "add" | "update" | "delete" {
-  switch (op) {
-    case "updated":
-      return "update";
-    case "removed":
-      return "delete";
-    default:
-      return "add";
-  }
-}
-
 function isNonEmpty(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === "string") return value.trim().length > 0;
@@ -106,7 +95,7 @@ function isNonEmpty(value: unknown): boolean {
 
 function validateCellDuplicates(cells: z.infer<typeof cellInputSchema>[]): void {
   for (const rat of ["GSM", "UMTS"] as const) {
-    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "removed");
+    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
     const seen = new Set<number>();
     for (const cell of ratCells) {
       const cid = (cell.details as { cid?: number } | undefined)?.cid;
@@ -116,7 +105,7 @@ function validateCellDuplicates(cells: z.infer<typeof cellInputSchema>[]): void 
     }
   }
 
-  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "removed");
+  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "delete");
   const seen = new Set<string>();
   for (const cell of lteCells) {
     const d = cell.details as { enbid?: number; clid?: number } | undefined;
@@ -169,22 +158,23 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (req.body.cells && req.body.cells.length > 0) {
     const operatorId = submission.station_id ? await getOperatorIdForStation(submission.station_id) : null;
     if (operatorId) {
-      for (const cell of req.body.cells) {
-        if (!cell.details || cell.operation === "removed") continue;
-        if (cell.rat === "GSM") {
-          const d = cell.details as { lac: number; cid: number };
-          /* eslint-disable-next-line no-await-in-loop */
-          await checkGSMDuplicate(d.lac, d.cid, operatorId, cell.target_cell_id ?? undefined);
-        } else if (cell.rat === "UMTS") {
-          const d = cell.details as { rnc: number; cid: number };
-          /* eslint-disable-next-line no-await-in-loop */
-          await checkUMTSDuplicate(d.rnc, d.cid, operatorId, cell.target_cell_id ?? undefined);
-        } else if (cell.rat === "LTE") {
-          const d = cell.details as { enbid: number; clid: number };
-          /* eslint-disable-next-line no-await-in-loop */
-          await checkLTEDuplicate(d.enbid, d.clid, operatorId, cell.target_cell_id ?? undefined);
-        }
-      }
+      await Promise.all(
+        req.body.cells
+          .filter((cell) => cell.details && cell.operation !== "delete")
+          .map((cell) => {
+            if (cell.rat === "GSM") {
+              const d = cell.details as { lac: number; cid: number };
+              return checkGSMDuplicate(d.lac, d.cid, operatorId, cell.target_cell_id ?? undefined);
+            } else if (cell.rat === "UMTS") {
+              const d = cell.details as { rnc: number; cid: number };
+              return checkUMTSDuplicate(d.rnc, d.cid, operatorId, cell.target_cell_id ?? undefined);
+            } else if (cell.rat === "LTE") {
+              const d = cell.details as { enbid: number; clid: number };
+              return checkLTEDuplicate(d.enbid, d.clid, operatorId, cell.target_cell_id ?? undefined);
+            }
+            return Promise.resolve();
+          }),
+      );
     }
   }
 
@@ -239,12 +229,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               ...cellData,
               submission_id: id,
               is_confirmed: hasAdminPermission ? (cellData.is_confirmed ?? false) : false,
-              operation: mapCellOperation(cell.operation ?? "added"),
+              operation: cell.operation ?? "add",
             })
             .returning();
           if (!base) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-          if (details && cell.operation !== "removed") {
+          if (details && cell.operation !== "delete") {
             switch (cell.rat) {
               case "GSM":
                 await tx.insert(proposedGSMCells).values({ ...(details as z.infer<typeof gsmInsertSchema>), proposed_cell_id: base.id });
@@ -270,13 +260,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         /* eslint-enable no-await-in-loop */
       }
 
-      const updated = await tx.query.submissions.findFirst({ where: { id } });
+      const [updated, rawCells] = await Promise.all([
+        tx.query.submissions.findFirst({ where: { id } }),
+        tx.query.proposedCells.findMany({ where: { submission_id: id }, with: { gsm: true, umts: true, lte: true, nr: true } }),
+      ]);
       if (!updated) throw new ErrorResponse("NOT_FOUND");
-
-      const rawCells = await tx.query.proposedCells.findMany({
-        where: { submission_id: id },
-        with: { gsm: true, umts: true, lte: true, nr: true },
-      });
 
       const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
         ...base,

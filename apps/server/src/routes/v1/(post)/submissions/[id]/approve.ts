@@ -126,37 +126,21 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
-  const hasPermission = await verifyPermissions(session.user.id, { submissions: ["update"] });
+  const [hasPermission, submission] = await Promise.all([
+    verifyPermissions(session.user.id, { submissions: ["update"] }),
+    db.query.submissions.findFirst({ where: { id } }),
+  ]);
   if (!hasPermission) throw new ErrorResponse("INSUFFICIENT_PERMISSIONS");
-
-  const submission = await db.query.submissions.findFirst({
-    where: {
-      id: id,
-    },
-  });
   if (!submission) throw new ErrorResponse("NOT_FOUND");
   if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
 
   try {
     const transactionResult = await db.transaction(async (tx) => {
-      const proposedStation = await tx.query.proposedStations.findFirst({
-        where: {
-          submission_id: id,
-        },
-      });
-
-      const proposedLocation = await tx.query.proposedLocations.findFirst({
-        where: {
-          submission_id: id,
-        },
-      });
-
-      const proposedCellRows = await tx.query.proposedCells.findMany({
-        where: {
-          submission_id: id,
-        },
-        with: { gsm: true, umts: true, lte: true, nr: true },
-      });
+      const [proposedStation, proposedLocation, proposedCellRows] = await Promise.all([
+        tx.query.proposedStations.findFirst({ where: { submission_id: id } }),
+        tx.query.proposedLocations.findFirst({ where: { submission_id: id } }),
+        tx.query.proposedCells.findMany({ where: { submission_id: id }, with: { gsm: true, umts: true, lte: true, nr: true } }),
+      ]);
 
       let stationId = submission.station_id;
 
@@ -480,9 +464,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
 
       if (stationId && submission.type !== "delete") {
-        const photos = await tx.query.submissionPhotos.findMany({ where: { submission_id: id } });
+        const sid = stationId;
+        const [photos, locationPhotoSels] = await Promise.all([
+          tx.query.submissionPhotos.findMany({ where: { submission_id: id } }),
+          tx.query.submissionLocationPhotoSelections.findMany({ where: { submission_id: id } }),
+        ]);
+
         if (photos.length > 0) {
-          const station = await tx.query.stations.findFirst({ where: { id: stationId }, columns: { location_id: true } });
+          const station = await tx.query.stations.findFirst({ where: { id: sid }, columns: { location_id: true } });
           if (station?.location_id) {
             await tx
               .insert(locationPhotos)
@@ -513,13 +502,13 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
             if (locationPhotoRows.length > 0) {
               const existingMain = await tx.query.stationPhotoSelections.findFirst({
-                where: { station_id: stationId, is_main: true },
+                where: { station_id: sid, is_main: true },
               });
               await tx
                 .insert(stationPhotoSelections)
                 .values(
                   locationPhotoRows.map((lp, i) => ({
-                    station_id: stationId!,
+                    station_id: sid,
                     location_photo_id: lp.id,
                     is_main: !existingMain && i === 0,
                   })),
@@ -528,11 +517,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             }
           }
         }
-      }
 
-      if (stationId && submission.type !== "delete") {
-        const sid = stationId;
-        const locationPhotoSels = await tx.query.submissionLocationPhotoSelections.findMany({ where: { submission_id: id } });
         if (locationPhotoSels.length > 0) {
           const requestedIds = locationPhotoSels.map((s) => s.location_photo_id);
           const existingRows = await tx
@@ -568,27 +553,28 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
     const { submission: result, resolvedStationId } = transactionResult;
 
-    const stationStringId = resolvedStationId
-      ? ((await db.query.stations.findFirst({ where: { id: resolvedStationId }, columns: { station_id: true } }))?.station_id ?? null)
-      : null;
-
     if (submission.type === "new") {
       void rebuildStationsPermitsAssociations().catch((e) =>
         logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
       );
     }
 
-    await createAuditLog(
-      {
-        action: "submissions.approve",
-        table_name: "submissions",
-        record_id: null,
-        old_values: { status: submission.status },
-        new_values: { status: result.status, reviewer_id: result.reviewer_id, reviewed_at: result.reviewed_at },
-        metadata: { submission_id: id, type: submission.type, station_id: submission.station_id },
-      },
-      req,
-    );
+    const [stationStringId] = await Promise.all([
+      resolvedStationId
+        ? db.query.stations.findFirst({ where: { id: resolvedStationId }, columns: { station_id: true } }).then((r) => r?.station_id ?? null)
+        : Promise.resolve(null),
+      createAuditLog(
+        {
+          action: "submissions.approve",
+          table_name: "submissions",
+          record_id: null,
+          old_values: { status: submission.status },
+          new_values: { status: result.status, reviewer_id: result.reviewer_id, reviewed_at: result.reviewed_at },
+          metadata: { submission_id: id, type: submission.type, station_id: submission.station_id },
+        },
+        req,
+      ),
+    ]);
 
     void createAndDeliverNotification({
       userId: submission.submitter_id,

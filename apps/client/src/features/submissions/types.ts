@@ -67,7 +67,7 @@ export type ProposedLocationForm = {
   latitude: number | null;
 };
 
-export type CellOperation = "added" | "updated" | "removed";
+export type CellOperation = "add" | "update" | "delete";
 
 export type CellPayload = {
   operation: CellOperation;
