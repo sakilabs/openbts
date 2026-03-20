@@ -429,14 +429,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               }
             }
 
-            const updatedCell = {
-              ...targetCell,
-              ...cellUpdate,
-              ...(rat === "GSM" && proposed.gsm ? { gsm: { ...targetCell.gsm, ...proposed.gsm } } : {}),
-              ...(rat === "UMTS" && proposed.umts ? { umts: { ...targetCell.umts, ...proposed.umts } } : {}),
-              ...(rat === "LTE" && proposed.lte ? { lte: { ...targetCell.lte, ...proposed.lte } } : {}),
-              ...(rat === "NR" && proposed.nr ? { nr: { ...targetCell.nr, ...proposed.nr } } : {}),
-            };
+            const updatedCell = { ...targetCell, ...cellUpdate };
 
             await createAuditLog(
               {
