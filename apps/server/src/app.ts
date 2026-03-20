@@ -123,6 +123,9 @@ export default class App {
 
       return res.status(statusCode).send(errorResponse);
     });
+    this.fastify.setNotFoundHandler((_req, res) => {
+      return res.status(404).send({ errors: [{ code: "NOT_FOUND", message: "The requested resource was not found." }] });
+    });
   }
 
   private initMiddlewares(): void {
@@ -144,6 +147,16 @@ export default class App {
           cb(new Error("CORS origin not allowed"), false);
         },
         credentials: true,
+        allowedHeaders: ["content-type", "x-api-key", "authorization"],
+        exposedHeaders: [
+          "x-response-time",
+          "x-ratelimit-limit",
+          "x-ratelimit-remaining",
+          "x-ratelimit-reset",
+          "x-retry-after",
+          "content-disposition",
+        ],
+        maxAge: 86400,
       })
       .register(import("@fastify/multipart"));
   }

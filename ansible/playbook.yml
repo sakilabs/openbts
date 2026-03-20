@@ -262,6 +262,15 @@
         mode: "0644"
       notify: Reload nginx
 
+    - name: Deploy /etc/nginx/snippets/security-headers.conf
+      copy:
+        src: files/security-headers.conf
+        dest: /etc/nginx/snippets/security-headers.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload nginx
+
     - name: Install certbot and nginx plugin via apt
       apt:
         name:
