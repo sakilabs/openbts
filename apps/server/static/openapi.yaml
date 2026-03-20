@@ -1,7 +1,9 @@
 openapi: 3.0.3
 info:
   title: OpenBTS API
-  description: API for OpenBTS Backend
+  description: |
+    API for OpenBTS Backend
+    Last updated: 2026-03-20
   version: 1.0.0
 
 servers:
