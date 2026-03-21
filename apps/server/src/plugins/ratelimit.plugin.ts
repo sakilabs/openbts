@@ -13,7 +13,15 @@ declare module "fastify" {
 
 export const registerRateLimit = (fastify: FastifyZodInstance) => {
   const rateLimitService = new RateLimitService(redis, {
-    routes: [{ url: "/api/v1/auth/sign-in", max: 20, window: 300 }],
+    routes: [
+      { url: "/api/v1/auth/sign-in", max: 10, window: 300 },
+      { url: "/api/v1/auth/sign-in/email", max: 10, window: 300 },
+      { url: "/api/v1/auth/sign-in/passkey", max: 10, window: 300 },
+      { url: "/api/v1/auth/sign-up", max: 5, window: 300 },
+      { url: "/api/v1/auth/sign-up/email", max: 5, window: 300 },
+      { url: "/api/v1/auth/forget-password", max: 5, window: 300 },
+      { url: "/api/v1/auth/reset-password", max: 5, window: 300 },
+    ],
   });
 
   fastify.decorate("rateLimitService", rateLimitService);
