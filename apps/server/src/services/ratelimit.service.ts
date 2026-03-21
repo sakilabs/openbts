@@ -33,8 +33,8 @@ export interface RateLimitResult {
 }
 
 export const DEFAULT_TIER_LIMITS: Required<NonNullable<RateLimitOptions["tiers"]>> = {
-  basic: { max: 100, window: 300 },
-  pro: { max: 1000, window: 60 },
+  basic: { max: 60, window: 60 },
+  pro: { max: 600, window: 60 },
   unlimited: { max: Number.POSITIVE_INFINITY, window: 60 },
 };
 
@@ -45,9 +45,9 @@ export class RateLimitService {
   private defaultTiers = DEFAULT_TIER_LIMITS;
 
   private defaultRoles: Required<NonNullable<RateLimitOptions["roles"]>> = {
-    guest: { max: 120, window: 300 },
-    user: { max: 300, window: 60 },
-    editor: { max: 1000, window: 60 },
+    guest: { max: 60, window: 60 },
+    user: { max: 120, window: 60 },
+    editor: { max: 500, window: 60 },
     admin: { max: Number.POSITIVE_INFINITY, window: 60 },
   };
 
