@@ -18,6 +18,7 @@ import {
   isNonEmpty,
   validateCellDuplicates,
   insertProposedCellDetails,
+  makeDetailsRatRefine,
 } from "../../../../../utils/submission.helpers.js";
 import { submissions, proposedCells, proposedStations, proposedLocations } from "@openbts/drizzle";
 
@@ -31,8 +32,9 @@ const cellInputSchema = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true })
   .extend({
     operation: z.enum(["add", "update", "delete"]).optional(),
-    details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchemaBase]).optional(),
-  });
+    details: z.unknown().optional(),
+  })
+  .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchemaBase }));
 
 const stationInputSchema = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
 

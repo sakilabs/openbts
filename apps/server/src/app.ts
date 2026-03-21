@@ -5,6 +5,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import staticServe from "@fastify/static";
 import scalarReference from "@scalar/fastify-api-reference";
+import type { $ZodIssue } from "zod/v4/core";
 import { serializerCompiler, validatorCompiler, hasZodFastifySchemaValidationErrors, type ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { dlogger } from "./config.js";
@@ -19,6 +20,18 @@ import { registerRateLimit } from "./plugins/ratelimit.plugin.js";
 import { logger, serializeError } from "./utils/logger.js";
 
 import type { FastifyZodInstance } from "./interfaces/fastify.interface.js";
+
+function flattenZodIssues(issues: $ZodIssue[], pathPrefix: string[] = []): { field: string; validationMessage: string }[] {
+  return issues.flatMap((issue) => {
+    const path = [...pathPrefix, ...issue.path.map(String)];
+    if (issue.code === "invalid_union") {
+      const branches = issue.errors.map((branchIssues) => flattenZodIssues(branchIssues, path));
+      const best = branches.reduce<{ field: string; validationMessage: string }[]>((a, b) => (a.length <= b.length ? a : b), branches[0] ?? []);
+      return best.length > 0 ? best : [{ field: path.join("/") || "unknown", validationMessage: "Invalid input" }];
+    }
+    return [{ field: path.join("/") || "unknown", validationMessage: issue.message }];
+  });
+}
 
 export default class App {
   fastify: FastifyZodInstance;
@@ -65,11 +78,21 @@ export default class App {
     registerRateLimit(this.fastify);
     this.fastify.setErrorHandler((error, req, res) => {
       if (hasZodFastifySchemaValidationErrors(error)) {
-        const details = error.validation.map((issue: { instancePath: string; message: string }) => ({
-          field: issue.instancePath.replace(/^\//, "") || "unknown",
-          validationMessage: issue.message,
-        }));
-
+        const details = error.validation.flatMap(
+          (issue: { instancePath: string; message: string; keyword: string; params?: { errors?: $ZodIssue[][] } }) => {
+            const field = issue.instancePath.replace(/^\//, "") || "unknown";
+            if (issue.keyword === "invalid_union" && issue.params?.errors?.length) {
+              const prefix = field.split("/").filter(Boolean);
+              const branches = issue.params.errors.map((branchIssues) => flattenZodIssues(branchIssues, prefix));
+              const best = branches.reduce<{ field: string; validationMessage: string }[]>(
+                (a, b) => (a.length <= b.length ? a : b),
+                branches[0] ?? [],
+              );
+              return best.length > 0 ? best : [{ field, validationMessage: "Invalid input" }];
+            }
+            return [{ field, validationMessage: issue.message }];
+          },
+        );
         return res.status(400).send({
           errors: [{ code: "VALIDATION_ERROR", message: "Validation error", details }],
         });

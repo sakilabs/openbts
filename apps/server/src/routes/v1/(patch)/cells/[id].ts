@@ -6,6 +6,7 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
+import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 import { cells, gsmCells, umtsCells, lteCells, nrCells, stations } from "@openbts/drizzle";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -61,9 +62,9 @@ const nrUpdateSchema = createUpdateSchema(nrCells)
     arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
   })
   .strict();
-const requestSchema = cellsUpdateSchema.extend({
-  details: z.union([gsmUpdateSchema, umtsUpdateSchema, lteUpdateSchema, nrUpdateSchema]).optional(),
-});
+const requestSchema = cellsUpdateSchema
+  .extend({ details: z.unknown().optional() })
+  .superRefine(makeDetailsRatRefine({ GSM: gsmUpdateSchema, UMTS: umtsUpdateSchema, LTE: lteUpdateSchema, NR: nrUpdateSchema }));
 
 const schemaRoute = {
   params: z.object({

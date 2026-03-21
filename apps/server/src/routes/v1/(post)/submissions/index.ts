@@ -25,6 +25,7 @@ import {
   isNonEmpty,
   validateCellDuplicates,
   insertProposedCellDetails,
+  makeDetailsRatRefine,
 } from "../../../../utils/submission.helpers.js";
 import { logger } from "../../../../utils/logger.js";
 
@@ -52,9 +53,10 @@ const proposedCellInsert = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
   .extend({
     operation: z.enum(["add", "update", "delete"]).optional(),
-    details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
+    details: z.unknown().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchema }));
 
 const singleSubmissionSchema = z
   .object({

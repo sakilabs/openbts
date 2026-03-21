@@ -7,6 +7,7 @@ import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../../../services/cellDuplicateCheck.service.js";
+import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
@@ -26,13 +27,42 @@ const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true });
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true });
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 
-const gsmInsertSchema = createInsertSchema(gsmCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
-const umtsInsertSchema = createInsertSchema(umtsCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
-const lteInsertSchema = createInsertSchema(lteCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
-const nrInsertSchema = createInsertSchema(nrCells).omit({ cell_id: true, createdAt: true, updatedAt: true }).strict();
-const cellWithDetailsInsert = cellsInsertSchema.extend({
-  details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
-});
+const gsmInsertSchema = createInsertSchema(gsmCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({ lac: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
+  .strict();
+const umtsInsertSchema = createInsertSchema(umtsCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({
+    lac: z.number().int().min(0).max(65535).nullable().optional(),
+    rnc: z.number().int().min(0).max(65535),
+    cid: z.number().int().min(0).max(65535),
+    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
+  })
+  .strict();
+const lteInsertSchema = createInsertSchema(lteCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({
+    tac: z.number().int().min(0).max(65535).nullable().optional(),
+    enbid: z.number().int().min(0).max(1048575),
+    clid: z.number().int().min(0).max(255),
+    pci: z.number().int().min(0).max(503).nullable().optional(),
+    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
+  })
+  .strict();
+const nrInsertSchema = createInsertSchema(nrCells)
+  .omit({ cell_id: true, createdAt: true, updatedAt: true })
+  .extend({
+    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
+    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
+    clid: z.number().int().min(0).max(16383).nullable().optional(),
+    pci: z.number().int().min(0).max(1007).nullable().optional(),
+    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
+  })
+  .strict();
+const cellWithDetailsInsert = cellsInsertSchema
+  .extend({ details: z.unknown().optional() })
+  .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchema }));
 const cellWithDetailsSelectSchema = cellsSelectSchema.extend({ details: cellDetailsSchema });
 
 const schemaRoute = {

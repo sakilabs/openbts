@@ -12,6 +12,7 @@ import {
   checkLTEDuplicate,
   getOperatorIdForStation,
 } from "../../../../services/cellDuplicateCheck.service.js";
+import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -64,9 +65,9 @@ const nrInsertSchema = createInsertSchema(nrCells)
   })
   .strict();
 
-const requestSchema = cellsInsertSchema.extend({
-  details: z.union([gsmInsertSchema, umtsInsertSchema, lteInsertSchema, nrInsertSchema]).optional(),
-});
+const requestSchema = cellsInsertSchema
+  .extend({ details: z.unknown().optional() })
+  .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchema }));
 
 type ReqWithDetails = { Body: z.infer<typeof requestSchema> };
 

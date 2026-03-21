@@ -46,6 +46,16 @@ export const detailsSelectSchema = z.union([gsmSelectSchema, umtsSelectSchema, l
 
 export const proposedCellsSelectSchema = createSelectSchema(proposedCells);
 
+export function makeDetailsRatRefine(schemaMap: Record<string, z.ZodType>) {
+  return (data: { rat?: string | null; details?: unknown }, ctx: z.RefinementCtx) => {
+    if (!data.details || !data.rat) return;
+    const schema = schemaMap[data.rat];
+    if (!schema) return;
+    const result = schema.safeParse(data.details);
+    if (!result.success) for (const issue of result.error.issues) ctx.addIssue({ ...issue, path: ["details", ...issue.path] });
+  };
+}
+
 export function computeGnbidLength(gnbid: number | null | undefined): number | undefined {
   if (gnbid === null || gnbid === undefined) return undefined;
   return Number(gnbid).toString(2).length;
@@ -64,7 +74,7 @@ export function isNonEmpty(value: unknown): boolean {
 interface CellWithDetails {
   rat?: string | null;
   operation?: string | null;
-  details?: { lac?: number | null; cid?: number | null; rnc?: number | null; enbid?: number | null; clid?: number | null } | null;
+  details?: unknown;
 }
 
 export function validateCellDuplicates(cells: CellWithDetails[]): void {
