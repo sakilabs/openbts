@@ -68,7 +68,9 @@ CREATE TABLE "gsm_cells" (
 	"e_gsm" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "gsm_cells_lac_cid_unique" UNIQUE("cell_id","lac","cid")
+	CONSTRAINT "gsm_cells_lac_cid_unique" UNIQUE("cell_id","lac","cid"),
+	CONSTRAINT "gsm_lac_check" CHECK ("lac" BETWEEN 0 AND 65535),
+	CONSTRAINT "gsm_cid_check" CHECK ("cid" BETWEEN 0 AND 65535)
 );
 --> statement-breakpoint
 CREATE TABLE "locations" (
@@ -99,7 +101,9 @@ CREATE TABLE "lte_cells" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "lte_cells_enbid_clid_unique" UNIQUE("cell_id","enbid","clid"),
 	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
-	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
+	CONSTRAINT "lte_enbid_check" CHECK ("enbid" BETWEEN 0 AND 1048575),
+	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503),
+	CONSTRAINT "lte_earfcn_check" CHECK ("earfcn" BETWEEN 0 AND 262143)
 );
 --> statement-breakpoint
 CREATE TABLE "nr_cells" (
@@ -114,7 +118,12 @@ CREATE TABLE "nr_cells" (
 	"type" "nr_type" NOT NULL,
 	"supports_nr_redcap" boolean DEFAULT false,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
+	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "nr_nrtac_check" CHECK ("nrtac" BETWEEN 0 AND 16777215),
+	CONSTRAINT "nr_gnbid_check" CHECK ("gnbid" BETWEEN 0 AND 4294967295),
+	CONSTRAINT "nr_clid_check" CHECK ("clid" BETWEEN 0 AND 16383),
+	CONSTRAINT "nr_pci_check" CHECK ("pci" BETWEEN 0 AND 1007),
+	CONSTRAINT "nr_arfcn_check" CHECK ("arfcn" BETWEEN 0 AND 3279165)
 );
 --> statement-breakpoint
 CREATE TABLE "operators" (
@@ -288,7 +297,11 @@ CREATE TABLE "umts_cells" (
 	"cid_long" integer GENERATED ALWAYS AS (("umts_cells"."rnc" * 65536) + "umts_cells"."cid") STORED NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "umts_cells_rnc_cid_unique" UNIQUE("cell_id","rnc","cid")
+	CONSTRAINT "umts_cells_rnc_cid_unique" UNIQUE("cell_id","rnc","cid"),
+	CONSTRAINT "umts_lac_check" CHECK ("lac" BETWEEN 0 AND 65535),
+	CONSTRAINT "umts_rnc_check" CHECK ("rnc" BETWEEN 0 AND 65535),
+	CONSTRAINT "umts_cid_check" CHECK ("cid" BETWEEN 0 AND 65535),
+	CONSTRAINT "umts_arfcn_check" CHECK ("arfcn" BETWEEN 0 AND 16383)
 );
 --> statement-breakpoint
 CREATE TABLE "auth"."accounts" (
@@ -496,7 +509,9 @@ CREATE TABLE "submissions"."proposed_gsm_cells" (
 	"proposed_cell_id" integer PRIMARY KEY,
 	"lac" integer NOT NULL,
 	"cid" integer NOT NULL,
-	"e_gsm" boolean DEFAULT false
+	"e_gsm" boolean DEFAULT false,
+	CONSTRAINT "gsm_lac_check" CHECK ("lac" BETWEEN 0 AND 65535),
+	CONSTRAINT "gsm_cid_check" CHECK ("cid" BETWEEN 0 AND 65535)
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_lte_cells" (
@@ -508,7 +523,9 @@ CREATE TABLE "submissions"."proposed_lte_cells" (
 	"earfcn" integer,
 	"supports_iot" boolean DEFAULT false,
 	CONSTRAINT "clid_check" CHECK ("clid" BETWEEN 0 AND 255),
-	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503)
+	CONSTRAINT "lte_enbid_check" CHECK ("enbid" BETWEEN 0 AND 1048575),
+	CONSTRAINT "pci_check" CHECK ("pci" BETWEEN 0 AND 503),
+	CONSTRAINT "lte_earfcn_check" CHECK ("earfcn" BETWEEN 0 AND 262143)
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_locations" (
@@ -532,7 +549,12 @@ CREATE TABLE "submissions"."proposed_nr_cells" (
 	"pci" integer,
 	"arfcn" integer,
 	"type" "nr_type" NOT NULL,
-	"supports_nr_redcap" boolean DEFAULT false
+	"supports_nr_redcap" boolean DEFAULT false,
+	CONSTRAINT "nr_nrtac_check" CHECK ("nrtac" BETWEEN 0 AND 16777215),
+	CONSTRAINT "nr_gnbid_check" CHECK ("gnbid" BETWEEN 0 AND 4294967295),
+	CONSTRAINT "nr_clid_check" CHECK ("clid" BETWEEN 0 AND 16383),
+	CONSTRAINT "nr_pci_check" CHECK ("pci" BETWEEN 0 AND 1007),
+	CONSTRAINT "nr_arfcn_check" CHECK ("arfcn" BETWEEN 0 AND 3279165)
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."proposed_stations" (
@@ -557,7 +579,11 @@ CREATE TABLE "submissions"."proposed_umts_cells" (
 	"lac" integer,
 	"arfcn" integer,
 	"rnc" integer NOT NULL,
-	"cid" integer NOT NULL
+	"cid" integer NOT NULL,
+	CONSTRAINT "umts_lac_check" CHECK ("lac" BETWEEN 0 AND 65535),
+	CONSTRAINT "umts_rnc_check" CHECK ("rnc" BETWEEN 0 AND 65535),
+	CONSTRAINT "umts_cid_check" CHECK ("cid" BETWEEN 0 AND 65535),
+	CONSTRAINT "umts_arfcn_check" CHECK ("arfcn" BETWEEN 0 AND 16383)
 );
 --> statement-breakpoint
 CREATE TABLE "submissions"."submission_location_photo_selections" (

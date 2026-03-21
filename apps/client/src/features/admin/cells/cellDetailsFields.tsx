@@ -31,6 +31,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.lac as number) ?? ""}
             error={!!detailErrors?.lac}
             disabled={disabled}
+            max={65535}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -61,6 +62,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.lac as number) ?? ""}
             error={!!detailErrors?.lac}
             disabled={disabled}
+            max={65535}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -88,6 +90,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.arfcn as number) ?? ""}
             error={!!detailErrors?.arfcn}
             disabled={disabled}
+            max={16383}
             onDetailChange={onDetailChange}
           />
         </>
@@ -130,6 +133,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.pci as number) ?? ""}
             error={!!detailErrors?.pci}
             disabled={disabled}
+            max={503}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -138,6 +142,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.earfcn as number) ?? ""}
             error={!!detailErrors?.earfcn}
             disabled={disabled}
+            max={262143}
             onDetailChange={onDetailChange}
           />
           <td className="px-1.5 py-1">
@@ -193,6 +198,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.nrtac as number) ?? ""}
             error={!!detailErrors?.nrtac}
             disabled={nsaLock(d.nrtac)}
+            max={16777215}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -201,6 +207,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.clid as number) ?? ""}
             error={!!detailErrors?.clid}
             disabled={nsaLock(d.clid)}
+            max={16383}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -209,6 +216,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.gnbid as number) ?? ""}
             error={!!detailErrors?.gnbid}
             disabled={nsaLock(d.gnbid)}
+            max={4294967295}
             onDetailChange={onDetailChange}
           />
           <DetailComputedCell value={nci} />
@@ -218,6 +226,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.pci as number) ?? ""}
             error={!!detailErrors?.pci}
             disabled={nsaLock(d.pci)}
+            max={1007}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell
@@ -226,6 +235,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.arfcn as number) ?? ""}
             error={!!detailErrors?.arfcn}
             disabled={nsaLock(d.arfcn)}
+            max={3279165}
             onDetailChange={onDetailChange}
           />
           <td className="px-1.5 py-1">

@@ -27,20 +27,37 @@ const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true }).strict
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
 const gsmUpdateSchema = createUpdateSchema(gsmCells)
   .omit({ createdAt: true, updatedAt: true })
-  .extend({ cid: z.number().int().min(0).max(65535).optional() })
+  .extend({ lac: z.number().int().min(0).max(65535).optional(), cid: z.number().int().min(0).max(65535).optional() })
   .strict();
 const umtsUpdateSchema = createUpdateSchema(umtsCells)
   .omit({ createdAt: true, updatedAt: true })
-  .extend({ rnc: z.number().int().min(0).max(65535).optional(), cid: z.number().int().min(0).max(65535).optional() })
+  .extend({
+    lac: z.number().int().min(0).max(65535).nullable().optional(),
+    rnc: z.number().int().min(0).max(65535).optional(),
+    cid: z.number().int().min(0).max(65535).optional(),
+    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
+  })
   .strict();
 const lteUpdateSchema = createUpdateSchema(lteCells)
   .omit({ createdAt: true, updatedAt: true })
-  .extend({ enbid: z.number().int().min(0).max(1048575).optional(), clid: z.number().int().min(0).max(255).optional() })
+  .extend({
+    enbid: z.number().int().min(0).max(1048575).optional(),
+    clid: z.number().int().min(0).max(255).optional(),
+    pci: z.number().int().min(0).max(503).nullable().optional(),
+    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
+  })
   .strict();
 const nrUpdateSchema = createUpdateSchema(nrCells)
   .omit({
     createdAt: true,
     updatedAt: true,
+  })
+  .extend({
+    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
+    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
+    clid: z.number().int().min(0).max(16383).nullable().optional(),
+    pci: z.number().int().min(0).max(1007).nullable().optional(),
+    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
   })
   .strict();
 const requestSchema = cellsUpdateSchema.extend({

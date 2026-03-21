@@ -1,6 +1,14 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-21
+
+### 🚀 Enhancements
+
+- **Audit logs** now support searching by Record ID
+- Added input limits and server-side validation for NR SA cells: TAC 0-16777215 (3GPP TS 38.413, 24-bit), gNBID 0-4294967295 (TS 38.300, up to 32-bit), CLID 0-16383 (TS 38.300, up to 14-bit), PCI 0-1007 (TS 38.211), NR-ARFCN 0-3279165 (TS 38.104)
+- Added input limits and server-side validation for remaining fields: UMTS UARFCN 0-16383 (TS 25.101), LTE PCI 0-503 (TS 36.211), LTE EARFCN 0-262143 (TS 36.101, extended range), GSM LAC 0-65535 (TS 23.003, 16-bit), UMTS LAC 0-65535 (TS 23.003, 16-bit)
+
 # 2026-03-20
 
 ### 🩹 Fixes
@@ -9,7 +17,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed submission approval always force-confirming cells regardless of the `is_confirmed` checkbox state set by the admin
 - Fixed `PATCH /submissions/:id` ignoring `is_confirmed` on proposed cells - admins and editors can now set confirmation per cell; regular submitters cannot self-confirm
 - Fixed UMTS UARFCN field not saving due to incorrect field key
-- Added input limits and server-side validation: GSM CID 0-65535, UMTS RNC 0-65535, UMTS CID 0-65535, LTE eNBID 0-1 048 575, LTE CLID 0-255
+- Added input limits and server-side validation: GSM CID 0-65535 (TS 23.003, 16-bit), UMTS RNC 0-65535 (TS 25.401, 16-bit), UMTS CID 0-65535 (TS 25.401, 16-bit), LTE eNBID 0-1 048 575 (TS 36.413, 20-bit), LTE CLID 0-255 (TS 36.413, 8-bit)
 
 # 2026-03-19
 

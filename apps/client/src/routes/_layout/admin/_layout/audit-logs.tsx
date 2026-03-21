@@ -5,6 +5,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AlertCircleIcon, Search01Icon, Cancel01Icon, Sorting05Icon, ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Input } from "@/components/ui/input";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,6 +40,7 @@ type AuditLogsFilterState = {
   actionsFilter: string[];
   dateFrom: string;
   dateTo: string;
+  recordIdFilter: string;
   sort: "asc" | "desc";
   selectedEntry: AuditLogEntry | null;
 };
@@ -50,6 +52,7 @@ function auditLogsFilterReducer(
     | { type: "SET_ACTIONS_FILTER"; payload: string[] }
     | { type: "SET_DATE_FROM"; payload: string }
     | { type: "SET_DATE_TO"; payload: string }
+    | { type: "SET_RECORD_ID_FILTER"; payload: string }
     | { type: "SET_SORT"; payload: "asc" | "desc" }
     | { type: "SET_SELECTED_ENTRY"; payload: AuditLogEntry | null }
     | { type: "CLEAR_FILTERS" },
@@ -63,12 +66,14 @@ function auditLogsFilterReducer(
       return { ...state, dateFrom: action.payload };
     case "SET_DATE_TO":
       return { ...state, dateTo: action.payload };
+    case "SET_RECORD_ID_FILTER":
+      return { ...state, recordIdFilter: action.payload };
     case "SET_SORT":
       return { ...state, sort: action.payload };
     case "SET_SELECTED_ENTRY":
       return { ...state, selectedEntry: action.payload };
     case "CLEAR_FILTERS":
-      return { ...state, tableFilter: "", actionsFilter: [], dateFrom: "", dateTo: "" };
+      return { ...state, tableFilter: "", actionsFilter: [], dateFrom: "", dateTo: "", recordIdFilter: "" };
     default:
       return state;
   }
@@ -79,6 +84,7 @@ const initialFilterState: AuditLogsFilterState = {
   actionsFilter: [],
   dateFrom: "",
   dateTo: "",
+  recordIdFilter: "",
   sort: "desc",
   selectedEntry: null,
 };
@@ -152,14 +158,14 @@ function AdminAuditLogsPage() {
   const { t, i18n } = useTranslation(["admin", "common"]);
 
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
-  const { tableFilter, actionsFilter, dateFrom, dateTo, sort, selectedEntry } = filterState;
+  const { tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort, selectedEntry } = filterState;
 
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
-  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo);
-  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo].filter(Boolean).length;
+  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || recordIdFilter);
+  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, recordIdFilter].filter(Boolean).length;
 
   const clearAllFilters = useCallback(() => {
     dispatchFilter({ type: "CLEAR_FILTERS" });
@@ -167,7 +173,7 @@ function AdminAuditLogsPage() {
   }, [resetPage]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "audit-logs", pagination.pageIndex, pagination.pageSize, tableFilter, actionsFilter, dateFrom, dateTo, sort],
+    queryKey: ["admin", "audit-logs", pagination.pageIndex, pagination.pageSize, tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
@@ -175,6 +181,7 @@ function AdminAuditLogsPage() {
       params.set("sort", sort);
       if (tableFilter) params.set("table_name", tableFilter);
       if (actionsFilter.length > 0) params.set("actions", actionsFilter.join(","));
+      if (recordIdFilter) params.set("record_id", recordIdFilter);
       if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
       if (dateTo) {
         const to = new Date(dateTo);
@@ -345,6 +352,22 @@ function AdminAuditLogsPage() {
               resetPage();
             }}
           />
+
+          <div className="relative">
+            <HugeiconsIcon
+              icon={Search01Icon}
+              className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+            />
+            <Input
+              className="h-8 pl-7 text-sm w-40"
+              placeholder={t("auditLogs.filters.recordId")}
+              value={recordIdFilter}
+              onChange={(e) => {
+                dispatchFilter({ type: "SET_RECORD_ID_FILTER", payload: e.target.value });
+                resetPage();
+              }}
+            />
+          </div>
 
           <DatePickerButton
             value={dateFrom}

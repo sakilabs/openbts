@@ -1,4 +1,4 @@
-import { sql, count, and, eq, gte, lte, inArray } from "drizzle-orm";
+import { sql, count, and, eq, gte, lte, inArray, ilike } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -17,7 +17,7 @@ const schemaRoute = {
     limit: z.coerce.number().min(1).max(100).default(50),
     offset: z.coerce.number().min(0).default(0),
     table_name: z.string().optional(),
-    record_id: z.coerce.number().optional(),
+    record_id: z.string().optional(),
     actions: z.string().optional(),
     invoked_by: z.string().optional(),
     from: z.string().optional(),
@@ -52,7 +52,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const buildConditions = (fields: typeof auditLogs) => {
     const conditions = [];
     if (table_name) conditions.push(eq(fields.table_name, table_name));
-    if (record_id !== undefined) conditions.push(eq(fields.record_id, record_id));
+    if (record_id) conditions.push(ilike(sql`${fields.record_id}::text`, `%${record_id}%`));
     if (actionList.length === 1) conditions.push(eq(fields.action, actionList[0]!));
     else if (actionList.length > 1) conditions.push(inArray(fields.action, actionList));
     if (invoked_by) conditions.push(eq(fields.invoked_by, invoked_by));

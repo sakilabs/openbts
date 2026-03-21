@@ -6,17 +6,36 @@ import { ErrorResponse } from "../errors.js";
 
 export const gsmInsertSchema = createInsertSchema(proposedGSMCells)
   .omit({ proposed_cell_id: true })
-  .extend({ cid: z.number().int().min(0).max(65535) })
+  .extend({ lac: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
   .strict();
 export const umtsInsertSchema = createInsertSchema(proposedUMTSCells)
   .omit({ proposed_cell_id: true })
-  .extend({ rnc: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
+  .extend({
+    lac: z.number().int().min(0).max(65535).nullable().optional(),
+    rnc: z.number().int().min(0).max(65535),
+    cid: z.number().int().min(0).max(65535),
+    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
+  })
   .strict();
 export const lteInsertSchema = createInsertSchema(proposedLTECells)
   .omit({ proposed_cell_id: true })
-  .extend({ enbid: z.number().int().min(0).max(1048575), clid: z.number().int().min(0).max(255) })
+  .extend({
+    enbid: z.number().int().min(0).max(1048575),
+    clid: z.number().int().min(0).max(255),
+    pci: z.number().int().min(0).max(503).nullable().optional(),
+    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
+  })
   .strict();
-export const nrInsertSchemaBase = createInsertSchema(proposedNRCells).omit({ proposed_cell_id: true }).strict();
+export const nrInsertSchemaBase = createInsertSchema(proposedNRCells)
+  .omit({ proposed_cell_id: true })
+  .extend({
+    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
+    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
+    clid: z.number().int().min(0).max(16383).nullable().optional(),
+    pci: z.number().int().min(0).max(1007).nullable().optional(),
+    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
+  })
+  .strict();
 
 export const gsmSelectSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 export const umtsSelectSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });

@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "9b246e5f-d27a-46a4-b5f5-db9d103d85a9",
+  "id": "4bbb8f1e-af8a-47c5-9c1e-bb18ae870262",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -9737,6 +9737,20 @@
       "entityType": "uniques"
     },
     {
+      "value": "\"lac\" BETWEEN 0 AND 65535",
+      "name": "gsm_lac_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "gsm_cells"
+    },
+    {
+      "value": "\"cid\" BETWEEN 0 AND 65535",
+      "name": "gsm_cid_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "gsm_cells"
+    },
+    {
       "value": "\"latitude\" BETWEEN -90 AND 90",
       "name": "locations_latitude_range",
       "entityType": "checks",
@@ -9758,11 +9772,60 @@
       "table": "lte_cells"
     },
     {
+      "value": "\"enbid\" BETWEEN 0 AND 1048575",
+      "name": "lte_enbid_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "lte_cells"
+    },
+    {
       "value": "\"pci\" BETWEEN 0 AND 503",
       "name": "pci_check",
       "entityType": "checks",
       "schema": "public",
       "table": "lte_cells"
+    },
+    {
+      "value": "\"earfcn\" BETWEEN 0 AND 262143",
+      "name": "lte_earfcn_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "lte_cells"
+    },
+    {
+      "value": "\"nrtac\" BETWEEN 0 AND 16777215",
+      "name": "nr_nrtac_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "nr_cells"
+    },
+    {
+      "value": "\"gnbid\" BETWEEN 0 AND 4294967295",
+      "name": "nr_gnbid_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "nr_cells"
+    },
+    {
+      "value": "\"clid\" BETWEEN 0 AND 16383",
+      "name": "nr_clid_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "nr_cells"
+    },
+    {
+      "value": "\"pci\" BETWEEN 0 AND 1007",
+      "name": "nr_pci_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "nr_cells"
+    },
+    {
+      "value": "\"arfcn\" BETWEEN 0 AND 3279165",
+      "name": "nr_arfcn_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "nr_cells"
     },
     {
       "value": "\"station_id\" ~ '(^.{1,16}$)'",
@@ -9784,6 +9847,34 @@
       "entityType": "checks",
       "schema": "public",
       "table": "uke_locations"
+    },
+    {
+      "value": "\"lac\" BETWEEN 0 AND 65535",
+      "name": "umts_lac_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "umts_cells"
+    },
+    {
+      "value": "\"rnc\" BETWEEN 0 AND 65535",
+      "name": "umts_rnc_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "umts_cells"
+    },
+    {
+      "value": "\"cid\" BETWEEN 0 AND 65535",
+      "name": "umts_cid_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "umts_cells"
+    },
+    {
+      "value": "\"arfcn\" BETWEEN 0 AND 16383",
+      "name": "umts_arfcn_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "umts_cells"
     },
     {
       "value": "\"size\" >= 0",
@@ -9821,8 +9912,29 @@
       "table": "user_lists"
     },
     {
+      "value": "\"lac\" BETWEEN 0 AND 65535",
+      "name": "gsm_lac_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_gsm_cells"
+    },
+    {
+      "value": "\"cid\" BETWEEN 0 AND 65535",
+      "name": "gsm_cid_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_gsm_cells"
+    },
+    {
       "value": "\"clid\" BETWEEN 0 AND 255",
       "name": "clid_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_lte_cells"
+    },
+    {
+      "value": "\"enbid\" BETWEEN 0 AND 1048575",
+      "name": "lte_enbid_check",
       "entityType": "checks",
       "schema": "submissions",
       "table": "proposed_lte_cells"
@@ -9833,6 +9945,76 @@
       "entityType": "checks",
       "schema": "submissions",
       "table": "proposed_lte_cells"
+    },
+    {
+      "value": "\"earfcn\" BETWEEN 0 AND 262143",
+      "name": "lte_earfcn_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_lte_cells"
+    },
+    {
+      "value": "\"nrtac\" BETWEEN 0 AND 16777215",
+      "name": "nr_nrtac_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_nr_cells"
+    },
+    {
+      "value": "\"gnbid\" BETWEEN 0 AND 4294967295",
+      "name": "nr_gnbid_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_nr_cells"
+    },
+    {
+      "value": "\"clid\" BETWEEN 0 AND 16383",
+      "name": "nr_clid_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_nr_cells"
+    },
+    {
+      "value": "\"pci\" BETWEEN 0 AND 1007",
+      "name": "nr_pci_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_nr_cells"
+    },
+    {
+      "value": "\"arfcn\" BETWEEN 0 AND 3279165",
+      "name": "nr_arfcn_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_nr_cells"
+    },
+    {
+      "value": "\"lac\" BETWEEN 0 AND 65535",
+      "name": "umts_lac_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_umts_cells"
+    },
+    {
+      "value": "\"rnc\" BETWEEN 0 AND 65535",
+      "name": "umts_rnc_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_umts_cells"
+    },
+    {
+      "value": "\"cid\" BETWEEN 0 AND 65535",
+      "name": "umts_cid_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_umts_cells"
+    },
+    {
+      "value": "\"arfcn\" BETWEEN 0 AND 16383",
+      "name": "umts_arfcn_check",
+      "entityType": "checks",
+      "schema": "submissions",
+      "table": "proposed_umts_cells"
     }
   ],
   "renames": []

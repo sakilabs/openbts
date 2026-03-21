@@ -74,24 +74,37 @@ export const proposedCells = SubmissionsSchema.table(
   (t) => [index("proposed_cells_submission_id_idx").on(t.submission_id), unique("proposed_cells_unique").on(t.submission_id, t.target_cell_id)],
 );
 
-export const proposedGSMCells = SubmissionsSchema.table("proposed_gsm_cells", {
-  proposed_cell_id: integer("proposed_cell_id")
-    .primaryKey()
-    .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
-  lac: integer("lac").notNull(),
-  cid: integer("cid").notNull(),
-  e_gsm: boolean("e_gsm").default(false),
-});
+export const proposedGSMCells = SubmissionsSchema.table(
+  "proposed_gsm_cells",
+  {
+    proposed_cell_id: integer("proposed_cell_id")
+      .primaryKey()
+      .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    lac: integer("lac").notNull(),
+    cid: integer("cid").notNull(),
+    e_gsm: boolean("e_gsm").default(false),
+  },
+  (t) => [check("gsm_lac_check", sql`${t.lac} BETWEEN 0 AND 65535`), check("gsm_cid_check", sql`${t.cid} BETWEEN 0 AND 65535`)],
+);
 
-export const proposedUMTSCells = SubmissionsSchema.table("proposed_umts_cells", {
-  proposed_cell_id: integer("proposed_cell_id")
-    .primaryKey()
-    .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
-  lac: integer("lac"),
-  arfcn: integer("arfcn"),
-  rnc: integer("rnc").notNull(),
-  cid: integer("cid").notNull(),
-});
+export const proposedUMTSCells = SubmissionsSchema.table(
+  "proposed_umts_cells",
+  {
+    proposed_cell_id: integer("proposed_cell_id")
+      .primaryKey()
+      .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    lac: integer("lac"),
+    arfcn: integer("arfcn"),
+    rnc: integer("rnc").notNull(),
+    cid: integer("cid").notNull(),
+  },
+  (t) => [
+    check("umts_lac_check", sql`${t.lac} BETWEEN 0 AND 65535`),
+    check("umts_rnc_check", sql`${t.rnc} BETWEEN 0 AND 65535`),
+    check("umts_cid_check", sql`${t.cid} BETWEEN 0 AND 65535`),
+    check("umts_arfcn_check", sql`${t.arfcn} BETWEEN 0 AND 16383`),
+  ],
+);
 
 export const proposedLTECells = SubmissionsSchema.table(
   "proposed_lte_cells",
@@ -106,22 +119,37 @@ export const proposedLTECells = SubmissionsSchema.table(
     earfcn: integer("earfcn"),
     supports_iot: boolean("supports_iot").default(false),
   },
-  (t) => [check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`), check("pci_check", sql`${t.pci} BETWEEN 0 AND 503`)],
+  (t) => [
+    check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`),
+    check("lte_enbid_check", sql`${t.enbid} BETWEEN 0 AND 1048575`),
+    check("pci_check", sql`${t.pci} BETWEEN 0 AND 503`),
+    check("lte_earfcn_check", sql`${t.earfcn} BETWEEN 0 AND 262143`),
+  ],
 );
 
-export const proposedNRCells = SubmissionsSchema.table("proposed_nr_cells", {
-  proposed_cell_id: integer("proposed_cell_id")
-    .primaryKey()
-    .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
-  nrtac: integer("nrtac"),
-  gnbid: integer("gnbid"),
-  gnbid_length: integer("gnbid_length").default(24),
-  clid: integer("clid"),
-  pci: integer("pci"),
-  arfcn: integer("arfcn"),
-  type: NRType("type").notNull(),
-  supports_nr_redcap: boolean("supports_nr_redcap").default(false),
-});
+export const proposedNRCells = SubmissionsSchema.table(
+  "proposed_nr_cells",
+  {
+    proposed_cell_id: integer("proposed_cell_id")
+      .primaryKey()
+      .references(() => proposedCells.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    nrtac: integer("nrtac"),
+    gnbid: integer("gnbid"),
+    gnbid_length: integer("gnbid_length").default(24),
+    clid: integer("clid"),
+    pci: integer("pci"),
+    arfcn: integer("arfcn"),
+    type: NRType("type").notNull(),
+    supports_nr_redcap: boolean("supports_nr_redcap").default(false),
+  },
+  (t) => [
+    check("nr_nrtac_check", sql`${t.nrtac} BETWEEN 0 AND 16777215`),
+    check("nr_gnbid_check", sql`${t.gnbid} BETWEEN 0 AND 4294967295`),
+    check("nr_clid_check", sql`${t.clid} BETWEEN 0 AND 16383`),
+    check("nr_pci_check", sql`${t.pci} BETWEEN 0 AND 1007`),
+    check("nr_arfcn_check", sql`${t.arfcn} BETWEEN 0 AND 3279165`),
+  ],
+);
 
 export const proposedStations = SubmissionsSchema.table(
   "proposed_stations",

@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-03-20
+    Last updated: 2026-03-21
   version: 1.0.0
 
 servers:
@@ -2072,27 +2072,27 @@ paths:
                         properties:
                           rat: { type: string, enum: [GSM] }
                           mnc: { type: integer, description: "Combined MCC+MNC (e.g. 26002)" }
-                          lac: { type: integer }
-                          cid: { type: integer }
+                          lac: { type: integer, minimum: 0, maximum: 65535 }
+                          cid: { type: integer, minimum: 0, maximum: 65535 }
                       - type: object
                         required: [rat, mnc, lac, cid, rnc]
                         properties:
                           rat: { type: string, enum: [UMTS] }
                           mnc: { type: integer, description: "Combined MCC+MNC (e.g. 26002)" }
-                          lac: { type: integer }
-                          cid: { type: integer }
-                          rnc: { type: integer, nullable: true }
-                          uarfcn: { type: integer }
+                          lac: { type: integer, minimum: 0, maximum: 65535 }
+                          cid: { type: integer, minimum: 0, maximum: 65535 }
+                          rnc: { type: integer, minimum: 0, maximum: 65535, nullable: true }
+                          uarfcn: { type: integer, minimum: 0, maximum: 16383 }
                       - type: object
                         required: [rat, mnc, tac, enbid, clid, pci]
                         properties:
                           rat: { type: string, enum: [LTE] }
                           mnc: { type: integer, description: "Combined MCC+MNC (e.g. 26002)" }
                           tac: { type: integer }
-                          enbid: { type: integer }
-                          clid: { type: integer }
-                          pci: { type: integer }
-                          earfcn: { type: integer }
+                          enbid: { type: integer, minimum: 0, maximum: 1048575 }
+                          clid: { type: integer, minimum: 0, maximum: 255 }
+                          pci: { type: integer, minimum: 0, maximum: 503 }
+                          earfcn: { type: integer, minimum: 0, maximum: 262143 }
                       - type: object
                         required: [rat, mnc]
                         properties:
@@ -2137,19 +2137,19 @@ paths:
                               required: [rat, rnc, cid]
                               properties:
                                 rat: { type: string, enum: [UMTS] }
-                                rnc: { type: integer }
-                                cid: { type: integer }
-                                lac: { type: integer, nullable: true }
-                                arfcn: { type: integer, nullable: true }
+                                rnc: { type: integer, minimum: 0, maximum: 65535 }
+                                cid: { type: integer, minimum: 0, maximum: 65535 }
+                                lac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
+                                arfcn: { type: integer, minimum: 0, maximum: 16383, nullable: true }
                             - type: object
                               required: [rat, enbid]
                               properties:
                                 rat: { type: string, enum: [LTE] }
-                                enbid: { type: integer }
-                                clid: { type: integer, nullable: true }
+                                enbid: { type: integer, minimum: 0, maximum: 1048575 }
+                                clid: { type: integer, minimum: 0, maximum: 255, nullable: true }
                                 tac: { type: integer, nullable: true }
-                                pci: { type: integer, nullable: true }
-                                earfcn: { type: integer, nullable: true }
+                                pci: { type: integer, minimum: 0, maximum: 503, nullable: true }
+                                earfcn: { type: integer, minimum: 0, maximum: 262143, nullable: true }
                             - type: object
                               required: [rat]
                               properties:
@@ -3251,64 +3251,66 @@ components:
     GsmCellDetails:
       type: object
       properties:
-        lac: { type: integer }
-        cid: { type: integer }
+        lac: { type: integer, minimum: 0, maximum: 65535 }
+        cid: { type: integer, minimum: 0, maximum: 65535 }
         e_gsm: { type: boolean, nullable: true }
     UmtsCellDetails:
       type: object
       properties:
-        lac: { type: integer, nullable: true }
-        arfcn: { type: integer, nullable: true }
-        rnc: { type: integer, nullable: true }
-        cid: { type: integer, nullable: true }
+        lac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
+        arfcn: { type: integer, minimum: 0, maximum: 16383, nullable: true }
+        rnc: { type: integer, minimum: 0, maximum: 65535, nullable: true }
+        cid: { type: integer, minimum: 0, maximum: 65535, nullable: true }
         cid_long: { type: integer, nullable: true }
     LteCellDetails:
       type: object
       properties:
         tac: { type: integer, nullable: true }
-        enbid: { type: integer, nullable: true }
-        clid: { type: integer, nullable: true }
+        enbid: { type: integer, minimum: 0, maximum: 1048575, nullable: true }
+        clid: { type: integer, minimum: 0, maximum: 255, nullable: true }
         ecid: { type: integer, nullable: true }
-        earfcn: { type: integer, nullable: true }
+        pci: { type: integer, minimum: 0, maximum: 503, nullable: true }
+        earfcn: { type: integer, minimum: 0, maximum: 262143, nullable: true }
         supports_iot: { type: boolean, nullable: true }
     NrCellDetails:
       type: object
       properties:
-        nrtac: { type: integer, nullable: true }
-        gnbid: { type: integer, nullable: true }
+        nrtac: { type: integer, minimum: 0, maximum: 16777215, nullable: true }
+        gnbid: { type: integer, minimum: 0, maximum: 4294967295, nullable: true }
         gnbid_length: { type: integer, nullable: true }
-        clid: { type: integer, nullable: true }
+        clid: { type: integer, minimum: 0, maximum: 16383, nullable: true }
         nci: { type: integer, nullable: true }
-        pci: { type: integer, nullable: true }
-        arfcn: { type: integer, nullable: true }
+        pci: { type: integer, minimum: 0, maximum: 1007, nullable: true }
+        arfcn: { type: integer, minimum: 0, maximum: 3279165, nullable: true }
         type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     UmtsCellDetailsInsert:
       description: UMTS cell details for create/update.
       type: object
       properties:
-        lac: { type: integer, nullable: true }
-        arfcn: { type: integer, nullable: true }
-        rnc: { type: integer }
-        cid: { type: integer }
+        lac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
+        arfcn: { type: integer, minimum: 0, maximum: 16383, nullable: true }
+        rnc: { type: integer, minimum: 0, maximum: 65535 }
+        cid: { type: integer, minimum: 0, maximum: 65535 }
     LteCellDetailsInsert:
       description: LTE cell details for create/update.
       type: object
       properties:
         tac: { type: integer, nullable: true }
-        enbid: { type: integer }
-        clid: { type: integer }
-        earfcn: { type: integer, nullable: true }
+        enbid: { type: integer, minimum: 0, maximum: 1048575 }
+        clid: { type: integer, minimum: 0, maximum: 255 }
+        pci: { type: integer, minimum: 0, maximum: 503, nullable: true }
+        earfcn: { type: integer, minimum: 0, maximum: 262143, nullable: true }
         supports_iot: { type: boolean, nullable: true }
     NrCellDetailsInsert:
       description: NR cell details for create/update.
       type: object
       properties:
-        nrtac: { type: integer, nullable: true }
-        gnbid: { type: integer, nullable: true }
-        clid: { type: integer, nullable: true }
-        pci: { type: integer, nullable: true }
-        arfcn: { type: integer, nullable: true }
+        nrtac: { type: integer, minimum: 0, maximum: 16777215, nullable: true }
+        gnbid: { type: integer, minimum: 0, maximum: 4294967295, nullable: true }
+        clid: { type: integer, minimum: 0, maximum: 16383, nullable: true }
+        pci: { type: integer, minimum: 0, maximum: 1007, nullable: true }
+        arfcn: { type: integer, minimum: 0, maximum: 3279165, nullable: true }
         type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     CellDetailsInsert:
