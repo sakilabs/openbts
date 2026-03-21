@@ -54,6 +54,8 @@ const STEP_KEYS: ImportStepKey[] = [
 
 const DELETED_ENTRIES_RETENTION_DAYS = Number(process.env.DELETED_ENTRIES_RETENTION_DAYS) || 180;
 const REDIS_KEY = "uke:import:status";
+const REDIS_LOCK_KEY = "uke:import:lock";
+const LOCK_TTL_SECONDS = 3600;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WORKER_PATH = join(__dirname, "..", "workers", "ukeImport.worker.js");
@@ -125,8 +127,8 @@ export async function startImportJob(options: {
   importRadiolines?: boolean;
   importPermits?: boolean;
 }): Promise<ImportJobStatus> {
-  const existing = await loadJob();
-  if (existing.state === "running") return getImportJobStatus();
+  const acquired = await redis.set(REDIS_LOCK_KEY, "1", { expiration: { type: "EX", value: LOCK_TTL_SECONDS }, condition: "NX" });
+  if (!acquired) return getImportJobStatus();
 
   const job: ImportJobStatus = {
     state: "running",
@@ -301,5 +303,6 @@ async function runJob(
       logger.error("Failed to cleanup downloads", { error: e instanceof Error ? e.message : String(e) });
     }
     await saveJob(job);
+    await redis.del(REDIS_LOCK_KEY);
   }
 }

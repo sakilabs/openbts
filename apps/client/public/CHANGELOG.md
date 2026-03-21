@@ -3,6 +3,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 # 2026-03-21
 
+### 🩹 Fixes
+
+- Fixed UKE import job running twice when multiple server instances trigger it simultaneously
+
 ### 🚀 Enhancements
 
 - **Audit logs** now support searching by Record ID
