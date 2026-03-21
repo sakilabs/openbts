@@ -11,7 +11,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - **Audit logs** now support searching by Record ID
 - Added input limits and server-side validation for NR SA cells: TAC 0-16777215 (3GPP TS 38.413, 24-bit), gNBID 0-4294967295 (TS 38.300, up to 32-bit), CLID 0-16383 (TS 38.300, up to 14-bit), PCI 0-1007 (TS 38.211), NR-ARFCN 0-3279165 (TS 38.104)
-- Added input limits and server-side validation for remaining fields: UMTS UARFCN 0-16383 (TS 25.101), LTE PCI 0-503 (TS 36.211), LTE EARFCN 0-262143 (TS 36.101, extended range), GSM LAC 0-65535 (TS 23.003, 16-bit), UMTS LAC 0-65535 (TS 23.003, 16-bit)
+- Added input limits and server-side validation for remaining fields: UMTS UARFCN 0-16383 (TS 25.101), LTE TAC 0-65535 (TS 36.413, 16-bit), LTE PCI 0-503 (TS 36.211), LTE EARFCN 0-262143 (TS 36.101, extended range), GSM LAC 0-65535 (TS 23.003, 16-bit), UMTS LAC 0-65535 (TS 23.003, 16-bit)
 
 # 2026-03-20
 

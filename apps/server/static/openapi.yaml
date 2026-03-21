@@ -2088,7 +2088,7 @@ paths:
                         properties:
                           rat: { type: string, enum: [LTE] }
                           mnc: { type: integer, description: "Combined MCC+MNC (e.g. 26002)" }
-                          tac: { type: integer }
+                          tac: { type: integer, minimum: 0, maximum: 65535 }
                           enbid: { type: integer, minimum: 0, maximum: 1048575 }
                           clid: { type: integer, minimum: 0, maximum: 255 }
                           pci: { type: integer, minimum: 0, maximum: 503 }
@@ -2147,7 +2147,7 @@ paths:
                                 rat: { type: string, enum: [LTE] }
                                 enbid: { type: integer, minimum: 0, maximum: 1048575 }
                                 clid: { type: integer, minimum: 0, maximum: 255, nullable: true }
-                                tac: { type: integer, nullable: true }
+                                tac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
                                 pci: { type: integer, minimum: 0, maximum: 503, nullable: true }
                                 earfcn: { type: integer, minimum: 0, maximum: 262143, nullable: true }
                             - type: object
@@ -3265,7 +3265,7 @@ components:
     LteCellDetails:
       type: object
       properties:
-        tac: { type: integer, nullable: true }
+        tac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
         enbid: { type: integer, minimum: 0, maximum: 1048575, nullable: true }
         clid: { type: integer, minimum: 0, maximum: 255, nullable: true }
         ecid: { type: integer, nullable: true }
@@ -3296,7 +3296,7 @@ components:
       description: LTE cell details for create/update.
       type: object
       properties:
-        tac: { type: integer, nullable: true }
+        tac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
         enbid: { type: integer, minimum: 0, maximum: 1048575 }
         clid: { type: integer, minimum: 0, maximum: 255 }
         pci: { type: integer, minimum: 0, maximum: 503, nullable: true }

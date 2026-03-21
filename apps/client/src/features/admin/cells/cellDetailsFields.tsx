@@ -106,6 +106,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             value={(d.tac as number) ?? ""}
             error={!!detailErrors?.tac}
             disabled={disabled}
+            max={65535}
             onDetailChange={onDetailChange}
           />
           <DetailInputCell

@@ -120,6 +120,7 @@ export const proposedLTECells = SubmissionsSchema.table(
     supports_iot: boolean("supports_iot").default(false),
   },
   (t) => [
+    check("lte_tac_check", sql`${t.tac} BETWEEN 0 AND 65535`),
     check("clid_check", sql`${t.clid} BETWEEN 0 AND 255`),
     check("lte_enbid_check", sql`${t.enbid} BETWEEN 0 AND 1048575`),
     check("pci_check", sql`${t.pci} BETWEEN 0 AND 503`),

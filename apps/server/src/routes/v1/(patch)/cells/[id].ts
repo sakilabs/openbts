@@ -41,6 +41,7 @@ const umtsUpdateSchema = createUpdateSchema(umtsCells)
 const lteUpdateSchema = createUpdateSchema(lteCells)
   .omit({ createdAt: true, updatedAt: true })
   .extend({
+    tac: z.number().int().min(0).max(65535).nullable().optional(),
     enbid: z.number().int().min(0).max(1048575).optional(),
     clid: z.number().int().min(0).max(255).optional(),
     pci: z.number().int().min(0).max(503).nullable().optional(),
