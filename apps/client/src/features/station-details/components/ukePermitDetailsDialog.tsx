@@ -157,13 +157,10 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                         render={
                           <a
                             href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
-                            aria-label="View on SI2PEM"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
-                          >
-                            <span className="sr-only">{t("specs.si2pemLink")}</span>
-                          </a>
+                          />
                         }
                       >
                         <HugeiconsIcon icon={Link01Icon} className="size-3.5 text-muted-foreground" />
