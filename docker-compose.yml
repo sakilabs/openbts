@@ -12,7 +12,7 @@ services:
         - VITE_ADSENSE_CLIENT=
         - COMMIT_SHA=${COMMIT_SHA}
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       - server
     restart: unless-stopped
@@ -22,7 +22,7 @@ services:
       context: .
       dockerfile: apps/server/docker/Dockerfile
     ports:
-      - "3030:3030"
+      - "127.0.0.1:3030:3030"
     environment:
       # Database
       - DATABASE_URL=postgres://user:password@pgbouncer:6432/openbts
@@ -76,7 +76,7 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     restart: unless-stopped
 
 volumes:
