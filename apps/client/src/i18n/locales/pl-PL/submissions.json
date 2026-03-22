@@ -62,7 +62,7 @@
     "title": "Technologie radiowe",
     "description": "Wybierz technologie radiowe (RAT) dostępne na tej stacji.",
     "noSelection": "Wybierz co najmniej jedną technologię, aby dodać komórki.",
-    "iotHint": "Komórki IoT można oznaczyć w tabelach LTE i NR odpowiednio jako NB-IoT i RedCap"
+    "iotHint": "Komórki IoT można oznaczyć w tabelach LTE i NR odpowiednio jako IoT (NB-IoT/LTE-M) i RedCap"
   },
   "deleteStation": {
     "title": "Usunięcie stacji",

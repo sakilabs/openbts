@@ -62,7 +62,7 @@
     "title": "Radio Technologies",
     "description": "Select radio technologies (RAT) available at this station",
     "noSelection": "Select at least one technology to add cells.",
-    "iotHint": "IoT cells can be marked in LTE and NR tables as NB-IoT and RedCap respectively"
+    "iotHint": "IoT cells can be marked in LTE and NR tables as IoT (NB-IoT/LTE-M) and RedCap respectively"
   },
   "deleteStation": {
     "title": "Delete Station",
