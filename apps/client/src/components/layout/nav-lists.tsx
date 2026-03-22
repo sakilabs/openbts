@@ -63,8 +63,8 @@ export const NavLists = memo(function NavLists() {
   return (
     <SidebarGroup>
       <SidebarMenu>
-        <Collapsible open={open} onOpenChange={setOpen}>
-          <SidebarMenuItem>
+        <SidebarMenuItem>
+          <Collapsible open={open} onOpenChange={setOpen}>
             <CollapsibleTrigger render={<SidebarMenuButton tooltip={t("nav:sections.lists")} className="pr-7" />}>
               <HugeiconsIcon icon={TaskDaily01Icon} />
               <span>{t("nav:sections.lists")}</span>
@@ -72,6 +72,7 @@ export const NavLists = memo(function NavLists() {
             </CollapsibleTrigger>
             <SidebarMenuAction
               showOnHover
+              aria-label={t("lists:create")}
               onClick={(e) => {
                 e.stopPropagation();
                 setDialogOpen(true);
@@ -99,8 +100,8 @@ export const NavLists = memo(function NavLists() {
                 </SidebarMenuSubItem>
               </SidebarMenuSub>
             </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
+          </Collapsible>
+        </SidebarMenuItem>
       </SidebarMenu>
 
       {dialogOpen && (

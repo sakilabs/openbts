@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /stations
+Allow: /statistics
+Allow: /about
+Allow: /contact
+Allow: /tos
+Allow: /changelog
+Allow: /analyzer
+Allow: /clf-export
+Allow: /deleted-entries
+
+Disallow: /admin/
+Disallow: /account/
+Disallow: /preferences
+Disallow: /lists
+Disallow: /submission
+Disallow: /share-target

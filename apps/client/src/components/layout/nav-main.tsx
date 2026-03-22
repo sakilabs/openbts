@@ -71,42 +71,40 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) => (
-          <Collapsible key={item.key} open={openState[item.key] ?? false} onOpenChange={(open) => handleOpenChange(item.key, open)}>
-            <SidebarMenuItem>
-              {item.items?.length ? (
-                <>
-                  <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
-                    <HugeiconsIcon icon={item.icon} />
-                    <span>{item.title}</span>
-                    <HugeiconsIcon
-                      icon={ArrowRight01Icon}
-                      className={cn("ml-auto size-4 transition-transform duration-200", openState[item.key] && "rotate-90")}
-                    />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items?.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.href ?? subItem.url}>
-                          <SidebarMenuSubButton
-                            render={subItem.href ? <a href={subItem.href} target="_blank" rel="noopener noreferrer" /> : <Link to={subItem.url} />}
-                            isActive={!subItem.href && location.pathname === subItem.url}
-                          >
-                            {subItem.icon && <HugeiconsIcon icon={subItem.icon} className="size-3.5" />}
-                            <span>{subItem.title}</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </>
-              ) : (
-                <SidebarMenuButton render={<Link to={item.url} />} tooltip={item.title}>
+          <SidebarMenuItem key={item.key}>
+            {item.items?.length ? (
+              <Collapsible open={openState[item.key] ?? false} onOpenChange={(open) => handleOpenChange(item.key, open)}>
+                <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
                   <HugeiconsIcon icon={item.icon} />
                   <span>{item.title}</span>
-                </SidebarMenuButton>
-              )}
-            </SidebarMenuItem>
-          </Collapsible>
+                  <HugeiconsIcon
+                    icon={ArrowRight01Icon}
+                    className={cn("ml-auto size-4 transition-transform duration-200", openState[item.key] && "rotate-90")}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {item.items?.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.href ?? subItem.url}>
+                        <SidebarMenuSubButton
+                          render={subItem.href ? <a href={subItem.href} target="_blank" rel="noopener noreferrer" /> : <Link to={subItem.url} />}
+                          isActive={!subItem.href && location.pathname === subItem.url}
+                        >
+                          {subItem.icon && <HugeiconsIcon icon={subItem.icon} className="size-3.5" />}
+                          <span>{subItem.title}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            ) : (
+              <SidebarMenuButton render={<Link to={item.url} />} tooltip={item.title}>
+                <HugeiconsIcon icon={item.icon} />
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            )}
+          </SidebarMenuItem>
         ))}
       </SidebarMenu>
     </SidebarGroup>

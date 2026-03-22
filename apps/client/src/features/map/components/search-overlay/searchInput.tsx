@@ -72,7 +72,7 @@ export function SearchInput({
       )}
     >
       <div className="flex items-center gap-2 px-3 py-2">
-        <button type="button" className="md:pointer-events-none shrink-0" onClick={handleMobileSearchClick}>
+        <button type="button" className="md:pointer-events-none shrink-0" onClick={handleMobileSearchClick} aria-label={t("common:actions.search")}>
           <HugeiconsIcon icon={Search01Icon} className="size-5 text-muted-foreground" />
         </button>
 
@@ -86,7 +86,12 @@ export function SearchInput({
               <span className="text-xs whitespace-nowrap max-w-30 truncate" title={filter.value}>
                 {filter.value}
               </span>
-              <button onClick={() => onRemoveFilter(filter)} className="hover:bg-primary/20 rounded p-0.5 transition-colors ml-0.5" type="button">
+              <button
+                onClick={() => onRemoveFilter(filter)}
+                className="hover:bg-primary/20 rounded p-0.5 transition-colors ml-0.5"
+                type="button"
+                aria-label={`${t("common:actions.clear")} ${filter.key}:${filter.value}`}
+              >
                 <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
               </button>
             </div>
@@ -113,6 +118,7 @@ export function SearchInput({
             onClick={onClearSearch}
             className={cn("p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0", !mobileExpanded && !isFocused && "hidden md:block")}
             type="button"
+            aria-label={t("common:actions.clear")}
           >
             <HugeiconsIcon icon={Cancel01Icon} className="size-4 text-muted-foreground" />
           </button>

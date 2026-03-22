@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -112,16 +112,16 @@ function AppLayout() {
                     </BreadcrumbItem>
                   )}
                   {breadcrumbs.map((segment) => (
-                    <span key={segment.titleKey} className="hidden md:contents">
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem>
+                    <Fragment key={segment.titleKey}>
+                      <BreadcrumbSeparator className="hidden md:flex" />
+                      <BreadcrumbItem className="hidden md:inline-flex">
                         {segment.path ? (
                           <BreadcrumbLink render={<Link to={segment.path} />}>{t(segment.titleKey, { ns: segment.i18nNamespace })}</BreadcrumbLink>
                         ) : (
                           <BreadcrumbPage>{t(segment.titleKey, { ns: segment.i18nNamespace })}</BreadcrumbPage>
                         )}
                       </BreadcrumbItem>
-                    </span>
+                    </Fragment>
                   ))}
                   {pageTitle && (
                     <>
