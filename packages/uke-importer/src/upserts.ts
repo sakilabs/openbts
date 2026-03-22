@@ -52,21 +52,23 @@ export async function upsertBands(
     .where(
       and(
         inArray(
+          bands.rat,
+          unique.map((k) => k.rat),
+        ),
+        inArray(
           bands.value,
           unique.map((k) => k.value),
+        ),
+        inArray(
+          bands.variant,
+          unique.map((k) => k.variant),
         ),
         isNull(bands.duplex),
       ),
     );
 
   const map = new Map<string, number>(existing.map((b) => [`${b.rat}:${b.value}:${b.variant}`, b.id]));
-  const existingNames = new Set(existing.map((b) => b.name));
-
-  const toInsert = unique.filter((k) => {
-    if (map.has(`${k.rat}:${k.value}:${k.variant}`)) return false;
-    const name = k.variant === "railway" ? `GSM-R ${k.value}` : `${k.rat} ${k.value}`;
-    return !existingNames.has(name);
-  });
+  const toInsert = unique.filter((k) => !map.has(`${k.rat}:${k.value}:${k.variant}`));
 
   if (toInsert.length) {
     const inserted = await db
