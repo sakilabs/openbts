@@ -171,7 +171,7 @@ const COLUMNS: [PreferenceColumn, PreferenceColumn] = [
       key: "azimuthsMinZoom",
       labelKey: "preferences.azimuthsMinZoom",
       hintKey: "preferences.azimuthsMinZoomHint",
-      min: 14,
+      min: 12,
       max: 17,
       step: 0.1,
       format: (v) => v.toFixed(1),

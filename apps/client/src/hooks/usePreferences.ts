@@ -37,7 +37,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapMeasureCircle: false,
   showStationPhotoPanel: true,
   showAzimuths: false,
-  azimuthsMinZoom: 12,
+  azimuthsMinZoom: 14,
   azimuthLineLength: 200,
 };
 
