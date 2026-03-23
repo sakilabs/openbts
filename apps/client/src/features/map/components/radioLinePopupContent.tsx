@@ -112,7 +112,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
           {linkTypeStyle ? (
             <span
               className={cn(
-                "px-1 py-px rounded-md text-[9px] font-semibold uppercase tracking-wider border",
+                "px-1 py-px rounded-md text-[8px] uppercase tracking-wider border",
                 linkTypeStyle.bg,
                 linkTypeStyle.text,
                 linkTypeStyle.border,
@@ -122,7 +122,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
             </span>
           ) : null}
           {totalSpeed !== null && totalSpeed !== undefined ? (
-            <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[9px] font-mono font-medium text-emerald-600 border border-emerald-500/20">
+            <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[9px] font-mono font-semibold text-emerald-600 border border-emerald-500/20">
               {formatSpeed(totalSpeed)}
             </span>
           ) : null}
@@ -157,18 +157,18 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
             return (
               <div key={dir.id} className="flex items-start gap-1.5">
                 {link.directions.length > 1 && (
-                  <span className="flex items-center gap-px text-[9px] font-bold text-muted-foreground shrink-0 leading-4.5">
+                  <span className="flex items-center gap-px text-[8px] font-bold text-muted-foreground shrink-0 leading-4.5">
                     {isForward ? "A" : "B"}
                     <HugeiconsIcon icon={ArrowRight02Icon} className="size-2.5" />
                     {isForward ? "B" : "A"}
                   </span>
                 )}
                 <div className="flex flex-wrap gap-1">
-                  <span className="px-1 py-px rounded-md bg-muted text-[9px] font-semibold tracking-wider text-muted-foreground border border-border/50">
+                  <span className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold tracking-wider text-muted-foreground border border-border/50">
                     {formatFrequency(dir.link.freq)}
                   </span>
                   {dir.link.polarization && (
-                    <span className="px-1 py-px rounded-md bg-muted text-[9px] font-bold text-muted-foreground border border-border/50">
+                    <span className="px-1 py-px rounded-md bg-muted text-[8px] font-bold text-muted-foreground border border-border/50">
                       {dir.link.polarization}
                     </span>
                   )}
