@@ -1,7 +1,7 @@
 import { sql, type SQL, inArray, and, count, eq, desc } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
-import { bands, operators, ukePermits, ukeLocations, regions } from "@openbts/drizzle";
+import { bands, operators, ukePermits, ukeLocations, regions, ukePermitSectors } from "@openbts/drizzle";
 import db from "../../../../../database/psql.js";
 import redis from "../../../../../database/redis.js";
 import { ErrorResponse } from "../../../../../errors.js";
@@ -90,6 +90,10 @@ const schemaRoute = {
         const n = Number(val);
         return n >= 1 && n <= 30 ? n : null;
       }),
+    azimuths: z
+      .string()
+      .optional()
+      .transform((val): boolean => val === "true" || val === "1"),
   }),
 };
 
@@ -109,7 +113,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   if (cached) return res.send(JSON.parse(cached));
 
-  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentDays } = req.query;
+  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentDays, azimuths } = req.query;
   const offset = (page - 1) * limit;
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
@@ -201,10 +205,45 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         )
       : eq(ukePermits.location_id, ukeLocations.id);
 
-    const permitsAgg = sql<PermitData[]>`
-      COALESCE(
-        json_agg(
-          json_build_object(
+    const sectorsSubquery = azimuths
+      ? sql`(SELECT COALESCE(json_agg(json_build_object(
+            'id', s.id,
+            'azimuth', s.azimuth,
+            'elevation', s.elevation,
+            'antenna_height', s.antenna_height,
+            'antenna_type', s.antenna_type
+          ) ORDER BY s.id), '[]'::json)
+          FROM ${ukePermitSectors} s WHERE s.permit_id = ${ukePermits.id})`
+      : null;
+
+    const permitObject = azimuths
+      ? sql`json_build_object(
+            'id',              ${ukePermits.id},
+            'station_id',      ${ukePermits.station_id},
+            'decision_number', ${ukePermits.decision_number},
+            'decision_type',   ${ukePermits.decision_type},
+            'expiry_date',     ${ukePermits.expiry_date},
+            'source',          ${ukePermits.source},
+            'createdAt',       ${ukePermits.createdAt},
+            'updatedAt',       ${ukePermits.updatedAt},
+            'band', json_build_object(
+              'id',      ${bands.id},
+              'value',   ${bands.value},
+              'rat',     ${bands.rat},
+              'name',    ${bands.name},
+              'duplex',  ${bands.duplex},
+              'variant', ${bands.variant}
+            ),
+            'operator', json_build_object(
+              'id',        ${operators.id},
+              'name',      ${operators.name},
+              'full_name', ${operators.full_name},
+              'parent_id', ${operators.parent_id},
+              'mnc',       ${operators.mnc}
+            ),
+            'sectors', ${sectorsSubquery}
+          )`
+      : sql`json_build_object(
             'id',              ${ukePermits.id},
             'station_id',      ${ukePermits.station_id},
             'decision_number', ${ukePermits.decision_number},
@@ -228,7 +267,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
               'parent_id', ${operators.parent_id},
               'mnc',       ${operators.mnc}
             )
-          ) ORDER BY ${ukePermits.id}
+          )`;
+
+    const permitsAgg = sql<PermitData[]>`
+      COALESCE(
+        json_agg(
+          ${permitObject} ORDER BY ${ukePermits.id}
         ) FILTER (WHERE ${ukePermits.id} IS NOT NULL),
         '[]'::json
       )`;

@@ -44,7 +44,7 @@
   },
   "dialog": {
     "hardwareLease": "Hardware lease from {{operator}} (virtual station)",
-    "btsStation": "BTS Station",
+    "btsStation": "Base station",
     "showOnMap": "Show on map",
     "createStation": "Create station"
   },

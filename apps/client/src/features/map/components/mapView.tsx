@@ -155,13 +155,15 @@ function MapViewInner() {
     onClose: handlePopupClose,
   });
 
+  const wantAzimuths = preferences.showAzimuths && filters.source === "uke" && zoom >= preferences.azimuthsMinZoom;
+
   const {
     data: locationsResponse,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["locations", bounds, filters, preferences.mapStationsLimit],
-    queryFn: () => fetchLocations(bounds, filters, preferences.mapStationsLimit),
+    queryKey: ["locations", bounds, filters, preferences.mapStationsLimit, wantAzimuths],
+    queryFn: () => fetchLocations(bounds, filters, preferences.mapStationsLimit, { azimuths: wantAzimuths }),
     enabled: isLoaded && !!bounds && !isMoving,
     staleTime: 1000 * 60 * 2,
     placeholderData: (prev) => prev,
@@ -283,7 +285,13 @@ function MapViewInner() {
       const { latitude: lat, longitude: lng } = station.location;
       map.flyTo({ center: [lng, lat], zoom: 16, essential: true, speed: 1.5 });
       await new Promise<void>((resolve) => map.once("moveend", () => resolve()));
-      const location: LocationInfo = { id: station.location.id, city: station.location.city, address: null, latitude: lat, longitude: lng };
+      const location: LocationInfo = {
+        id: station.location.id,
+        city: station.location.city ?? undefined,
+        address: undefined,
+        latitude: lat,
+        longitude: lng,
+      };
       showPopup([lng, lat], location, null, [station as unknown as UkeStation], "uke");
       setActivePopupLocation({ locationId: station.location.id, source: "uke" });
     },

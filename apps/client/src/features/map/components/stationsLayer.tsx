@@ -15,10 +15,12 @@ import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 import { useUrlSync } from "../hooks/useURLSync";
 import { useMapLayer } from "../hooks/useMapLayer";
 import { useHeatmapLayer } from "../hooks/useHeatmapLayer";
+import { useAzimuthLayer } from "../hooks/useAzimuthLayer";
 import { showApiError } from "@/lib/api";
 import { POINT_LAYER_ID } from "../constants";
 
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+const EMPTY_UKE_LOCATIONS: UkeLocationWithPermits[] = [];
 
 export function locationQueryKey(locationId: number, filters: StationFilters) {
   return ["location", locationId, filters] as const;
@@ -391,6 +393,15 @@ export function StationsLayer({
   });
 
   useHeatmapLayer({ map, isLoaded, enabled: showHeatmap, showStations: filters.showStations });
+
+  const azimuthEnabled = preferences.showAzimuths && filters.source === "uke" && zoom >= preferences.azimuthsMinZoom;
+  useAzimuthLayer({
+    map,
+    isLoaded,
+    locations: azimuthEnabled ? (locations as unknown as UkeLocationWithPermits[]) : EMPTY_UKE_LOCATIONS,
+    enabled: azimuthEnabled,
+    minZoom: preferences.azimuthsMinZoom,
+  });
 
   useEffect(() => cleanupPopup, [cleanupPopup]);
 

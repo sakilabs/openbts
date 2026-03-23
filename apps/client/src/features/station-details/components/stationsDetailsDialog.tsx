@@ -11,6 +11,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { useSettings } from "@/hooks/useSettings";
 import { usePreferences } from "@/hooks/usePreferences";
+import { formatRelativeTime, formatFullDate } from "@/lib/format";
 import { fetchStation } from "../api";
 import { StationDetailsBody } from "./dialogBody";
 import { MainPhotoPanel } from "./mainPhotoPanel";
@@ -24,7 +25,8 @@ type StationDetailsDialogProps = {
 };
 
 export function StationDetailsDialog({ stationId, source, onClose }: StationDetailsDialogProps) {
-  const { t } = useTranslation(["stationDetails", "common"]);
+  const { t, i18n } = useTranslation(["stationDetails", "common"]);
+  const { t: tCommon } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<TabId>(source === "uke" ? "permits" : "specs");
   const { data: settings } = useSettings();
   const { data: session } = authClient.useSession();
@@ -98,6 +100,21 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         <p className="text-xs text-muted-foreground font-medium opacity-80">
                           {station.extra_address || station.location.address || t("dialog.btsStation")}
                         </p>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <Tooltip>
+                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default">
+                              {tCommon("labels.created")}: {formatRelativeTime(station.createdAt, tCommon)}
+                            </TooltipTrigger>
+                            <TooltipContent>{formatFullDate(station.createdAt, i18n.language)}</TooltipContent>
+                          </Tooltip>
+                          <span className="text-xs text-muted-foreground/40">·</span>
+                          <Tooltip>
+                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default">
+                              {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
+                            </TooltipTrigger>
+                            <TooltipContent>{formatFullDate(station.updatedAt, i18n.language)}</TooltipContent>
+                          </Tooltip>
+                        </div>
                       </div>
                     </div>
                   ) : null}

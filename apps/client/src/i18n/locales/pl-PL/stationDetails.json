@@ -44,7 +44,7 @@
   },
   "dialog": {
     "hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
-    "btsStation": "Stacja BTS",
+    "btsStation": "Stacja bazowa",
     "showOnMap": "Pokaż na mapie",
     "createStation": "Utwórz stację"
   },

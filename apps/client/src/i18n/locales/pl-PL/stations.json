@@ -2,7 +2,7 @@
   "header": {
     "deleteStation": "Usuń stację",
     "confirmDelete": "Czy na pewno chcesz usunąć stację?",
-    "confirmDeleteDesc": "Po usunięciu, stacja zostanie oznaczona jako 'inactive' i nie będzie już widoczna na mapie ani w wynikach wyszukiwania",
+    "confirmDeleteDesc": "Po usunięciu, stacja zostanie oznaczona jako nieaktywna i nie będzie już widoczna na mapie ani w wynikach wyszukiwania",
     "createStation": "Utwórz stację",
     "deleteLocation": "Usuń lokalizację",
     "confirmDeleteLocation": "Czy na pewno chcesz usunąć tę lokalizację?",

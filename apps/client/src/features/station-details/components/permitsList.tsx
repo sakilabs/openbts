@@ -59,9 +59,10 @@ type PermitsListProps = {
   stationId?: number;
   isUkeSource?: boolean;
   permits?: UkePermit[];
+  isExternalLoading?: boolean;
 };
 
-export function PermitsList({ stationId, isUkeSource = false, permits: externalPermits }: PermitsListProps) {
+export function PermitsList({ stationId, isUkeSource = false, permits: externalPermits, isExternalLoading }: PermitsListProps) {
   const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const {
     data: fetchedPermits = [],
@@ -81,7 +82,7 @@ export function PermitsList({ stationId, isUkeSource = false, permits: externalP
   const permitsByRat = useMemo(() => groupPermitsByRat(permits), [permits]);
   const hasDeviceRegistryData = useMemo(() => permits.some((p) => p.source === "device_registry"), [permits]);
 
-  if (!externalPermits && isLoading) {
+  if (isExternalLoading || (!externalPermits && isLoading)) {
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
@@ -222,10 +223,10 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                       </div>
                     </td>
                     <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs">{permit.decision_number}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono text-xs break-all">{permit.decision_number}</span>
                         <Tooltip>
-                          <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                          <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[11px] font-bold uppercase cursor-help">
                             {permit.decision_type}
                           </TooltipTrigger>
                           <TooltipContent>
@@ -262,7 +263,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                                     </SectorValueTooltip>
                                     {sector.antenna_type && (
                                       <Tooltip>
-                                        <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                        <TooltipTrigger className="px-1 py-0.5 rounded bg-muted text-muted-foreground text-[11px] font-bold uppercase cursor-help">
                                           {t(`permits.antennaType.${sector.antenna_type}Short`)}
                                         </TooltipTrigger>
                                         <TooltipContent>{t(`permits.antennaType.${sector.antenna_type}`)}</TooltipContent>
@@ -283,7 +284,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                         {isExpired ? (
                           <>
                             <span className="text-destructive font-medium">{expiryDate.toLocaleDateString(i18n.language)}</span>
-                            <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
+                            <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[11px] font-bold uppercase">
                               {t("common:status.expired")}
                             </span>
                           </>
@@ -295,7 +296,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                             <TooltipTrigger>
                               <Badge
                                 variant="secondary"
-                                className="bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-1.5 py-0 ml-auto cursor-help"
+                                className="bg-green-500/10 text-green-600 dark:text-green-400 text-[11px] px-1.5 py-0 ml-auto cursor-help"
                               >
                                 {t("common:submissionType.new")}
                               </Badge>

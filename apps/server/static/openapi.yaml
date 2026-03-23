@@ -2317,6 +2317,10 @@ paths:
         - name: new
           in: query
           schema: { type: boolean, default: false }
+        - name: azimuths
+          in: query
+          description: When true, each permit includes its `sectors` array with azimuth data. Omitted by default
+          schema: { type: boolean, default: false }
       responses:
         "200":
           description: OK
@@ -3723,6 +3727,10 @@ components:
               allOf:
                 - $ref: "#/components/schemas/Operator"
               nullable: true
+            sectors:
+              type: array
+              description: Included only when `?azimuths=true` is passed to `/uke/locations` endpoint
+              items: { $ref: "#/components/schemas/UkePermitSector" }
     UkePermitWithBandOperatorLocation:
       allOf:
         - $ref: "#/components/schemas/UkePermitBase"
@@ -3745,11 +3753,11 @@ components:
         createdAt: { type: string, format: date-time }
     UkePermitSector:
       type: object
-      description: Available only for `device_registry` source
       properties:
         id: { type: integer }
         azimuth: { type: integer, nullable: true }
         elevation: { type: integer, nullable: true }
+        antenna_height: { type: number, nullable: true }
         antenna_type: { type: string, enum: [indoor, outdoor], nullable: true }
     UkeLocation:
       type: object

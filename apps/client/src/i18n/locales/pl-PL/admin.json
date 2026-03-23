@@ -71,6 +71,17 @@
       "role": "Rola",
       "status": "Status",
       "created": "Utworzono"
+    },
+    "filters": {
+      "labelRole": "Rola",
+      "labelStatus": "Status",
+      "allRoles": "Wszystkie role",
+      "roleUser": "Użytkownik",
+      "roleEditor": "Edytor",
+      "roleAdmin": "Admin",
+      "allStatuses": "Wszystkie statusy",
+      "active": "Aktywny",
+      "banned": "Zbanowany"
     }
   },
   "lists": {

@@ -8,12 +8,14 @@ import { Search01Icon } from "@hugeicons/core-free-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
-import { authClient } from "@/lib/authClient";
+import { fetchJson, API_BASE } from "@/lib/api";
 import type { AdminUser } from "@/features/admin/users/types";
+
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 36, paginationHeight: 40 };
 
 const columnHelper = createColumnHelper<AdminUser>();
@@ -70,6 +72,9 @@ function useColumns() {
   );
 }
 
+type RoleFilter = "all" | "user" | "editor" | "admin";
+type BannedFilter = "all" | "true" | "false";
+
 function AdminUsersPage() {
   "use no memo";
   const navigate = useNavigate();
@@ -77,36 +82,29 @@ function AdminUsersPage() {
   const columns = useColumns();
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [bannedFilter, setBannedFilter] = useState<BannedFilter>("all");
   const debouncedSearch = useDebouncedValue(search, 300);
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [debouncedSearch, setPagination]);
+  }, [debouncedSearch, roleFilter, bannedFilter, setPagination]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "users", pagination.pageIndex, pagination.pageSize, debouncedSearch],
+    queryKey: ["admin", "users", pagination.pageIndex, pagination.pageSize, debouncedSearch, roleFilter, bannedFilter],
     queryFn: async () => {
-      const result = await authClient.admin.listUsers({
-        query: {
-          limit: pagination.pageSize,
-          offset: pagination.pageIndex * pagination.pageSize,
-          ...(debouncedSearch
-            ? {
-                searchValue: debouncedSearch,
-                searchField: "name" as const,
-                searchOperator: "contains" as const,
-              }
-            : {}),
-          sortBy: "createdAt",
-          sortDirection: "desc",
-        },
+      const params = new URLSearchParams({
+        limit: String(pagination.pageSize),
+        offset: String(pagination.pageIndex * pagination.pageSize),
       });
-      if (result.error) throw result.error;
-      return result.data;
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (roleFilter !== "all") params.set("role", roleFilter);
+      if (bannedFilter !== "all") params.set("banned", bannedFilter);
+      return fetchJson<{ data: AdminUser[]; total: number; limit: number }>(`${API_BASE}/admin/users?${params}`);
     },
   });
 
-  const users = (data?.users as AdminUser[]) ?? [];
+  const users = (data?.data as AdminUser[]) ?? [];
   const total = data?.total ?? 0;
 
   const table = useReactTable({
@@ -121,10 +119,37 @@ function AdminUsersPage() {
 
   return (
     <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input placeholder={t("common:placeholder.search")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelRole")}</label>
+          <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder={t("users.filters.allRoles")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("users.filters.allRoles")}</SelectItem>
+              <SelectItem value="user">{t("users.filters.roleUser")}</SelectItem>
+              <SelectItem value="editor">{t("users.filters.roleEditor")}</SelectItem>
+              <SelectItem value="admin">{t("users.filters.roleAdmin")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelStatus")}</label>
+          <Select value={bannedFilter} onValueChange={(v) => setBannedFilter(v as BannedFilter)}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder={t("users.filters.allStatuses")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("users.filters.allStatuses")}</SelectItem>
+              <SelectItem value="false">{t("users.filters.active")}</SelectItem>
+              <SelectItem value="true">{t("users.filters.banned")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

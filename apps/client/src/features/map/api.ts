@@ -23,11 +23,17 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
   return params;
 }
 
-export async function fetchLocations(bounds: string, filters: StationFilters, limit = 1000): Promise<LocationsResponse> {
+export async function fetchLocations(
+  bounds: string,
+  filters: StationFilters,
+  limit = 1000,
+  options?: { azimuths?: boolean },
+): Promise<LocationsResponse> {
   if (filters.source === "uke") {
     const params = buildFilterParams(filters);
     params.set("limit", String(limit));
     params.set("bounds", bounds);
+    if (options?.azimuths) params.set("azimuths", "true");
     const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
     return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
   }

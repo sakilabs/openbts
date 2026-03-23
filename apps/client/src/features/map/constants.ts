@@ -24,6 +24,9 @@ export const PICKER_UKE_CIRCLE_LAYER_ID = "picker-uke-locations-circle";
 export const PICKER_UKE_SYMBOL_LAYER_ID = "picker-uke-locations-symbol";
 export const PICKER_UKE_LAYER_IDS = [PICKER_UKE_CIRCLE_LAYER_ID, PICKER_UKE_SYMBOL_LAYER_ID] as const;
 
+export const AZIMUTHS_SOURCE_ID = "azimuths-source";
+export const AZIMUTHS_LINE_LAYER_ID = "azimuths-layer";
+
 export const RADIOLINES_SOURCE_ID = "radiolines-source";
 export const RADIOLINES_ENDPOINTS_SOURCE_ID = "radiolines-endpoints-source";
 export const RADIOLINES_LINE_LAYER_ID = "radiolines-layer";

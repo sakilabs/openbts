@@ -1,7 +1,7 @@
 {
   "search": {
     "placeholderAddMore": "Add more...",
-    "searching": "Searching results...",
+    "searching": "Searching...",
     "noResults": "No results",
     "noResultsHint": "Try other keywords or filters",
     "found": "Found: {{count, number}}",
@@ -40,7 +40,7 @@
   "stats": {
     "dataInfo": "Data Information",
     "lastUpdated": "Last Updated",
-    "internalData": "Internal DB",
+    "internalData": "Internal database",
     "ukeStations": "UKE Stations",
     "stations": "Number of stations",
     "permits": "Number of permits"
@@ -65,7 +65,7 @@
   },
   "unknownOperator": "Unknown Operator",
   "radiolines": {
-    "title": "Radiolink #{{id}}",
+    "title": "Radioline #{{id}}",
     "viewDetails": "View details",
     "distance": "Distance",
     "txSide": "Transmitting Side (TX)",
@@ -78,7 +78,8 @@
     "polarization": "Polarization",
     "modulation": "Modulation",
     "bandwidth": "Bandwidth",
-    "totalSpeed": "Total speed",
+    "dataRate": "Data rate",
+    "totalSpeed": "Total Speed",
     "height": "Height",
     "antennaGain": "Antenna Gain",
     "antennaHeight": "Antenna Height",

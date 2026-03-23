@@ -4,7 +4,6 @@ import type { Station } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   InformationCircleIcon,
-  Calendar03Icon,
   Globe02Icon,
   Image01Icon,
   Link01Icon,
@@ -12,7 +11,6 @@ import {
   MapsLocation01Icon,
   Message01Icon,
   Note01Icon,
-  RefreshIcon,
   SignalFull02Icon,
   Tag01Icon,
 } from "@hugeicons/core-free-icons";
@@ -58,15 +56,11 @@ export function StationDetailsBody({
   onClose,
   isAdmin = false,
 }: StationDetailsBodyProps) {
-  const { t, i18n } = useTranslation(["stationDetails", "common"]);
+  const { t } = useTranslation(["stationDetails", "common"]);
   const { data: settings } = useSettings();
   const { preferences } = usePreferences();
   const location = useLocation();
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-    [i18n.language],
-  );
   const cellGroups = station ? groupCellsByRat(station.cells) : {};
   const visibleTabs = useMemo(
     () =>
@@ -262,19 +256,6 @@ export function StationDetailsBody({
                       <p className="text-sm p-4 border rounded-xl bg-muted/20">{station.notes}</p>
                     </section>
                   )}
-
-                  <section className="pt-4 border-t">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-2">
-                        <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-                        {t("common:labels.created")}: {dateFormatter.format(new Date(station.createdAt))}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-                        {t("common:labels.updated")}: {dateFormatter.format(new Date(station.updatedAt))}
-                      </span>
-                    </div>
-                  </section>
                 </div>
               )}
 

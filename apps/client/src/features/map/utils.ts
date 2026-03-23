@@ -202,6 +202,18 @@ export function buildRadiolineShareUrl(link: DuplexRadioLink): string {
   return `${window.location.origin}/#map=${zoom}/${lat}/${lng}?radiolines=1&radioline=${link.directions[0].id}`;
 }
 
+export function destinationPoint(lat: number, lon: number, bearingDeg: number, distanceM: number): [number, number] {
+  const φ1 = toRad(lat);
+  const λ1 = toRad(lon);
+  const brng = toRad(bearingDeg);
+  const δ = distanceM / EARTH_RADIUS_M;
+
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(brng));
+  const λ2 = λ1 + Math.atan2(Math.sin(brng) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
+
+  return [φ2 * (180 / Math.PI), λ2 * (180 / Math.PI)];
+}
+
 export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const φ1 = toRad(lat1);
   const φ2 = toRad(lat2);

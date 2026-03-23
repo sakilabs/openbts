@@ -36,7 +36,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
   useEscapeKey(onClose, !!station);
 
-  const { data: permits } = useQuery({
+  const { data: permits, isLoading: permitsLoading } = useQuery({
     queryKey: ["uke-permits-by-station", station?.station_id],
     queryFn: () => (station ? fetchUkePermitsByStationId(station.station_id) : Promise.resolve([])),
     enabled: !!station,
@@ -45,7 +45,8 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
   if (!station) return null;
 
-  const operatorColor = station.operator?.mnc ? getOperatorColor(station.operator.mnc) : "#3b82f6";
+  const { location: stationLocation, operator, station_id } = station;
+  const operatorColor = operator?.mnc ? getOperatorColor(operator.mnc) : "#3b82f6";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto sm:items-center">
@@ -65,27 +66,27 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2 min-w-0">
                   <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
-                    {station.operator?.name ?? t("main:unknownOperator")}
+                    {operator?.name ?? t("main:unknownOperator")}
                   </h2>
-                  <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
+                  <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station_id}</span>
                 </div>
-                {station.location && (
+                {stationLocation && (
                   <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-medium text-foreground/90 truncate">{station.location.address || t("dialog.btsStation")}</p>
+                    <p className="text-sm font-medium text-foreground/90 truncate">{stationLocation.address || t("dialog.btsStation")}</p>
                     <p className="text-xs text-muted-foreground font-medium opacity-80">
-                      {station.location.city}
-                      {station.location.region && ` - ${station.location.region.name}`}
+                      {stationLocation.city}
+                      {stationLocation.region && ` - ${stationLocation.region.name}`}
                     </p>
                   </div>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
-              {station.location && (
+              {stationLocation && (
                 <ShareButton
-                  title={`${station.operator?.name ?? "UKE"} - ${station.station_id}`}
-                  text={`${station.operator?.name ?? "UKE"} ${station.station_id} - ${station.location.city}`}
-                  url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke&station=${station.station_id}`}
+                  title={`${operator?.name ?? "UKE"} - ${station_id}`}
+                  text={`${operator?.name ?? "UKE"} ${station_id} - ${stationLocation.city}`}
+                  url={`${window.location.origin}/#map=16/${stationLocation.latitude}/${stationLocation.longitude}?source=uke&station=${station_id}`}
                   size="md"
                 />
               )}
@@ -93,7 +94,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                 <Link
                   to="/admin/stations/$id"
                   params={{ id: "new" }}
-                  search={{ uke: station.station_id }}
+                  search={{ uke: station_id }}
                   className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
                   onClick={onClose}
                 >
@@ -103,7 +104,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
               ) : isLoggedIn && settings?.submissionsEnabled ? (
                 <Link
                   to="/submission"
-                  search={{ uke: station.station_id }}
+                  search={{ uke: station_id }}
                   className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
                   onClick={onClose}
                 >
@@ -124,39 +125,39 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
             <div className="rounded-xl border bg-muted/20 p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {station.location && (
+                {stationLocation && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
                     <span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}:</span>
                     <span className="font-mono text-sm font-medium break-all">
-                      {formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
+                      {formatCoordinates(stationLocation.latitude, stationLocation.longitude, preferences.gpsFormat)}
                     </span>
-                    <CopyButton text={`${station.location.latitude}, ${station.location.longitude}`} />
+                    <CopyButton text={`${stationLocation.latitude}, ${stationLocation.longitude}`} />
                     {preferences.navLinksDisplay === "inline" && (
-                      <NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
+                      <NavigationLinks latitude={stationLocation.latitude} longitude={stationLocation.longitude} displayMode="inline" />
                     )}
                   </div>
                 )}
 
-                {station.location?.region && (
+                {stationLocation?.region && (
                   <div className="flex items-center gap-2">
                     <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
                     <span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
-                    <span className="text-sm font-medium">{station.location.region.name}</span>
+                    <span className="text-sm font-medium">{stationLocation.region.name}</span>
                   </div>
                 )}
 
                 <div className="flex items-center gap-2">
                   <HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
                   <span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
-                  <span className="font-mono text-sm font-medium">{station.station_id}</span>
+                  <span className="font-mono text-sm font-medium">{station_id}</span>
                   <div className="flex items-center gap-1">
-                    <CopyButton text={station.station_id} />
+                    <CopyButton text={station_id} />
                     <Tooltip>
                       <TooltipTrigger
                         render={
                           <a
-                            href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
+                            href={`https://si2pem.gov.pl/installations/?base_station=${station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
@@ -170,7 +171,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                   </div>
                 </div>
 
-                {station.location && (!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
+                {stationLocation && (!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                   <div className="sm:col-span-2 pt-3 border-t border-border/50">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {!isOnMap && (
@@ -179,7 +180,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                             render={
                               <Link
                                 to="/"
-                                hash={`map=16/${station.location.latitude}/${station.location.longitude}?source=uke&location=${station.location.id}`}
+                                hash={`map=16/${stationLocation.latitude}/${stationLocation.longitude}?source=uke&location=${stationLocation.id}`}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                 onClick={onClose}
                               />
@@ -194,7 +195,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                       {preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
                         <>
                           {!isOnMap && <Separator orientation="vertical" className="h-5 mx-1" />}
-                          <NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="buttons" />
+                          <NavigationLinks latitude={stationLocation.latitude} longitude={stationLocation.longitude} displayMode="buttons" />
                         </>
                       )}
                     </div>
@@ -205,13 +206,17 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
           </div>
 
           <div className="px-6 pb-5">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{t("tabs.permits")}</h3>
-            <PermitsList permits={permits} />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("tabs.permits")}</h3>
+              <Tooltip>
+                <TooltipTrigger className="text-[10px] font-semibold text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-help tracking-widest uppercase">
+                  UKE
+                </TooltipTrigger>
+                <TooltipContent>{t("permits.sourceUke")}</TooltipContent>
+              </Tooltip>
+            </div>
+            <PermitsList permits={permits} isExternalLoading={permitsLoading} />
           </div>
-        </div>
-
-        <div className="shrink-0 px-6 py-3 border-t bg-muted/20">
-          <p className="text-xs text-muted-foreground text-center">{t("permits.sourceUke")}</p>
         </div>
       </div>
     </div>

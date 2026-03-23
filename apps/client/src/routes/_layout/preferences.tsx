@@ -158,6 +158,24 @@ const COLUMNS: [PreferenceColumn, PreferenceColumn] = [
       itemLabelKey: "preferences.mapMeasureCircleLabel",
       itemDescKey: "preferences.mapMeasureCircleDesc",
     },
+    {
+      type: "checkbox",
+      key: "showAzimuths",
+      labelKey: "preferences.showAzimuths",
+      hintKey: "preferences.showAzimuthsHint",
+      itemLabelKey: "preferences.showAzimuthsLabel",
+      itemDescKey: "preferences.showAzimuthsDesc",
+    },
+    {
+      type: "slider",
+      key: "azimuthsMinZoom",
+      labelKey: "preferences.azimuthsMinZoom",
+      hintKey: "preferences.azimuthsMinZoomHint",
+      min: 14,
+      max: 17,
+      step: 0.1,
+      format: (v) => v.toFixed(1),
+    },
   ],
 ];
 

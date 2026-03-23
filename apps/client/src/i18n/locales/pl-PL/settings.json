@@ -45,7 +45,13 @@
     "mapMeasureCircle": "Okrąg zasięgu",
     "mapMeasureCircleHint": "Rysuj okrąg o podanym promieniu wokół punktu odniesienia na mapie",
     "mapMeasureCircleLabel": "Włącz okrąg zasięgu",
-    "mapMeasureCircleDesc": "Promień okręgu będzie odpowiadał długości linii pomiarowej"
+    "mapMeasureCircleDesc": "Promień okręgu będzie odpowiadał długości linii pomiarowej",
+    "showAzimuths": "Azymuty anten",
+    "showAzimuthsHint": "Wyświetlaj linie kierunkowe azymutów ze stacji na mapie (tylko źródło danych UKE)",
+    "showAzimuthsLabel": "Pokaż azymuty",
+    "showAzimuthsDesc": "Rysuj linie wskazujące kierunki sektorów antenowych",
+    "azimuthsMinZoom": "Minimalny zoom azymutów",
+    "azimuthsMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego azymuty będą widoczne na mapie"
   },
   "page": {
     "title": "Ustawienia konta",

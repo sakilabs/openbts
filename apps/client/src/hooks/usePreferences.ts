@@ -17,6 +17,8 @@ export interface UserPreferences {
   mapRightClickMeasure: boolean;
   mapMeasureCircle: boolean;
   showStationPhotoPanel: boolean;
+  showAzimuths: boolean;
+  azimuthsMinZoom: number;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -33,6 +35,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapRightClickMeasure: false,
   mapMeasureCircle: false,
   showStationPhotoPanel: true,
+  showAzimuths: false,
+  azimuthsMinZoom: 15,
 };
 
 let listeners: Array<() => void> = [];

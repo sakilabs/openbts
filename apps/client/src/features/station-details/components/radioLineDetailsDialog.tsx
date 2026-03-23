@@ -85,14 +85,14 @@ function DirectionButtonsRow({
                 )}
                 onClick={() => onSelectDir(idx)}
               >
-                <span className="flex items-center gap-px text-[9px] font-bold text-muted-foreground">
+                <span className="flex items-center gap-px text-[10px] font-bold text-muted-foreground">
                   {isForward ? "A" : "B"}
                   <HugeiconsIcon icon={ArrowRight02Icon} className="size-2.5" />
                   {isForward ? "B" : "A"}
                 </span>
                 <span className="font-mono">{formatFrequency(dir.link.freq)}</span>
-                {dir.link.polarization && <span className="text-[9px] font-bold text-muted-foreground">{dir.link.polarization}</span>}
-                <span className="text-[9px] text-muted-foreground">#{dir.id}</span>
+                {dir.link.polarization && <span className="text-[10px] font-bold text-muted-foreground">{dir.link.polarization}</span>}
+                <span className="text-[10px] text-muted-foreground">#{dir.id}</span>
               </button>
               {isLastInPair && !isLastDirection && <span className="w-px h-5 bg-border shrink-0" aria-hidden />}
             </div>
@@ -144,7 +144,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
-                    {normalizeOperatorName(operatorName)}
+                    {operatorName}
                   </h2>
                   {linkTypeStyle ? (
                     <span
@@ -221,7 +221,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   <InfoRow icon={Activity01Icon} label={t("radiolines.modulation")} value={radioLine.link.modulation_type} />
                 ) : null}
                 {dirSpeed !== null && dirSpeed !== undefined ? (
-                  <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.bandwidth")} value={formatSpeed(dirSpeed)} mono />
+                  <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.dataRate")} value={formatSpeed(dirSpeed)} mono />
                 ) : radioLine.link.bandwidth !== null && radioLine.link.bandwidth !== undefined ? (
                   <InfoRow icon={DashboardSpeed01Icon} label={t("radiolines.bandwidth")} value={formatBandwidth(radioLine.link.bandwidth)} />
                 ) : null}
@@ -300,7 +300,15 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
           </div>
 
           <div className="px-6 pb-5">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">{t("stationDetails:permits.permit")}</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("stationDetails:permits.permit")}</h3>
+              <Tooltip>
+                <TooltipTrigger className="text-[10px] font-semibold text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-help tracking-widest uppercase">
+                  UKE
+                </TooltipTrigger>
+                <TooltipContent>{t("stationDetails:permits.sourceUke")}</TooltipContent>
+              </Tooltip>
+            </div>
             <div className="rounded-xl border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -321,10 +329,10 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                         <tr key={dir.id} className="hover:bg-muted/20 transition-colors border-b last:border-b-0">
                           <td className="px-4 py-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs">{dir.permit.number || "-"}</span>
+                              <span className="font-mono text-xs break-all">{dir.permit.number || "-"}</span>
                               {dir.permit.decision_type && (
                                 <Tooltip>
-                                  <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[9px] font-bold uppercase cursor-help">
+                                  <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[11px] font-bold uppercase cursor-help">
                                     {dir.permit.decision_type}
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -334,7 +342,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                                   </TooltipContent>
                                 </Tooltip>
                               )}
-                              <span className="text-[10px] text-muted-foreground font-mono">{formatFrequency(dir.link.freq)}</span>
+                              <span className="text-[11px] text-muted-foreground font-mono">{formatFrequency(dir.link.freq)}</span>
                             </div>
                           </td>
                           <td className="px-4 py-2.5">
@@ -344,7 +352,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                                 <span className="text-destructive font-medium">
                                   {new Date(dir.permit.expiry_date).toLocaleDateString(i18n.language)}
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[9px] font-bold uppercase">
+                                <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[11px] font-bold uppercase">
                                   {t("common:status.expired")}
                                 </span>
                               </div>
@@ -360,10 +368,6 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="shrink-0 px-6 py-3 border-t bg-muted/20">
-          <p className="text-xs text-muted-foreground text-center">{t("stationDetails:permits.sourceUke")}</p>
         </div>
       </div>
     </div>
