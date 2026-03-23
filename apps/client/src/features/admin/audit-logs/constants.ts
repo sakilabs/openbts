@@ -66,7 +66,7 @@ export const ACTION_GROUPS: { label: string; actions: string[] }[] = [
     actions: ["submissions.create", "submissions.update", "submissions.delete", "submissions.approve", "submissions.reject", "submissions.cleanup"],
   },
   { label: "Settings", actions: ["settings.update"] },
-  { label: "Comments", actions: ["station_comments.create", "station_comments.delete"] },
+  { label: "Comments", actions: ["station_comments.create", "station_comments.update", "station_comments.delete"] },
   { label: "Location Photos", actions: ["location_photos.create", "location_photos.update", "location_photos.delete"] },
   { label: "Submission Photos", actions: ["submission_photos.create", "submission_photos.update", "submission_photos.delete"] },
   { label: "User Lists", actions: ["user_lists.create", "user_lists.update", "user_lists.delete"] },
