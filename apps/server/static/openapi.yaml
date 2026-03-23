@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-03-21
+    Last updated: 2026-03-23
   version: 1.0.0
 
 servers:
@@ -697,7 +697,8 @@ paths:
   /comments:
     get:
       tags: [Comments]
-      summary: List all station comments. Requires `read:comments`
+      summary: List all station comments
+      description: Requires `read:comments` permission
       security:
         - CookieAuth: []
       parameters:
@@ -724,7 +725,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [data, total, limit]
+                required: [data, totalCount]
                 properties:
                   data:
                     type: array
@@ -749,8 +750,7 @@ paths:
                                 id: { type: integer }
                                 station_id: { type: string }
                                 operator: { $ref: "#/components/schemas/Operator", nullable: true }
-                  total: { type: integer }
-                  limit: { type: integer }
+                  totalCount: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
