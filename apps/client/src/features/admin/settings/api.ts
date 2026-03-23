@@ -11,6 +11,7 @@ export interface RuntimeSettings {
   allowedUnauthenticatedRoutes: string[];
   disabledRoutes: string[];
   enableStationComments: boolean;
+  commentQueueEnabled: boolean;
   submissionsEnabled: boolean;
   enableUserLists: boolean;
   photosEnabled: boolean;

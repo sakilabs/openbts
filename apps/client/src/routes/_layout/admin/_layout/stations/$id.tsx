@@ -570,7 +570,6 @@ function StationDetailForm({
               showEditLocationLink={!isCreateMode}
             />
 
-            {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
             {isCreateMode ? (
               <PhotoUploadSection
                 photos={photos}
@@ -583,6 +582,7 @@ function StationDetailForm({
             ) : (
               station?.location?.id && <StationPhotoSelector stationId={station.id} locationId={station.location.id} />
             )}
+            {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
           </div>
 
           <div className="w-full lg:flex-3 min-w-0 space-y-2">

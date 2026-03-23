@@ -11,7 +11,27 @@
     "settings": "Ustawienia",
     "ukeImport": "Import UKE",
     "ukePermits": "Nieprzypisane pozwolenia UKE",
-    "lists": "Listy"
+    "lists": "Listy",
+    "comments": "Komentarze"
+  },
+  "comments": {
+    "table": {
+      "author": "Autor",
+      "station": "Stacja",
+      "content": "Treść",
+      "attachments": "Załączniki",
+      "empty": "Brak komentarzy",
+      "emptyHint": "Nie ma jeszcze żadnych komentarzy"
+    },
+    "approveSuccess": "Komentarz zatwierdzony",
+    "deleteTitle": "Usuń komentarz",
+    "deleteDesc": "Czy na pewno chcesz usunąć ten komentarz? Spowoduje to również usunięcie wszystkich załączników. Tej operacji nie można cofnąć.",
+    "deleteSuccess": "Komentarz usunięty",
+    "deleteError": "Nie udało się usunąć komentarza",
+    "editTitle": "Edytuj komentarz",
+    "editSuccess": "Komentarz zaktualizowany",
+    "editError": "Nie udało się zaktualizować komentarza",
+    "noAttachments": "Brak załączników"
   },
   "settings": {
     "title": "Ustawienia systemowe",
@@ -32,6 +52,9 @@
     "enableComments": "Włącz komentarze",
     "commentsEnabled": "Użytkownicy mogą komentować stacje",
     "commentsDisabled": "Komentarze są wyłączone",
+    "commentQueue": "Kolejka komentarzy",
+    "commentQueueEnabled": "Komentarze wymagają zatwierdzenia przed wyświetleniem",
+    "commentQueueDisabled": "Komentarze są publikowane natychmiast",
     "submissions": "Zgłoszenia",
     "submissionsDesc": "Pozwól użytkownikom zgłaszać nowe stacje",
     "enableSubmissions": "Włącz zgłoszenia",

@@ -11,6 +11,7 @@ export const settingsDataSchema = z.object({
   allowedUnauthenticatedRoutes: z.array(z.string().min(1)),
   disabledRoutes: z.array(z.string().min(1)),
   enableStationComments: z.boolean(),
+  commentQueueEnabled: z.boolean(),
   submissionsEnabled: z.boolean(),
   enableUserLists: z.boolean(),
   photosEnabled: z.boolean(),

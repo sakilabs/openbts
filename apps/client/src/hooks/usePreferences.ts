@@ -36,7 +36,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapMeasureCircle: false,
   showStationPhotoPanel: true,
   showAzimuths: false,
-  azimuthsMinZoom: 15,
+  azimuthsMinZoom: 12,
 };
 
 let listeners: Array<() => void> = [];

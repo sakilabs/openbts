@@ -13,6 +13,7 @@ CREATE TYPE "rat" AS ENUM('GSM', 'CDMA', 'UMTS', 'LTE', 'NR', 'IOT');--> stateme
 CREATE TYPE "api_token_tier" AS ENUM('basic', 'pro', 'unlimited');--> statement-breakpoint
 CREATE TYPE "audit_action" AS ENUM('stations.create', 'stations.update', 'stations.delete', 'cells.create', 'cells.update', 'cells.delete', 'locations.create', 'locations.update', 'locations.delete', 'operators.create', 'operators.update', 'operators.delete', 'bands.create', 'bands.update', 'bands.delete', 'regions.create', 'regions.update', 'regions.delete', 'submissions.create', 'submissions.update', 'submissions.delete', 'submissions.approve', 'submissions.reject', 'submissions.cleanup', 'settings.update', 'station_comments.create', 'station_comments.delete', 'station_photos.create', 'station_photos.update', 'station_photos.delete', 'location_photos.create', 'location_photos.update', 'location_photos.delete', 'submission_photos.create', 'submission_photos.update', 'submission_photos.delete', 'user_lists.create', 'user_lists.update', 'user_lists.delete', 'uke_import.start');--> statement-breakpoint
 CREATE TYPE "audit_source" AS ENUM('api', 'import', 'system');--> statement-breakpoint
+CREATE TYPE "comment_status" AS ENUM('pending', 'approved');--> statement-breakpoint
 CREATE TYPE "notification_type" AS ENUM('submission_approved', 'submission_rejected', 'new_submission');--> statement-breakpoint
 CREATE TYPE "role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
 CREATE TYPE "cell_operation" AS ENUM('add', 'update', 'delete');--> statement-breakpoint
@@ -428,6 +429,7 @@ CREATE TABLE "station_comments" (
 	"user_id" uuid NOT NULL,
 	"attachments" jsonb,
 	"content" text NOT NULL,
+	"status" "comment_status" DEFAULT 'approved'::"comment_status" NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
 	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "station_comments_content_len" CHECK (char_length("content") BETWEEN 1 AND 10000)

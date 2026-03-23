@@ -39,6 +39,7 @@ import { Route as LayoutAdminLayoutSubmissionsIndexRouteImport } from './routes/
 import { Route as LayoutAdminLayoutStationsIndexRouteImport } from './routes/_layout/admin/_layout/stations/index'
 import { Route as LayoutAdminLayoutLocationsIndexRouteImport } from './routes/_layout/admin/_layout/locations/index'
 import { Route as LayoutAdminLayoutListsIndexRouteImport } from './routes/_layout/admin/_layout/lists/index'
+import { Route as LayoutAdminLayoutCommentsIndexRouteImport } from './routes/_layout/admin/_layout/comments/index'
 import { Route as LayoutAdminLayoutUsersIdRouteImport } from './routes/_layout/admin/_layout/users/$id'
 import { Route as LayoutAdminLayoutSubmissionsIdRouteImport } from './routes/_layout/admin/_layout/submissions/$id'
 import { Route as LayoutAdminLayoutStationsIdRouteImport } from './routes/_layout/admin/_layout/stations/$id'
@@ -203,6 +204,12 @@ const LayoutAdminLayoutListsIndexRoute =
     path: '/lists/',
     getParentRoute: () => LayoutAdminLayoutRoute,
   } as any)
+const LayoutAdminLayoutCommentsIndexRoute =
+  LayoutAdminLayoutCommentsIndexRouteImport.update({
+    id: '/comments/',
+    path: '/comments/',
+    getParentRoute: () => LayoutAdminLayoutRoute,
+  } as any)
 const LayoutAdminLayoutUsersIdRoute =
   LayoutAdminLayoutUsersIdRouteImport.update({
     id: '/users/$id',
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/admin/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
   '/admin/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
   '/admin/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/admin/comments/': typeof LayoutAdminLayoutCommentsIndexRoute
   '/admin/lists/': typeof LayoutAdminLayoutListsIndexRoute
   '/admin/locations/': typeof LayoutAdminLayoutLocationsIndexRoute
   '/admin/stations/': typeof LayoutAdminLayoutStationsIndexRoute
@@ -291,6 +299,7 @@ export interface FileRoutesByTo {
   '/admin/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
   '/admin/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
   '/admin/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/admin/comments': typeof LayoutAdminLayoutCommentsIndexRoute
   '/admin/lists': typeof LayoutAdminLayoutListsIndexRoute
   '/admin/locations': typeof LayoutAdminLayoutLocationsIndexRoute
   '/admin/stations': typeof LayoutAdminLayoutStationsIndexRoute
@@ -328,6 +337,7 @@ export interface FileRoutesById {
   '/_layout/admin/_layout/stations/$id': typeof LayoutAdminLayoutStationsIdRoute
   '/_layout/admin/_layout/submissions/$id': typeof LayoutAdminLayoutSubmissionsIdRoute
   '/_layout/admin/_layout/users/$id': typeof LayoutAdminLayoutUsersIdRoute
+  '/_layout/admin/_layout/comments/': typeof LayoutAdminLayoutCommentsIndexRoute
   '/_layout/admin/_layout/lists/': typeof LayoutAdminLayoutListsIndexRoute
   '/_layout/admin/_layout/locations/': typeof LayoutAdminLayoutLocationsIndexRoute
   '/_layout/admin/_layout/stations/': typeof LayoutAdminLayoutStationsIndexRoute
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/admin/stations/$id'
     | '/admin/submissions/$id'
     | '/admin/users/$id'
+    | '/admin/comments/'
     | '/admin/lists/'
     | '/admin/locations/'
     | '/admin/stations/'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/admin/stations/$id'
     | '/admin/submissions/$id'
     | '/admin/users/$id'
+    | '/admin/comments'
     | '/admin/lists'
     | '/admin/locations'
     | '/admin/stations'
@@ -435,6 +447,7 @@ export interface FileRouteTypes {
     | '/_layout/admin/_layout/stations/$id'
     | '/_layout/admin/_layout/submissions/$id'
     | '/_layout/admin/_layout/users/$id'
+    | '/_layout/admin/_layout/comments/'
     | '/_layout/admin/_layout/lists/'
     | '/_layout/admin/_layout/locations/'
     | '/_layout/admin/_layout/stations/'
@@ -659,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminLayoutListsIndexRouteImport
       parentRoute: typeof LayoutAdminLayoutRoute
     }
+    '/_layout/admin/_layout/comments/': {
+      id: '/_layout/admin/_layout/comments/'
+      path: '/comments'
+      fullPath: '/admin/comments/'
+      preLoaderRoute: typeof LayoutAdminLayoutCommentsIndexRouteImport
+      parentRoute: typeof LayoutAdminLayoutRoute
+    }
     '/_layout/admin/_layout/users/$id': {
       id: '/_layout/admin/_layout/users/$id'
       path: '/users/$id'
@@ -713,6 +733,7 @@ interface LayoutAdminLayoutRouteChildren {
   LayoutAdminLayoutStationsIdRoute: typeof LayoutAdminLayoutStationsIdRoute
   LayoutAdminLayoutSubmissionsIdRoute: typeof LayoutAdminLayoutSubmissionsIdRoute
   LayoutAdminLayoutUsersIdRoute: typeof LayoutAdminLayoutUsersIdRoute
+  LayoutAdminLayoutCommentsIndexRoute: typeof LayoutAdminLayoutCommentsIndexRoute
   LayoutAdminLayoutListsIndexRoute: typeof LayoutAdminLayoutListsIndexRoute
   LayoutAdminLayoutLocationsIndexRoute: typeof LayoutAdminLayoutLocationsIndexRoute
   LayoutAdminLayoutStationsIndexRoute: typeof LayoutAdminLayoutStationsIndexRoute
@@ -729,6 +750,7 @@ const LayoutAdminLayoutRouteChildren: LayoutAdminLayoutRouteChildren = {
   LayoutAdminLayoutStationsIdRoute: LayoutAdminLayoutStationsIdRoute,
   LayoutAdminLayoutSubmissionsIdRoute: LayoutAdminLayoutSubmissionsIdRoute,
   LayoutAdminLayoutUsersIdRoute: LayoutAdminLayoutUsersIdRoute,
+  LayoutAdminLayoutCommentsIndexRoute: LayoutAdminLayoutCommentsIndexRoute,
   LayoutAdminLayoutListsIndexRoute: LayoutAdminLayoutListsIndexRoute,
   LayoutAdminLayoutLocationsIndexRoute: LayoutAdminLayoutLocationsIndexRoute,
   LayoutAdminLayoutStationsIndexRoute: LayoutAdminLayoutStationsIndexRoute,

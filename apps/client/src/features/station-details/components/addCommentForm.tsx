@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, type SubmitEvent, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ImageAdd01Icon, Cancel01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
@@ -56,10 +57,11 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
         content,
         images.map((img) => img.file),
       ),
-    onSuccess: () => {
+    onSuccess: (res: { data: { status: "pending" | "approved" } }) => {
       setContent("");
       setImages([]);
-      return queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
+      if (res.data.status === "pending") toast.info(t("comments.pendingApproval"));
+      void queryClient.invalidateQueries({ queryKey: ["station-comments", stationId] });
     },
   });
 

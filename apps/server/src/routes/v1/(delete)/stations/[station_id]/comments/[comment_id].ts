@@ -1,5 +1,8 @@
-import { stationComments } from "@openbts/drizzle";
-import { eq } from "drizzle-orm";
+import path from "node:path";
+import fs from "node:fs/promises";
+
+import { stationComments, attachments } from "@openbts/drizzle";
+import { eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
@@ -10,6 +13,8 @@ import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { Route, EmptyResponse } from "../../../../../../interfaces/routes.interface.js";
+
+const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 
 const schemaRoute = {
   params: z.object({
@@ -38,7 +43,21 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
   if (comment.user_id !== userId && !isPrivileged) throw new ErrorResponse("FORBIDDEN");
 
   try {
+    const commentAttachments = comment.attachments ?? [];
+
     await db.delete(stationComments).where(eq(stationComments.id, comment_id));
+
+    if (commentAttachments.length > 0) {
+      const uuids = commentAttachments.map((a) => a.uuid);
+      await db.delete(attachments).where(inArray(attachments.uuid, uuids));
+      await Promise.all(
+        uuids.map(async (uuid) => {
+          try {
+            await fs.unlink(path.join(UPLOAD_DIR, `${uuid}.webp`));
+          } catch {}
+        }),
+      );
+    }
 
     await createAuditLog(
       {

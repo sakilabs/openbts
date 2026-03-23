@@ -13,6 +13,7 @@ export interface RuntimeSettings {
   allowedUnauthenticatedRoutes: NonEmptyString[];
   disabledRoutes: NonEmptyString[];
   enableStationComments: boolean;
+  commentQueueEnabled: boolean;
   submissionsEnabled: boolean;
   enableUserLists: boolean;
   photosEnabled: boolean;
@@ -27,6 +28,7 @@ const defaultSettings: RuntimeSettings = {
   allowedUnauthenticatedRoutes: ["/api/v1/auth"] as NonEmptyString[],
   disabledRoutes: [],
   enableStationComments: false,
+  commentQueueEnabled: false,
   submissionsEnabled: true,
   enableUserLists: false,
   photosEnabled: true,
@@ -50,6 +52,7 @@ function isSettings(obj: unknown): obj is RuntimeSettings {
     Array.isArray(candidate.disabledRoutes) &&
     candidate.disabledRoutes.every(isNonEmptyString) &&
     typeof candidate.enableStationComments === "boolean" &&
+    typeof candidate.commentQueueEnabled === "boolean" &&
     typeof candidate.submissionsEnabled === "boolean" &&
     typeof candidate.enableUserLists === "boolean" &&
     typeof candidate.photosEnabled === "boolean" &&
@@ -65,6 +68,7 @@ function deepMergeSettings(base: RuntimeSettings, patch: Partial<RuntimeSettings
   const next: RuntimeSettings = { ...base };
   if (typeof patch.enforceAuthForAllRoutes === "boolean") next.enforceAuthForAllRoutes = patch.enforceAuthForAllRoutes;
   if (typeof patch.enableStationComments === "boolean") next.enableStationComments = patch.enableStationComments;
+  if (typeof patch.commentQueueEnabled === "boolean") next.commentQueueEnabled = patch.commentQueueEnabled;
   if (typeof patch.submissionsEnabled === "boolean") next.submissionsEnabled = patch.submissionsEnabled;
   if (typeof patch.photosEnabled === "boolean") next.photosEnabled = patch.photosEnabled;
   if (typeof patch.enableUserLists === "boolean") next.enableUserLists = patch.enableUserLists;

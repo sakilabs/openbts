@@ -156,6 +156,7 @@ function AdminSettingsPage() {
             allowedUnauthenticatedRoutes: [],
             disabledRoutes: [],
             enableStationComments: false,
+            commentQueueEnabled: false,
             submissionsEnabled: true,
             photosEnabled: true,
             enableUserLists: false,
@@ -169,6 +170,7 @@ function AdminSettingsPage() {
     return (
       formData.enforceAuthForAllRoutes !== settings.enforceAuthForAllRoutes ||
       formData.enableStationComments !== settings.enableStationComments ||
+      formData.commentQueueEnabled !== settings.commentQueueEnabled ||
       formData.submissionsEnabled !== settings.submissionsEnabled ||
       formData.photosEnabled !== settings.photosEnabled ||
       formData.enableUserLists !== settings.enableUserLists ||
@@ -211,6 +213,9 @@ function AdminSettingsPage() {
       }
       if (formData.enableStationComments !== settings.enableStationComments) {
         patch.enableStationComments = formData.enableStationComments;
+      }
+      if (formData.commentQueueEnabled !== settings.commentQueueEnabled) {
+        patch.commentQueueEnabled = formData.commentQueueEnabled;
       }
       if (formData.submissionsEnabled !== settings.submissionsEnabled) {
         patch.submissionsEnabled = formData.submissionsEnabled;
@@ -358,6 +363,18 @@ function AdminSettingsPage() {
                 <Toggle
                   checked={formData.enableStationComments}
                   onChange={(checked) => setPatch((prev) => ({ ...prev, enableStationComments: checked }))}
+                />
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t mt-2">
+                <div>
+                  <p className="text-sm font-medium">{t("settings.commentQueue")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formData.commentQueueEnabled ? t("settings.commentQueueEnabled") : t("settings.commentQueueDisabled")}
+                  </p>
+                </div>
+                <Toggle
+                  checked={formData.commentQueueEnabled}
+                  onChange={(checked) => setPatch((prev) => ({ ...prev, commentQueueEnabled: checked }))}
                 />
               </div>
             </SettingsCard>

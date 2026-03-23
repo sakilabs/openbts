@@ -4,6 +4,7 @@ import { locations, stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
 
 export const NotificationType = pgEnum("notification_type", ["submission_approved", "submission_rejected", "new_submission"]);
+export const CommentStatus = pgEnum("comment_status", ["pending", "approved"]);
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
@@ -282,6 +283,7 @@ export const stationComments = pgTable(
       .notNull(),
     attachments: jsonb("attachments").$type<{ uuid: string; type: string }[]>(),
     content: text("content").notNull(),
+    status: CommentStatus("status").notNull().default("approved"),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

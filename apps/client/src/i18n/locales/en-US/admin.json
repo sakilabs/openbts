@@ -11,7 +11,27 @@
     "settings": "Settings",
     "ukeImport": "UKE Import",
     "ukePermits": "Unassigned UKE Permits",
-    "lists": "Lists"
+    "lists": "Lists",
+    "comments": "Comments"
+  },
+  "comments": {
+    "table": {
+      "author": "Author",
+      "station": "Station",
+      "content": "Content",
+      "attachments": "Attachments",
+      "empty": "No comments found",
+      "emptyHint": "There are no comments yet"
+    },
+    "approveSuccess": "Comment approved",
+    "deleteTitle": "Delete Comment",
+    "deleteDesc": "Are you sure you want to delete this comment? This will also remove all attachments. This action cannot be undone.",
+    "deleteSuccess": "Comment deleted",
+    "deleteError": "Failed to delete comment",
+    "editTitle": "Edit Comment",
+    "editSuccess": "Comment updated",
+    "editError": "Failed to update comment",
+    "noAttachments": "No attachments"
   },
   "settings": {
     "title": "System Settings",
@@ -32,6 +52,9 @@
     "enableComments": "Enable comments",
     "commentsEnabled": "Users can comment on stations",
     "commentsDisabled": "Comments are disabled",
+    "commentQueue": "Comment queue",
+    "commentQueueEnabled": "Comments require approval before being visible",
+    "commentQueueDisabled": "Comments are published immediately",
     "submissions": "Submissions",
     "submissionsDesc": "Allow users to submit new stations",
     "enableSubmissions": "Enable submissions",

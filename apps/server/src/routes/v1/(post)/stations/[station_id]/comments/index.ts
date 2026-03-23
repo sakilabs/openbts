@@ -127,6 +127,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
     if (!content) throw new ErrorResponse("BAD_REQUEST");
 
+    const { commentQueueEnabled } = getRuntimeSettings();
+
     const [newComment] = await db
       .insert(stationComments)
       .values({
@@ -134,9 +136,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         user_id: userId,
         content: content,
         attachments: validatedAttachments,
+        status: commentQueueEnabled ? "pending" : "approved",
       })
       .returning();
-
     if (!newComment) throw new ErrorResponse("FAILED_TO_CREATE");
 
     await createAuditLog(
@@ -161,7 +163,7 @@ const createStationComment: Route<RequestData, ResponseData> = {
   url: "/stations/:station_id/comments",
   method: "POST",
   schema: schemaRoute,
-  config: { permissions: ["write:comments"] },
+  config: { permissions: ["create:comments"] },
   handler,
 };
 

@@ -17,6 +17,7 @@ const schemaRoute = {
       disabledRoutes: z.array(z.string().regex(/^\/api\/v1\/.+/, "Must be a specific path under /api/v1/")).optional(),
       enableStationComments: z.boolean().optional(),
       submissionsEnabled: z.boolean().optional(),
+      commentQueueEnabled: z.boolean().optional(),
       enableUserLists: z.boolean().optional(),
       photosEnabled: z.boolean().optional(),
       announcement: z

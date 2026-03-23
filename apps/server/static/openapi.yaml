@@ -28,6 +28,7 @@ tags:
   - name: Audit Logs
   - name: UKE
   - name: Lists
+  - name: Comments
 
 paths:
   /health:
@@ -693,6 +694,68 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /comments:
+    get:
+      tags: [Comments]
+      summary: List all station comments. Requires `read:comments`
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: search
+          in: query
+          description: "Search across comment content, author name/username, and station ID"
+          schema: { type: string }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [createdAt, id], default: createdAt }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, total, limit]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/StationComment"
+                        - type: object
+                          properties:
+                            author:
+                              nullable: true
+                              type: object
+                              properties:
+                                id: { type: string, format: uuid }
+                                username: { type: string, nullable: true }
+                                displayUsername: { type: string, nullable: true }
+                                name: { type: string }
+                                image: { type: string, nullable: true }
+                            station:
+                              nullable: true
+                              type: object
+                              properties:
+                                id: { type: integer }
+                                station_id: { type: string }
+                                operator: { $ref: "#/components/schemas/Operator", nullable: true }
+                  total: { type: integer }
+                  limit: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /stations/{station_id}/comments:
     get:
       tags: [Stations]
@@ -752,6 +815,42 @@ paths:
         "500": { $ref: "#/components/responses/InternalServerError" }
 
   /stations/{station_id}/comments/{comment_id}:
+    patch:
+      tags: [Stations]
+      summary: Update comment content or approval status
+      security:
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { type: string, minLength: 1, maxLength: 10000 }
+                approve: { type: boolean, description: "Approve or unapprove the comment. Requires `update:comments` permission" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/StationComment" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
     delete:
       tags: [Stations]
       summary: Delete comment
@@ -3428,6 +3527,7 @@ components:
         station_id: { type: integer }
         user_id: { type: string, format: uuid }
         content: { type: string }
+        status: { type: string, enum: [pending, approved] }
         attachments: { type: array, items: { type: object, properties: { uuid: { type: string }, type: { type: string } } }, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }

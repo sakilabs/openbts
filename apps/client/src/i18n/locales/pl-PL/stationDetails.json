@@ -60,7 +60,8 @@
     "postComment": "Opublikuj komentarz",
     "deleteConfirm": "Usuń komentarz",
     "deleteDescription": "Czy na pewno chcesz usunąć ten komentarz? Tej operacji nie można cofnąć.",
-    "deleted": "Komentarz usunięty"
+    "deleted": "Komentarz usunięty",
+    "pendingApproval": "Twój komentarz został przesłany i oczekuje na zatwierdzenie przed opublikowaniem"
   },
   "photos": {
     "title": "Zdjęcia",

@@ -46,7 +46,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   try {
     const comments = await db.query.stationComments.findMany({
       where: {
-        RAW: (fields, { eq }) => eq(fields.station_id, station_id),
+        AND: [{ station_id: { eq: station_id } }, { status: { eq: "approved" } }],
       },
       with: {
         author: {
@@ -66,7 +66,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 const getStationComments: Route<ReqParams, ResponseData> = {
   url: "/stations/:station_id/comments",
   method: "GET",
-  config: { permissions: ["read:stations", "read:comments"], allowGuestAccess: true },
+  config: { permissions: ["read:stations"], allowGuestAccess: true },
   schema: schemaRoute,
   handler,
 };
