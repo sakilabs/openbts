@@ -3,14 +3,14 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 # 2026-03-23
 
-### 🚀 Enhancements
+### 🩹 Fixes
 
-- Added `/admin/comments` page - browse all station comments in a table with search, sorting, author info, station/operator, attachments lightbox, and edit/delete actions
-- Comments now support an optional approval queue - when enabled in settings, new comments are held as `pending` until approved by an admin or editor
 - Deleting a comment now also removes its attachments from disk
 
 ### 🚀 Enhancements
 
+- Added `/admin/comments` page - browse all station comments in a table with search, sorting, author info, station/operator, attachments lightbox, and edit/delete actions
+- Comments now support an optional approval queue, when enabled in settings, new comments are held as `pending` until approved by an admin or editor
 - When viewing the UKE source, sector azimuths are now drawn as lines on the map, color-coded by operator. Enable it in preferences and configure the minimum zoom level at which it appears
 - The `/admin/users` page now has role and status (`active`/`banned`) filter dropdowns in addition to the existing search
 
