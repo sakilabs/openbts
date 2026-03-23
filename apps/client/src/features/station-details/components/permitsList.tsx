@@ -224,7 +224,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-mono text-xs break-all">{permit.decision_number}</span>
+                        <span className="font-mono text-xs">{permit.decision_number}</span>
                         <Tooltip>
                           <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[11px] font-bold uppercase cursor-help">
                             {permit.decision_type}

@@ -3048,6 +3048,7 @@ components:
           allowedUnauthenticatedRoutes,
           disabledRoutes,
           enableStationComments,
+          commentQueueEnabled,
           submissionsEnabled,
           photosEnabled,
           announcement,
@@ -3057,6 +3058,7 @@ components:
         allowedUnauthenticatedRoutes: { type: array, items: { type: string } }
         disabledRoutes: { type: array, items: { type: string } }
         enableStationComments: { type: boolean }
+        commentQueueEnabled: { type: boolean }
         submissionsEnabled: { type: boolean }
         photosEnabled: { type: boolean }
         announcement:
@@ -3073,6 +3075,7 @@ components:
         allowedUnauthenticatedRoutes: { type: array, items: { type: string } }
         disabledRoutes: { type: array, items: { type: string } }
         enableStationComments: { type: boolean }
+        commentQueueEnabled: { type: boolean }
         submissionsEnabled: { type: boolean }
         photosEnabled: { type: boolean }
         announcement:

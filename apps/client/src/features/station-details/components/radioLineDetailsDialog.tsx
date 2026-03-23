@@ -329,7 +329,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                         <tr key={dir.id} className="hover:bg-muted/20 transition-colors border-b last:border-b-0">
                           <td className="px-4 py-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs break-all">{dir.permit.number || "-"}</span>
+                              <span className="font-mono text-xs">{dir.permit.number || "-"}</span>
                               {dir.permit.decision_type && (
                                 <Tooltip>
                                   <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[11px] font-bold uppercase cursor-help">

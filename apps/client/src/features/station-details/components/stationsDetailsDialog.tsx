@@ -100,16 +100,16 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         <p className="text-xs text-muted-foreground font-medium opacity-80">
                           {station.extra_address || station.location.address || t("dialog.btsStation")}
                         </p>
-                        <div className="flex items-center gap-2 pt-0.5">
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
                           <Tooltip>
-                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default">
+                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                               {tCommon("labels.created")}: {formatRelativeTime(station.createdAt, tCommon)}
                             </TooltipTrigger>
                             <TooltipContent>{formatFullDate(station.createdAt, i18n.language)}</TooltipContent>
                           </Tooltip>
                           <span className="text-xs text-muted-foreground/40">·</span>
                           <Tooltip>
-                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default">
+                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                               {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
                             </TooltipTrigger>
                             <TooltipContent>{formatFullDate(station.updatedAt, i18n.language)}</TooltipContent>

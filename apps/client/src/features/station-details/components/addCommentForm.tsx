@@ -154,7 +154,7 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
         </div>
 
         <Button type="submit" size="sm" disabled={isDisabled}>
-          <span>{mutation.isPending ? t("common:actions.submitting") : t("comments.postComment")}</span>
+          {mutation.isPending ? t("common:actions.submitting") : t("comments.postComment")}
           {mutation.isPending ? <Spinner data-icon="inline-end" /> : <HugeiconsIcon icon={SentIcon} className="size-4" data-icon="inline-end" />}
         </Button>
       </div>

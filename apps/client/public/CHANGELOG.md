@@ -1,14 +1,22 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+Planned:
+
+- [ ] Continuous GPS tracking with your location shown on the map as dot (Google Maps/Apple Maps/Waze-like). Idea: @Athantor
+- [ ] Ability to click on that tracking dot to see your coordinates in popup
+- [ ] Push notifications when there is update for UKE data
+
 # 2026-03-23
 
 ### 🩹 Fixes
 
 - Deleting a comment now also removes its attachments from disk
+- Fixed created/updated dates in station header wrapping mid-phrase on mobile
 
 ### 🚀 Enhancements
 
+- Added a data freshness widget in the bottom-left corner of the map (above the scale bar) showing when the internal DB and UKE permits were last updated, with relative time and a full-date tooltip. Clicking either label also switches the map source
 - Added `/admin/comments` page - browse all station comments in a table with search, sorting, author info, station/operator, attachments lightbox, and edit/delete actions
 - Comments now support an optional approval queue, when enabled in settings, new comments are held as `pending` until approved by an admin or editor
 - When viewing the UKE source, sector azimuths are now drawn as lines on the map, color-coded by operator. Enable it in preferences and configure the minimum zoom level at which it appears

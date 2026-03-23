@@ -1,11 +1,13 @@
-import { useState, useRef, useMemo, memo, type FocusEvent, type KeyboardEvent } from "react";
+import { useState, useRef, useMemo, memo, useCallback, type FocusEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { FilterIcon } from "@hugeicons/core-free-icons";
+import { FilterIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils.js";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.js";
-import type { Station, StationFilters } from "@/types/station.js";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip.js";
+import { Separator } from "@/components/ui/separator.js";
+import type { Station, StationFilters, StationSource } from "@/types/station.js";
 import { searchLocations, searchStations, searchUkePermits, type UkeSearchPermitStation, type UkeSearchRadioline } from "../../searchApi.js";
 import { operatorsQueryOptions, bandsQueryOptions } from "@/features/shared/queries.js";
 import { AutocompleteDropdown } from "./autocompleteDropdown.js";
@@ -22,6 +24,53 @@ import { parseFilters } from "../../filters.js";
 import { useSearchState } from "../../hooks/useSearchState.js";
 import { useFilterHandlers } from "../../hooks/useFilterHandlers.js";
 import { useIsMobile } from "@/hooks/useMobile.js";
+import { fetchStats } from "../../statsApi.js";
+import { formatRelativeTime, formatFullDate } from "@/lib/format.js";
+
+const DataFreshnessWidget = memo(function DataFreshnessWidget({
+  source,
+  onSourceChange,
+}: {
+  source: StationSource;
+  onSourceChange: (source: StationSource) => void;
+}) {
+  const { t: tCommon, i18n } = useTranslation("common");
+  const { data: stats } = useQuery({
+    queryKey: ["stats"],
+    queryFn: fetchStats,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  if (!stats) return null;
+
+  const items = [
+    { label: "DB", date: stats.lastUpdated.stations, value: "internal" as StationSource },
+    { label: "UKE", date: stats.lastUpdated.stations_permits, value: "uke" as StationSource },
+  ];
+
+  return (
+    <div className="flex items-center gap-2 text-[10px] text-muted-foreground select-none bg-background/90 backdrop-blur-sm border border-border/50 rounded-md px-2 py-1 shadow-sm">
+      {items.map(({ label, date, value }, i) => {
+        const isActive = source === value;
+        return (
+          <span key={label} className="flex items-center gap-2">
+            {i > 0 && <Separator orientation="vertical" className="h-3" />}
+            <Tooltip>
+              <TooltipTrigger
+                className={cn("flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors", isActive && "text-foreground")}
+                onClick={() => onSourceChange(value)}
+              >
+                {isActive && <HugeiconsIcon icon={Tick02Icon} className="size-2.5" />}
+                <span className="font-semibold">{label}:</span> {date ? formatRelativeTime(date, tCommon) : tCommon("status.never")}
+              </TooltipTrigger>
+              <TooltipContent side="top">{date ? formatFullDate(date, i18n.language) : tCommon("status.never")}</TooltipContent>
+            </Tooltip>
+          </span>
+        );
+      })}
+    </div>
+  );
+});
 
 type MapSearchOverlayProps = {
   locationCount: number;
@@ -194,6 +243,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     setShowFilters((prev) => !prev);
   }
 
+  const handleSourceChange = useCallback((source: StationSource) => onFiltersChange({ ...filters, source }), [filters, onFiltersChange]);
+
   return (
     <>
       <div
@@ -338,6 +389,10 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         <div className="pointer-events-auto">
           <MapStyleSwitcher />
         </div>
+      </div>
+
+      <div className="hidden md:flex absolute bottom-10 left-2 z-10">
+        <DataFreshnessWidget source={filters.source} onSourceChange={handleSourceChange} />
       </div>
 
       <div className="md:hidden absolute bottom-4 left-4 z-5 flex flex-col items-start gap-1">
