@@ -176,6 +176,16 @@ const COLUMNS: [PreferenceColumn, PreferenceColumn] = [
       step: 0.1,
       format: (v) => v.toFixed(1),
     },
+    {
+      type: "slider",
+      key: "azimuthLineLength",
+      labelKey: "preferences.azimuthLineLength",
+      hintKey: "preferences.azimuthLineLengthHint",
+      min: 50,
+      max: 1000,
+      step: 50,
+      format: (v) => `${v} m`,
+    },
   ],
 ];
 

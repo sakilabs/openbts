@@ -30,7 +30,7 @@ export const userRole = accessControl.newRole({
   deleted_entries: ["read"],
   uke_permits: ["read"],
   user_lists: ["create"],
-  comments: ["create"]
+  comments: ["create"],
 });
 
 export const editorRole = accessControl.newRole({

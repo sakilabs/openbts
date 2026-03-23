@@ -19,6 +19,7 @@ export interface UserPreferences {
   showStationPhotoPanel: boolean;
   showAzimuths: boolean;
   azimuthsMinZoom: number;
+  azimuthLineLength: number;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -37,6 +38,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   showStationPhotoPanel: true,
   showAzimuths: false,
   azimuthsMinZoom: 12,
+  azimuthLineLength: 200,
 };
 
 let listeners: Array<() => void> = [];

@@ -6,10 +6,9 @@ import { destinationPoint } from "../utils";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { DEFAULT_COLOR } from "../geojson";
 
-const AZIMUTH_LINE_LENGTH_M = 200;
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
-function azimuthsToGeoJSON(locations: UkeLocationWithPermits[]): GeoJSON.FeatureCollection {
+function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: number): GeoJSON.FeatureCollection {
   const features: GeoJSON.Feature[] = [];
 
   for (const location of locations) {
@@ -25,7 +24,7 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[]): GeoJSON.Feature
       for (const sector of permit.sectors) {
         if (sector.azimuth == null) continue;
 
-        const [destLat, destLng] = destinationPoint(lat, lng, sector.azimuth, AZIMUTH_LINE_LENGTH_M);
+        const [destLat, destLng] = destinationPoint(lat, lng, sector.azimuth, lineLength);
 
         features.push({
           type: "Feature",
@@ -68,10 +67,11 @@ type UseAzimuthLayerArgs = {
   locations: UkeLocationWithPermits[];
   enabled: boolean;
   minZoom: number;
+  lineLength: number;
 };
 
-export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom }: UseAzimuthLayerArgs) {
-  const geoJSON = useMemo(() => (enabled ? azimuthsToGeoJSON(locations) : EMPTY_GEOJSON), [locations, enabled]);
+export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom, lineLength }: UseAzimuthLayerArgs) {
+  const geoJSON = useMemo(() => (enabled ? azimuthsToGeoJSON(locations, lineLength) : EMPTY_GEOJSON), [locations, enabled, lineLength]);
   const geoJSONRef = useRef(geoJSON);
   geoJSONRef.current = geoJSON;
 

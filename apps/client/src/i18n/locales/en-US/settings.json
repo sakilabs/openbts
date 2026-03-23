@@ -51,7 +51,9 @@
     "showAzimuthsLabel": "Show azimuths",
     "showAzimuthsDesc": "Draw directional lines indicating antenna sector azimuths",
     "azimuthsMinZoom": "Azimuths Minimum Zoom",
-    "azimuthsMinZoomHint": "Set the minimum zoom level at which azimuths become visible on the map"
+    "azimuthsMinZoomHint": "Set the minimum zoom level at which azimuths become visible on the map",
+    "azimuthLineLength": "Azimuth Line Length",
+    "azimuthLineLengthHint": "Set the length of azimuth direction lines drawn on the map"
   },
   "page": {
     "title": "Account Settings",

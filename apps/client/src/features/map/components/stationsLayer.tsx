@@ -401,6 +401,7 @@ export function StationsLayer({
     locations: azimuthEnabled ? (locations as unknown as UkeLocationWithPermits[]) : EMPTY_UKE_LOCATIONS,
     enabled: azimuthEnabled,
     minZoom: preferences.azimuthsMinZoom,
+    lineLength: preferences.azimuthLineLength,
   });
 
   useEffect(() => cleanupPopup, [cleanupPopup]);

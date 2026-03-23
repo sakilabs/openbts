@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "469f98b3-6eff-4827-871e-32ef51f1bb0c",
+  "id": "a28e7a8c-cbbd-4677-805c-02cc78a57ab7",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -94,6 +94,7 @@
         "submissions.cleanup",
         "settings.update",
         "station_comments.create",
+        "station_comments.update",
         "station_comments.delete",
         "station_photos.create",
         "station_photos.update",

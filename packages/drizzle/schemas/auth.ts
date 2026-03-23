@@ -35,6 +35,7 @@ export const AuditAction = pgEnum("audit_action", [
   "submissions.cleanup",
   "settings.update",
   "station_comments.create",
+  "station_comments.update",
   "station_comments.delete",
   "station_photos.create",
   "station_photos.update",

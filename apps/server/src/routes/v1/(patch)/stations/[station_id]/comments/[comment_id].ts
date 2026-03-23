@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
 import { stationComments } from "@openbts/drizzle";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
 
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -66,6 +67,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     .returning();
 
   if (!updated) throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+
+  await createAuditLog(
+    {
+      action: "station_comments.update",
+      table_name: "station_comments",
+      record_id: comment_id,
+      old_values: comment,
+      new_values: updated,
+    },
+    req,
+  );
 
   return res.send({ data: updated });
 }
