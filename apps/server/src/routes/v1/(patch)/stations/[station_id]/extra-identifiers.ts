@@ -88,23 +88,26 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     return res.send({ data: existing ?? ({} as ResponseData) });
   }
 
-  const [result] = await db
-    .insert(extraIdentificators)
-    .values({
-      station_id,
-      networks_id: networks_id ?? null,
-      networks_name: networks_name ?? null,
-      mno_name: mno_name ?? null,
-    })
-    .onConflictDoUpdate({
-      target: [extraIdentificators.station_id, extraIdentificators.networks_id],
-      set: {
-        networks_name: networks_name ?? null,
-        mno_name: mno_name ?? null,
-        updatedAt: new Date(),
-      },
-    })
-    .returning();
+  const [result] = existing
+    ? await db
+        .update(extraIdentificators)
+        .set({
+          networks_id: networks_id ?? null,
+          networks_name: networks_name ?? null,
+          mno_name: mno_name ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(extraIdentificators.id, existing.id))
+        .returning()
+    : await db
+        .insert(extraIdentificators)
+        .values({
+          station_id,
+          networks_id: networks_id ?? null,
+          networks_name: networks_name ?? null,
+          mno_name: mno_name ?? null,
+        })
+        .returning();
 
   if (!result) throw new ErrorResponse("FAILED_TO_UPDATE");
 
