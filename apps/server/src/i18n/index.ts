@@ -1,15 +1,14 @@
-import en from "./en/notifications.js";
-import pl from "./pl/notifications.js";
+import enUS from "./en-US/notifications.js";
+import plPL from "./pl-PL/notifications.js";
 
-const translations = { en, pl } as const;
+const translations = { "en-US": enUS, "pl-PL": plPL } as const;
 
 type Locale = keyof typeof translations;
-type Namespace = keyof typeof translations.en;
+type Namespace = keyof (typeof translations)["en-US"];
 
 function resolveLocale(locale: string | null | undefined): Locale {
-  if (!locale) return "pl";
-  const lang = locale.split("-")[0]!.toLowerCase();
-  return lang in translations ? (lang as Locale) : "pl";
+  if (locale && locale in translations) return locale as Locale;
+  return "pl-PL";
 }
 
 export function t<N extends Namespace>(namespace: N, locale: string | null | undefined): { title: string; body: string } {

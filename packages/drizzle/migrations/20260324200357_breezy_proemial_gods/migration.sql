@@ -483,7 +483,7 @@ CREATE TABLE "auth"."users" (
 	"banExpires" timestamp with time zone,
 	"two_factor_enabled" boolean DEFAULT false,
 	"force_totp" boolean DEFAULT false,
-	"locale" varchar(10) DEFAULT 'pl'
+	"locale" varchar(10) DEFAULT 'pl-PL'
 );
 --> statement-breakpoint
 CREATE TABLE "auth"."verification_tokens" (
