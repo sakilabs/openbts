@@ -2466,6 +2466,10 @@ paths:
         - name: station_id
           in: query
           schema: { type: string }
+        - name: operator
+          in: query
+          description: Filter by operator MNC code (e.g. 26003)
+          schema: { type: integer }
       responses:
         "200":
           description: OK

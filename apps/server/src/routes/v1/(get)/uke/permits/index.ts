@@ -56,6 +56,7 @@ const schemaRoute = {
     decisionType: z.literal(["zmP", "P"]).optional(),
     decision_number: z.string().optional(),
     station_id: z.string().optional(),
+    operator: z.coerce.number().optional(),
   }),
   response: {
     200: z.object({
@@ -83,7 +84,7 @@ type Permit = z.infer<typeof ukePermitsSchema> & {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-  const { limit = undefined, page = 1, bounds, rat, bands: bandValues, decisionType, decision_number, station_id } = req.query;
+  const { limit = undefined, page = 1, bounds, rat, bands: bandValues, decisionType, decision_number, station_id, operator: operatorMnc } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   try {
@@ -95,7 +96,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
     }
 
-    const [bandRows, boundaryLocations] = await Promise.all([
+    const [bandRows, boundaryLocations, operatorRow] = await Promise.all([
       bandValues
         ? db.query.bands.findMany({
             columns: { id: true },
@@ -108,6 +109,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             .from(ukeLocations)
             .where(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`)
         : undefined,
+      operatorMnc !== undefined ? db.query.operators.findFirst({ columns: { id: true }, where: { mnc: operatorMnc } }) : undefined,
     ]);
 
     const bandIds = bandRows.length ? bandRows.map((band) => band.id) : undefined;
@@ -115,6 +117,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
     const locationIds = boundaryLocations?.map((loc) => loc.id);
     if (boundaryLocations && !locationIds?.length) return res.send({ data: [] });
+
+    const operatorId = operatorRow?.id;
+    if (operatorMnc !== undefined && !operatorId) return res.send({ data: [] });
 
     const ukePermitsRes = await db.query.ukePermits.findMany({
       columns: {
@@ -149,6 +154,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             );
           }
           if (station_id) conditions.push(eq(fields.station_id, station_id));
+          if (operatorId) conditions.push(eq(fields.operator_id, operatorId));
           if (rat) {
             const ratMap: Record<string, string> = { gsm: "GSM", "gsm-r": "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" };
             const wantsGsmR = rat.includes("gsm-r");

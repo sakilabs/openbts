@@ -1,11 +1,12 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
-Planned:
+# 2026-03-24
 
-- [ ] Continuous GPS tracking with your location shown on the map as dot (Google Maps/Apple Maps/Waze-like). Idea: @Athantor
-- [ ] Ability to click on that tracking dot to see your coordinates in popup
-- [ ] Push notifications when there is update for UKE data
+### 🚀 Enhancements
+
+- Added continuous GPS tracking with your location shown on the map as dot with ability to click that dot to see your location
+- Added push notifications (/preferences) for when new UKE data is imported
 
 # 2026-03-23
 

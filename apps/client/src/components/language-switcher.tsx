@@ -4,6 +4,7 @@ import { PL, US } from "country-flag-icons/react/3x2";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { supportedLanguages, type SupportedLanguage } from "@/i18n/config";
+import { authClient } from "@/lib/authClient";
 
 const flagComponents: Record<string, React.ComponentType<{ className?: string }>> = {
   US,
@@ -12,6 +13,7 @@ const flagComponents: Record<string, React.ComponentType<{ className?: string }>
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  const { data: session } = authClient.useSession();
   const currentUserLang = localStorage.getItem("i18nextLng") || i18n.language;
 
   const currentLanguage = supportedLanguages.find((lang) => lang.code === currentUserLang);
@@ -20,6 +22,7 @@ export function LanguageSwitcher() {
   const handleLanguageChange = (code: SupportedLanguage) => {
     void i18n.changeLanguage(code);
     localStorage.setItem("i18nextLng", code);
+    if (session?.user) void authClient.updateUser({ locale: code });
   };
 
   return (

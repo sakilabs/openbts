@@ -53,7 +53,16 @@
     "azimuthsMinZoom": "Minimalny zoom azymutów",
     "azimuthsMinZoomHint": "Ustaw minimalny poziom przybliżenia, od którego azymuty będą widoczne na mapie",
     "azimuthLineLength": "Długość linii azymutu",
-    "azimuthLineLengthHint": "Ustaw długość linii kierunkowych azymutów rysowanych na mapie"
+    "azimuthLineLengthHint": "Ustaw długość linii kierunkowych azymutów rysowanych na mapie",
+    "notifications": "Powiadomienia",
+    "notificationsHint": "Zarządzaj subskrypcjami powiadomień push dla tej przeglądarki",
+    "notificationsBlocked": "Powiadomienia są zablokowane przez przeglądarkę. Włącz je w ustawieniach przeglądarki, aby korzystać z tej funkcji.",
+    "pushLabel": "Włącz powiadomienia push",
+    "pushDesc": "Otrzymuj powiadomienia push z tej aplikacji na tym urządzeniu",
+    "ukeUpdates": "Aktualizacje danych UKE",
+    "ukeUpdatesHint": "Otrzymuj powiadomienie, gdy nowe dane stacji UKE zostaną zaimportowane",
+    "ukeUpdatesLabel": "Powiadamiaj mnie o aktualizacjach UKE",
+    "ukeUpdatesDesc": "Otrzymuj powiadomienie push, gdy dane stacji lub pozwoleń UKE zostaną odświeżone"
   },
   "page": {
     "title": "Ustawienia konta",

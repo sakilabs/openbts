@@ -420,6 +420,7 @@ CREATE TABLE "push_subscriptions" (
 	"endpoint" text NOT NULL UNIQUE,
 	"p256dh" text NOT NULL,
 	"auth" text NOT NULL,
+	"uke_updates_enabled" boolean DEFAULT false NOT NULL,
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -481,7 +482,8 @@ CREATE TABLE "auth"."users" (
 	"banReason" text,
 	"banExpires" timestamp with time zone,
 	"two_factor_enabled" boolean DEFAULT false,
-	"force_totp" boolean DEFAULT false
+	"force_totp" boolean DEFAULT false,
+	"locale" varchar(10) DEFAULT 'pl'
 );
 --> statement-breakpoint
 CREATE TABLE "auth"."verification_tokens" (

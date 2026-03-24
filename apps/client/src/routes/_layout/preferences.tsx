@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GoogleMapsIcon, AppleIcon, WazeIcon } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,6 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { usePreferences, type UserPreferences } from "@/hooks/usePreferences";
 import { toggleValue, cn } from "@/lib/utils";
+import { authClient } from "@/lib/authClient";
+import { usePushSubscription } from "@/features/notifications/usePushSubscription";
+import { fetchPushPreferences, updatePushPreferences } from "@/features/notifications/api";
 
 type RadioOption = { value: string; labelKey: string; descKey?: string; example?: string };
 type CheckboxGroupOption = { value: string; labelKey: string; icon?: typeof GoogleMapsIcon };
@@ -171,8 +175,8 @@ const COLUMNS: [PreferenceColumn, PreferenceColumn] = [
       key: "azimuthsMinZoom",
       labelKey: "preferences.azimuthsMinZoom",
       hintKey: "preferences.azimuthsMinZoomHint",
-      min: 12,
-      max: 17,
+      min: 10,
+      max: 19,
       step: 0.1,
       format: (v) => v.toFixed(1),
     },
@@ -292,6 +296,87 @@ function PreferenceField({
   }
 }
 
+function NotificationsSection({ t }: { t: (key: string) => string }) {
+  const { data: session } = authClient.useSession();
+  const { subscription, permission, isSubscribing, subscribe, unsubscribe, isSupported } = usePushSubscription();
+  const queryClient = useQueryClient();
+  const isSubscribed = !!subscription;
+
+  const { data: pushPrefs } = useQuery({
+    queryKey: ["push-preferences"],
+    queryFn: fetchPushPreferences,
+    enabled: !!session?.user && isSubscribed,
+  });
+
+  const { mutate: updatePrefs, isPending: isUpdatingPrefs } = useMutation({
+    mutationFn: updatePushPreferences,
+    onMutate: async ({ ukeUpdatesEnabled }) => {
+      await queryClient.cancelQueries({ queryKey: ["push-preferences"] });
+      const prev = queryClient.getQueryData<{ ukeUpdatesEnabled: boolean }>(["push-preferences"]);
+      queryClient.setQueryData(["push-preferences"], { ukeUpdatesEnabled });
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(["push-preferences"], ctx?.prev);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["push-preferences"] }),
+  });
+
+  if (!isSupported || !session?.user) return null;
+
+  return (
+    <>
+      <Separator />
+      <section className="space-y-6">
+        <div className="space-y-3">
+          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.notifications")}</Label>
+          <p className="text-xs text-muted-foreground">{t("preferences.notificationsHint")}</p>
+
+          {permission === "denied" ? (
+            <p className="text-xs text-destructive px-3">{t("preferences.notificationsBlocked")}</p>
+          ) : (
+            <label
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                isSubscribed ? "bg-primary/10" : "hover:bg-muted",
+              )}
+            >
+              <Checkbox checked={isSubscribed} disabled={isSubscribing} onCheckedChange={() => (isSubscribed ? unsubscribe() : subscribe())} />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">{t("preferences.pushLabel")}</span>
+                <span className="text-xs text-muted-foreground">{t("preferences.pushDesc")}</span>
+              </div>
+            </label>
+          )}
+        </div>
+
+        {isSubscribed && (
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.ukeUpdates")}</Label>
+            <p className="text-xs text-muted-foreground">{t("preferences.ukeUpdatesHint")}</p>
+            <label
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                pushPrefs?.ukeUpdatesEnabled ? "bg-primary/10" : "hover:bg-muted",
+              )}
+            >
+              <Checkbox
+                checked={pushPrefs?.ukeUpdatesEnabled ?? false}
+                disabled={isUpdatingPrefs}
+                onCheckedChange={(v) => updatePrefs({ ukeUpdatesEnabled: !!v })}
+              />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">{t("preferences.ukeUpdatesLabel")}</span>
+                <span className="text-xs text-muted-foreground">{t("preferences.ukeUpdatesDesc")}</span>
+              </div>
+            </label>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
 function PreferencesPage() {
   const { t } = useTranslation("settings");
   const { preferences, updatePreferences } = usePreferences();
@@ -320,6 +405,8 @@ function PreferencesPage() {
             </section>
           ))}
         </div>
+
+        <NotificationsSection t={t} />
       </div>
     </main>
   );

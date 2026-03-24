@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "a28e7a8c-cbbd-4677-805c-02cc78a57ab7",
+  "id": "ef86dd83-576d-4bdd-af84-afeb34f7cef1",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -4194,6 +4194,19 @@
       "table": "push_subscriptions"
     },
     {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "uke_updates_enabled",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "push_subscriptions"
+    },
+    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -4762,6 +4775,19 @@
       "generated": null,
       "identity": null,
       "name": "force_totp",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "users"
+    },
+    {
+      "type": "varchar(10)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'pl'",
+      "generated": null,
+      "identity": null,
+      "name": "locale",
       "entityType": "columns",
       "schema": "auth",
       "table": "users"

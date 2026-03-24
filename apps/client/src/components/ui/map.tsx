@@ -24,6 +24,10 @@ import { Cancel01Icon, MinusSignIcon, PlusSignIcon, Location01Icon, MaximizeIcon
 import { cn } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { Spinner } from "./spinner";
+import { usePreferences, type GpsFormat } from "@/hooks/usePreferences";
+import { formatCoordinates } from "@/lib/gpsUtils";
+import { useTranslation } from "react-i18next";
+import { NavigationLinks } from "@/features/station-details/components/navLinks";
 
 // Check document class for theme (works with next-themes, etc.)
 function getDocumentTheme(): Theme | null {
@@ -879,6 +883,97 @@ function MarkerLabel({ children, className, position = "top" }: MarkerLabelProps
   );
 }
 
+const GPS_DOT = (
+  <div className="relative flex cursor-pointer items-center justify-center">
+    <div className="absolute h-5 w-5 animate-ping rounded-full bg-blue-500/40" />
+    <div className="relative h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-md" />
+  </div>
+);
+
+type UserLocationMarkerProps = {
+  longitude: number;
+  latitude: number;
+  accuracy: number;
+  gpsFormat: GpsFormat;
+};
+
+function UserLocationMarker({ longitude, latitude, accuracy, gpsFormat }: UserLocationMarkerProps) {
+  const { map } = useMap();
+  const { t } = useTranslation("main");
+  const markerRef = useRef<MapLibreGL.Marker | null>(null);
+  const [markerEl, setMarkerEl] = useState<HTMLDivElement | null>(null);
+  const [popupContainer, setPopupContainer] = useState<HTMLDivElement | null>(null);
+
+  const animFrameRef = useRef<number | null>(null);
+  const animFromRef = useRef<{ longitude: number; latitude: number } | null>(null);
+
+  useEffect(() => {
+    if (!map) return;
+    const el = document.createElement("div");
+    const container = document.createElement("div");
+    const popup = new MapLibreGL.Popup({ closeButton: true, closeOnClick: true, offset: 16 }).setDOMContent(container);
+    const marker = new MapLibreGL.Marker({ element: el }).setLngLat([longitude, latitude]).setPopup(popup).addTo(map);
+    markerRef.current = marker;
+    animFromRef.current = { longitude, latitude };
+    setMarkerEl(el);
+    setPopupContainer(container);
+    return () => {
+      marker.remove();
+      popup.remove();
+      markerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map]);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    const from = animFromRef.current ?? { longitude, latitude };
+    const to = { longitude, latitude };
+
+    if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current);
+
+    const start = performance.now();
+    const duration = 800;
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - (1 - t) ** 3; // ease-out cubic
+      const lng = from.longitude + (to.longitude - from.longitude) * eased;
+      const lat = from.latitude + (to.latitude - from.latitude) * eased;
+      marker.setLngLat([lng, lat]);
+      animFromRef.current = { longitude: lng, latitude: lat };
+      if (t < 1) animFrameRef.current = requestAnimationFrame(tick);
+      else animFrameRef.current = null;
+    };
+
+    animFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [longitude, latitude]);
+
+  return (
+    <>
+      {markerEl && createPortal(GPS_DOT, markerEl)}
+      {popupContainer &&
+        createPortal(
+          <div className="min-w-40 space-y-1 p-3 text-xs">
+            <div className="mb-2 text-sm font-semibold">{t("popup.yourLocation")}</div>
+            <div className="font-mono">{formatCoordinates(latitude, longitude, gpsFormat)}</div>
+            <div className="flex justify-between gap-4 font-mono">
+              <span className="text-muted-foreground">{t("popup.accuracy")}</span>
+              <span>±{Math.round(accuracy)} m</span>
+            </div>
+            <NavigationLinks latitude={latitude} longitude={longitude} displayMode="buttons" className="border-t pt-2" />
+          </div>,
+          popupContainer,
+        )}
+    </>
+  );
+}
+
 type MapControlsProps = {
   /** Position of the controls on the map (default: "bottom-right") */
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
@@ -951,7 +1046,11 @@ function MapControls({
   onLocate,
 }: MapControlsProps) {
   const { map } = useMap();
+  const { preferences } = usePreferences();
   const [waitingForLocation, setWaitingForLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ longitude: number; latitude: number; accuracy: number } | null>(null);
+  const userLocationRef = useRef<{ longitude: number; latitude: number; accuracy: number } | null>(null);
+  const watchIdRef = useRef<number | null>(null);
 
   const [scaleLabel, setScaleLabel] = useState("");
   const [scaleWidth, setScaleWidth] = useState(0);
@@ -996,29 +1095,40 @@ function MapControls({
   }, [map]);
 
   const handleLocate = useCallback(() => {
-    setWaitingForLocation(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const coords = {
-            longitude: pos.coords.longitude,
-            latitude: pos.coords.latitude,
-          };
-          map?.flyTo({
-            center: [coords.longitude, coords.latitude],
-            zoom: 14,
-            duration: 1500,
-          });
-          onLocate?.(coords);
-          setWaitingForLocation(false);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setWaitingForLocation(false);
-        },
-      );
+    if (watchIdRef.current !== null && userLocationRef.current) {
+      const loc = userLocationRef.current;
+      map?.flyTo({ center: [loc.longitude, loc.latitude], zoom: 14, duration: 1500 });
+      return;
     }
+    if (!("geolocation" in navigator)) return;
+    setWaitingForLocation(true);
+    let firstFix = true;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const coords = { longitude: pos.coords.longitude, latitude: pos.coords.latitude, accuracy: pos.coords.accuracy };
+        userLocationRef.current = coords;
+        setUserLocation(coords);
+        if (firstFix) {
+          firstFix = false;
+          setWaitingForLocation(false);
+          map?.flyTo({ center: [coords.longitude, coords.latitude], zoom: 14, duration: 1500 });
+          onLocate?.(coords);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setWaitingForLocation(false);
+      },
+      { enableHighAccuracy: true },
+    );
+    watchIdRef.current = watchId;
   }, [map, onLocate]);
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    };
+  }, []);
 
   const handleFullscreen = useCallback(() => {
     const container = map?.getContainer();
@@ -1050,8 +1160,12 @@ function MapControls({
         )}
         {showLocate && (
           <ControlGroup>
-            <ControlButton onClick={handleLocate} label="Find my location" disabled={waitingForLocation}>
-              {waitingForLocation ? <Spinner className="size-4" /> : <HugeiconsIcon icon={Location01Icon} className="size-4" />}
+            <ControlButton onClick={handleLocate} label={userLocation ? "Center on my location" : "Find my location"} disabled={waitingForLocation}>
+              {waitingForLocation ? (
+                <Spinner className="size-4" />
+              ) : (
+                <HugeiconsIcon icon={Location01Icon} className={cn("size-4", userLocation && "text-blue-500")} />
+              )}
             </ControlButton>
           </ControlGroup>
         )}
@@ -1070,6 +1184,14 @@ function MapControls({
             <div className="mt-0.5 border-b-2 border-l-2 border-r-2 border-foreground/60 rounded-b-sm" style={{ width: scaleWidth }} />
           </div>
         </div>
+      )}
+      {userLocation && (
+        <UserLocationMarker
+          longitude={userLocation.longitude}
+          latitude={userLocation.latitude}
+          accuracy={userLocation.accuracy}
+          gpsFormat={preferences.gpsFormat}
+        />
       )}
     </>
   );

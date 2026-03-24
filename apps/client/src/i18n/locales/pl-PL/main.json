@@ -22,7 +22,9 @@
   "popup": {
     "loading": "Ładowanie stacji...",
     "noStations": "Brak stacji",
-    "noPermits": "Brak pozwoleń"
+    "noPermits": "Brak pozwoleń",
+    "yourLocation": "Twoja lokalizacja",
+    "accuracy": "Dokładność"
   },
   "overlay": {
     "locations": "lokalizacji",

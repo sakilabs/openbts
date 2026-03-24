@@ -51,3 +51,15 @@ export async function unsubscribeFromPush(endpoint: string): Promise<void> {
     body: JSON.stringify({ endpoint }),
   });
 }
+
+export async function fetchPushPreferences(): Promise<{ ukeUpdatesEnabled: boolean }> {
+  return fetchApiData<{ ukeUpdatesEnabled: boolean }>("push/preferences");
+}
+
+export async function updatePushPreferences(prefs: { ukeUpdatesEnabled: boolean }): Promise<void> {
+  await fetchJson(`${API_BASE}/push/subscribe`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(prefs),
+  });
+}

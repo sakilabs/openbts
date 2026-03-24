@@ -6,6 +6,7 @@ import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 import { cleanupDownloads } from "@openbts/uke-importer/utils";
 import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
 import { takeStatsSnapshot } from "./statsSnapshot.service.js";
+import { notifyUkeUpdate } from "./notification.service.js";
 import { logger } from "../utils/logger.js";
 import redis from "../database/redis.js";
 import { deletedEntries } from "@openbts/drizzle";
@@ -286,6 +287,7 @@ async function runJob(
     job.state = "success";
     job.finishedAt = new Date().toISOString();
     await saveJob(job);
+    notifyUkeUpdate().catch((e) => logger.error("Failed to send UKE update notifications", { error: e instanceof Error ? e.message : String(e) }));
   } catch (e) {
     job.state = "error";
     job.finishedAt = new Date().toISOString();

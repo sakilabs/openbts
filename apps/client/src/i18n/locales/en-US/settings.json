@@ -53,7 +53,16 @@
     "azimuthsMinZoom": "Azimuths Minimum Zoom",
     "azimuthsMinZoomHint": "Set the minimum zoom level at which azimuths become visible on the map",
     "azimuthLineLength": "Azimuth Line Length",
-    "azimuthLineLengthHint": "Set the length of azimuth direction lines drawn on the map"
+    "azimuthLineLengthHint": "Set the length of azimuth direction lines drawn on the map",
+    "notifications": "Notifications",
+    "notificationsHint": "Manage push notification subscriptions for this browser",
+    "notificationsBlocked": "Notifications are blocked by the browser. Enable them in your browser settings to use this feature.",
+    "pushLabel": "Enable push notifications",
+    "pushDesc": "Receive push notifications from this app on this device",
+    "ukeUpdates": "UKE Data Updates",
+    "ukeUpdatesHint": "Get notified when new UKE station data is imported",
+    "ukeUpdatesLabel": "Notify me about UKE updates",
+    "ukeUpdatesDesc": "Receive a push notification when UKE station or permit data is refreshed"
   },
   "page": {
     "title": "Account Settings",

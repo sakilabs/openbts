@@ -22,7 +22,9 @@
   "popup": {
     "loading": "Loading stations...",
     "noStations": "No stations",
-    "noPermits": "No permits"
+    "noPermits": "No permits",
+    "yourLocation": "Your location",
+    "accuracy": "Accuracy"
   },
   "overlay": {
     "locations": "locations",

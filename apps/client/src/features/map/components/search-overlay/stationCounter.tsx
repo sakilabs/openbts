@@ -1,8 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils.js";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip.js";
 import { Spinner } from "@/components/ui/spinner.js";
 import i18n from "@/i18n/config.js";
+import { fetchStats } from "../../statsApi.js";
+import { formatRelativeTime, formatFullDate } from "@/lib/format.js";
+import type { StationSource } from "@/types/station.js";
 
 type StationCounterProps = {
   locationCount: number;
@@ -14,7 +18,8 @@ type StationCounterProps = {
   isFetching: boolean;
   showStations: boolean;
   zoom?: number;
-  source: "internal" | "uke";
+  source: StationSource;
+  onSourceChange: (source: StationSource) => void;
 };
 
 export function StationCounter({
@@ -28,11 +33,24 @@ export function StationCounter({
   showStations,
   zoom,
   source,
+  onSourceChange,
 }: StationCounterProps) {
   const { t } = useTranslation("main");
+  const { t: tCommon } = useTranslation("common");
   const hasMoreLocations = totalCount > locationCount;
   const hasMoreRadioLines = radioLineTotalCount > radioLineCount;
   const showRadioLines = radioLineCount > 0 || isRadioLinesFetching;
+
+  const { data: stats } = useQuery({
+    queryKey: ["stats"],
+    queryFn: fetchStats,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const sourceItems: { label: string; date: string | null | undefined; value: StationSource }[] = [
+    { label: t("filters.internalDb"), date: stats?.lastUpdated.stations, value: "internal" },
+    { label: t("stationDetails:tabs.permits"), date: stats?.lastUpdated.stations_permits, value: "uke" },
+  ];
 
   return (
     <div className="flex items-stretch shadow-xl rounded-lg overflow-hidden border bg-background/95 backdrop-blur-md">
@@ -89,10 +107,23 @@ export function StationCounter({
           </TooltipContent>
         </Tooltip>
       )}
-      <div className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5">
-        <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none whitespace-nowrap">
-          {source === "uke" ? t("stationDetails:tabs.permits") : t("filters.internalDb")}
-        </span>
+      <div
+        className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => onSourceChange(source === "internal" ? "uke" : "internal")}
+      >
+        <Tooltip>
+          <TooltipTrigger className="text-[8px] uppercase font-bold text-muted-foreground leading-none whitespace-nowrap">
+            {sourceItems.find((s) => s.value === source)?.label}
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            {sourceItems.map(({ label, date, value }) => (
+              <p key={value} className={cn(source === value && "font-semibold")}>
+                {label}: {date ? formatRelativeTime(date, tCommon) : tCommon("status.never")}
+                {date && <span className="text-muted-foreground"> · {formatFullDate(date, i18n.language)}</span>}
+              </p>
+            ))}
+          </TooltipContent>
+        </Tooltip>
         <div className="w-px h-2 bg-border/60" />
         <span className="text-[8px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">
           {t("overlay.zoom")} {zoom?.toFixed(1) || "-"}

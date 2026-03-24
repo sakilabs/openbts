@@ -299,7 +299,7 @@ export const PopupContent = memo(function PopupContent({
           GPS: {formatCoordinates(location.latitude, location.longitude, preferences.gpsFormat)}
         </span>
         <div className="flex items-center gap-1.5">
-          <PopupPhotosButton locationId={location.id} />
+          {!isUkeSource && <PopupPhotosButton locationId={location.id} />}
           {isUkeSource && showAddToList && (
             <Suspense>
               <AddToListPopover ukeLocationId={location.id} />

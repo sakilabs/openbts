@@ -587,7 +587,6 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     void createAndDeliverNotification({
       userId: submission.submitter_id,
       type: "submission_approved",
-      title: "Submission approved",
       submissionId: id,
       metadata: {
         ...(stationStringId ? { station_id: stationStringId } : {}),

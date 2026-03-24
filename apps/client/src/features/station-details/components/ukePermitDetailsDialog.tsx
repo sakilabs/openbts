@@ -37,8 +37,8 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
   useEscapeKey(onClose, !!station);
 
   const { data: permits, isLoading: permitsLoading } = useQuery({
-    queryKey: ["uke-permits-by-station", station?.station_id],
-    queryFn: () => (station ? fetchUkePermitsByStationId(station.station_id) : Promise.resolve([])),
+    queryKey: ["uke-permits-by-station", station?.station_id, station?.operator?.mnc],
+    queryFn: () => (station ? fetchUkePermitsByStationId(station.station_id, station.operator?.mnc) : Promise.resolve([])),
     enabled: !!station,
     staleTime: 1000 * 60 * 5,
   });

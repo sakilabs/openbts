@@ -34,6 +34,11 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false,
       },
+      locale: {
+        type: "string" as const,
+        defaultValue: null,
+        input: true,
+      },
     },
     deleteUser: {
       enabled: true,

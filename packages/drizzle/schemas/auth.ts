@@ -75,6 +75,7 @@ export const users = AuthSchema.table(
     banExpires: timestamp({ withTimezone: true }),
     twoFactorEnabled: boolean("two_factor_enabled").default(false),
     forceTotp: boolean("force_totp").default(false),
+    locale: varchar("locale", { length: 10 }).default("pl"),
   },
   (table) => [index("users_email_idx").on(table.email)],
 );
@@ -367,6 +368,7 @@ export const pushSubscriptions = pgTable(
     endpoint: text("endpoint").notNull().unique(),
     p256dh: text("p256dh").notNull(),
     auth: text("auth").notNull(),
+    ukeUpdatesEnabled: boolean("uke_updates_enabled").notNull().default(false),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("push_subscriptions_user_id_idx").on(t.userId)],

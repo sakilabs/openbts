@@ -53,9 +53,10 @@ export async function fetchLocationWithStations(locationId: number, filters: Sta
   return result.data;
 }
 
-export async function fetchUkePermitsByStationId(stationId: string): Promise<UkePermit[]> {
+export async function fetchUkePermitsByStationId(stationId: string, operator?: number | null): Promise<UkePermit[]> {
   const params = new URLSearchParams();
   params.set("station_id", stationId);
+  if (operator !== null && operator !== undefined) params.set("operator", String(operator));
   const result = await fetchJson<{ data: UkePermit[] }>(`${API_BASE}/uke/permits?${decodeURIComponent(params.toString())}`);
   return result.data;
 }

@@ -3,6 +3,7 @@ import { eq, inArray } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { notifications, pushSubscriptions, users } from "@openbts/drizzle";
+import { t } from "../i18n/index.js";
 import { logger } from "../utils/logger.js";
 
 const { VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } = process.env;
@@ -11,17 +12,26 @@ if (VAPID_SUBJECT && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) webpush.setVapidDeta
 
 export type NotificationType = "submission_approved" | "submission_rejected" | "new_submission";
 
+const NOTIFICATION_TYPE_KEY: Record<NotificationType, "submissionApproved" | "submissionRejected" | "newSubmission"> = {
+  submission_approved: "submissionApproved",
+  submission_rejected: "submissionRejected",
+  new_submission: "newSubmission",
+};
+
 export interface CreateNotificationParams {
   userId: string;
   type: NotificationType;
-  title: string;
   submissionId?: string;
   metadata?: Record<string, unknown>;
   actionUrl?: string;
 }
 
 export async function createAndDeliverNotification(params: CreateNotificationParams): Promise<void> {
-  const { userId, type, title, submissionId, metadata, actionUrl } = params;
+  const { userId, type, submissionId, metadata, actionUrl } = params;
+
+  const user = await db.query.users.findFirst({ where: { id: userId }, columns: { locale: true } });
+  const strings = t(NOTIFICATION_TYPE_KEY[type], user?.locale);
+  const title = strings.title;
 
   const [inserted] = await db
     .insert(notifications)
@@ -35,11 +45,9 @@ export async function createAndDeliverNotification(params: CreateNotificationPar
     })
     .returning({ id: notifications.id });
 
-  const subs = await db.query.pushSubscriptions.findMany({
-    where: { userId },
-  });
+  const subs = await db.query.pushSubscriptions.findMany({ where: { userId } });
 
-  const payload = JSON.stringify({ title, metadata, actionUrl, notificationId: inserted?.id });
+  const payload = JSON.stringify({ title, body: strings.body, metadata, actionUrl, notificationId: inserted?.id });
 
   await deliverPush(subs, payload);
 }
@@ -63,6 +71,29 @@ async function deliverPush(subs: { endpoint: string; p256dh: string; auth: strin
   );
 }
 
+export async function notifyUkeUpdate(): Promise<void> {
+  const subs = await db
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+      locale: users.locale,
+    })
+    .from(pushSubscriptions)
+    .innerJoin(users, eq(pushSubscriptions.userId, users.id))
+    .where(eq(pushSubscriptions.ukeUpdatesEnabled, true));
+
+  if (subs.length === 0) return;
+
+  await Promise.allSettled(
+    subs.map((sub) => {
+      const strings = t("ukeUpdate", sub.locale);
+      const payload = JSON.stringify({ title: strings.title, body: strings.body, actionUrl: "/" });
+      return deliverPush([sub], payload);
+    }),
+  );
+}
+
 const STAFF_ROLES = ["admin", "editor"];
 
 export async function notifyStaffNewSubmission(params: {
@@ -71,11 +102,10 @@ export async function notifyStaffNewSubmission(params: {
   submissionType: string;
   stationId?: string;
 }): Promise<void> {
-  const staffUsers = await db.select({ id: users.id }).from(users).where(inArray(users.role, STAFF_ROLES));
+  const staffUsers = await db.select({ id: users.id, locale: users.locale }).from(users).where(inArray(users.role, STAFF_ROLES));
 
   if (staffUsers.length === 0) return;
 
-  const title = "New submission";
   const metadata: Record<string, unknown> = {
     submitter_name: params.submitterName,
     submission_type: params.submissionType,
@@ -89,7 +119,7 @@ export async function notifyStaffNewSubmission(params: {
       staffUsers.map((u) => ({
         userId: u.id,
         type: "new_submission" as const,
-        title,
+        title: t("newSubmission", u.locale).title,
         submissionId: params.submissionId,
         metadata,
         actionUrl,
@@ -98,6 +128,7 @@ export async function notifyStaffNewSubmission(params: {
     .returning({ id: notifications.id, userId: notifications.userId });
 
   const staffIds = staffUsers.map((u) => u.id);
+  const localeByUser = new Map(staffUsers.map((u) => [u.id, u.locale]));
   const allSubs = await db
     .select({
       endpoint: pushSubscriptions.endpoint,
@@ -118,7 +149,8 @@ export async function notifyStaffNewSubmission(params: {
   await Promise.allSettled(
     insertedNotifications.map((notif) => {
       const userSubs = subsByUser.get(notif.userId) ?? [];
-      return deliverPush(userSubs, JSON.stringify({ title, metadata, actionUrl, notificationId: notif.id }));
+      const strings = t("newSubmission", localeByUser.get(notif.userId));
+      return deliverPush(userSubs, JSON.stringify({ title: strings.title, body: strings.body, metadata, actionUrl, notificationId: notif.id }));
     }),
   );
 }
