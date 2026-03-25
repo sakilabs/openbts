@@ -188,6 +188,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     function onKeyDown(e: globalThis.KeyboardEvent) {
       if (e.key === "f" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         e.preventDefault();
+        (document.activeElement as HTMLElement)?.blur();
         setShowFilters((prev) => !prev);
       }
     }
