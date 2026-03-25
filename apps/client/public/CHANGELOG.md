@@ -11,6 +11,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🚀 Enhancements
 
 - The entire mobile stats panel is now a tap target. It will switch sources back and forth
+- Pressing `F` on the map now toggles the filter panel
 - Mapbox location search now also works when UKE source is selected
 - Operators without an MNC now appear as a separate segment in the map pie chart using the default color
 - Added respective colors for PGE Systemy (26018) and PKP PLK (26035)

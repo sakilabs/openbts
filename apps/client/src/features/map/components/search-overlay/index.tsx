@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, memo, useCallback, type KeyboardEvent } from "react";
+import { useState, useRef, useMemo, memo, useCallback, useEffect, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -183,6 +183,17 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   function handleToggleFilters() {
     setShowFilters((prev) => !prev);
   }
+
+  useEffect(() => {
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      if (e.key === "f" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        setShowFilters((prev) => !prev);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const handleSourceChange = useCallback((source: StationSource) => onFiltersChange({ ...filters, source }), [filters, onFiltersChange]);
 
