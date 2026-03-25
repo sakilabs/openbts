@@ -17,7 +17,7 @@ function scheduleDailyImport() {
 
   setTimeout(() => {
     logger.info("uke_import_scheduled", { trigger: "daily" });
-    void startImportJob({ importStations: true, importRadiolines: true, importPermits: true });
+    void startImportJob({ importStations: true, importRadiolines: false, importPermits: true });
     scheduleDailyImport();
   }, delay);
 }

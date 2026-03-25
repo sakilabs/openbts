@@ -10,6 +10,7 @@ const UKE_OPERATOR_NAME_MAP: Record<string, string> = {
   "t-mobile polska": "T-Mobile",
   polkomtel: "Plus",
   "pkp polskie linie kolejowe": "PKP PLK",
+  "tatrzańskie ochotnicze pogotowanie ratunkowe": "TOPR",
 };
 
 export async function upsertRegions(items: Array<{ name: string; code: string }>): Promise<Map<string, number>> {

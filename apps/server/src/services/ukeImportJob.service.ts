@@ -148,7 +148,7 @@ async function runJob(
 ): Promise<void> {
   const {
     importStations: shouldImportStations = true,
-    importRadiolines: shouldImportRadiolines = true,
+    importRadiolines: shouldImportRadiolines = false,
     importPermits: shouldImportPermits = true,
   } = options;
 
