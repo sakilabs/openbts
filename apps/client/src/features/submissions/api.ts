@@ -29,7 +29,6 @@ export type SearchCell = {
 export type SearchStation = {
   id: number;
   station_id: string;
-  location_id?: number;
   operator_id: number;
   notes: string | null;
   updatedAt: string;
@@ -81,7 +80,6 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
   return {
     id: station.id,
     station_id: station.station_id,
-    location_id: station.location_id,
     operator_id: station.operator?.id ?? null,
     notes: station.notes,
     updatedAt: station.updatedAt,

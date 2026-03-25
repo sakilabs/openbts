@@ -255,8 +255,9 @@ function MapViewInner() {
         return;
       }
 
+      const locationId = station.location?.id;
       const location: LocationInfo = {
-        id: station.location_id,
+        id: locationId,
         city: station.location?.city,
         address: station.location?.address,
         region: station.location?.region?.name,
@@ -264,7 +265,7 @@ function MapViewInner() {
         longitude: lng,
       };
       showPopup([lng, lat], location, null, null, currentFilters.source);
-      setActivePopupLocation({ locationId: station.location_id, source: currentFilters.source });
+      setActivePopupLocation({ locationId, source: currentFilters.source });
     },
     [map, showPopup],
   );

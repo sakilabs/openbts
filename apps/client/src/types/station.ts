@@ -82,7 +82,6 @@ export type ExtraIdentificator = {
 export type Station = {
   id: number;
   station_id: string;
-  location_id: number;
   operator_id: number;
   notes: string | null;
   extra_address: string | null;

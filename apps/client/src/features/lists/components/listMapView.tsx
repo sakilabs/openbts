@@ -170,7 +170,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       const lng = station.location?.longitude;
       if (!lat || !lng || !map) return;
 
-      const locationId = station.location_id;
+      const locationId = station.location?.id;
       const alreadyInList = listData?.stations.some((s) => s.location?.id === locationId);
       if (!alreadyInList) {
         const tempLoc: LocationWithStations = {

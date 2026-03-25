@@ -420,8 +420,9 @@ function StationDetailForm({
       {
         onSuccess: async (result) => {
           if (result.mode === "create") {
-            if (photos.length > 0 && result.station.location_id) {
-              await uploadLocationPhotos(result.station.location_id, photos)
+            const resultLocationId = result.station.location?.id;
+            if (photos.length > 0 && resultLocationId) {
+              await uploadLocationPhotos(resultLocationId, photos)
                 .then((uploaded) =>
                   setStationPhotoSelection(
                     result.station.id,

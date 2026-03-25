@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils.js";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip.js";
 import { Spinner } from "@/components/ui/spinner.js";
 import i18n from "@/i18n/config.js";
+import type { StationSource } from "@/types/station.js";
 
 type MobileStatsPanelProps = {
   locationCount: number;
@@ -15,7 +16,8 @@ type MobileStatsPanelProps = {
   showStations: boolean;
   searchMode: "bounds" | "search";
   zoom?: number;
-  source: "internal" | "uke";
+  source: StationSource;
+  onSourceChange: (source: StationSource) => void;
 };
 
 export function MobileStatsPanel({
@@ -30,6 +32,7 @@ export function MobileStatsPanel({
   searchMode,
   zoom,
   source,
+  onSourceChange,
 }: MobileStatsPanelProps) {
   const { t } = useTranslation("main");
   const hasMoreLocations = totalCount > locationCount;
@@ -37,7 +40,10 @@ export function MobileStatsPanel({
   const showRadioLines = radioLineCount > 0 || isRadioLinesFetching;
 
   return (
-    <div className="bg-background/95 backdrop-blur-md border rounded-lg shadow-lg overflow-hidden">
+    <div
+      className="bg-background/95 backdrop-blur-md border rounded-lg shadow-lg overflow-hidden cursor-pointer"
+      onClick={() => onSourceChange(source === "internal" ? "uke" : "internal")}
+    >
       <Tooltip>
         <TooltipTrigger
           className={cn("px-2 py-1.5 bg-muted/30 flex items-center gap-2", hasMoreLocations && "cursor-help")}

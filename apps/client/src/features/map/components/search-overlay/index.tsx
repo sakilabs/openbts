@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, memo, useCallback, type FocusEvent, type KeyboardEvent } from "react";
+import { useState, useRef, useMemo, memo, useCallback, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -351,6 +351,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           searchMode={searchMode as "bounds" | "search"}
           zoom={zoom}
           source={filters.source}
+          onSourceChange={handleSourceChange}
         />
       </div>
     </>
