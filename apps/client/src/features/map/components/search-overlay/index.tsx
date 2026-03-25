@@ -124,8 +124,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   const isUkeSource = filters.source === "uke";
 
-  const shouldSearchLocations =
-    !isUkeSource && searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
+  const shouldSearchLocations = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
   const { data: locationResults = [], isLoading: isLocationSearchLoading } = useQuery({
     queryKey: ["geocoding-search", searchKeyword],

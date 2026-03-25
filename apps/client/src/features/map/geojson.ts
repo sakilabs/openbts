@@ -16,13 +16,16 @@ export const DEFAULT_COLOR = "#3b82f6";
 type OperatorMnc = number | null | undefined;
 
 export function getOperatorData(mncs: OperatorMnc[]) {
-  const operators = [...new Set(mncs.filter((mnc): mnc is number => mnc !== null))].sort((a, b) => a - b);
-  const isMultiOperator = operators.length > 1;
+  const uniqueMncs = [...new Set(mncs)].filter((mnc) => mnc !== undefined);
+  const operators = uniqueMncs.filter((mnc): mnc is number => mnc !== null).sort((a, b) => a - b);
+  const hasNullOperator = uniqueMncs.some((mnc) => mnc === null);
+  const isMultiOperator = operators.length + (hasNullOperator ? 1 : 0) > 1;
 
   return {
     operators,
+    hasNullOperator,
     isMultiOperator,
-    pieImageId: isMultiOperator ? `pie-${operators.join("-")}` : undefined,
+    pieImageId: isMultiOperator ? `pie-${operators.join("-")}${hasNullOperator ? "-null" : ""}` : undefined,
     color: operators.length > 0 ? getOperatorColor(operators[0]) : DEFAULT_COLOR,
   };
 }
@@ -41,7 +44,7 @@ export function locationsToGeoJSON(locations: LocationWithStations[], source: St
   for (const location of locations) {
     if (location.latitude == null || location.longitude == null || !location.stations?.length) continue;
 
-    const { operators, isMultiOperator, pieImageId, color } = getOperatorData(location.stations.map((s) => s.operator?.mnc));
+    const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(location.stations.map((s) => s.operator?.mnc));
 
     features.push(
       createPointFeature(location.longitude, location.latitude, {
@@ -52,6 +55,7 @@ export function locationsToGeoJSON(locations: LocationWithStations[], source: St
         stationCount: location.stations.length,
         operatorCount: operators.length,
         operators: JSON.stringify(operators),
+        hasNullOperator,
         color,
         isMultiOperator,
         pieImageId,
@@ -68,7 +72,7 @@ export function ukeLocationsToGeoJSON(locations: UkeLocationWithPermits[], sourc
   for (const location of locations) {
     if (location.latitude == null || location.longitude == null || !location.permits?.length) continue;
 
-    const { operators, isMultiOperator, pieImageId, color } = getOperatorData(location.permits.map((p) => p.operator?.mnc));
+    const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(location.permits.map((p) => p.operator?.mnc));
 
     features.push(
       createPointFeature(location.longitude, location.latitude, {
@@ -79,6 +83,7 @@ export function ukeLocationsToGeoJSON(locations: UkeLocationWithPermits[], sourc
         stationCount: location.permits.length,
         operatorCount: operators.length,
         operators: JSON.stringify(operators),
+        hasNullOperator,
         color,
         isMultiOperator,
         pieImageId,

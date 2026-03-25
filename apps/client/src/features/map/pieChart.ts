@@ -45,11 +45,10 @@ function parseOperators(operatorsJson: string | undefined): number[] {
   }
 }
 
-function createOperatorSegments(operators: number[]) {
-  return operators.map((mnc) => ({
-    value: 1,
-    color: getOperatorColor(mnc),
-  }));
+function createOperatorSegments(operators: number[], hasNullOperator?: boolean) {
+  const segments = operators.map((mnc) => ({ value: 1, color: getOperatorColor(mnc) }));
+  if (hasNullOperator) segments.push({ value: 1, color: getOperatorColor(-1) });
+  return segments;
 }
 
 const PIN_W = 22;
@@ -131,7 +130,7 @@ export function syncMarkerImages(map: maplibregl.Map, features: GeoJSON.Feature[
         addedImages.add(imageId);
         continue;
       }
-      const segments = createOperatorSegments(parseOperators(props.operators));
+      const segments = createOperatorSegments(parseOperators(props.operators), props.hasNullOperator);
       const imageData = createPinImage(segments);
       if (imageData) {
         map.addImage(imageId, imageData);
@@ -167,7 +166,7 @@ export function syncPieImages(map: maplibregl.Map, features: GeoJSON.Feature[], 
       continue;
     }
 
-    const segments = createOperatorSegments(operators);
+    const segments = createOperatorSegments(operators, feature.properties?.hasNullOperator);
     const imageData = createPieChartImage(segments);
 
     if (imageData) {

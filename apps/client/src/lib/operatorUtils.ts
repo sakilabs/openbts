@@ -10,6 +10,10 @@ export const getOperatorColor = (mnc: number): string => {
       return "#8549CE"; // Play - Purple
     case 26034:
       return "#A2334C"; // NetWorks - Dark Red
+    case 26018:
+      return "#0E4AC0"; // PGE Systemy - Blue
+    case 26035:
+      return "#0082F4"; // PKP PLK - Light Blue
     default:
       return "#00E1FF"; // blue
   }
