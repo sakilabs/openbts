@@ -158,16 +158,6 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     activeOverlay === "results" &&
     (isSearching || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0);
 
-  function handleFilterPanelBlur(e: FocusEvent) {
-    const relatedTarget = e.relatedTarget as Node | null;
-    const isInsidePanel = filterPanelRef.current?.contains(relatedTarget);
-    const isToggleButton = (relatedTarget as Element)?.closest("[data-filter-toggle]");
-
-    if (!isInsidePanel && !isToggleButton) {
-      setShowFilters(false);
-    }
-  }
-
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape") {
       if (activeOverlay) {
@@ -250,7 +240,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         )}
 
         {showFilters && !isMobile && (
-          <fieldset ref={filterPanelRef} onBlur={handleFilterPanelBlur} tabIndex={-1}>
+          <fieldset ref={filterPanelRef} tabIndex={-1}>
             <FilterPanel
               filters={filters}
               operators={operators}
