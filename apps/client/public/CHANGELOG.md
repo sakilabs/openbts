@@ -8,6 +8,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed `address:` and `city:` search filters ignoring other location filters (e.g. `region:`) when combined. The OR inside the similarity condition was not parenthesised, causing `AND` to bind tighter and bypass the region constraint
 - Fixed `new` filter on `/uke/locations` checking the location's own timestamps instead of its associated permits' `updatedAt`/`createdAt`
 
+### 🚀 Enhancements
+
+- UKE station dialog now shows the oldest `createdAt` and newest `updatedAt` across all permits for that station in the dialog header, matching the internal station dialog
+
 # 2026-03-25
 
 ### 🩹 Fixes

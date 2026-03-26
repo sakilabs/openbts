@@ -13,6 +13,7 @@ import { PermitsList } from "./permitsList";
 import type { UkeStation } from "@/types/station";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import { formatRelativeTime, formatFullDate } from "@/lib/format";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { authClient } from "@/lib/authClient";
@@ -24,7 +25,8 @@ type UkeStationDetailsDialogProps = {
 };
 
 export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDialogProps) {
-  const { t } = useTranslation(["stationDetails", "common"]);
+  const { t, i18n } = useTranslation(["stationDetails", "common"]);
+  const { t: tCommon } = useTranslation("common");
   const { preferences } = usePreferences();
   const location = useLocation();
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
@@ -47,6 +49,17 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
 
   const { location: stationLocation, operator, station_id } = station;
   const operatorColor = operator?.mnc ? getOperatorColor(operator.mnc) : "#3b82f6";
+
+  let oldestCreatedAt: string | null = null;
+  let newestUpdatedAt: string | null = null;
+  if (permits?.length) {
+    oldestCreatedAt = permits[0].createdAt;
+    newestUpdatedAt = permits[0].updatedAt;
+    for (const p of permits) {
+      if (p.createdAt < oldestCreatedAt) oldestCreatedAt = p.createdAt;
+      if (p.updatedAt > newestUpdatedAt) newestUpdatedAt = p.updatedAt;
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto sm:items-center">
@@ -77,6 +90,23 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                       {stationLocation.city}
                       {stationLocation.region && ` - ${stationLocation.region.name}`}
                     </p>
+                    {oldestCreatedAt && newestUpdatedAt && (
+                      <div className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 pt-0.5">
+                        <Tooltip>
+                          <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
+                            {tCommon("labels.created")}: {formatRelativeTime(oldestCreatedAt, tCommon)}
+                          </TooltipTrigger>
+                          <TooltipContent>{formatFullDate(oldestCreatedAt, i18n.language)}</TooltipContent>
+                        </Tooltip>
+                        <span className="hidden sm:inline text-xs text-muted-foreground/40">·</span>
+                        <Tooltip>
+                          <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
+                            {tCommon("labels.updated")}: {formatRelativeTime(newestUpdatedAt, tCommon)}
+                          </TooltipTrigger>
+                          <TooltipContent>{formatFullDate(newestUpdatedAt, i18n.language)}</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
