@@ -35,6 +35,7 @@ export const DEFAULT_FILTERS: StationFilters = {
   showStations: true,
   showRadiolines: false,
   radiolineOperators: [],
+  showHeatmap: false,
 };
 
 const MAP_FILTERS_STORAGE_KEY = "map:filters";
@@ -61,6 +62,7 @@ export function loadMapFilters(): StationFilters | null {
       showStations: parsed.showStations ?? true,
       showRadiolines: parsed.showRadiolines ?? false,
       radiolineOperators: parsed.radiolineOperators ?? [],
+      showHeatmap: parsed.showHeatmap ?? false,
     };
   } catch {
     return null;
@@ -99,8 +101,6 @@ type StationsLayerProps = {
   popupActions: PopupActions;
   onRadiolineIdFromUrl?: (id: number) => void;
   activePopupLocationId?: number | null;
-  showHeatmap?: boolean;
-  onHeatmapChange?: (v: boolean) => void;
 };
 
 export function StationsLayer({
@@ -113,8 +113,6 @@ export function StationsLayer({
   popupActions,
   onRadiolineIdFromUrl,
   activePopupLocationId,
-  showHeatmap = false,
-  onHeatmapChange,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
@@ -234,19 +232,17 @@ export function StationsLayer({
     isLoaded,
     filters,
     zoom,
-    showHeatmap,
-    onHeatmapChange: onHeatmapChange ?? (() => {}),
     onInitialize: handleUrlInitialize,
   });
 
   const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
 
   const geoJSON = useMemo(() => {
-    if (!filters.showStations && !showHeatmap) return EMPTY_GEOJSON;
+    if (!filters.showStations && !filters.showHeatmap) return EMPTY_GEOJSON;
     return filters.source === "uke"
       ? ukeLocationsToGeoJSON(locations as unknown as UkeLocationWithPermits[], filters.source)
       : locationsToGeoJSON(locations, filters.source);
-  }, [locations, filters.source, filters.showStations, showHeatmap]);
+  }, [locations, filters.source, filters.showStations, filters.showHeatmap]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -392,7 +388,7 @@ export function StationsLayer({
     pointStyle: preferences.mapPointStyle,
   });
 
-  useHeatmapLayer({ map, isLoaded, enabled: showHeatmap, showStations: filters.showStations });
+  useHeatmapLayer({ map, isLoaded, enabled: filters.showHeatmap, showStations: filters.showStations });
 
   const azimuthEnabled = preferences.showAzimuths && filters.source === "uke" && zoom >= preferences.azimuthsMinZoom;
   useAzimuthLayer({

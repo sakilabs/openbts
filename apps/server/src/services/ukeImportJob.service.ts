@@ -153,6 +153,7 @@ async function runJob(
   } = options;
 
   let stationsChanged = false;
+  let radiolinesChanged = false;
   let permitsChanged = false;
 
   try {
@@ -178,7 +179,7 @@ async function runJob(
       markRunning(job, "radiolines");
       await saveJob(job);
       try {
-        const radiolinesChanged = await runInWorker("importRadiolines");
+        radiolinesChanged = await runInWorker("importRadiolines");
         if (radiolinesChanged) markSuccess(job, "radiolines");
         else markSkipped(job, "radiolines");
         await saveJob(job);
@@ -287,7 +288,9 @@ async function runJob(
     job.state = "success";
     job.finishedAt = new Date().toISOString();
     await saveJob(job);
-    notifyUkeUpdate().catch((e) => logger.error("Failed to send UKE update notifications", { error: e instanceof Error ? e.message : String(e) }));
+    if (stationsChanged || radiolinesChanged || permitsChanged) {
+      notifyUkeUpdate().catch((e) => logger.error("Failed to send UKE update notifications", { error: e instanceof Error ? e.message : String(e) }));
+    }
   } catch (e) {
     job.state = "error";
     job.finishedAt = new Date().toISOString();

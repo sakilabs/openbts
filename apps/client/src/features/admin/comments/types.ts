@@ -12,7 +12,6 @@ export type AdminComment = {
   author: {
     id: string;
     username: string | null;
-    displayUsername: string | null;
     name: string;
     image: string | null;
   } | null;

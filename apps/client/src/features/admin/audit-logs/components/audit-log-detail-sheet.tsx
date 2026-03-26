@@ -69,9 +69,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                     </Avatar>
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm">{entry.user.name}</span>
-                      {entry.user.displayUsername && (
-                        <span className="truncate max-w-28 text-[10px] text-muted-foreground">@{entry.user.displayUsername}</span>
-                      )}
+                      {entry.user.username && <span className="truncate max-w-28 text-[10px] text-muted-foreground">@{entry.user.username}</span>}
                     </div>
                   </div>
                 ) : (

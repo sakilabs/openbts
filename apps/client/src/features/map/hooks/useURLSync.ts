@@ -6,8 +6,6 @@ type UseUrlSyncArgs = {
   isLoaded: boolean;
   filters: StationFilters;
   zoom: number;
-  showHeatmap: boolean;
-  onHeatmapChange: (v: boolean) => void;
   onInitialize: (data: {
     filters?: StationFilters;
     center?: [number, number];
@@ -27,7 +25,6 @@ function parseUrlHash(): {
   stationId?: string;
   locationId?: number;
   radiolineId?: number;
-  showHeatmap?: boolean;
 } {
   const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
   if (!hash.startsWith("map=")) {
@@ -82,8 +79,7 @@ function parseUrlHash(): {
   const showHeatmap = params.get("heatmap") === "1";
 
   return {
-    filters: hasFilterParams ? { operators, bands, rat, source, recentDays, showStations, showRadiolines, radiolineOperators } : null,
-    showHeatmap: hasFilterParams ? showHeatmap : undefined,
+    filters: hasFilterParams ? { operators, bands, rat, source, recentDays, showStations, showRadiolines, radiolineOperators, showHeatmap } : null,
     center: !Number.isNaN(lat) && !Number.isNaN(lng) ? [lng, lat] : undefined,
     zoom: !Number.isNaN(z) ? z : undefined,
     stationId,
@@ -92,7 +88,7 @@ function parseUrlHash(): {
   };
 }
 
-function buildUrlHash(filters: StationFilters, showHeatmap: boolean, map: maplibregl.Map, zoomOverride?: number): string {
+function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride?: number): string {
   const params = new URLSearchParams();
 
   if (filters.operators.length > 0) params.set("operators", filters.operators.join(","));
@@ -103,7 +99,7 @@ function buildUrlHash(filters: StationFilters, showHeatmap: boolean, map: maplib
   if (filters.showRadiolines) params.set("radiolines", "1");
   if (!filters.showStations) params.set("stations", "0");
   if (filters.radiolineOperators.length > 0) params.set("rl_operators", filters.radiolineOperators.join(","));
-  if (showHeatmap) params.set("heatmap", "1");
+  if (filters.showHeatmap) params.set("heatmap", "1");
 
   const center = map.getCenter();
   const zoom = zoomOverride ?? map.getZoom();
@@ -114,13 +110,13 @@ function buildUrlHash(filters: StationFilters, showHeatmap: boolean, map: maplib
   return `#${mapPart}${query ? `?${query}` : ""}`;
 }
 
-export function useUrlSync({ map, isLoaded, filters, zoom, showHeatmap, onHeatmapChange, onInitialize }: UseUrlSyncArgs) {
+export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUrlSyncArgs) {
   const isInitialized = useRef(false);
 
   useEffect(() => {
     if (!isLoaded || !map || isInitialized.current) return;
 
-    const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId, radiolineId, showHeatmap: urlHeatmap } = parseUrlHash();
+    const { filters: urlFilters, center, zoom: urlZoom, stationId, locationId, radiolineId } = parseUrlHash();
 
     if (center || urlZoom !== undefined) {
       map.flyTo({
@@ -130,8 +126,6 @@ export function useUrlSync({ map, isLoaded, filters, zoom, showHeatmap, onHeatma
         speed: 1.5,
       });
     }
-
-    if (urlHeatmap !== undefined) onHeatmapChange(urlHeatmap);
 
     onInitialize({
       filters: urlFilters
@@ -144,6 +138,7 @@ export function useUrlSync({ map, isLoaded, filters, zoom, showHeatmap, onHeatma
             showStations: urlFilters.showStations ?? true,
             showRadiolines: urlFilters.showRadiolines ?? false,
             radiolineOperators: urlFilters.radiolineOperators || [],
+            showHeatmap: urlFilters.showHeatmap ?? false,
           }
         : undefined,
       center,
@@ -154,12 +149,12 @@ export function useUrlSync({ map, isLoaded, filters, zoom, showHeatmap, onHeatma
     });
 
     isInitialized.current = true;
-  }, [isLoaded, map, onInitialize, onHeatmapChange]);
+  }, [isLoaded, map, onInitialize]);
 
   useEffect(() => {
     if (!isLoaded || !map || !isInitialized.current) return;
 
-    const newUrl = `${window.location.pathname}${buildUrlHash(filters, showHeatmap, map, zoom)}`;
+    const newUrl = `${window.location.pathname}${buildUrlHash(filters, map, zoom)}`;
     window.history.replaceState(null, "", newUrl);
-  }, [filters, showHeatmap, isLoaded, map, zoom]);
+  }, [filters, isLoaded, map, zoom]);
 }

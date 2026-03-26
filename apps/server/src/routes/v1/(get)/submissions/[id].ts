@@ -29,7 +29,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const submittersSchema = createSelectSchema(users);
-const reviewersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, displayUsername: true });
+const reviewersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, username: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
@@ -93,7 +93,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
           id: true,
           name: true,
           image: true,
-          displayUsername: true,
+          username: true,
         },
       },
       proposedLocation: true,

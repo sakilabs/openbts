@@ -10,7 +10,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const auditLogSchema = createSelectSchema(auditLogs);
-const userSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, displayUsername: true });
+const userSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, username: true });
 
 const schemaRoute = {
   params: z.object({
@@ -41,7 +41,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
           id: true,
           name: true,
           image: true,
-          displayUsername: true,
+          username: true,
         },
       },
     },

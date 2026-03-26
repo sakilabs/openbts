@@ -23,7 +23,7 @@ export function SubmitterCard({ submission }: { submission: SubmissionDetail }) 
           </Avatar>
           <div className="flex-1 min-w-0 space-y-1">
             <p className="text-sm font-medium leading-none truncate">{submission.submitter.name}</p>
-            <p className="text-xs text-muted-foreground truncate">@{submission.submitter.displayUsername}</p>
+            {submission.submitter.username && <p className="text-xs text-muted-foreground truncate">@{submission.submitter.username}</p>}
             {submission.createdAt && (
               <p className="text-[11px] text-muted-foreground/70">
                 {t("detail.createdAt")}: {formatFullDate(submission.createdAt, i18n.language)}

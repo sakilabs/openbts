@@ -239,7 +239,7 @@ function AdminAuditLogsPage() {
               </Avatar>
               <div className="flex flex-col min-w-0">
                 <span className="truncate max-w-28 text-xs font-medium">{user.name}</span>
-                {user.displayUsername && <span className="truncate max-w-28 text-[10px] text-muted-foreground">@{user.displayUsername}</span>}
+                {user.username && <span className="truncate max-w-28 text-[10px] text-muted-foreground">@{user.username}</span>}
               </div>
             </div>
           );

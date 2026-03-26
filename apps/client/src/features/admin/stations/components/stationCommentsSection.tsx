@@ -94,9 +94,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-sm">{comment.author?.name ?? `User #${comment.author_id}`}</span>
-                          {comment.author?.displayUsername && (
-                            <span className="text-xs text-muted-foreground">@{comment.author.displayUsername}</span>
-                          )}
+                          {comment.author?.username && <span className="text-xs text-muted-foreground">@{comment.author.username}</span>}
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <HugeiconsIcon icon={Calendar03Icon} className="size-3" />
                             {new Date(comment.createdAt).toLocaleDateString(i18n.language)}

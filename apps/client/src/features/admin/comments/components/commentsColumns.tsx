@@ -75,7 +75,7 @@ export function createCommentsColumns({
             </Avatar>
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{author?.name ?? `#${row.original.user_id}`}</p>
-              {author?.displayUsername && <p className="text-xs text-muted-foreground truncate">@{author.displayUsername}</p>}
+              {author?.username && <p className="text-xs text-muted-foreground truncate">@{author.username}</p>}
             </div>
           </div>
         );

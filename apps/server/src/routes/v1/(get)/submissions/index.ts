@@ -24,7 +24,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
-const usersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, displayUsername: true });
+const usersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, username: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
 const proposedStationSchema = createSelectSchema(proposedStations);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
@@ -135,7 +135,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           id: true,
           name: true,
           image: true,
-          displayUsername: true,
+          username: true,
         },
       },
       reviewer: {
@@ -143,7 +143,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           id: true,
           name: true,
           image: true,
-          displayUsername: true,
+          username: true,
         },
       },
       proposedStation: true,

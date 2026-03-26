@@ -11,7 +11,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.ts";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.ts";
 
 const stationCommentSelectSchema = createSelectSchema(stationComments);
-const userSelectSchema = createSelectSchema(users).pick({ id: true, username: true, displayUsername: true, name: true, image: true });
+const userSelectSchema = createSelectSchema(users).pick({ id: true, username: true, name: true, image: true });
 const stationWithOperatorSchema = createSelectSchema(stations)
   .pick({ id: true, station_id: true })
   .extend({ operator: createSelectSchema(operators).nullable() });
@@ -83,7 +83,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       },
       with: {
         author: {
-          columns: { id: true, username: true, displayUsername: true, name: true, image: true },
+          columns: { id: true, username: true, name: true, image: true },
         },
         station: {
           columns: { id: true, station_id: true },

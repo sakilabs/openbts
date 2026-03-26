@@ -740,7 +740,6 @@ paths:
                               properties:
                                 id: { type: string, format: uuid }
                                 username: { type: string, nullable: true }
-                                displayUsername: { type: string, nullable: true }
                                 name: { type: string }
                                 image: { type: string, nullable: true }
                             station:
@@ -3549,7 +3548,6 @@ components:
               properties:
                 id: { type: string, format: uuid }
                 username: { type: string, nullable: true }
-                displayUsername: { type: string, nullable: true }
                 name: { type: string, nullable: true }
                 image: { type: string, nullable: true }
 
@@ -3757,13 +3755,12 @@ components:
         id: { type: string, format: uuid }
         name: { type: string, nullable: true }
         image: { type: string, nullable: true }
-        displayUsername: { type: string, nullable: true }
+        username: { type: string, nullable: true }
     UserFull:
       type: object
       properties:
         id: { type: string, format: uuid }
         username: { type: string, nullable: true }
-        displayUsername: { type: string, nullable: true }
         email: { type: string }
         image: { type: string, nullable: true }
         name: { type: string }

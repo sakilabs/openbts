@@ -80,7 +80,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
               author: lightboxComment.author
                 ? {
                     uuid: lightboxComment.author.id,
-                    username: lightboxComment.author.displayUsername ?? lightboxComment.author.username ?? "",
+                    username: lightboxComment.author.username ?? "",
                     name: lightboxComment.author.name,
                   }
                 : null,
@@ -141,9 +141,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-sm font-bold truncate">{comment.author?.name}</span>
-                    {comment.author?.displayUsername && (
-                      <span className="text-xs text-muted-foreground truncate">@{comment.author.displayUsername}</span>
-                    )}
+                    {comment.author?.username && <span className="text-xs text-muted-foreground truncate">@{comment.author.username}</span>}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">

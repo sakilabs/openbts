@@ -35,7 +35,7 @@ export function AdminReviewCard({ submission, reviewNotes, onReviewNotesChange, 
             </Avatar>
             <div className="flex-1 min-w-0 space-y-1">
               <p className="text-sm font-medium leading-none truncate">{reviewer.name}</p>
-              <p className="text-xs text-muted-foreground truncate">@{reviewer.displayUsername}</p>
+              {reviewer.username && <p className="text-xs text-muted-foreground truncate">@{reviewer.username}</p>}
               {submission.reviewed_at && (
                 <p className="text-[11px] text-muted-foreground/70">
                   {t("detail.reviewedAt")}: {formatFullDate(submission.reviewed_at, i18n.language)}

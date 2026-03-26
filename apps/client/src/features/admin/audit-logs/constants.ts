@@ -2,7 +2,7 @@ export interface AuditLogUser {
   id: string;
   name: string;
   image: string | null;
-  displayUsername: string | null;
+  username: string | null;
 }
 
 export interface AuditLogEntry {

@@ -5,7 +5,7 @@ export type SubmissionUser = {
   id: string;
   name: string;
   image: string | null;
-  displayUsername: string;
+  username: string | null;
 };
 
 export type ProposedCell = {

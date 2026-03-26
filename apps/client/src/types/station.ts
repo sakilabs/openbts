@@ -157,6 +157,7 @@ export type StationFilters = {
   showStations: boolean;
   showRadiolines: boolean;
   radiolineOperators: number[];
+  showHeatmap: boolean;
 };
 
 export type StationWithoutCells = Omit<Station, "location" | "cells"> & {
@@ -266,7 +267,6 @@ export type StationComment = {
   author?: {
     id: string;
     username: string | null;
-    displayUsername: string | null;
     name: string;
     image: string | null;
   };
