@@ -15,6 +15,7 @@ self.addEventListener("activate", (event) => {
 
 type PushPayload = {
   title?: string;
+  body?: string;
   metadata?: { station_id?: string; reviewer_note?: string; submitter_name?: string; submission_type?: string };
   actionUrl?: string;
   notificationId?: string;
@@ -35,7 +36,7 @@ self.addEventListener("push", (event) => {
 
   (event as ExtendableEvent).waitUntil(
     self.registration.showNotification(data.title ?? "OpenBTS", {
-      body: lines.join("\n") || undefined,
+      body: lines.join("\n") || data.body || undefined,
       icon: "/pwa-192x192.png",
       data: { actionUrl: data.actionUrl, notificationId: data.notificationId },
     }),
