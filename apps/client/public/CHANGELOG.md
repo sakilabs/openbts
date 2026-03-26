@@ -5,6 +5,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
+- Station dialog no longer jumps in height when switching tabs while the new tab's content is still loading
 - Fixed `address:` and `city:` search filters ignoring other location filters (e.g. `region:`) when combined. The OR inside the similarity condition was not parenthesised, causing `AND` to bind tighter and bypass the region constraint
 - Fixed `new` filter on `/uke/locations` checking the location's own timestamps instead of its associated permits' `updatedAt`/`createdAt`
 

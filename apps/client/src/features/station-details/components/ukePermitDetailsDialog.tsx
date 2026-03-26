@@ -86,9 +86,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                 {stationLocation && (
                   <div className="flex flex-col gap-0.5">
                     <p className="text-sm font-medium text-foreground/90 truncate">{stationLocation.address || t("dialog.btsStation")}</p>
-                    <p className="text-xs text-muted-foreground font-medium opacity-80">
-                      {stationLocation.city}
-                    </p>
+                    <p className="text-xs text-muted-foreground font-medium opacity-80">{stationLocation.city}</p>
                     {oldestCreatedAt && newestUpdatedAt && (
                       <div className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 pt-0.5">
                         <Tooltip>

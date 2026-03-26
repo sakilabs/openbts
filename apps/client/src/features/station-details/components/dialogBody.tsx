@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { Station } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -60,6 +60,34 @@ export function StationDetailsBody({
   const { data: settings } = useSettings();
   const { preferences } = usePreferences();
   const location = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [minContentHeight, setMinContentHeight] = useState(0);
+
+  useEffect(() => {
+    if (!minContentHeight || !contentRef.current) return;
+    const el = contentRef.current;
+    const observer = new ResizeObserver(() => {
+      if (el.offsetHeight >= minContentHeight) {
+        setMinContentHeight(0);
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(el);
+    const id = setTimeout(() => {
+      setMinContentHeight(0);
+      observer.disconnect();
+    }, 1500);
+    return () => {
+      observer.disconnect();
+      clearTimeout(id);
+    };
+  }, [minContentHeight]);
+
+  const handleTabChange = (tab: TabId) => {
+    if (contentRef.current) setMinContentHeight(contentRef.current.offsetHeight);
+    onTabChange(tab);
+  };
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
   const cellGroups = station ? groupCellsByRat(station.cells) : {};
   const visibleTabs = useMemo(
@@ -129,13 +157,13 @@ export function StationDetailsBody({
           <p className="text-muted-foreground max-w-xs">{error instanceof Error ? error.message : t("common:placeholder.errorFetching")}</p>
         </div>
       ) : station ? (
-        <div className="p-6 space-y-8">
+        <div ref={contentRef} className="p-6 space-y-8" style={minContentHeight ? { minHeight: minContentHeight } : undefined}>
           <div className="flex p-1 bg-muted/50 rounded-xl gap-1">
             {visibleTabs.map((tab) => (
               <button
                 type="button"
                 key={tab.id}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200",
                   activeTab === tab.id
