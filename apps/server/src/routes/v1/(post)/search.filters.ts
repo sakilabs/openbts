@@ -193,7 +193,7 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     table: "locations",
     buildCondition: (value: FilterValue) => {
       const values = parseStrings(value);
-      const conditions = values.map((val) => sql`${val} <% ${locations.city} OR ${locations.city} ILIKE ${`%${val}%`}`);
+      const conditions = values.map((val) => sql`(${val} <% ${locations.city} OR ${locations.city} ILIKE ${`%${val}%`})`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },
   },
@@ -201,7 +201,7 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     table: "locations",
     buildCondition: (value: FilterValue) => {
       const values = parseStrings(value);
-      const conditions = values.map((val) => sql`${val} <% ${locations.address} OR ${locations.address} ILIKE ${`%${val}%`}`);
+      const conditions = values.map((val) => sql`(${val} <% ${locations.address} OR ${locations.address} ILIKE ${`%${val}%`})`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },
   },

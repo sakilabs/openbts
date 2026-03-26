@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-26
+
+### 🩹 Fixes
+
+- Fixed `address:` and `city:` search filters ignoring other location filters (e.g. `region:`) when combined. The OR inside the similarity condition was not parenthesised, causing `AND` to bind tighter and bypass the region constraint
+- Fixed `new` filter on `/uke/locations` checking the location's own timestamps instead of its associated permits' `updatedAt`/`createdAt`
+
 # 2026-03-25
 
 ### 🩹 Fixes

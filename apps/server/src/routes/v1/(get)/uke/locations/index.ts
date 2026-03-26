@@ -181,7 +181,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
     if (recentDays) {
       const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
-      conditions.push(sql`GREATEST(${locFields.createdAt}, ${locFields.updatedAt}) >= ${cutoff.toISOString()}`);
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${ukePermits}
+        WHERE ${ukePermits.location_id} = ${locFields.id}
+        AND (${ukePermits.updatedAt} >= ${cutoff.toISOString()} OR ${ukePermits.createdAt} >= ${cutoff.toISOString()})
+      )`);
     }
     return conditions;
   };
