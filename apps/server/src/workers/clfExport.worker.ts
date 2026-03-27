@@ -1,16 +1,16 @@
 import { parentPort } from "node:worker_threads";
-import { writeFile } from "node:fs/promises";
+import { writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { and, inArray, eq } from "drizzle-orm";
-
 import db from "../database/psql.js";
 import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
 import { convertToCLF, type ClfFormat } from "../utils/clf-export.js";
 
 if (!parentPort) throw new Error("This file must be run as a worker thread");
 
+const CLF_TMP_DIR = join(tmpdir(), "clf-exports");
 const NETWORKS_MNC = 26034;
 const NETWORKS_CHILD_MNCS = [26002, 26003];
 
@@ -269,7 +269,8 @@ parentPort.on("message", async (params: WorkerParams) => {
 
     clfLines.sort();
 
-    const tmpPath = join(tmpdir(), `clf-export-${randomUUID()}.txt`);
+    await mkdir(CLF_TMP_DIR, { recursive: true });
+    const tmpPath = join(CLF_TMP_DIR, `${randomUUID()}.txt`);
     await writeFile(tmpPath, clfLines.join("\n") + "\n");
 
     parentPort!.postMessage({ success: true, tmpPath });

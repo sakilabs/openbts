@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "CLF Export",
-    "description": "Export cell data to CLF (Cell List File) format. These files can be used in cellular network monitoring applications to identify base stations serving the phone"
+    "description": "Export cell data to CLF (Cell List File) format. These files can be used in cellular network monitoring applications to identify base stations serving the phone. Data may be delayed by 1 hour"
   },
   "info": {
     "appsTitle": "Popular monitoring applications using CLF files:",
