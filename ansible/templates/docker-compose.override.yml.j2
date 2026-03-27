@@ -27,6 +27,9 @@ services:
       - VAPID_PUBLIC_KEY=
       - VAPID_PRIVATE_KEY=
       - VAPID_SUBJECT={{ vapid_subject }}
+      # Resend (email)
+      - RESEND_API_KEY=
+      - RESEND_FROM=noreply@openbts.sakilabs.com
       # Optional Axiom logging:
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts

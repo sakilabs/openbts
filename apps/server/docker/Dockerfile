@@ -1,5 +1,7 @@
 FROM node:22-alpine AS builder
 
+ENV NODE_ENV=production
+
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10 --activate
@@ -23,6 +25,8 @@ RUN pnpm --filter @openbts/drizzle build && \
     pnpm --filter @openbts/sora build
 
 FROM oven/bun:alpine
+
+ENV NODE_ENV=production
 
 RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
 ENV PATH="/root/.local/share/pnpm:$PATH"
