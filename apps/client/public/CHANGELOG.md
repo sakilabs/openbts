@@ -1,6 +1,12 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-27
+
+### 🩹 Fixes
+
+- RAT toggle pills are now disabled on approved submissions, not just rejected ones on /admin/submissions/$id
+
 # 2026-03-26
 
 ### 🩹 Fixes

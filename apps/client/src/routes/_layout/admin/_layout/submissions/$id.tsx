@@ -476,7 +476,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}
               onDeleteCell={handleDeleteCell}
-              ratPillsDisabled={isRejected}
+              ratPillsDisabled={isReadOnly}
               showAddButton={!isFormDisabled}
               showConfirmCellsButton={!isFormDisabled}
               onConfirmAllCellsInRat={handleConfirmAllCellsInRat}
