@@ -11,23 +11,34 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const schemaRoute = {
   response: {
-    200: z.object({ data: z.object({ ukeUpdatesEnabled: z.boolean() }) }),
+    200: z.object({
+      data: z.object({
+        ukeUpdates: z.boolean(),
+        submissionUpdates: z.boolean(),
+        newSubmission: z.boolean(),
+      }),
+    }),
   },
 };
 
-type ResponseData = { data: { ukeUpdatesEnabled: boolean } };
+type ResponseData = { data: { ukeUpdates: boolean; submissionUpdates: boolean; newSubmission: boolean } };
 
 async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData>>) {
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
   const subs = await db
-    .select({ ukeUpdatesEnabled: pushSubscriptions.ukeUpdatesEnabled })
+    .select({ preferences: pushSubscriptions.preferences })
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.userId, session.user.id));
 
-  const ukeUpdatesEnabled = subs.some((s) => s.ukeUpdatesEnabled);
-  return res.send({ data: { ukeUpdatesEnabled } });
+  return res.send({
+    data: {
+      ukeUpdates: subs.some((s) => s.preferences.ukeUpdates === true),
+      submissionUpdates: !subs.some((s) => s.preferences.submissionUpdates === false),
+      newSubmission: !subs.some((s) => s.preferences.newSubmission === false),
+    },
+  });
 }
 
 const getPushPreferences: Route<object, ResponseData> = {

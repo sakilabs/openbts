@@ -62,7 +62,15 @@
     "ukeUpdates": "Aktualizacje danych UKE",
     "ukeUpdatesHint": "Otrzymuj powiadomienie, gdy nowe dane stacji UKE zostaną zaimportowane",
     "ukeUpdatesLabel": "Powiadamiaj mnie o aktualizacjach UKE",
-    "ukeUpdatesDesc": "Otrzymuj powiadomienie push, gdy dane stacji lub pozwoleń UKE zostaną odświeżone"
+    "ukeUpdatesDesc": "Otrzymuj powiadomienie push, gdy dane stacji lub pozwoleń UKE zostaną odświeżone",
+    "submissionUpdates": "Aktualizacje zgłoszeń",
+    "submissionUpdatesHint": "Otrzymuj powiadomienie, gdy Twoje zgłoszenia zostaną rozpatrzone",
+    "submissionUpdatesLabel": "Powiadamiaj mnie o decyzjach dotyczących zgłoszeń",
+    "submissionUpdatesDesc": "Otrzymuj powiadomienie push, gdy Twoje zgłoszenie zostanie zaakceptowane lub odrzucone",
+    "newSubmissions": "Nowe zgłoszenia",
+    "newSubmissionsHint": "Otrzymuj powiadomienie, gdy użytkownicy nadeślą nowe dane do weryfikacji",
+    "newSubmissionsLabel": "Powiadamiaj mnie o nowych zgłoszeniach",
+    "newSubmissionsDesc": "Otrzymuj powiadomienie push, gdy nowe zgłoszenie oczekuje na weryfikację"
   },
   "page": {
     "title": "Ustawienia konta",

@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { notifications, pushSubscriptions, users } from "@openbts/drizzle";
@@ -45,11 +45,13 @@ export async function createAndDeliverNotification(params: CreateNotificationPar
     })
     .returning({ id: notifications.id });
 
-  const subs = await db.query.pushSubscriptions.findMany({ where: { userId } });
+  const allSubs = await db.query.pushSubscriptions.findMany({ where: { userId } });
+  const pushSubs =
+    type === "submission_approved" || type === "submission_rejected" ? allSubs.filter((s) => s.preferences.submissionUpdates !== false) : allSubs;
 
   const payload = JSON.stringify({ title, body: strings.body, metadata, actionUrl, notificationId: inserted?.id });
 
-  await deliverPush(subs, payload);
+  await deliverPush(pushSubs, payload);
 }
 
 async function deliverPush(subs: { endpoint: string; p256dh: string; auth: string }[], payload: string): Promise<void> {
@@ -81,8 +83,7 @@ export async function notifyUkeUpdate(): Promise<void> {
     })
     .from(pushSubscriptions)
     .innerJoin(users, eq(pushSubscriptions.userId, users.id))
-    .where(eq(pushSubscriptions.ukeUpdatesEnabled, true));
-
+    .where(sql`(${pushSubscriptions.preferences}->>'ukeUpdates')::boolean = true`);
   if (subs.length === 0) return;
 
   await Promise.allSettled(
@@ -103,7 +104,6 @@ export async function notifyStaffNewSubmission(params: {
   stationId?: string;
 }): Promise<void> {
   const staffUsers = await db.select({ id: users.id, locale: users.locale }).from(users).where(inArray(users.role, STAFF_ROLES));
-
   if (staffUsers.length === 0) return;
 
   const metadata: Record<string, unknown> = {
@@ -137,7 +137,7 @@ export async function notifyStaffNewSubmission(params: {
       userId: pushSubscriptions.userId,
     })
     .from(pushSubscriptions)
-    .where(inArray(pushSubscriptions.userId, staffIds));
+    .where(and(inArray(pushSubscriptions.userId, staffIds), sql`(${pushSubscriptions.preferences}->>'newSubmission') IS DISTINCT FROM 'false'`));
 
   const subsByUser = new Map<string, { endpoint: string; p256dh: string; auth: string }[]>();
   for (const sub of allSubs) {

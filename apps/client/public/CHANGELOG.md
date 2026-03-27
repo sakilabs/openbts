@@ -7,6 +7,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - RAT toggle pills are now disabled on approved submissions, not just rejected ones on /admin/submissions/$id
 
+### 🚀 Enhancements
+
+- Push notification preferences are now per-type: regular users can opt out of submission approved/rejected push notifications, staff (admin/editor) can opt out of new submission push notifications, both configurable in /preferences alongside the existing UKE updates toggle
+
 # 2026-03-26
 
 ### 🩹 Fixes

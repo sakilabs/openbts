@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "a119d1e2-13da-40c0-a103-2df4b7fbabdb",
+  "id": "b39820ff-f80e-4252-bd0d-3b305a061aa1",
   "prevIds": ["b7b651a6-ade6-4a5e-bfb6-ae55ce159b92"],
   "ddl": [
     {
@@ -4194,14 +4194,14 @@
       "table": "push_subscriptions"
     },
     {
-      "type": "boolean",
+      "type": "jsonb",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "false",
+      "default": "'{}'",
       "generated": null,
       "identity": null,
-      "name": "uke_updates_enabled",
+      "name": "preferences",
       "entityType": "columns",
       "schema": "public",
       "table": "push_subscriptions"

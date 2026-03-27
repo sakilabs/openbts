@@ -62,7 +62,15 @@
     "ukeUpdates": "UKE Data Updates",
     "ukeUpdatesHint": "Get notified when new UKE station data is imported",
     "ukeUpdatesLabel": "Notify me about UKE updates",
-    "ukeUpdatesDesc": "Receive a push notification when UKE station or permit data is refreshed"
+    "ukeUpdatesDesc": "Receive a push notification when UKE station or permit data is refreshed",
+    "submissionUpdates": "Submission Updates",
+    "submissionUpdatesHint": "Get notified when your submissions are reviewed",
+    "submissionUpdatesLabel": "Notify me about submission decisions",
+    "submissionUpdatesDesc": "Receive a push notification when your submission is approved or rejected",
+    "newSubmissions": "New Submissions",
+    "newSubmissionsHint": "Get notified when users submit new data for review",
+    "newSubmissionsLabel": "Notify me about new submissions",
+    "newSubmissionsDesc": "Receive a push notification when a new submission is waiting for review"
   },
   "page": {
     "title": "Account Settings",

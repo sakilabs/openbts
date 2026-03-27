@@ -368,7 +368,7 @@ export const pushSubscriptions = pgTable(
     endpoint: text("endpoint").notNull().unique(),
     p256dh: text("p256dh").notNull(),
     auth: text("auth").notNull(),
-    ukeUpdatesEnabled: boolean("uke_updates_enabled").notNull().default(false),
+    preferences: jsonb("preferences").$type<{ ukeUpdates?: boolean; submissionUpdates?: boolean; newSubmission?: boolean }>().notNull().default({}),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("push_subscriptions_user_id_idx").on(t.userId)],

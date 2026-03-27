@@ -296,11 +296,39 @@ function PreferenceField({
   }
 }
 
+function PrefToggle({
+  checked,
+  disabled,
+  onChange,
+  label,
+  desc,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  desc: string;
+}) {
+  return (
+    <label
+      className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors", checked ? "bg-primary/10" : "hover:bg-muted")}
+    >
+      <Checkbox checked={checked} disabled={disabled} onCheckedChange={(v) => onChange(!!v)} />
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="text-xs text-muted-foreground">{desc}</span>
+      </div>
+    </label>
+  );
+}
+
 function NotificationsSection({ t }: { t: (key: string) => string }) {
   const { data: session } = authClient.useSession();
   const { subscription, permission, isSubscribing, subscribe, unsubscribe, isSupported } = usePushSubscription();
   const queryClient = useQueryClient();
   const isSubscribed = !!subscription;
+  const role = session?.user?.role ?? "user";
+  const isStaff = role === "admin" || role === "editor";
 
   const { data: pushPrefs } = useQuery({
     queryKey: ["push-preferences"],
@@ -310,10 +338,10 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
 
   const { mutate: updatePrefs, isPending: isUpdatingPrefs } = useMutation({
     mutationFn: updatePushPreferences,
-    onMutate: async ({ ukeUpdatesEnabled }) => {
+    onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["push-preferences"] });
-      const prev = queryClient.getQueryData<{ ukeUpdatesEnabled: boolean }>(["push-preferences"]);
-      queryClient.setQueryData(["push-preferences"], { ukeUpdatesEnabled });
+      const prev = queryClient.getQueryData(["push-preferences"]);
+      queryClient.setQueryData(["push-preferences"], (old: typeof pushPrefs) => ({ ...old, ...vars }));
       return { prev };
     },
     onError: (_err, _vars, ctx) => {
@@ -351,26 +379,47 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
         </div>
 
         {isSubscribed && (
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.ukeUpdates")}</Label>
-            <p className="text-xs text-muted-foreground">{t("preferences.ukeUpdatesHint")}</p>
-            <label
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                pushPrefs?.ukeUpdatesEnabled ? "bg-primary/10" : "hover:bg-muted",
-              )}
-            >
-              <Checkbox
-                checked={pushPrefs?.ukeUpdatesEnabled ?? false}
+          <>
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.ukeUpdates")}</Label>
+              <p className="text-xs text-muted-foreground">{t("preferences.ukeUpdatesHint")}</p>
+              <PrefToggle
+                checked={pushPrefs?.ukeUpdates ?? false}
                 disabled={isUpdatingPrefs}
-                onCheckedChange={(v) => updatePrefs({ ukeUpdatesEnabled: !!v })}
+                onChange={(v) => updatePrefs({ ukeUpdates: v })}
+                label={t("preferences.ukeUpdatesLabel")}
+                desc={t("preferences.ukeUpdatesDesc")}
               />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{t("preferences.ukeUpdatesLabel")}</span>
-                <span className="text-xs text-muted-foreground">{t("preferences.ukeUpdatesDesc")}</span>
+            </div>
+
+            {!isStaff && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.submissionUpdates")}</Label>
+                <p className="text-xs text-muted-foreground">{t("preferences.submissionUpdatesHint")}</p>
+                <PrefToggle
+                  checked={pushPrefs?.submissionUpdates ?? true}
+                  disabled={isUpdatingPrefs}
+                  onChange={(v) => updatePrefs({ submissionUpdates: v })}
+                  label={t("preferences.submissionUpdatesLabel")}
+                  desc={t("preferences.submissionUpdatesDesc")}
+                />
               </div>
-            </label>
-          </div>
+            )}
+
+            {isStaff && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.newSubmissions")}</Label>
+                <p className="text-xs text-muted-foreground">{t("preferences.newSubmissionsHint")}</p>
+                <PrefToggle
+                  checked={pushPrefs?.newSubmission ?? true}
+                  disabled={isUpdatingPrefs}
+                  onChange={(v) => updatePrefs({ newSubmission: v })}
+                  label={t("preferences.newSubmissionsLabel")}
+                  desc={t("preferences.newSubmissionsDesc")}
+                />
+              </div>
+            )}
+          </>
         )}
       </section>
     </>
