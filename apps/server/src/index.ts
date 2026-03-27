@@ -37,19 +37,28 @@ if (cluster.isPrimary) {
   installProcessErrorHandlers();
   logger.info("primary_started", { pid: process.pid, workers: workerCount });
 
-  for (let i = 0; i < workerCount; i++) cluster.fork();
+  const workerPorts = new Map<number, string>();
+  for (let i = 0; i < workerCount; i++) {
+    const workerPort = String(port + 1 + i);
+    const w = cluster.fork({ WORKER_PORT: workerPort });
+    workerPorts.set(w.id, workerPort);
+  }
 
   cluster.on("exit", (worker, code) => {
     logger.warn("worker_exit", { pid: worker.process.pid, code });
-    cluster.fork();
+    const workerPort = workerPorts.get(worker.id) ?? String(port + 1);
+    workerPorts.delete(worker.id);
+    const w = cluster.fork({ WORKER_PORT: workerPort });
+    workerPorts.set(w.id, workerPort);
   });
 
   scheduleDailyImport();
   scheduleSubmissionCleanup();
 } else {
   installProcessErrorHandlers();
+  const workerPort = Number(process.env.WORKER_PORT) || port;
   const app = new App();
-  void app.listen(port).then(() => {
-    logger.info("worker_started", { pid: process.pid, port });
+  void app.listen(workerPort).then(() => {
+    logger.info("worker_started", { pid: process.pid, port: workerPort });
   });
 }

@@ -211,7 +211,7 @@ export function StationDetailsBody({
                               <TooltipTrigger
                                 render={
                                   <a
-                                    href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
+                                    href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&page_size=25`}
                                     title={t("specs.si2pemLink")}
                                     target="_blank"
                                     rel="noopener noreferrer"

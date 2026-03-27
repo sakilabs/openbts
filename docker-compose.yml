@@ -22,7 +22,7 @@ services:
       context: .
       dockerfile: apps/server/docker/Dockerfile
     ports:
-      - "127.0.0.1:3030:3030"
+      - "127.0.0.1:3031-3034:3031-3034"
     environment:
       # Database
       - DATABASE_URL=postgres://user:password@pgbouncer:6432/openbts

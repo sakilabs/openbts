@@ -184,7 +184,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                       <TooltipTrigger
                         render={
                           <a
-                            href={`https://si2pem.gov.pl/installations/?base_station=${station_id}&entity=&venue_city=&street=&voivodeship=&county=&page=1&page_size=25`}
+                            href={`https://si2pem.gov.pl/installations/?base_station=${station_id}&page_size=25`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
