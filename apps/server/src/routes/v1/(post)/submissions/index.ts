@@ -231,14 +231,12 @@ async function processSubmission(
   if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
 
   if (stationData)
-    await tx
-      .insert(proposedStations)
-      .values({
-        ...stationData,
-        notes: typeof stationData.notes === "string" && stationData.notes.trim() !== "" ? stationData.notes : null,
-        submission_id: submission.id,
-        is_confirmed: false,
-      });
+    await tx.insert(proposedStations).values({
+      ...stationData,
+      notes: typeof stationData.notes === "string" && stationData.notes.trim() !== "" ? stationData.notes : null,
+      submission_id: submission.id,
+      is_confirmed: false,
+    });
 
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
