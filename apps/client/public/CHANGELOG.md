@@ -10,6 +10,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🚀 Enhancements
 
 - Push notification preferences are now per-type: regular users can opt out of submission approved/rejected push notifications, staff (admin/editor) can opt out of new submission push notifications, both configurable in /preferences alongside the existing UKE updates toggle
+- Optimized the `/api/v1/cells/export` route even more and cut response times by another 50%
 
 # 2026-03-26
 

@@ -161,7 +161,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               station_id: proposedStation.station_id ?? "",
               location_id: locationId,
               operator_id: proposedStation.operator_id,
-              notes: proposedStation.notes,
+              notes: typeof proposedStation.notes === "string" && proposedStation.notes.trim() !== "" ? proposedStation.notes : null,
               is_confirmed: true,
               status: "published",
             })

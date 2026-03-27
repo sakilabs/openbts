@@ -367,7 +367,7 @@ export function toNTM(cell: CellExportData): string | null {
 }
 
 export function sortCLFLines(lines: string[]): string[] {
-  return lines.sort((a, b) => a.localeCompare(b));
+  return lines.sort();
 }
 
 export function toNetMonitor(cell: CellExportData): string | null {
