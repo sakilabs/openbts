@@ -211,6 +211,8 @@ function SignInForm({
 }) {
   const { t } = useTranslation("auth");
   const [error, setError] = useState<string | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const form = useForm({
     defaultValues: { email: "", password: "" },
@@ -220,21 +222,37 @@ function SignInForm({
       await authClient.signIn.email(
         { email: value.email, password: value.password },
         {
-          onSuccess(ctx) {
-            if ((ctx.data as { twoFactorRedirect?: boolean })?.twoFactorRedirect) {
+          onSuccess(ctx: { data: { twoFactorRedirect?: boolean } }) {
+            if (ctx.data?.twoFactorRedirect) {
               onTwoFactorRequired();
               return;
             }
             toast.success(t("signIn.success"));
             onSuccess();
           },
-          onError(ctx) {
+          onError(ctx: { error: Error }) {
             setError(ctx.error.message ?? "An unexpected error occurred");
           },
         },
       );
     },
   });
+
+  async function handleResetPassword(email: string) {
+    setResetLoading(true);
+    const { error: resetError } = await authClient.requestPasswordReset({
+      email,
+      redirectTo: "/account/reset-password",
+    });
+    setResetLoading(false);
+    if (resetError) {
+      toast.error(resetError.message ?? t("resetPassword.requestError"));
+      return;
+    }
+
+    setResetSent(true);
+    toast.success(t("resetPassword.requestSuccess"));
+  }
 
   return (
     <>
@@ -275,7 +293,22 @@ function SignInForm({
           <form.Field name="password">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="sign-in-password">{t("signIn.password")}</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="sign-in-password">{t("signIn.password")}</Label>
+                  <form.Subscribe selector={(s) => s.values.email}>
+                    {(email) => (
+                      <button
+                        type="button"
+                        title={!email ? t("signIn.resetPasswordDisabled") : undefined}
+                        disabled={!email || resetLoading || resetSent}
+                        onClick={() => void handleResetPassword(email)}
+                        className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {resetLoading ? <Spinner className="size-3" /> : t("signIn.resetPassword")}
+                      </button>
+                    )}
+                  </form.Subscribe>
+                </div>
                 <Input
                   id="sign-in-password"
                   type="password"

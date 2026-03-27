@@ -79,7 +79,16 @@
   },
   "account": {
     "title": "Konto",
-    "description": "Twój profil i dane osobowe"
+    "description": "Twój profil i dane osobowe",
+    "emailVerification": {
+      "verified": "Email zweryfikowany",
+      "unverified": "Email niezweryfikowany",
+      "unverifiedDescription": "Zweryfikuj adres email, aby zabezpieczyć swoje konto.",
+      "resend": "Wyślij ponownie",
+      "resending": "Wysyłanie...",
+      "resendSuccess": "Email weryfikacyjny wysłany",
+      "resendError": "Nie udało się wysłać emaila weryfikacyjnego"
+    }
   },
   "security": {
     "title": "Bezpieczeństwo",

@@ -79,7 +79,16 @@
   },
   "account": {
     "title": "Account",
-    "description": "Your profile and personal information"
+    "description": "Your profile and personal information",
+    "emailVerification": {
+      "verified": "Email verified",
+      "unverified": "Email not verified",
+      "unverifiedDescription": "Verify your email to secure your account.",
+      "resend": "Resend verification",
+      "resending": "Sending...",
+      "resendSuccess": "Verification email sent",
+      "resendError": "Failed to send verification email"
+    }
   },
   "security": {
     "title": "Security",

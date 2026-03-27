@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { UserIcon, SecurityLockIcon, ComputerIcon, Alert02Icon, Key01Icon } from "@hugeicons/core-free-icons";
+import { UserIcon, SecurityLockIcon, ComputerIcon, Alert02Icon, Key01Icon, CheckmarkCircle02Icon, Alert01Icon } from "@hugeicons/core-free-icons";
 import { AccountSettingsCards, DeleteAccountCard, PasskeysCard, ProvidersCard, SessionsCard, TwoFactorCard } from "@daveyplate/better-auth-ui";
 import { PasswordCard } from "@/components/account/passwordCard";
 import { authClient } from "@/lib/authClient";
@@ -77,6 +77,41 @@ function PasswordSection({ userId }: { userId: string }) {
   );
 }
 
+function EmailVerificationCard({ email, emailVerified }: { email: string; emailVerified: boolean }) {
+  const { t } = useTranslation("settings");
+
+  const resendMutation = useMutation({
+    mutationFn: () => authClient.sendVerificationEmail({ email, callbackURL: "/account/settings" }),
+    onSuccess: () => toast.success(t("account.emailVerification.resendSuccess")),
+    onError: (err: Error) => toast.error(err.message ?? t("account.emailVerification.resendError")),
+  });
+
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <HugeiconsIcon
+            icon={emailVerified ? CheckmarkCircle02Icon : Alert01Icon}
+            className={emailVerified ? "size-4 text-green-500 shrink-0" : "size-4 text-amber-500 shrink-0"}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-none">
+              {emailVerified ? t("account.emailVerification.verified") : t("account.emailVerification.unverified")}
+            </p>
+            {!emailVerified && <p className="text-xs text-muted-foreground mt-1.5">{t("account.emailVerification.unverifiedDescription")}</p>}
+          </div>
+        </div>
+        {!emailVerified && (
+          <Button size="sm" variant="outline" disabled={resendMutation.isPending} onClick={() => resendMutation.mutate()}>
+            {resendMutation.isPending ? <Spinner /> : null}
+            {t(resendMutation.isPending ? "account.emailVerification.resending" : "account.emailVerification.resend")}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AccountSettingsPage() {
   const { t } = useTranslation("settings");
   const { data: session, isPending } = authClient.useSession();
@@ -97,7 +132,10 @@ function AccountSettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section className="space-y-0">
             <SectionHeader icon={UserIcon} title={t("account.title")} description={t("account.description")} />
-            <AccountSettingsCards className="gap-3" />
+            <div className="space-y-3">
+              <AccountSettingsCards className="gap-3" />
+              <EmailVerificationCard email={session.user.email} emailVerified={session.user.emailVerified} />
+            </div>
           </section>
 
           <section className="space-y-0">

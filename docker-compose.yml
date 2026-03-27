@@ -37,6 +37,9 @@ services:
       # App configuration
       - APP_NAME=OpenBTS
       - WORKERS=4 # Number of server workers, since javascript is single-threaded, this will improve performance of the server
+      # Resend (email)
+      - RESEND_API_KEY=
+      - RESEND_FROM=noreply@openbts.sakilabs.com
       # AXIOM HQ logging
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts

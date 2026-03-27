@@ -30,6 +30,7 @@ import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_l
 import { Route as LayoutAccountTwoFactorRouteImport } from './routes/_layout/account/two-factor'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
 import { Route as LayoutAccountSettingsRouteImport } from './routes/_layout/account/settings'
+import { Route as LayoutAccountResetPasswordRouteImport } from './routes/_layout/account/reset-password'
 import { Route as LayoutAdminLayoutUkePermitsRouteImport } from './routes/_layout/admin/_layout/uke-permits'
 import { Route as LayoutAdminLayoutUkeImportRouteImport } from './routes/_layout/admin/_layout/uke-import'
 import { Route as LayoutAdminLayoutSettingsRouteImport } from './routes/_layout/admin/_layout/settings'
@@ -150,6 +151,12 @@ const LayoutAccountSettingsRoute = LayoutAccountSettingsRouteImport.update({
   path: '/account/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutAccountResetPasswordRoute =
+  LayoutAccountResetPasswordRouteImport.update({
+    id: '/account/reset-password',
+    path: '/account/reset-password',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutAdminLayoutUkePermitsRoute =
   LayoutAdminLayoutUkePermitsRouteImport.update({
     id: '/uke-permits',
@@ -250,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
   '/tos': typeof LayoutTosRoute
+  '/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/account/two-factor': typeof LayoutAccountTwoFactorRoute
@@ -285,6 +293,7 @@ export interface FileRoutesByTo {
   '/submission': typeof LayoutSubmissionRoute
   '/tos': typeof LayoutTosRoute
   '/': typeof LayoutIndexRoute
+  '/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/account/two-factor': typeof LayoutAccountTwoFactorRoute
@@ -323,6 +332,7 @@ export interface FileRoutesById {
   '/_layout/submission': typeof LayoutSubmissionRoute
   '/_layout/tos': typeof LayoutTosRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/_layout/account/two-factor': typeof LayoutAccountTwoFactorRoute
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/statistics'
     | '/submission'
     | '/tos'
+    | '/account/reset-password'
     | '/account/settings'
     | '/account/submissions'
     | '/account/two-factor'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/submission'
     | '/tos'
     | '/'
+    | '/account/reset-password'
     | '/account/settings'
     | '/account/submissions'
     | '/account/two-factor'
@@ -433,6 +445,7 @@ export interface FileRouteTypes {
     | '/_layout/submission'
     | '/_layout/tos'
     | '/_layout/'
+    | '/_layout/account/reset-password'
     | '/_layout/account/settings'
     | '/_layout/account/submissions'
     | '/_layout/account/two-factor'
@@ -609,6 +622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAccountSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/account/reset-password': {
+      id: '/_layout/account/reset-password'
+      path: '/account/reset-password'
+      fullPath: '/account/reset-password'
+      preLoaderRoute: typeof LayoutAccountResetPasswordRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/admin/_layout/uke-permits': {
       id: '/_layout/admin/_layout/uke-permits'
       path: '/uke-permits'
@@ -776,6 +796,7 @@ interface LayoutRouteChildren {
   LayoutSubmissionRoute: typeof LayoutSubmissionRoute
   LayoutTosRoute: typeof LayoutTosRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutAccountResetPasswordRoute: typeof LayoutAccountResetPasswordRoute
   LayoutAccountSettingsRoute: typeof LayoutAccountSettingsRoute
   LayoutAccountSubmissionsRoute: typeof LayoutAccountSubmissionsRoute
   LayoutAccountTwoFactorRoute: typeof LayoutAccountTwoFactorRoute
@@ -796,6 +817,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSubmissionRoute: LayoutSubmissionRoute,
   LayoutTosRoute: LayoutTosRoute,
   LayoutIndexRoute: LayoutIndexRoute,
+  LayoutAccountResetPasswordRoute: LayoutAccountResetPasswordRoute,
   LayoutAccountSettingsRoute: LayoutAccountSettingsRoute,
   LayoutAccountSubmissionsRoute: LayoutAccountSubmissionsRoute,
   LayoutAccountTwoFactorRoute: LayoutAccountTwoFactorRoute,

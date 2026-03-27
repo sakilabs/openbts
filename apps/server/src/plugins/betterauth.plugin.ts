@@ -12,6 +12,7 @@ import { redis } from "../database/redis.js";
 import { APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
 import { accessControl, adminRole, editorRole, userRole } from "./auth/permissions.js";
 import { beforeAuthHook, afterAuthHook } from "./auth/hooks.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mail.js";
 
 import type { FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
@@ -39,6 +40,9 @@ export const auth = betterAuth({
         defaultValue: null,
         input: true,
       },
+    },
+    changeEmail: {
+      enabled: true,
     },
     deleteUser: {
       enabled: true,
@@ -81,6 +85,10 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail(user.email, url);
+    },
     password: {
       hash: async (password) => {
         const hashedPwd = await hash(password, ARGON2_OPTIONS);
@@ -92,6 +100,13 @@ export const auth = betterAuth({
         return isValid;
       },
     },
+  },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail(user.email, url);
+    },
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
   },
   experimental: { joins: true },
   hooks: {
