@@ -1,3 +1,4 @@
+// oxlint-disable no-await-in-loop
 import { createReadStream, existsSync } from "node:fs";
 import { readdir, stat, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -26,9 +27,7 @@ async function cleanupOldExports() {
     for (const file of files) {
       const filePath = join(CLF_TMP_DIR, file);
       const fileStat = await stat(filePath).catch(() => null);
-      if (fileStat && now - fileStat.mtimeMs > CACHE_TTL * 1000) {
-        await unlink(filePath).catch(() => {});
-      }
+      if (fileStat && now - fileStat.mtimeMs > CACHE_TTL * 1000) await unlink(filePath).catch(() => {});
     }
   } catch {}
 }

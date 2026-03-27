@@ -14,5 +14,8 @@
     "no-else-return": "error",
     "react/self-closing-comp": "error"
   },
+  "options": {
+    "typeAware": true
+  },
   "ignorePatterns": ["*.gen.ts"]
 }

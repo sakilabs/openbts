@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsgo",
     "start": "tsx src/index.ts"
   },
   "dependencies": {
@@ -31,7 +31,7 @@
     "@turf/helpers": "7.3.4",
     "cheerio": "1.2.0",
     "dotenv": "17.3.1",
-    "drizzle-orm": "1.0.0-beta.17-67b1795",
+    "drizzle-orm": "1.0.0-beta.20",
     "geojson-rbush": "~3.2.0",
     "postgres": "3.4.8",
     "tsx": "4.21.0",
@@ -40,7 +40,6 @@
   "devDependencies": {
     "@openbts/typescript-configs": "workspace:*",
     "@types/geojson": "^7946.0.16",
-    "@types/node": "20",
-    "typescript": "5.9.3"
+    "@types/node": "20"
   }
 }

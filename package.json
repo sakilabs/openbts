@@ -5,7 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo build",
     "start:client": "pnpm --filter @sakilabs/openbts_client run start",
     "start:server": "pnpm --filter @sakilabs/openbts_server run start",
     "fmt": "oxfmt",
@@ -15,10 +14,11 @@
     "tsx": "4.21.0"
   },
   "devDependencies": {
-    "oxfmt": "^0.41.0",
-    "oxlint": "^1.56.0",
-    "oxlint-tsgolint": "^0.17.0",
-    "typescript": "5.9.3"
+    "@typescript/native-preview": "7.0.0-dev.20260327.2",
+    "oxfmt": "0.42.0",
+    "oxlint": "1.57.0",
+    "oxlint-tsgolint": "0.18.0",
+    "typescript": "6.0.2"
   },
   "engines": {
     "node": ">=18",

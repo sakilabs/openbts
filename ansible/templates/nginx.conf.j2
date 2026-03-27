@@ -70,11 +70,11 @@ http {
         ##
 
         gzip on;
-        gzip_min_length 10240;
-        gzip_comp_level 1;
+        gzip_min_length 256;
+        gzip_comp_level 5;
         gzip_vary on;
         gzip_disable msie6;
-        gzip_proxied expired no-cache no-store private auth;
+        gzip_proxied any;
         gzip_types
                 # text/html is always compressed by HttpGzipModule
                 text/css
