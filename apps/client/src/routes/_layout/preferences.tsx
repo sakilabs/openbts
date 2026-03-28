@@ -378,7 +378,7 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
           )}
         </div>
 
-        {isSubscribed && (
+        {isSubscribed && subscriptionId && (
           <>
             <div className="space-y-3">
               <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.ukeUpdates")}</Label>

@@ -4,10 +4,18 @@ import { subscribeToPush, unsubscribeFromPush } from "./api";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
 const STORAGE_KEY = "push_subscription_id";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function getStoredId(): string | null {
+  const v = localStorage.getItem(STORAGE_KEY);
+  if (v && UUID_RE.test(v)) return v;
+  if (v) localStorage.removeItem(STORAGE_KEY);
+  return null;
+}
 
 export function usePushSubscription() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
-  const [subscriptionId, setSubscriptionId] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(getStoredId);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -19,7 +27,7 @@ export function usePushSubscription() {
       .then((reg) => reg.pushManager.getSubscription())
       .then(async (sub) => {
         setSubscription(sub);
-        if (sub && !localStorage.getItem(STORAGE_KEY)) {
+        if (sub && !getStoredId()) {
           const id = await subscribeToPush(sub);
           localStorage.setItem(STORAGE_KEY, id);
           setSubscriptionId(id);
