@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-28
+
+### 🩹 Fixes
+
+- Push notification preferences are now correctly scoped per device. Changing them on one device no longer affects other devices
+- Fixed "Confirm cells" button not showing on mobile in the cell editor; it now renders as a checkmark icon on small screens
+
 # 2026-03-27
 
 ### 🩹 Fixes

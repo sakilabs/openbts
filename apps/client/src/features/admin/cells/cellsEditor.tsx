@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, Add01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Add01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -208,7 +208,8 @@ export function CellsEditor<T extends CellDraftBase>({
                   <div className="flex items-center gap-1">
                     {showConfirmCellsButton && onConfirmAllCellsInRat && cellsForRat.length > 0 && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => onConfirmAllCellsInRat(rat)} className="h-7 text-xs">
-                        {t("stations:cells.confirmCells")}
+                        <HugeiconsIcon icon={Tick02Icon} className="size-3.5 sm:hidden" />
+                        <span className="hidden sm:inline">{t("stations:cells.confirmCells")}</span>
                       </Button>
                     )}
                     {showAddButton && (
