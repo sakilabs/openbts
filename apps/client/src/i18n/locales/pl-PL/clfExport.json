@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Eksport CLF",
-    "description": "Eksportuj dane komórek do formatu CLF (Cell List File). Pliki te można wykorzystać w aplikacjach do monitorowania sieci komórkowych, aby zidentyfikować stacje bazowe obsługujące telefon. Dane mogą być opóźnione o 1 godzinę"
+    "description": "Eksportuj dane komórek do formatu CLF (Cell List File). Pliki te można wykorzystać w aplikacjach do monitorowania sieci komórkowych, aby zidentyfikować stacje bazowe obsługujące telefon"
   },
   "info": {
     "appsTitle": "Popularne aplikacje monitorujące korzystające z plików CLF:",
