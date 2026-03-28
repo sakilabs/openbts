@@ -1,4 +1,4 @@
-import type { Station } from "@/types/station";
+import type { Operator, Station, UkeLocation, UkePermit } from "@/types/station";
 import { postApiData } from "@/lib/api";
 import { forwardGeocode } from "@/lib/mapboxGeocoding";
 import type { OSMResult } from "./types";
@@ -7,9 +7,9 @@ export const searchStations = (query: string) => postApiData<Station[], { query:
 
 export type UkeSearchPermitStation = {
   station_id: string;
-  operator: { id: number; name: string; mnc: number | null } | null;
-  location: { id: number; city: string | null; latitude: number; longitude: number } | null;
-  permits: { id: number; decision_number: string; decision_type: string; band_id: number | null; expiry_date: string; source: string }[];
+  operator: Operator | null;
+  location: UkeLocation | null;
+  permits: UkePermit[];
 };
 
 export type UkeSearchRadioline = {

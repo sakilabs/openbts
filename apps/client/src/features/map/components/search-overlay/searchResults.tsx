@@ -191,7 +191,7 @@ export function SearchResults({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">
-                        {permit.location?.city ?? permit.station_id}
+                        {permit.location?.address ?? permit.station_id}
                       </span>
                       <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">{permit.station_id}</span>
                     </div>
