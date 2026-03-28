@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { subscribeToPush, unsubscribeFromPush } from "./api";
 
@@ -18,6 +18,12 @@ export function usePushSubscription() {
   const [subscriptionId, setSubscriptionId] = useState<string | null>(getStoredId);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const syncing = useRef(false);
+  const subscriptionRef = useRef(subscription);
+
+  useEffect(() => {
+    subscriptionRef.current = subscription;
+  }, [subscription]);
 
   useEffect(() => {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
@@ -27,7 +33,8 @@ export function usePushSubscription() {
       .then((reg) => reg.pushManager.getSubscription())
       .then(async (sub) => {
         setSubscription(sub);
-        if (sub && !getStoredId()) {
+        if (sub && !subscriptionId && !syncing.current) {
+          syncing.current = true;
           const id = await subscribeToPush(sub);
           localStorage.setItem(STORAGE_KEY, id);
           setSubscriptionId(id);
@@ -72,17 +79,18 @@ export function usePushSubscription() {
   }, []);
 
   const unsubscribe = useCallback(async () => {
-    if (!subscription) return;
+    const sub = subscriptionRef.current;
+    if (!sub) return;
     try {
-      await unsubscribeFromPush(subscription.endpoint);
-      await subscription.unsubscribe();
+      await unsubscribeFromPush(sub.endpoint);
+      await sub.unsubscribe();
       localStorage.removeItem(STORAGE_KEY);
       setSubscription(null);
       setSubscriptionId(null);
     } catch {
       toast.error("Failed to disable notifications");
     }
-  }, [subscription]);
+  }, []);
 
   const isSupported = "Notification" in window && "serviceWorker" in navigator;
 
