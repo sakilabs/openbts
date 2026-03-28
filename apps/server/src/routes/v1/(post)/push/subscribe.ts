@@ -1,3 +1,4 @@
+import { and, eq, not } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -42,6 +43,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       target: [pushSubscriptions.endpoint],
       set: { userId: session.user.id },
     });
+
+  const [existingSub] = await db
+    .select({ preferences: pushSubscriptions.preferences })
+    .from(pushSubscriptions)
+    .where(and(eq(pushSubscriptions.userId, session.user.id), not(eq(pushSubscriptions.endpoint, endpoint))))
+    .limit(1);
+
+  if (existingSub && Object.keys(existingSub.preferences).length > 0)
+    await db.update(pushSubscriptions).set({ preferences: existingSub.preferences }).where(eq(pushSubscriptions.endpoint, endpoint));
 
   return res.send({ data: { ok: true } });
 }
