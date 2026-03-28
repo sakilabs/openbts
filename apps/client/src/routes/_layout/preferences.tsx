@@ -12,7 +12,7 @@ import { usePreferences, type UserPreferences } from "@/hooks/usePreferences";
 import { toggleValue, cn } from "@/lib/utils";
 import { authClient } from "@/lib/authClient";
 import { usePushSubscription } from "@/features/notifications/usePushSubscription";
-import { fetchPushPreferences, updatePushPreferences } from "@/features/notifications/api";
+import { fetchPushPreferences, updatePushPreferences, type PushPreferences } from "@/features/notifications/api";
 
 type RadioOption = { value: string; labelKey: string; descKey?: string; example?: string };
 type CheckboxGroupOption = { value: string; labelKey: string; icon?: typeof GoogleMapsIcon };
@@ -324,20 +324,20 @@ function PrefToggle({
 
 function NotificationsSection({ t }: { t: (key: string) => string }) {
   const { data: session } = authClient.useSession();
-  const { subscription, permission, isSubscribing, subscribe, unsubscribe, isSupported } = usePushSubscription();
+  const { subscription, subscriptionId, permission, isSubscribing, subscribe, unsubscribe, isSupported } = usePushSubscription();
   const queryClient = useQueryClient();
   const isSubscribed = !!subscription;
   const role = session?.user?.role ?? "user";
   const isStaff = role === "admin" || role === "editor";
 
   const { data: pushPrefs } = useQuery({
-    queryKey: ["push-preferences"],
-    queryFn: fetchPushPreferences,
-    enabled: !!session?.user && isSubscribed,
+    queryKey: ["push-preferences", subscriptionId],
+    queryFn: () => fetchPushPreferences(subscriptionId!),
+    enabled: !!session?.user && !!subscriptionId,
   });
 
   const { mutate: updatePrefs, isPending: isUpdatingPrefs } = useMutation({
-    mutationFn: updatePushPreferences,
+    mutationFn: (prefs: Partial<PushPreferences>) => updatePushPreferences(prefs, subscriptionId!),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["push-preferences"] });
       const prev = queryClient.getQueryData(["push-preferences"]);

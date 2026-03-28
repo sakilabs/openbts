@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -10,6 +10,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const prefsSchema = z.object({
+  id: z.string().uuid(),
   ukeUpdates: z.boolean().optional(),
   submissionUpdates: z.boolean().optional(),
   newSubmission: z.boolean().optional(),
@@ -38,7 +39,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     await db
       .update(pushSubscriptions)
       .set({ preferences: sql`preferences || ${JSON.stringify(patch)}::jsonb` })
-      .where(eq(pushSubscriptions.userId, session.user.id));
+      .where(and(eq(pushSubscriptions.id, req.body.id), eq(pushSubscriptions.userId, session.user.id)));
 
   return res.send({ data: { ok: true } });
 }

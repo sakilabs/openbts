@@ -3,16 +3,11 @@ import { toast } from "sonner";
 import { subscribeToPush, unsubscribeFromPush } from "./api";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  return Uint8Array.from(rawData, (char) => char.charCodeAt(0));
-}
+const STORAGE_KEY = "push_subscription_id";
 
 export function usePushSubscription() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -22,7 +17,14 @@ export function usePushSubscription() {
 
     navigator.serviceWorker.ready
       .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => setSubscription(sub))
+      .then(async (sub) => {
+        setSubscription(sub);
+        if (sub && !localStorage.getItem(STORAGE_KEY)) {
+          const id = await subscribeToPush(sub);
+          localStorage.setItem(STORAGE_KEY, id);
+          setSubscriptionId(id);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -46,10 +48,12 @@ export function usePushSubscription() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: VAPID_PUBLIC_KEY,
       });
-      await subscribeToPush(sub);
+      const id = await subscribeToPush(sub);
+      localStorage.setItem(STORAGE_KEY, id);
       setSubscription(sub);
+      setSubscriptionId(id);
       toast.success("Push notifications enabled");
     } catch (err) {
       console.error("Push subscription failed:", err);
@@ -64,7 +68,9 @@ export function usePushSubscription() {
     try {
       await unsubscribeFromPush(subscription.endpoint);
       await subscription.unsubscribe();
+      localStorage.removeItem(STORAGE_KEY);
       setSubscription(null);
+      setSubscriptionId(null);
     } catch {
       toast.error("Failed to disable notifications");
     }
@@ -72,5 +78,5 @@ export function usePushSubscription() {
 
   const isSupported = "Notification" in window && "serviceWorker" in navigator;
 
-  return { subscription, permission, isSubscribing, subscribe, unsubscribe, isSupported };
+  return { subscription, subscriptionId, permission, isSubscribing, subscribe, unsubscribe, isSupported };
 }

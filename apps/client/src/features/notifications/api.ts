@@ -36,12 +36,13 @@ export async function markRead(id: string): Promise<Notification> {
   });
 }
 
-export async function subscribeToPush(sub: PushSubscription): Promise<void> {
+export async function subscribeToPush(sub: PushSubscription): Promise<string> {
   const json = sub.toJSON();
-  await postApiData("push/subscribe", {
+  const { id } = await postApiData<{ id: string }>("push/subscribe", {
     endpoint: sub.endpoint,
     keys: { p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "" },
   });
+  return id;
 }
 
 export async function unsubscribeFromPush(endpoint: string): Promise<void> {
@@ -58,14 +59,14 @@ export type PushPreferences = {
   newSubmission: boolean;
 };
 
-export async function fetchPushPreferences(): Promise<PushPreferences> {
-  return fetchApiData<PushPreferences>("push/preferences");
+export async function fetchPushPreferences(id: string): Promise<PushPreferences> {
+  return fetchApiData<PushPreferences>(`push/preferences?id=${encodeURIComponent(id)}`);
 }
 
-export async function updatePushPreferences(prefs: Partial<PushPreferences>): Promise<void> {
+export async function updatePushPreferences(prefs: Partial<PushPreferences>, id: string): Promise<void> {
   await fetchJson(`${API_BASE}/push/subscribe`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(prefs),
+    body: JSON.stringify({ ...prefs, id }),
   });
 }

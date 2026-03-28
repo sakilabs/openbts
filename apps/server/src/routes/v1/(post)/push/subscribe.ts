@@ -1,4 +1,3 @@
-import { and, eq, not } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -18,12 +17,12 @@ const schemaRoute = {
     }),
   }),
   response: {
-    200: z.object({ data: z.object({ ok: z.boolean() }) }),
+    200: z.object({ data: z.object({ ok: z.boolean(), id: z.string() }) }),
   },
 };
 
 type ReqBody = { Body: { endpoint: string; keys: { p256dh: string; auth: string } } };
-type ResponseData = { data: { ok: boolean } };
+type ResponseData = { data: { ok: boolean; id: string } };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const session = req.userSession;
@@ -31,7 +30,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const { endpoint, keys } = req.body;
 
-  await db
+  const [sub] = await db
     .insert(pushSubscriptions)
     .values({
       userId: session.user.id,
@@ -42,18 +41,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     .onConflictDoUpdate({
       target: [pushSubscriptions.endpoint],
       set: { userId: session.user.id },
-    });
+    })
+    .returning({ id: pushSubscriptions.id });
+  if (!sub) throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: "Failed to create or update push subscription" });
 
-  const [existingSub] = await db
-    .select({ preferences: pushSubscriptions.preferences })
-    .from(pushSubscriptions)
-    .where(and(eq(pushSubscriptions.userId, session.user.id), not(eq(pushSubscriptions.endpoint, endpoint))))
-    .limit(1);
-
-  if (existingSub && Object.keys(existingSub.preferences).length > 0)
-    await db.update(pushSubscriptions).set({ preferences: existingSub.preferences }).where(eq(pushSubscriptions.endpoint, endpoint));
-
-  return res.send({ data: { ok: true } });
+  return res.send({ data: { ok: true, id: sub.id } });
 }
 
 const subscribePush: Route<ReqBody, ResponseData> = {
