@@ -14,6 +14,11 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from "@/components/reui/timeline";
+import NetworksIcon from "@/features/station-details/components/logos/networks.svg?react";
+import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
+import TmobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
+import PlusIcon from "@/features/station-details/components/logos/plus.svg?react";
+import PlayIcon from "@/features/station-details/components/logos/play.svg?react";
 
 const markdownClasses =
   "space-y-4 text-sm text-muted-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-foreground [&_p]:leading-relaxed [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_strong]:text-foreground";
@@ -153,11 +158,11 @@ function AboutPage() {
         <section className="space-y-4 border-t pt-8">
           <h2 className="text-xl font-semibold">Informacje prawne</h2>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <img src="/operators/networks.svg" alt="NetWorks" className="size-6 shrink-0" />
-            <img src="/operators/orange.svg" alt="Orange" className="h-6 w-auto shrink-0" />
-            <img src="/operators/t-mobile.svg" alt="T-Mobile" className="size-6 shrink-0" />
-            <img src="/operators/plus.svg" alt="Plus" className="size-6 shrink-0" />
-            <img src="/operators/play.svg" alt="Play" className="h-6 w-auto max-w-20 shrink-0" />
+            <NetworksIcon aria-label="NetWorks" className="size-6 shrink-0" />
+            <OrangeIcon aria-label="Orange" className="h-6 w-auto shrink-0" />
+            <TmobileIcon aria-label="T-Mobile" className="size-6 shrink-0" />
+            <PlusIcon aria-label="Plus" className="size-6 shrink-0" />
+            <PlayIcon aria-label="Play" className="h-6 w-auto max-w-20 shrink-0" />
           </div>
           <p className="text-sm text-muted-foreground">
             Przedstawione logo i nazwy operatorów są własnością ich prawnych właścicieli. Wykorzystanie w serwisie {APP_NAME} ma wyłącznie charakter

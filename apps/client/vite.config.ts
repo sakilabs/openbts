@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import svgr from "vite-plugin-svgr";
 
 function getGitCommit(): string {
   try {
@@ -32,6 +33,7 @@ export default defineConfig({
     "import.meta.env.VITE_GIT_COMMIT": JSON.stringify(getGitCommit()),
   },
   plugins: [
+    svgr(),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
