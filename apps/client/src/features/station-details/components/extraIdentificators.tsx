@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { ExtraIdentificator } from "@/types/station";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CopyButton } from "./copyButton";
+import { getMnoBrand } from "@/lib/operatorUtils";
 import NetworksIcon from "./logos/networks.svg?react";
 import OrangeIcon from "./logos/orange.svg?react";
 import TmobileIcon from "./logos/t-mobile.svg?react";
@@ -13,13 +14,6 @@ type ExtraIdentificatorsDisplayProps = {
   operatorMnc?: number | null;
 };
 
-const MNO_BRAND: Record<number, string> = {
-  26003: "OPL",
-  26002: "TMPL",
-  26001: "Plus",
-  26006: "Play",
-};
-
 const MNO_LOGO: Partial<Record<string, typeof OrangeIcon>> = {
   OPL: OrangeIcon,
   TMPL: TmobileIcon,
@@ -29,20 +23,20 @@ const MNO_LOGO: Partial<Record<string, typeof OrangeIcon>> = {
 
 export function ExtraIdentificatorsDisplay({ data, operatorMnc }: ExtraIdentificatorsDisplayProps) {
   const { t } = useTranslation("common");
-  const brand = (operatorMnc !== null && operatorMnc !== undefined ? MNO_BRAND[operatorMnc] : undefined) ?? "MNO";
+  const brand = getMnoBrand(operatorMnc);
   const mnoLabel = t("labels.mnoName", { brand });
   const MNOLogo = MNO_LOGO[brand];
 
   return (
     <>
-      {data.networks_id && (
+      {data.networks_id !== null ? (
         <div className="flex items-center gap-2">
           <NetworksIcon className="size-4 shrink-0" />
           <span className="text-sm text-muted-foreground whitespace-nowrap">{t("labels.networksId")}:</span>
           <span className="text-sm font-mono font-medium">{data.networks_id}</span>
           <CopyButton text={String(data.networks_id)} />
         </div>
-      )}
+      ) : null}
       {data.networks_name && (
         <div className="flex items-center gap-2 min-w-0">
           <NetworksIcon className="size-4 shrink-0" />

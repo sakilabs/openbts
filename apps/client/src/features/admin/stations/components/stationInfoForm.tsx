@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OperatorSelect } from "@/components/operator-select";
-import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import type { Operator, UkeStation, LocationWithStations, Location } from "@/types/station";
@@ -131,7 +131,7 @@ export function StationInfoForm({
                 </div>
               )}
               <div className="space-y-2">
-                <Label>{t("common:labels.mnoName")}</Label>
+                <Label>{t("common:labels.mnoName", { brand: getMnoBrand(selectedOperator?.mnc) })}</Label>
                 <Input
                   value={mnoName ?? ""}
                   maxLength={50}

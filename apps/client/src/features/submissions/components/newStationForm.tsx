@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OperatorSelect } from "@/components/operator-select";
 import { operatorsQueryOptions } from "@/features/shared/queries";
-import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import type { ProposedStationForm } from "../types";
 import type { StationErrors } from "../utils/validation";
 
@@ -122,7 +122,7 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
             )}
             <div className="space-y-1.5">
               <Label htmlFor="mno_name" className="text-xs">
-                {t("common:labels.mnoName")}
+                {t("common:labels.mnoName", { brand: getMnoBrand(selectedOperator?.mnc) })}
               </Label>
               <Input
                 id="mno_name"

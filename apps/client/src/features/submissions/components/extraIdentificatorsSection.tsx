@@ -4,7 +4,7 @@ import { Globe02Icon } from "@hugeicons/core-free-icons";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import type { SearchStation } from "../api";
 
 export interface ExtraIdentificatorsSectionProps {
@@ -75,7 +75,7 @@ export function ExtraIdentificatorsSection({
         )}
         <div className="space-y-1.5">
           <Label htmlFor="existing_mno_name" className="text-xs">
-            {t("common:labels.mnoName", "MNO name")}
+            {t("common:labels.mnoName", { brand: getMnoBrand(operatorMnc) })}
           </Label>
           <Input
             id="existing_mno_name"
