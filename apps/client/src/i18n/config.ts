@@ -119,6 +119,7 @@ void i18n.use(initReactI18next).init({
     useSuspense: false,
     bindI18n: "languageChanged loaded",
     bindI18nStore: "added removed",
+    transKeepBasicHtmlNodesFor: ["br", "strong", "i", "p", "em"],
   },
   showSupportNotice: false,
 });

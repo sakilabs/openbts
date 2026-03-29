@@ -1,5 +1,5 @@
 import { type Dispatch, type SetStateAction, useState, useCallback, useMemo, useRef, type RefObject } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { Operator, StationFilters, StationSource } from "@/types/station";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -533,6 +533,15 @@ export function FilterPanel({
         )}
       </div>
       {filterSections}
+      <div className="px-4 py-1.5 border-t bg-muted/30">
+        <p className="text-[11px] text-muted-foreground">
+          <Trans
+            t={t}
+            i18nKey="filters.toggleHint"
+            components={{ kbd: <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border border-border" /> }}
+          />
+        </p>
+      </div>
     </div>
   );
 }

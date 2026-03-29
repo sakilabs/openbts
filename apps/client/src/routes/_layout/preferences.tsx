@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GoogleMapsIcon, AppleIcon, WazeIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
@@ -201,6 +201,7 @@ const GROUPS: PreferenceGroup[] = [
             itemLabelKey: "preferences.mapMeasureCircleLabel",
           },
         ],
+        noteKey: "preferences.mapMeasureCircleNote",
       },
     ],
   },
@@ -491,7 +492,15 @@ function PreferencesPage() {
                   {card.noteKey && (
                     <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
                       <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-                      <p className="text-xs text-amber-700 dark:text-amber-400">{t(card.noteKey)}</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        <Trans
+                          t={t}
+                          i18nKey={card.noteKey}
+                          components={{
+                            kbd: <kbd className="px-1 py-0.5 rounded bg-amber-500/20 font-mono text-[10px] border border-amber-500/30" />,
+                          }}
+                        />
+                      </p>
                     </div>
                   )}
                 </div>

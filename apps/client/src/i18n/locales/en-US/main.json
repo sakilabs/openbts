@@ -63,7 +63,8 @@
     "radiolineOperator": "Radioline Operator",
     "radiolineOperators_one": "{{count, number}} radioline operator",
     "radiolineOperators_others": "{{count, number}} radioline operators",
-    "searchRadiolineOperators": "Search radioline operators..."
+    "searchRadiolineOperators": "Search radioline operators...",
+    "toggleHint": "Tip: Press <kbd>F</kbd> to toggle this panel"
   },
   "unknownOperator": "Unknown Operator",
   "radiolines": {
