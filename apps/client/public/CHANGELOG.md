@@ -5,6 +5,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Pressing `C` on the map now toggles the coverage circle visibility without changing the preference, useful when the circle is enabled but temporarily
 - `/account/settings` now shows a skeleton loading state instead of a blank page while the session is loading
 - Improved the `/account/settings` page. Sections have clearer visual hierarchy, Sessions and API Keys are now full-width separate sections, Providers moved under Account, Danger Zone has a distinct red separator
 - Third-party UI components on `/account/settings` are now fully translated in Polish
@@ -14,6 +15,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
+- `/cells/export` no longer includes cells whose station has `inactive` or `pending` status, only `published` stations are exported
 - Removing password on `/account/settings` now correctly distinguishes between "no passkeys registered" and "failed to load passkeys"; the button stays disabled in both cases but shows an accurate hint message
 - Remove password error toast no longer shows blank when the server returns no message body
 

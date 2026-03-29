@@ -38,7 +38,7 @@ parentPort.on("message", async (params: WorkerParams) => {
       resolvedOperatorIds = matched.map((o) => o.id);
     }
 
-    const stationConditions = [];
+    const stationConditions = [eq(stations.status, "published")];
     if (resolvedOperatorIds && resolvedOperatorIds.length > 0) stationConditions.push(inArray(stations.operator_id, resolvedOperatorIds));
     if (regionCodes && regionCodes.length > 0) stationConditions.push(inArray(regions.code, regionCodes));
 

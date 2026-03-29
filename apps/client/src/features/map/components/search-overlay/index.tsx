@@ -186,7 +186,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   useEffect(() => {
     function onKeyDown(e: globalThis.KeyboardEvent) {
-      if (e.key === "f" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      if (e.key.toLowerCase() === "f" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         e.preventDefault();
         (document.activeElement as HTMLElement)?.blur();
         setShowFilters((prev) => !prev);

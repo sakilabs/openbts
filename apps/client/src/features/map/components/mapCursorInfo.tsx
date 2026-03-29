@@ -43,6 +43,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
 
   const activeMarkerRef = useRef(activeMarker);
   const circleEnabledRef = useRef(preferences.mapMeasureCircle);
+  const circleVisibleRef = useRef(true);
   const cursorRef = useRef<{ lat: number; lng: number } | null>(null);
   const lineSourceRef = useRef<maplibregl.GeoJSONSource | null>(null);
   const circleSourceRef = useRef<maplibregl.GeoJSONSource | null>(null);
@@ -56,6 +57,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
   }, [activeMarker]);
   useEffect(() => {
     circleEnabledRef.current = preferences.mapMeasureCircle;
+    if (preferences.mapMeasureCircle) circleVisibleRef.current = true;
   }, [preferences.mapMeasureCircle]);
 
   const markerLat = activeMarker?.latitude ?? null;
@@ -79,7 +81,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
       })),
     });
     savedCircleSourceRef.current?.setData(
-      circleEnabledRef.current
+      circleEnabledRef.current && circleVisibleRef.current
         ? {
             type: "FeatureCollection",
             features: measurements.map(({ marker, cursor }) =>
@@ -103,6 +105,20 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         updateSavedSources();
         setLastSaved(measurement);
         onActiveMarkerClear?.();
+      } else if (e.key.toLowerCase() === "c") {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        if (!circleEnabledRef.current) return;
+        (document.activeElement as HTMLElement | null)?.blur();
+        circleVisibleRef.current = !circleVisibleRef.current;
+        updateSavedSources();
+        const marker = activeMarkerRef.current;
+        const cursor = cursorRef.current;
+        if (marker && cursor) {
+          if (circleVisibleRef.current) {
+            const radius = calculateDistance(marker.latitude, marker.longitude, cursor.lat, cursor.lng);
+            circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
+          } else circleSourceRef.current?.setData(EMPTY_FC);
+        }
       } else if (e.key === "Escape") {
         savedMeasurementsRef.current = [];
         updateSavedSources();
@@ -259,7 +275,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
             ],
           },
         });
-        if (circleEnabledRef.current) {
+        if (circleEnabledRef.current && circleVisibleRef.current) {
           const radius = calculateDistance(marker.latitude, marker.longitude, lat, lng);
           circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
         } else {
@@ -305,7 +321,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
           ],
         },
       });
-      if (circleEnabled) {
+      if (circleEnabled && circleVisibleRef.current) {
         const radius = calculateDistance(markerLat, markerLng, cursor.lat, cursor.lng);
         circleSourceRef.current?.setData(generateCirclePolygon(markerLat, markerLng, radius));
       } else {
