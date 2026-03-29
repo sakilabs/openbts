@@ -1,4 +1,4 @@
-import { ilike, or } from "drizzle-orm";
+import { eq, ilike, or } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -66,7 +66,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     db
       .selectDistinct({ station_id: ukePermits.station_id })
       .from(ukePermits)
-      .where(or(ilike(ukePermits.decision_number, like), ilike(ukePermits.station_id, like)))
+      .leftJoin(ukeLocations, eq(ukePermits.location_id, ukeLocations.id))
+      .where(
+        or(
+          ilike(ukePermits.decision_number, like),
+          ilike(ukePermits.station_id, like),
+          ilike(ukeLocations.address, like),
+          ilike(ukeLocations.city, like),
+        ),
+      )
       .limit(LIMIT),
     db
       .selectDistinctOn([ukeRadiolines.permit_number], {
