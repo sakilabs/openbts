@@ -1,6 +1,22 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-29
+
+### 🚀 Enhancements
+
+- `/account/settings` now shows a skeleton loading state instead of a blank page while the session is loading
+- Improved the `/account/settings` page. Sections have clearer visual hierarchy, Sessions and API Keys are now full-width separate sections, Providers moved under Account, Danger Zone has a distinct red separator
+- Third-party UI components on `/account/settings` are now fully translated in Polish
+- Azimuths preference card now shows a visible warning that the feature only works with UKE as the data source and only for stations where the permit originates from the device registry
+- Redesigned the `/preferences` page to have separate sections and each have its own box to include relevant settings
+- Made the `light` the default theme
+
+### 🩹 Fixes
+
+- Removing password on `/account/settings` now correctly distinguishes between "no passkeys registered" and "failed to load passkeys"; the button stays disabled in both cases but shows an accurate hint message
+- Remove password error toast no longer shows blank when the server returns no message body
+
 # 2026-03-28
 
 ### 🩹 Fixes

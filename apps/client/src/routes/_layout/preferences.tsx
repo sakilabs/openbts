@@ -1,9 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { GoogleMapsIcon, AppleIcon, WazeIcon } from "@hugeicons/core-free-icons";
+import { GoogleMapsIcon, AppleIcon, WazeIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,7 +38,6 @@ type CheckboxPref = {
   labelKey: string;
   hintKey: string;
   itemLabelKey: string;
-  itemDescKey: string;
 };
 
 type SliderPref = {
@@ -55,142 +53,198 @@ type SliderPref = {
 
 type PreferenceItem = RadioPref | CheckboxGroupPref | CheckboxPref | SliderPref;
 
-type PreferenceColumn = PreferenceItem[];
+type PreferenceCard = { items: PreferenceItem[]; noteKey?: string };
 
-const COLUMNS: [PreferenceColumn, PreferenceColumn] = [
-  [
-    {
-      type: "radio",
-      key: "gpsFormat",
-      labelKey: "preferences.gpsFormat",
-      hintKey: "preferences.gpsFormatHint",
-      options: [
-        { value: "decimal", labelKey: "preferences.gpsDecimal", example: "52.23157, 21.00672" },
-        { value: "dms", labelKey: "preferences.gpsDms", example: "52°13'53.7\"N 21°00'24.2\"E" },
-      ],
-    },
-    {
-      type: "checkbox-group",
-      key: "navigationApps",
-      labelKey: "preferences.navigationApps",
-      hintKey: "preferences.navigationAppsHint",
-      options: [
-        { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
-        { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
-        { value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
-      ],
-    },
-    {
-      type: "radio",
-      key: "navLinksDisplay",
-      labelKey: "preferences.navDisplayMode",
-      hintKey: "preferences.navDisplayModeHint",
-      options: [
-        { value: "inline", labelKey: "preferences.navDisplayInline", descKey: "preferences.navDisplayInlineDesc" },
-        { value: "buttons", labelKey: "preferences.navDisplayButtons", descKey: "preferences.navDisplayButtonsDesc" },
-      ],
-    },
-    {
-      type: "checkbox",
-      key: "showStationPhotoPanel",
-      labelKey: "preferences.stationPhotoPanel",
-      hintKey: "preferences.stationPhotoPanelHint",
-      itemLabelKey: "preferences.stationPhotoPanelLabel",
-      itemDescKey: "preferences.stationPhotoPanelDesc",
-    },
-  ],
-  [
-    {
-      type: "slider",
-      key: "radiolinesMinZoom",
-      labelKey: "preferences.radiolinesMinZoom",
-      hintKey: "preferences.radiolinesMinZoomHint",
-      min: 7,
-      max: 11,
-      step: 0.1,
-      format: (v) => v.toFixed(1),
-    },
-    {
-      type: "slider",
-      key: "mapStationsLimit",
-      labelKey: "preferences.mapStationsLimit",
-      hintKey: "preferences.mapStationsLimitHint",
-      min: 10,
-      max: 1000,
-      step: 10,
-    },
-    {
-      type: "slider",
-      key: "mapRadiolinesLimit",
-      labelKey: "preferences.mapRadiolinesLimit",
-      hintKey: "preferences.mapRadiolinesLimitHint",
-      min: 10,
-      max: 1000,
-      step: 10,
-    },
-    {
-      type: "checkbox",
-      key: "showMapHoverTooltip",
-      labelKey: "preferences.mapHoverTooltip",
-      hintKey: "preferences.mapHoverTooltipHint",
-      itemLabelKey: "preferences.mapHoverTooltipLabel",
-      itemDescKey: "preferences.mapHoverTooltipDesc",
-    },
-    {
-      type: "radio",
-      key: "mapPointStyle",
-      labelKey: "preferences.mapPointStyle",
-      hintKey: "preferences.mapPointStyleHint",
-      options: [
-        { value: "dots", labelKey: "preferences.mapPointStyleDots", descKey: "preferences.mapPointStyleDotsDesc" },
-        { value: "markers", labelKey: "preferences.mapPointStyleMarkers", descKey: "preferences.mapPointStyleMarkersDesc" },
-      ],
-    },
-    {
-      type: "checkbox",
-      key: "mapRightClickMeasure",
-      labelKey: "preferences.mapRightClickMeasure",
-      hintKey: "preferences.mapRightClickMeasureHint",
-      itemLabelKey: "preferences.mapRightClickMeasureLabel",
-      itemDescKey: "preferences.mapRightClickMeasureDesc",
-    },
-    {
-      type: "checkbox",
-      key: "mapMeasureCircle",
-      labelKey: "preferences.mapMeasureCircle",
-      hintKey: "preferences.mapMeasureCircleHint",
-      itemLabelKey: "preferences.mapMeasureCircleLabel",
-      itemDescKey: "preferences.mapMeasureCircleDesc",
-    },
-    {
-      type: "checkbox",
-      key: "showAzimuths",
-      labelKey: "preferences.showAzimuths",
-      hintKey: "preferences.showAzimuthsHint",
-      itemLabelKey: "preferences.showAzimuthsLabel",
-      itemDescKey: "preferences.showAzimuthsDesc",
-    },
-    {
-      type: "slider",
-      key: "azimuthsMinZoom",
-      labelKey: "preferences.azimuthsMinZoom",
-      hintKey: "preferences.azimuthsMinZoomHint",
-      min: 10,
-      max: 19,
-      step: 0.1,
-      format: (v) => v.toFixed(1),
-    },
-    {
-      type: "slider",
-      key: "azimuthLineLength",
-      labelKey: "preferences.azimuthLineLength",
-      hintKey: "preferences.azimuthLineLengthHint",
-      min: 50,
-      max: 1000,
-      step: 50,
-      format: (v) => `${v} m`,
-    },
-  ],
+type PreferenceGroup = {
+  titleKey: string;
+  cards: PreferenceCard[];
+};
+
+const GROUPS: PreferenceGroup[] = [
+  {
+    titleKey: "preferences.groupNavigation",
+    cards: [
+      {
+        items: [
+          {
+            type: "radio",
+            key: "gpsFormat",
+            labelKey: "preferences.gpsFormat",
+            hintKey: "preferences.gpsFormatHint",
+            options: [
+              { value: "decimal", labelKey: "preferences.gpsDecimal", example: "52.23157, 21.00672" },
+              { value: "dms", labelKey: "preferences.gpsDms", example: "52°13'53.7\"N 21°00'24.2\"E" },
+            ],
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "checkbox-group",
+            key: "navigationApps",
+            labelKey: "preferences.navigationApps",
+            hintKey: "preferences.navigationAppsHint",
+            options: [
+              { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
+              { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
+              { value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
+            ],
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "radio",
+            key: "navLinksDisplay",
+            labelKey: "preferences.navDisplayMode",
+            hintKey: "preferences.navDisplayModeHint",
+            options: [
+              { value: "inline", labelKey: "preferences.navDisplayInline", descKey: "preferences.navDisplayInlineDesc" },
+              { value: "buttons", labelKey: "preferences.navDisplayButtons", descKey: "preferences.navDisplayButtonsDesc" },
+            ],
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "checkbox",
+            key: "showStationPhotoPanel",
+            labelKey: "preferences.stationPhotoPanel",
+            hintKey: "preferences.stationPhotoPanelHint",
+            itemLabelKey: "preferences.stationPhotoPanelLabel",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    titleKey: "preferences.groupMap",
+    cards: [
+      {
+        items: [
+          {
+            type: "slider",
+            key: "mapStationsLimit",
+            labelKey: "preferences.mapStationsLimit",
+            hintKey: "preferences.mapStationsLimitHint",
+            min: 10,
+            max: 1000,
+            step: 10,
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "slider",
+            key: "radiolinesMinZoom",
+            labelKey: "preferences.radiolinesMinZoom",
+            hintKey: "preferences.radiolinesMinZoomHint",
+            min: 7,
+            max: 11,
+            step: 0.1,
+            format: (v) => v.toFixed(1),
+          },
+          {
+            type: "slider",
+            key: "mapRadiolinesLimit",
+            labelKey: "preferences.mapRadiolinesLimit",
+            hintKey: "preferences.mapRadiolinesLimitHint",
+            min: 10,
+            max: 1000,
+            step: 10,
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "checkbox",
+            key: "showMapHoverTooltip",
+            labelKey: "preferences.mapHoverTooltip",
+            hintKey: "preferences.mapHoverTooltipHint",
+            itemLabelKey: "preferences.mapHoverTooltipLabel",
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "radio",
+            key: "mapPointStyle",
+            labelKey: "preferences.mapPointStyle",
+            hintKey: "preferences.mapPointStyleHint",
+            options: [
+              { value: "dots", labelKey: "preferences.mapPointStyleDots", descKey: "preferences.mapPointStyleDotsDesc" },
+              { value: "markers", labelKey: "preferences.mapPointStyleMarkers", descKey: "preferences.mapPointStyleMarkersDesc" },
+            ],
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "checkbox",
+            key: "mapRightClickMeasure",
+            labelKey: "preferences.mapRightClickMeasure",
+            hintKey: "preferences.mapRightClickMeasureHint",
+            itemLabelKey: "preferences.mapRightClickMeasureLabel",
+          },
+          {
+            type: "checkbox",
+            key: "mapMeasureCircle",
+            labelKey: "preferences.mapMeasureCircle",
+            hintKey: "preferences.mapMeasureCircleHint",
+            itemLabelKey: "preferences.mapMeasureCircleLabel",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    titleKey: "preferences.groupAzimuths",
+    cards: [
+      {
+        items: [
+          {
+            type: "checkbox",
+            key: "showAzimuths",
+            labelKey: "preferences.showAzimuths",
+            hintKey: "preferences.showAzimuthsHint",
+            itemLabelKey: "preferences.showAzimuthsLabel",
+          },
+        ],
+        noteKey: "preferences.showAzimuthsNote",
+      },
+      {
+        items: [
+          {
+            type: "slider",
+            key: "azimuthsMinZoom",
+            labelKey: "preferences.azimuthsMinZoom",
+            hintKey: "preferences.azimuthsMinZoomHint",
+            min: 10,
+            max: 19,
+            step: 0.1,
+            format: (v) => v.toFixed(1),
+          },
+          {
+            type: "slider",
+            key: "azimuthLineLength",
+            labelKey: "preferences.azimuthLineLength",
+            hintKey: "preferences.azimuthLineLengthHint",
+            min: 50,
+            max: 1000,
+            step: 50,
+            format: (v) => `${v} m`,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 function PreferenceField({
@@ -269,10 +323,7 @@ function PreferenceField({
           )}
         >
           <Checkbox id={item.key} checked={checked} onCheckedChange={(v) => updatePreferences({ [item.key]: !!v })} />
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium">{t(item.itemLabelKey)}</span>
-            <span className="text-xs text-muted-foreground">{t(item.itemDescKey)}</span>
-          </div>
+          <span className="text-sm font-medium">{t(item.itemLabelKey)}</span>
         </label>
       );
     }
@@ -281,7 +332,7 @@ function PreferenceField({
       const value = preferences[item.key] as number;
       const display = item.format ? item.format(value) : String(value);
       return (
-        <div className="flex items-center gap-4 px-3 py-2.5">
+        <div className="flex items-center gap-4 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors">
           <Slider
             value={[value]}
             onValueChange={(v) => updatePreferences({ [item.key]: Array.isArray(v) ? v[0] : v })}
@@ -296,28 +347,13 @@ function PreferenceField({
   }
 }
 
-function PrefToggle({
-  checked,
-  disabled,
-  onChange,
-  label,
-  desc,
-}: {
-  checked: boolean;
-  disabled: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-  desc: string;
-}) {
+function PrefToggle({ checked, disabled, onChange, label }: { checked: boolean; disabled: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <label
       className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors", checked ? "bg-primary/10" : "hover:bg-muted")}
     >
       <Checkbox checked={checked} disabled={disabled} onCheckedChange={(v) => onChange(!!v)} />
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium">{label}</span>
-        <span className="text-xs text-muted-foreground">{desc}</span>
-      </div>
+      <span className="text-sm font-medium">{label}</span>
     </label>
   );
 }
@@ -353,76 +389,74 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
   if (!isSupported || !session?.user) return null;
 
   return (
-    <>
-      <Separator />
-      <section className="space-y-6">
-        <div className="space-y-3">
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.notifications")}</Label>
-          <p className="text-xs text-muted-foreground">{t("preferences.notificationsHint")}</p>
-
+    <section className="space-y-4">
+      <h2 className="text-base font-semibold">{t("preferences.notifications")}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-xl border bg-card p-4 space-y-3">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">{t("preferences.pushTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("preferences.notificationsHint")}</p>
+          </div>
           {permission === "denied" ? (
-            <p className="text-xs text-destructive px-3">{t("preferences.notificationsBlocked")}</p>
+            <p className="text-sm text-destructive px-3">{t("preferences.notificationsBlocked")}</p>
           ) : (
-            <label
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                isSubscribed ? "bg-primary/10" : "hover:bg-muted",
-              )}
-            >
-              <Checkbox checked={isSubscribed} disabled={isSubscribing} onCheckedChange={() => (isSubscribed ? unsubscribe() : subscribe())} />
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{t("preferences.pushLabel")}</span>
-                <span className="text-xs text-muted-foreground">{t("preferences.pushDesc")}</span>
-              </div>
-            </label>
+            <PrefToggle
+              checked={isSubscribed}
+              disabled={isSubscribing}
+              onChange={(v) => (v ? subscribe() : unsubscribe())}
+              label={t("preferences.pushLabel")}
+            />
           )}
         </div>
 
         {isSubscribed && subscriptionId && (
           <>
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.ukeUpdates")}</Label>
-              <p className="text-xs text-muted-foreground">{t("preferences.ukeUpdatesHint")}</p>
+            <div className="rounded-xl border bg-card p-4 space-y-3">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{t("preferences.ukeUpdates")}</p>
+                <p className="text-sm text-muted-foreground">{t("preferences.ukeUpdatesHint")}</p>
+              </div>
               <PrefToggle
                 checked={pushPrefs?.ukeUpdates ?? false}
                 disabled={isUpdatingPrefs}
                 onChange={(v) => updatePrefs({ ukeUpdates: v })}
                 label={t("preferences.ukeUpdatesLabel")}
-                desc={t("preferences.ukeUpdatesDesc")}
               />
             </div>
 
             {!isStaff && (
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.submissionUpdates")}</Label>
-                <p className="text-xs text-muted-foreground">{t("preferences.submissionUpdatesHint")}</p>
+              <div className="rounded-xl border bg-card p-4 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">{t("preferences.submissionUpdates")}</p>
+                  <p className="text-sm text-muted-foreground">{t("preferences.submissionUpdatesHint")}</p>
+                </div>
                 <PrefToggle
                   checked={pushPrefs?.submissionUpdates ?? true}
                   disabled={isUpdatingPrefs}
                   onChange={(v) => updatePrefs({ submissionUpdates: v })}
                   label={t("preferences.submissionUpdatesLabel")}
-                  desc={t("preferences.submissionUpdatesDesc")}
                 />
               </div>
             )}
 
             {isStaff && (
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("preferences.newSubmissions")}</Label>
-                <p className="text-xs text-muted-foreground">{t("preferences.newSubmissionsHint")}</p>
+              <div className="rounded-xl border bg-card p-4 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">{t("preferences.newSubmissions")}</p>
+                  <p className="text-sm text-muted-foreground">{t("preferences.newSubmissionsHint")}</p>
+                </div>
                 <PrefToggle
                   checked={pushPrefs?.newSubmission ?? true}
                   disabled={isUpdatingPrefs}
                   onChange={(v) => updatePrefs({ newSubmission: v })}
                   label={t("preferences.newSubmissionsLabel")}
-                  desc={t("preferences.newSubmissionsDesc")}
                 />
               </div>
             )}
           </>
         )}
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
 
@@ -431,29 +465,40 @@ function PreferencesPage() {
   const { preferences, updatePreferences } = usePreferences();
 
   return (
-    <main className="flex-1 overflow-y-auto custom-scrollbar p-4">
-      <div className="space-y-8">
+    <main className="flex-1 overflow-y-auto custom-scrollbar p-6">
+      <div className="space-y-10">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">{t("preferences.title")}</h1>
           <p className="text-muted-foreground text-sm">{t("preferences.description")}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {COLUMNS.map((column, colIdx) => (
-            <section key={colIdx} className="space-y-6">
-              {column.map((item, itemIdx) => (
-                <div key={item.key}>
-                  {itemIdx > 0 ? <Separator className="mb-6" /> : null}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t(item.labelKey)}</Label>
-                    <p className="text-xs text-muted-foreground">{t(item.hintKey)}</p>
-                    <PreferenceField item={item} preferences={preferences} updatePreferences={updatePreferences} t={t} />
-                  </div>
+        {GROUPS.map((group) => (
+          <section key={group.titleKey} className="space-y-4">
+            <h2 className="text-lg font-semibold">{t(group.titleKey)}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {group.cards.map((card) => (
+                <div key={card.items.map((i) => i.key).join("-")} className="rounded-xl border bg-card p-4 space-y-4">
+                  {card.items.map((item, idx) => (
+                    <div key={item.key} className="space-y-3">
+                      {idx > 0 && <Separator />}
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">{t(item.labelKey)}</p>
+                        <p className="text-sm text-muted-foreground">{t(item.hintKey)}</p>
+                      </div>
+                      <PreferenceField item={item} preferences={preferences} updatePreferences={updatePreferences} t={t} />
+                    </div>
+                  ))}
+                  {card.noteKey && (
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                      <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                      <p className="text-xs text-amber-700 dark:text-amber-400">{t(card.noteKey)}</p>
+                    </div>
+                  )}
                 </div>
               ))}
-            </section>
-          ))}
-        </div>
+            </div>
+          </section>
+        ))}
 
         <NotificationsSection t={t} />
       </div>
