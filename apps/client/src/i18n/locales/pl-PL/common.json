@@ -75,7 +75,7 @@
     "confirmed": "Potwierdzona",
     "networksId": "N! ID",
     "networksName": "Nazwa NetWorks",
-    "mnoName": "Nazwa MNO",
+    "mnoName": "Nazwa {{brand}}",
     "cells": "komórki",
     "newStation": "Nowa stacja",
     "submitted": "Zgłoszone",

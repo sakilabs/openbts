@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-30
+
+### 🚀 Enhancements
+
+- Added `OsmAnd` as a navigation app option in preferences
+- Operator logos (Orange, T-Mobile, Plus, Play) are now shown next to the MNO name field in station details instead of a generic icon
+- The N! (NetWorks) logo is now shown next to both NetWorks ID and NetWorks name fields
+- The MNO name label now reflects the actual operator brand - e.g. `OPL name`, `TMPL name`, instead of the generic `MNO name`
+- Added copy buttons next to NetWorks ID and NetWorks name in station details
+- SI2PEM link redesigned from a generic link icon to a styled `S` matching the SI2PEM's logo
+- Added trademark/copyright notices for all operator logos (Orange, T-Mobile, Plus, Play, NetWorks) to the `/about` page
+- Added weekly quota to API ratelimit
+
 # 2026-03-29
 
 ### 🚀 Enhancements

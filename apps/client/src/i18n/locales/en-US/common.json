@@ -76,7 +76,7 @@
     "confirmed": "Confirmed",
     "networksId": "N! ID",
     "networksName": "Network name",
-    "mnoName": "MNO name",
+    "mnoName": "{{brand}} name",
     "cells": "cells",
     "newStation": "New Station",
     "submitted": "Submitted",

@@ -4,6 +4,31 @@ import { useTranslation } from "react-i18next";
 import { usePreferences, type NavigationApp } from "@/hooks/usePreferences";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import type { JSX } from "react/jsx-runtime";
+
+type NavIconComponent = (props: { className?: string }) => JSX.Element;
+
+const hugeIcon = (icon: typeof GoogleMapsIcon): NavIconComponent => {
+  function NavHugeIcon({ className }: { className?: string }) {
+    return <HugeiconsIcon icon={icon} className={className} />;
+  }
+  return NavHugeIcon;
+};
+
+const GoogleMapsNavIcon = hugeIcon(GoogleMapsIcon);
+const AppleNavIcon = hugeIcon(AppleIcon);
+const WazeNavIcon = hugeIcon(WazeIcon);
+
+export function OsmAndIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 1000 1000" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fillRule="evenodd"
+        d="m598.32963 913.706-84.95 80.979a19.593 19.593 0 0 1 -26.784 0l-84.947-80.978c-207.9-45.1-363.672001-230.086-363.672001-451.553 0-255.237 206.849001-462.15399485 462.011001-462.15399485s462.012 206.91699485 462.012 462.15399485c0 221.466-155.771 406.451-363.67 451.552zm-98.318-715.649c-145.786 0-263.971 118.208-263.971 264.036s118.185 264.039 263.971 264.039 263.976-118.217 263.976-264.039-118.19-264.036-263.976-264.036z"
+      />
+    </svg>
+  );
+}
 
 type NavigationLinksProps = {
   latitude: number;
@@ -12,23 +37,28 @@ type NavigationLinksProps = {
   displayMode?: "inline" | "buttons";
 };
 
-export const NAV_APP_CONFIG = {
+export const NAV_APP_CONFIG: Record<NavigationApp, { label: string; Icon: NavIconComponent; url: (lat: number, lng: number) => string }> = {
   "google-maps": {
     label: "Google Maps",
-    icon: GoogleMapsIcon,
-    url: (lat: number, lng: number) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+    Icon: GoogleMapsNavIcon,
+    url: (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
   },
   "apple-maps": {
     label: "Apple Maps",
-    icon: AppleIcon,
-    url: (lat: number, lng: number) => `https://maps.apple.com/?q=${lat},${lng}`,
+    Icon: AppleNavIcon,
+    url: (lat, lng) => `https://maps.apple.com/?q=${lat},${lng}`,
   },
   waze: {
     label: "Waze",
-    icon: WazeIcon,
-    url: (lat: number, lng: number) => `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`,
+    Icon: WazeNavIcon,
+    url: (lat, lng) => `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`,
   },
-} satisfies Record<NavigationApp, { label: string; icon: typeof GoogleMapsIcon; url: (lat: number, lng: number) => string }>;
+  osmand: {
+    label: "OsmAnd",
+    Icon: OsmAndIcon,
+    url: (lat, lng) => `https://osmand.net/go?lat=${lat}&lon=${lng}&z=16`,
+  },
+};
 
 export function NavigationLinks({ latitude, longitude, className, displayMode }: NavigationLinksProps) {
   const { t } = useTranslation("settings");
@@ -55,7 +85,7 @@ export function NavigationLinks({ latitude, longitude, className, displayMode }:
                     />
                   }
                 >
-                  <HugeiconsIcon icon={config.icon} className="size-3.5" />
+                  <config.Icon className="size-3.5" />
                   {config.label}
                 </TooltipTrigger>
                 <TooltipContent>{t("preferences.openWith", { app: config.label })}</TooltipContent>
@@ -89,7 +119,7 @@ export function NavigationLinks({ latitude, longitude, className, displayMode }:
                 onClick={() => window.open(config.url(latitude, longitude), "_blank", "noreferrer")}
                 className="cursor-pointer"
               >
-                <HugeiconsIcon icon={config.icon} className="size-4" />
+                <config.Icon className="size-4" />
                 {t("preferences.openWith", { app: config.label })}
               </DropdownMenuItem>
             );

@@ -44,6 +44,7 @@ export type ErrorCode =
   | "ALREADY_LOGGED_IN"
   | "INSUFFICIENT_PERMISSIONS"
   | "TOO_MANY_REQUESTS"
+  | "QUOTA_EXCEEDED"
   | "DUPLICATE_ENTRY"
   | "TWO_FACTOR_REQUIRED";
 
@@ -107,6 +108,10 @@ const errors: Record<ErrorCode, ErrorDefinition> = {
   },
   TOO_MANY_REQUESTS: {
     message: "You have made too many requests. Please try again later.",
+    statusCode: 429,
+  },
+  QUOTA_EXCEEDED: {
+    message: "Weekly usage quota exceeded. Please try again later.",
     statusCode: 429,
   },
   DUPLICATE_ENTRY: {

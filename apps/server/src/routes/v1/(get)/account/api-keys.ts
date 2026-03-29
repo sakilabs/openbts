@@ -10,6 +10,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { DEFAULT_TIER_LIMITS } from "../../../../services/ratelimit.service.js";
+import { DEFAULT_QUOTA_LIMITS } from "../../../../services/quota.service.js";
 
 import type { TokenTier } from "../../../../interfaces/auth.interface.js";
 
@@ -17,6 +18,12 @@ const apiKeySchema = createSelectSchema(apikeys)
   .pick({ id: true, name: true, start: true, expiresAt: true, createdAt: true, enabled: true })
   .extend({
     rateLimit: z.object({
+      used: z.number(),
+      max: z.number().nullable(),
+      window: z.number(),
+      reset: z.number().nullable(),
+    }),
+    quota: z.object({
       used: z.number(),
       max: z.number().nullable(),
       window: z.number(),
@@ -63,8 +70,16 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
       const limits = DEFAULT_TIER_LIMITS[tier] ?? DEFAULT_TIER_LIMITS.basic;
 
       const redisKey = `ratelimit:api:${key.id}`;
-      const [countStr, ttl] = await Promise.all([redis.get(redisKey), redis.ttl(redisKey)]);
+      const quotaRedisKey = `quota:api:${key.id}`;
+      const [countStr, ttl, quotaCountStr, quotaTtl] = await Promise.all([
+        redis.get(redisKey),
+        redis.ttl(redisKey),
+        redis.get(quotaRedisKey),
+        redis.ttl(quotaRedisKey),
+      ]);
       const used = countStr ? Number.parseInt(countStr, 10) : 0;
+      const quotaUsed = quotaCountStr ? Number.parseInt(quotaCountStr, 10) : 0;
+      const quotaLimits = DEFAULT_QUOTA_LIMITS[tier] ?? DEFAULT_QUOTA_LIMITS.basic;
 
       return {
         id: key.id,
@@ -78,6 +93,12 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
           max: Number.isFinite(limits.max) ? limits.max : null,
           window: limits.window,
           reset: ttl > 0 ? Math.floor(Date.now() / 1000) + ttl : null,
+        },
+        quota: {
+          used: quotaUsed,
+          max: Number.isFinite(quotaLimits.max) ? quotaLimits.max : null,
+          window: quotaLimits.window,
+          reset: quotaTtl > 0 ? Math.floor(Date.now() / 1000) + quotaTtl : null,
         },
       };
     }),

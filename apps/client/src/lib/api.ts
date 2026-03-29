@@ -31,6 +31,12 @@ export class RateLimitError extends Error {
   }
 }
 
+export class QuotaExceededError extends Error {
+  constructor() {
+    super("Weekly usage quota exceeded. Please try again later.");
+  }
+}
+
 export class TwoFactorRequiredError extends Error {
   constructor() {
     super("Two-factor authentication must be enabled to access this resource.");
@@ -50,6 +56,12 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
     if (allowedErrors?.includes(response.status)) return null as unknown as T;
 
     if (response.status === 429) {
+      try {
+        const errorData = await response.json();
+        if (errorData.errors?.[0]?.code === "QUOTA_EXCEEDED") throw new QuotaExceededError();
+      } catch (e) {
+        if (e instanceof QuotaExceededError) throw e;
+      }
       throw new RateLimitError();
     }
 
@@ -97,7 +109,7 @@ export async function postApiData<T, B = unknown>(endpoint: string, body: B): Pr
 }
 
 export function showApiError(error: unknown) {
-  if (error instanceof RateLimitError) return;
+  if (error instanceof RateLimitError || error instanceof QuotaExceededError) return;
   if (error instanceof ApiResponseError) {
     for (const err of error.errors) {
       toast.error(err.message || err.code);

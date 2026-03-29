@@ -10,7 +10,7 @@
     "cellDetails": "Cell Details",
     "internalNotes": "Internal Notes",
     "newCellTooltip": "This cell was added in the last 30 days",
-    "si2pemLink": "Find installation report on si2pem.gov.pl"
+    "si2pemLink": "Find installation report on SI2PEM"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} permit",

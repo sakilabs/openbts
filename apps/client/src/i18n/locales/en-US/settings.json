@@ -11,6 +11,7 @@
     "navGoogleMaps": "Google Maps",
     "navAppleMaps": "Apple Maps",
     "navWaze": "Waze",
+    "navOsmAnd": "OsmAnd",
     "openWith": "Open with {{app}}",
     "navDisplayMode": "Navigation Buttons Style",
     "navDisplayModeHint": "Choose how navigation links are displayed in station details",
@@ -134,7 +135,8 @@
       "name": "Name",
       "key": "Key",
       "expires": "Expires",
-      "rateLimit": "Rate Limit"
+      "rateLimit": "Rate Limit",
+      "usage": "Usage"
     },
     "created": "Created {{date}}",
     "expiresNever": "Never",
@@ -169,6 +171,10 @@
       "title": "Key created successfully",
       "warning": "Store this key securely. You won't be able to view it again after closing this dialog.",
       "done": "Done"
+    },
+    "usage": {
+      "minute": "1min",
+      "weekly": "Weekly"
     },
     "errors": {
       "createFailed": "Failed to create API key",

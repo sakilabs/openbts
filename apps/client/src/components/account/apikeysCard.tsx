@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -38,6 +38,12 @@ type ApiKeyInfo = {
     window: number;
     reset: number | null;
   };
+  quota: {
+    used: number;
+    max: number | null;
+    window: number;
+    reset: number | null;
+  };
 };
 
 const EXPIRY_OPTIONS = ["1d", "3d", "7d", "30d", "90d", "1y", "never"] as const;
@@ -56,10 +62,16 @@ function formatResetTime(resetUnix: number): string {
   const diff = Math.max(0, resetUnix - Math.floor(Date.now() / 1000));
   if (diff < 60) return `${diff}s`;
   if (diff < 3600) return `${Math.ceil(diff / 60)}m`;
-  return `${Math.ceil(diff / 3600)}h`;
+  if (diff < 86400) return `${Math.ceil(diff / 3600)}h`;
+  return `${Math.ceil(diff / 86400)}d`;
 }
 
-function RateLimitBar({ used, max, reset }: { used: number; max: number; reset: number | null }) {
+function formatNumber(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+  return n.toString();
+}
+
+const UsageBar = memo(function UsageBar({ used, max, reset, label }: { used: number; max: number; reset: number | null; label?: string }) {
   const pct = max > 0 ? Math.min((used / max) * 100, 100) : 0;
   const isHigh = pct > 60;
 
@@ -67,7 +79,8 @@ function RateLimitBar({ used, max, reset }: { used: number; max: number; reset: 
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs tabular-nums">
-          {used} / {max}
+          {label ? <span className="text-muted-foreground">{label} </span> : null}
+          {formatNumber(used)} / {formatNumber(max)}
         </span>
         {reset !== null && used > 0 ? <span className="text-[10px] text-muted-foreground tabular-nums">{formatResetTime(reset)}</span> : null}
       </div>
@@ -76,7 +89,7 @@ function RateLimitBar({ used, max, reset }: { used: number; max: number; reset: 
       </div>
     </div>
   );
-}
+});
 
 function KeyCreatedDialog({ apiKey, open, onClose }: { apiKey: string; open: boolean; onClose: () => void }) {
   const { t } = useTranslation("settings");
@@ -294,7 +307,7 @@ export function ApiKeysCard({ userId }: { userId: string }) {
                       <th className="text-left font-medium px-4 pb-2">{t("apiKeys.columns.name")}</th>
                       <th className="text-left font-medium px-4 pb-2">{t("apiKeys.columns.key")}</th>
                       <th className="text-left font-medium px-4 pb-2">{t("apiKeys.columns.expires")}</th>
-                      <th className="text-left font-medium px-4 pb-2">{t("apiKeys.columns.rateLimit")}</th>
+                      <th className="text-left font-medium px-4 pb-2">{t("apiKeys.columns.usage")}</th>
                       <th className="px-4 pb-2" />
                     </tr>
                   </thead>
@@ -318,12 +331,24 @@ export function ApiKeysCard({ userId }: { userId: string }) {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 min-w-24">
-                          {key.rateLimit.max !== null ? (
-                            <RateLimitBar used={key.rateLimit.used} max={key.rateLimit.max} reset={key.rateLimit.reset} />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">∞</span>
-                          )}
+                        <td className="px-4 py-2.5 min-w-32">
+                          <div className="space-y-2">
+                            {key.rateLimit.max !== null ? (
+                              <UsageBar
+                                used={key.rateLimit.used}
+                                max={key.rateLimit.max}
+                                reset={key.rateLimit.reset}
+                                label={t("apiKeys.usage.minute")}
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{t("apiKeys.usage.minute")} ∞</span>
+                            )}
+                            {key.quota.max !== null ? (
+                              <UsageBar used={key.quota.used} max={key.quota.max} reset={key.quota.reset} label={t("apiKeys.usage.weekly")} />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{t("apiKeys.usage.weekly")} ∞</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-2.5">
                           <Button

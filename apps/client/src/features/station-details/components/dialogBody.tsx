@@ -6,7 +6,6 @@ import {
   InformationCircleIcon,
   Globe02Icon,
   Image01Icon,
-  Link01Icon,
   Location01Icon,
   MapsLocation01Icon,
   Message01Icon,
@@ -212,21 +211,22 @@ export function StationDetailsBody({
                                 render={
                                   <a
                                     href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&page_size=25`}
-                                    title={t("specs.si2pemLink")}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
+                                    className="inline-flex items-center justify-center size-5.5 hover:bg-muted rounded transition-colors cursor-pointer text-sm font-bold text-[#2e2e5a] dark:text-[#9898ce] leading-none shrink-0"
                                   />
                                 }
                               >
-                                <HugeiconsIcon icon={Link01Icon} className="size-3.5 text-muted-foreground" />
+                                S
                               </TooltipTrigger>
                               <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
                             </Tooltip>
                           )}
                         </div>
                       </div>
-                      {station.extra_identificators && <ExtraIdentificatorsDisplay data={station.extra_identificators} />}
+                      {station.extra_identificators && (
+                        <ExtraIdentificatorsDisplay data={station.extra_identificators} operatorMnc={station.operator?.mnc} />
+                      )}
                       {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                         <div className="sm:col-span-2 pt-3 border-t border-border/50">
                           <div className="flex items-center gap-1.5 flex-wrap">

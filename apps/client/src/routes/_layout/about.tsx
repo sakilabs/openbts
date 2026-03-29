@@ -149,6 +149,21 @@ function AboutPage() {
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{thanksContent}</ReactMarkdown>
           </article>
         </section>
+
+        <section className="space-y-4 border-t pt-8">
+          <h2 className="text-xl font-semibold">Informacje prawne</h2>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <img src="/operators/networks.svg" alt="NetWorks" className="size-6 shrink-0" />
+            <img src="/operators/orange.svg" alt="Orange" className="h-6 w-auto shrink-0" />
+            <img src="/operators/t-mobile.svg" alt="T-Mobile" className="size-6 shrink-0" />
+            <img src="/operators/plus.svg" alt="Plus" className="size-6 shrink-0" />
+            <img src="/operators/play.svg" alt="Play" className="h-6 w-auto max-w-20 shrink-0" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Przedstawione logo i nazwy operatorów są własnością ich prawnych właścicieli. Wykorzystanie w serwisie {APP_NAME} ma wyłącznie charakter
+            informacyjny i nie oznacza afiliacji ani poparcia ze strony tych podmiotów.
+          </p>
+        </section>
       </div>
     </main>
   );

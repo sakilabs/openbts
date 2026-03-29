@@ -1,6 +1,7 @@
 import { Trans, useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GoogleMapsIcon, AppleIcon, WazeIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
+import { OsmAndIcon } from "@/features/station-details/components/navLinks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -12,9 +13,16 @@ import { toggleValue, cn } from "@/lib/utils";
 import { authClient } from "@/lib/authClient";
 import { usePushSubscription } from "@/features/notifications/usePushSubscription";
 import { fetchPushPreferences, updatePushPreferences, type PushPreferences } from "@/features/notifications/api";
+import type { JSX } from "react";
 
 type RadioOption = { value: string; labelKey: string; descKey?: string; example?: string };
-type CheckboxGroupOption = { value: string; labelKey: string; icon?: typeof GoogleMapsIcon };
+type NavIconComponent = (props: { className?: string }) => JSX.Element;
+const hugeIcon = (icon: typeof GoogleMapsIcon): NavIconComponent =>
+  function NavHugeIcon({ className }) {
+    return <HugeiconsIcon icon={icon} className={className} />;
+  };
+
+type CheckboxGroupOption = { value: string; labelKey: string; icon?: NavIconComponent };
 
 type RadioPref = {
   type: "radio";
@@ -86,9 +94,10 @@ const GROUPS: PreferenceGroup[] = [
             labelKey: "preferences.navigationApps",
             hintKey: "preferences.navigationAppsHint",
             options: [
-              { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: GoogleMapsIcon },
-              { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: AppleIcon },
-              { value: "waze", labelKey: "preferences.navWaze", icon: WazeIcon },
+              { value: "google-maps", labelKey: "preferences.navGoogleMaps", icon: hugeIcon(GoogleMapsIcon) },
+              { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: hugeIcon(AppleIcon) },
+              { value: "waze", labelKey: "preferences.navWaze", icon: hugeIcon(WazeIcon) },
+              { value: "osmand", labelKey: "preferences.navOsmAnd", icon: OsmAndIcon },
             ],
           },
         ],
@@ -305,7 +314,7 @@ function PreferenceField({
                 checked={selected.includes(option.value)}
                 onCheckedChange={() => updatePreferences({ [item.key]: toggleValue(selected, option.value) })}
               />
-              {option.icon ? <HugeiconsIcon icon={option.icon} className="size-4 text-muted-foreground" /> : null}
+              {option.icon ? <option.icon className="size-4 text-muted-foreground" /> : null}
               <span className="text-sm font-medium">{t(option.labelKey)}</span>
             </label>
           ))}

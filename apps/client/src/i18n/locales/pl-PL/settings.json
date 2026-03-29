@@ -11,6 +11,7 @@
     "navGoogleMaps": "Mapy Google",
     "navAppleMaps": "Apple Maps",
     "navWaze": "Waze",
+    "navOsmAnd": "OsmAnd",
     "openWith": "Otwórz w {{app}}",
     "navDisplayMode": "Styl przycisków nawigacji",
     "navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji",
@@ -134,7 +135,8 @@
       "name": "Nazwa",
       "key": "Klucz",
       "expires": "Wygasa",
-      "rateLimit": "Limit zapytań"
+      "rateLimit": "Limit zapytań",
+      "usage": "Użycie"
     },
     "created": "Utworzono {{date}}",
     "expiresNever": "Nigdy",
@@ -169,6 +171,10 @@
       "title": "Klucz został utworzony",
       "warning": "Przechowuj ten klucz w bezpiecznym miejscu. Nie będziesz mógł go ponownie wyświetlić po zamknięciu tego okna.",
       "done": "Gotowe"
+    },
+    "usage": {
+      "minute": "1min",
+      "weekly": "Tygodniowo"
     },
     "errors": {
       "createFailed": "Nie udało się utworzyć klucza API",

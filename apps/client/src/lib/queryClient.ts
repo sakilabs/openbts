@@ -1,9 +1,9 @@
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BackendUnavailableError, RateLimitError, TwoFactorRequiredError } from "./api";
+import { BackendUnavailableError, QuotaExceededError, RateLimitError, TwoFactorRequiredError } from "./api";
 
 function onRateLimitError(error: Error): void {
-  if (error instanceof RateLimitError) toast.error(error.message);
+  if (error instanceof RateLimitError || error instanceof QuotaExceededError) toast.error(error.message);
 }
 
 export const queryClient = new QueryClient({
@@ -24,6 +24,7 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         if (error instanceof BackendUnavailableError) return false;
         if (error instanceof RateLimitError) return false;
+        if (error instanceof QuotaExceededError) return false;
         if (error instanceof TwoFactorRequiredError) return false;
         return failureCount < 3;
       },
