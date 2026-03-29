@@ -50,6 +50,6 @@
     "fileTooLarge": "Plik zbyt duży (maks. 10 MB)",
     "invalidFileType": "Nieobsługiwany typ pliku",
     "noValidRows": "Brak poprawnych wierszy w pliku",
-    "truncated": "Plik jest duży — wczytano tylko pierwsze {{count}} wierszy"
+    "truncated": "Plik jest duży, wczytano tylko pierwsze {{count}} wierszy"
   }
 }

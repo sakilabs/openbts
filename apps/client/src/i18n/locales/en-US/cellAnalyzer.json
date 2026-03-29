@@ -50,6 +50,6 @@
     "fileTooLarge": "File too large (max 10 MB)",
     "invalidFileType": "Unsupported file type",
     "noValidRows": "No valid rows found in file",
-    "truncated": "File is large — only the first {{count}} rows were loaded"
+    "truncated": "File is large, only the first {{count}} rows were loaded"
   }
 }
