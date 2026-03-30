@@ -99,7 +99,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
       <button type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => onOpenDetails(link)}>
         <div className="flex items-center gap-1.5 min-w-0">
           <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
-          <span className="font-medium text-xs truncate" style={{ color }}>
+          <span className="font-medium text-xs truncate">
             {normalizeOperatorName(operatorName)}
           </span>
           {permitNumber && <span className="text-[9px] text-muted-foreground font-mono shrink-0">{permitNumber}</span>}

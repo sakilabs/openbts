@@ -64,10 +64,10 @@ function PopupStationList({
         >
           <div className="flex items-center gap-1.5">
             <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
-            <span className="font-medium text-xs" style={{ color }}>
+            <span className="font-medium text-xs">
               {operatorName}
             </span>
-            <span className="text-[11px] text-muted-foreground font-mono">{station.station_id}</span>
+            <span className="text-[10px] text-foreground/70 font-mono">{station.station_id}</span>
           </div>
           <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
             {bands.map((band) => (
@@ -104,12 +104,12 @@ function PopupStationList({
           >
             <div className="flex items-center gap-1.5">
               <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
-              <span className="font-medium text-xs" style={{ color }}>
+              <span className="font-medium text-xs">
                 {operatorName}
               </span>
-              <span className="text-[11px] text-muted-foreground">{stationId}</span>
+              <span className="text-[10px] text-foreground/70">{stationId}</span>
               {station.extra_identificators?.networks_id && (
-                <span className="text-[11px] text-muted-foreground font-mono">N!{station.extra_identificators.networks_id}</span>
+                <span className="text-[10px] text-foreground/70 font-mono">N!{station.extra_identificators.networks_id}</span>
               )}
             </div>
             {hasCells ? (

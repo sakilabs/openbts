@@ -39,10 +39,8 @@ export const StationHoverTooltipContent = memo(function StationHoverTooltipConte
           <div key={station.stationId} className="px-3 py-1.5 border-b border-border/30 last:border-0">
             <div className="flex items-center gap-1.5">
               <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: station.color }} />
-              <span className="font-medium text-[13px]" style={{ color: station.color }}>
-                {station.name}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{station.stationId}</span>
+              <span className="font-medium text-xs">{station.name}</span>
+              <span className="text-[10px] text-foreground/70">{station.stationId}</span>
             </div>
           </div>
         ))}

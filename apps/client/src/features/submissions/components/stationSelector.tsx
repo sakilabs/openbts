@@ -112,7 +112,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
                       <span className="text-sm font-medium truncate">
                         {selectedStation.location?.address || selectedStation.location?.city || t("common:notFound.address")}
                       </span>
-                      <span className="text-[10px] font-mono text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-mono text-foreground/70 shrink-0 bg-muted px-1.5 py-0.5 rounded">
                         {selectedStation.station_id}
                       </span>
                     </div>
@@ -129,7 +129,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
                         : t("common:notFound.gps")}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-muted-foreground">{selectedStation.operator?.name}</span>
+                      <span className="text-xs text-foreground/70">{selectedStation.operator?.name}</span>
                       {selectedStation.cells?.length > 0 && (
                         <>
                           <span className="text-xs text-muted-foreground/50">•</span>
@@ -180,12 +180,12 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
                                 <span className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                                   {station.location?.address || station.location?.city || t("common:notFound.address")}
                                 </span>
-                                <span className="text-[10px] font-mono text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] font-mono text-foreground/70 shrink-0 bg-muted px-1.5 py-0.5 rounded">
                                   {station.station_id}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="text-[11px] font-medium text-foreground/70 italic">{station.operator?.name}</span>
+                                <span className="text-[11px] font-medium text-foreground/70">{station.operator?.name}</span>
                                 <span className="text-[11px] text-muted-foreground/50">•</span>
                                 <span className="text-[11px] text-muted-foreground">{station.location?.city}</span>
                                 {station.cells?.length > 0 && (

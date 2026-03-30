@@ -138,15 +138,15 @@ export function SearchResults({
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
                         {station.extra_identificators?.networks_id && (
-                          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] font-mono text-foreground/70 bg-muted px-1.5 py-0.5 rounded">
                             N!{station.extra_identificators.networks_id}
                           </span>
                         )}
-                        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{station.station_id}</span>
+                        <span className="text-[10px] font-mono text-foreground/70 bg-muted px-1.5 py-0.5 rounded">{station.station_id}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[11px] font-medium text-foreground/70 italic">{station.operator?.name}</span>
+                      <span className="text-[11px] font-medium text-foreground/70">{station.operator?.name}</span>
                       <span className="text-[11px] text-muted-foreground/50">•</span>
                       <span className="text-[11px] text-muted-foreground">{station.location?.city}</span>
                     </div>
@@ -193,10 +193,10 @@ export function SearchResults({
                       <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">
                         {permit.location?.address ?? permit.station_id}
                       </span>
-                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">{permit.station_id}</span>
+                      <span className="text-[10px] font-mono text-foreground/70 bg-muted px-1.5 py-0.5 rounded shrink-0">{permit.station_id}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[11px] font-medium text-foreground/70 italic">{permit.operator?.name}</span>
+                      <span className="text-[11px] font-medium text-foreground/70">{permit.operator?.name}</span>
                       {permit.location?.city && (
                         <>
                           <span className="text-[11px] text-muted-foreground/50">•</span>
@@ -240,12 +240,12 @@ export function SearchResults({
                         <span className="text-[11px] text-muted-foreground/60 shrink-0">↔</span>
                         <span className="text-sm font-bold truncate group-hover:text-primary transition-colors">{radioline.rx.city ?? "?"}</span>
                       </div>
-                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
+                      <span className="text-[10px] font-mono text-foreground/70 bg-muted px-1.5 py-0.5 rounded shrink-0">
                         {radioline.permit_number}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[11px] font-medium text-foreground/70 italic">{radioline.operator?.name}</span>
+                      <span className="text-[11px] font-medium text-foreground/70">{radioline.operator?.name}</span>
                     </div>
                   </div>
                 </button>
