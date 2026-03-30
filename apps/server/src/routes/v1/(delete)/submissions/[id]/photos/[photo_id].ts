@@ -27,7 +27,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
-  const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read_all"] })) || false;
+  const hasAdminPermission = (await verifyPermissions(session.user.id, { submissions: ["read"] })) || false;
 
   const submission = await db.query.submissions.findFirst({ where: { id }, columns: { id: true, submitter_id: true, status: true } });
   if (!submission) throw new ErrorResponse("NOT_FOUND");
