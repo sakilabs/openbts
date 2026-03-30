@@ -141,6 +141,7 @@
     "uploaded": "Zdjęcia przesłane",
     "deleted": "Zdjęcie usunięte",
     "uploadFailed": "Nie udało się przesłać zdjęć",
+    "fileTooLarge": "{{name}} jest za duże (maks. {{size}})",
     "confirmDelete": "Usunąć to zdjęcie?",
     "confirmDeleteDesc": "Ta akcja jest nieodwracalna. Zdjęcie zostanie trwale usunięte.",
     "deleteFailed": "Nie udało się usunąć zdjęcia",

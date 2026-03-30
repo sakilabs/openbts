@@ -24,6 +24,8 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   const { t, i18n } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { data: locationPhotos = [], isLoading: loadingLocation } = useQuery({
     queryKey: ["location-photos", locationId],
@@ -119,6 +121,29 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
     e.target.value = "";
   }
 
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current++;
+    if (dragCounter.current === 1) setIsDragging(true);
+  }
+
+  function handleDragLeave() {
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current = 0;
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    if (files.length > 0) uploadMutation.mutate(files);
+  }
+
   const isLoading = loadingLocation || loadingStation;
 
   function toggleSelect(photo: LocationPhoto) {
@@ -157,7 +182,13 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
 
   if (locationPhotos.length === 0) {
     return (
-      <div className="border rounded-xl overflow-hidden">
+      <div
+        className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
           <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("photos.label")}</span>
@@ -176,7 +207,13 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   }
 
   return (
-    <div className="border rounded-xl overflow-hidden">
+    <div
+      className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
           <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />

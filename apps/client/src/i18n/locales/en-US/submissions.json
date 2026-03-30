@@ -141,6 +141,7 @@
     "uploaded": "Photos uploaded",
     "deleted": "Photo deleted",
     "uploadFailed": "Failed to upload photos",
+    "fileTooLarge": "{{name}} is too large (max {{size}})",
     "confirmDelete": "Delete this photo?",
     "confirmDeleteDesc": "This action cannot be undone. The photo will be permanently removed.",
     "deleteFailed": "Failed to delete photo",

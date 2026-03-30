@@ -35,7 +35,7 @@ import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { fetchSubmissionPhotos, deleteSubmissionPhoto, updateSubmissionPhotoNote, updateSubmissionPhotoTakenAt, type SubmissionPhoto } from "../api";
 
 const MAX_FILES = 5;
-const MAX_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
 type Props = {
   photos: File[];
@@ -53,6 +53,8 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
   const { t, i18n } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
   const previewUrls = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
 
   const [deleteTarget, setDeleteTarget] = useState<{ type: "existing"; id: number } | { type: "local"; index: number } | null>(null);
@@ -114,16 +116,47 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
   const totalCount = existingPhotos.length + photos.length;
   const remainingSlots = MAX_FILES - totalCount;
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    const valid = files.filter((f) => f.size <= MAX_SIZE_BYTES);
+  function processFiles(files: File[]) {
+    const valid: File[] = [];
+    for (const f of files) {
+      if (f.size > MAX_SIZE_BYTES) toast.error(t("photos.fileTooLarge", { name: f.name, size: "10 MB" }));
+      else valid.push(f);
+    }
     const combined = [...photos, ...valid].slice(0, remainingSlots > 0 ? remainingSlots + photos.length : photos.length);
     const combinedNotes = [...notes, ...valid.map(() => "")].slice(0, combined.length);
     const combinedTakenAts = [...takenAts, ...valid.map(() => null)].slice(0, combined.length);
     onPhotosChange(combined);
     onNotesChange(combinedNotes);
     onTakenAtsChange(combinedTakenAts);
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    processFiles(Array.from(e.target.files ?? []));
     e.target.value = "";
+  }
+
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current++;
+    if (dragCounter.current === 1) setIsDragging(true);
+  }
+
+  function handleDragLeave() {
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current = 0;
+    setIsDragging(false);
+    if (remainingSlots <= 0) return;
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    if (files.length > 0) processFiles(files);
   }
 
   function removeLocalPhoto(idx: number) {
@@ -186,7 +219,13 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
   return (
     <>
       <Collapsible defaultOpen>
-        <div className="border rounded-xl overflow-hidden">
+        <div
+          className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
           <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
             <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
               <HugeiconsIcon
@@ -441,7 +480,7 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                 )}
               </div>
             )}
-            <p className="px-3 pb-2 text-xs text-muted-foreground">{t("photos.hint", { max: MAX_FILES, size: "3 MB" })}</p>
+            <p className="px-3 pb-2 text-xs text-muted-foreground">{t("photos.hint", { max: MAX_FILES, size: "10 MB" })}</p>
           </CollapsibleContent>
         </div>
       </Collapsible>

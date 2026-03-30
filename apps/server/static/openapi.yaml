@@ -777,7 +777,7 @@ paths:
         "500": { $ref: "#/components/responses/InternalServerError" }
     post:
       tags: [Stations]
-      summary: Create comment (multipart/form-data with content and optional files)
+      summary: Create comment (multipart/form-data with content and optional files). Maximum of 5 image attachments allowed with 5 MB size limit each.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1863,7 +1863,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Upload photos for a submission (multipart/form-data)
-      description: Accepts interleaved `notes` fields and `files` fields. Max 5 photos per submission, max 3 MB per file. Only the submission's owner can upload while status is pending.
+      description: Accepts interleaved `notes` fields and `files` fields. Max 5 photos per submission, max 10 MB per file. Only the submission's owner can upload while status is pending.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []

@@ -355,6 +355,11 @@ export function FilterPanel({
     onFiltersChange({ ...filters, showRadiolines: !filters.showRadiolines });
   }, [filters, showHeatmap, onFiltersChange]);
 
+  const handleToggleHeatmap = useCallback(() => {
+    if (!filters.showStations && !filters.showRadiolines && showHeatmap) return;
+    onToggleHeatmap?.();
+  }, [filters.showStations, filters.showRadiolines, showHeatmap, onToggleHeatmap]);
+
   const filterSections = (
     <div className={cn("space-y-2", isSheet ? "p-4" : "p-4 overflow-y-auto overscroll-contain")}>
       <div>
@@ -369,7 +374,7 @@ export function FilterPanel({
             <span className="flex-1 text-left">{t("filters.showRadiolines")}</span>
           </Checkbox>
           {onToggleHeatmap && (
-            <Checkbox checked={showHeatmap} onChange={onToggleHeatmap}>
+            <Checkbox checked={showHeatmap} onChange={handleToggleHeatmap}>
               <HugeiconsIcon icon={Fire02Icon} className="size-3.5 shrink-0" />
               <span className="flex-1 text-left">Heatmap</span>
             </Checkbox>

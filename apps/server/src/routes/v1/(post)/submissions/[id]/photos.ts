@@ -18,7 +18,7 @@ import type { MultipartFile } from "@fastify/multipart";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 const MAX_PHOTOS_PER_SUBMISSION = 5;
-const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 async function ensureUploadDir() {
   try {
@@ -95,6 +95,7 @@ async function handler(
 
       const chunks: Buffer[] = [];
       for await (const chunk of filePart.file) chunks.push(chunk as Buffer);
+      if (filePart.file.truncated) throw new ErrorResponse("BAD_REQUEST", { message: "File too large (max 10 MB)" });
       const inputBuffer = Buffer.concat(chunks);
 
       const detected = await fileTypeFromBuffer(inputBuffer);
@@ -111,7 +112,7 @@ async function handler(
       const outputBuffer = await sharp(sharpInput, sharpOptions)
         .rotate()
         .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
-        .webp({ quality: 82 })
+        .webp({ quality: 75 })
         .toBuffer();
       await fs.writeFile(filePath, outputBuffer);
 

@@ -18,6 +18,7 @@ import type { MultipartFile, MultipartValue } from "@fastify/multipart";
 
 const stationCommentSelectSchema = createSelectSchema(stationComments);
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 async function ensureUploadDir() {
   try {
@@ -65,7 +66,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     await ensureUploadDir();
     const savedPaths: string[] = [];
     try {
-      for await (const part of (req as unknown as { parts: () => AsyncIterableIterator<MultipartFile | MultipartValue> }).parts()) {
+      for await (const part of req.parts({ limits: { fileSize: MAX_FILE_SIZE_BYTES } })) {
         if ((part as MultipartFile).type === "file" && (part as MultipartFile).file) {
           const filePart = part as MultipartFile;
           const mimetype: string = filePart.mimetype;
@@ -79,6 +80,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
           const chunks: Buffer[] = [];
           for await (const chunk of filePart.file) chunks.push(chunk as Buffer);
+          if (filePart.file.truncated) throw new ErrorResponse("BAD_REQUEST", { message: "File too large (max 5 MB)" });
           const inputBuffer = Buffer.concat(chunks);
 
           let sharpInput: sharp.SharpInput;
@@ -92,7 +94,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           const outputBuffer = await sharp(sharpInput, sharpOptions)
             .rotate()
             .resize({ width: 2048, height: 2048, fit: "inside", withoutEnlargement: true })
-            .webp({ quality: 82 })
+            .webp({ quality: 75 })
             .toBuffer();
           await fs.writeFile(filePath, outputBuffer);
           const stats = await fs.stat(filePath);

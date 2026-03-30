@@ -57,6 +57,8 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
   const { t, i18n } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [deletePhotoId, setDeletePhotoId] = useState<number | null>(null);
   const [editState, setEditState] = useState<{ id: number; note: string; takenAt: Date | null } | null>(null);
@@ -150,12 +152,45 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
     e.target.value = "";
   }
 
+  function handleDragEnter(e: React.DragEvent) {
+    if (!uploadFn) return;
+    e.preventDefault();
+    dragCounter.current++;
+    if (dragCounter.current === 1) setIsDragging(true);
+  }
+
+  function handleDragLeave() {
+    if (!uploadFn) return;
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    if (!uploadFn) return;
+    e.preventDefault();
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    if (!uploadFn) return;
+    e.preventDefault();
+    dragCounter.current = 0;
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    if (files.length > 0) uploadMutation.mutate(files);
+  }
+
   if (!isLoading && photos.length === 0 && hideWhenEmpty) return null;
 
   return (
     <>
       <Collapsible defaultOpen>
-        <div className="border rounded-xl overflow-hidden">
+        <div
+          className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
           <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
             <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
               <HugeiconsIcon

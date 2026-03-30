@@ -81,7 +81,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
       const outputBuffer = await sharp(sharpInput, sharpOptions)
         .rotate()
         .resize({ width: AVATAR_SIZE, height: AVATAR_SIZE, fit: "cover", position: "attention" })
-        .webp({ quality: 88 })
+        .webp({ quality: 80 })
         .toBuffer();
 
       await fs.writeFile(filePath, outputBuffer);
