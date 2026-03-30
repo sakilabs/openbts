@@ -60,6 +60,7 @@
     "showStations": "Stations",
     "operator": "BTS Operator",
     "showRadiolines": "Radiolines",
+    "showAzimuths": "Azimuths",
     "radiolineOperator": "Radioline Operator",
     "radiolineOperators_one": "{{count, number}} radioline operator",
     "radiolineOperators_others": "{{count, number}} radioline operators",

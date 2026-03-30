@@ -96,8 +96,8 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         )}
                       </div>
                       <div className="flex flex-col gap-0.5 min-w-0">
-                        <p className="text-sm font-medium text-foreground/90 truncate">{station.location.city}</p>
-                        <p className="text-xs text-muted-foreground font-medium opacity-80">
+                        <p className="text-sm font-medium text-foreground truncate">{station.location.city}</p>
+                        <p className="text-xs text-muted-foreground font-medium">
                           {station.extra_address || station.location.address || t("dialog.btsStation")}
                         </p>
                         <div className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 pt-0.5">

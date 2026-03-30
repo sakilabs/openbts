@@ -39,6 +39,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
   const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const { data: session } = authClient.useSession();
   const currentUserId = session?.user?.id;
+  const isLoggedIn = !!session?.user;
   const queryClient = useQueryClient();
   const {
     data: comments = [],
@@ -124,8 +125,8 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
       {comments.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground bg-muted/10 rounded-2xl border border-dashed mx-2">
           <HugeiconsIcon icon={Message01Icon} className="size-10 mb-3 opacity-10" />
-          <p className="text-sm font-medium">{t("comments.noComments")}</p>
-          <p className="text-xs opacity-60 mt-1 px-6">{t("comments.noCommentsHint")}</p>
+          <p className="text-sm font-medium text-foreground">{t("comments.noComments")}</p>
+          <p className="text-xs text-muted-foreground mt-1 px-6">{t("comments.noCommentsHint")}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -213,7 +214,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
         </div>
       )}
       {comments.length > 0 && <div className="border-t" />}
-      <AddCommentForm stationId={stationId} />
+      {isLoggedIn && <AddCommentForm stationId={stationId} />}
       <Lightbox photos={lightboxPhotos} index={lightbox?.index ?? null} onClose={closeLightbox} onPrev={prevPhoto} onNext={nextPhoto} />
     </div>
   );

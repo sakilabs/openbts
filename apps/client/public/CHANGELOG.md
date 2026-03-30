@@ -25,10 +25,17 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Changed limits for submission photos (3MB->10MB)
 - Limit for attachments to station comments is raised to 5MB
 - Changed quality of uploaded images to ~75%
+- Azimuths can now be toggled directly from the layers section in the filter panel. Only shown when `UKE` source is enabled
+- Coverage circle tip in preferences now mentions `Space` to save the current circle and `Esc` to clear all saved circles
 
 ### 🩹 Fixes
 
 - Made the heatmap checkbox logic follow the same principle like for stations & radiolines layers checkboxes in FilterPanel. You must have at least one layer active
+- `rl_operators` is no longer appended to the URL when the radiolines layer is disabled
+- Non-logged-in users can now read station comments but the add comment form is hidden
+- Username is now required on sign-up at the server level
+- Fixed multiple WCAG AA contrast failures across the app
+- `MapControls` scale bar no longer causes ~500 re-renders during `flyTo` animations
 
 # 2026-03-29
 

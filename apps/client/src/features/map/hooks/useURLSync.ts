@@ -98,7 +98,7 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
   if (filters.recentDays !== null) params.set("new", String(filters.recentDays));
   if (filters.showRadiolines) params.set("radiolines", "1");
   if (!filters.showStations) params.set("stations", "0");
-  if (filters.radiolineOperators.length > 0) params.set("rl_operators", filters.radiolineOperators.join(","));
+  if (filters.showRadiolines && filters.radiolineOperators.length > 0) params.set("rl_operators", filters.radiolineOperators.join(","));
   if (filters.showHeatmap) params.set("heatmap", "1");
 
   const center = map.getCenter();

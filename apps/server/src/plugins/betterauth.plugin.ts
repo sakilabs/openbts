@@ -9,7 +9,7 @@ import * as schema from "@openbts/drizzle";
 
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
-import { APP_NAME, ARGON2_OPTIONS, PUBLIC_ROUTES } from "../constants.js";
+import { APP_NAME, ARGON2_OPTIONS } from "../constants.js";
 import { accessControl, adminRole, editorRole, userRole } from "./auth/permissions.js";
 import { beforeAuthHook, afterAuthHook } from "./auth/hooks.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mail.js";
@@ -189,7 +189,7 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com", "https://v3beta.btsearch.pl"],
-  // disabledPaths: PUBLIC_ROUTES,
+  disabledPaths: ["/is-username-available"],
 });
 
 export function getCurrentUser(req: FastifyRequest) {

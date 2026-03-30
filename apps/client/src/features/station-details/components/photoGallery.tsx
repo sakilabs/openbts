@@ -28,7 +28,7 @@ function PhotoMeta({ photo, locale, showNote }: { photo: StationPhoto; locale: s
           <span className="tabular-nums">{new Date(photo.taken_at).toLocaleDateString(locale, { year: "numeric", month: "short" })}</span>
         </div>
       ) : null}
-      {showNote && photo.note ? <span className="italic opacity-70">{photo.note}</span> : null}
+      {showNote && photo.note ? <span className="italic text-muted-foreground">{photo.note}</span> : null}
     </div>
   );
 }
@@ -71,7 +71,7 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
       <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
         <HugeiconsIcon icon={Image01Icon} className="size-10 mb-3 opacity-20" />
         <p className="text-sm font-medium">{t("photos.noPhotos")}</p>
-        <p className="text-xs mt-1 opacity-70">{t("photos.noPhotosHint")}</p>
+        <p className="text-xs mt-1 text-muted-foreground">{t("photos.noPhotosHint")}</p>
       </div>
     );
   }

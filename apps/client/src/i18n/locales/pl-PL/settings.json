@@ -43,7 +43,7 @@
     "mapMeasureCircle": "Okrąg zasięgu",
     "mapMeasureCircleHint": "Rysuj okrąg o podanym promieniu wokół punktu odniesienia na mapie",
     "mapMeasureCircleLabel": "Włącz okrąg zasięgu",
-    "mapMeasureCircleNote": "Tip: Naciśnij <kbd>C</kbd> na mapie, aby schować lub pokazać z powrotem okrąg zasięgu",
+    "mapMeasureCircleNote": "Tip: Naciśnij <kbd>C</kbd> na mapie, aby schować lub pokazać z powrotem okrąg zasięgu. Naciśnij <kbd>Space</kbd>, aby zapisać bieżący okrąg, lub <kbd>Esc</kbd>, aby usunąć wszystkie zapisane okręgi.",
     "showAzimuths": "Azymuty anten",
     "showAzimuthsHint": "Wyświetlaj linie kierunkowe azymutów ze stacji na mapie",
     "showAzimuthsLabel": "Pokaż azymuty",

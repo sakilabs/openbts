@@ -1075,10 +1075,10 @@ function MapControls({
       setScaleLabel(label);
     };
 
-    map.on("move", updateScale);
+    map.on("moveend", updateScale);
     updateScale();
     return () => {
-      map.off("move", updateScale);
+      map.off("moveend", updateScale);
     };
   }, [map, showScale]);
 

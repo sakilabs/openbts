@@ -12,6 +12,7 @@ import {
   AirportTowerIcon,
   Route02Icon,
   Fire02Icon,
+  Navigation03Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
 import { fetchStats, type DataStats } from "../../statsApi";
 import { fetchUkeRadioLineOperators } from "@/features/shared/api";
 import type { UkeOperator } from "@/features/shared/api";
+import { usePreferences } from "@/hooks/usePreferences";
 import {
   Combobox,
   ComboboxChips,
@@ -308,6 +310,7 @@ export function FilterPanel({
   hideAPIFilters = false,
 }: FilterPanelProps) {
   const { t, i18n } = useTranslation(["main", "common", "stations"]);
+  const { preferences, updatePreferences } = usePreferences();
   const [showOtherOperators, setShowOtherOperators] = useState(false);
 
   const { data: stats } = useQuery({
@@ -377,6 +380,15 @@ export function FilterPanel({
             <Checkbox checked={showHeatmap} onChange={handleToggleHeatmap}>
               <HugeiconsIcon icon={Fire02Icon} className="size-3.5 shrink-0" />
               <span className="flex-1 text-left">Heatmap</span>
+            </Checkbox>
+          )}
+          {filters.source === "uke" && (
+            <Checkbox
+              checked={preferences.showAzimuths}
+              onChange={() => updatePreferences({ showAzimuths: !preferences.showAzimuths })}
+            >
+              <HugeiconsIcon icon={Navigation03Icon} className="size-3.5 shrink-0" />
+              <span className="flex-1 text-left">{t("filters.showAzimuths")}</span>
             </Checkbox>
           )}
         </div>
@@ -456,7 +468,7 @@ export function FilterPanel({
                     : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
                 )}
               >
-                <span className="text-xs opacity-70">{rat.gen}</span>
+                <span className={cn("text-xs", filters.rat.includes(rat.value) ? "text-primary-foreground/70" : "text-muted-foreground")}>{rat.gen}</span>
                 <span>{rat.label}</span>
               </button>
             ))}

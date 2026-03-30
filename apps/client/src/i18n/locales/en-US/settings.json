@@ -43,7 +43,7 @@
     "mapMeasureCircle": "Coverage circle",
     "mapMeasureCircleHint": "Draw a circle with a specified radius around the reference point on the map",
     "mapMeasureCircleLabel": "Enable coverage circle",
-    "mapMeasureCircleNote": "Tip: Press <kbd>C</kbd> on the map to quickly toggle the coverage circle.",
+    "mapMeasureCircleNote": "Tip: Press <kbd>C</kbd> on the map to quickly toggle the coverage circle. Press <kbd>Space</kbd> to save the current circle, or <kbd>Esc</kbd> to clear all saved circles.",
     "showAzimuths": "Antenna Azimuths",
     "showAzimuthsHint": "Display azimuth direction lines from station locations on the map",
     "showAzimuthsLabel": "Show azimuths",

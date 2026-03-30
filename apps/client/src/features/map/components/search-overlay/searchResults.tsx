@@ -58,7 +58,7 @@ export function SearchResults({
             <HugeiconsIcon icon={Search01Icon} className="size-6 opacity-20" />
             <div>
               <p className="text-sm font-medium">{t("search.noResults")}</p>
-              <p className="text-xs opacity-60">{t("search.noResultsHint")}</p>
+              <p className="text-xs text-muted-foreground">{t("search.noResultsHint")}</p>
             </div>
           </div>
         )}
@@ -91,7 +91,7 @@ export function SearchResults({
                     </span>
                     {(result.addresstype === "place" || result.type === "place" || result.type === "locality") && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-700 shadow-sm dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300">
-                        <span className="size-1.5 rounded-full bg-current opacity-80" />
+                        <span className="size-1.5 rounded-full bg-current" />
                         {t("common:labels.city")}
                       </span>
                     )}

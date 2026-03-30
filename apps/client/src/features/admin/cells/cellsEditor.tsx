@@ -148,7 +148,7 @@ export function CellsEditor<T extends CellDraftBase>({
                 ratPillsDisabled && "opacity-50 cursor-not-allowed",
               )}
             >
-              <span className="text-xs opacity-70">{ratToGenLabel(rat)}</span>
+              <span className={cn("text-xs", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>{ratToGenLabel(rat)}</span>
               <span>{rat}</span>
             </button>
           );
