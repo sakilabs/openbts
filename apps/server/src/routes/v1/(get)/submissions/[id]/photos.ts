@@ -74,7 +74,6 @@ const getSubmissionPhotos: Route<ReqParams, PhotoItem[]> = {
   url: "/submissions/:id/photos",
   method: "GET",
   schema: schemaRoute,
-  config: { permissions: ["read:submissions"] },
   handler,
 };
 

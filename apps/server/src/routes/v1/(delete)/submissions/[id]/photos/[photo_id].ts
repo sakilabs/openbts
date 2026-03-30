@@ -59,7 +59,6 @@ const deleteSubmissionPhoto: Route<ReqParams, Record<never, never>> = {
   url: "/submissions/:id/photos/:photo_id",
   method: "DELETE",
   schema: schemaRoute,
-  config: { permissions: ["read:submissions"] },
   handler,
 };
 

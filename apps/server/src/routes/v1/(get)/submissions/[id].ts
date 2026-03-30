@@ -155,7 +155,6 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 const getSubmission: Route<ReqParams, Submission> = {
   url: "/submissions/:id",
   method: "GET",
-  config: { permissions: ["read:submissions"] },
   schema: schemaRoute,
   handler,
 };
