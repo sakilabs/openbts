@@ -35,7 +35,8 @@
     "sharedList": "Shared List",
     "viewAllLists": "View all",
     "analyzer": "Log Analyzer",
-    "apiDocs": "API Docs"
+    "apiDocs": "API Docs",
+    "releasenotes": "v3 Release Notes"
   },
   "secondary": {
     "settings": "Settings",

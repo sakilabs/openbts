@@ -25,6 +25,7 @@ import {
   Upload04Icon,
   UserGroupIcon,
   FileBracesIcon,
+  NewsIcon,
 } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
@@ -79,6 +80,7 @@ const infoNavConfig = [
     url: "#",
     icon: InformationCircleIcon,
     items: [
+      { titleKey: "items.releasenotes", url: "/release-v3", icon: NewsIcon },
       { titleKey: "items.about", url: "/about", icon: InformationCircleIcon },
       { titleKey: "items.contact", url: "/contact", icon: Mail01Icon },
       { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },

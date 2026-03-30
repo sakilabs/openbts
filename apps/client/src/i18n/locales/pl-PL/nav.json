@@ -35,7 +35,8 @@
     "sharedList": "Udostępniona lista",
     "viewAllLists": "Pokaż wszystkie",
     "analyzer": "Analizator logów",
-    "apiDocs": "Dokumentacja API"
+    "apiDocs": "Dokumentacja API",
+    "releasenotes": "v3 Lista zmian"
   },
   "secondary": {
     "settings": "Ustawienia",
