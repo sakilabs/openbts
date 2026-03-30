@@ -349,19 +349,16 @@ export function FilterPanel({
   ];
 
   const handleToggleStations = useCallback(() => {
-    if (!filters.showRadiolines && !showHeatmap && filters.showStations) return;
     onFiltersChange({ ...filters, showStations: !filters.showStations });
-  }, [filters, showHeatmap, onFiltersChange]);
+  }, [filters, onFiltersChange]);
 
   const handleToggleRadiolines = useCallback(() => {
-    if (!filters.showStations && !showHeatmap && filters.showRadiolines) return;
     onFiltersChange({ ...filters, showRadiolines: !filters.showRadiolines });
-  }, [filters, showHeatmap, onFiltersChange]);
+  }, [filters, onFiltersChange]);
 
   const handleToggleHeatmap = useCallback(() => {
-    if (!filters.showStations && !filters.showRadiolines && showHeatmap) return;
     onToggleHeatmap?.();
-  }, [filters.showStations, filters.showRadiolines, showHeatmap, onToggleHeatmap]);
+  }, [onToggleHeatmap]);
 
   const filterSections = (
     <div className={cn("space-y-2", isSheet ? "p-4" : "p-4 overflow-y-auto overscroll-contain")}>
@@ -383,10 +380,7 @@ export function FilterPanel({
             </Checkbox>
           )}
           {filters.source === "uke" && (
-            <Checkbox
-              checked={preferences.showAzimuths}
-              onChange={() => updatePreferences({ showAzimuths: !preferences.showAzimuths })}
-            >
+            <Checkbox checked={preferences.showAzimuths} onChange={() => updatePreferences({ showAzimuths: !preferences.showAzimuths })}>
               <HugeiconsIcon icon={Navigation03Icon} className="size-3.5 shrink-0" />
               <span className="flex-1 text-left">{t("filters.showAzimuths")}</span>
             </Checkbox>
@@ -468,7 +462,9 @@ export function FilterPanel({
                     : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
                 )}
               >
-                <span className={cn("text-xs", filters.rat.includes(rat.value) ? "text-primary-foreground/70" : "text-muted-foreground")}>{rat.gen}</span>
+                <span className={cn("text-xs", filters.rat.includes(rat.value) ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                  {rat.gen}
+                </span>
                 <span>{rat.label}</span>
               </button>
             ))}

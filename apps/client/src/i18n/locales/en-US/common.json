@@ -59,6 +59,7 @@
     "type": "Type",
     "created": "Created",
     "updated": "Updated",
+    "lastSeen": "Last seen",
     "station": "Station",
     "stations": "Stations",
     "date": "Date",

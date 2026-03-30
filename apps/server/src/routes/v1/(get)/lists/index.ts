@@ -13,9 +13,9 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const userListsSchema = createSelectSchema(userLists);
-const usersSchema = createSelectSchema(users).pick({ id: true, name: true, username: true });
+const usersSchema = createSelectSchema(users).pick({ id: true, name: true, username: true, image: true });
 
-const createdBySchema = usersSchema.pick({ name: true, username: true }).partial().extend({ uuid: z.string() });
+const createdBySchema = usersSchema.pick({ name: true, username: true, image: true }).partial().extend({ uuid: z.string() });
 
 const listItemSchema = userListsSchema
   .pick({ id: true, uuid: true, name: true, description: true, is_public: true, createdAt: true, updatedAt: true })
@@ -75,6 +75,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           updatedAt: userLists.updatedAt,
           createdByName: users.name,
           createdByUsername: users.username,
+          createdByImage: users.image,
         })
         .from(userLists)
         .leftJoin(users, eq(userLists.created_by, users.id))
@@ -100,7 +101,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         radiolineCount: radiolines.length,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
-        createdBy: { uuid: row.created_by, ...(row.createdByName ? { name: row.createdByName, username: row.createdByUsername ?? null } : {}) },
+        createdBy: {
+          uuid: row.created_by,
+          ...(row.createdByName ? { name: row.createdByName, username: row.createdByUsername ?? null, image: row.createdByImage ?? null } : {}),
+        },
       };
     });
 

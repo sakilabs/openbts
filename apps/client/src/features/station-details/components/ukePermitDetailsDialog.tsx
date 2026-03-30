@@ -98,7 +98,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                         <span className="hidden sm:inline text-xs text-muted-foreground/40">·</span>
                         <Tooltip>
                           <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
-                            {tCommon("labels.updated")}: {formatRelativeTime(newestUpdatedAt, tCommon)}
+                            {tCommon("labels.lastSeen")}: {formatRelativeTime(newestUpdatedAt, tCommon)}
                           </TooltipTrigger>
                           <TooltipContent>{formatFullDate(newestUpdatedAt, i18n.language)}</TooltipContent>
                         </Tooltip>

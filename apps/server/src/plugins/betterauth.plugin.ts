@@ -26,6 +26,37 @@ export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown
   return map;
 }
 
+const DISALLOWED_CHARACTERS = [
+  "@",
+  "/",
+  " ",
+  "!",
+  "#",
+  "$",
+  "%",
+  "^",
+  "&",
+  "*",
+  "(",
+  ")",
+  "+",
+  "=",
+  "{",
+  "}",
+  "[",
+  "]",
+  "|",
+  "\\",
+  ":",
+  ";",
+  '"',
+  "'",
+  "<",
+  ">",
+  ",",
+  "?",
+];
+
 export const auth = betterAuth({
   appName: APP_NAME,
   user: {
@@ -165,6 +196,7 @@ export const auth = betterAuth({
       maxUsernameLength: 25,
       usernameValidator: (username) => {
         if (["admin", "administrator", "mod", "moderator"].includes(username)) return false;
+        if (DISALLOWED_CHARACTERS.some((char) => username.includes(char))) return false;
         return true;
       },
     }),

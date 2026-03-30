@@ -13,7 +13,7 @@ export type UserListSummary = {
   radiolineCount: number;
   createdAt: string;
   updatedAt: string;
-  createdBy: { uuid: string; name?: string; username?: string | null };
+  createdBy: { uuid: string; name?: string; username?: string | null; image?: string | null };
 };
 
 export type UserListDetail = {

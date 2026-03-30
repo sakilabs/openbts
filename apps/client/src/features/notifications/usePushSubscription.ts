@@ -33,7 +33,7 @@ export function usePushSubscription() {
       .then((reg) => reg.pushManager.getSubscription())
       .then(async (sub) => {
         setSubscription(sub);
-        if (sub && !subscriptionId && !syncing.current) {
+        if (sub && !getStoredId() && !syncing.current) {
           syncing.current = true;
           const id = await subscribeToPush(sub);
           localStorage.setItem(STORAGE_KEY, id);

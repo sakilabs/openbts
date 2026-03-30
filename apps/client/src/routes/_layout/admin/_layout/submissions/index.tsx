@@ -152,12 +152,15 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => {
           const submitter = getValue();
           return (
-            <div className="flex items-center gap-2">
-              <Avatar className="size-6">
+            <div className="flex items-center gap-2 min-w-0">
+              <Avatar className="size-6 shrink-0">
                 <AvatarImage src={resolveAvatarUrl(submitter.image)} />
                 <AvatarFallback className="text-[10px]">{submitter.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="truncate max-w-37.5 text-sm">{submitter.name}</span>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">{submitter.name}</div>
+                {submitter.username && <div className="truncate text-xs text-muted-foreground">@{submitter.username}</div>}
+              </div>
             </div>
           );
         },

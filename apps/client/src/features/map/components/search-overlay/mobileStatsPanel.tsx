@@ -63,7 +63,9 @@ export function MobileStatsPanel({
                   <span className={cn("text-xs font-bold leading-none", hasMoreLocations && "text-amber-500")}>
                     {locationCount.toLocaleString(i18n.language)}
                   </span>
-                  <span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+                  <span className="text-[8px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+                    {t("overlay.locations", { count: locationCount })}
+                  </span>
                 </>
               )}
               {showRadioLines && (

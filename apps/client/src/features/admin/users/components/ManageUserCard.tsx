@@ -25,6 +25,7 @@ function ForceTotpDescription({ hasPassword, twoFactorEnabled }: { hasPassword?:
 export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPassword?: boolean }) {
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
   const invalidateAll = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
@@ -49,6 +50,22 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
     onSuccess: () => {
       toast.success("Name updated successfully");
       setEditName("");
+      return invalidateAll();
+    },
+    onError: (error) => showApiError(error),
+  });
+
+  const updateUsernameMutation = useMutation({
+    mutationFn: async () => {
+      const result = await authClient.admin.updateUser({
+        userId: user.id,
+        data: { username: editUsername.trim() } as Record<string, unknown>,
+      });
+      if (result.error) throw result.error;
+    },
+    onSuccess: () => {
+      toast.success("Username updated successfully");
+      setEditUsername("");
       return invalidateAll();
     },
     onError: (error) => showApiError(error),
@@ -115,6 +132,22 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
               />
               <Button onClick={() => updateNameMutation.mutate()} disabled={updateNameMutation.isPending || !editName.trim()}>
                 {updateNameMutation.isPending ? <Spinner /> : "Update"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Update Username</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder={user.username ?? "No username"}
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                className="max-w-xs"
+                autoComplete="username"
+              />
+              <Button onClick={() => updateUsernameMutation.mutate()} disabled={updateUsernameMutation.isPending || !editUsername.trim()}>
+                {updateUsernameMutation.isPending ? <Spinner /> : "Update"}
               </Button>
             </div>
           </div>

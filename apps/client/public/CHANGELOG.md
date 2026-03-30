@@ -27,6 +27,14 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Changed quality of uploaded images to ~75%
 - Azimuths can now be toggled directly from the layers section in the filter panel. Only shown when `UKE` source is enabled
 - Coverage circle tip in preferences now mentions `Space` to save the current circle and `Esc` to clear all saved circles
+- Map style switcher now supports Carto light/dark/auto variant selection
+- Azimuth toggle moved from `/preferences` to the filter panel layers section (only visible when UKE source is active); the standalone preference card has been removed
+- Map layer toggles (stations, radiolines, heatmap) can now be switched independently, the previous constraint that at least one layer must stay active has been removed
+- Users can update their own username from `/account/settings`
+- Admins can update a user's username from the user detail page
+- Submitter column in `/admin/submissions` now shows `@username` below the display name, matching the style in `/admin/lists` and `/admin/audit-logs`
+- Avatar images now shown in the creator column on `/admin/lists`
+- "Updated" label in internal station and UKE permit dialog headers replaced with "Last seen"
 
 ### 🩹 Fixes
 
@@ -36,6 +44,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Username is now required on sign-up at the server level
 - Fixed multiple WCAG AA contrast failures across the app
 - `MapControls` scale bar no longer causes ~500 re-renders during `flyTo` animations
+- Fixed stale closure in `usePushSubscription` where mount-only effect read `subscriptionId` state instead of `localStorage` directly, risking a double-sync
+- Usernames containing one of the few special characters are now rejected at the server level
 
 # 2026-03-29
 

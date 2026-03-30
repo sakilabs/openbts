@@ -71,7 +71,9 @@ export function StationCounter({
               <span className={cn("text-sm font-bold tabular-nums leading-none tracking-tight", hasMoreLocations && "text-amber-500")}>
                 {locationCount.toLocaleString(i18n.language)}
               </span>
-              <span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">{t("overlay.locations")}</span>
+              <span className="text-[9px] font-bold text-muted-foreground leading-none uppercase tracking-wider">
+                {t("overlay.locations", { count: locationCount })}
+              </span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">{t("overlay.moreStations", { total: totalCount, shown: locationCount })}</TooltipContent>

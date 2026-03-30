@@ -105,10 +105,12 @@ function useMap() {
 
 type MapStyleOption = string | MapLibreGL.StyleSpecification;
 
-const defaultStyles = {
+export const CARTO_STYLE_URLS = {
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-};
+} as const;
+
+const defaultStyles = CARTO_STYLE_URLS;
 
 const osmRasterStyle: MapLibreGL.StyleSpecification = {
   version: 8,
@@ -215,8 +217,8 @@ const mapStyleOptions: Record<
   }
 > = {
   carto: {
-    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-    light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    dark: CARTO_STYLE_URLS.dark,
+    light: CARTO_STYLE_URLS.light,
     label: "Standard",
     thumbnail: "https://a.basemaps.cartocdn.com/dark_all/13/4400/2686.png",
   },
@@ -354,6 +356,14 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
   const styleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const internalUpdateRef = useRef(false);
   const resolvedTheme = useResolvedTheme(themeProp);
+  const { preferences } = usePreferences();
+
+  const effectiveTheme: "light" | "dark" = mapStyle === "carto" && preferences.cartoVariant !== "auto" ? preferences.cartoVariant : resolvedTheme;
+
+  const effectiveThemeRef = useRef<"light" | "dark">(effectiveTheme);
+  useEffect(() => {
+    effectiveThemeRef.current = effectiveTheme;
+  });
 
   const isControlled = viewport !== undefined && onViewportChange !== undefined;
 
@@ -400,7 +410,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     if (!containerRef.current) return;
 
     const initStyles = initialStyleRef.current;
-    const initialStyle = resolvedTheme === "dark" ? initStyles.dark : initStyles.light;
+    const initialStyle = effectiveThemeRef.current === "dark" ? initStyles.dark : initStyles.light;
     currentStyleRef.current = initialStyle;
 
     const map = new MapLibreGL.Map({
@@ -493,9 +503,9 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
   }, [mapInstance, isControlled, viewport]);
 
   useEffect(() => {
-    if (!mapInstance || !resolvedTheme) return;
+    if (!mapInstance || !effectiveTheme) return;
 
-    const newStyle = resolvedTheme === "dark" ? mapStyles.dark : mapStyles.light;
+    const newStyle = effectiveTheme === "dark" ? mapStyles.dark : mapStyles.light;
 
     if (currentStyleRef.current === newStyle) return;
 
@@ -514,7 +524,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     } catch {
       mapInstance.setStyle(newStyle, { diff: false });
     }
-  }, [mapInstance, resolvedTheme, mapStyles, clearStyleTimeout]);
+  }, [mapInstance, effectiveTheme, mapStyles, clearStyleTimeout]);
 
   const contextValue = useMemo(
     () => ({
@@ -1791,6 +1801,7 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
 export {
   MapComponent as Map,
   useMap,
+  useResolvedTheme,
   MapMarker,
   MarkerContent,
   MarkerPopup,
@@ -1803,4 +1814,4 @@ export {
   MapClusterLayer,
 };
 
-export type { MapRef, MapStyle };
+export type { MapRef, MapStyle, Theme };

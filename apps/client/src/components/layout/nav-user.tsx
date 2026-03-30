@@ -30,7 +30,7 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-medium">{user.name}</span>
-            <span className="truncate text-xs">@{user.username}</span>
+            <span className="truncate text-xs text-muted-foreground">@{user.username}</span>
           </div>
           <ElipsisIcon className="ml-auto size-4" />
         </DropdownMenuTrigger>

@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveAvatarUrl } from "@/lib/format";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
@@ -97,6 +98,7 @@ function AdminListsPage() {
           return (
             <div className="flex items-center gap-2 min-w-0">
               <Avatar className="size-6 shrink-0">
+                <AvatarImage src={resolveAvatarUrl(by.image)} />
                 <AvatarFallback className="text-[10px]">{by.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">

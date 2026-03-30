@@ -7,9 +7,7 @@ const markdownClasses =
 
 const REMARK_PLUGINS = [remarkGfm];
 
-const content = `# BTSearch v3 - co nowego?
-
-Witamy w trzeciej generacji serwisu BTSearch. Serwis został zaprojektowany i napisany od zera, dzięki zaangażowaniu społeczności open source, a w szczególności użytkowniczki @ririxi. Tym samym objęła ona funkcję opiekuna technicznego serwisu BTSearch.
+const content = `Witamy w trzeciej generacji serwisu BTSearch. Serwis został zaprojektowany i napisany od zera, dzięki zaangażowaniu społeczności open source, a w szczególności użytkowniczki @ririxi. Tym samym objęła ona funkcję opiekuna technicznego serwisu BTSearch.
 
 Poniżej lista najważniejszych zmian i nowości w serwisie BTSearch v3. Lista jest aktualna na dzień premiery, tj. 4 kwietnia 2026 roku. Kolejne nowości, zmiany i usprawnienia publikowane będą w ["Historii zmian"](https://btsearch.pl/changelog) (changelog).
 
@@ -25,7 +23,7 @@ Poniżej lista najważniejszych zmian i nowości w serwisie BTSearch v3. Lista j
 - Możliwość dodawania i wyświetlania fotografii oraz komentarzy do lokalizacji stacji bazowych.
 - Nowy widok szczegółowych statystyk o zgromadzonych danych BTSearch oraz UKE.
 - Nowe narzędzie analizatora logów, pozwalający wgrywać i analizować dane z logów wygenerowanych przez aplikacje NetMonster i / lub NetMonitor (parizene).
-- Znacząco usprawniona funkcja eksportu danych do formatu CLF/NTM (eksport całej bazy nawet w ciągu kilkunastu sekund).
+- Znacząco usprawniona funkcja eksportu danych do formatu CLF/NTM (eksport całej bazy nawet w ciągu kilku sekund).
 
 ## Ogólne usprawnienia interfejsu użytkownika
 
@@ -34,7 +32,7 @@ Poniżej lista najważniejszych zmian i nowości w serwisie BTSearch v3. Lista j
 - Opcja wyboru języka interfejsu: polski lub angielski.
 - Funkcja szybkiego przełączania źródła danych (BTSearch / UKE) poprzez kliknięcie w panel pokazujący aktualną liczbę wyświetlanych lokalizacji.
 - Opcja wyświetlania skróconych danych o lokalizacji na mapie po najechaniu kursorem na lokalizację.
-- Rozbudowany panel szczegółów stacji bazowej, zawierający [m.in](http://m.in). funkcje szybkiego kopiowania do schowka wybranych danych (np. współrzędne GPS, numer stacji itp.), udostępniania poprzez systemowe mechanizmy udostępniania danych (np. "Wyślij do...") czy wyszukiwania informacji o danej stacji zgłoszonych w serwisie rządowym SI2PEM.
+- Rozbudowany panel szczegółów stacji bazowej, zawierający m.in. funkcje szybkiego kopiowania do schowka wybranych danych (np. współrzędne GPS, numer stacji itp.), udostępniania poprzez systemowe mechanizmy udostępniania danych (np. "Wyślij do...") czy wyszukiwania informacji o danej stacji zgłoszonych w serwisie rządowym SI2PEM.
 - Opcja włączenia powiadomień "push" o aktualizacji danych UKE lub działaniach związanych ze zgłoszeniem zmian w bazie (np. powiadomienie o akceptacji / odrzuceniu zgłoszenia).
 - Wyświetlanie bieżącej pozycji GPS użytkownika serwisu w postaci pulsującej kropki.
 
@@ -85,7 +83,7 @@ function ReleaseNotesPage() {
   return (
     <main className="flex-1 overflow-y-auto custom-scrollbar p-4">
       <div className="max-w-4xl space-y-6">
-        <h1 className="text-2xl font-bold">Release notes v3</h1>
+        <h1 className="text-2xl font-bold">BTSearch v3 - co nowego?</h1>
         <article className={markdownClasses}>
           <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{content}</ReactMarkdown>
         </article>

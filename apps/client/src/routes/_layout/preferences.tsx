@@ -220,18 +220,6 @@ const GROUPS: PreferenceGroup[] = [
       {
         items: [
           {
-            type: "checkbox",
-            key: "showAzimuths",
-            labelKey: "preferences.showAzimuths",
-            hintKey: "preferences.showAzimuthsHint",
-            itemLabelKey: "preferences.showAzimuthsLabel",
-          },
-        ],
-        noteKey: "preferences.showAzimuthsNote",
-      },
-      {
-        items: [
-          {
             type: "slider",
             key: "azimuthsMinZoom",
             labelKey: "preferences.azimuthsMinZoom",

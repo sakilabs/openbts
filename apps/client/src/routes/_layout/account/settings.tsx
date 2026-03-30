@@ -3,7 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, SecurityLockIcon, ComputerIcon, Alert02Icon, Key01Icon, CheckmarkCircle02Icon, Alert01Icon } from "@hugeicons/core-free-icons";
-import { AccountSettingsCards, DeleteAccountCard, PasskeysCard, ProvidersCard, SessionsCard, TwoFactorCard } from "@daveyplate/better-auth-ui";
+import {
+  AccountSettingsCards,
+  DeleteAccountCard,
+  PasskeysCard,
+  ProvidersCard,
+  SessionsCard,
+  TwoFactorCard,
+  UpdateUsernameCard,
+} from "@daveyplate/better-auth-ui";
 import { PasswordCard } from "@/components/account/passwordCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/authClient";
@@ -153,11 +161,12 @@ function AccountSettingsSkeleton() {
           <Skeleton className="h-4 w-64 rounded" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SectionSkeleton rows={3} />
+          <SectionSkeleton rows={5} />
           <SectionSkeleton rows={3} />
         </div>
-        <SectionSkeleton rows={2} />
-        <SectionSkeleton rows={2} />
+        <SectionSkeleton rows={1} />
+        <SectionSkeleton rows={1} />
+        <SectionSkeleton rows={1} />
       </div>
     </div>
   );
@@ -187,6 +196,7 @@ function AccountSettingsPage() {
               <AvatarCard />
               <AccountSettingsCards className="gap-3" />
               <EmailVerificationCard email={session.user.email} emailVerified={session.user.emailVerified} />
+              <UpdateUsernameCard />
               <ProvidersCard />
             </div>
           </section>

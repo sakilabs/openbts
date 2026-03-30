@@ -27,9 +27,13 @@
     "accuracy": "Dokładność"
   },
   "overlay": {
-    "locations": "lokalizacji",
+    "locations_one": "lokalizacja",
+    "locations_few": "lokalizacje",
+    "locations_many": "lokalizacji",
+    "locations_other": "lokalizacji",
     "zoom": "Zoom",
     "mapStyle": "Styl mapy",
+    "mapVariant": "Wariant",
     "moreStations": "Pokazano {{shown, number}} z {{total, number}} lokalizacji. Przybliż, aby zobaczyć wszystkie",
     "radiolines": "radiolinie",
     "radiolinesCount_one": "radiolinia",

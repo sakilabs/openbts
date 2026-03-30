@@ -4,6 +4,7 @@ export type GpsFormat = "decimal" | "dms";
 export type NavigationApp = "google-maps" | "apple-maps" | "waze" | "osmand";
 export type NavLinksDisplay = "inline" | "buttons";
 export type MapPointStyle = "dots" | "markers";
+export type CartoVariant = "auto" | "dark" | "light";
 
 export interface UserPreferences {
   gpsFormat: GpsFormat;
@@ -20,6 +21,7 @@ export interface UserPreferences {
   showAzimuths: boolean;
   azimuthsMinZoom: number;
   azimuthLineLength: number;
+  cartoVariant: CartoVariant;
 }
 
 const STORAGE_KEY = "user-preferences";
@@ -39,6 +41,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   showAzimuths: false,
   azimuthsMinZoom: 14,
   azimuthLineLength: 200,
+  cartoVariant: "light",
 };
 
 let listeners: Array<() => void> = [];

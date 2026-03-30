@@ -154,7 +154,7 @@ function SubmissionDetailPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">{t("common:error.description")}</p>
-          <Button variant="outline" onClick={() => navigate({ to: "/admin/submissions", search: { page: 0 } })}>
+          <Button variant="outline" onClick={() => navigate({ to: "/admin/submissions", search: { page: 0, q: undefined } })}>
             {t("common:actions.back")}
           </Button>
         </div>
@@ -209,7 +209,6 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
   const isReadOnly = submission.status !== "pending";
   const isDeleteSubmission = submission.type === "delete";
-  const isRejected = submission.status === "rejected";
   const isFormDisabled = isReadOnly || isDeleteSubmission;
 
   useEffect(() => {
