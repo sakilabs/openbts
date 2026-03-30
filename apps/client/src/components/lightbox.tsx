@@ -47,7 +47,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
     <div
       role="button"
       tabIndex={0}
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90"
+      className="fixed inset-0 z-200 flex items-center justify-center bg-black/90"
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onClose();

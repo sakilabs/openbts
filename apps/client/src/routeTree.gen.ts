@@ -16,6 +16,7 @@ import { Route as LayoutTosRouteImport } from './routes/_layout/tos'
 import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submission'
 import { Route as LayoutStatisticsRouteImport } from './routes/_layout/statistics'
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
+import { Route as LayoutReleaseV3RouteImport } from './routes/_layout/release-v3'
 import { Route as LayoutPreferencesRouteImport } from './routes/_layout/preferences'
 import { Route as LayoutListsRouteImport } from './routes/_layout/lists'
 import { Route as LayoutDeletedEntriesRouteImport } from './routes/_layout/deleted-entries'
@@ -78,6 +79,11 @@ const LayoutStatisticsRoute = LayoutStatisticsRouteImport.update({
 const LayoutStationsRoute = LayoutStationsRouteImport.update({
   id: '/stations',
   path: '/stations',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutReleaseV3Route = LayoutReleaseV3RouteImport.update({
+  id: '/release-v3',
+  path: '/release-v3',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutPreferencesRoute = LayoutPreferencesRouteImport.update({
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/lists': typeof LayoutListsRouteWithChildren
   '/preferences': typeof LayoutPreferencesRoute
+  '/release-v3': typeof LayoutReleaseV3Route
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/contact': typeof LayoutContactRoute
   '/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/preferences': typeof LayoutPreferencesRoute
+  '/release-v3': typeof LayoutReleaseV3Route
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/_layout/deleted-entries': typeof LayoutDeletedEntriesRoute
   '/_layout/lists': typeof LayoutListsRouteWithChildren
   '/_layout/preferences': typeof LayoutPreferencesRoute
+  '/_layout/release-v3': typeof LayoutReleaseV3Route
   '/_layout/stations': typeof LayoutStationsRoute
   '/_layout/statistics': typeof LayoutStatisticsRoute
   '/_layout/submission': typeof LayoutSubmissionRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/deleted-entries'
     | '/lists'
     | '/preferences'
+    | '/release-v3'
     | '/stations'
     | '/statistics'
     | '/submission'
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/deleted-entries'
     | '/preferences'
+    | '/release-v3'
     | '/stations'
     | '/statistics'
     | '/submission'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/_layout/deleted-entries'
     | '/_layout/lists'
     | '/_layout/preferences'
+    | '/_layout/release-v3'
     | '/_layout/stations'
     | '/_layout/statistics'
     | '/_layout/submission'
@@ -522,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/stations'
       fullPath: '/stations'
       preLoaderRoute: typeof LayoutStationsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/release-v3': {
+      id: '/_layout/release-v3'
+      path: '/release-v3'
+      fullPath: '/release-v3'
+      preLoaderRoute: typeof LayoutReleaseV3RouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/preferences': {
@@ -791,6 +810,7 @@ interface LayoutRouteChildren {
   LayoutDeletedEntriesRoute: typeof LayoutDeletedEntriesRoute
   LayoutListsRoute: typeof LayoutListsRouteWithChildren
   LayoutPreferencesRoute: typeof LayoutPreferencesRoute
+  LayoutReleaseV3Route: typeof LayoutReleaseV3Route
   LayoutStationsRoute: typeof LayoutStationsRoute
   LayoutStatisticsRoute: typeof LayoutStatisticsRoute
   LayoutSubmissionRoute: typeof LayoutSubmissionRoute
@@ -812,6 +832,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutDeletedEntriesRoute: LayoutDeletedEntriesRoute,
   LayoutListsRoute: LayoutListsRouteWithChildren,
   LayoutPreferencesRoute: LayoutPreferencesRoute,
+  LayoutReleaseV3Route: LayoutReleaseV3Route,
   LayoutStationsRoute: LayoutStationsRoute,
   LayoutStatisticsRoute: LayoutStatisticsRoute,
   LayoutSubmissionRoute: LayoutSubmissionRoute,
