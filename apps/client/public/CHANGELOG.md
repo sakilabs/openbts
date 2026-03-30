@@ -21,6 +21,14 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - My Submissions now shows the reviewer's name and username alongside their review notes
 - Edit and delete buttons on My Submissions rows now have tooltips
 - Update submissions no longer accepts only the submitter note to submit the submission
+- Added support for drag&drop on submission photos etc.
+- Changed limits for submission photos (3MB->10MB)
+- Limit for attachments to station comments is raised to 5MB
+- Changed quality of uploaded images to ~75%
+
+### 🩹 Fixes
+
+- Made the heatmap checkbox logic follow the same principle like for stations & radiolines layers checkboxes in FilterPanel. You must have at least one layer active
 
 # 2026-03-29
 
