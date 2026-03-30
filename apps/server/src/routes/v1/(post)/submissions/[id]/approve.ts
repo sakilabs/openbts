@@ -175,7 +175,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           );
 
           if (proposedStation.networks_id || proposedStation.mno_name) {
-            await tx
+            const [newIdentifier] = await tx
               .insert(extraIdentificators)
               .values({
                 station_id: newStation.id,
@@ -190,7 +190,22 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                   mno_name: proposedStation.mno_name ?? null,
                   updatedAt: new Date(),
                 },
-              });
+              })
+              .returning();
+            if (newIdentifier) {
+              await createAuditLog(
+                {
+                  action: "stations.update",
+                  table_name: "extra_identificators",
+                  record_id: newStation.id,
+                  old_values: null,
+                  new_values: newIdentifier,
+                  metadata: { submission_id: id },
+                },
+                req,
+                tx,
+              );
+            }
           }
         }
         resolvedLocationId = locationId;
@@ -251,7 +266,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       }
 
       if (submission.type === "update" && proposedStation && (proposedStation.networks_id || proposedStation.mno_name) && stationId) {
-        await tx
+        const existingIdentifier = await tx.query.extraIdentificators.findFirst({ where: { station_id: stationId } });
+        const [updatedIdentifier] = await tx
           .insert(extraIdentificators)
           .values({
             station_id: stationId,
@@ -266,7 +282,22 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               mno_name: proposedStation.mno_name ?? null,
               updatedAt: new Date(),
             },
-          });
+          })
+          .returning();
+        if (updatedIdentifier) {
+          await createAuditLog(
+            {
+              action: "stations.update",
+              table_name: "extra_identificators",
+              record_id: stationId,
+              old_values: existingIdentifier ?? null,
+              new_values: updatedIdentifier,
+              metadata: { submission_id: id },
+            },
+            req,
+            tx,
+          );
+        }
       }
 
       if (submission.type === "delete") {
