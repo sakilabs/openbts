@@ -110,7 +110,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                           <span className="hidden sm:inline text-xs text-muted-foreground/40">·</span>
                           <Tooltip>
                             <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
-                              {tCommon("labels.lastSeen")}: {formatRelativeTime(station.updatedAt, tCommon)}
+                              {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
                             </TooltipTrigger>
                             <TooltipContent>{formatFullDate(station.updatedAt, i18n.language)}</TooltipContent>
                           </Tooltip>
