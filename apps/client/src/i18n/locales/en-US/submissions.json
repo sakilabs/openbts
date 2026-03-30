@@ -104,6 +104,7 @@
   },
   "table": {
     "cells": "Cell Count",
+    "searchPlaceholder": "Search by ID, station, or user...",
     "empty": "No submissions to display",
     "emptyHint": "No submissions matching selected filters",
     "emptyHintUser": "You haven't submitted any stations yet. Start by creating a new submission"
@@ -160,6 +161,7 @@
     "selectedLocationPhotos": "Photos selected by submitter"
   },
   "mySubmissions": {
+    "reviewedBy": "Reviewed by",
     "editTooltip": "Edit submission",
     "deleteTooltip": "Delete submission",
     "confirmDelete": "Are you sure you want to delete this submission?",

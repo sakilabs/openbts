@@ -200,10 +200,9 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
     const hasCellChanges = input.cells && input.cells.length > 0;
 
-    const hasNote = !!input.submitter_note?.trim();
     const hasPendingPhotos = !!input.pending_photos;
     const hasLocationPhotoSelections = (input.location_photo_ids?.length ?? 0) > 0;
-    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasNote && !hasPendingPhotos && !hasLocationPhotoSelections)
+    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasPendingPhotos && !hasLocationPhotoSelections)
       throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
   }
 }

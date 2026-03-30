@@ -6,6 +6,7 @@ import { ArrowDown01Icon, Delete02Icon, UserIcon, Calendar03Icon, Message01Icon,
 import { toast } from "sonner";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveAvatarUrl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -84,7 +85,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
                 {comments.map((comment) => (
                   <div key={comment.id} className="flex gap-3 p-4">
                     <Avatar className="size-8 shrink-0">
-                      {comment.author?.image && <AvatarImage src={comment.author.image} alt={comment.author.name} />}
+                      {comment.author?.image && <AvatarImage src={resolveAvatarUrl(comment.author.image)} alt={comment.author.name} />}
                       <AvatarFallback>
                         <HugeiconsIcon icon={UserIcon} className="size-4" />
                       </AvatarFallback>

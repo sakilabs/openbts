@@ -161,7 +161,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         !isNewStation && !isDeleteMode && (value.networksId !== null || value.networksName || value.mnoName || hadExtraIds)
           ? {
               station_id: value.selectedStation!.station_id,
-              operator_id: value.selectedStation!.operator_id,
+              operator_id: value.selectedStation!.operator?.id ?? value.selectedStation!.operator_id,
               networks_id: value.networksId,
               networks_name: value.networksName || null,
               mno_name: value.mnoName || null,

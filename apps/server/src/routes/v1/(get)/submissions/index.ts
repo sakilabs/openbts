@@ -1,5 +1,5 @@
 import { createSelectSchema } from "drizzle-orm/zod";
-import { count, eq, and } from "drizzle-orm";
+import { count, eq, and, sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 
 import db from "../../../../database/psql.js";
@@ -40,8 +40,8 @@ const schemaRoute = {
     offset: z.coerce.number().min(0).default(0),
     status: z.enum(["pending", "approved", "rejected"]).optional(),
     type: z.enum(["new", "update", "delete"]).optional(),
-    station_id: z.string().optional(),
     submitter_id: z.string().optional(),
+    search: z.string().optional(),
   }),
   response: {
     200: z.object({
@@ -79,6 +79,7 @@ type ResponseBody = { data: ResponseData[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
   if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
+  const { limit, offset, status, type, submitter_id, search } = req.query;
 
   const session = req.userSession;
   const apiToken = req.apiToken;
@@ -87,47 +88,46 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const userId = session?.user?.id ?? apiToken?.referenceId;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
-  const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read_all"] })) || false;
+  const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read"] })) || false;
 
-  const { limit, offset, status, type, station_id, submitter_id } = req.query;
+  const buildConditions = (t: typeof submissions) => {
+    const conds: SQL[] = [];
+    if (!hasAdminPermission) {
+      conds.push(eq(t.submitter_id, userId));
+    } else if (submitter_id) {
+      conds.push(eq(t.submitter_id, submitter_id));
+    }
+    if (status) conds.push(eq(t.status, status));
+    if (type) conds.push(eq(t.type, type));
+    if (search?.trim()) {
+      const trimmed = search.trim();
+      const like = `%${trimmed}%`;
+      conds.push(sql`(
+        ${t.id}::text ILIKE ${trimmed + "%"}
+        OR EXISTS (
+          SELECT 1 FROM ${users}
+          WHERE ${users.id} = ${t.submitter_id}
+          AND (${users.name} ILIKE ${like} OR ${users.username} ILIKE ${like})
+        )
+        OR EXISTS (
+          SELECT 1 FROM ${stations}
+          WHERE ${stations.id} = ${t.station_id}
+          AND ${stations.station_id} ILIKE ${like}
+        )
+      )`);
+    }
+    return conds;
+  };
 
-  const whereFilter: Record<string, unknown> = {};
-  const countConditions = [];
-  if (!hasAdminPermission) {
-    whereFilter.submitter_id = userId;
-    countConditions.push(eq(submissions.submitter_id, userId));
-  } else if (submitter_id) {
-    whereFilter.submitter_id = submitter_id;
-    countConditions.push(eq(submissions.submitter_id, submitter_id));
-  }
-  if (status) {
-    whereFilter.status = status;
-    countConditions.push(eq(submissions.status, status));
-  }
-  if (type) {
-    whereFilter.type = type;
-    countConditions.push(eq(submissions.type, type));
-  }
-  if (station_id) {
-    const station = await db.query.stations.findFirst({
-      where: { station_id },
-      columns: { id: true },
-    });
-    if (!station) return res.send({ data: [], totalCount: 0 });
-    whereFilter.station_id = station.id;
-    countConditions.push(eq(submissions.station_id, station.id));
-  }
-
-  const [totalCount] = await db
-    .select({ count: count() })
-    .from(submissions)
-    .where(countConditions.length > 0 ? and(...countConditions) : undefined);
+  const countConds = buildConditions(submissions);
+  const whereClause = countConds.length > 0 ? and(...countConds) : undefined;
+  const [totalCount] = await db.select({ count: count() }).from(submissions).where(whereClause);
 
   const rows = await db.query.submissions.findMany({
     limit,
     offset,
     orderBy: { createdAt: "desc" },
-    where: Object.keys(whereFilter).length > 0 ? whereFilter : undefined,
+    where: { RAW: (fields) => and(...buildConditions(fields)) ?? sql`true` },
     with: {
       station: true,
       submitter: {
@@ -184,7 +184,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 const getSubmissions: Route<ReqQuery, ResponseBody> = {
   url: "/submissions",
   method: "GET",
-  config: { permissions: ["read:submissions"] },
   schema: schemaRoute,
   handler: handler,
 };

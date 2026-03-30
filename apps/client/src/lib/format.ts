@@ -1,5 +1,11 @@
 import type { TFunction } from "i18next";
 
+export function resolveAvatarUrl(image: string | null | undefined): string | undefined {
+  if (!image) return undefined;
+  if (image.startsWith("http")) return image;
+  return `/uploads/${image}`;
+}
+
 export function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);

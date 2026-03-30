@@ -4,7 +4,7 @@ import { UserCheck02Icon } from "@hugeicons/core-free-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatFullDate } from "@/lib/format";
+import { formatFullDate, resolveAvatarUrl } from "@/lib/format";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 
 type AdminReviewCardProps = {
@@ -30,7 +30,7 @@ export function AdminReviewCard({ submission, reviewNotes, onReviewNotesChange, 
         <div className="px-4 py-3 space-y-4">
           <div className="flex items-start gap-4">
             <Avatar className="size-10 border">
-              <AvatarImage src={reviewer.image ?? undefined} />
+              <AvatarImage src={resolveAvatarUrl(reviewer.image)} />
               <AvatarFallback>{reviewer.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0 space-y-1">

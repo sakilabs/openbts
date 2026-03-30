@@ -3,7 +3,8 @@ import { Logout02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
 import { ElipsisIcon } from "@/components/ui/elipsis-icon";
 import { Link } from "@tanstack/react-router";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveAvatarUrl } from "@/lib/format";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/authClient";
@@ -24,6 +25,7 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
           render={<SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground" />}
         >
           <Avatar className="h-8 w-8 rounded-lg">
+            <AvatarImage src={resolveAvatarUrl(user.image)} className="rounded-lg" />
             <AvatarFallback className="rounded-lg">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">

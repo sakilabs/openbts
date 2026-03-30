@@ -78,6 +78,23 @@
   "account": {
     "title": "Account",
     "description": "Your profile and personal information",
+    "avatar": {
+      "title": "Profile photo",
+      "subtitle": "Your photo is shown across the app",
+      "upload": "Upload photo",
+      "uploading": "Uploading...",
+      "remove": "Remove",
+      "removing": "Removing...",
+      "hint": "JPG, PNG or WebP. Max 3 MB.",
+      "uploadSuccess": "Profile photo updated",
+      "uploadError": "Failed to upload photo",
+      "removeSuccess": "Profile photo removed",
+      "removeError": "Failed to remove photo",
+      "cropTitle": "Crop photo",
+      "cropConfirm": "Apply crop",
+      "cropApplying": "Uploading...",
+      "cropCancel": "Cancel"
+    },
     "emailVerification": {
       "verified": "Email verified",
       "unverified": "Email not verified",

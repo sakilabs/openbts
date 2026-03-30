@@ -6,6 +6,7 @@ import { Calendar03Icon, AlertCircleIcon, UserIcon, Message01Icon, Image01Icon, 
 import { toast } from "sonner";
 import type { StationComment } from "@/types/station";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveAvatarUrl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -131,7 +132,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
           {comments.map((comment) => (
             <div key={comment.id} className="flex gap-4">
               <Avatar className="size-9 shrink-0 border">
-                <AvatarImage src={comment.author?.image || ""} />
+                <AvatarImage src={resolveAvatarUrl(comment.author?.image)} />
                 <AvatarFallback>
                   <HugeiconsIcon icon={UserIcon} className="size-4 opacity-50" />
                 </AvatarFallback>

@@ -8,6 +8,7 @@ import { AlertCircleIcon, Search01Icon, Cancel01Icon, Sorting05Icon, ArrowDown01
 import { Input } from "@/components/ui/input";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/lib/format";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -234,7 +235,7 @@ function AdminAuditLogsPage() {
           return (
             <div className="flex items-center gap-2">
               <Avatar className="size-6">
-                <AvatarImage src={user.image ?? undefined} />
+                <AvatarImage src={resolveAvatarUrl(user.image)} />
                 <AvatarFallback className="text-[9px]">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0">

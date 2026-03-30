@@ -104,6 +104,7 @@
   },
   "table": {
     "cells": "Ilość komórek",
+    "searchPlaceholder": "Szukaj po ID, stacji lub użytkowniku...",
     "empty": "Brak zgłoszeń do wyświetlenia",
     "emptyHint": "Brak zgłoszeń pasujących do wybranych filtrów",
     "emptyHintUser": "Nie złożyłeś jeszcze żadnych zgłoszeń. Zacznij od utworzenia nowego zgłoszenia"
@@ -160,6 +161,7 @@
     "selectedLocationPhotos": "Wybrane zdjęcia przez zgłaszającego"
   },
   "mySubmissions": {
+    "reviewedBy": "Sprawdzone przez",
     "editTooltip": "Edytuj zgłoszenie",
     "deleteTooltip": "Usuń zgłoszenie",
     "confirmDelete": "Czy na pewno chcesz usunąć to zgłoszenie?",

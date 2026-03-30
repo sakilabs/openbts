@@ -374,12 +374,11 @@ function ClfExportPage() {
           <form.Subscribe selector={(s) => ({ isSubmitting: s.isSubmitting })}>
             {({ isSubmitting }) => (
               <div className="flex items-center gap-3">
-                <Button type="submit" disabled={isSubmitting} size="lg" className="w-full md:w-auto">
+                <Button type="submit" disabled={isSubmitting} size="lg" className="flex-1 md:flex-none">
                   {isSubmitting ? (
                     <>
                       <Spinner data-icon="inline-start" />
                       {t("form.exporting")}
-                      <span className="opacity-70 text-xs tabular-nums">{formatDuration(elapsed)}</span>
                     </>
                   ) : (
                     <>
@@ -388,8 +387,9 @@ function ClfExportPage() {
                     </>
                   )}
                 </Button>
+                {isSubmitting && <span className="opacity-70 text-sm tabular-nums shrink-0">{formatDuration(elapsed)}</span>}
                 {finalDuration !== null && !isSubmitting && (
-                  <span className="text-sm text-muted-foreground tabular-nums">{formatDuration(finalDuration)}</span>
+                  <span className="text-sm text-muted-foreground tabular-nums shrink-0">{formatDuration(finalDuration)}</span>
                 )}
               </div>
             )}

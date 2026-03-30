@@ -1,12 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { AdminUser } from "@/features/admin/users/types";
+import { resolveAvatarUrl } from "@/lib/format";
 
 export function UserDetailHeader({ user }: { user: AdminUser }) {
   return (
     <div className="flex items-center gap-4">
       <Avatar size="lg">
-        {user.image && <AvatarImage src={user.image} />}
+        {user.image && <AvatarImage src={resolveAvatarUrl(user.image)} />}
         <AvatarFallback>{user.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">

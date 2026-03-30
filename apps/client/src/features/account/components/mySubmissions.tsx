@@ -3,7 +3,7 @@ import { useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, AlertCircleIcon, PencilEdit02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
+import { SentIcon, AlertCircleIcon, PencilEdit02Icon, Delete02Icon, Add01Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { showApiError } from "@/lib/api";
@@ -12,6 +12,7 @@ import { formatShortDate } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -112,6 +113,10 @@ export function MySubmissions() {
         <HugeiconsIcon icon={SentIcon} className="size-8 mb-2 opacity-30" />
         <p className="text-sm font-medium">{t("table.empty")}</p>
         <p className="text-xs mt-1">{t("table.emptyHintUser")}</p>
+        <Button size="sm" className="mt-4" nativeButton={false} render={<Link to="/submission" />}>
+          <HugeiconsIcon icon={Add01Icon} className="size-4" />
+          {t("submitNew")}
+        </Button>
       </div>
     );
   }
@@ -130,6 +135,7 @@ export function MySubmissions() {
           const statusCfg = SUBMISSION_STATUS[submission.status];
           const typeCfg = SUBMISSION_TYPE[submission.type];
           const hasNotes = !!submission.review_notes;
+          const hasReview = hasNotes || !!submission.reviewer;
 
           return (
             <div
@@ -144,8 +150,8 @@ export function MySubmissions() {
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <div className="group border-b border-border/50">
-                <div className="flex items-center gap-3 px-3 py-2.5 min-w-0 hover:bg-muted/40 transition-colors">
+              <div className="group border-b border-border/50 hover:bg-muted/40 transition-colors">
+                <div className="flex items-center gap-3 px-3 py-2.5 min-w-0">
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border shrink-0",
@@ -156,8 +162,6 @@ export function MySubmissions() {
                     {t(`common:submissionType.${submission.type}`)}
                   </span>
 
-                  <span className="text-xs font-mono text-muted-foreground hidden sm:inline shrink-0">#{submission.id}</span>
-
                   {submission.station?.station_id ? (
                     <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.station.station_id}</span>
                   ) : submission.proposedStation?.station_id ? (
@@ -167,18 +171,28 @@ export function MySubmissions() {
                   <div className="ml-auto flex items-center gap-3">
                     {submission.status === "pending" && (
                       <div className="flex items-center gap-1">
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          nativeButton={false}
-                          render={<Link to="/submission" search={{ edit: submission.id }} />}
-                        >
-                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger render={<span />}>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              nativeButton={false}
+                              render={<Link to="/submission" search={{ edit: submission.id }} />}
+                            >
+                              <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t("mySubmissions.editTooltip")}</TooltipContent>
+                        </Tooltip>
                         <AlertDialog>
-                          <AlertDialogTrigger render={<Button size="icon-sm" variant="ghost" />}>
-                            <HugeiconsIcon icon={Delete02Icon} className="size-3.5 text-destructive" />
-                          </AlertDialogTrigger>
+                          <Tooltip>
+                            <TooltipTrigger render={<span />}>
+                              <AlertDialogTrigger render={<Button size="icon-sm" variant="ghost" />}>
+                                <HugeiconsIcon icon={Delete02Icon} className="size-3.5 text-destructive" />
+                              </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>{t("mySubmissions.deleteTooltip")}</TooltipContent>
+                          </Tooltip>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>{t("mySubmissions.confirmDelete")}</AlertDialogTitle>
@@ -208,11 +222,16 @@ export function MySubmissions() {
                   </div>
                 </div>
 
-                {hasNotes && (
+                {hasReview && (
                   <div className="px-3 pb-2.5 pt-0">
                     <div className="bg-muted/60 rounded-lg px-3 py-2.5 space-y-1">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{t("detail.reviewerResponse")}</p>
-                      <p className="text-sm leading-relaxed text-foreground wrap-break-word">{submission.review_notes}</p>
+                      {submission.reviewer && (
+                        <p className="text-[11px] text-muted-foreground">
+                          {t("mySubmissions.reviewedBy")} <span className="font-medium text-foreground">{submission.reviewer.name}</span>
+                          {submission.reviewer.username && <span> (@{submission.reviewer.username})</span>}
+                        </p>
+                      )}
+                      {hasNotes && <p className="text-sm leading-relaxed text-foreground wrap-break-word">{submission.review_notes}</p>}
                     </div>
                   </div>
                 )}

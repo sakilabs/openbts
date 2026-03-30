@@ -1625,14 +1625,14 @@ paths:
         - name: type
           in: query
           schema: { type: string, enum: [new, update, delete] }
-        - name: station_id
-          in: query
-          description: Filter by station's station_id identifier
-          schema: { type: string }
         - name: submitter_id
           in: query
           description: Filter by submitter user ID (admin only)
           schema: { type: string, format: uuid }
+        - name: search
+          in: query
+          description: Search by submission ID, submitter name/username, or station ID
+          schema: { type: string }
       responses:
         "200":
           description: OK

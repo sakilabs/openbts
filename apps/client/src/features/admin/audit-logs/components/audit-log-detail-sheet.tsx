@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatFullDate } from "@/lib/format";
+import { formatFullDate, resolveAvatarUrl } from "@/lib/format";
 import { type AuditLogEntry, TABLE_LABELS, getActionStyle } from "../constants";
 import { ChangesTable } from "./changes-table";
 import { Link } from "@tanstack/react-router";
@@ -64,7 +64,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
                 {entry.user ? (
                   <div className="flex items-center gap-2">
                     <Avatar className="size-5">
-                      <AvatarImage src={entry.user.image ?? undefined} />
+                      <AvatarImage src={resolveAvatarUrl(entry.user.image)} />
                       <AvatarFallback className="text-[9px]">{entry.user.name.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0">

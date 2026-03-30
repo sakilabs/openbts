@@ -55,7 +55,7 @@ type SubmissionBase = {
   submitter_id: string;
   status: "pending" | "approved" | "rejected";
   type: "new" | "update" | "delete";
-  reviewer_id: string | null;
+  reviewer: SubmissionUser | null;
   review_notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -71,7 +71,6 @@ export type SubmissionDetail = SubmissionBase & {
   submitter_note: string | null;
   station: { id: number; station_id: string; operator_id: number; notes: string | null; is_confirmed: boolean } | null;
   submitter: SubmissionUser;
-  reviewer: SubmissionUser | null;
   proposedStation: ProposedStation | null;
   proposedLocation: ProposedLocation | null;
   cells: ProposedCell[];
@@ -82,7 +81,6 @@ export type SubmissionListItem = SubmissionBase & {
   submitter_note: string | null;
   station: { id: number; station_id: string } | null;
   submitter: SubmissionUser;
-  reviewer: SubmissionUser | null;
   proposedStation: ProposedStation | null;
   cells: ProposedCellWithDetails[];
 };

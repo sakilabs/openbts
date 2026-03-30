@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
-import { showApiError } from "@/lib/api";
+import { showApiError, fetchJson, API_BASE } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import {
   AlertDialog,
@@ -32,6 +32,11 @@ const BAN_DURATIONS = [
   { label: "30 days", value: 60 * 60 * 24 * 30 },
   { label: "Permanent", value: 0 },
 ] as const;
+
+function isUploadedImage(image: string | null | undefined): boolean {
+  if (!image) return false;
+  return !image.startsWith("http") && image.endsWith(".webp");
+}
 
 export function DangerZoneCard({ user }: { user: AdminUser }) {
   const navigate = useNavigate();
@@ -73,6 +78,19 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
     onError: (error) => showApiError(error),
   });
 
+  const removeAvatarMutation = useMutation({
+    mutationFn: async () => {
+      await fetchJson<{ data: null }>(`${API_BASE}/users/${user.id}/avatar`, { method: "DELETE" });
+      const result = await authClient.admin.updateUser({ userId: user.id, data: { image: null } });
+      if (result.error) throw result.error;
+    },
+    onSuccess: () => {
+      toast.success("Avatar removed successfully");
+      return invalidateAll();
+    },
+    onError: (error) => showApiError(error),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const result = await authClient.admin.removeUser({ userId: user.id });
@@ -90,6 +108,30 @@ export function DangerZoneCard({ user }: { user: AdminUser }) {
       <SectionHeader icon={Alert02Icon} title="Danger Zone" description="Irreversible and destructive actions" />
       <Card>
         <CardContent className="space-y-4">
+          {isUploadedImage(user.image) ? (
+            <div className="flex items-center justify-between gap-4 py-2">
+              <div>
+                <p className="text-sm font-medium">Remove Avatar</p>
+                <p className="text-xs text-muted-foreground">Delete the user's uploaded profile picture</p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger render={<Button variant="outline" />}>Remove</AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove avatar?</AlertDialogTitle>
+                    <AlertDialogDescription>This will permanently delete {user.name}'s profile picture.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => removeAvatarMutation.mutate()} disabled={removeAvatarMutation.isPending}>
+                      {removeAvatarMutation.isPending ? <Spinner /> : "Remove"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          ) : null}
+
           <div className="flex items-center justify-between gap-4 py-2">
             <div>
               <p className="text-sm font-medium">{user.banned ? "Unban User" : "Ban User"}</p>

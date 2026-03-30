@@ -78,6 +78,23 @@
   "account": {
     "title": "Konto",
     "description": "Twój profil i dane osobowe",
+    "avatar": {
+      "title": "Zdjęcie profilowe",
+      "subtitle": "Twoje zdjęcie jest widoczne w całej aplikacji",
+      "upload": "Prześlij zdjęcie",
+      "uploading": "Przesyłanie...",
+      "remove": "Usuń",
+      "removing": "Usuwanie...",
+      "hint": "JPG, PNG lub WebP. Maks. 3 MB.",
+      "uploadSuccess": "Zdjęcie profilowe zaktualizowane",
+      "uploadError": "Nie udało się przesłać zdjęcia",
+      "removeSuccess": "Zdjęcie profilowe usunięte",
+      "removeError": "Nie udało się usunąć zdjęcia",
+      "cropTitle": "Przytnij zdjęcie",
+      "cropConfirm": "Zastosuj",
+      "cropApplying": "Przesyłanie...",
+      "cropCancel": "Anuluj"
+    },
     "emailVerification": {
       "verified": "Email zweryfikowany",
       "unverified": "Email niezweryfikowany",

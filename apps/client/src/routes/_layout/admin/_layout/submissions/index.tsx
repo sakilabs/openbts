@@ -1,22 +1,22 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { PaginationState } from "@/hooks/useTablePageSize";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { FilterIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
+import { AlertCircleIcon, Search01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useTablePagination } from "@/hooks/useTablePageSize";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionListItem } from "@/features/admin/submissions/types";
-import { formatShortDate } from "@/lib/format";
+import { formatShortDate, resolveAvatarUrl } from "@/lib/format";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 
@@ -26,7 +26,7 @@ function AdminSubmissionsListPage() {
   "use no memo";
   const { t, i18n } = useTranslation(["submissions", "common"]);
   const navigate = useNavigate();
-  const { page } = Route.useSearch();
+  const { page, q } = Route.useSearch();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">(() => {
     const saved = localStorage.getItem("admin:submissions:status");
@@ -36,13 +36,16 @@ function AdminSubmissionsListPage() {
     const saved = localStorage.getItem("admin:submissions:type");
     return saved === "all" || saved === "new" || saved === "update" || saved === "delete" ? saved : "all";
   });
-  const [stationIdFilter, setStationIdFilter] = useState("");
-  const [userIdFilter, setUserIdFilter] = useState("");
+  const [searchInput, setSearchInput] = useState(q ?? "");
+  const debouncedSearch = useDebouncedValue(searchInput.trim(), 300) || undefined;
 
-  const stationIdFilterRef = useRef(stationIdFilter);
-  stationIdFilterRef.current = stationIdFilter;
-  const userIdFilterRef = useRef(userIdFilter);
-  userIdFilterRef.current = userIdFilter;
+  useEffect(() => {
+    void navigate({
+      from: Route.fullPath,
+      search: (s) => ({ ...s, q: debouncedSearch, page: 0 }),
+      replace: true,
+    });
+  }, [debouncedSearch, navigate]);
 
   const handleStatusFilter = useCallback(
     (v: typeof statusFilter) => {
@@ -77,16 +80,14 @@ function AdminSubmissionsListPage() {
   );
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, stationIdFilter, userIdFilter],
+    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, debouncedSearch],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
       params.set("offset", (pagination.pageIndex * pagination.pageSize).toString());
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (typeFilter !== "all") params.set("type", typeFilter);
-      if (stationIdFilter) params.set("station_id", stationIdFilter);
-      if (userIdFilter) params.set("submitter_id", userIdFilter);
-
+      if (debouncedSearch) params.set("search", debouncedSearch);
       return fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions?${params.toString()}`);
     },
     placeholderData: keepPreviousData,
@@ -137,37 +138,7 @@ function AdminSubmissionsListPage() {
         },
       }),
       columnHelper.accessor("station", {
-        header: () => (
-          <div className="flex items-center gap-1 group/col">
-            <span>{t("common:labels.station")}</span>
-            <Popover>
-              <PopoverTrigger
-                className={cn(
-                  "p-0.5 rounded transition-colors",
-                  stationIdFilterRef.current
-                    ? "text-primary"
-                    : "text-muted-foreground/40 opacity-0 group-hover/col:opacity-100 hover:text-muted-foreground",
-                )}
-              >
-                <HugeiconsIcon icon={FilterIcon} className="size-3" />
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-52 p-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">{t("common:labels.stationId")}</label>
-                  <Input
-                    className="h-8 text-sm"
-                    placeholder="BTS12345"
-                    value={stationIdFilterRef.current}
-                    onChange={(e) => {
-                      setStationIdFilter(e.target.value);
-                      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
-                    }}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        ),
+        header: t("common:labels.station"),
         cell: ({ getValue, row }) => {
           const station = getValue();
           const proposedStation = row.original.proposedStation;
@@ -177,43 +148,13 @@ function AdminSubmissionsListPage() {
         },
       }),
       columnHelper.accessor("submitter", {
-        header: () => (
-          <div className="flex items-center gap-1 group/col">
-            <span>{t("detail.submitter")}</span>
-            <Popover>
-              <PopoverTrigger
-                className={cn(
-                  "p-0.5 rounded transition-colors",
-                  userIdFilterRef.current
-                    ? "text-primary"
-                    : "text-muted-foreground/40 opacity-0 group-hover/col:opacity-100 hover:text-muted-foreground",
-                )}
-              >
-                <HugeiconsIcon icon={FilterIcon} className="size-3" />
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-52 p-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">{t("admin:auditLogs.filters.userId")}</label>
-                  <Input
-                    className="h-8 text-sm"
-                    placeholder="uuid..."
-                    value={userIdFilterRef.current}
-                    onChange={(e) => {
-                      setUserIdFilter(e.target.value);
-                      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
-                    }}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        ),
+        header: t("detail.submitter"),
         cell: ({ getValue }) => {
           const submitter = getValue();
           return (
             <div className="flex items-center gap-2">
               <Avatar className="size-6">
-                <AvatarImage src={submitter.image ?? undefined} />
+                <AvatarImage src={resolveAvatarUrl(submitter.image)} />
                 <AvatarFallback className="text-[10px]">{submitter.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <span className="truncate max-w-37.5 text-sm">{submitter.name}</span>
@@ -237,7 +178,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
     ],
-    [t, i18n.language, navigate],
+    [t, i18n.language],
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);
@@ -254,48 +195,72 @@ function AdminSubmissionsListPage() {
 
   return (
     <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("adminTitle")}</h1>
-          <p className="text-muted-foreground text-sm">{t("adminDescription")}</p>
+      <div className="flex flex-col gap-3 shrink-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t("adminTitle")}</h1>
+            <p className="text-muted-foreground text-sm">{t("adminDescription")}</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full md:w-auto">
+            <div className="flex items-center p-1 bg-muted/50 rounded-lg border">
+              {(["all", "pending", "approved", "rejected"] as const).map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => handleStatusFilter(status)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
+                    statusFilter === status
+                      ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  )}
+                >
+                  {status === "all" ? t("common:status.all", "All") : t(`common:status.${status}`)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center p-1 bg-muted/50 rounded-lg border">
+              {(["all", "new", "update", "delete"] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleTypeFilter(type)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
+                    typeFilter === type
+                      ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  )}
+                >
+                  {type === "all" ? t("common:submissionType.all", "All") : t(`common:submissionType.${type}`)}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full md:w-auto">
-          <div className="flex items-center p-1 bg-muted/50 rounded-lg border">
-            {(["all", "pending", "approved", "rejected"] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => handleStatusFilter(status)}
-                className={cn(
-                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
-                  statusFilter === status
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                )}
-              >
-                {status === "all" ? t("common:status.all", "All") : t(`common:status.${status}`)}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center p-1 bg-muted/50 rounded-lg border">
-            {(["all", "new", "update", "delete"] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleTypeFilter(type)}
-                className={cn(
-                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
-                  typeFilter === type
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                )}
-              >
-                {type === "all" ? t("common:submissionType.all", "All") : t(`common:submissionType.${type}`)}
-              </button>
-            ))}
-          </div>
+        <div className="relative">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+          />
+          <Input
+            className="h-8 pl-8 pr-8 text-sm w-full sm:w-72"
+            placeholder={t("table.searchPlaceholder")}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          {searchInput ? (
+            <button
+              type="button"
+              onClick={() => setSearchInput("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -323,7 +288,7 @@ function AdminSubmissionsListPage() {
                 <tr>
                   <td colSpan={columns.length} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <HugeiconsIcon icon={FilterIcon} className="size-10 mb-2 opacity-20" />
+                      <HugeiconsIcon icon={Search01Icon} className="size-10 mb-2 opacity-20" />
                       <p className="font-medium">{t("table.empty")}</p>
                       <p className="text-sm opacity-70">{t("table.emptyHint")}</p>
                     </div>
@@ -346,6 +311,7 @@ function AdminSubmissionsListPage() {
 export const Route = createFileRoute("/_layout/admin/_layout/submissions/")({
   validateSearch: (search: Record<string, unknown>) => ({
     page: typeof search.page === "number" && search.page >= 0 ? Math.floor(search.page) : 0,
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
   }),
   component: AdminSubmissionsListPage,
   staticData: {

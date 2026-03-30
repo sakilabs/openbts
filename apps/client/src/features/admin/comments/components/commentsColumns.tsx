@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatRelativeTime, formatFullDate } from "@/lib/format";
+import { formatRelativeTime, formatFullDate, resolveAvatarUrl } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { AdminComment } from "../types";
 
@@ -68,7 +68,7 @@ export function createCommentsColumns({
         return (
           <div className="flex items-center gap-2">
             <Avatar className="size-7 shrink-0">
-              {author?.image && <AvatarImage src={author.image} alt={author.name} />}
+              {author?.image && <AvatarImage src={resolveAvatarUrl(author.image)} alt={author.name} />}
               <AvatarFallback>
                 <HugeiconsIcon icon={UserIcon} className="size-3.5" />
               </AvatarFallback>

@@ -14,6 +14,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { fetchJson, API_BASE } from "@/lib/api";
+import { resolveAvatarUrl } from "@/lib/format";
 import type { AdminUser } from "@/features/admin/users/types";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 36, paginationHeight: 40 };
@@ -30,7 +31,7 @@ function useColumns() {
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <Avatar size="sm">
-              {row.original.image && <AvatarImage src={row.original.image} />}
+              {row.original.image && <AvatarImage src={resolveAvatarUrl(row.original.image)} />}
               <AvatarFallback>{row.original.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">

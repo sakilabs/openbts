@@ -4,7 +4,7 @@ import { UserIcon } from "@hugeicons/core-free-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import i18n from "@/i18n/config";
-import { formatFullDate } from "@/lib/format";
+import { formatFullDate, resolveAvatarUrl } from "@/lib/format";
 
 export function SubmitterCard({ submission }: { submission: SubmissionDetail }) {
   const { t } = useTranslation("submissions");
@@ -18,7 +18,7 @@ export function SubmitterCard({ submission }: { submission: SubmissionDetail }) 
       <div className="px-4 py-3 space-y-4">
         <div className="flex items-start gap-4">
           <Avatar className="size-10 border">
-            <AvatarImage src={submission.submitter.image ?? undefined} />
+            <AvatarImage src={resolveAvatarUrl(submission.submitter.image)} />
             <AvatarFallback>{submission.submitter.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0 space-y-1">

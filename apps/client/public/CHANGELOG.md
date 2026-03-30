@@ -13,6 +13,14 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - SI2PEM link redesigned from a generic link icon to a styled `S` matching the SI2PEM's logo
 - Added trademark/copyright notices for all operator logos (Orange, T-Mobile, Plus, Play, NetWorks) to the `/about` page
 - Added weekly quota to API ratelimit
+- Users can now upload, crop and remove a profile picture from `/account/settings`
+- Admins can remove a user's uploaded avatar from the user detail page in the Danger Zone section
+- Profile pictures now show in the sidebar nav, submission cards, user detail header and other places that display avatars
+- `/admin/submissions` now has a single search bar instead of separate station and submitter filter popovers; it matches by submission ID, submitter name/username or station ID and the query is reflected in the URL
+- My Submissions now shows a "Submit new" button when the list is empty
+- My Submissions now shows the reviewer's name and username alongside their review notes
+- Edit and delete buttons on My Submissions rows now have tooltips
+- Update submissions no longer accepts only the submitter note to submit the submission
 
 # 2026-03-29
 

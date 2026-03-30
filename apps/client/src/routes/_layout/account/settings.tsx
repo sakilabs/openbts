@@ -10,6 +10,7 @@ import { authClient } from "@/lib/authClient";
 import { fetchJson, API_BASE } from "@/lib/api";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { ApiKeysCard } from "@/components/account/apikeysCard";
+import { AvatarCard } from "@/components/account/avatarCard";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -136,7 +137,7 @@ function SectionSkeleton({ rows = 3 }: { rows?: number }) {
       </div>
       <div className="space-y-3">
         {Array.from({ length: rows }).map((_, i) => (
-          <Skeleton key={i} className="h-[72px] w-full rounded-xl" />
+          <Skeleton key={i} className="h-18 w-full rounded-xl" />
         ))}
       </div>
     </div>
@@ -183,6 +184,7 @@ function AccountSettingsPage() {
           <section className="space-y-4">
             <SectionHeader icon={UserIcon} title={t("account.title")} description={t("account.description")} />
             <div className="space-y-3">
+              <AvatarCard />
               <AccountSettingsCards className="gap-3" />
               <EmailVerificationCard email={session.user.email} emailVerified={session.user.emailVerified} />
               <ProvidersCard />

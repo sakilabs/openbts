@@ -136,7 +136,6 @@ const EMPTY_LOCATION: ProposedLocationForm = {
 };
 
 export function hasFormChanges(current: FormState, original: OriginalState, isEditMode = false): boolean {
-  if (current.submitterNote.trim()) return true;
   if (current.action === "delete") return true;
 
   if (current.mode === "new") {
