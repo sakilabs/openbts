@@ -68,10 +68,28 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      mapProfileToUser: (profile) => {
+        return {
+          username: profile.email?.split("@")[0] ?? profile.sub,
+          image: profile.picture,
+          name: profile.name,
+          email: profile.email,
+          emailVerified: profile.email_verified,
+        };
+      },
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      mapProfileToUser: (profile) => {
+        return {
+          username: profile.login,
+          image: profile.avatar_url,
+          name: profile.name || profile.login,
+          email: profile.email,
+          emailVerified: !!profile.email,
+        };
+      },
     },
   },
   database: drizzleAdapter(db, {
