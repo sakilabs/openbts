@@ -138,7 +138,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         user_id: userId,
         content: content,
         attachments: validatedAttachments,
-        status: commentQueueEnabled ? "pending" : "approved",
+        status: commentQueueEnabled && !["admin", "editor"].includes(req.userSession?.user.role ?? "") ? "pending" : "approved",
       })
       .returning();
     if (!newComment) throw new ErrorResponse("FAILED_TO_CREATE");
