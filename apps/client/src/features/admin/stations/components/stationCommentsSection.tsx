@@ -81,7 +81,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
             ) : comments.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">{t("stationComments.noComments")}</div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y max-h-105 overflow-y-auto">
                 {comments.map((comment) => (
                   <div key={comment.id} className="flex gap-3 p-4">
                     <Avatar className="size-8 shrink-0">
