@@ -58,7 +58,7 @@ Poniżej lista najważniejszych zmian i nowości w serwisie BTSearch v3. Lista j
 
 - Interfejs BTSearch v3 jest responsywny i działa sprawnie w mobilnych przeglądarkach współczesnych smartfonów. Serwis może działać także jako niezależna aplikacja typu PWA (Progressive Web App).
 - Aby zainstalować BTSearch v3 jako aplikację typu PWA, otwórz stronę [btsearch.pl](http://btsearch.pl) w przeglądarce telefonu. Następnie znajdź w opcjach przeglądarki funkcję "Dodaj do ekranu głównego" (lub podobnie). Wówczas serwis zostanie dodany do pamięci smartfonu jako niezależna aplikacja.
-- Aplikacja PWA jest uruchamiana z osobnej ikonki z ekranu głównego lub zasobnika aplikacji, tak jak każda inna aplikacja zainstalowana np. poprzez Google Play lub Apple Appstore.
+- Aplikacja PWA jest uruchamiana z osobnej ikonki z ekranu głównego lub zasobnika aplikacji, tak jak każda inna aplikacja zainstalowana np. poprzez Google Play lub App Store.
 - Aplikacja PWA może wyświetlać powiadomienia systemowe, np. o aktualizacjach danych z wykazu UKE czy o statusie zgłoszonych zmian w bazie.
 
 ## Interfejs API

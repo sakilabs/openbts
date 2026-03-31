@@ -54,7 +54,7 @@ function AdminUkePermitsPage() {
 
   const handleViewOnMap = useCallback((station: UkeStation) => {
     if (!station.location) return;
-    const url = `${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?source=uke&station=${station.station_id}`;
+    const url = `${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}~fu~S${station.station_id}`;
     window.open(url, "_blank");
   }, []);
 

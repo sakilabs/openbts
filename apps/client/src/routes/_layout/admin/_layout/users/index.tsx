@@ -18,6 +18,7 @@ import { resolveAvatarUrl } from "@/lib/format";
 import type { AdminUser } from "@/features/admin/users/types";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 36, paginationHeight: 40 };
+const EMPTY_USERS: AdminUser[] = [];
 
 const columnHelper = createColumnHelper<AdminUser>();
 
@@ -89,7 +90,7 @@ function AdminUsersPage() {
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [debouncedSearch, roleFilter, bannedFilter, setPagination]);
+  }, [debouncedSearch, setPagination]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "users", pagination.pageIndex, pagination.pageSize, debouncedSearch, roleFilter, bannedFilter],
@@ -105,7 +106,7 @@ function AdminUsersPage() {
     },
   });
 
-  const users = (data?.data as AdminUser[]) ?? [];
+  const users = (data?.data as AdminUser[]) ?? EMPTY_USERS;
   const total = data?.total ?? 0;
 
   const table = useReactTable({
@@ -124,7 +125,13 @@ function AdminUsersPage() {
         <div className="flex items-center gap-2">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelRole")}</label>
-            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
+            <Select
+              value={roleFilter}
+              onValueChange={(v) => {
+                setRoleFilter(v as RoleFilter);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder={t("users.filters.allRoles")} />
               </SelectTrigger>
@@ -138,7 +145,13 @@ function AdminUsersPage() {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelStatus")}</label>
-            <Select value={bannedFilter} onValueChange={(v) => setBannedFilter(v as BannedFilter)}>
+            <Select
+              value={bannedFilter}
+              onValueChange={(v) => {
+                setBannedFilter(v as BannedFilter);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder={t("users.filters.allStatuses")} />
               </SelectTrigger>

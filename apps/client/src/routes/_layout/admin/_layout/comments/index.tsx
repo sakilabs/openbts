@@ -27,6 +27,8 @@ import { CommentsDataTable } from "@/features/admin/comments/components/comments
 import type { AdminComment } from "@/features/admin/comments/types";
 import type { LightboxPhoto } from "@/components/lightbox";
 
+const EMPTY_COMMENTS: AdminComment[] = [];
+
 function AdminCommentsPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
@@ -115,13 +117,6 @@ function AdminCommentsPage() {
     onError: showApiError,
   });
 
-  const handleApprove = useCallback(
-    (comment: AdminComment) => {
-      approveMutation.mutate(comment);
-    },
-    [approveMutation],
-  );
-
   const handleEdit = useCallback((comment: AdminComment) => {
     setEditTarget(comment);
     setEditContent(comment.content);
@@ -187,14 +182,14 @@ function AdminCommentsPage() {
                 setPageIndex(0);
               }}
             >
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="min-w-40">
-              <SelectItem value="all">{t("comments.filters.allStatuses")}</SelectItem>
-              <SelectItem value="pending">{t("comments.filters.pending")}</SelectItem>
-              <SelectItem value="approved">{t("comments.filters.approved")}</SelectItem>
-            </SelectContent>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-40">
+                <SelectItem value="all">{t("comments.filters.allStatuses")}</SelectItem>
+                <SelectItem value="pending">{t("comments.filters.pending")}</SelectItem>
+                <SelectItem value="approved">{t("comments.filters.approved")}</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div className="relative max-w-sm">
@@ -211,7 +206,7 @@ function AdminCommentsPage() {
           </div>
         </div>
         <CommentsDataTable
-          data={data?.data ?? []}
+          data={data?.data ?? EMPTY_COMMENTS}
           isLoading={isLoading}
           total={data?.totalCount ?? 0}
           pageIndex={pageIndex}
@@ -223,7 +218,7 @@ function AdminCommentsPage() {
           onPageSizeChange={handlePageSizeChange}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onApprove={handleApprove}
+          onApprove={approveMutation.mutate}
           onOpenLightbox={handleOpenLightbox}
         />
       </div>

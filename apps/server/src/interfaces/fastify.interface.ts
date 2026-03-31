@@ -33,6 +33,8 @@ declare module "fastify" {
   export interface FastifyRequest {
     requestStartTime: bigint;
     apiToken: ApiToken;
+    // TODO: to check again later on
+    // oxlint-disable-next-line typescript/no-redundant-type-constituents: Better Auth broke types?
     userSession: Session | null;
   }
 

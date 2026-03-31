@@ -125,7 +125,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                       <ShareButton
                         title={`${station.operator.name} - ${station.station_id}`}
                         text={`${station.operator.name} ${station.station_id} - ${station.location.city}`}
-                        url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}?station=${station.id}`}
+                        url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}~S${station.id}`}
                         size="md"
                       />
                       {isAdmin ? (

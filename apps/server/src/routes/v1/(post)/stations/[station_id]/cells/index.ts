@@ -1,3 +1,4 @@
+// oxlint-disable no-unused-vars: We want to remove `cell_id` from the details object because it's not needed
 import { cells, gsmCells, umtsCells, lteCells, nrCells, stations } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
 import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";

@@ -199,7 +199,7 @@ export function buildRadiolineShareUrl(link: DuplexRadioLink): string {
   const zoom = Math.max(8, Math.min(14, Math.round(14.5 - Math.log2(distance / 1000))));
   const lat = ((link.a.latitude + link.b.latitude) / 2).toFixed(6);
   const lng = ((link.a.longitude + link.b.longitude) / 2).toFixed(6);
-  return `${window.location.origin}/#map=${zoom}/${lat}/${lng}?radiolines=1&radioline=${link.directions[0].id}`;
+  return `${window.location.origin}/#map=${zoom}/${lat}/${lng}~fr~R${link.directions[0].id}`;
 }
 
 export function destinationPoint(lat: number, lon: number, bearingDeg: number, distanceM: number): [number, number] {

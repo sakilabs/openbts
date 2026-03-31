@@ -5,6 +5,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Map filter state is now encoded in a compact token format in the URL (e.g. `~fr` for radiolines on) instead of verbose query params; old-style URLs remain supported
 - Azimuths are now shown on the user list map view when UKE source is active and the azimuth preference is enabled
 - Weekly quota is now enforced for API key requests only; session-authenticated and unauthenticated users are no longer subject to the weekly quota
 

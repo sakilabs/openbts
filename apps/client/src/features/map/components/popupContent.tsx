@@ -177,7 +177,7 @@ function TechBadgesSkeleton() {
 function PopupShareButton({ location, source }: { location: LocationInfo; source: StationSource }) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = `${window.location.origin}/#map=16/${location.latitude}/${location.longitude}?source=${source}&location=${location.id}`;
+  const shareUrl = `${window.location.origin}/#map=16/${location.latitude}/${location.longitude}~L${location.id}${source === "uke" ? "~fu" : ""}`;
 
   const handleShare = useCallback(() => {
     if (navigator.share) {
