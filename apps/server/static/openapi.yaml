@@ -712,6 +712,10 @@ paths:
           in: query
           description: "Search across comment content, author name/username, and station ID"
           schema: { type: string }
+        - name: status
+          in: query
+          description: "Filter by comment status"
+          schema: { type: string, enum: [pending, approved] }
         - name: sortBy
           in: query
           schema: { type: string, enum: [createdAt, id], default: createdAt }

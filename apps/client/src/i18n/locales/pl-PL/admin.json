@@ -23,6 +23,12 @@
       "empty": "Brak komentarzy",
       "emptyHint": "Nie ma jeszcze żadnych komentarzy"
     },
+    "filters": {
+      "labelStatus": "Status",
+      "allStatuses": "Wszystkie statusy",
+      "pending": "Oczekujące",
+      "approved": "Zatwierdzone"
+    },
     "approveSuccess": "Komentarz zatwierdzony",
     "deleteTitle": "Usuń komentarz",
     "deleteDesc": "Czy na pewno chcesz usunąć ten komentarz? Spowoduje to również usunięcie wszystkich załączników. Tej operacji nie można cofnąć.",

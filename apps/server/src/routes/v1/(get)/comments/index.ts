@@ -26,6 +26,7 @@ const schemaRoute = {
     limit: z.coerce.number().min(1).max(100).default(25),
     offset: z.coerce.number().min(0).default(0),
     search: z.string().optional(),
+    status: z.enum(["pending", "approved"]).optional(),
     sortBy: z.enum(["createdAt", "id"]).default("createdAt"),
     sort: z.enum(["asc", "desc"]).default("desc"),
   }),
@@ -44,7 +45,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const userId = req.userSession?.user.id;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
-  const { limit, offset, search, sortBy, sort } = req.query;
+  const { limit, offset, search, status, sortBy, sort } = req.query;
 
   const buildWhereConditions = (fields: typeof stationComments) => {
     const conditions: ReturnType<typeof sql>[] = [];
@@ -65,6 +66,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         )
       )`);
     }
+
+    if (status) conditions.push(sql`${fields.status} = ${status}`);
 
     return conditions;
   };

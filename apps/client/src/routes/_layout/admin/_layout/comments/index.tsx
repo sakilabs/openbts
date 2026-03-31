@@ -7,6 +7,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
@@ -35,6 +36,7 @@ function AdminCommentsPage() {
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved">("all");
   const [sortBy, setSortBy] = useState<"createdAt" | "id">("createdAt");
   const [sort, setSort] = useState<"asc" | "desc">("desc");
 
@@ -46,7 +48,7 @@ function AdminCommentsPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-comments", pageIndex, pageSize, debouncedSearch, sortBy, sort],
+    queryKey: ["admin-comments", pageIndex, pageSize, debouncedSearch, statusFilter, sortBy, sort],
     queryFn: () => {
       const params = new URLSearchParams({
         limit: String(pageSize),
@@ -55,6 +57,7 @@ function AdminCommentsPage() {
         sort,
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter !== "all") params.set("status", statusFilter);
       return fetchJson<{ data: AdminComment[]; totalCount: number }>(`${API_BASE}/comments?${params}`).then(
         (res) => res ?? { data: [], totalCount: 0 },
       );
@@ -174,17 +177,38 @@ function AdminCommentsPage() {
   return (
     <>
       <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
-        <div className="relative max-w-sm">
-          <HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder={t("common:placeholder.search")}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPageIndex(0);
-            }}
-            className="pl-8"
-          />
+        <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">{t("comments.filters.labelStatus")}</label>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v as typeof statusFilter);
+                setPageIndex(0);
+              }}
+            >
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="min-w-40">
+              <SelectItem value="all">{t("comments.filters.allStatuses")}</SelectItem>
+              <SelectItem value="pending">{t("comments.filters.pending")}</SelectItem>
+              <SelectItem value="approved">{t("comments.filters.approved")}</SelectItem>
+            </SelectContent>
+            </Select>
+          </div>
+          <div className="relative max-w-sm">
+            <HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              placeholder={t("common:placeholder.search")}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPageIndex(0);
+              }}
+              className="pl-8"
+            />
+          </div>
         </div>
         <CommentsDataTable
           data={data?.data ?? []}
