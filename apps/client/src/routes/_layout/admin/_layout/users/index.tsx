@@ -120,37 +120,39 @@ function AdminUsersPage() {
 
   return (
     <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
-      <div className="flex items-center gap-2">
-        <div className="relative max-w-sm flex-1">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelRole")}</label>
+            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder={t("users.filters.allRoles")} />
+              </SelectTrigger>
+              <SelectContent className="min-w-40">
+                <SelectItem value="all">{t("users.filters.allRoles")}</SelectItem>
+                <SelectItem value="user">{t("users.filters.roleUser")}</SelectItem>
+                <SelectItem value="editor">{t("users.filters.roleEditor")}</SelectItem>
+                <SelectItem value="admin">{t("users.filters.roleAdmin")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelStatus")}</label>
+            <Select value={bannedFilter} onValueChange={(v) => setBannedFilter(v as BannedFilter)}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder={t("users.filters.allStatuses")} />
+              </SelectTrigger>
+              <SelectContent className="min-w-40">
+                <SelectItem value="all">{t("users.filters.allStatuses")}</SelectItem>
+                <SelectItem value="false">{t("users.filters.active")}</SelectItem>
+                <SelectItem value="true">{t("users.filters.banned")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="relative w-full sm:max-w-sm sm:flex-1">
           <HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input placeholder={t("common:placeholder.search")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelRole")}</label>
-          <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder={t("users.filters.allRoles")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("users.filters.allRoles")}</SelectItem>
-              <SelectItem value="user">{t("users.filters.roleUser")}</SelectItem>
-              <SelectItem value="editor">{t("users.filters.roleEditor")}</SelectItem>
-              <SelectItem value="admin">{t("users.filters.roleAdmin")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">{t("users.filters.labelStatus")}</label>
-          <Select value={bannedFilter} onValueChange={(v) => setBannedFilter(v as BannedFilter)}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder={t("users.filters.allStatuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("users.filters.allStatuses")}</SelectItem>
-              <SelectItem value="false">{t("users.filters.active")}</SelectItem>
-              <SelectItem value="true">{t("users.filters.banned")}</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

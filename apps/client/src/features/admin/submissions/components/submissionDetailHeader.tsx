@@ -74,7 +74,7 @@ export function SubmissionDetailHeader({ submission, isReadOnly, isProcessing, o
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         {isReadOnly ? (
           <div className="text-sm font-medium text-muted-foreground px-4">{t("detail.readOnly")}</div>
         ) : (

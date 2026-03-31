@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-03-31
+
+### 🚀 Enhancements
+
+- Azimuths are now shown on the user list map view when UKE source is active and the azimuth preference is enabled
+- Weekly quota is now enforced for API key requests only; session-authenticated and unauthenticated users are no longer subject to the weekly quota
+
 # 2026-03-30
 
 ### 🚀 Enhancements

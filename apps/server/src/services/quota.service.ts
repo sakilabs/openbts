@@ -154,6 +154,8 @@ export class QuotaService {
 
   async processRequest(req: FastifyRequest): Promise<QuotaResult | null> {
     try {
+      if (!req.apiToken) return null;
+
       const quota = await this.getQuotaTier(req);
       const key = this.generateKey(req);
       if (!key) return null;

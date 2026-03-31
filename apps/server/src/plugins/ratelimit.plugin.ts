@@ -46,15 +46,15 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
     res.header("X-RateLimit-Reset", result.reset.toString());
 
     const quota = await quotaService.processRequest(req);
-    if (!quota) throw new ErrorResponse("QUOTA_EXCEEDED");
+    if (quota) {
+      if (!quota.allowed) {
+        res.header("X-Retry-After", quota.retryAfter?.toString() || "3600");
+        throw new ErrorResponse("QUOTA_EXCEEDED");
+      }
 
-    if (!quota.allowed) {
-      res.header("X-Retry-After", quota.retryAfter?.toString() || "3600");
-      throw new ErrorResponse("QUOTA_EXCEEDED");
+      res.header("X-Quota-Limit", quota.limit.toString());
+      res.header("X-Quota-Remaining", quota.remaining.toString());
+      res.header("X-Quota-Reset", quota.reset.toString());
     }
-
-    res.header("X-Quota-Limit", quota.limit.toString());
-    res.header("X-Quota-Remaining", quota.remaining.toString());
-    res.header("X-Quota-Reset", quota.reset.toString());
   });
 };

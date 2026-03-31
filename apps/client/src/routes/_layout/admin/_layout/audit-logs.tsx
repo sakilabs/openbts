@@ -360,7 +360,7 @@ function AdminAuditLogsPage() {
               className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
             />
             <Input
-              className="h-8 pl-7 text-sm w-40"
+              className="h-8 pl-7 w-40"
               placeholder={t("auditLogs.filters.recordId")}
               value={recordIdFilter}
               onChange={(e) => {

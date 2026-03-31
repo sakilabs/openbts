@@ -11,6 +11,7 @@ import { fetchLocationWithStations } from "@/features/map/api";
 import { toLocationInfo } from "@/features/map/utils";
 import { useListDetail } from "@/features/lists/hooks/useListDetail";
 import { useSettings } from "@/hooks/useSettings";
+import { usePreferences } from "@/hooks/usePreferences";
 import { authClient } from "@/lib/authClient";
 import type { LocationsResponse } from "@/features/map/api";
 import type { LocationWithStations, StationSource, StationFilters, StationWithoutCells, UkeStation, RadioLine, Station } from "@/types/station";
@@ -54,10 +55,10 @@ function detailReducer(_state: DetailState, action: DetailAction): DetailState {
 function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   const { map, isLoaded } = useMap();
   const { zoom } = useMapBounds({ map, isLoaded });
-  const { data: listData, isLoading, isError } = useListDetail(uuid);
   const { data: runtimeSettings } = useSettings();
   const { data: session } = authClient.useSession();
   const showAddToList = !!session?.user && !!runtimeSettings?.enableUserLists;
+  const { preferences } = usePreferences();
 
   const [filters, setFiltersState] = useState<StationFilters>(() => {
     const saved = loadMapFilters() ?? DEFAULT_FILTERS;
@@ -70,6 +71,9 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       return next;
     });
   }, []);
+
+  const wantAzimuths = preferences.showAzimuths && filters.source === "uke";
+  const { data: listData, isLoading, isError } = useListDetail(uuid, wantAzimuths);
 
   const [detailState, dispatchDetail] = useReducer(detailReducer, { selectedStation: null });
   const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);

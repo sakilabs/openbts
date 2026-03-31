@@ -15,6 +15,7 @@ import {
   operators,
   ukeLocations,
   ukePermits,
+  ukePermitSectors,
   radioLinesManufacturers,
   radiolinesAntennaTypes,
 } from "@openbts/drizzle";
@@ -23,11 +24,14 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
+const ukePermitSectorResponseSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
+
 const ukePermitResponseSchema = createSelectSchema(ukePermits)
   .omit({ operator_id: true, location_id: true, band_id: true })
   .extend({
     band: createSelectSchema(bands).nullable(),
     operator: createSelectSchema(operators).nullable(),
+    sectors: z.array(ukePermitSectorResponseSchema).optional(),
   });
 const ukeLocationResponseSchema = createSelectSchema(ukeLocations)
   .omit({ point: true, region_id: true })
@@ -109,6 +113,12 @@ const schemaRoute = {
   params: z.object({
     uuid: z.string(),
   }),
+  querystring: z.object({
+    azimuths: z
+      .string()
+      .optional()
+      .transform((val): boolean => val === "true" || val === "1"),
+  }),
   response: {
     200: z.object({
       data: createSelectSchema(userLists)
@@ -122,7 +132,7 @@ const schemaRoute = {
   },
 };
 
-type ReqParams = { Params: { uuid: string } };
+type ReqParams = { Params: { uuid: string }; Querystring: { azimuths: boolean } };
 type ResponseBody = z.infer<(typeof schemaRoute.response)["200"]>;
 
 function mapType(t: { id: number; name: string; manufacturer: { id: number; name: string } | null } | null | undefined) {
@@ -139,6 +149,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   if (!getRuntimeSettings().enableUserLists) throw new ErrorResponse("FORBIDDEN");
 
   const { uuid } = req.params;
+  const { azimuths } = req.query;
 
   const list = await db.query.userLists.findFirst({
     where: { uuid },
@@ -201,7 +212,11 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
             region: true,
             permits: {
               columns: { location_id: false },
-              with: { band: true, operator: true },
+              with: {
+                band: true,
+                operator: true,
+                ...(azimuths ? { sectors: { columns: { permit_id: false } } } : {}),
+              },
             },
           },
           where: { id: { in: ukeLocationIds } },

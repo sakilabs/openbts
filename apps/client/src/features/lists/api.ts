@@ -52,8 +52,9 @@ export async function fetchUserLists(limit = 50, page = 1, search?: string): Pro
   return fetchJson<ListsResponse>(`${API_BASE}/lists?${params.toString()}`);
 }
 
-export async function fetchListByUuid(uuid: string): Promise<UserListDetail> {
-  const res = await fetchJson<ListDetailResponse>(`${API_BASE}/lists/${uuid}`);
+export async function fetchListByUuid(uuid: string, azimuths?: boolean): Promise<UserListDetail> {
+  const params = azimuths ? "?azimuths=true" : "";
+  const res = await fetchJson<ListDetailResponse>(`${API_BASE}/lists/${uuid}${params}`);
   return res.data;
 }
 
