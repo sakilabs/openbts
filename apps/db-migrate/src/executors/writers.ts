@@ -417,6 +417,7 @@ export async function writeCellsAndDetails(
       enbid: val.cell.lte.enbid,
       clid: val.cell.lte.clid,
       pci: val.cell.lte.pci,
+      arfcn: val.cell.lte.arfcn,
       supports_iot: val.cell.lte.supports_iot,
       createdAt: val.cell.date_added ?? new Date(),
       updatedAt: val.cell.date_updated ?? new Date(),
