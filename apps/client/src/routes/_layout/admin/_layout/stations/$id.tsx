@@ -565,6 +565,7 @@ function StationDetailForm({
         <div className="flex flex-col lg:flex-row gap-3 p-3">
           <div className="w-full lg:flex-2 space-y-2">
             <StationInfoForm
+              stationDbId={station?.id}
               stationId={stationId}
               onStationIdChange={(v) => dispatch({ type: "SET_STATION_ID", payload: v })}
               operatorId={operatorId}

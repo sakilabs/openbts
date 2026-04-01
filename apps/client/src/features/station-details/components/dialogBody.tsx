@@ -236,7 +236,7 @@ export function StationDetailsBody({
                                   render={
                                     <Link
                                       to="/"
-                                      hash={`map=16/${station.location.latitude}/${station.location.longitude}?location=${station.location.id}`}
+                                      hash={`map=16/${station.location.latitude}/${station.location.longitude}~L${station.location.id}`}
                                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                       onClick={onClose}
                                     />

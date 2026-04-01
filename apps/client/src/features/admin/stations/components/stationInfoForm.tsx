@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AirportTowerIcon, Globe02Icon } from "@hugeicons/core-free-icons";
+import { Link } from "@tanstack/react-router";
+import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import type { ProposedLocationForm } from "@/features/submissions/types";
 import type { Operator, UkeStation, LocationWithStations, Location } from "@/types/station";
 
 type StationInfoFormProps = {
+  stationDbId?: number;
   stationId: string;
   onStationIdChange: (value: string) => void;
   operatorId: number | null;
@@ -39,6 +41,7 @@ type StationInfoFormProps = {
 };
 
 export function StationInfoForm({
+  stationDbId,
   stationId,
   onStationIdChange,
   operatorId,
@@ -76,6 +79,16 @@ export function StationInfoForm({
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
           <HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{t("stationInfo.title")}</span>
+          {stationDbId && (
+            <Link
+              to="/"
+              hash={`map=16/${location.latitude}/${location.longitude}~S${stationDbId}`}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <HugeiconsIcon icon={MapsLocation01Icon} className="size-3" />
+              {t("dialog.showOnMap", { ns: "stationDetails" })}
+            </Link>
+          )}
         </div>
         <div className="px-4 py-3 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
