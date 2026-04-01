@@ -1,5 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
+import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CheckmarkCircle02Icon, Delete02Icon, Edit01Icon, Sorting05Icon } from "@hugeicons/core-free-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -89,13 +90,13 @@ export function createCommentsColumns({
         const op = station.operator;
         const color = op?.mnc ? getOperatorColor(op.mnc) : "#00E1FF";
         return (
-          <a href={`/admin/stations/${station.id}`} className="flex items-center gap-2 group" onClick={(e) => e.stopPropagation()}>
+          <Link to="/admin/stations/$id" params={{ id: String(station.id) }} search={{ uke: undefined }} className="flex items-center gap-2 group">
             <div className="size-3 rounded-[2px] border border-background shrink-0" style={{ backgroundColor: color }} />
             <div className="min-w-0">
               <p className="text-sm font-medium truncate group-hover:underline">{op?.name ?? "-"}</p>
               <p className="font-mono text-xs text-muted-foreground truncate">{station.station_id}</p>
             </div>
-          </a>
+          </Link>
         );
       },
     },
