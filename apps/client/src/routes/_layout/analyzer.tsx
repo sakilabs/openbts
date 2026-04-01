@@ -550,7 +550,7 @@ function AnalyzerPage() {
               {station.location && (
                 <Link
                   to="/"
-                  hash={`map=16/${station.location.latitude}/${station.location.longitude}~L${station.location.id}`}
+                  hash={`map=16/${station.location.latitude}/${station.location.longitude}~f~L${station.location.id}`}
                   target="_blank"
                   className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                 >

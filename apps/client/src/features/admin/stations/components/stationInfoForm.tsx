@@ -82,7 +82,7 @@ export function StationInfoForm({
           {stationDbId && (
             <Link
               to="/"
-              hash={`map=16/${location.latitude}/${location.longitude}~S${stationDbId}`}
+              hash={`map=16/${location.latitude}/${location.longitude}~f~S${stationDbId}`}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <HugeiconsIcon icon={MapsLocation01Icon} className="size-3" />
