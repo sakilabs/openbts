@@ -124,7 +124,7 @@ function paramsToState(searchParams: URLSearchParams): FullState {
 export function useStationsData() {
   const location = useLocation();
   const navigate = useNavigate();
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const searchParams = useMemo(() => new URLSearchParams(location.searchStr), [location.searchStr]);
 
   const state = useMemo(() => paramsToState(searchParams), [searchParams]);
   const stateRef = useRef(state);
@@ -134,7 +134,7 @@ export function useStationsData() {
     (patch: Partial<FullState>) => {
       const merged = { ...stateRef.current, ...patch };
       stateRef.current = merged;
-      void navigate({ to: ".", search: Object.fromEntries(stateToParams(merged).entries()), replace: true });
+      void navigate({ to: ".", search: Object.fromEntries(stateToParams(merged).entries()) as Record<string, string>, replace: true });
     },
     [navigate],
   );
@@ -148,6 +148,7 @@ export function useStationsData() {
       recentDays: state.recentDays,
       showStations: true,
       showRadiolines: false,
+      showHeatmap: false,
       radiolineOperators: [],
     }),
     [state.operators, state.bands, state.rat, state.recentDays],
@@ -168,6 +169,7 @@ export function useStationsData() {
         recentDays: stateRef.current.recentDays,
         showStations: true,
         showRadiolines: false,
+        showHeatmap: false,
         radiolineOperators: [],
       };
       const resolved = typeof newFilters === "function" ? newFilters(current) : newFilters;
@@ -254,9 +256,11 @@ export function useStationsData() {
     });
   }, [searchQuery, filters, selectedRegionNames]);
 
+  const searchSortBy = searchQuery.trim().length > 0 && sortBy === "updatedAt" ? "relevance" : sortBy;
+
   const { data: searchResults = [], isLoading: isSearching } = useQuery({
-    queryKey: ["station-search-table", combinedSearchQuery, sort, sortBy],
-    queryFn: () => searchStations(combinedSearchQuery, sort, sortBy),
+    queryKey: ["station-search-table", combinedSearchQuery, sort, searchSortBy],
+    queryFn: () => searchStations(combinedSearchQuery, sort, searchSortBy),
     enabled: combinedSearchQuery.length > 0,
     staleTime: 1000 * 60 * 5,
   });
@@ -291,7 +295,7 @@ export function useStationsData() {
 
     sort,
     setSort,
-    sortBy,
+    sortBy: searchQuery.trim().length > 0 ? searchSortBy : sortBy,
     setSortBy,
 
     searchQuery,

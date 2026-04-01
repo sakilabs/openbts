@@ -26,7 +26,7 @@ const cellWithDetailsSchema = cellsSelectSchema.extend({ details: cellDetailsSch
 
 type ReqBody = {
   Body: { query?: string };
-  Querystring: { limit?: number; sort?: "asc" | "desc"; sortBy?: "station_id" | "updatedAt" | "createdAt" };
+  Querystring: { limit?: number; sort?: "asc" | "desc"; sortBy?: "station_id" | "updatedAt" | "createdAt" | "relevance" };
 };
 type CellWithRat = z.infer<typeof cellsSelectSchema> & {
   gsm?: z.infer<typeof gsmCellsSchema>;
@@ -53,7 +53,7 @@ const schemaRoute = {
   querystring: z.object({
     limit: z.coerce.number().int().min(1).max(100).optional().default(100),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
-    sortBy: z.enum(["station_id", "updatedAt", "createdAt"]).optional().default("updatedAt"),
+    sortBy: z.enum(["station_id", "updatedAt", "createdAt", "relevance"]).optional().default("relevance"),
   }),
   response: {
     200: z.object({
@@ -107,7 +107,12 @@ const withCellDetails = (station: StationWithRatCells): StationWithCells => {
   return result;
 };
 
-const sortStations = (arr: StationWithCells[], sortBy: "station_id" | "updatedAt" | "createdAt", sort: "asc" | "desc"): StationWithCells[] => {
+const sortStations = (
+  arr: StationWithCells[],
+  sortBy: "station_id" | "updatedAt" | "createdAt" | "relevance",
+  sort: "asc" | "desc",
+): StationWithCells[] => {
+  if (sortBy === "relevance") return arr;
   const dir = sort === "asc" ? 1 : -1;
   return [...arr].sort((a, b) => {
     if (sortBy === "station_id") return dir * a.station_id.localeCompare(b.station_id);
@@ -284,8 +289,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
           })
           .catch(() => [])
       : [];
-  for (const station of fuzzyStations) {
-    stationMap.set(station.id, withCellDetails(station));
+  const fuzzyById = new Map(fuzzyStations.map((s) => [s.id, s]));
+  for (const { id } of fuzzyIds) {
+    const station = fuzzyById.get(id);
+    if (station) stationMap.set(station.id, withCellDetails(station));
   }
 
   const numericQuery = Number.parseInt(searchQuery, 10);
@@ -307,7 +314,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       .from(stations)
       .innerJoin(locations, eq(stations.location_id, locations.id))
       .where(and(ne(stations.status, "inactive"), or(sql`${searchQuery} <% ${locations.city}`, sql`${searchQuery} <% ${locations.address}`)))
-      .orderBy(sql`GREATEST(word_similarity(${searchQuery}, ${locations.city}), word_similarity(${searchQuery}, ${locations.address})) DESC`)
+      .orderBy(
+        sql`(CASE WHEN ${locations.address} ILIKE ${searchQuery} THEN 3 WHEN ${locations.address} ILIKE ${`${searchQuery}%`} THEN 2 WHEN ${locations.address} ILIKE ${`%${searchQuery}%`} THEN 1 ELSE 0 END) DESC`,
+        sql`GREATEST(word_similarity(${searchQuery}, ${locations.city}), word_similarity(${searchQuery}, ${locations.address})) DESC`,
+      )
       .limit(limit);
 
     const missingCityIds = cityAndAddressMatches
@@ -317,8 +327,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
     if (missingCityIds.length > 0) {
       const additionalStations = await fetchStations(inArray(stations.id, missingCityIds), limit - stationMap.size);
-      for (const station of additionalStations) {
-        stationMap.set(station.id, withCellDetails(station));
+      const stationById = new Map(additionalStations.map((s) => [s.id, s]));
+      for (const id of missingCityIds) {
+        const station = stationById.get(id);
+        if (station) stationMap.set(station.id, withCellDetails(station));
       }
     }
   }
@@ -348,7 +360,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     }
   }
 
-  return res.send({ data: sortStations(Array.from(stationMap.values()).slice(0, limit), sortBy, sort) });
+  const results = Array.from(stationMap.values()).slice(0, limit);
+  return res.send({ data: sortBy === "relevance" ? results : sortStations(results, sortBy, sort) });
 }
 
 const searchRoute: Route<ReqBody, StationWithCells[]> = {

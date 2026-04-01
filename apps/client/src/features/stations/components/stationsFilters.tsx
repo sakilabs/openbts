@@ -82,10 +82,12 @@ export function StationsFilters({
     isFocused,
     containerRef,
     inputRef,
+    focusedChipIndex,
     handleContainerBlur,
     handleInputChange,
     handleInputFocus,
     handleInputClick,
+    handleKeyDown,
     applyAutocomplete,
     clearSearch,
     removeFilter,
@@ -130,6 +132,7 @@ export function StationsFilters({
       showRadiolines: false,
       radiolineOperators: [],
       showStations: true,
+      showHeatmap: false,
     });
     onRegionsChange([]);
   };
@@ -146,10 +149,13 @@ export function StationsFilters({
             <div className="flex items-center gap-1 px-3 py-2">
               <HugeiconsIcon icon={Search02Icon} className="size-4 text-muted-foreground shrink-0" />
               <div className="flex items-center gap-1 flex-1 flex-wrap">
-                {parsedFilters.map((filter) => (
+                {parsedFilters.map((filter, index) => (
                   <div
                     key={filter.raw}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium border border-primary/20 shrink-0"
+                    className={cn(
+                      "inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium border shrink-0",
+                      focusedChipIndex === index ? "border-primary ring-2 ring-primary/30" : "border-primary/20",
+                    )}
                   >
                     <span className="font-mono text-[10px]">{filter.key}:</span>
                     <span className="text-[10px] max-w-20 truncate" title={filter.value}>
@@ -167,6 +173,7 @@ export function StationsFilters({
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
                   onClick={handleInputClick}
+                  onKeyDown={handleKeyDown}
                   placeholder={parsedFilters.length > 0 ? "" : t("common:placeholder.search")}
                   className="flex-1 min-w-16 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
                 />

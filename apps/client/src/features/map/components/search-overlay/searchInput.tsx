@@ -11,13 +11,14 @@ type SearchInputProps = {
   inputRef: RefObject<HTMLInputElement | null>;
   inputValue: string;
   parsedFilters: ParsedFilter[];
+  focusedChipIndex?: number | null;
   isSearching: boolean;
   query: string;
   isFocused: boolean;
   mobileExpanded: boolean;
   filterSlot?: ReactNode;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyDown: (e: KeyboardEvent) => void;
+  onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
   onInputFocus: () => void;
   onInputClick: () => void;
   onRemoveFilter: (filter: ParsedFilter) => void;
@@ -32,6 +33,7 @@ export function SearchInput({
   inputRef,
   inputValue,
   parsedFilters,
+  focusedChipIndex = null,
   isSearching,
   query,
   isFocused,
@@ -77,10 +79,13 @@ export function SearchInput({
         </button>
 
         <div className={cn("flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide", !mobileExpanded && !isFocused && "hidden md:flex")}>
-          {parsedFilters.map((filter) => (
+          {parsedFilters.map((filter, index) => (
             <div
               key={filter.raw}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20 shrink-0"
+              className={cn(
+                "inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium border shrink-0",
+                focusedChipIndex === index ? "border-primary ring-2 ring-primary/30" : "border-primary/20",
+              )}
             >
               <span className="font-mono text-xs whitespace-nowrap">{filter.key}:</span>
               <span className="text-xs whitespace-nowrap max-w-30 truncate" title={filter.value}>

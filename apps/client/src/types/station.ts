@@ -142,7 +142,7 @@ export type RadioLine = {
 
 export type StationSource = "internal" | "uke";
 
-export type StationSortBy = "station_id" | "updatedAt" | "createdAt";
+export type StationSortBy = "station_id" | "updatedAt" | "createdAt" | "relevance";
 export type StationSortDirection = "asc" | "desc";
 
 export type LocationSortBy = "id" | "updatedAt" | "createdAt";

@@ -1,11 +1,15 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import svgr from "vite-plugin-svgr";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 function getGitCommit(): string {
   try {

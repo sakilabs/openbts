@@ -2286,7 +2286,7 @@ paths:
           schema: { type: string, enum: [asc, desc], default: desc }
         - name: sortBy
           in: query
-          schema: { type: string, enum: [station_id, updatedAt, createdAt], default: updatedAt }
+          schema: { type: string, enum: [station_id, updatedAt, createdAt, relevance], default: relevance }
       requestBody:
         required: true
         content:

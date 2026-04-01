@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FocusEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent, type FocusEvent, type KeyboardEvent } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import type { FilterKeyword, ParsedFilter } from "../types";
 
@@ -58,9 +58,12 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
   });
   const [isFocused, setIsFocused] = useState(false);
   const [activeOverlay, setActiveOverlay] = useState<OverlayType>(null);
+  const [focusedChipIndex, setFocusedChipIndex] = useState<number | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const stateRef = useRef({ inputValue, parsedFilters, focusedChipIndex });
+  stateRef.current = { inputValue, parsedFilters, focusedChipIndex };
 
   const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue].filter(Boolean).join(" "), [parsedFilters, inputValue]);
 
@@ -91,6 +94,7 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
     setInputValue(value);
+    setFocusedChipIndex(null);
 
     if ((value.endsWith(" ") && !hasUnclosedQuote(value)) || value === "") {
       const fullQuery = [...parsedFilters.map((f) => f.raw), value].filter(Boolean).join(" ");
@@ -128,8 +132,47 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
     inputRef.current?.focus();
   }
 
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    const { inputValue: currentInput, parsedFilters: filters, focusedChipIndex: chipIdx } = stateRef.current;
+    const caretAtStart = inputRef.current?.selectionStart === 0 && inputRef.current?.selectionEnd === 0;
+
+    if (chipIdx !== null) {
+      if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        setParsedFilters((prev) => prev.filter((_, i) => i !== chipIdx));
+        if (filters.length <= 1) {
+          setFocusedChipIndex(null);
+          inputRef.current?.focus();
+        } else {
+          setFocusedChipIndex(Math.min(chipIdx, filters.length - 2));
+        }
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setFocusedChipIndex(Math.max(0, chipIdx - 1));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        if (chipIdx < filters.length - 1) {
+          setFocusedChipIndex(chipIdx + 1);
+        } else {
+          setFocusedChipIndex(null);
+          inputRef.current?.focus();
+        }
+      } else if (e.key === "Escape") {
+        setFocusedChipIndex(null);
+        inputRef.current?.focus();
+      }
+      return;
+    }
+
+    if (caretAtStart && currentInput === "" && filters.length > 0 && (e.key === "Backspace" || e.key === "ArrowLeft")) {
+      e.preventDefault();
+      setFocusedChipIndex(filters.length - 1);
+    }
+  }, []);
+
   function handleInputFocus() {
     setIsFocused(true);
+    setFocusedChipIndex(null);
     if (inputValue === "" && parsedFilters.length === 0) setActiveOverlay("autocomplete");
     else if (query.trim() !== "") setActiveOverlay("results");
   }
@@ -156,10 +199,13 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
     containerRef,
     inputRef,
 
+    focusedChipIndex,
+
     handleContainerBlur,
     handleInputChange,
     handleInputFocus,
     handleInputClick,
+    handleKeyDown,
     applyAutocomplete,
     clearSearch,
     removeFilter,

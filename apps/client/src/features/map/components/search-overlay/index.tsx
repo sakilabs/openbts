@@ -88,10 +88,12 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     activeOverlay,
     containerRef,
     inputRef,
+    focusedChipIndex,
     handleContainerBlur,
     handleInputChange,
     handleInputFocus,
     handleInputClick,
+    handleKeyDown: handleChipKeyDown,
     applyAutocomplete,
     clearSearch,
     removeFilter,
@@ -157,7 +159,9 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     activeOverlay === "results" &&
     (isSearching || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0);
 
-  function handleKeyDown(e: KeyboardEvent) {
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    handleChipKeyDown(e);
+    if (e.defaultPrevented) return;
     if (e.key === "Escape") {
       if (activeOverlay) {
         closeOverlay();
@@ -211,6 +215,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           inputRef={inputRef}
           inputValue={inputValue}
           parsedFilters={parsedFilters}
+          focusedChipIndex={focusedChipIndex}
           isSearching={isSearching}
           query={query}
           isFocused={isFocused}

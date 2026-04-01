@@ -66,8 +66,9 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
       showStations: filters.showStations,
       showRadiolines: filters.showRadiolines,
       radiolineOperators: [],
+      showHeatmap: filters.showHeatmap,
     });
-  }, [filters.source, filters.showStations, filters.showRadiolines, onFiltersChange]);
+  }, [filters.source, filters.showStations, filters.showRadiolines, filters.showHeatmap, onFiltersChange]);
 
   const activeFilterCount = useMemo(() => {
     return (

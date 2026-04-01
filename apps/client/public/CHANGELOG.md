@@ -1,6 +1,17 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-02
+
+### 🚀 Enhancements
+
+- `POST /search` now supports `relevance` as a `sortBy` option (and uses it by default). Results are ordered by match quality instead of `updatedAt`
+- Search input filter chips can now be navigated and deleted with the keyboard (Arrow Left/Right to select, Backspace/Delete to remove)
+
+### 🩹 Fixes
+
+- Fixed `POST /search` returning results in wrong order when searching by city or address. Exact and prefix matches on the address are now prioritised over fuzzy `word_similarity` scores
+
 # 2026-04-01
 
 ### 🚀 Enhancements
