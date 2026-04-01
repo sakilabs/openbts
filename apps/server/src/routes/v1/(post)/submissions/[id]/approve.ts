@@ -391,12 +391,13 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 break;
               }
             }
+            const newCellDetails = proposed.gsm ?? proposed.umts ?? proposed.lte ?? proposed.nr ?? null;
             await createAuditLog(
               {
                 action: "cells.create",
                 table_name: "cells",
                 record_id: newCell.id,
-                new_values: newCell,
+                new_values: { ...newCell, details: newCellDetails },
                 metadata: { submission_id: id, station_id: stationId },
               },
               req,
@@ -460,6 +461,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               }
             }
 
+            const oldDetails = targetCell.gsm ?? targetCell.umts ?? targetCell.lte ?? targetCell.nr ?? null;
+            const newDetails = proposed.gsm ?? proposed.umts ?? proposed.lte ?? proposed.nr ?? null;
             const updatedCell = { ...targetCell, ...cellUpdate };
 
             await createAuditLog(
@@ -467,8 +470,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 action: "cells.update",
                 table_name: "cells",
                 record_id: targetCellId,
-                old_values: targetCell,
-                new_values: updatedCell,
+                old_values: { ...targetCell, details: oldDetails },
+                new_values: { ...updatedCell, details: newDetails },
                 metadata: { submission_id: id },
               },
               req,

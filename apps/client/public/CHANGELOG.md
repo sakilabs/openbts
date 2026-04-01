@@ -1,6 +1,17 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-01
+
+### 🚀 Enhancements
+
+- Added admin dashboard with all information in one place
+- Added weekly statistics delta endpoint (`/api/v1/stats/delta`) to track changes in stations, cells, and submissions
+
+### 🩹 Fixes
+
+- Fixed cell sorting in admin station edit and submission edit pages; cells are now sorted once on initial load instead of re-sorting on every edit
+
 # 2026-03-31
 
 ### 🚀 Enhancements

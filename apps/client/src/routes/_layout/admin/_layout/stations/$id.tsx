@@ -38,6 +38,26 @@ function cellToLocal(cell: Cell): LocalCell {
   };
 }
 
+function sortAndMapCells(cells: Cell[]): LocalCell[] {
+  return [...cells]
+    .sort((a, b) => {
+      if (a.band.value !== b.band.value) return a.band.value - b.band.value;
+      switch (a.rat) {
+        case "GSM":
+          return ((a.details?.cid as number) ?? 0) - ((b.details?.cid as number) ?? 0);
+        case "UMTS":
+          return ((a.details?.cid_long as number) ?? 0) - ((b.details?.cid_long as number) ?? 0);
+        case "LTE":
+          return ((a.details?.ecid as number) ?? 0) - ((b.details?.ecid as number) ?? 0);
+        case "NR":
+          return ((a.details?.nci as number) ?? 0) - ((b.details?.nci as number) ?? 0);
+        default:
+          return 0;
+      }
+    })
+    .map(cellToLocal);
+}
+
 type CellDiffStatus = "added" | "modified" | "unchanged";
 
 function getLocalCellDiffStatus(lc: LocalCell, originalCells: Cell[]): CellDiffStatus {
@@ -278,7 +298,7 @@ function StationDetailForm({
     addCell: handleAddCell,
     deleteCell: handleDeleteCell,
   } = useCellDrafts<LocalCell>({
-    initialCells: station?.cells.map(cellToLocal) ?? [],
+    initialCells: sortAndMapCells(station?.cells ?? []),
     allBands,
     createNewCell: createNewStationCell,
     onDelete: handleServerCellDelete,
@@ -459,7 +479,7 @@ function StationDetailForm({
     dispatch({ type: "LOAD_STATION", payload: station });
     const existingRats = new Set(station.cells.map((c) => c.rat));
     setEnabledRats(RAT_ORDER.filter((r) => existingRats.has(r)));
-    setLocalCells(station.cells.map(cellToLocal));
+    setLocalCells(sortAndMapCells(station.cells));
   };
 
   const selectedOperator = useMemo(() => operators.find((o) => o.id === operatorId), [operators, operatorId]);

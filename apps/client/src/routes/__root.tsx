@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createRootRoute, HeadContent, Outlet, Link as RouterLink, useNavigate } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -15,8 +16,37 @@ import i18n from "@/i18n/config";
 import { plPLAuthLocalization } from "@/i18n/authLocalization";
 import "@/index.css";
 
+declare global {
+  interface Window {
+    rybbit?: {
+      identify: (userId: string, traits?: Record<string, unknown>) => void;
+      clearUserId: () => void;
+    };
+  }
+}
+
 type AuthLinkProps = { href: string; className?: string; children: ReactNode };
 type AppProvidersProps = { children: ReactNode };
+
+function RybbitIdentify() {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const prevUserIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!window.rybbit) return;
+    if (user) {
+      prevUserIdRef.current = user.id;
+      window.rybbit.identify(user.id, { email: user.email, name: user.name, username: user.username });
+    } else if (prevUserIdRef.current !== undefined) {
+      prevUserIdRef.current = undefined;
+      window.rybbit.clearUserId();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  return null;
+}
 
 function AuthLink({ href, ...props }: AuthLinkProps) {
   return <RouterLink to={href} {...props} />;
@@ -42,6 +72,7 @@ function AppProviders({ children }: AppProvidersProps) {
       twoFactor={["totp"]}
       localization={localization}
     >
+      <RybbitIdentify />
       <ErrorBoundary>{children}</ErrorBoundary>
       <Toaster />
       <ReloadPrompt />

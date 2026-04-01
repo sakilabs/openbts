@@ -1,6 +1,7 @@
 {
   "breadcrumbs": {
     "admin": "Admin",
+    "dashboard": "Dashboard",
     "stations": "Stacje",
     "editStation": "Edytuj stację",
     "submissions": "Zgłoszenia",
@@ -13,6 +14,46 @@
     "ukePermits": "Nieprzypisane pozwolenia UKE",
     "lists": "Listy",
     "comments": "Komentarze"
+  },
+  "dashboard": {
+    "stats": {
+      "cells": "Komórki",
+      "ukePermits": "Pozwolenia UKE"
+    },
+    "thisWeek": "w tym tygodniu",
+    "editorNotes": "Notatki",
+    "toReview_one": "zgłoszenie do przejrzenia",
+    "toReview_few": "zgłoszenia do przejrzenia",
+    "toReview_many": "zgłoszeń do przejrzenia",
+    "toReview_other": "zgłoszeń do przejrzenia",
+    "toModerate_one": "komentarz do moderacji",
+    "toModerate_few": "komentarze do moderacji",
+    "toModerate_many": "komentarzy do moderacji",
+    "toModerate_other": "komentarzy do moderacji",
+    "queueClear": "Kolejka jest pusta",
+    "allSubmissions": "Wszystkie zgłoszenia",
+    "allComments": "Wszystkie komentarze",
+    "cells_one": "{{count}} komórka",
+    "cells_few": "{{count}} komórki",
+    "cells_many": "{{count}} komórek",
+    "databaseStats": "Statystyki bazy danych",
+    "dataFreshness": "Aktualność danych",
+    "freshnessFresh": "Aktualne",
+    "freshnessStale": "Wymaga aktualizacji",
+    "unknownAuthor": "Nieznany",
+    "noCommentsToModerate": "Brak komentarzy do moderacji",
+    "openImportPage": "Otwórz stronę importu",
+    "importSteps": {
+      "stations": "Stacje",
+      "radiolines": "Radiolinie",
+      "permits": "Pozwolenia",
+      "prune_deleted_entries": "Czyszczenie usuniętych",
+      "prune_associations": "Czyszczenie powiązań",
+      "cleanup_orphaned_uke_locations": "Czyszczenie osieroconych",
+      "associate": "Powiązanie",
+      "cleanup": "Czyszczenie",
+      "snapshot": "Snapshot"
+    }
   },
   "comments": {
     "table": {

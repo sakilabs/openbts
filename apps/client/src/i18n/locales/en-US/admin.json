@@ -1,6 +1,7 @@
 {
   "breadcrumbs": {
     "admin": "Admin",
+    "dashboard": "Dashboard",
     "stations": "Stations",
     "editStation": "Edit Station",
     "submissions": "Submissions",
@@ -13,6 +14,41 @@
     "ukePermits": "Unassigned UKE Permits",
     "lists": "Lists",
     "comments": "Comments"
+  },
+  "dashboard": {
+    "stats": {
+      "cells": "Cells",
+      "ukePermits": "UKE Permits"
+    },
+    "thisWeek": "this week",
+    "editorNotes": "Notes",
+    "toReview_one": "submission to review",
+    "toReview_other": "submissions to review",
+    "toModerate_one": "comment to moderate",
+    "toModerate_other": "comments to moderate",
+    "queueClear": "Queue is clear",
+    "allSubmissions": "All submissions",
+    "allComments": "All comments",
+    "cells_one": "{{count}} cell",
+    "cells_other": "{{count}} cells",
+    "databaseStats": "Database statistics",
+    "dataFreshness": "Data freshness",
+    "freshnessFresh": "Up to date",
+    "freshnessStale": "Needs update",
+    "unknownAuthor": "Unknown",
+    "noCommentsToModerate": "No comments to moderate",
+    "openImportPage": "Open import page",
+    "importSteps": {
+      "stations": "Stations",
+      "radiolines": "Radiolines",
+      "permits": "Permits",
+      "prune_deleted_entries": "Prune deleted",
+      "prune_associations": "Prune associations",
+      "cleanup_orphaned_uke_locations": "Cleanup orphaned",
+      "associate": "Associate",
+      "cleanup": "Cleanup",
+      "snapshot": "Snapshot"
+    }
   },
   "comments": {
     "table": {

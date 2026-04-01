@@ -5,6 +5,7 @@ import {
   AirportTowerIcon,
   AnalyticsUpIcon,
   DatabaseIcon,
+  DashboardSquare01Icon,
   Delete02Icon,
   Download04Icon,
   FileAttachmentIcon,
@@ -96,6 +97,7 @@ const adminNavConfig = [
     url: "#",
     icon: SecurityLockIcon,
     items: [
+      { titleKey: "items.dashboard", url: "/admin", allowedRoles: ["admin", "editor"], icon: DashboardSquare01Icon },
       { titleKey: "items.users", url: "/admin/users", allowedRoles: ["admin"], icon: UserGroupIcon },
       { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor"], icon: AirportTowerIcon },
       { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor"], icon: Location01Icon },

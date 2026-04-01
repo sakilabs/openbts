@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type Dispatch, type SetStateAction } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { RAT_ORDER, getSharedDetailFields } from "../rat";
@@ -50,27 +50,49 @@ export function useCellDrafts<T extends CellDraftBase>({
     return map;
   }, [allBands]);
 
+  const sortedOnce = useRef(false);
+
+  useEffect(() => {
+    if (!sortCellsByRat || sortedOnce.current || bandValueMap.size === 0) return;
+    sortedOnce.current = true;
+    setCells((prev) =>
+      [...prev].sort((a, b) => {
+        const bandA = bandValueMap.get(a.band_id) ?? 0;
+        const bandB = bandValueMap.get(b.band_id) ?? 0;
+        if (bandA !== bandB) return bandA - bandB;
+        let clidA = 0;
+        let clidB = 0;
+        switch (a.rat) {
+          case "GSM":
+            clidA = (a.details.cid as number) ?? 0;
+            clidB = (b.details.cid as number) ?? 0;
+            break;
+          case "UMTS":
+            clidA = (a.details.cid_long as number) ?? 0;
+            clidB = (b.details.cid_long as number) ?? 0;
+            break;
+          case "LTE":
+            clidA = (a.details.ecid as number) ?? 0;
+            clidB = (b.details.ecid as number) ?? 0;
+            break;
+          case "NR":
+            clidA = (a.details.nci as number) ?? 0;
+            clidB = (b.details.nci as number) ?? 0;
+            break;
+        }
+        return clidA - clidB;
+      }),
+    );
+  }, [bandValueMap, sortCellsByRat]);
+
   const cellsByRat = useMemo(() => {
     const grouped: Record<string, T[]> = {};
     for (const cell of cells) {
       if (!grouped[cell.rat]) grouped[cell.rat] = [];
       grouped[cell.rat].push(cell);
     }
-    if (!sortCellsByRat) return grouped;
-
-    for (const rat of Object.keys(grouped)) {
-      grouped[rat].sort((a, b) => {
-        const bandA = bandValueMap.get(a.band_id) ?? 0;
-        const bandB = bandValueMap.get(b.band_id) ?? 0;
-        if (bandA !== bandB) return bandA - bandB;
-        const clidKey = rat === "GSM" || rat === "UMTS" ? "cid" : "clid";
-        const clidA = (a.details[clidKey] as number) ?? 0;
-        const clidB = (b.details[clidKey] as number) ?? 0;
-        return clidA - clidB;
-      });
-    }
     return grouped;
-  }, [cells, bandValueMap, sortCellsByRat]);
+  }, [cells]);
 
   const visibleRats = useMemo(() => RAT_ORDER.filter((r) => enabledRats.includes(r)), [enabledRats]);
 

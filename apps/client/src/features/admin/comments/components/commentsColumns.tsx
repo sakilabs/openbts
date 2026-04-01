@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CheckmarkCircle02Icon, Delete02Icon, Edit01Icon, Sorting05Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { CheckmarkCircle02Icon, Delete02Icon, Edit01Icon, Sorting05Icon } from "@hugeicons/core-free-icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,9 +69,7 @@ export function createCommentsColumns({
           <div className="flex items-center gap-2">
             <Avatar className="size-7 shrink-0">
               {author?.image && <AvatarImage src={resolveAvatarUrl(author.image)} alt={author.name} />}
-              <AvatarFallback>
-                <HugeiconsIcon icon={UserIcon} className="size-3.5" />
-              </AvatarFallback>
+              <AvatarFallback className="text-[9px]">{author?.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{author?.name ?? `#${row.original.user_id}`}</p>
