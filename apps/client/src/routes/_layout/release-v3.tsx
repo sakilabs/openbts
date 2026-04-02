@@ -38,11 +38,19 @@ Poniżej lista najważniejszych zmian i nowości w serwisie BTSearch v3. Lista j
 
 ## Sprytne skróty klawiszowe
 
-- Kliknij prawym przyciskiem myszki na dowolnej lokalizacji (lub w dowolnym punkcie mapy, jeśli ta opcja została włączona w preferencjach), aby zmierzyć odległość z punktu A do B.
-- W trakcie pomiaru klawiszem "C" włącz / wyłącz okrąg pomiaru promienia.
-- Zachowaj bieżący pomiar klawiszem "Spacja".
-- Zakończ pomiar i wyczyść wcześniej zachowane pomiary klawiszem "Esc".
-- Za pomocą klawisza "F" otwórz / zamknij panel filtrowania danych na mapie.
+- Prawy przycisk myszki - rozpoczęcie pomiaru odległości od stacji / pozwolenia (lub do dowolnego punktu na mapie, jeśli ta opcja została włączona w preferencjach)
+    - Klawisz \`C\` - w trakcie pomiaru włącz / wyłącz okrąg pomiaru promienia
+    - Klawisz \`Spacja\` - zachowaj bieżący pomiar (wówczas można rozpocząć kolejny)
+    - Klawisz \`Esc\` - zakończ pomiar odległości i wyczyść wcześniej zachowane pomiary
+- Klawisz \`F\` - otwórz / zamknij panel filtrowania danych na mapie.
+- Skrót \`Shift+F\` - wyczyść wszystkie filtry.
+- Klawisz \`S\` - włącz / wyłącz warstwę Stacje.
+- Klawisz \`R\` - włącz / wyłącz warstwę Radiolinii.
+- Klawisz \`H\` - włącz / wyłącz warstwę Heatmap.
+- Klawisz \`A\` - włącz / wyłącz warstwę Azymuty.
+- Klawisz \`Z\` - przełącz źródło danych (baza BTSearch / pozwolenia UKE).
+- Klawisz \`N\` - włącz / wyłącz wyświetlanie ostatnich aktualizacji w bazie.
+- Klawisze \`1\` / \`2\` / \`3\` / \`4\` - włącz / wyłącz filtr głównych operatorów: Orange / Play / Plus / T-Mobile.
 
 ## Rejestracja użytkowników i edycja danych w bazie BTSearch
 
