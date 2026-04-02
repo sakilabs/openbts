@@ -5,6 +5,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Band column in the cell table now shows a tooltip with the calculated downlink frequency (e.g. `1805.0 MHz`) and standard band name (e.g. `B3`, `Band I`, `n78`) when ARFCN data is available
+- Band selector in the cell editor now shows the standard band name next to the frequency value (e.g. `1800 (B3)`) in both the trigger and the dropdown
 - `POST /search` now supports `relevance` as a `sortBy` option (and uses it by default). Results are ordered by match quality instead of `updatedAt`
 - Search input filter chips can now be navigated and deleted with the keyboard (Arrow Left/Right to select, Backspace/Delete to remove)
 - Added `Shift+F` keyboard shortcut to clear all map filters

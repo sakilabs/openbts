@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { cn } from "@/lib/utils";
 import { isRecent } from "@/lib/dateUtils";
 import { RAT_ICONS } from "../utils";
+import { calcExactFrequency, getBandName } from "../frequencyCalc";
 
 type CellTableProps = {
   rat: string;
@@ -211,11 +212,31 @@ export function CellTable({ rat, cells }: CellTableProps) {
             <tbody>
               {cells.map((cell) => {
                 const isNew = isRecent(cell.createdAt);
+                const arfcnForCalc =
+                  rat === "UMTS" ? cell.details?.arfcn : rat === "LTE" ? cell.details?.earfcn : rat === "NR" ? cell.details?.arfcn : null;
+                const freqInfo = calcExactFrequency(rat, Number(cell.band.value), arfcnForCalc, cell.band.duplex);
+                const bandName = freqInfo?.bandName ?? getBandName(rat, Number(cell.band.value), cell.band.duplex);
+                const hasTooltip = freqInfo || bandName;
+                const bandLabel = Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : cell.band.value;
                 return (
                   <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20")}>
                     <td className={cn("px-4 py-2 font-mono", isNew && "border-l-2 border-l-green-500")}>
                       <div className="flex items-center gap-1.5 whitespace-nowrap">
-                        <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : cell.band.value}</span>
+                        {hasTooltip ? (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+                                {bandLabel}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              {freqInfo?.frequency && <span>{freqInfo.frequency}</span>}
+                              {bandName && (freqInfo?.frequency ? <span className="ml-1.5 opacity-75">({bandName})</span> : <span>{bandName}</span>)}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span>{bandLabel}</span>
+                        )}
                         {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
                             {cell.details.type.toUpperCase()}

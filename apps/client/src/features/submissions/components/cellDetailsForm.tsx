@@ -17,6 +17,7 @@ import type { Band } from "@/types/station";
 
 import { CellDetailsFields } from "@/features/admin/cells/cellDetailsFields";
 import { useBandSelection } from "@/features/admin/cells/hooks/useBandSelection";
+import { getBandName } from "@/features/station-details/frequencyCalc";
 import { useCellDetailsForm } from "./hooks/useCellDetailsForm";
 import { CollapsibleHeader } from "./subcomponents/CollapsibleHeader";
 import { CellsTableHeaders } from "./subcomponents/CellsTableHeaders";
@@ -192,6 +193,7 @@ const CellRow = memo(function CellRow({
 
   const isDeleted = diffStatus === "deleted";
   const deletedCellClass = isDeleted ? "opacity-50" : "";
+  const selectedBandName = bandValue ? getBandName(rat, bandValue, duplex) : null;
 
   const actionButton = onRestore ? (
     <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-yellow-600 hover:text-yellow-500">
@@ -218,14 +220,27 @@ const CellRow = memo(function CellRow({
           onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}
         >
           <SelectTrigger className={`h-7 w-24 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
-            <SelectValue>{bandValue ? bandValue : t("common:placeholder.selectBand")}</SelectValue>
+            <SelectValue>
+              {bandValue ? (
+                <>
+                  {bandValue}
+                  {selectedBandName ? ` (${selectedBandName})` : ""}
+                </>
+              ) : (
+                t("common:placeholder.selectBand")
+              )}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {uniqueBandValues.map((value) => (
-              <SelectItem key={value} value={value.toString()}>
-                {value}
-              </SelectItem>
-            ))}
+            {uniqueBandValues.map((value) => {
+              const name = getBandName(rat, value);
+              return (
+                <SelectItem key={value} value={value.toString()}>
+                  {value}
+                  {name ? <span className="opacity-75">({name})</span> : null}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </td>

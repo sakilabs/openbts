@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
@@ -116,7 +116,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       sql`date_trunc('month', ${statsSnapshots.snapshot_date})`,
       statsSnapshots.operator_id,
       statsSnapshots.band_id,
-      desc(statsSnapshots.snapshot_date),
+      statsSnapshots.snapshot_date,
     );
 
   const response = { data: mapRows(rows) };
