@@ -21,6 +21,7 @@ import { parseFilters } from "../../filters.js";
 import { useSearchState } from "../../hooks/useSearchState.js";
 import { useFilterHandlers } from "../../hooks/useFilterHandlers.js";
 import { useIsMobile } from "@/hooks/useMobile.js";
+import { usePreferences } from "@/hooks/usePreferences.js";
 
 import type { Station, StationFilters, StationSource } from "@/types/station.js";
 
@@ -75,6 +76,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   const filterPanelRef = useRef<HTMLFieldSetElement>(null);
   const isMobile = useIsMobile();
 
+  const { preferences, updatePreferences } = usePreferences();
   const mapFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map")), []);
 
   const {
@@ -188,20 +190,68 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     setShowFilters((prev) => !prev);
   }
 
+  function handleFilterPanelBlur(e: React.FocusEvent) {
+    if (!preferences.hideFiltersOnMapClick) return;
+    const relatedTarget = e.relatedTarget as Node | null;
+    const isInsidePanel = filterPanelRef.current?.contains(relatedTarget);
+    const isToggleButton = (relatedTarget as Element)?.closest("[data-filter-toggle]");
+    if (!isInsidePanel && !isToggleButton) {
+      setShowFilters(false);
+    }
+  }
+
   useEffect(() => {
+    const OPERATOR_KEYBINDS: Record<string, number> = { "1": 26003, "2": 26006, "3": 26001, "4": 26002 };
+
     function onKeyDown(e: globalThis.KeyboardEvent) {
-      if (e.key.toLowerCase() === "f" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+      const key = e.key.toLowerCase();
+
+      if (key === "f") {
         e.preventDefault();
         if (e.shiftKey) handleClearFilters();
         else {
           (document.activeElement as HTMLElement)?.blur();
           setShowFilters((prev) => !prev);
         }
+        return;
+      }
+
+      switch (key) {
+        case "s":
+          e.preventDefault();
+          onFiltersChange({ ...filters, showStations: !filters.showStations });
+          break;
+        case "r":
+          e.preventDefault();
+          onFiltersChange({ ...filters, showRadiolines: !filters.showRadiolines });
+          break;
+        case "a":
+          e.preventDefault();
+          updatePreferences({ showAzimuths: !preferences.showAzimuths });
+          break;
+        case "h":
+          e.preventDefault();
+          onToggleHeatmap?.();
+          break;
+        case "z":
+          e.preventDefault();
+          onFiltersChange({ ...filters, source: filters.source === "uke" ? "internal" : "uke" });
+          break;
+        case "n":
+          e.preventDefault();
+          onFiltersChange({ ...filters, recentDays: filters.recentDays === null ? 30 : null });
+          break;
+        default:
+          if (e.key in OPERATOR_KEYBINDS) {
+            e.preventDefault();
+            handleToggleOperator(OPERATOR_KEYBINDS[e.key]);
+          }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleClearFilters]);
+  }, [handleClearFilters, filters, onFiltersChange, onToggleHeatmap, handleToggleOperator, preferences.showAzimuths, updatePreferences]);
 
   const handleSourceChange = useCallback((source: StationSource) => onFiltersChange({ ...filters, source }), [filters, onFiltersChange]);
 
@@ -259,7 +309,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         )}
 
         {showFilters && !isMobile && (
-          <fieldset ref={filterPanelRef} tabIndex={-1}>
+          <fieldset ref={filterPanelRef} tabIndex={-1} onBlur={handleFilterPanelBlur}>
             <FilterPanel
               filters={filters}
               operators={operators}

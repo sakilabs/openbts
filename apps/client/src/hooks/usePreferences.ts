@@ -19,6 +19,7 @@ export interface UserPreferences {
   mapMeasureCircle: boolean;
   showStationPhotoPanel: boolean;
   showAzimuths: boolean;
+  hideFiltersOnMapClick: boolean;
   azimuthsMinZoom: number;
   azimuthLineLength: number;
   cartoVariant: CartoVariant;
@@ -39,6 +40,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapMeasureCircle: false,
   showStationPhotoPanel: true,
   showAzimuths: false,
+  hideFiltersOnMapClick: false,
   azimuthsMinZoom: 14,
   azimuthLineLength: 200,
   cartoVariant: "light",

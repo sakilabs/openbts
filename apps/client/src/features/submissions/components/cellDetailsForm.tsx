@@ -218,12 +218,12 @@ const CellRow = memo(function CellRow({
           onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}
         >
           <SelectTrigger className={`h-7 w-24 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
-            <SelectValue>{bandValue ? `${bandValue} MHz` : t("common:placeholder.selectBand")}</SelectValue>
+            <SelectValue>{bandValue ? bandValue : t("common:placeholder.selectBand")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {uniqueBandValues.map((value) => (
               <SelectItem key={value} value={value.toString()}>
-                {value} MHz
+                {value}
               </SelectItem>
             ))}
           </SelectContent>

@@ -69,7 +69,7 @@
     "radiolineOperators_one": "{{count, number}} radioline operator",
     "radiolineOperators_others": "{{count, number}} radioline operators",
     "searchRadiolineOperators": "Search radioline operators...",
-    "toggleHint": "Tip: Press <kbd>F</kbd> to toggle this panel, <kbd>Shift+F</kbd> to clear all filters"
+    "toggleHint": "Tip: <kbd>F</kbd> panel, <kbd>Shift+F</kbd> clear filters, <kbd>S</kbd> stations, <kbd>R</kbd> radiolines, <kbd>A</kbd> azimuths, <kbd>H</kbd> heatmap, <kbd>Z</kbd> source, <kbd>N</kbd> recent, <kbd>1-4</kbd> operators"
   },
   "unknownOperator": "Unknown Operator",
   "radiolines": {

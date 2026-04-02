@@ -215,7 +215,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                   <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20")}>
                     <td className={cn("px-4 py-2 font-mono", isNew && "border-l-2 border-l-green-500")}>
                       <div className="flex items-center gap-1.5 whitespace-nowrap">
-                        <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : `${cell.band.value} MHz`}</span>
+                        <span>{Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : cell.band.value}</span>
                         {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
                             {cell.details.type.toUpperCase()}

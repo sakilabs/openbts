@@ -401,7 +401,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
               {t("diff.was")}
             </span>
-            <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value} MHz</span>
+            <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value}</span>
           </td>
           {targetCell.rat !== "GSM" && <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>}
           <SubmissionDiffDetailCells details={details} rat={targetCell.rat} changedKeys={changedKeys} />

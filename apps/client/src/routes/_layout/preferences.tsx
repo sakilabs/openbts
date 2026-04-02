@@ -182,6 +182,17 @@ const GROUPS: PreferenceGroup[] = [
       {
         items: [
           {
+            type: "checkbox",
+            key: "hideFiltersOnMapClick",
+            labelKey: "preferences.hideFiltersOnMapClick",
+            hintKey: "preferences.hideFiltersOnMapClickHint",
+            itemLabelKey: "preferences.hideFiltersOnMapClickLabel",
+          },
+        ],
+      },
+      {
+        items: [
+          {
             type: "radio",
             key: "mapPointStyle",
             labelKey: "preferences.mapPointStyle",

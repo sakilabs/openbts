@@ -342,7 +342,7 @@ export function StationsFilters({
                 <ComboboxEmpty>{t("common:placeholder.noBandsFound")}</ComboboxEmpty>
                 {uniqueBandValues.map((band) => (
                   <ComboboxItem key={band} value={band}>
-                    <span className="font-mono">{band === 0 ? t("stations:cells.unknownBand") : `${band} MHz`}</span>
+                    <span className="font-mono">{band === 0 ? t("stations:cells.unknownBand") : band}</span>
                   </ComboboxItem>
                 ))}
               </ComboboxList>

@@ -56,8 +56,6 @@ async function run() {
 
   // key: "raw_station_id:operator_id" → new stations.id[]
   const stationLookup = new Map<string, number[]>();
-  // key: raw numeric station_id → new stations.id[] (T- and O- prefixed variants, any operator)
-  const variantLookup = new Map<string, number[]>();
   const addToMap = (map: Map<string, number[]>, key: string, id: number) => {
     const existing = map.get(key);
     if (existing) existing.push(id);
@@ -68,7 +66,6 @@ async function run() {
     const prefixMatch = s.station_id.match(/^[TO]-(.+)$/);
     if (prefixMatch?.[1]) {
       addToMap(stationLookup, `${prefixMatch[1]}:${s.operator_id}`, s.id);
-      addToMap(variantLookup, prefixMatch[1], s.id);
     }
   }
   console.log(`Loaded ${allStations.length} stations into lookup map`);
@@ -109,9 +106,7 @@ async function run() {
       }
       const operatorId = operatorNameToId.get(operatorName)!;
       const key = `${row.mno_id}:${operatorId}`;
-      const baseIds = stationLookup.get(key) ?? [];
-      const variantIds = variantLookup.get(String(row.mno_id)) ?? [];
-      const matchedIds = [...new Set([...baseIds, ...variantIds])];
+      const matchedIds = stationLookup.get(key) ?? [];
 
       if (!matchedIds.length) {
         notFound++;

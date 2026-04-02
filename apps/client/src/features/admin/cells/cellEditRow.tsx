@@ -92,12 +92,12 @@ export const CellEditRow = memo(function CellEditRow({
           disabled={disabled}
         >
           <SelectTrigger className="h-7 w-24 text-sm">
-            <SelectValue>{bandValue === null ? "-" : bandValue === 0 ? t("stations:cells.unknownBand") : `${bandValue} MHz`}</SelectValue>
+            <SelectValue>{bandValue === null ? "-" : bandValue === 0 ? t("stations:cells.unknownBand") : bandValue}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {uniqueBandValues.map((v) => (
               <SelectItem key={v} value={v.toString()}>
-                {v === 0 ? t("stations:cells.unknownBand") : `${v} MHz`}
+                {v === 0 ? t("stations:cells.unknownBand") : v}
               </SelectItem>
             ))}
           </SelectContent>

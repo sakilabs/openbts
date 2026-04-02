@@ -202,11 +202,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                     <td className={cn("px-4 py-2.5 font-mono font-medium", isNew && "border-l-2 border-l-green-500")}>
                       <div className="flex items-center gap-1.5">
                         <span>
-                          {permit.band?.value
-                            ? Number(permit.band.value) === 0
-                              ? t("stations:cells.unknownBand")
-                              : `${permit.band.value} MHz`
-                            : "-"}
+                          {permit.band?.value ? (Number(permit.band.value) === 0 ? t("stations:cells.unknownBand") : permit.band.value) : "-"}
                         </span>
                         {permit.band?.variant === "railway" && (
                           <Tooltip>
