@@ -7,6 +7,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - `POST /search` now supports `relevance` as a `sortBy` option (and uses it by default). Results are ordered by match quality instead of `updatedAt`
 - Search input filter chips can now be navigated and deleted with the keyboard (Arrow Left/Right to select, Backspace/Delete to remove)
+- Added `Shift+F` keyboard shortcut to clear all map filters
 
 ### 🩹 Fixes
 

@@ -69,7 +69,7 @@
     "radiolineOperators_one": "{{count, number}} radioline operator",
     "radiolineOperators_others": "{{count, number}} radioline operators",
     "searchRadiolineOperators": "Search radioline operators...",
-    "toggleHint": "Tip: Press <kbd>F</kbd> to toggle this panel"
+    "toggleHint": "Tip: Press <kbd>F</kbd> to toggle this panel, <kbd>Shift+F</kbd> to clear all filters"
   },
   "unknownOperator": "Unknown Operator",
   "radiolines": {

@@ -192,13 +192,16 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     function onKeyDown(e: globalThis.KeyboardEvent) {
       if (e.key.toLowerCase() === "f" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         e.preventDefault();
-        (document.activeElement as HTMLElement)?.blur();
-        setShowFilters((prev) => !prev);
+        if (e.shiftKey) handleClearFilters();
+        else {
+          (document.activeElement as HTMLElement)?.blur();
+          setShowFilters((prev) => !prev);
+        }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [handleClearFilters]);
 
   const handleSourceChange = useCallback((source: StationSource) => onFiltersChange({ ...filters, source }), [filters, onFiltersChange]);
 

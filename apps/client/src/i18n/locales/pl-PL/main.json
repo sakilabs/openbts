@@ -73,7 +73,7 @@
     "radiolineOperators_many": "{{count, number}} operatorów radiolinii",
     "radiolineOperators_other": "{{count, number}} operatorów radiolinii",
     "searchRadiolineOperators": "Szukaj operatorów radiolinii...",
-    "toggleHint": "Tip: Naciśnij <kbd>F</kbd> aby pokazać lub schować ten panel"
+    "toggleHint": "Tip: Naciśnij <kbd>F</kbd> aby pokazać lub schować ten panel, <kbd>Shift+F</kbd> aby wyczyścić filtry"
   },
   "unknownOperator": "Nieznany operator",
   "radiolines": {

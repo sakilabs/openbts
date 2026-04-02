@@ -553,7 +553,7 @@ export function FilterPanel({
           <Trans
             t={t}
             i18nKey="filters.toggleHint"
-            components={{ kbd: <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border border-border" /> }}
+            components={{ kbd: <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border border-border dark:text-foreground/60" /> }}
           />
         </p>
       </div>
