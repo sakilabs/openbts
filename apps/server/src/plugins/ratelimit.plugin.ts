@@ -31,6 +31,10 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
   fastify.decorate("rateLimitService", rateLimitService);
   fastify.decorate("quotaService", quotaService);
   fastify.addHook("preHandler", async (req: FastifyRequest, res: FastifyReply) => {
+    const netMonsterUserAgent = process.env.NTM_USERAGENT || null;
+    const isNetMonsterExport = netMonsterUserAgent && req.headers["user-agent"]?.startsWith(netMonsterUserAgent) && req.url.includes("/cells/export");
+    if (isNetMonsterExport) return;
+
     const result = await rateLimitService.processRequest(req);
     if (!result) {
       throw new ErrorResponse("TOO_MANY_REQUESTS");
