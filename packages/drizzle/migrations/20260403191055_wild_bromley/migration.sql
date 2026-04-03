@@ -425,7 +425,7 @@ CREATE TABLE "push_subscriptions" (
 );
 --> statement-breakpoint
 CREATE TABLE "station_comments" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "station_comments_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"id" uuid PRIMARY KEY DEFAULT uuidv7(),
 	"station_id" integer NOT NULL,
 	"user_id" uuid NOT NULL,
 	"attachments" jsonb,
