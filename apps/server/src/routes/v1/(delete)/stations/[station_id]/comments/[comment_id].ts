@@ -19,7 +19,7 @@ const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 const schemaRoute = {
   params: z.object({
     station_id: z.coerce.number<number>(),
-    comment_id: z.coerce.number<number>(),
+    comment_id: z.uuid(),
   }),
 };
 type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
@@ -27,7 +27,7 @@ type ReqParams = { Params: z.infer<typeof schemaRoute.params> };
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyResponse>) {
   const { station_id, comment_id } = req.params;
 
-  if (Number.isNaN(station_id) || Number.isNaN(comment_id)) throw new ErrorResponse("INVALID_QUERY");
+  if (Number.isNaN(station_id)) throw new ErrorResponse("INVALID_QUERY");
 
   const userId = req.userSession?.user.id;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
@@ -63,9 +63,9 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
       {
         action: "station_comments.delete",
         table_name: "station_comments",
-        record_id: comment_id,
         old_values: comment,
         new_values: null,
+        metadata: { comment_id },
       },
       req,
     );

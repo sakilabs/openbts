@@ -53,7 +53,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (commentId: number) => {
+    mutationFn: async (commentId: string) => {
       const response = await fetch(`${API_BASE}/stations/${stationId}/comments/${commentId}`, {
         method: "DELETE",
         credentials: "include",
@@ -67,7 +67,7 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
     onError: (error) => showApiError(error),
   });
 
-  const [lightbox, setLightbox] = useState<{ commentId: number; index: number } | null>(null);
+  const [lightbox, setLightbox] = useState<{ commentId: string; index: number } | null>(null);
 
   const lightboxComment = useMemo(() => (lightbox ? comments.find((c) => c.id === lightbox.commentId) : null), [lightbox, comments]);
   const lightboxPhotos: LightboxPhoto[] = useMemo(

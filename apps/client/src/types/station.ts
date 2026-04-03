@@ -257,9 +257,9 @@ export type CommentAttachment = {
 };
 
 export type StationComment = {
-  id: number;
+  id: string;
   station_id: number;
-  author_id: number;
+  author_id: string;
   content: string;
   createdAt: string;
   updatedAt: string;

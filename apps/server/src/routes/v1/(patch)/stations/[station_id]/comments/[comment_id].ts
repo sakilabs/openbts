@@ -17,7 +17,7 @@ const stationCommentSelectSchema = createSelectSchema(stationComments);
 const schemaRoute = {
   params: z.object({
     station_id: z.coerce.number<number>(),
-    comment_id: z.coerce.number<number>(),
+    comment_id: z.uuid(),
   }),
   body: z
     .object({
@@ -72,9 +72,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     {
       action: "station_comments.update",
       table_name: "station_comments",
-      record_id: comment_id,
       old_values: comment,
       new_values: updated,
+      metadata: { comment_id },
     },
     req,
   );

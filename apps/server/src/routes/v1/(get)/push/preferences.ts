@@ -8,7 +8,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const schemaRoute = {
-  querystring: z.object({ id: z.string().uuid() }),
+  querystring: z.object({ id: z.uuid() }),
   response: {
     200: z.object({
       data: z.object({

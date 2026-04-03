@@ -276,7 +276,10 @@ export const userLists = pgTable(
 export const stationComments = pgTable(
   "station_comments",
   {
-    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`)
+      .notNull(),
     station_id: integer("station_id")
       .references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),

@@ -31,7 +31,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
   const { t: tAdmin } = useTranslation("admin");
   const queryClient = useQueryClient();
 
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["station-comments", stationId],
@@ -42,7 +42,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (commentId: number) => {
+    mutationFn: async (commentId: string) => {
       const response = await fetch(`${API_BASE}/stations/${stationId}/comments/${commentId}`, {
         method: "DELETE",
         credentials: "include",

@@ -10,7 +10,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const prefsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   ukeUpdates: z.boolean().optional(),
   submissionUpdates: z.boolean().optional(),
   newSubmission: z.boolean().optional(),
