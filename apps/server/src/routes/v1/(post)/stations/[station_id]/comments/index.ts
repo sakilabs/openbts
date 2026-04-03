@@ -147,9 +147,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       {
         action: "station_comments.create",
         table_name: "station_comments",
-        record_id: newComment.id,
+        record_id: null,
         old_values: null,
         new_values: newComment,
+        metadata: { comment_id: newComment.id },
       },
       req,
     );
