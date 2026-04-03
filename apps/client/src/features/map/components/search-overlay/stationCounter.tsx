@@ -110,11 +110,19 @@ export function StationCounter({
         </Tooltip>
       )}
       <div
-        className="bg-muted/30 px-2 py-1.5 flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors"
+        className={cn(
+          "px-2 py-1.5 flex items-center gap-1.5 cursor-pointer transition-colors",
+          source === "uke" ? "bg-violet-500/10 hover:bg-violet-500/20" : "bg-emerald-500/10 hover:bg-emerald-500/20",
+        )}
         onClick={() => onSourceChange(source === "internal" ? "uke" : "internal")}
       >
         <Tooltip>
-          <TooltipTrigger className="text-[8px] uppercase font-bold text-muted-foreground leading-none whitespace-nowrap">
+          <TooltipTrigger
+            className={cn(
+              "text-[8px] uppercase font-bold leading-none whitespace-nowrap",
+              source === "uke" ? "text-violet-600 dark:text-violet-400" : "text-emerald-700 dark:text-emerald-400",
+            )}
+          >
             {sourceItems.find((s) => s.value === source)?.label}
           </TooltipTrigger>
           <TooltipContent side="bottom">
@@ -127,7 +135,12 @@ export function StationCounter({
           </TooltipContent>
         </Tooltip>
         <div className="w-px h-2 bg-border/60" />
-        <span className="text-[8px] uppercase font-bold text-blue-600/80 dark:text-blue-400/80 leading-none whitespace-nowrap">
+        <span
+          className={cn(
+            "text-[8px] uppercase font-bold leading-none whitespace-nowrap",
+            source === "uke" ? "text-violet-600 dark:text-violet-400" : "text-emerald-700 dark:text-emerald-400",
+          )}
+        >
           {t("overlay.zoom")} {zoom?.toFixed(1) || "-"}
         </span>
       </div>

@@ -37,7 +37,9 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
   if (!authHeader) {
     const user = await getCurrentUser(req);
     const allowGuest = route?.config?.allowGuestAccess && !settings.enforceAuthForAllRoutes;
-    if (!user && !allowGuest) throw new ErrorResponse("UNAUTHORIZED");
+    const netMonsterUserAgent = process.env.NTM_USERAGENT || null;
+    const isNetMonsterExport = netMonsterUserAgent && req.headers["user-agent"]?.startsWith(netMonsterUserAgent) && url.includes("/cells/export");
+    if (!user && !allowGuest && !isNetMonsterExport) throw new ErrorResponse("UNAUTHORIZED");
 
     req.userSession = user;
 

@@ -86,7 +86,14 @@ export function MobileStatsPanel({
               )}
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-[7px] uppercase font-bold text-primary border-b border-primary/20 leading-none">
+              <span
+                className={cn(
+                  "text-[7px] uppercase font-bold border-b leading-none",
+                  source === "uke"
+                    ? "text-violet-600 dark:text-violet-400 border-violet-500/30"
+                    : "text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+                )}
+              >
                 {source === "uke" ? "UKE" : "INT"}
               </span>
               <span className="text-[7px] uppercase font-bold text-blue-600 dark:text-blue-400 border-b border-blue-500/20 leading-none">

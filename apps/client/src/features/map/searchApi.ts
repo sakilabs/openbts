@@ -33,8 +33,7 @@ export async function searchLocations(query: string): Promise<OSMResult[]> {
   try {
     const results = await forwardGeocode(query);
 
-    const isCity = (r: OSMResult) => r.addresstype === "place" || r.type === "place" || r.type === "locality";
-    return results.sort((a, b) => Number(isCity(b)) - Number(isCity(a))).slice(0, 5);
+    return results.slice(0, 5);
   } catch {
     return [];
   }

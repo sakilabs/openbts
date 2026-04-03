@@ -398,7 +398,11 @@ export function FilterPanel({
               <Button
                 key={src.id}
                 variant={filters.source === src.id ? "default" : "outline"}
-                className="flex-1"
+                className={cn(
+                  "flex-1",
+                  filters.source === src.id && src.id === "internal" && "bg-emerald-700 hover:bg-emerald-800 text-white",
+                  filters.source === src.id && src.id === "uke" && "bg-violet-600 hover:bg-violet-700 text-white",
+                )}
                 onClick={() => {
                   const newSource = src.id as StationSource;
                   const targetRatValues = new Set((newSource === "uke" ? UKE_RAT_OPTIONS : RAT_OPTIONS).map((r) => r.value as string));

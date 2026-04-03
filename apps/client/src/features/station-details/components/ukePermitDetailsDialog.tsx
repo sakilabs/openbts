@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Globe02Icon, Link01Icon, Location01Icon, Tag01Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, Globe02Icon, Location01Icon, Tag01Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { Link, useLocation } from "@tanstack/react-router";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
@@ -180,21 +180,23 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                   <span className="font-mono text-sm font-medium">{station_id}</span>
                   <div className="flex items-center gap-1">
                     <CopyButton text={station_id} />
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <a
-                            href={`https://si2pem.gov.pl/installations/?base_station=${station_id}&page_size=25`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center p-1 hover:bg-muted rounded transition-colors"
-                          />
-                        }
-                      >
-                        <HugeiconsIcon icon={Link01Icon} className="size-3.5 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
-                    </Tooltip>
+                    {station_id ? (
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <a
+                              href={`https://si2pem.gov.pl/installations/?base_station=${station_id}&page_size=25`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center size-5.5 hover:bg-muted rounded transition-colors cursor-pointer text-sm font-bold text-[#2e2e5a] dark:text-[#9898ce] leading-none shrink-0"
+                            />
+                          }
+                        >
+                          S
+                        </TooltipTrigger>
+                        <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
+                      </Tooltip>
+                    ) : null}
                   </div>
                 </div>
 

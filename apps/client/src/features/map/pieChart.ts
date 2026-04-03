@@ -81,36 +81,29 @@ function createPinImage(segments: { value: number; color: string }[]): ImageData
     cy = PIN_CY,
     r = PIN_R;
 
-  ctx.beginPath();
-  tracePinPath(ctx);
-  ctx.fillStyle = "#ffffff";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.45)";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
   const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.clip();
   let startAngle = -Math.PI / 2;
   for (const { value, color } of segments) {
     const endAngle = startAngle + (value / total) * Math.PI * 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.arc(cx, cy, r * 4, startAngle, endAngle);
     ctx.closePath();
     ctx.fillStyle = color;
     ctx.fill();
     startAngle = endAngle;
   }
-  ctx.restore();
+
+  ctx.globalCompositeOperation = "destination-in";
+  ctx.beginPath();
+  tracePinPath(ctx);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
 
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2.5;
+  tracePinPath(ctx);
+  ctx.strokeStyle = "rgba(0,0,0,0.45)";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   return ctx.getImageData(0, 0, PIN_W, PIN_H);

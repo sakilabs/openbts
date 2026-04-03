@@ -433,9 +433,9 @@ function StationDetailForm({
         localCells,
         deletedServerCellIds,
         originalStation: station,
-        networksId: networksId ?? undefined,
-        networksName: networksName || undefined,
-        mnoName: mnoName || undefined,
+        networksId: selectedOperator?.mnc !== 26006 ? (networksId ?? undefined) : undefined,
+        networksName: selectedOperator?.mnc !== 26006 ? networksName || undefined : undefined,
+        mnoName: selectedOperator?.mnc !== 26006 ? mnoName || undefined : undefined,
       },
       {
         onSuccess: async (result) => {

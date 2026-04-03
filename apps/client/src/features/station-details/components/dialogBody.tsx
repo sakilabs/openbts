@@ -205,7 +205,7 @@ export function StationDetailsBody({
                         <span className="text-sm font-mono font-medium">{station.station_id}</span>
                         <div className="flex items-center gap-1">
                           <CopyButton text={station.station_id || ""} />
-                          {station.station_id && (
+                          {station.station_id ? (
                             <Tooltip>
                               <TooltipTrigger
                                 render={
@@ -221,7 +221,7 @@ export function StationDetailsBody({
                               </TooltipTrigger>
                               <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
                             </Tooltip>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                       {station.extra_identificators && (

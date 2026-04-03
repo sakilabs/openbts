@@ -43,6 +43,7 @@ services:
       # AXIOM HQ logging
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts
+      - NTM_USERAGENT=
     volumes:
       - uploads-volume:/app/uploads
     depends_on:

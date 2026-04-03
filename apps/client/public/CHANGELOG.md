@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-03
+
+### 🚀 Enhancements
+
+- Map pin pie charts now fill the entire pin shape instead of being clipped to a circle
+- Data source filter buttons (Internal/UKE) now have distinct colors (emerald for Internal, violet for UKE) across the filter panel, station counter, and mobile stats panel
+- SI2PEM external link on station details and UKE permit dialogs is now conditionally rendered and uses a styled "S" button
+
+### 🩹 Fixes
+
+- Fixed geocoding search results being incorrectly sorted by type (cities first) instead of Mapbox relevance order, which caused address results to be hidden
+- Extra identifiers (networks ID, networks name, MNO name) are no longer sent when saving a station with operator Play (MNC 26006)
+
 # 2026-04-02
 
 ### 🚀 Enhancements
