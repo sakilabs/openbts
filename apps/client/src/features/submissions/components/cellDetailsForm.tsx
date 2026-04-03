@@ -193,7 +193,6 @@ const CellRow = memo(function CellRow({
 
   const isDeleted = diffStatus === "deleted";
   const deletedCellClass = isDeleted ? "opacity-50" : "";
-  const selectedBandName = bandValue ? getBandName(rat, bandValue, duplex) : null;
 
   const actionButton = onRestore ? (
     <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-yellow-600 hover:text-yellow-500">
@@ -219,17 +218,8 @@ const CellRow = memo(function CellRow({
           value={bandValue?.toString() ?? ""}
           onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}
         >
-          <SelectTrigger className={`h-7 w-24 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
-            <SelectValue>
-              {bandValue ? (
-                <>
-                  {bandValue}
-                  {selectedBandName ? ` (${selectedBandName})` : ""}
-                </>
-              ) : (
-                t("common:placeholder.selectBand")
-              )}
-            </SelectValue>
+          <SelectTrigger className={`h-7 w-20 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
+            <SelectValue>{bandValue ? bandValue : t("common:placeholder.selectBand")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {uniqueBandValues.map((value) => {

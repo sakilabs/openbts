@@ -18,22 +18,22 @@ function calcUmtsFrequency(uarfcn: number): { freq: number; bandName: string } |
 
 type LTEBandDef = { name: string; fdlLow: number; noffsDl: number; range: [number, number] };
 const LTE_BANDS: LTEBandDef[] = [
-  { name: "B1", fdlLow: 2110, noffsDl: 0, range: [0, 599] },
-  { name: "B2", fdlLow: 1930, noffsDl: 600, range: [600, 1199] },
-  { name: "B3", fdlLow: 1805, noffsDl: 1200, range: [1200, 1949] },
-  { name: "B4", fdlLow: 2110, noffsDl: 1950, range: [1950, 2399] },
-  { name: "B5", fdlLow: 869, noffsDl: 2400, range: [2400, 2649] },
-  { name: "B6", fdlLow: 875, noffsDl: 2650, range: [2650, 2749] },
-  { name: "B7", fdlLow: 2620, noffsDl: 2750, range: [2750, 3449] },
-  { name: "B8", fdlLow: 925, noffsDl: 3450, range: [3450, 3799] },
-  { name: "B9", fdlLow: 1844.9, noffsDl: 3800, range: [3800, 4149] },
-  { name: "B20", fdlLow: 791, noffsDl: 6150, range: [6150, 6449] },
-  { name: "B28", fdlLow: 758, noffsDl: 9210, range: [9210, 9659] },
-  { name: "B38", fdlLow: 2570, noffsDl: 37750, range: [37750, 38249] },
-  { name: "B40", fdlLow: 1880, noffsDl: 38650, range: [38650, 39649] },
-  { name: "B41", fdlLow: 2496, noffsDl: 41590, range: [41590, 43589] },
-  { name: "B42", fdlLow: 3510, noffsDl: 42590, range: [42590, 43589] },
-  { name: "B43", fdlLow: 3600, noffsDl: 43590, range: [43590, 45589] },
+  { name: "b1", fdlLow: 2110, noffsDl: 0, range: [0, 599] },
+  { name: "b2", fdlLow: 1930, noffsDl: 600, range: [600, 1199] },
+  { name: "b3", fdlLow: 1805, noffsDl: 1200, range: [1200, 1949] },
+  { name: "b4", fdlLow: 2110, noffsDl: 1950, range: [1950, 2399] },
+  { name: "b5", fdlLow: 869, noffsDl: 2400, range: [2400, 2649] },
+  { name: "b6", fdlLow: 875, noffsDl: 2650, range: [2650, 2749] },
+  { name: "b7", fdlLow: 2620, noffsDl: 2750, range: [2750, 3449] },
+  { name: "b8", fdlLow: 925, noffsDl: 3450, range: [3450, 3799] },
+  { name: "b9", fdlLow: 1844.9, noffsDl: 3800, range: [3800, 4149] },
+  { name: "b20", fdlLow: 791, noffsDl: 6150, range: [6150, 6449] },
+  { name: "b28", fdlLow: 758, noffsDl: 9210, range: [9210, 9659] },
+  { name: "b38", fdlLow: 2570, noffsDl: 37750, range: [37750, 38249] },
+  { name: "b40", fdlLow: 1880, noffsDl: 38650, range: [38650, 39649] },
+  { name: "b41", fdlLow: 2496, noffsDl: 41590, range: [41590, 43589] },
+  { name: "b42", fdlLow: 3510, noffsDl: 42590, range: [42590, 43589] },
+  { name: "b43", fdlLow: 3600, noffsDl: 43590, range: [43590, 45589] },
 ];
 
 function calcLteFrequency(earfcn: number): { freq: number; bandName: string } | null {
@@ -81,16 +81,16 @@ function calcNrFrequency(nrarfcn: number): number | null {
 export type FrequencyInfo = { frequency: string | null; bandName: string | null };
 
 const LTE_BAND_NAMES: Record<number, string> = {
-  700: "B28",
-  800: "B20",
-  850: "B5",
-  900: "B8",
-  1800: "B3",
-  1900: "B2",
-  2100: "B1",
-  2600: "B7",
-  3500: "B42",
-  3600: "B43",
+  700: "b28",
+  800: "b20",
+  850: "b5",
+  900: "b8",
+  1800: "b3",
+  1900: "b2",
+  2100: "b1",
+  2600: "b7",
+  3500: "b42",
+  3600: "b43",
 };
 
 const UMTS_BAND_NAMES: Record<number, string> = {

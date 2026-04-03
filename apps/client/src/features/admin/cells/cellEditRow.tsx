@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
@@ -8,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Band } from "@/types/station";
 import { useBandSelection } from "./hooks/useBandSelection";
+import { getBandName } from "@/features/station-details/frequencyCalc";
 import { CellDetailsFields } from "./cellDetailsFields";
-import { useTranslation } from "react-i18next";
 import type { RAT_ORDER } from "./rat";
 
 export type CellDraftBase = {
@@ -91,15 +92,19 @@ export const CellEditRow = memo(function CellEditRow({
           onValueChange={(v) => handleBandValueChange(v ? Number.parseInt(v, 10) : null)}
           disabled={disabled}
         >
-          <SelectTrigger className="h-7 w-24 text-sm">
+          <SelectTrigger className="h-7 w-20 text-sm">
             <SelectValue>{bandValue === null ? "-" : bandValue === 0 ? t("stations:cells.unknownBand") : bandValue}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {uniqueBandValues.map((v) => (
-              <SelectItem key={v} value={v.toString()}>
-                {v === 0 ? t("stations:cells.unknownBand") : v}
-              </SelectItem>
-            ))}
+            {uniqueBandValues.map((v) => {
+              const name = v !== 0 ? getBandName(localCell.rat, v) : null;
+              return (
+                <SelectItem key={v} value={v.toString()}>
+                  {v === 0 ? t("stations:cells.unknownBand") : v}
+                  {name ? <span className="opacity-75">({name})</span> : null}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </td>
