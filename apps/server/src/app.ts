@@ -162,7 +162,8 @@ export default class App {
           }
 
           const hostname = new URL(origin).hostname;
-          if (hostname === "localhost" || hostname === "openbts.sakilabs.com" || hostname === "v3beta.btsearch.pl") {
+          const isLocalhost = process.env.NODE_ENV !== "production" && hostname === "localhost";
+          if (isLocalhost || hostname === "btsearch.pl") {
             cb(null, true);
             return;
           }

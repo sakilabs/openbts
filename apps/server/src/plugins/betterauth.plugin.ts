@@ -26,6 +26,8 @@ export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown
   return map;
 }
 
+const TRUSTED_ORIGIN = process.env.NODE_ENV === "production" ? "https://btsearch.pl" : "https://localhost";
+
 const DISALLOWED_CHARACTERS = [
   "@",
   "/",
@@ -238,7 +240,7 @@ export const auth = betterAuth({
       await redis.del(`auth:${key}`);
     },
   },
-  trustedOrigins: ["https://localhost", "https://openbts.sakilabs.com", "https://v3beta.btsearch.pl"],
+  trustedOrigins: [TRUSTED_ORIGIN],
   disabledPaths: ["/is-username-available"],
 });
 
