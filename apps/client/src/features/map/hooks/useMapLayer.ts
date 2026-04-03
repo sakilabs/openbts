@@ -92,7 +92,7 @@ const MARKER_SINGLE_LAYER_CONFIG: maplibregl.LayerSpecification = {
   filter: ["!", ["get", "isMultiOperator"]],
   layout: {
     "icon-image": ["concat", "mpin-", ["get", "color"]],
-    "icon-size": 1,
+    "icon-size": 0.85,
     "icon-allow-overlap": true,
     "icon-anchor": "bottom",
   },
@@ -105,7 +105,7 @@ const MARKER_MULTI_LAYER_CONFIG: maplibregl.LayerSpecification = {
   filter: ["get", "isMultiOperator"],
   layout: {
     "icon-image": ["concat", "m", ["get", "pieImageId"]],
-    "icon-size": 1,
+    "icon-size": 0.85,
     "icon-allow-overlap": true,
     "icon-anchor": "bottom",
   },

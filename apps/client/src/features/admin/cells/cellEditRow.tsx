@@ -56,9 +56,7 @@ export const CellEditRow = memo(function CellEditRow({
     const newBandId = findBandId(value, defaultDuplex);
     if (newBandId) {
       const patch: Partial<CellDraftBase> = { band_id: newBandId };
-      if (localCell.rat === "GSM" && value === 1800) {
-        patch.details = { ...localCell.details, e_gsm: false };
-      }
+      if (localCell.rat === "GSM" && value === 1800) patch.details = { ...localCell.details, e_gsm: false };
       onChange(localCell._localId, patch);
     }
   };
