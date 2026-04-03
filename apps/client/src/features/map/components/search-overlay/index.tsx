@@ -205,6 +205,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
     function onKeyDown(e: globalThis.KeyboardEvent) {
       if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+      if (e.ctrlKey || e.metaKey) return;
       const key = e.key.toLowerCase();
 
       if (key === "f") {
