@@ -184,7 +184,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sql`EXISTS (
         SELECT 1 FROM ${ukePermits}
         WHERE ${ukePermits.location_id} = ${locFields.id}
-        AND ${ukePermits.createdAt} >= ${cutoff.toISOString()})
+        AND ${ukePermits.createdAt} >= ${cutoff.toISOString()}
       )`);
     }
     return conditions;
