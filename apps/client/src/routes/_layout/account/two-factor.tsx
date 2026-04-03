@@ -88,7 +88,7 @@ function StepIndicator({ current }: { current: Step }) {
   const currentIdx = getStepIndex(current);
 
   return (
-    <div className="shrink-0 w-110">
+    <div className="hidden sm:block shrink-0 w-110">
       <Timeline orientation="horizontal" value={currentIdx + 1}>
         {STEPS.map((step, idx) => {
           const isDone = idx < currentIdx;
@@ -209,8 +209,8 @@ function ScanStep({
   const formattedSecret = secret.match(/.{1,4}/g)?.join(" ") ?? secret;
 
   return (
-    <div className="flex flex-1 gap-6 min-h-0">
-      <div className="flex-1 bg-card border rounded-2xl flex flex-col items-center justify-between py-12 px-10 gap-8">
+    <div className="flex flex-col lg:flex-row flex-1 gap-6 min-h-0">
+      <div className="flex-1 bg-card border rounded-2xl flex flex-col items-center justify-between py-8 lg:py-12 px-6 lg:px-10 gap-8">
         <div className="flex items-center gap-2 bg-muted rounded-lg px-3.5 py-2 text-muted-foreground">
           <HugeiconsIcon icon={FingerPrintIcon} className="size-3.5 shrink-0" />
           <span className="text-xs font-medium">{t("twoFactor.scan.hint")}</span>
@@ -229,7 +229,7 @@ function ScanStep({
         </div>
       </div>
 
-      <div className="w-100 shrink-0 flex flex-col gap-4">
+      <div className="w-full lg:w-100 shrink-0 flex flex-col gap-4">
         <div className="bg-card border rounded-2xl p-5 space-y-4">
           <p className="text-sm font-semibold text-foreground">{t("twoFactor.scan.manualSetup")}</p>
 
@@ -419,7 +419,7 @@ function TwoFactorPage() {
   const { titleKey, labelKey } = getStepMeta(step);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden p-10 gap-7">
+    <div className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-6 lg:p-10 gap-7">
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
