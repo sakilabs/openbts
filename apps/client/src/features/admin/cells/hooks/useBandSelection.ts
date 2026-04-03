@@ -10,7 +10,7 @@ export function useBandSelection(bands: Band[], rat: string, bandId: number) {
   const duplex = currentBand?.duplex ?? null;
 
   const duplexOptions = useMemo(() => {
-    if (!bandValue) return [];
+    if (bandValue === null) return [];
     return [...new Set(bandsForRat.filter((b) => b.value === bandValue).map((b) => b.duplex))];
   }, [bandsForRat, bandValue]);
 
@@ -18,7 +18,7 @@ export function useBandSelection(bands: Band[], rat: string, bandId: number) {
 
   const findBandId = useCallback(
     (value: number | null, dup: string | null): number | null => {
-      if (!value) return null;
+      if (value === null) return null;
       return bandsForRat.find((b) => b.value === value && b.duplex === dup)?.id ?? bandsForRat.find((b) => b.value === value)?.id ?? null;
     },
     [bandsForRat],
