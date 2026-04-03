@@ -57,8 +57,8 @@ export function createCommentsColumns({
           {sortIcon("id")}
         </button>
       ),
-      size: 60,
-      cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">{getValue<number>()}</span>,
+      size: 80,
+      cell: ({ getValue }) => <span className="font-mono text-xs text-muted-foreground pl-2">{getValue<string>().slice(-8)}</span>,
     },
     {
       id: "author",

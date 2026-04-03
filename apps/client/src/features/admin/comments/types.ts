@@ -1,7 +1,7 @@
 export type CommentAttachment = { uuid: string; type: string };
 
 export type AdminComment = {
-  id: number;
+  id: string;
   station_id: number;
   user_id: string;
   content: string;
