@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useMatches } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AirportTowerIcon } from "@hugeicons/core-free-icons";
@@ -10,7 +10,7 @@ import { AnnouncementBanner } from "@/components/announcement-banner";
 import { AuthGuard } from "@/components/auth/authGuard";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NotificationsBell } from "@/features/notifications/components/NotificationsBell";
 import { useAppBadge } from "@/features/notifications/useAppBadge";
 import { useTwoFactorRedirect } from "@/hooks/useTwoFactorRedirect";
@@ -34,6 +34,15 @@ export interface RouteHandle {
 }
 
 const EMPTY_BREADCRUMBS: BreadcrumbSegment[] = [];
+
+function MobileSidebarAutoClose() {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [pathname, isMobile, setOpenMobile]);
+  return null;
+}
 
 function AppLayout() {
   const matches = useMatches();
@@ -69,6 +78,7 @@ function AppLayout() {
   return (
     <AuthGuard>
       <SidebarProvider>
+        <MobileSidebarAutoClose />
         <AppSidebar />
         <SidebarInset className="overflow-hidden max-h-svh">
           <header

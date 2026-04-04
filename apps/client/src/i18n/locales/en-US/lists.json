@@ -6,6 +6,8 @@
   "description": "Description",
   "stationCount_one": "{{count}} station",
   "stationCount_other": "{{count}} stations",
+  "locationCount_one": "{{count}} location",
+  "locationCount_other": "{{count}} locations",
   "radiolineCount_one": "{{count}} radio line",
   "radiolineCount_other": "{{count}} radio lines",
   "public": "Public",

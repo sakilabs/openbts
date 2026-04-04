@@ -5,6 +5,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Sidebar now closes automatically when navigating to a new page on mobile
+- List map view station counter now shows the number of unique locations instead of total stations
 - Cell analyzer now shows a **Band** column calculated from EARFCN (LTE) or UARFCN (UMTS)
 - NR NSA cells now support setting a **PCI** value; all other SA-only fields (TAC, CLID, gNBID, ARFCN, RedCap) remain locked
 

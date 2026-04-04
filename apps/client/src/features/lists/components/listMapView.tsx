@@ -242,14 +242,14 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
     [handleOpenStationDetails, handleOpenUkeStationDetails],
   );
 
-  const stationCount = (listData?.stations.length ?? 0) + (listData?.ukeLocations?.length ?? 0);
+  const locationCount = (locationsResponse?.data.length ?? 0) + (listData?.ukeLocations?.length ?? 0);
   const radiolineCount = listData?.radiolines.length ?? 0;
 
   return (
     <>
       <MapSearchOverlay
-        locationCount={stationCount}
-        totalCount={stationCount}
+        locationCount={locationCount}
+        totalCount={locationCount}
         radioLineCount={radiolineCount}
         radioLineTotalCount={radiolineCount}
         isLoading={isLoading}
