@@ -329,6 +329,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           : [];
       const targetCellsMap = new Map(targetCellsArr.map((tc) => [tc.id, tc] as const));
 
+      const cellsAdded: Array<Record<string, unknown>> = [];
+      const cellsUpdated: Array<{ old: Record<string, unknown>; new: Record<string, unknown> }> = [];
+      const cellsDeleted: Array<Record<string, unknown>> = [];
+
       /* eslint-disable no-await-in-loop */
       for (const proposed of proposedCellRows) {
         switch (proposed.operation) {
@@ -349,60 +353,69 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               .returning();
             if (!newCell) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create cell" });
 
+            let newCellDetails: Record<string, unknown> | null = null;
             switch (proposed.rat) {
               case "GSM": {
                 const d = proposed.gsm;
-                if (d) await tx.insert(gsmCells).values({ cell_id: newCell.id, lac: d.lac, cid: d.cid, e_gsm: d.e_gsm });
+                if (d) {
+                  const [inserted] = await tx.insert(gsmCells).values({ cell_id: newCell.id, lac: d.lac, cid: d.cid, e_gsm: d.e_gsm }).returning();
+                  newCellDetails = inserted ?? null;
+                }
                 break;
               }
               case "UMTS": {
                 const d = proposed.umts;
-                if (d) await tx.insert(umtsCells).values({ cell_id: newCell.id, lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid });
+                if (d) {
+                  const [inserted] = await tx
+                    .insert(umtsCells)
+                    .values({ cell_id: newCell.id, lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid })
+                    .returning();
+                  newCellDetails = inserted ?? null;
+                }
                 break;
               }
               case "LTE": {
                 const d = proposed.lte;
-                if (d)
-                  await tx.insert(lteCells).values({
-                    cell_id: newCell.id,
-                    tac: d.tac,
-                    enbid: d.enbid,
-                    clid: d.clid,
-                    pci: d.pci,
-                    earfcn: d.earfcn,
-                    supports_iot: d.supports_iot,
-                  });
+                if (d) {
+                  const [inserted] = await tx
+                    .insert(lteCells)
+                    .values({
+                      cell_id: newCell.id,
+                      tac: d.tac,
+                      enbid: d.enbid,
+                      clid: d.clid,
+                      pci: d.pci,
+                      earfcn: d.earfcn,
+                      supports_iot: d.supports_iot,
+                    })
+                    .returning();
+                  newCellDetails = inserted ?? null;
+                }
                 break;
               }
               case "NR": {
                 const d = proposed.nr;
-                if (d)
-                  await tx.insert(nrCells).values({
-                    cell_id: newCell.id,
-                    nrtac: d.nrtac,
-                    gnbid: d.gnbid,
-                    gnbid_length: computeGnbidLength(d.gnbid),
-                    clid: d.clid,
-                    pci: d.pci,
-                    arfcn: d.arfcn,
-                    type: d.type,
-                    supports_nr_redcap: d.supports_nr_redcap,
-                  });
+                if (d) {
+                  const [inserted] = await tx
+                    .insert(nrCells)
+                    .values({
+                      cell_id: newCell.id,
+                      nrtac: d.nrtac,
+                      gnbid: d.gnbid,
+                      gnbid_length: computeGnbidLength(d.gnbid),
+                      clid: d.clid,
+                      pci: d.pci,
+                      arfcn: d.arfcn,
+                      type: d.type,
+                      supports_nr_redcap: d.supports_nr_redcap,
+                    })
+                    .returning();
+                  newCellDetails = inserted ?? null;
+                }
                 break;
               }
             }
-            const newCellDetails = proposed.gsm ?? proposed.umts ?? proposed.lte ?? proposed.nr ?? null;
-            await createAuditLog(
-              {
-                action: "cells.create",
-                table_name: "cells",
-                record_id: newCell.id,
-                new_values: { ...newCell, details: newCellDetails },
-                metadata: { submission_id: id, station_id: stationId },
-              },
-              req,
-              tx,
-            );
+            cellsAdded.push({ ...newCell, details: newCellDetails });
             break;
           }
 
@@ -421,31 +434,48 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             await tx.update(cells).set(cellUpdate).where(eq(cells.id, targetCellId));
 
             const rat = proposed.rat ?? targetCell.rat;
+            let newDetails: Record<string, unknown> | null = null;
             switch (rat) {
               case "GSM": {
                 const d = proposed.gsm;
-                if (d) await tx.update(gsmCells).set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm }).where(eq(gsmCells.cell_id, targetCellId));
+                if (d) {
+                  const [updated] = await tx
+                    .update(gsmCells)
+                    .set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm })
+                    .where(eq(gsmCells.cell_id, targetCellId))
+                    .returning();
+                  newDetails = updated ?? null;
+                }
                 break;
               }
               case "UMTS": {
                 const d = proposed.umts;
-                if (d)
-                  await tx.update(umtsCells).set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid }).where(eq(umtsCells.cell_id, targetCellId));
+                if (d) {
+                  const [updated] = await tx
+                    .update(umtsCells)
+                    .set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid })
+                    .where(eq(umtsCells.cell_id, targetCellId))
+                    .returning();
+                  newDetails = updated ?? null;
+                }
                 break;
               }
               case "LTE": {
                 const d = proposed.lte;
-                if (d)
-                  await tx
+                if (d) {
+                  const [updated] = await tx
                     .update(lteCells)
                     .set({ tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, earfcn: d.earfcn, supports_iot: d.supports_iot })
-                    .where(eq(lteCells.cell_id, targetCellId));
+                    .where(eq(lteCells.cell_id, targetCellId))
+                    .returning();
+                  newDetails = updated ?? null;
+                }
                 break;
               }
               case "NR": {
                 const d = proposed.nr;
-                if (d)
-                  await tx
+                if (d) {
+                  const [updated] = await tx
                     .update(nrCells)
                     .set({
                       nrtac: d.nrtac,
@@ -456,27 +486,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                       arfcn: d.arfcn,
                       supports_nr_redcap: d.supports_nr_redcap,
                     })
-                    .where(eq(nrCells.cell_id, targetCellId));
+                    .where(eq(nrCells.cell_id, targetCellId))
+                    .returning();
+                  newDetails = updated ?? null;
+                }
                 break;
               }
             }
 
-            const oldDetails = targetCell.gsm ?? targetCell.umts ?? targetCell.lte ?? targetCell.nr ?? null;
-            const newDetails = proposed.gsm ?? proposed.umts ?? proposed.lte ?? proposed.nr ?? null;
-            const updatedCell = { ...targetCell, ...cellUpdate };
+            const { gsm: _gsm, umts: _umts, lte: _lte, nr: _nr, ...baseCellOld } = targetCell;
+            const oldDetails = _gsm ?? _umts ?? _lte ?? _nr ?? null;
 
-            await createAuditLog(
-              {
-                action: "cells.update",
-                table_name: "cells",
-                record_id: targetCellId,
-                old_values: { ...targetCell, details: oldDetails },
-                new_values: { ...updatedCell, details: newDetails },
-                metadata: { submission_id: id },
-              },
-              req,
-              tx,
-            );
+            cellsUpdated.push({ old: { ...baseCellOld, details: oldDetails }, new: { ...baseCellOld, ...cellUpdate, details: newDetails } });
             break;
           }
 
@@ -488,16 +509,46 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
 
             await tx.delete(cells).where(eq(cells.id, targetCellId));
-            await createAuditLog(
-              { action: "cells.delete", table_name: "cells", record_id: targetCellId, old_values: targetCell, metadata: { submission_id: id } },
-              req,
-              tx,
-            );
+            const { gsm: _dGsm, umts: _dUmts, lte: _dLte, nr: _dNr, ...baseCellDelete } = targetCell;
+            const deleteDetails = _dGsm ?? _dUmts ?? _dLte ?? _dNr ?? null;
+            cellsDeleted.push({ ...baseCellDelete, details: deleteDetails });
             break;
           }
         }
       }
       /* eslint-enable no-await-in-loop */
+
+      if (cellsAdded.length > 0)
+        await createAuditLog(
+          {
+            action: "cells.create",
+            table_name: "cells",
+            record_id: null,
+            new_values: { cells: cellsAdded },
+            metadata: { submission_id: id, station_id: stationId },
+          },
+          req,
+          tx,
+        );
+      if (cellsUpdated.length > 0)
+        await createAuditLog(
+          {
+            action: "cells.update",
+            table_name: "cells",
+            record_id: null,
+            old_values: { cells: cellsUpdated.map((c) => c.old) },
+            new_values: { cells: cellsUpdated.map((c) => c.new) },
+            metadata: { submission_id: id },
+          },
+          req,
+          tx,
+        );
+      if (cellsDeleted.length > 0)
+        await createAuditLog(
+          { action: "cells.delete", table_name: "cells", record_id: null, old_values: { cells: cellsDeleted }, metadata: { submission_id: id } },
+          req,
+          tx,
+        );
 
       if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
 

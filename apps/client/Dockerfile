@@ -6,13 +6,20 @@ RUN corepack enable && corepack prepare pnpm@10 --activate
 
 # Copy workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/typescript-configs/package.json ./packages/typescript-configs/
+COPY packages/shared/package.json ./packages/shared/
 COPY apps/client/package.json ./apps/client/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy client source
+# Copy sources
+COPY packages/typescript-configs ./packages/typescript-configs
+COPY packages/shared ./packages/shared
 COPY apps/client ./apps/client
+
+# Build shared package first
+RUN pnpm --filter @openbts/shared build
 
 WORKDIR /app/apps/client
 

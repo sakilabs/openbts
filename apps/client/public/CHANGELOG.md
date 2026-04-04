@@ -5,6 +5,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- ARFCN/EARFCN/UARFCN values are now validated against the selected band in the submission form; a mismatch shows an inline error on the field
+- ARFCN/EARFCN band validation is also enforced server-side on submission
+- `POST /search` filter sub-queries (RAT, cells, locations, extra identifiers, text query) now run in parallel, reducing latency when multiple filters are active
+- Submission approval audit log now records full cell details (inserted/updated/deleted fields) instead of just the cell base row
 - Sidebar now closes automatically when navigating to a new page on mobile
 - List map view station counter now shows the number of unique locations instead of total stations
 - Cell analyzer now shows a **Band** column calculated from EARFCN (LTE) or UARFCN (UMTS)
@@ -12,6 +16,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
+- Fixed audit log change list item numbers being clipped when there are 10 or more items
+- Fixed "Add to List" not sending the correct stations payload when toggling UKE locations
 - Push notification body labels are now translated according to the recipient's locale instead of always showing in English
 - Fixed `/admin/submissions` table being scrollable in the Y-axis on mobile
 - Added missing Heatmap and Azimuth button in mobile filter panel

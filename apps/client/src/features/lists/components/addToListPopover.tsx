@@ -74,7 +74,8 @@ export function AddToListPopover({ stationId, radiolineIds, ukeLocationId }: Add
   const [createOpen, setCreateOpen] = useState(false);
 
   const toggleMutation = useMutation({
-    mutationFn: ({ uuid, data }: { uuid: string; data: { stations?: number[]; radiolines?: number[] } }) => updateList(uuid, data),
+    mutationFn: ({ uuid, data }: { uuid: string; data: { stations?: { internal: number[]; uke: number[] }; radiolines?: number[] } }) =>
+      updateList(uuid, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["user-lists"] });
       toast.success(t("lists:updated"));

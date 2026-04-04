@@ -10,6 +10,8 @@ import type {
   SubmissionMode,
 } from "../types";
 import type { SearchStation } from "../api";
+import type { Band } from "@/types/station";
+import { isARFCNValidForBand } from "@/features/station-details/frequencyCalc";
 import { findDuplicateCids, findDuplicateEnbidClids, type CellLike } from "./cellDuplicates";
 
 export type StationErrors = {
@@ -41,6 +43,7 @@ type ValidationContext = {
   newStation: ProposedStationForm;
   location: ProposedLocationForm;
   cells: ProposedCellForm[];
+  bands?: Band[];
 };
 
 export function validateForm(ctx: ValidationContext): FormErrors {
@@ -56,7 +59,7 @@ export function validateForm(ctx: ValidationContext): FormErrors {
   const locationErrors = validateLocation(ctx.location);
   if (Object.keys(locationErrors).length > 0) errors.location = locationErrors;
 
-  const cellErrors = validateCells(ctx.cells);
+  const cellErrors = validateCells(ctx.cells, ctx.bands);
   if (Object.keys(cellErrors).length > 0) errors.cells = cellErrors;
 
   return errors;
@@ -87,11 +90,13 @@ function validateLocation(location: ProposedLocationForm): LocationErrors {
   return errors;
 }
 
-export function validateCells(cells: ProposedCellForm[]): Record<string, CellError> {
+export function validateCells(cells: ProposedCellForm[], bands?: Band[]): Record<string, CellError> {
   const errors: Record<string, CellError> = {};
+  const bandMap = bands ? new Map(bands.map((b) => [b.id, b])) : null;
 
   for (const cell of cells) {
-    const cellError = validateCell(cell);
+    const band = cell.band_id !== null ? (bandMap?.get(cell.band_id) ?? null) : null;
+    const cellError = validateCell(cell, band);
     if (Object.keys(cellError).length > 0) errors[cell.id] = cellError;
   }
 
@@ -115,18 +120,18 @@ export function validateCells(cells: ProposedCellForm[]): Record<string, CellErr
   return errors;
 }
 
-function validateCell(cell: ProposedCellForm): CellError {
+function validateCell(cell: ProposedCellForm, band: Band | null): CellError {
   const error: CellError = {};
 
   if (cell.band_id === null) error.band_id = "validation.bandRequired";
 
-  const detailErrors = validateCellDetails(cell.rat, cell.details);
+  const detailErrors = validateCellDetails(cell.rat, cell.details, band);
   if (Object.keys(detailErrors).length > 0) error.details = detailErrors;
 
   return error;
 }
 
-function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["details"]>): Record<string, string> {
+function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["details"]>, band: Band | null): Record<string, string> {
   const errors: Record<string, string> = {};
 
   const requireNonNegative = (field: string, value: number | undefined) => {
@@ -151,6 +156,8 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       requireNonNegative("cid", d.cid);
       requireNonNegative("rnc", d.rnc);
       optionalNonNegative("arfcn", d.arfcn);
+      if (d.arfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("UMTS", band.value, d.arfcn))
+        errors.arfcn = "validation.arfcnBandMismatch";
       break;
     }
     case "LTE": {
@@ -162,6 +169,8 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("pci", d.pci);
       if (d.pci !== undefined && d.pci > 503) errors.pci = "validation.pciRangeInvalid";
       optionalNonNegative("earfcn", d.earfcn);
+      if (d.earfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("LTE", band.value, d.earfcn))
+        errors.earfcn = "validation.arfcnBandMismatch";
       break;
     }
     case "NR": {
@@ -173,7 +182,10 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("gnbid", d.gnbid);
       optionalNonNegative("clid", d.clid);
       optionalNonNegative("pci", d.pci);
-      if (d.type === "sa") optionalNonNegative("arfcn", d.arfcn);
+      if (d.type === "sa") {
+        optionalNonNegative("arfcn", d.arfcn);
+        if (d.arfcn !== undefined && !isARFCNValidForBand("NR", band?.value ?? 0, d.arfcn)) errors.arfcn = "validation.arfcnBandMismatch";
+      }
       break;
     }
   }

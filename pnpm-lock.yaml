@@ -57,6 +57,9 @@ importers:
       '@number-flow/react':
         specifier: 0.6.0
         version: 0.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@openbts/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@tanstack/react-form':
         specifier: 1.28.5
         version: 1.28.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -275,6 +278,9 @@ importers:
       '@openbts/drizzle':
         specifier: workspace:*
         version: link:../../packages/drizzle
+      '@openbts/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@openbts/uke-importer':
         specifier: workspace:*
         version: link:../../packages/uke-importer
@@ -385,6 +391,12 @@ importers:
       drizzle-kit:
         specifier: 1.0.0-beta.20
         version: 1.0.0-beta.20
+
+  packages/shared:
+    devDependencies:
+      '@openbts/typescript-configs':
+        specifier: workspace:*
+        version: link:../typescript-configs
 
   packages/typescript-configs: {}
 

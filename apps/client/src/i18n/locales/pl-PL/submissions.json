@@ -94,7 +94,8 @@
     "typeRequired": "Typ (NSA/SA) jest wymagany",
     "typeInvalid": "Typ musi być NSA lub SA",
     "cidDuplicate": "CID musi być unikalny w ramach tej samej technologii",
-    "enbidClidDuplicate": "Kombinacja eNBID+CLID musi być unikalna w komórkach LTE"
+    "enbidClidDuplicate": "Kombinacja eNBID+CLID musi być unikalna w komórkach LTE",
+    "arfcnBandMismatch": "ARFCN nie pasuje do wybranego pasma"
   },
   "form": {
     "summary": "Pozostaw po sobie notatkę jeżeli jest taka potrzeba",

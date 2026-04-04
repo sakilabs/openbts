@@ -46,6 +46,7 @@ type StationWithCells = z.infer<typeof stationsSelectSchema> & {
   location: z.infer<typeof locationSelectSchema> | null;
   operator: z.infer<typeof operatorsSelectSchema> | null;
 };
+
 const schemaRoute = {
   body: z.object({
     query: z.string().min(1, "Query must not be empty"),
@@ -84,18 +85,11 @@ const stationQueryConfig = {
 } as const;
 
 const ratTables = [
-  { table: gsmCells, key: "gsmCells" as const, joinCol: gsmCells.cell_id },
-  { table: umtsCells, key: "umtsCells" as const, joinCol: umtsCells.cell_id },
-  { table: lteCells, key: "lteCells" as const, joinCol: lteCells.cell_id },
-  { table: nrCells, key: "nrCells" as const, joinCol: nrCells.cell_id },
+  { table: gsmCells, key: "gsmCells" as const, joinCol: gsmCells.cell_id, searchCols: [gsmCells.cid] as const },
+  { table: umtsCells, key: "umtsCells" as const, joinCol: umtsCells.cell_id, searchCols: [umtsCells.cid, umtsCells.cid_long] as const },
+  { table: lteCells, key: "lteCells" as const, joinCol: lteCells.cell_id, searchCols: [lteCells.enbid, lteCells.ecid] as const },
+  { table: nrCells, key: "nrCells" as const, joinCol: nrCells.cell_id, searchCols: [nrCells.gnbid, nrCells.nci] as const },
 ] as const;
-
-const numSearchCols = {
-  gsm: [gsmCells.cid],
-  umts: [umtsCells.cid, umtsCells.cid_long],
-  lte: [lteCells.enbid, lteCells.ecid],
-  nr: [nrCells.gnbid, nrCells.nci],
-} as const;
 
 const withCellDetails = (station: StationWithRatCells): StationWithCells => {
   const transformedCells = station.cells.map(({ gsm, umts, lte, nr, ...rest }) => ({
@@ -149,30 +143,51 @@ const buildNumericSearchCondition = (columns: readonly unknown[], numericQuery: 
   or(...columns.flatMap((col) => [sql`CAST(${col} AS TEXT) = ${numericQuery.toString()}`, sql`CAST(${col} AS TEXT) LIKE ${likeQuery}`]));
 
 const searchNumericInRatTables = async (numericQuery: number, likeQuery: string): Promise<number[]> => {
-  const results = await Promise.allSettled([
-    db
-      .select({ stationId: cells.station_id })
-      .from(gsmCells)
-      .innerJoin(cells, eq(gsmCells.cell_id, cells.id))
-      .where(buildNumericSearchCondition(numSearchCols.gsm, numericQuery, likeQuery)),
-    db
-      .select({ stationId: cells.station_id })
-      .from(umtsCells)
-      .innerJoin(cells, eq(umtsCells.cell_id, cells.id))
-      .where(buildNumericSearchCondition(numSearchCols.umts, numericQuery, likeQuery)),
-    db
-      .select({ stationId: cells.station_id })
-      .from(lteCells)
-      .innerJoin(cells, eq(lteCells.cell_id, cells.id))
-      .where(buildNumericSearchCondition(numSearchCols.lte, numericQuery, likeQuery)),
-    db
-      .select({ stationId: cells.station_id })
-      .from(nrCells)
-      .innerJoin(cells, eq(nrCells.cell_id, cells.id))
-      .where(buildNumericSearchCondition(numSearchCols.nr, numericQuery, likeQuery)),
-  ]);
-
+  const results = await Promise.allSettled(
+    ratTables.map(({ table, joinCol, searchCols }) =>
+      db
+        .select({ stationId: cells.station_id })
+        .from(table)
+        .innerJoin(cells, eq(joinCol, cells.id))
+        .where(buildNumericSearchCondition(searchCols, numericQuery, likeQuery)),
+    ),
+  );
   return results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).map((r) => r.stationId);
+};
+
+const resolveQueryStationIds = async (searchQuery: string, limit: number): Promise<number[]> => {
+  const isNumeric = /^\d+$/.test(searchQuery);
+
+  const exactPromise =
+    searchQuery.length > 3
+      ? db
+          .select({ id: stations.id })
+          .from(stations)
+          .where(eq(stations.station_id, searchQuery.toUpperCase()))
+          .then((rows) => rows.map((r) => r.id))
+      : Promise.resolve([] as number[]);
+
+  const fuzzyPromise = db
+    .select({ id: stations.id })
+    .from(stations)
+    .where(and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE '%${searchQuery}%'`))
+    .orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
+    .limit(limit)
+    .then((rows) => rows.map((r) => r.id))
+    .catch(() => [] as number[]);
+
+  const thirdPromise = isNumeric
+    ? searchNumericInRatTables(Number.parseInt(searchQuery, 10), `%${searchQuery}%`)
+    : db
+        .select({ id: stations.id })
+        .from(stations)
+        .innerJoin(locations, eq(stations.location_id, locations.id))
+        .where(and(ne(stations.status, "inactive"), or(sql`${searchQuery} <% ${locations.city}`, sql`${searchQuery} <% ${locations.address}`)))
+        .limit(limit)
+        .then((rows) => rows.map((r) => r.id));
+
+  const [exactIds, fuzzyIds, thirdIds] = await Promise.all([exactPromise, fuzzyPromise, thirdPromise]);
+  return [...new Set([...exactIds, ...fuzzyIds, ...thirdIds])];
 };
 
 const fetchStations = async (where?: SQL, limit?: number) => {
@@ -202,6 +217,17 @@ const fetchStations = async (where?: SQL, limit?: number) => {
   });
 };
 
+const addMissingToMap = async (candidateIds: number[], map: Map<number, StationWithCells>, remaining: number) => {
+  const missing = candidateIds.filter((id) => !map.has(id)).slice(0, remaining);
+  if (missing.length === 0) return;
+  const fetched = await fetchStations(inArray(stations.id, missing), remaining);
+  const byId = new Map(fetched.map((s) => [s.id, s]));
+  for (const id of missing) {
+    const station = byId.get(id);
+    if (station) map.set(id, withCellDetails(station));
+  }
+};
+
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<StationWithCells[]>>) {
   const { query } = req.body;
   const { limit: requestedLimit, sort = "desc", sortBy = "updatedAt" } = req.query;
@@ -212,51 +238,59 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   if (hasFilters(filters)) {
     const grouped = groupFiltersByTable(filters);
+
+    const [ratStationIds, cellResult, locationResult, extraResult, queryMatchIds] = await Promise.all([
+      queryRatTableStationIds(grouped),
+      grouped.cells.length > 0 ? db.selectDistinct({ stationId: cells.station_id }).from(cells).where(combineConditions(grouped.cells)) : null,
+      grouped.locations.length > 0 ? db.selectDistinct({ id: locations.id }).from(locations).where(combineConditions(grouped.locations)) : null,
+      grouped.extraIdentificators.length > 0
+        ? db
+            .selectDistinct({ stationId: extraIdentificators.station_id })
+            .from(extraIdentificators)
+            .where(combineConditions(grouped.extraIdentificators))
+        : null,
+      remainingQuery ? resolveQueryStationIds(remainingQuery, limit) : null,
+    ]);
+
     const stationConditions: SQL[] = [...grouped.stations];
 
     const hasRatFilters = ratTables.some(({ key }) => grouped[key].length > 0);
-    const ratStationIds = await queryRatTableStationIds(grouped);
-
     if (hasRatFilters && ratStationIds.length === 0) return res.send({ data: [] });
     if (ratStationIds.length > 0) stationConditions.push(inArray(stations.id, ratStationIds));
 
-    if (grouped.cells.length > 0) {
-      const cellStationIds = await db.selectDistinct({ stationId: cells.station_id }).from(cells).where(combineConditions(grouped.cells));
-
-      if (cellStationIds.length === 0) return res.send({ data: [] });
+    if (cellResult !== null) {
+      if (cellResult.length === 0) return res.send({ data: [] });
       stationConditions.push(
         inArray(
           stations.id,
-          cellStationIds.map((r) => r.stationId),
+          cellResult.map((r) => r.stationId),
         ),
       );
     }
 
-    if (grouped.locations.length > 0) {
-      const locationIds = await db.selectDistinct({ id: locations.id }).from(locations).where(combineConditions(grouped.locations));
-
-      if (locationIds.length === 0) return res.send({ data: [] });
+    if (locationResult !== null) {
+      if (locationResult.length === 0) return res.send({ data: [] });
       stationConditions.push(
         inArray(
           stations.location_id,
-          locationIds.map((r) => r.id),
+          locationResult.map((r) => r.id),
         ),
       );
     }
 
-    if (grouped.extraIdentificators.length > 0) {
-      const extraStationIds = await db
-        .selectDistinct({ stationId: extraIdentificators.station_id })
-        .from(extraIdentificators)
-        .where(combineConditions(grouped.extraIdentificators));
-
-      if (extraStationIds.length === 0) return res.send({ data: [] });
+    if (extraResult !== null) {
+      if (extraResult.length === 0) return res.send({ data: [] });
       stationConditions.push(
         inArray(
           stations.id,
-          extraStationIds.map((r) => r.stationId),
+          extraResult.map((r) => r.stationId),
         ),
       );
+    }
+
+    if (queryMatchIds !== null) {
+      if (queryMatchIds.length === 0) return res.send({ data: [] });
+      stationConditions.push(inArray(stations.id, queryMatchIds));
     }
 
     const filteredStations = await fetchStations(combineConditions(stationConditions), limit);
@@ -264,10 +298,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   }
 
   const searchQuery = remainingQuery || query;
-  const upperQuery = searchQuery.toUpperCase();
   const stationMap = new Map<number, StationWithCells>();
 
-  const exactMatch = upperQuery.length > 3 ? await fetchStations(eq(stations.station_id, upperQuery)) : [];
+  const exactMatch = searchQuery.length > 3 ? await fetchStations(eq(stations.station_id, searchQuery.toUpperCase())) : [];
   if (exactMatch.length > 0) return res.send({ data: exactMatch.map(withCellDetails) });
 
   const fuzzyIds = await db
@@ -277,38 +310,18 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     .orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
     .limit(limit)
     .catch(() => []);
+  await addMissingToMap(
+    fuzzyIds.map((r) => r.id),
+    stationMap,
+    limit,
+  );
 
-  const fuzzyStations =
-    fuzzyIds.length > 0
-      ? await db.query.stations
-          .findMany({
-            where: {
-              id: { in: fuzzyIds.map((r) => r.id) },
-            },
-            ...stationQueryConfig,
-          })
-          .catch(() => [])
-      : [];
-  const fuzzyById = new Map(fuzzyStations.map((s) => [s.id, s]));
-  for (const { id } of fuzzyIds) {
-    const station = fuzzyById.get(id);
-    if (station) stationMap.set(station.id, withCellDetails(station));
+  if (/^\d+$/.test(searchQuery) && stationMap.size < limit) {
+    const matchedIds = await searchNumericInRatTables(Number.parseInt(searchQuery, 10), `%${searchQuery}%`);
+    await addMissingToMap(matchedIds, stationMap, limit - stationMap.size);
   }
 
-  const numericQuery = Number.parseInt(searchQuery, 10);
-  if (/^\d+$/.test(searchQuery) && !Number.isNaN(numericQuery) && stationMap.size < limit) {
-    const matchedIds = await searchNumericInRatTables(numericQuery, `%${searchQuery}%`);
-    const missingIds = matchedIds.filter((id) => !stationMap.has(id)).slice(0, limit - stationMap.size);
-
-    if (missingIds.length > 0) {
-      const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
-      for (const station of additionalStations) {
-        stationMap.set(station.id, withCellDetails(station));
-      }
-    }
-  }
-
-  if (stationMap.size < limit && !/^\d+$/.test(searchQuery)) {
+  if (!/^\d+$/.test(searchQuery) && stationMap.size < limit) {
     const cityAndAddressMatches = await db
       .select({ id: stations.id })
       .from(stations)
@@ -319,20 +332,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
         sql`GREATEST(word_similarity(${searchQuery}, ${locations.city}), word_similarity(${searchQuery}, ${locations.address})) DESC`,
       )
       .limit(limit);
-
-    const missingCityIds = cityAndAddressMatches
-      .map((r) => r.id)
-      .filter((id) => !stationMap.has(id))
-      .slice(0, limit - stationMap.size);
-
-    if (missingCityIds.length > 0) {
-      const additionalStations = await fetchStations(inArray(stations.id, missingCityIds), limit - stationMap.size);
-      const stationById = new Map(additionalStations.map((s) => [s.id, s]));
-      for (const id of missingCityIds) {
-        const station = stationById.get(id);
-        if (station) stationMap.set(station.id, withCellDetails(station));
-      }
-    }
+    await addMissingToMap(
+      cityAndAddressMatches.map((r) => r.id),
+      stationMap,
+      limit - stationMap.size,
+    );
   }
 
   if (stationMap.size < limit) {
@@ -346,18 +350,11 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
           sql`${extraIdentificators.mno_name} ILIKE ${`%${searchQuery}%`}`,
         ),
       );
-
-    const missingIds = extraMatches
-      .map((r) => r.stationId)
-      .filter((id) => !stationMap.has(id))
-      .slice(0, limit - stationMap.size);
-
-    if (missingIds.length > 0) {
-      const additionalStations = await fetchStations(inArray(stations.id, missingIds), limit - stationMap.size);
-      for (const station of additionalStations) {
-        stationMap.set(station.id, withCellDetails(station));
-      }
-    }
+    await addMissingToMap(
+      extraMatches.map((r) => r.stationId),
+      stationMap,
+      limit - stationMap.size,
+    );
   }
 
   const results = Array.from(stationMap.values()).slice(0, limit);

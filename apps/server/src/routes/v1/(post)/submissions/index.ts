@@ -8,6 +8,7 @@ import {
   stations,
 } from "@openbts/drizzle";
 import { inArray, eq, and, count } from "drizzle-orm";
+import { isARFCNValidForBand } from "@openbts/shared/frequency";
 import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -159,6 +160,24 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
     throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
 
   if (input.cells && input.cells.length > 0) validateCellDuplicates(input.cells);
+
+  if (input.cells && input.cells.length > 0) {
+    const bandIds = [...new Set(input.cells.filter((c) => c.band_id !== null && c.band_id !== undefined).map((c) => c.band_id!))];
+    if (bandIds.length > 0) {
+      const bandRows = await db.query.bands.findMany({ where: { id: { in: bandIds } }, columns: { id: true, rat: true, value: true } });
+      const bandMap = new Map(bandRows.map((b) => [b.id, b]));
+      for (const cell of input.cells) {
+        if (cell.operation === "delete" || !cell.band_id || !cell.rat || !cell.details) continue;
+        const band = bandMap.get(cell.band_id);
+        if (!band?.value) continue;
+        const details = cell.details as Record<string, unknown>;
+        const arfcn = (details["earfcn"] ?? details["arfcn"]) as number | null | undefined;
+        if (arfcn === null || arfcn === undefined) continue;
+        if (!isARFCNValidForBand(cell.rat, band.value, arfcn))
+          throw new ErrorResponse("BAD_REQUEST", { message: `ARFCN ${arfcn} is not valid for band ${band.value} (${cell.rat})` });
+      }
+    }
+  }
 
   if (type === "update" && input.location_photo_ids && input.location_photo_ids.length > 0) {
     if (!targetStation?.location?.id)

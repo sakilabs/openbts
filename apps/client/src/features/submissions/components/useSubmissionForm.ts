@@ -18,6 +18,7 @@ import { showApiError } from "@/lib/api";
 import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
 import { validateForm, validateCells, hasErrors, type FormErrors } from "../utils/validation";
 import { hasFormChanges, type OriginalState } from "../utils/equality";
+import { bandsQueryOptions } from "@/features/shared/queries";
 import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
 import type { UkeStation } from "@/types/station";
 
@@ -72,6 +73,7 @@ type UseSubmissionFormProps = {
 export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadUkeStationId }: UseSubmissionFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
   const queryClient = useQueryClient();
+  const { data: allBands = [] } = useQuery(bandsQueryOptions());
   const [showErrors, setShowErrors] = useState(false);
   const [originalState, setOriginalState] = useState<OriginalState>({});
   const [photos, setPhotos] = useState<File[]>([]);
@@ -141,6 +143,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         newStation: value.newStation,
         location: value.location,
         cells: activeCells,
+        bands: allBands,
       });
 
       if (hasErrors(errors)) {
@@ -522,9 +525,9 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const cellErrors = useMemo(() => {
     if (!showErrors) return undefined;
     const currentCells = form.state.values.cells;
-    const errors = validateCells(currentCells);
+    const errors = validateCells(currentCells, allBands);
     return Object.keys(errors).length > 0 ? errors : undefined;
-  }, [showErrors, form.state.values.cells]);
+  }, [showErrors, form.state.values.cells, allBands]);
 
   const formErrors = useMemo((): FormErrors => {
     if (!showErrors) return {};
