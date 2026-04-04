@@ -16,7 +16,6 @@ self.addEventListener("activate", (event) => {
 type PushPayload = {
   title?: string;
   body?: string;
-  metadata?: { station_id?: string; reviewer_note?: string; submitter_name?: string; submission_type?: string };
   actionUrl?: string;
   notificationId?: string;
 };
@@ -29,14 +28,9 @@ self.addEventListener("push", (event) => {
     data = { title: (event as PushEvent).data?.text() ?? "OpenBTS" };
   }
 
-  const lines: string[] = [];
-  if (data.metadata?.submitter_name) lines.push(`By ${data.metadata.submitter_name}`);
-  if (data.metadata?.station_id) lines.push(`Station: ${data.metadata.station_id}`);
-  if (data.metadata?.reviewer_note) lines.push(data.metadata.reviewer_note);
-
   (event as ExtendableEvent).waitUntil(
     self.registration.showNotification(data.title ?? "OpenBTS", {
-      body: lines.join("\n") || data.body || undefined,
+      body: data.body || undefined,
       icon: "/pwa-192x192.png",
       data: { actionUrl: data.actionUrl, notificationId: data.notificationId },
     }),

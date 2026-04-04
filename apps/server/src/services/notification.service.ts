@@ -3,7 +3,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { notifications, pushSubscriptions, users } from "@openbts/drizzle";
-import { t } from "../i18n/index.js";
+import { t, getLabels } from "../i18n/index.js";
 import { logger } from "../utils/logger.js";
 
 const { VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } = process.env;
@@ -49,7 +49,8 @@ export async function createAndDeliverNotification(params: CreateNotificationPar
   const pushSubs =
     type === "submission_approved" || type === "submission_rejected" ? allSubs.filter((s) => s.preferences.submissionUpdates !== false) : allSubs;
 
-  const payload = JSON.stringify({ title, body: strings.body, metadata, actionUrl, notificationId: inserted?.id });
+  const body = buildPushBody(strings.body, metadata, user?.locale);
+  const payload = JSON.stringify({ title, body, actionUrl, notificationId: inserted?.id });
 
   await deliverPush(pushSubs, payload);
 }
@@ -71,6 +72,16 @@ async function deliverPush(subs: { endpoint: string; p256dh: string; auth: strin
       }
     }),
   );
+}
+
+function buildPushBody(baseBody: string, metadata: Record<string, unknown> | undefined, locale: string | null | undefined): string {
+  const labels = getLabels(locale);
+  const lines = [baseBody];
+  const { submitter_name, station_id, reviewer_note } = metadata ?? {};
+  if (typeof submitter_name === "string") lines.push(`${labels.submittedBy} ${submitter_name}`);
+  if (typeof station_id === "string") lines.push(`${labels.station}: ${station_id}`);
+  if (typeof reviewer_note === "string") lines.push(`${labels.reviewerNote}: ${reviewer_note}`);
+  return lines.join("\n");
 }
 
 export async function notifyUkeUpdate(): Promise<void> {
@@ -149,8 +160,10 @@ export async function notifyStaffNewSubmission(params: {
   await Promise.allSettled(
     insertedNotifications.map((notif) => {
       const userSubs = subsByUser.get(notif.userId) ?? [];
-      const strings = t("newSubmission", localeByUser.get(notif.userId));
-      return deliverPush(userSubs, JSON.stringify({ title: strings.title, body: strings.body, metadata, actionUrl, notificationId: notif.id }));
+      const locale = localeByUser.get(notif.userId);
+      const strings = t("newSubmission", locale);
+      const body = buildPushBody(strings.body, metadata, locale);
+      return deliverPush(userSubs, JSON.stringify({ title: strings.title, body, actionUrl, notificationId: notif.id }));
     }),
   );
 }

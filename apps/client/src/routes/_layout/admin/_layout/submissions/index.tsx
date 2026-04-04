@@ -267,7 +267,7 @@ function AdminSubmissionsListPage() {
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
+      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto overscroll-y-contain">
         <DataTable.Root table={table}>
           <DataTable.Table>
             <DataTable.Header />

@@ -57,7 +57,7 @@ const nrCellsUpdateSchema = createUpdateSchema(nrCells)
   .strict()
   .superRefine((data, ctx) => {
     if (data.type === "nsa") {
-      for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+      for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
         if (data[field] !== null && data[field] !== undefined)
           ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
       }
@@ -122,7 +122,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (req.body.details && cell.rat === "NR") {
     const nrDetails = req.body.details as z.infer<typeof nrCellsUpdateSchema>;
     if (nrDetails.type === undefined && cell.nr?.type === "nsa") {
-      for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+      for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
         if (nrDetails[field] !== null && nrDetails[field] !== undefined) {
           throw new ErrorResponse("BAD_REQUEST", { message: `${field} must not be set for NSA NR cells` });
         }

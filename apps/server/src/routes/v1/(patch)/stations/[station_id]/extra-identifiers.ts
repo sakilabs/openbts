@@ -68,7 +68,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
   if (allEmpty && existing) {
     await db.delete(extraIdentificators).where(eq(extraIdentificators.id, existing.id));
-    await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id));
+    const [updatedStation] = await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id)).returning();
 
     await createAuditLog(
       {
@@ -77,6 +77,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         record_id: station_id,
         old_values: existing,
         new_values: null,
+      },
+      req,
+    );
+
+    await createAuditLog(
+      {
+        action: "stations.update",
+        table_name: "stations",
+        record_id: station_id,
+        old_values: station,
+        new_values: updatedStation ?? null,
       },
       req,
     );
@@ -111,7 +122,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
   if (!result) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-  await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id));
+  const [updatedStation] = await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id)).returning();
 
   await createAuditLog(
     {
@@ -120,6 +131,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       record_id: station_id,
       old_values: existing ?? null,
       new_values: result,
+    },
+    req,
+  );
+
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "stations",
+      record_id: station_id,
+      old_values: station,
+      new_values: updatedStation ?? null,
     },
     req,
   );

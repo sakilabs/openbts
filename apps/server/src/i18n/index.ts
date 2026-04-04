@@ -14,3 +14,7 @@ function resolveLocale(locale: string | null | undefined): Locale {
 export function t<N extends Namespace>(namespace: N, locale: string | null | undefined): { title: string; body: string } {
   return translations[resolveLocale(locale)][namespace];
 }
+
+export function getLabels(locale: string | null | undefined) {
+  return translations[resolveLocale(locale)].labels;
+}

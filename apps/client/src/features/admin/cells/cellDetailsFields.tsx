@@ -173,7 +173,6 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
                     nrtac: undefined,
                     clid: undefined,
                     gnbid: undefined,
-                    pci: undefined,
                     arfcn: undefined,
                     supports_nr_redcap: undefined,
                   });
@@ -226,7 +225,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             placeholder="PCI"
             value={(d.pci as number) ?? ""}
             error={!!detailErrors?.pci}
-            disabled={nsaLock(d.pci)}
+            disabled={disabled}
             max={1007}
             onDetailChange={onDetailChange}
           />

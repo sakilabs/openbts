@@ -6,6 +6,12 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🚀 Enhancements
 
 - Cell analyzer now shows a **Band** column calculated from EARFCN (LTE) or UARFCN (UMTS)
+- NR NSA cells now support setting a **PCI** value; all other SA-only fields (TAC, CLID, gNBID, ARFCN, RedCap) remain locked
+
+### 🩹 Fixes
+
+- Push notification body labels are now translated according to the recipient's locale instead of always showing in English
+- Fixed `/admin/submissions` table being scrollable in the Y-axis on mobile
 
 # 2026-04-03
 

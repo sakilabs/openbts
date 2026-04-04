@@ -15,4 +15,9 @@ export default {
     title: "New submission",
     body: "A new submission is waiting for review",
   },
+  labels: {
+    station: "Station",
+    submittedBy: "By",
+    reviewerNote: "Note",
+  },
 } as const;

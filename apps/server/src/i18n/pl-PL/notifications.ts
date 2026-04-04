@@ -15,4 +15,9 @@ export default {
     title: "Nowe zgłoszenie",
     body: "Nowe zgłoszenie oczekuje na rozpatrzenie",
   },
+  labels: {
+    station: "Stacja",
+    submittedBy: "Od",
+    reviewerNote: "Notatka",
+  },
 } as const;
