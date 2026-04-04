@@ -12,6 +12,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Push notification body labels are now translated according to the recipient's locale instead of always showing in English
 - Fixed `/admin/submissions` table being scrollable in the Y-axis on mobile
+- Added missing Heatmap and Azimuth button in mobile filter panel
 
 # 2026-04-03
 

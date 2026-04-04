@@ -374,6 +374,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                 isSheet
                 hideSource={hideSource}
                 hideAPIFilters={hideAPIFilters}
+                showHeatmap={showHeatmap}
+                onToggleHeatmap={onToggleHeatmap}
               />
             </div>
           </SheetContent>
