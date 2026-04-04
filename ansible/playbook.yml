@@ -366,10 +366,36 @@
         version: main
         update: false
 
-    - name: Deploy docker-compose.override.yml with generated secrets
-      template:
-        src: templates/docker-compose.override.yml.j2
-        dest: /opt/openbts/docker-compose.override.yml
+    - name: Deploy .env with generated secrets
+      copy:
+        dest: /opt/openbts/.env
+        content: |
+          DATABASE_URL=postgres://user:{{ db_password }}@pgbouncer:6432/openbts
+          REDIS_PASSWORD={{ redis_password }}
+          BETTER_AUTH_SECRET={{ auth_secret }}
+          BASE_URL=https://{{ openbts_domain }}
+          APP_NAME=OpenBTS
+          POSTGRES_USER=user
+          POSTGRES_PASSWORD={{ db_password }}
+          POSTGRES_DB=openbts
+          # Fill in your OAuth credentials:
+          GOOGLE_CLIENT_ID=
+          GOOGLE_CLIENT_SECRET=
+          GITHUB_CLIENT_ID=
+          GITHUB_CLIENT_SECRET=
+          # Resend (email)
+          RESEND_API_KEY=
+          RESEND_FROM=noreply@openbts.sakilabs.com
+          # Optional Axiom logging:
+          AXIOM_TOKEN=
+          AXIOM_DATASET=openbts
+          NTM_USERAGENT=
+          # Client build args:
+          VITE_API_URL=https://{{ openbts_domain }}/api/v1
+          VITE_APP_NAME=OpenBTS
+          VITE_MAPBOX_ACCESS_TOKEN=
+          VITE_VAPID_PUBLIC_KEY=
+          VITE_ADSENSE_CLIENT=
         owner: root
         group: root
         mode: "0600"
@@ -391,6 +417,38 @@
         mode: "0644"
       notify: Reload nginx
 
+    - name: Install iptables-persistent
+      apt:
+        name:
+          - iptables-persistent
+          - netfilter-persistent
+        state: present
+
+    - name: Block external access to internal ports (IPv4)
+      iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ item }}"
+        jump: DROP
+        comment: "openbts: block external access"
+      loop:
+        - "3000"
+        - "6379"
+      notify: Save iptables rules
+
+    - name: Block external access to internal ports (IPv6)
+      iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ item }}"
+        jump: DROP
+        ip_version: ipv6
+        comment: "openbts: block external access"
+      loop:
+        - "3000"
+        - "6379"
+      notify: Save iptables rules
+
     - name: Display generated credentials
       debug:
         msg:
@@ -399,10 +457,14 @@
           - "Redis password      : {{ redis_password }}"
           - "Better Auth secret  : {{ auth_secret }}"
           - "================================================="
-          - "Edit OAuth and other vars in /opt/openbts/docker-compose.override.yml"
-          - "Then start the app: cd /opt/openbts && docker compose up -d"
+          - "Edit OAuth and other vars in /opt/openbts/.env"
+          - "Then deploy: cd /opt/openbts && ./build.sh swarm"
 
   handlers:
+    - name: Save iptables rules
+      command: netfilter-persistent save
+      changed_when: true
+
     - name: Reload nginx
       systemd:
         name: nginx

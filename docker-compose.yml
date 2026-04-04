@@ -5,11 +5,12 @@ services:
     build:
       context: .
       dockerfile: apps/client/Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:3030/api/v1
-        - VITE_MAPBOX_ACCESS_TOKEN=
-        - VITE_APP_NAME=OpenBTS
-        - VITE_ADSENSE_CLIENT=
+        args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3030/api/v1}
+        - VITE_MAPBOX_ACCESS_TOKEN=${VITE_MAPBOX_ACCESS_TOKEN:-}
+        - VITE_VAPID_PUBLIC_KEY=${VITE_VAPID_PUBLIC_KEY:-}
+        - VITE_APP_NAME=${VITE_APP_NAME:-OpenBTS}
+        - VITE_ADSENSE_CLIENT=${VITE_ADSENSE_CLIENT:-}
         - COMMIT_SHA=${COMMIT_SHA}
     ports:
       - "127.0.0.1:3000:80"

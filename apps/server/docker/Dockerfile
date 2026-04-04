@@ -50,9 +50,10 @@ COPY --from=builder /app/packages/uke-importer/poland.voivodeships.max.json ./pa
 COPY --from=builder /app/apps/server/dist ./apps/server/dist
 COPY apps/server/static ./static
 COPY apps/server/docker/docker-entrypoint.sh ./
+COPY apps/server/docker/docker-migrate.sh ./
 
 RUN pnpm install --frozen-lockfile --prod && \
-    chmod +x docker-entrypoint.sh
+    chmod +x docker-entrypoint.sh docker-migrate.sh
 
 EXPOSE 3030
 CMD ["./docker-entrypoint.sh"]

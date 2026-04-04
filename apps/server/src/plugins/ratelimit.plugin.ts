@@ -34,6 +34,7 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
     const netMonsterUserAgent = process.env.NTM_USERAGENT || null;
     const isNetMonsterExport = netMonsterUserAgent && req.headers["user-agent"]?.startsWith(netMonsterUserAgent) && req.url.includes("/cells/export");
     if (isNetMonsterExport) return;
+    if (req.url === "/api/v1/health") return;
 
     const result = await rateLimitService.processRequest(req);
     if (!result) {

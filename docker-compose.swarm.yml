@@ -1,0 +1,172 @@
+services:
+  migrate:
+    image: openbts-server
+    command: ["./docker-migrate.sh"]
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+
+  server:
+    image: openbts-server
+    ports:
+      - target: 3031
+        published: 3031
+        mode: ingress
+    environment:
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
+      # Authentication
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - BASE_URL=${BASE_URL}
+      # App configuration
+      - APP_NAME=${APP_NAME:-OpenBTS}
+      - WORKERS=1
+      # Resend (email)
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM=${RESEND_FROM:-noreply@openbts.sakilabs.com}
+      # AXIOM HQ logging
+      - AXIOM_TOKEN=${AXIOM_TOKEN}
+      - AXIOM_DATASET=${AXIOM_DATASET:-openbts}
+      - NTM_USERAGENT=${NTM_USERAGENT}
+    volumes:
+      - uploads-volume:/app/uploads
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3031/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      replicas: 5
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        parallelism: 1
+        order: start-first
+        failure_action: pause
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+
+  client:
+    image: openbts-client
+    ports:
+      - target: 80
+        published: 3000
+        mode: host
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  postgres:
+    image: openbts-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-openbts}
+    volumes:
+      - postgres-volume:/var/lib/postgresql/18/docker
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-openbts}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  pgbouncer:
+    image: dhi.io/pgbouncer:1.25
+    ports:
+      - target: 6432
+        published: 6432
+        mode: host
+    volumes:
+      - ./docker/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./docker/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  redis:
+    image: redis:alpine
+    command: redis-server --save 60 1 --appendonly yes --requirepass ${REDIS_PASSWORD}
+    ports:
+      - target: 6379
+        published: 6379
+        mode: host
+    volumes:
+      - redis-volume:/data
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  internal:
+    driver: overlay
+    attachable: true
+
+volumes:
+  postgres-volume:
+    external: true
+    name: btsearch_postgres-volume
+  uploads-volume:
+    external: true
+    name: btsearch_uploads-volume
+  redis-volume:
+    external: true
+    name: btsearch_redis-volume

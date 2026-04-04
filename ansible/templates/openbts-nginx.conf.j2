@@ -1,8 +1,5 @@
 upstream sora_backend {
-    least_conn;
-{% for i in range(openbts_workers | default(4) | int) %}
-    server 127.0.0.1:{{ 3031 + i }};
-{% endfor %}
+    server 127.0.0.1:3031;
 }
 
 server {
