@@ -239,6 +239,7 @@ export function useSaveStationMutation() {
         stationPatch.station_id !== station.station_id ||
         stationPatch.operator_id !== (station.operator?.id ?? null) ||
         stationPatch.notes !== (station.notes ?? null) ||
+        stationPatch.extra_address !== (station.extra_address ?? null) ||
         stationPatch.is_confirmed !== station.is_confirmed ||
         ("location_id" in stationPatch && stationPatch.location_id !== (station.location?.id ?? null));
 
