@@ -232,24 +232,23 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       return { ...cell, details };
     });
 
-    await Promise.all(
-      response.map((cell) => {
-        const oldFull = existingCells.find((c) => c.id === cell.id);
-        // oxlint-disable-next-line no-unused-vars: We want to remove those from the object
-        const { gsm, umts, lte, nr, ...oldBase } = oldFull ?? ({} as typeof oldFull & Record<string, never>);
-        const oldDetails = oldFull ? (oldFull.gsm ?? oldFull.umts ?? oldFull.lte ?? oldFull.nr ?? undefined) : undefined;
-        return createAuditLog(
-          {
-            action: "cells.update",
-            table_name: "cells",
-            record_id: cell.id,
-            old_values: { ...oldBase, details: oldDetails },
-            new_values: cell,
-            metadata: { station_id },
-          },
-          req,
-        );
-      }),
+    const cellsUpdated = response.map((cell) => {
+      const oldFull = existingCells.find((c) => c.id === cell.id);
+      // oxlint-disable-next-line no-unused-vars: We want to remove those from the object
+      const { gsm, umts, lte, nr, ...oldBase } = oldFull ?? ({} as typeof oldFull & Record<string, never>);
+      const oldDetails = oldFull ? (oldFull.gsm ?? oldFull.umts ?? oldFull.lte ?? oldFull.nr ?? undefined) : undefined;
+      return { old: { ...oldBase, details: oldDetails }, new: cell };
+    });
+    await createAuditLog(
+      {
+        action: "cells.update",
+        table_name: "cells",
+        record_id: null,
+        old_values: { cells: cellsUpdated.map((c) => c.old) },
+        new_values: { cells: cellsUpdated.map((c) => c.new) },
+        metadata: { station_id },
+      },
+      req,
     );
 
     const [updatedStation] = await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id)).returning();

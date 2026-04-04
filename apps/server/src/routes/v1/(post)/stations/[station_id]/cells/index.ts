@@ -174,19 +174,15 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
     const response: ResponseData = created.map((cell) => ({ ...cell, details: idToDetails.get(cell.id) ?? null }));
 
-    await Promise.all(
-      response.map((cell) =>
-        createAuditLog(
-          {
-            action: "cells.create",
-            table_name: "cells",
-            record_id: cell.id,
-            new_values: cell,
-            metadata: { station_id },
-          },
-          req,
-        ),
-      ),
+    await createAuditLog(
+      {
+        action: "cells.create",
+        table_name: "cells",
+        record_id: null,
+        new_values: { cells: response },
+        metadata: { station_id },
+      },
+      req,
     );
 
     const [updatedStation] = await db.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, station_id)).returning();
