@@ -2,10 +2,11 @@ version: "3.8"
 
 services:
   client:
+    image: btsearch-client:${COMMIT_SHA}
     build:
       context: .
       dockerfile: apps/client/Dockerfile
-        args:
+      args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:3030/api/v1}
         - VITE_MAPBOX_ACCESS_TOKEN=${VITE_MAPBOX_ACCESS_TOKEN:-}
         - VITE_VAPID_PUBLIC_KEY=${VITE_VAPID_PUBLIC_KEY:-}
@@ -19,6 +20,7 @@ services:
     restart: unless-stopped
 
   server:
+    image: btsearch-server:${COMMIT_SHA}
     build:
       context: .
       dockerfile: apps/server/docker/Dockerfile

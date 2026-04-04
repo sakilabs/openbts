@@ -1,11 +1,15 @@
 #!/bin/bash
 set -e
 
-COMMIT_SHA=$(git log --invert-grep --grep="^feat: swap \`OpenBTS\` to \`BTSearch\`" -1 --format="%h")
+export COMMIT_SHA=$(git log --invert-grep --grep="^feat: swap \`OpenBTS\` to \`BTSearch\`" -1 --format="%h")
 
 if [[ "$1" == "swarm" ]]; then
   COMMIT_SHA=$COMMIT_SHA docker compose build client server
   docker build -t btsearch-postgres -f docker/postgres/Dockerfile .
+  set -a && source .env && set +a
+  docker stack deploy -c docker-compose.swarm.yml btsearch
+elif [[ "$1" == "deploy" ]]; then
+  export COMMIT_SHA=$(docker service inspect btsearch_server --format '{{index (split .Spec.TaskTemplate.ContainerSpec.Image ":") 1}}')
   set -a && source .env && set +a
   docker stack deploy -c docker-compose.swarm.yml btsearch
 elif [[ "$1" == "client" || "$1" == "server" ]]; then

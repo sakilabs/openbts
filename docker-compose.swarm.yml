@@ -1,6 +1,6 @@
 services:
   migrate:
-    image: openbts-server
+    image: btsearch-server:${COMMIT_SHA}
     command: ["./docker-migrate.sh"]
     environment:
       - DATABASE_URL=${DATABASE_URL}
@@ -16,7 +16,7 @@ services:
           - node.role == manager
 
   server:
-    image: openbts-server
+    image: btsearch-server:${COMMIT_SHA}
     ports:
       - target: 3031
         published: 3031
@@ -47,7 +47,7 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3031/api/v1/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3031/api/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -72,7 +72,7 @@ services:
           - node.role == manager
 
   client:
-    image: openbts-client
+    image: btsearch-client:${COMMIT_SHA}
     ports:
       - target: 80
         published: 3000
@@ -80,7 +80,7 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -88,7 +88,7 @@ services:
     deploy:
       replicas: 1
       update_config:
-        order: start-first
+        order: stop-first
         failure_action: rollback
       restart_policy:
         condition: on-failure
