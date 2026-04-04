@@ -98,7 +98,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
               <span className="tabular-nums">{new Date(activePhoto.taken_at).toLocaleDateString(i18n.language, MONTH_FORMAT)}</span>
             </div>
           ) : null}
-          {activePhoto.note ? <span className="italic text-muted-foreground">{activePhoto.note}</span> : null}
+          {activePhoto.note ? <span className="italic text-white/60">{activePhoto.note}</span> : null}
         </div>
       </div>
     </div>,
