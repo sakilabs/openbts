@@ -97,6 +97,7 @@ export interface SaveStationPayload {
   networksId?: number;
   networksName?: string;
   mnoName?: string;
+  skipExtraIds?: boolean;
 }
 
 export function useSaveStationMutation() {
@@ -144,7 +145,7 @@ export function useSaveStationMutation() {
           cells: cellsPayload,
         });
 
-        if (payload.networksId || payload.networksName || payload.mnoName) {
+        if (!payload.skipExtraIds && (payload.networksId || payload.networksName || payload.mnoName)) {
           await updateExtraIds(res.data.id, {
             networks_id: payload.networksId ?? null,
             networks_name: payload.networksName || null,
@@ -244,6 +245,8 @@ export function useSaveStationMutation() {
       if (stationChanged) await patchStation(station.id, stationPatch);
 
       const existingNetworksId = payload.originalStation?.extra_identificators?.networks_id ?? null;
+      if (payload.skipExtraIds) return { mode: "update" as const, stationId: station.id };
+
       const extraIdsFieldsChanged =
         payload.networksId !== existingNetworksId ||
         payload.networksName !== (payload.originalStation?.extra_identificators?.networks_name ?? "") ||

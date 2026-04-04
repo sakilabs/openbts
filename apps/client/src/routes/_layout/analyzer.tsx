@@ -25,6 +25,7 @@ import { useTablePagination } from "@/hooks/useTablePageSize";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/format";
+import { getBandFromEarfcn, getBandFromUarfcn, getBandMhz } from "@/lib/band-utils";
 
 type AnalyzerLocation = {
   id: number;
@@ -377,6 +378,27 @@ function AnalyzerPage() {
             <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold", RAT_BADGE_CLASS[rat])}>
               <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-3" />
               {rat}
+            </span>
+          );
+        },
+      }),
+      columnHelper.accessor((r) => r.parsedRow, {
+        id: "band",
+        header: t("common:labels.band"),
+        size: 90,
+        cell: ({ getValue }) => {
+          const row = getValue();
+          let band: number | null = null;
+          if (row.rat === "LTE" && row.earfcn !== undefined) band = getBandFromEarfcn(row.earfcn);
+          else if (row.rat === "UMTS" && row.uarfcn !== undefined) band = getBandFromUarfcn(row.uarfcn);
+          if (band === null) return <span className="text-muted-foreground text-xs">-</span>;
+          const mhz = getBandMhz(band);
+          return (
+            <span className="text-xs font-mono">
+              {mhz && <span className="font-semibold">{mhz}</span>}
+              <span className="opacity-75">
+                {mhz ? " " : ""}(B{band})
+              </span>
             </span>
           );
         },
