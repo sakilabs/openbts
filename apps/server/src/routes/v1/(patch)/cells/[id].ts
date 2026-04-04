@@ -107,7 +107,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       const nrDetails = req.body.details as z.infer<typeof nrUpdateSchema>;
       const effectiveType = nrDetails.type ?? cell.nr?.type;
       if (effectiveType === "nsa") {
-        for (const field of ["nrtac", "clid", "gnbid", "pci", "arfcn"] as const) {
+        for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
           if (nrDetails[field] !== null && nrDetails[field] !== undefined)
             throw new ErrorResponse("BAD_REQUEST", { message: `${field} must not be set for NSA NR cells` });
         }
