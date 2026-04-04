@@ -46,9 +46,10 @@ type UpdateListBody = Partial<{
   radiolines: number[];
 }>;
 
-export async function fetchUserLists(limit = 50, page = 1, search?: string): Promise<ListsResponse> {
+export async function fetchUserLists(limit = 50, page = 1, search?: string, all?: boolean): Promise<ListsResponse> {
   const params = new URLSearchParams({ limit: String(limit), page: String(page) });
   if (search) params.set("search", search);
+  if (all) params.set("all", "true");
   return fetchJson<ListsResponse>(`${API_BASE}/lists?${params.toString()}`);
 }
 

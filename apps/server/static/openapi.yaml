@@ -2716,7 +2716,7 @@ paths:
     get:
       tags: [Lists]
       summary: List user lists
-      description: Returns lists owned by the authenticated user. Admins with `user_lists:read` permission see all lists.
+      description: Returns lists owned by the authenticated user. Admins with `user_lists:read` permission can pass `all=true` to see all lists across all users.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -2730,6 +2730,10 @@ paths:
         - name: search
           in: query
           schema: { type: string }
+        - name: all
+          in: query
+          description: Return all users' lists. Requires `user_lists:read` admin permission. Ignored for non-admins.
+          schema: { type: boolean, default: false }
       responses:
         "200":
           description: OK

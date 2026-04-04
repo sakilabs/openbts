@@ -32,6 +32,7 @@ const schemaRoute = {
     limit: z.coerce.number().min(1).max(100).optional().default(50),
     page: z.coerce.number().min(1).default(1),
     search: z.string().optional(),
+    all: z.coerce.boolean().optional().default(false),
   }),
   response: {
     200: z.object({
@@ -48,17 +49,18 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   if (!getRuntimeSettings().enableUserLists) throw new ErrorResponse("FORBIDDEN");
   if (!req.userSession) throw new ErrorResponse("UNAUTHORIZED");
 
-  const { limit, page, search } = req.query;
+  const { limit, page, search, all } = req.query;
   const offset = (page - 1) * limit;
   const userId = req.userSession.user.id;
 
   const isAdmin = await verifyPermissions(userId, { user_lists: ["read"] });
+  const showAll = isAdmin && all;
 
-  const whereClause = and(isAdmin ? undefined : eq(userLists.created_by, userId), search ? ilike(userLists.name, `%${search}%`) : undefined);
+  const whereClause = and(showAll ? undefined : eq(userLists.created_by, userId), search ? ilike(userLists.name, `%${search}%`) : undefined);
 
   const countQuery = db.select({ count: count() }).from(userLists).where(whereClause);
 
-  if (isAdmin) {
+  if (showAll) {
     const [countResult, rows] = await Promise.all([
       countQuery,
       db

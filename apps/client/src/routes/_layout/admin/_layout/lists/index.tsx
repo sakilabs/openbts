@@ -55,7 +55,7 @@ function AdminListsPage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "lists", pagination.pageIndex, pagination.pageSize, debouncedSearch],
-    queryFn: () => fetchUserLists(pagination.pageSize, pagination.pageIndex + 1, debouncedSearch || undefined),
+    queryFn: () => fetchUserLists(pagination.pageSize, pagination.pageIndex + 1, debouncedSearch || undefined, true),
     placeholderData: keepPreviousData,
     staleTime: 0,
     refetchOnMount: "always",
