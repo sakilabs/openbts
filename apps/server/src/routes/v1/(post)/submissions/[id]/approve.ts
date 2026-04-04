@@ -267,36 +267,47 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
       if (submission.type === "update" && proposedStation && (proposedStation.networks_id || proposedStation.mno_name) && stationId) {
         const existingIdentifier = await tx.query.extraIdentificators.findFirst({ where: { station_id: stationId } });
-        const [updatedIdentifier] = await tx
-          .insert(extraIdentificators)
-          .values({
-            station_id: stationId,
-            networks_id: proposedStation.networks_id ?? null,
-            networks_name: proposedStation.networks_name ?? null,
-            mno_name: proposedStation.mno_name ?? null,
-          })
-          .onConflictDoUpdate({
-            target: [extraIdentificators.station_id, extraIdentificators.networks_id],
-            set: {
-              networks_name: proposedStation.networks_name ?? null,
-              mno_name: proposedStation.mno_name ?? null,
-              updatedAt: new Date(),
-            },
-          })
-          .returning();
-        if (updatedIdentifier) {
-          await createAuditLog(
-            {
-              action: "stations.update",
-              table_name: "extra_identificators",
-              record_id: stationId,
-              old_values: existingIdentifier ?? null,
-              new_values: updatedIdentifier,
-              metadata: { submission_id: id },
-            },
-            req,
-            tx,
-          );
+        const proposedNetworksId = proposedStation.networks_id ?? null;
+        const proposedNetworksName = proposedStation.networks_name ?? null;
+        const proposedMnoName = proposedStation.mno_name ?? null;
+        const hasIdentifierChanges =
+          !existingIdentifier ||
+          existingIdentifier.networks_id !== proposedNetworksId ||
+          existingIdentifier.networks_name !== proposedNetworksName ||
+          existingIdentifier.mno_name !== proposedMnoName;
+
+        if (hasIdentifierChanges) {
+          const [updatedIdentifier] = await tx
+            .insert(extraIdentificators)
+            .values({
+              station_id: stationId,
+              networks_id: proposedNetworksId,
+              networks_name: proposedNetworksName,
+              mno_name: proposedMnoName,
+            })
+            .onConflictDoUpdate({
+              target: [extraIdentificators.station_id, extraIdentificators.networks_id],
+              set: {
+                networks_name: proposedNetworksName,
+                mno_name: proposedMnoName,
+                updatedAt: new Date(),
+              },
+            })
+            .returning();
+          if (updatedIdentifier) {
+            await createAuditLog(
+              {
+                action: "stations.update",
+                table_name: "extra_identificators",
+                record_id: stationId,
+                old_values: existingIdentifier ?? null,
+                new_values: updatedIdentifier,
+                metadata: { submission_id: id },
+              },
+              req,
+              tx,
+            );
+          }
         }
       }
 
