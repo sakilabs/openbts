@@ -3,7 +3,7 @@ import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchApiData, showApiError } from "@/lib/api";
 import type { ProposedLocationForm } from "@/features/submissions/types";
@@ -242,6 +242,7 @@ function StationDetailForm({
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation("stations");
+  const queryClient = useQueryClient();
 
   const [formState, dispatch] = useReducer(formReducer, station, getInitialFormState);
   const {
@@ -269,7 +270,6 @@ function StationDetailForm({
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
 
   const saveMutation = useSaveStationMutation();
-
   const handleServerCellDelete = useCallback((cell: LocalCell) => {
     if (cell._serverId) dispatch({ type: "ADD_DELETED_ID", payload: cell._serverId });
   }, []);
@@ -460,6 +460,12 @@ function StationDetailForm({
           } else {
             toast.success(t("toast.saved"));
             dispatch({ type: "CLEAR_DELETED" });
+            const fresh = await queryClient.fetchQuery<Station>({
+              queryKey: ["admin", "station", String(result.stationId)],
+            });
+            setLocalCells(sortAndMapCells(fresh.cells));
+            const freshRats = new Set(fresh.cells.map((c) => c.rat));
+            setEnabledRats(RAT_ORDER.filter((r) => freshRats.has(r)));
           }
         },
         onError: (error) => {
@@ -563,8 +569,8 @@ function StationDetailForm({
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col lg:flex-row gap-3 p-3">
-          <div className="w-full lg:flex-2 space-y-2">
+        <div className="flex flex-wrap gap-3 p-3">
+          <div className="flex-[2_1_300px] space-y-2">
             <StationInfoForm
               stationDbId={station?.id}
               stationId={stationId}
@@ -608,7 +614,7 @@ function StationDetailForm({
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
           </div>
 
-          <div className="w-full lg:flex-3 min-w-0 space-y-2">
+          <div className="flex-[3_1_500px] space-y-2">
             <CellsEditor
               cellsByRat={cellsByRat}
               enabledRats={enabledRats}

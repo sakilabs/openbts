@@ -70,8 +70,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
   }
 
   return (
-    <form onSubmit={handleFormSubmit} onKeyDown={handleKeyDown} className="flex flex-col lg:flex-row gap-4 h-full">
-      <div className="w-full lg:flex-2 space-y-3 max-w-136">
+    <form onSubmit={handleFormSubmit} onKeyDown={handleKeyDown} className="flex flex-wrap gap-4 h-full">
+      <div className="flex-[2_1_300px] space-y-3 max-w-136">
         {isEditMode && (
           <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30 px-4 py-2.5 flex items-center gap-2.5">
             <HugeiconsIcon icon={PencilEdit02Icon} className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -279,7 +279,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         </form.Subscribe>
       </div>
 
-      <div className="border-t lg:border-t-0 pt-4 lg:pt-0 w-full lg:flex-3 min-w-0">
+      <div className="flex-[3_1_500px] min-w-0">
         <form.Subscribe
           selector={(s) => ({
             selectedRats: s.values.selectedRats,
