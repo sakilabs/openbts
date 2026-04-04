@@ -129,7 +129,7 @@ export function StationCounter({
             {sourceItems.map(({ label, date, value }) => (
               <p key={value} className={cn(source === value && "font-semibold")}>
                 {label}: {date ? formatRelativeTime(date, tCommon) : tCommon("status.never")}
-                {date && <span className="text-muted-foreground"> · {formatFullDate(date, i18n.language)}</span>}
+                {date && <span className="text-background/60"> · {formatFullDate(date, i18n.language)}</span>}
               </p>
             ))}
           </TooltipContent>
