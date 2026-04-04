@@ -14,6 +14,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { fetchJson, API_BASE } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { resolveAvatarUrl } from "@/lib/format";
 import type { AdminUser } from "@/features/admin/users/types";
 
@@ -82,7 +83,7 @@ function AdminUsersPage() {
   const navigate = useNavigate();
   const { t } = useTranslation("admin");
   const columns = useColumns();
-  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [bannedFilter, setBannedFilter] = useState<BannedFilter>("all");
@@ -169,7 +170,10 @@ function AdminUsersPage() {
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
+      <div
+        ref={containerRef}
+        className={cn("flex-1 h-full overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}
+      >
         <DataTable.Root table={table}>
           <DataTable.Table>
             <DataTable.Header />

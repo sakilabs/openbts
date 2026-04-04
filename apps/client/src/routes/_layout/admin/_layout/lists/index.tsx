@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import { resolveAvatarUrl } from "@/lib/format";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
@@ -38,7 +39,7 @@ function AdminListsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
@@ -189,7 +190,10 @@ function AdminListsPage() {
           </div>
         </div>
 
-        <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
+        <div
+          ref={containerRef}
+          className={cn("flex-1 h-full overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}
+        >
           <DataTable.Root table={table}>
             <DataTable.Table>
               <DataTable.Header />

@@ -23,6 +23,7 @@ const StationDetailsDialog = lazy(() =>
 );
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
+import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/format";
 import { getBandFromEarfcn, getBandFromUarfcn, getBandMhz } from "@/lib/band-utils";
@@ -184,8 +185,12 @@ function AnalyzerPage() {
   const [elapsed, setElapsed] = useState(0);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
   const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter } = state;
+  const isMobile = useIsMobile();
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+
+  const MOBILE_PAGE_SIZE = 13;
+  const effectivePagination = isMobile ? { ...pagination, pageSize: MOBILE_PAGE_SIZE } : pagination;
 
   const mergedRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -598,13 +603,13 @@ function AnalyzerPage() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination },
+    state: { pagination: effectivePagination },
     onPaginationChange: setPagination,
   });
 
   return (
     <RequireAuth>
-      <div className="flex-1 flex flex-col p-4 gap-4 min-h-0 overflow-hidden">
+      <div className={cn("flex-1 p-4", isMobile ? "overflow-y-auto space-y-4" : "flex flex-col gap-4 min-h-0 overflow-hidden")}>
         <div className="flex flex-col gap-4 shrink-0">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold">{t("nav:items.analyzer")}</h1>
@@ -825,8 +830,14 @@ function AnalyzerPage() {
         )}
 
         <div
-          ref={mergedRef}
-          className={cn("flex-1 min-h-0 overflow-auto transition-opacity", !parsedRows && "hidden", isLoading && "opacity-50 pointer-events-none")}
+          ref={isMobile ? undefined : mergedRef}
+          className={cn(
+            "transition-opacity",
+            !isMobile && "flex-1 min-h-0 overflow-auto",
+            isMobile && "overflow-x-auto",
+            !parsedRows && "hidden",
+            isLoading && "opacity-50 pointer-events-none",
+          )}
         >
           <DataTable.Root table={table}>
             <DataTable.Table className="w-max min-w-full">

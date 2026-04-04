@@ -161,7 +161,7 @@ function AdminAuditLogsPage() {
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
   const { tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort, selectedEntry } = filterState;
 
-  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
@@ -400,7 +400,10 @@ function AdminAuditLogsPage() {
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto">
+      <div
+        ref={containerRef}
+        className={cn("flex-1 h-full overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}
+      >
         <DataTable.Root table={table}>
           <DataTable.Table>
             <DataTable.Header />

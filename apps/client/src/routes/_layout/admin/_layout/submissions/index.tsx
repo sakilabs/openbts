@@ -65,7 +65,13 @@ function AdminSubmissionsListPage() {
     [navigate],
   );
 
-  const { containerRef, pagination: sizePagination, setPagination: setSizePagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const {
+    containerRef,
+    pagination: sizePagination,
+    setPagination: setSizePagination,
+    autoPageSize,
+    pageSizeOptions,
+  } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const pagination = useMemo(() => ({ pageIndex: page, pageSize: sizePagination.pageSize }), [page, sizePagination.pageSize]);
 
@@ -267,7 +273,13 @@ function AdminSubmissionsListPage() {
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full overflow-x-auto overflow-y-auto overscroll-y-contain">
+      <div
+        ref={containerRef}
+        className={cn(
+          "flex-1 h-full overflow-x-auto",
+          sizePagination.pageSize > autoPageSize ? "overflow-y-auto overscroll-y-contain" : "overflow-y-clip",
+        )}
+      >
         <DataTable.Root table={table}>
           <DataTable.Table>
             <DataTable.Header />
