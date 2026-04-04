@@ -11,7 +11,9 @@ function resolveLocale(locale: string | null | undefined): Locale {
   return "pl-PL";
 }
 
-export function t<N extends Namespace>(namespace: N, locale: string | null | undefined): { title: string; body: string } {
+type NotificationNamespace = Exclude<Namespace, "labels">;
+
+export function t<N extends NotificationNamespace>(namespace: N, locale: string | null | undefined): { title: string; body: string } {
   return translations[resolveLocale(locale)][namespace];
 }
 
