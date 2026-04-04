@@ -95,9 +95,15 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     return res.send({ data: existing });
   }
 
-  if (allEmpty) {
-    return res.send({ data: existing ?? ({} as ResponseData) });
-  }
+  if (allEmpty) return res.send({ data: existing ?? ({} as ResponseData) });
+
+  if (
+    existing &&
+    existing.networks_id === (networks_id ?? null) &&
+    existing.networks_name === (networks_name ?? null) &&
+    existing.mno_name === (mno_name ?? null)
+  )
+    return res.send({ data: existing });
 
   const [result] = existing
     ? await db

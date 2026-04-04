@@ -248,9 +248,9 @@ export function useSaveStationMutation() {
       if (payload.skipExtraIds) return { mode: "update" as const, stationId: station.id };
 
       const extraIdsFieldsChanged =
-        payload.networksId !== existingNetworksId ||
-        payload.networksName !== (payload.originalStation?.extra_identificators?.networks_name ?? "") ||
-        payload.mnoName !== (payload.originalStation?.extra_identificators?.mno_name ?? "");
+        (payload.networksId ?? null) !== existingNetworksId ||
+        (payload.networksName || null) !== (payload.originalStation?.extra_identificators?.networks_name || null) ||
+        (payload.mnoName || null) !== (payload.originalStation?.extra_identificators?.mno_name || null);
 
       const existingHasExtraIds =
         (existingNetworksId !== null && existingNetworksId !== undefined) || !!payload.originalStation?.extra_identificators?.mno_name;
