@@ -148,7 +148,7 @@ export function StationCommentsSection({ stationId }: StationCommentsSectionProp
           <AlertDialogFooter>
             <AlertDialogCancel>{tAdmin("common:actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-white hover:bg-destructive/90"
               onClick={() => deleteTarget !== null && deleteMutation.mutate(deleteTarget)}
               disabled={deleteMutation.isPending}
             >

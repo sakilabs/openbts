@@ -124,7 +124,7 @@ export function AddCommentForm({ stationId }: AddCommentFormProps) {
                     "bg-background/80 backdrop-blur-sm border shadow-sm",
                     "flex items-center justify-center",
                     "opacity-0 group-hover:opacity-100 transition-opacity",
-                    "hover:bg-destructive hover:text-destructive-foreground",
+                    "hover:bg-destructive hover:text-white",
                   )}
                 >
                   <HugeiconsIcon icon={Cancel01Icon} className="size-3" />
