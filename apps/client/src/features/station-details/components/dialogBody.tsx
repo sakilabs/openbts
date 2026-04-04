@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import type { Station } from "@/types/station";
+import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   InformationCircleIcon,
@@ -28,9 +28,12 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { NavigationLinks } from "./navLinks";
 import { groupCellsByRat } from "../utils";
 import { TAB_OPTIONS, type TabId } from "../tabs";
+import { fetchStationPhotos } from "../api";
+import { fetchApiData } from "@/lib/api";
 import { useSettings } from "@/hooks/useSettings";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import type { Station, StationComment } from "@/types/station";
 
 type StationDetailsBodyProps = {
   stationId: number;
@@ -89,6 +92,25 @@ export function StationDetailsBody({
   };
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
   const cellGroups = station ? groupCellsByRat(station.cells) : {};
+
+  const { data: photos } = useQuery({
+    queryKey: ["station-photos", stationId],
+    queryFn: () => fetchStationPhotos(stationId),
+    staleTime: 1000 * 60 * 5,
+    enabled: source === "internal" && !!settings?.photosEnabled,
+  });
+
+  const { data: comments } = useQuery({
+    queryKey: ["station-comments", stationId],
+    queryFn: () => fetchApiData<StationComment[]>(`stations/${stationId}/comments`, { allowedErrors: [404, 403] }).then((data) => data ?? []),
+    staleTime: 1000 * 60 * 5,
+    enabled: source === "internal" && !!settings?.enableStationComments,
+  });
+
+  const tabCounts: Partial<Record<TabId, number>> = {
+    ...(photos !== undefined ? { photos: photos.length } : {}),
+    ...(comments !== undefined ? { comments: comments.length } : {}),
+  };
   const visibleTabs = useMemo(
     () =>
       source === "uke"
@@ -172,6 +194,11 @@ export function StationDetailsBody({
               >
                 <HugeiconsIcon icon={tab.icon} className="size-4" />
                 <span className="hidden sm:inline">{t(`tabs.${tab.id}`)}</span>
+                {tabCounts[tab.id] !== undefined && tabCounts[tab.id]! > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-xs font-bold bg-primary text-primary-foreground leading-none animate-in fade-in zoom-in-50 duration-200">
+                    {tabCounts[tab.id]! > 99 ? "99+" : tabCounts[tab.id]}
+                  </span>
+                )}
               </button>
             ))}
           </div>
