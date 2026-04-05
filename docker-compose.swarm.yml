@@ -105,6 +105,10 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-openbts}
     volumes:
       - postgres-volume:/var/lib/postgresql/18/docker
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 4294967296
     networks:
       - internal
     healthcheck:
