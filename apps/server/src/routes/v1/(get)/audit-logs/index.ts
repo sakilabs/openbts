@@ -1,4 +1,4 @@
-import { sql, count, and, eq, gte, lte, inArray, ilike } from "drizzle-orm";
+import { sql, count, and, or, eq, gte, lte, inArray, ilike } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
@@ -20,6 +20,7 @@ const schemaRoute = {
     record_id: z.string().optional(),
     actions: z.string().optional(),
     invoked_by: z.string().optional(),
+    search: z.string().optional(),
     from: z.string().optional(),
     to: z.string().optional(),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
@@ -43,7 +44,7 @@ type AuditLogWithUser = z.infer<typeof auditLogSchema> & {
 type ResponseBody = { data: AuditLogWithUser[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit, offset, table_name, record_id, actions, invoked_by, from, to, sort } = req.query;
+  const { limit, offset, table_name, record_id, actions, invoked_by, search, from, to, sort } = req.query;
 
   const actionList = actions
     ? actions.split(",").filter((a): a is (typeof AuditAction.enumValues)[number] => AuditAction.enumValues.includes(a as never))
@@ -56,6 +57,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     if (actionList.length === 1) conditions.push(eq(fields.action, actionList[0]!));
     else if (actionList.length > 1) conditions.push(inArray(fields.action, actionList));
     if (invoked_by) conditions.push(eq(fields.invoked_by, invoked_by));
+    if (search) {
+      const term = `%${search}%`;
+      const subquery = db
+        .select({ id: users.id })
+        .from(users)
+        .where(or(ilike(users.name, term), ilike(users.username, term), ilike(users.email, term)));
+      conditions.push(inArray(fields.invoked_by, subquery));
+    }
     if (from) conditions.push(gte(fields.createdAt, new Date(from)));
     if (to) conditions.push(lte(fields.createdAt, new Date(to)));
     return conditions;

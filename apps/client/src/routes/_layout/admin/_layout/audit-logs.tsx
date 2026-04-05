@@ -1,4 +1,5 @@
 import { useReducer, useMemo, useCallback, useState } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -161,20 +162,36 @@ function AdminAuditLogsPage() {
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
   const { tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort, selectedEntry } = filterState;
 
+  const [userFilterInput, setUserFilterInput] = useState("");
+  const debouncedUserFilter = useDebouncedValue(userFilterInput, 300);
+
   const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
-  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || recordIdFilter);
-  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, recordIdFilter].filter(Boolean).length;
+  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || recordIdFilter || userFilterInput);
+  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, recordIdFilter, userFilterInput].filter(Boolean).length;
 
   const clearAllFilters = useCallback(() => {
     dispatchFilter({ type: "CLEAR_FILTERS" });
+    setUserFilterInput("");
     resetPage();
   }, [resetPage]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "audit-logs", pagination.pageIndex, pagination.pageSize, tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort],
+    queryKey: [
+      "admin",
+      "audit-logs",
+      pagination.pageIndex,
+      pagination.pageSize,
+      tableFilter,
+      actionsFilter,
+      dateFrom,
+      dateTo,
+      recordIdFilter,
+      debouncedUserFilter,
+      sort,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
@@ -183,6 +200,7 @@ function AdminAuditLogsPage() {
       if (tableFilter) params.set("table_name", tableFilter);
       if (actionsFilter.length > 0) params.set("actions", actionsFilter.join(","));
       if (recordIdFilter) params.set("record_id", recordIdFilter);
+      if (debouncedUserFilter) params.set("search", debouncedUserFilter);
       if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
       if (dateTo) {
         const to = new Date(dateTo);
@@ -365,6 +383,23 @@ function AdminAuditLogsPage() {
               value={recordIdFilter}
               onChange={(e) => {
                 dispatchFilter({ type: "SET_RECORD_ID_FILTER", payload: e.target.value });
+                resetPage();
+              }}
+            />
+          </div>
+
+          <div className="relative">
+            <HugeiconsIcon
+              icon={Search01Icon}
+              className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+            />
+            <Input
+              className="h-8 pl-7 w-44"
+              placeholder={t("auditLogs.filters.userSearch")}
+              autoComplete="off"
+              value={userFilterInput}
+              onChange={(e) => {
+                setUserFilterInput(e.target.value);
                 resetPage();
               }}
             />

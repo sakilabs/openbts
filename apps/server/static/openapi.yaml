@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-03-23
+    Last updated: 2026-04-05
   version: 1.0.0
 
 servers:
@@ -2337,6 +2337,10 @@ paths:
         - name: invoked_by
           in: query
           schema: { type: string, format: uuid }
+        - name: search
+          in: query
+          description: Search across user name, username, and email
+          schema: { type: string }
         - name: from
           in: query
           description: ISO date for createdAt >=

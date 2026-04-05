@@ -236,6 +236,7 @@
       "dateTo": "To",
       "recordId": "Record ID",
       "userId": "User ID",
+      "userSearch": "User (name, email...)",
       "moreFilters": "More filters"
     },
     "empty": {

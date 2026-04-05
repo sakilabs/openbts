@@ -242,6 +242,7 @@
       "dateTo": "Do",
       "recordId": "ID rekordu",
       "userId": "ID użytkownika",
+      "userSearch": "Użytkownik (imię, email...)",
       "moreFilters": "Więcej filtrów"
     },
     "empty": {
