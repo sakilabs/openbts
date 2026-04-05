@@ -1,6 +1,16 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-05
+
+### 🚀 Enhancements
+
+- Admin user detail page now shows whether the user's email address has been verified
+
+### 🩹 Fixes
+
+- Fixed page refresh (F5) causing an endless loading loop on non-root routes by adding a service worker navigation fallback
+
 # 2026-04-04
 
 ### 🚀 Enhancements

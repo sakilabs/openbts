@@ -1,9 +1,12 @@
-import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
+import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
+import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
+
+registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html")));
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") void self.skipWaiting();

@@ -11,6 +11,7 @@ export interface AdminUser {
   username?: string;
   twoFactorEnabled?: boolean;
   forceTotp?: boolean;
+  emailVerified?: boolean;
 }
 
 export interface Session {
