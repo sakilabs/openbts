@@ -290,27 +290,36 @@ export async function associateStationsWithPermits(): Promise<boolean> {
     if (s.operator_id !== null) stationsByKey.set(`${s.station_id}:${s.operator_id}`, s.id);
   }
 
-  const associations: Array<{ permit_id: number; station_id: number }> = [];
+  const allAssociations: Array<{ permit_id: number; station_id: number }> = [];
   let skippedOperatorMismatch = 0;
   for (const permit of permits) {
     const key = `${permit.station_id}:${permit.operator_id}`;
     const internalStationId = stationsByKey.get(key);
-    if (internalStationId !== undefined) associations.push({ permit_id: permit.id, station_id: internalStationId });
+    if (internalStationId !== undefined) allAssociations.push({ permit_id: permit.id, station_id: internalStationId });
     else skippedOperatorMismatch++;
   }
   if (skippedOperatorMismatch > 0) logger.warn(`Skipped ${skippedOperatorMismatch} permits (no station with matching station_id + operator)`);
-  logger.log(`Creating ${associations.length} associations`);
-  if (!associations.length) {
+  if (!allAssociations.length) {
     logger.log("No associations to create");
     await recordImportMetadata("stations_permits", [], "success");
     return false;
   }
 
+  const existingAssociations = await db.query.stationsPermits.findMany({
+    columns: { permit_id: true, station_id: true },
+  });
+  const existingKeys = new Set(existingAssociations.map((a) => `${a.permit_id}:${a.station_id}`));
+  const associations = allAssociations.filter((a) => !existingKeys.has(`${a.permit_id}:${a.station_id}`));
+
+  logger.log(`Creating ${associations.length} new associations (${allAssociations.length - associations.length} already exist)`);
+  if (!associations.length) {
+    logger.log("All associations already exist, skipping");
+    await recordImportMetadata("stations_permits", [], "success");
+    return false;
+  }
+
   for (const group of chunk(associations, BATCH_SIZE)) {
-    await db
-      .insert(stationsPermits)
-      .values(group)
-      .onConflictDoNothing({ target: [stationsPermits.station_id, stationsPermits.permit_id] });
+    await db.insert(stationsPermits).values(group);
   }
 
   await recordImportMetadata("stations_permits", [], "success");

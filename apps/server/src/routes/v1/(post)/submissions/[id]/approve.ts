@@ -7,7 +7,7 @@ import { ErrorResponse } from "../../../../../errors.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
+import { syncStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
 import { computeGnbidLength } from "../../../../../utils/submission.helpers.js";
 import { checkCellDuplicatesBatch } from "../../../../../services/cellDuplicateCheck.service.js";
@@ -682,8 +682,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     const { submission: result, stationStringId } = transactionResult;
 
     if (submission.type === "new") {
-      void rebuildStationsPermitsAssociations().catch((e) =>
-        logger.error("Failed to rebuild stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
+      void syncStationsPermitsAssociations().catch((e) =>
+        logger.error("Failed to sync stations_permits after approval", { error: e instanceof Error ? e.message : String(e) }),
       );
     }
 

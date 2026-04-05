@@ -13,6 +13,10 @@ export async function rebuildStationsPermitsAssociations(): Promise<void> {
   await associateStationsWithPermits();
 }
 
+export async function syncStationsPermitsAssociations(): Promise<void> {
+  await associateStationsWithPermits();
+}
+
 export async function cleanupOrphanedUkeLocations(): Promise<void> {
   await db
     .delete(ukeLocations)

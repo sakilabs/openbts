@@ -6,7 +6,7 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
-import { rebuildStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
+import { syncStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../utils/logger.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
@@ -204,8 +204,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       return response;
     });
 
-    void rebuildStationsPermitsAssociations().catch((e) =>
-      logger.error("Failed to rebuild stations_permits after station creation", { error: e instanceof Error ? e.message : String(e) }),
+    void syncStationsPermitsAssociations().catch((e) =>
+      logger.error("Failed to sync stations_permits after station creation", { error: e instanceof Error ? e.message : String(e) }),
     );
 
     await createAuditLog(
