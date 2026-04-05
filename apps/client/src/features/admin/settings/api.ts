@@ -40,3 +40,10 @@ export async function cleanupSubmissions(): Promise<{ cleaned: number }> {
   });
   return res.data;
 }
+
+export async function cleanupRejectedPhotos(): Promise<{ deleted: number }> {
+  const res = await fetchJson<{ data: { deleted: number } }>(`${API_BASE}/submissions/cleanup-photos`, {
+    method: "POST",
+  });
+  return res.data;
+}

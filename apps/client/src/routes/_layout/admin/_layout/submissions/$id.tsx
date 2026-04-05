@@ -137,10 +137,10 @@ function SubmissionDetailPage() {
         </div>
         <div className="flex-1 overflow-y-auto p-3">
           <div className="flex flex-wrap gap-3">
-            <div className="flex-[2_1_300px]">
+            <div className="flex-[2_0_300px]">
               <Skeleton className="h-52 w-full rounded-xl" />
             </div>
-            <div className="flex-[3_1_500px] space-y-2 min-w-0">
+            <div className="flex-[2.5_0_500px] max-md:flex-[1_1_auto] max-md:min-w-0 space-y-2">
               <Skeleton className="h-40 w-full rounded-xl" />
             </div>
           </div>
@@ -442,7 +442,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
           </div>
         )}
         <div className="flex flex-wrap gap-3 p-3">
-          <div className="flex-[2_1_300px] space-y-2">
+          <div className="flex-[2_0_300px] space-y-2">
             <SubmitterCard submission={submission} />
             <AdminReviewCard submission={submission} reviewNotes={reviewNotes} onReviewNotesChange={setReviewNotes} isReadOnly={isReadOnly} />
 
@@ -467,7 +467,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} />
           </div>
 
-          <div className="flex-[3_1_500px] space-y-2 min-w-0">
+          <div className="flex-[2.5_0_500px] max-md:flex-[1_1_auto] max-md:min-w-0 space-y-2">
             <CellsEditor
               cellsByRat={cellsByRat}
               enabledRats={enabledRats}

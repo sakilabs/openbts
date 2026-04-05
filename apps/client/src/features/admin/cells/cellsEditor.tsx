@@ -91,7 +91,7 @@ function RatTable<T extends CellDraftBase>({
         <thead>
           <tr className="border-b bg-muted/30">
             {headers.map((h) => (
-              <th key={h} className="px-4 py-2 text-left font-medium text-muted-foreground text-xs">
+              <th key={h} className="px-4 py-2 text-left font-medium text-muted-foreground text-xs whitespace-nowrap">
                 {h}
               </th>
             ))}

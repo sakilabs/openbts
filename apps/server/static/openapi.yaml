@@ -2001,6 +2001,32 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /submissions/cleanup-photos:
+    post:
+      tags: [Submissions]
+      summary: Clean up rejected submission photos
+      description: Deletes attachment files and records for photos uploaded to rejected submissions that were never assigned to a station
+      security:
+        - CookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [deleted]
+                    properties:
+                      deleted: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /notifications:
     get:
       tags: [Notifications]

@@ -1,34 +1,28 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
-# Staged
-
-### 🚀 Enhancements
-
-- Station details and UKE permit dialogs now show a **SI2PEM** logo instead of `S` letter
-- Map filter panel now shows keyboard shortcut hints inline next to each filter control
-- Map filter keybinds updated: operators `1–4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
-- Search filters now support `earfcn:` (LTE EARFCN value) and `cell_notes:` (cell notes partial match)
-- Cell rows in the cell editor now have a **Clone** button that duplicates the row in-place with a brief highlight
-- Submission approval now runs a duplicate-cell check before committing changes
-- Audit log changes table now renders a mobile-friendly stacked layout on small screens
-
-### 🩹 Fixes
-
-- Fixed cell editor overflowing viewport width on mobile in `/submission`, `/admin/submissions/:id`, and `/admin/stations/:id`
-- Fixed `rat:5g` being rejected by `POST /search` when NR filter is active on the stations page
-- Fixed comment preview in admin comments table incorrectly wrapping on newlines; preview now collapses them into spaces
-- Fixed locations table showing a scrollbar when all rows fit within the viewport
-
 # 2026-04-05
 
 ### 🚀 Enhancements
 
 - Admin user detail page now shows whether the user's email address has been verified
+- Station details and UKE permit dialogs now show a **SI2PEM** logo instead of `S` letter
+- Map filter panel now shows keyboard shortcut hints inline next to each filter control
+- Map filter keybinds updated: operators `1–4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
+- Search filters now support `earfcn:` (LTE EARFCN value) and `cell_notes:` (cell notes partial match)
+- Cell rows in the cell editor now have a **Clone** button that duplicates the row in-place with a brief highlight; cloned cells are now treated as newly added (no server ID)
+- Cell editor and station details form now use a non-shrinking flex layout that wraps to a column when the viewport is too narrow instead of squeezing
+- Submission approval now runs a duplicate-cell check before committing changes
+- Audit log changes table now renders a mobile-friendly stacked layout on small screens
 
 ### 🩹 Fixes
 
 - Fixed page refresh (F5) causing an endless loading loop on non-root routes by adding a service worker navigation fallback
+- Fixed cell editor overflowing viewport width on mobile in `/submission`, `/admin/submissions/:id`, and `/admin/stations/:id`
+- Fixed cell editor table headers (e.g. `E-GSM`) wrapping at hyphens on narrow screens
+- Fixed `rat:5g` being rejected by `POST /search` when NR filter is active on the stations page
+- Fixed comment preview in admin comments table incorrectly wrapping on newlines; preview now collapses them into spaces
+- Fixed locations table showing a scrollbar when all rows fit within the viewport
 
 # 2026-04-04
 

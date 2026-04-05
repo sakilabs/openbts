@@ -572,7 +572,7 @@ function StationDetailForm({
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-wrap gap-3 p-3">
-          <div className="flex-[2_1_300px] space-y-2">
+          <div className="flex-[2_0_300px] space-y-2">
             <StationInfoForm
               stationDbId={station?.id}
               stationId={stationId}
@@ -616,7 +616,7 @@ function StationDetailForm({
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
           </div>
 
-          <div className="flex-[3_1_500px] space-y-2 min-w-0">
+          <div className="flex-[2.5_0_500px] max-md:flex-[1_1_auto] max-md:min-w-0 space-y-2">
             <CellsEditor
               cellsByRat={cellsByRat}
               enabledRats={enabledRats}

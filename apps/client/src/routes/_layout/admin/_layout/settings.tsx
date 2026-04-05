@@ -20,7 +20,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchSettings, patchSettings, cleanupSubmissions, type RuntimeSettings, type SettingsPatch } from "@/features/admin/settings/api";
+import {
+  fetchSettings,
+  patchSettings,
+  cleanupSubmissions,
+  cleanupRejectedPhotos,
+  type RuntimeSettings,
+  type SettingsPatch,
+} from "@/features/admin/settings/api";
 
 function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
   return (
@@ -202,6 +209,16 @@ function AdminSettingsPage() {
     },
     onError: () => {
       toast.error(t("settings.cleanupError"));
+    },
+  });
+
+  const cleanupPhotosMutation = useMutation({
+    mutationFn: cleanupRejectedPhotos,
+    onSuccess: (result) => {
+      toast.success(t("settings.cleanupPhotosSuccess", { count: result.deleted }));
+    },
+    onError: () => {
+      toast.error(t("settings.cleanupPhotosError"));
     },
   });
 
@@ -510,6 +527,19 @@ function AdminSettingsPage() {
               <Button size="sm" variant="destructive" onClick={() => cleanupMutation.mutate()} disabled={cleanupMutation.isPending}>
                 {cleanupMutation.isPending && <Spinner className="size-4 mr-2" />}
                 {t("settings.cleanupRun")}
+              </Button>
+            </div>
+          </SettingsCard>
+
+          <SettingsCard
+            icon={<HugeiconsIcon icon={Image01Icon} className="size-4" />}
+            title={t("settings.cleanupPhotosTitle")}
+            description={t("settings.cleanupPhotosDesc")}
+          >
+            <div className="flex items-center justify-between pt-1">
+              <Button size="sm" variant="destructive" onClick={() => cleanupPhotosMutation.mutate()} disabled={cleanupPhotosMutation.isPending}>
+                {cleanupPhotosMutation.isPending && <Spinner className="size-4 mr-2" />}
+                {t("settings.cleanupPhotosRun")}
               </Button>
             </div>
           </SettingsCard>
