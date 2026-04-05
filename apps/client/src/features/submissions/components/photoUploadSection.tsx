@@ -11,6 +11,7 @@ import {
   Cancel01Icon,
   Delete02Icon,
   Image01Icon,
+  InformationCircleIcon,
   PencilEdit02Icon,
   Tick02Icon,
   Upload04Icon,
@@ -478,6 +479,15 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                     <span className="text-xs text-muted-foreground">{t("photos.add")}</span>
                   </button>
                 )}
+              </div>
+            )}
+            {totalCount > 0 && (
+              <div className="mx-3 mb-2 rounded-lg border border-blue-500/30 bg-blue-50 dark:bg-blue-950/30 px-3 py-2 flex items-start gap-2">
+                <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">{t("warnings.photosTitle")}</p>
+                  <p className="text-xs text-blue-600/80 dark:text-blue-400/80 leading-relaxed">{t("warnings.photosDesc")}</p>
+                </div>
               </div>
             )}
             <p className="px-3 pb-2 text-xs text-muted-foreground">{t("photos.hint", { max: MAX_FILES, size: "10 MB" })}</p>

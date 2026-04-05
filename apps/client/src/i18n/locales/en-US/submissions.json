@@ -131,6 +131,10 @@
     "rejected": "Submission rejected",
     "photoUploadFailed": "Submission created, but photo upload failed"
   },
+  "warnings": {
+    "photosTitle": "Warnings regarding photos",
+    "photosDesc": "If you plan to add these photos to multiple stations at this location, wait for the first submission to be approved - once accepted, you can select those photos for other stations without re-uploading them."
+  },
   "photos": {
     "label": "Photos",
     "add": "Add photo",

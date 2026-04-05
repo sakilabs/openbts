@@ -79,7 +79,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
             )}
           >
             <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-            {t("common:labels.newStation")}
+            <span className="hidden sm:inline">{t("common:labels.newStation")}</span>
           </button>
           <button
             type="button"
@@ -92,7 +92,7 @@ export function StationSelector({ mode, selectedStation, onModeChange, onStation
             )}
           >
             <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-            {t("submissionSelector.existingStation")}
+            <span className="hidden sm:inline">{t("submissionSelector.existingStation")}</span>
           </button>
         </div>
       </div>

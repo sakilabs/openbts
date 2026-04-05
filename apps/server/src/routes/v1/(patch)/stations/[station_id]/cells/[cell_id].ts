@@ -149,7 +149,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "GSM":
           {
             const details = req.body.details as z.infer<typeof gsmCellsUpdateSchema>;
-            const [existing] = await db.update(gsmCells).set(details).where(eq(gsmCells.cell_id, cell_id)).returning();
+            const [existing] = await db
+              .update(gsmCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(gsmCells.cell_id, cell_id))
+              .returning();
             if (!existing) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no GSM data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -160,7 +164,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "UMTS":
           {
             const details = req.body.details as z.infer<typeof umtsCellsUpdateSchema>;
-            const [existing] = await db.update(umtsCells).set(details).where(eq(umtsCells.cell_id, cell_id)).returning();
+            const [existing] = await db
+              .update(umtsCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(umtsCells.cell_id, cell_id))
+              .returning();
             if (!existing) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no UMTS data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -171,7 +179,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "LTE":
           {
             const details = req.body.details as z.infer<typeof lteCellsUpdateSchema>;
-            const [existing] = await db.update(lteCells).set(details).where(eq(lteCells.cell_id, cell_id)).returning();
+            const [existing] = await db
+              .update(lteCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(lteCells.cell_id, cell_id))
+              .returning();
             if (!existing) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no LTE data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -182,7 +194,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "NR":
           {
             const details = req.body.details as z.infer<typeof nrCellsUpdateSchema>;
-            const [existing] = await db.update(nrCells).set(details).where(eq(nrCells.cell_id, cell_id)).returning();
+            const [existing] = await db
+              .update(nrCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(nrCells.cell_id, cell_id))
+              .returning();
             if (!existing) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",

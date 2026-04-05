@@ -133,7 +133,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "GSM":
           {
             const details = req.body.details as z.infer<typeof gsmUpdateSchema>;
-            const [updated] = await db.update(gsmCells).set(details).where(eq(gsmCells.cell_id, id)).returning();
+            const [updated] = await db
+              .update(gsmCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(gsmCells.cell_id, id))
+              .returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -144,7 +148,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "UMTS":
           {
             const details = req.body.details as z.infer<typeof umtsUpdateSchema>;
-            const [updated] = await db.update(umtsCells).set(details).where(eq(umtsCells.cell_id, id)).returning();
+            const [updated] = await db
+              .update(umtsCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(umtsCells.cell_id, id))
+              .returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -155,7 +163,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         case "LTE":
           {
             const details = req.body.details as z.infer<typeof lteUpdateSchema>;
-            const [updated] = await db.update(lteCells).set(details).where(eq(lteCells.cell_id, id)).returning();
+            const [updated] = await db
+              .update(lteCells)
+              .set({ ...details, updatedAt: new Date() })
+              .where(eq(lteCells.cell_id, id))
+              .returning();
             if (!updated) {
               throw new ErrorResponse("FAILED_TO_UPDATE", {
                 message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
@@ -168,7 +180,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
             const details = req.body.details as z.infer<typeof nrUpdateSchema>;
             const [updated] = await db
               .update(nrCells)
-              .set({ ...details, ...(details.gnbid ? { gnbid_length: Number(details.gnbid).toString(2).length } : {}) })
+              .set({ ...details, ...(details.gnbid ? { gnbid_length: Number(details.gnbid).toString(2).length } : {}), updatedAt: new Date() })
               .where(eq(nrCells.cell_id, id))
               .returning();
             if (!updated) {

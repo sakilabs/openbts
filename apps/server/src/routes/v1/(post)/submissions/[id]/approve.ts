@@ -495,7 +495,15 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 if (d) {
                   const [updated] = await tx
                     .update(lteCells)
-                    .set({ tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, earfcn: d.earfcn, supports_iot: d.supports_iot, updatedAt: new Date() })
+                    .set({
+                      tac: d.tac,
+                      enbid: d.enbid,
+                      clid: d.clid,
+                      pci: d.pci,
+                      earfcn: d.earfcn,
+                      supports_iot: d.supports_iot,
+                      updatedAt: new Date(),
+                    })
                     .where(eq(lteCells.cell_id, targetCellId))
                     .returning();
                   newDetails = updated ?? null;

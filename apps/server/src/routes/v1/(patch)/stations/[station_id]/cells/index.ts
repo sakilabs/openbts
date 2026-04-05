@@ -156,7 +156,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               /* eslint-disable-next-line no-await-in-loop */
               const [row] = await tx
                 .update(gsmCells)
-                .set(details as z.infer<typeof gsmCellsUpdateSchema>)
+                .set({ ...(details as z.infer<typeof gsmCellsUpdateSchema>), updatedAt: new Date() })
                 .where(eq(gsmCells.cell_id, cell_id))
                 .returning();
               if (!row)
@@ -169,7 +169,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               /* eslint-disable-next-line no-await-in-loop */
               const [row] = await tx
                 .update(umtsCells)
-                .set(details as z.infer<typeof umtsCellsUpdateSchema>)
+                .set({ ...(details as z.infer<typeof umtsCellsUpdateSchema>), updatedAt: new Date() })
                 .where(eq(umtsCells.cell_id, cell_id))
                 .returning();
               if (!row)
@@ -182,7 +182,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               /* eslint-disable-next-line no-await-in-loop */
               const [row] = await tx
                 .update(lteCells)
-                .set(details as z.infer<typeof lteCellsUpdateSchema>)
+                .set({ ...(details as z.infer<typeof lteCellsUpdateSchema>), updatedAt: new Date() })
                 .where(eq(lteCells.cell_id, cell_id))
                 .returning();
               if (!row)
@@ -195,7 +195,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               /* eslint-disable-next-line no-await-in-loop */
               const [row] = await tx
                 .update(nrCells)
-                .set(details as z.infer<typeof nrCellsUpdateSchema>)
+                .set({ ...(details as z.infer<typeof nrCellsUpdateSchema>), updatedAt: new Date() })
                 .where(eq(nrCells.cell_id, cell_id))
                 .returning();
               if (!row)

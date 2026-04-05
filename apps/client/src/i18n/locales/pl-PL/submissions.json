@@ -131,6 +131,10 @@
     "rejected": "Zgłoszenie odrzucone",
     "photoUploadFailed": "Zgłoszenie utworzone, ale przesyłanie zdjęć nie powiodło się"
   },
+  "warnings": {
+    "photosTitle": "Uwagi dotyczące zdjęć",
+    "photosDesc": "Jeśli planujesz dodać te zdjęcia do wielu stacji w tej lokalizacji, poczekaj na zatwierdzenie pierwszego zgłoszenia - po akceptacji będziesz mógł wybrać te zdjęcia dla pozostałych stacji bez ponownego wgrywania."
+  },
   "photos": {
     "label": "Zdjęcia",
     "add": "Dodaj zdjęcie",

@@ -39,7 +39,7 @@ export function ActionSelector({ action, onActionChange }: ActionSelectorProps) 
             )}
           >
             <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-            {t("actionSelector.update")}
+            <span className="hidden sm:inline">{t("actionSelector.update")}</span>
           </button>
           <button
             type="button"
@@ -52,7 +52,7 @@ export function ActionSelector({ action, onActionChange }: ActionSelectorProps) 
             )}
           >
             <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-            {t("actionSelector.delete")}
+            <span className="hidden sm:inline">{t("actionSelector.delete")}</span>
           </button>
         </div>
       </div>

@@ -14,6 +14,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Cell editor and station details form now use a non-shrinking flex layout that wraps to a column when the viewport is too narrow instead of squeezing
 - Submission approval now runs a duplicate-cell check before committing changes
 - Audit log changes table now renders a mobile-friendly stacked layout on small screens
+- Submission form now shows an info banner when photos are added, reminding submitters that after approval they can select existing location photos for other stations without re-uploading
+- Submission form station column now expands to full width when the cells editor wraps below it on narrow viewports
 
 ### 🩹 Fixes
 
@@ -23,6 +25,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Fixed `rat:5g` being rejected by `POST /search` when NR filter is active on the stations page
 - Fixed comment preview in admin comments table incorrectly wrapping on newlines; preview now collapses them into spaces
 - Fixed locations table showing a scrollbar when all rows fit within the viewport
+- Fixed submission form overflowing horizontally on mobile due to missing `min-w-0` and an uncapped `max-w` on the station column
+- Fixed station and action selector headers overflowing on mobile. Button labels are now hidden on small screens (icon-only)
 
 # 2026-04-04
 
