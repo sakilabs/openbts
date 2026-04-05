@@ -429,10 +429,12 @@
         chain: INPUT
         protocol: tcp
         destination_port: "{{ item }}"
+        source: "! 127.0.0.1"
         jump: DROP
         comment: "openbts: block external access"
       loop:
         - "3000"
+        - "3031"
         - "6379"
       notify: Save iptables rules
 
@@ -441,11 +443,13 @@
         chain: INPUT
         protocol: tcp
         destination_port: "{{ item }}"
+        source: "! ::1"
         jump: DROP
         ip_version: ipv6
         comment: "openbts: block external access"
       loop:
         - "3000"
+        - "3031"
         - "6379"
       notify: Save iptables rules
 
