@@ -73,7 +73,17 @@ type RatTableProps<T extends CellDraftBase> = {
   onDeleteCell: (localId: string) => void;
 };
 
-function RatTable<T extends CellDraftBase>({ cells, headers, bands, getCellProps, renderAfterRow, onCellChange, onCloneCell, clonedIds, onDeleteCell }: RatTableProps<T>) {
+function RatTable<T extends CellDraftBase>({
+  cells,
+  headers,
+  bands,
+  getCellProps,
+  renderAfterRow,
+  onCellChange,
+  onCloneCell,
+  clonedIds,
+  onDeleteCell,
+}: RatTableProps<T>) {
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   return (
     <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">

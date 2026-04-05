@@ -139,7 +139,12 @@ export function useCellDrafts<T extends CellDraftBase>({
     [disabled, allBands, createNewCell, t],
   );
 
-  useEffect(() => () => { for (const t of cloneTimers.current.values()) clearTimeout(t); }, []);
+  useEffect(
+    () => () => {
+      for (const t of cloneTimers.current.values()) clearTimeout(t);
+    },
+    [],
+  );
 
   const cloneCell = useCallback(
     (localId: string) => {
@@ -158,7 +163,11 @@ export function useCellDrafts<T extends CellDraftBase>({
       const id = cloned._localId;
       setClonedIds((s) => new Set([...s, id]));
       const timer = setTimeout(() => {
-        setClonedIds((s) => { const copy = new Set(s); copy.delete(id); return copy; });
+        setClonedIds((s) => {
+          const copy = new Set(s);
+          copy.delete(id);
+          return copy;
+        });
         cloneTimers.current.delete(id);
       }, 2000);
       cloneTimers.current.set(id, timer);

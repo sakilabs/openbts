@@ -100,7 +100,12 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
   const [clonedIds, setClonedIds] = useState<ReadonlySet<string>>(new Set());
   const cloneTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  useEffect(() => () => { for (const t of cloneTimers.current.values()) clearTimeout(t); }, []);
+  useEffect(
+    () => () => {
+      for (const t of cloneTimers.current.values()) clearTimeout(t);
+    },
+    [],
+  );
 
   const handleCloneCell = useCallback(
     (id: string) => {
@@ -114,7 +119,11 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
       onCellsChange(rat, next);
       setClonedIds((prev) => new Set([...prev, newId]));
       const timer = setTimeout(() => {
-        setClonedIds((prev) => { const s = new Set(prev); s.delete(newId); return s; });
+        setClonedIds((prev) => {
+          const s = new Set(prev);
+          s.delete(newId);
+          return s;
+        });
         cloneTimers.current.delete(newId);
       }, 2000);
       cloneTimers.current.set(newId, timer);

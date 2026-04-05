@@ -204,7 +204,6 @@ const CellRow = memo(function CellRow({
   const isDeleted = diffStatus === "deleted";
   const deletedCellClass = isDeleted ? "opacity-50" : "";
 
-
   return (
     <tr className={cn("border-b last:border-0 hover:bg-muted/20", isDeleted && "bg-muted/10", isCloned && "bg-sky-500/5")}>
       <td className={cn("px-3 py-1", firstCellBorderClass, deletedCellClass)}>

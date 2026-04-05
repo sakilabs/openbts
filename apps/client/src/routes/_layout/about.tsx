@@ -163,10 +163,23 @@ function AboutPage() {
             <TmobileIcon aria-label="T-Mobile" className="size-6 shrink-0" />
             <PlusIcon aria-label="Plus" className="size-6 shrink-0" />
             <PlayIcon aria-label="Play" className="h-6 w-auto max-w-20 shrink-0" />
+            <span
+              aria-label="SI2PEM"
+              className="block h-5 shrink-0 bg-[#2e2e5a] dark:bg-[#9898ce]"
+              style={{
+                aspectRatio: "2435/521",
+                maskImage: "url(/si2pem.svg)",
+                WebkitMaskImage: "url(/si2pem.svg)",
+                maskSize: "contain",
+                WebkitMaskSize: "contain",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
+              }}
+            />
           </div>
           <p className="text-sm text-muted-foreground">
-            Przedstawione logo i nazwy operatorów są własnością ich prawnych właścicieli. Wykorzystanie w serwisie {APP_NAME} ma wyłącznie charakter
-            informacyjny i nie oznacza afiliacji ani poparcia ze strony tych podmiotów.
+            Przedstawione logo i nazwy operatorów oraz serwisu SI2PEM są własnością ich prawnych właścicieli. Wykorzystanie w serwisie {APP_NAME} ma
+            wyłącznie charakter informacyjny i nie oznacza afiliacji ani poparcia ze strony tych podmiotów.
           </p>
         </section>
       </div>

@@ -240,12 +240,24 @@ export function StationDetailsBody({
                                     href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id}&page_size=25`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center size-5.5 hover:bg-muted rounded transition-colors cursor-pointer text-sm font-bold text-[#2e2e5a] dark:text-[#9898ce] leading-none shrink-0"
-                                  />
+                                    className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
+                                  >
+                                    <span
+                                      aria-hidden="true"
+                                      className="block h-3.5 bg-[#2e2e5a] dark:bg-[#9898ce]"
+                                      style={{
+                                        aspectRatio: "2435/521",
+                                        maskImage: "url(/si2pem.svg)",
+                                        WebkitMaskImage: "url(/si2pem.svg)",
+                                        maskSize: "contain",
+                                        WebkitMaskSize: "contain",
+                                        maskRepeat: "no-repeat",
+                                        WebkitMaskRepeat: "no-repeat",
+                                      }}
+                                    />
+                                  </a>
                                 }
-                              >
-                                S
-                              </TooltipTrigger>
+                              />
                               <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
                             </Tooltip>
                           ) : null}

@@ -5,6 +5,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Station details and UKE permit dialogs now show a **SI2PEM** logo instead of `S` letter
 - Map filter panel now shows keyboard shortcut hints inline next to each filter control
 - Map filter keybinds updated: operators `1–4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
 - Search filters now support `earfcn:` (LTE EARFCN value) and `cell_notes:` (cell notes partial match)
