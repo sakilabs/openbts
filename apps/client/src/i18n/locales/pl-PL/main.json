@@ -73,7 +73,8 @@
     "radiolineOperators_many": "{{count, number}} operatorów radiolinii",
     "radiolineOperators_other": "{{count, number}} operatorów radiolinii",
     "searchRadiolineOperators": "Szukaj operatorów radiolinii...",
-    "toggleHint": "Tip: <kbd>F</kbd> panel, <kbd>Shift+F</kbd> wyczyść filtry, <kbd>S</kbd> stacje, <kbd>R</kbd> radiolinie, <kbd>A</kbd> azymuty, <kbd>H</kbd> heatmap, <kbd>Z</kbd> źródło, <kbd>N</kbd> najnowsze, <kbd>1-4</kbd> operatorzy"
+    "toggleHint": "<kbd>F</kbd> panel · <kbd>Shift</kbd>+<kbd>F</kbd> wyczyść filtry",
+    "ratKeybindHint": "+litera"
   },
   "unknownOperator": "Nieznany operator",
   "radiolines": {

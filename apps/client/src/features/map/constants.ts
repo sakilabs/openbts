@@ -64,6 +64,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "band:", description: "Frequency in MHz (e.g., 800, 1800, 2100)", availableOn: ["map"] },
   { key: "rat:", description: "Standard (GSM, UMTS, LTE, NR)", availableOn: ["map"] },
   { key: "is_confirmed:", description: "Confirmation status (true, false)", availableOn: ["map", "stations"] },
+  { key: "notes:", description: "Cell notes (partial match)", availableOn: ["map", "stations"] },
 
   // GSM cell filters
   { key: "lac:", description: "GSM Location Area Code", availableOn: ["map", "stations"] },
@@ -81,6 +82,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "lte_clid:", description: "LTE Cell Local ID", availableOn: ["map", "stations"] },
   { key: "tac:", description: "LTE Tracking Area Code", availableOn: ["map", "stations"] },
   { key: "lte_pci:", description: "LTE Physical Cell ID", availableOn: ["map", "stations"] },
+  { key: "earfcn:", description: "LTE EARFCN value", availableOn: ["map", "stations"] },
   { key: "supports_iot:", description: "Supports IoT (true, false)", availableOn: ["map", "stations"] },
 
   // NR (5G) cell filters

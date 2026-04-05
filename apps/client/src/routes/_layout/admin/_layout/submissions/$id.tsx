@@ -140,7 +140,7 @@ function SubmissionDetailPage() {
             <div className="flex-[2_1_300px]">
               <Skeleton className="h-52 w-full rounded-xl" />
             </div>
-            <div className="flex-[3_1_500px] space-y-2">
+            <div className="flex-[3_1_500px] space-y-2 min-w-0">
               <Skeleton className="h-40 w-full rounded-xl" />
             </div>
           </div>
@@ -465,7 +465,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} />
           </div>
 
-          <div className="flex-[3_1_500px] space-y-2">
+          <div className="flex-[3_1_500px] space-y-2 min-w-0">
             <CellsEditor
               cellsByRat={cellsByRat}
               enabledRats={enabledRats}

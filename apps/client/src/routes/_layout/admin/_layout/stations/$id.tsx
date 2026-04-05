@@ -614,7 +614,7 @@ function StationDetailForm({
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
           </div>
 
-          <div className="flex-[3_1_500px] space-y-2">
+          <div className="flex-[3_1_500px] space-y-2 min-w-0">
             <CellsEditor
               cellsByRat={cellsByRat}
               enabledRats={enabledRats}

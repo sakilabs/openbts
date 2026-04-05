@@ -24,7 +24,12 @@ const stringListSchema = z
   .pipe(z.array(z.string().min(1)).min(1));
 const ratListSchema = z
   .string()
-  .transform((value) => splitList(value).map((item) => item.toUpperCase()))
+  .transform((value) =>
+    splitList(value).map((item) => {
+      const upper = item.toUpperCase();
+      return upper === "5G" ? "NR" : upper;
+    }),
+  )
   .pipe(z.array(z.enum(["GSM", "UMTS", "LTE", "NR"])).min(1));
 const booleanSchema = z.union([z.boolean(), z.string()]).transform((v) => v === true || v === "true");
 
@@ -96,6 +101,10 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     table: "cells",
     buildCondition: buildBooleanEq(cells.is_confirmed),
   },
+  notes: {
+    table: "cells",
+    buildCondition: buildLikeAny(cells.notes),
+  },
 
   // gsmCells
   lac: {
@@ -145,6 +154,10 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   lte_pci: {
     table: "lteCells",
     buildCondition: buildInArray(lteCells.pci, parseNumbers),
+  },
+  earfcn: {
+    table: "lteCells",
+    buildCondition: buildInArray(lteCells.earfcn, parseNumbers),
   },
   supports_iot: {
     table: "lteCells",

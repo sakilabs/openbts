@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# Staged
+
+### 🚀 Enhancements
+
+- Map filter panel now shows keyboard shortcut hints inline next to each filter control
+- Map filter keybinds updated: operators `1–4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
+- Search filters now support `earfcn:` (LTE EARFCN value) and `notes:` (cell notes partial match)
+
+### 🩹 Fixes
+
+- Fixed cell editor overflowing viewport width on mobile in `/submission`, `/admin/submissions/:id`, and `/admin/stations/:id`
+- Fixed `rat:5g` being rejected by `POST /search` when NR filter is active on the stations page
+
 # 2026-04-05
 
 ### 🚀 Enhancements
