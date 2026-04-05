@@ -162,7 +162,7 @@ export function ChangesTable({ oldValues, newValues }: { oldValues: Record<strin
 
   return (
     <div className="rounded-lg border overflow-hidden">
-      <table className="w-full text-xs table-fixed">
+      <table className="hidden sm:table w-full text-xs table-fixed">
         <thead>
           <tr className="bg-muted/50 border-b">
             <th className="text-left px-3 py-2 font-medium text-muted-foreground w-1/4">{t("auditLogs.detail.field")}</th>
@@ -197,6 +197,37 @@ export function ChangesTable({ oldValues, newValues }: { oldValues: Record<strin
           })}
         </tbody>
       </table>
+
+      <div className="sm:hidden divide-y">
+        {allKeys.map((key) => {
+          const rawOld = oldValues?.[key];
+          const rawNew = newValues?.[key];
+          const resolvedOld = resolveValue(rawOld);
+          const resolvedNew = resolveValue(rawNew);
+          const changed = oldValues && newValues && JSON.stringify(rawOld) !== JSON.stringify(rawNew);
+          const isComplex = Array.isArray(resolvedOld) || Array.isArray(resolvedNew) || isObject(resolvedOld) || isObject(resolvedNew);
+
+          return (
+            <div key={key} className="px-3 py-2 text-xs space-y-1.5">
+              <span className="font-mono font-medium text-muted-foreground">{key}</span>
+              <div className={oldValues && newValues ? "grid grid-cols-2 gap-2" : "flex"}>
+                {oldValues && (
+                  <div className={cn("font-mono break-all rounded-sm p-1.5", changed && !isComplex ? "bg-red-500/10" : "bg-muted/30")}>
+                    <span className="block text-[10px] text-red-400 font-semibold mb-1">{t("auditLogs.detail.oldValues")}</span>
+                    <Value value={rawOld} compareWith={isComplex ? resolvedNew : undefined} variant="old" />
+                  </div>
+                )}
+                {newValues && (
+                  <div className={cn("font-mono break-all rounded-sm p-1.5", changed && !isComplex ? "bg-emerald-500/10" : "bg-muted/30")}>
+                    <span className="block text-[10px] text-emerald-400 font-semibold mb-1">{t("auditLogs.detail.newValues")}</span>
+                    <Value value={rawNew} compareWith={isComplex ? resolvedOld : undefined} variant="new" />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

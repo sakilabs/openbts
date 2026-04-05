@@ -64,7 +64,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "band:", description: "Frequency in MHz (e.g., 800, 1800, 2100)", availableOn: ["map"] },
   { key: "rat:", description: "Standard (GSM, UMTS, LTE, NR)", availableOn: ["map"] },
   { key: "is_confirmed:", description: "Confirmation status (true, false)", availableOn: ["map", "stations"] },
-  { key: "notes:", description: "Cell notes (partial match)", availableOn: ["map", "stations"] },
+  { key: "cell_notes:", description: "Cell notes (partial match)", availableOn: ["map", "stations"] },
 
   // GSM cell filters
   { key: "lac:", description: "GSM Location Area Code", availableOn: ["map", "stations"] },

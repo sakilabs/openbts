@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, Copy01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +31,7 @@ type CellEditRowProps = {
   rowClassName?: string;
   onChange: (localId: string, patch: Partial<CellDraftBase>) => void;
   onDelete: (localId: string) => void;
+  onClone?: (localId: string) => void;
 };
 
 export const CellEditRow = memo(function CellEditRow({
@@ -42,6 +43,7 @@ export const CellEditRow = memo(function CellEditRow({
   rowClassName,
   onChange,
   onDelete,
+  onClone,
 }: CellEditRowProps) {
   const { t } = useTranslation();
   const { uniqueBandValues, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, bandsForRat } = useBandSelection(
@@ -155,16 +157,29 @@ export const CellEditRow = memo(function CellEditRow({
         />
       </td>
       <td className="px-3 py-1">
-        {showDelete && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(localCell._localId)}
-            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-          >
-            <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-          </Button>
-        )}
+        <div className="flex items-center gap-0.5">
+          {onClone && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onClone(localCell._localId)}
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              disabled={disabled}
+            >
+              <HugeiconsIcon icon={Copy01Icon} className="size-3.5" />
+            </Button>
+          )}
+          {showDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(localCell._localId)}
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+            >
+              <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+            </Button>
+          )}
+        </div>
       </td>
     </tr>
   );

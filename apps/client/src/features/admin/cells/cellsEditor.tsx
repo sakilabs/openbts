@@ -27,6 +27,8 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   onToggleRat: (rat: string) => void;
   onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
   onAddCell: (rat: string) => void;
+  onCloneCell?: (localId: string) => void;
+  clonedIds?: ReadonlySet<string>;
   onDeleteCell: (localId: string) => void;
 
   // Disable all RAT toggle pills (e.g. when submission is rejected)
@@ -66,10 +68,12 @@ type RatTableProps<T extends CellDraftBase> = {
   getCellProps?: CellsEditorProps<T>["getCellProps"];
   renderAfterRow?: CellsEditorProps<T>["renderAfterRow"];
   onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
+  onCloneCell?: (localId: string) => void;
+  clonedIds?: ReadonlySet<string>;
   onDeleteCell: (localId: string) => void;
 };
 
-function RatTable<T extends CellDraftBase>({ cells, headers, bands, getCellProps, renderAfterRow, onCellChange, onDeleteCell }: RatTableProps<T>) {
+function RatTable<T extends CellDraftBase>({ cells, headers, bands, getCellProps, renderAfterRow, onCellChange, onCloneCell, clonedIds, onDeleteCell }: RatTableProps<T>) {
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   return (
     <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">
@@ -86,16 +90,18 @@ function RatTable<T extends CellDraftBase>({ cells, headers, bands, getCellProps
         <tbody>
           {cells.map((cell) => {
             const cellProps = getCellProps?.(cell) ?? {};
+            const isCloned = clonedIds?.has(cell._localId) ?? false;
             return (
               <Fragment key={cell._localId}>
                 <CellEditRow
                   localCell={cell}
                   bands={bands}
                   disabled={cellProps.disabled}
-                  leftBorderClass={cellProps.leftBorderClass}
+                  leftBorderClass={isCloned ? "border-l-2 border-l-sky-500" : cellProps.leftBorderClass}
                   showDelete={cellProps.showDelete}
-                  rowClassName={cellProps.rowClassName}
+                  rowClassName={isCloned ? "bg-sky-500/5" : cellProps.rowClassName}
                   onChange={onCellChange}
+                  onClone={onCloneCell}
                   onDelete={onDeleteCell}
                 />
                 {renderAfterRow?.(cell)}
@@ -116,6 +122,8 @@ export function CellsEditor<T extends CellDraftBase>({
   onToggleRat,
   onCellChange,
   onAddCell,
+  onCloneCell,
+  clonedIds,
   onDeleteCell,
   ratPillsDisabled,
   showAddButton = true,
@@ -231,6 +239,8 @@ export function CellsEditor<T extends CellDraftBase>({
                       getCellProps={getCellProps}
                       renderAfterRow={renderAfterRow}
                       onCellChange={onCellChange}
+                      onCloneCell={onCloneCell}
+                      clonedIds={clonedIds}
                       onDeleteCell={onDeleteCell}
                     />
                   )}

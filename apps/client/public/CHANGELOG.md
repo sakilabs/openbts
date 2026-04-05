@@ -7,12 +7,17 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Map filter panel now shows keyboard shortcut hints inline next to each filter control
 - Map filter keybinds updated: operators `1–4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
-- Search filters now support `earfcn:` (LTE EARFCN value) and `notes:` (cell notes partial match)
+- Search filters now support `earfcn:` (LTE EARFCN value) and `cell_notes:` (cell notes partial match)
+- Cell rows in the cell editor now have a **Clone** button that duplicates the row in-place with a brief highlight
+- Submission approval now runs a duplicate-cell check before committing changes
+- Audit log changes table now renders a mobile-friendly stacked layout on small screens
 
 ### 🩹 Fixes
 
 - Fixed cell editor overflowing viewport width on mobile in `/submission`, `/admin/submissions/:id`, and `/admin/stations/:id`
 - Fixed `rat:5g` being rejected by `POST /search` when NR filter is active on the stations page
+- Fixed comment preview in admin comments table incorrectly wrapping on newlines; preview now collapses them into spaces
+- Fixed locations table showing a scrollbar when all rows fit within the viewport
 
 # 2026-04-05
 

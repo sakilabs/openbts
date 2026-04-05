@@ -25,6 +25,8 @@ type UseCellDraftsReturn<T extends CellDraftBase> = {
   toggleRat: (rat: string) => void;
   changeCell: (localId: string, patch: Partial<CellDraftBase>) => void;
   addCell: (rat: string) => void;
+  cloneCell: (localId: string) => void;
+  clonedIds: ReadonlySet<string>;
   deleteCell: (localId: string) => void;
 };
 
@@ -40,6 +42,10 @@ export function useCellDrafts<T extends CellDraftBase>({
   const { t } = useTranslation("stations");
 
   const [cells, setCells] = useState<T[]>(initialCells);
+  const cellsRef = useRef(cells);
+  cellsRef.current = cells;
+  const [clonedIds, setClonedIds] = useState<ReadonlySet<string>>(new Set());
+  const cloneTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [enabledRats, setEnabledRats] = useState<string[]>(
     () => initialEnabledRats ?? RAT_ORDER.filter((r) => initialCells.some((c) => c.rat === r)),
   );
@@ -133,6 +139,33 @@ export function useCellDrafts<T extends CellDraftBase>({
     [disabled, allBands, createNewCell, t],
   );
 
+  useEffect(() => () => { for (const t of cloneTimers.current.values()) clearTimeout(t); }, []);
+
+  const cloneCell = useCallback(
+    (localId: string) => {
+      if (disabled) return;
+      const prev = cellsRef.current;
+      const cell = prev.find((c) => c._localId === localId);
+      if (!cell) return;
+      const band = allBands.find((b) => b.id === cell.band_id) ?? allBands.find((b) => b.rat === cell.rat);
+      if (!band) return;
+      const template = createNewCell(cell.rat, band);
+      const cloned = { ...cell, _localId: template._localId };
+      const idx = prev.findIndex((c) => c._localId === localId);
+      const next = [...prev];
+      next.splice(idx + 1, 0, cloned);
+      setCells(next);
+      const id = cloned._localId;
+      setClonedIds((s) => new Set([...s, id]));
+      const timer = setTimeout(() => {
+        setClonedIds((s) => { const copy = new Set(s); copy.delete(id); return copy; });
+        cloneTimers.current.delete(id);
+      }, 2000);
+      cloneTimers.current.set(id, timer);
+    },
+    [disabled, allBands, createNewCell],
+  );
+
   const deleteCellFn = useCallback(
     (localId: string) => {
       if (disabled) return;
@@ -155,6 +188,8 @@ export function useCellDrafts<T extends CellDraftBase>({
     toggleRat,
     changeCell,
     addCell,
+    cloneCell,
+    clonedIds,
     deleteCell: deleteCellFn,
   };
 }

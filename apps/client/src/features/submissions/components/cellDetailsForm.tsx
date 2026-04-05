@@ -2,7 +2,7 @@ import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon, DeletePutBackIcon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, DeletePutBackIcon, Copy01Icon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,8 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
     originalsMap,
     diffCounts,
     handleAddCell,
+    handleCloneCell,
+    clonedIds,
     handleRemoveCell,
     handleRestoreCell,
     handleCellUpdate,
@@ -77,6 +79,8 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
                         onDetailsChange={handleDetailsChange}
                         onNotesChange={handleNotesChange}
                         onRemove={handleRemoveCell}
+                        onClone={!isDeleted ? handleCloneCell : undefined}
+                        isCloned={clonedIds.has(cell.id)}
                         onRestore={isDeleted ? () => handleRestoreCell(cell) : undefined}
                       />
                     );
@@ -101,6 +105,8 @@ type CellRowProps = {
   onDetailsChange: (id: string, field: string, value: number | boolean | string | undefined) => void;
   onNotesChange: (id: string, notes: string) => void;
   onRemove: (id: string) => void;
+  onClone?: (id: string) => void;
+  isCloned?: boolean;
   onRestore?: () => void;
 };
 
@@ -151,6 +157,8 @@ const CellRow = memo(function CellRow({
   onDetailsChange,
   onNotesChange,
   onRemove,
+  onClone,
+  isCloned,
   onRestore,
 }: CellRowProps) {
   const { t } = useTranslation(["submissions", "common"]);
@@ -184,34 +192,21 @@ const CellRow = memo(function CellRow({
 
   const handleNotesChange = useCallback((value: string) => onNotesChange(cell.id, value), [cell.id, onNotesChange]);
 
-  const firstCellBorderClass = {
-    added: "border-l-2 border-l-green-500",
-    modified: "border-l-2 border-l-amber-500",
-    deleted: "border-l-2 border-l-red-500",
-    unchanged: "",
-  }[diffStatus];
+  const firstCellBorderClass = isCloned
+    ? "border-l-2 border-l-sky-500"
+    : {
+        added: "border-l-2 border-l-green-500",
+        modified: "border-l-2 border-l-amber-500",
+        deleted: "border-l-2 border-l-red-500",
+        unchanged: "",
+      }[diffStatus];
 
   const isDeleted = diffStatus === "deleted";
   const deletedCellClass = isDeleted ? "opacity-50" : "";
 
-  const actionButton = onRestore ? (
-    <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-yellow-600 hover:text-yellow-500">
-      <HugeiconsIcon icon={DeletePutBackIcon} className="size-3.5" />
-    </Button>
-  ) : (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onClick={() => onRemove(cell.id)}
-      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-    >
-      <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-    </Button>
-  );
 
   return (
-    <tr className={cn("border-b last:border-0 hover:bg-muted/20", isDeleted && "bg-muted/10")}>
+    <tr className={cn("border-b last:border-0 hover:bg-muted/20", isDeleted && "bg-muted/10", isCloned && "bg-sky-500/5")}>
       <td className={cn("px-3 py-1", firstCellBorderClass, deletedCellClass)}>
         <Select
           disabled={diffStatus === "deleted"}
@@ -278,10 +273,48 @@ const CellRow = memo(function CellRow({
         />
       </td>
       <td className="px-3 py-1">
-        <Tooltip>
-          <TooltipTrigger render={actionButton} />
-          <TooltipContent>{onRestore ? t("common:actions.restore") : t("common:actions.delete")}</TooltipContent>
-        </Tooltip>
+        {onRestore ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button type="button" variant="ghost" size="sm" onClick={onRestore} className="h-6 w-6 p-0 text-yellow-600 hover:text-yellow-500">
+                  <HugeiconsIcon icon={DeletePutBackIcon} className="size-3.5" />
+                </Button>
+              }
+            />
+            <TooltipContent>{t("common:actions.restore")}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <div className="flex items-center gap-0.5">
+            {onClone && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onClone(cell.id)}
+                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <HugeiconsIcon icon={Copy01Icon} className="size-3.5" />
+              </Button>
+            )}
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemove(cell.id)}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                  >
+                    <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent>{t("common:actions.delete")}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </td>
     </tr>
   );

@@ -10,6 +10,7 @@ import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { rebuildStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
 import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
 import { computeGnbidLength } from "../../../../../utils/submission.helpers.js";
+import { checkCellDuplicatesBatch } from "../../../../../services/cellDuplicateCheck.service.js";
 import { logger } from "../../../../../utils/logger.js";
 import {
   submissions,
@@ -343,6 +344,24 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       const cellsAdded: Array<Record<string, unknown>> = [];
       const cellsUpdated: Array<{ old: Record<string, unknown>; new: Record<string, unknown> }> = [];
       const cellsDeleted: Array<Record<string, unknown>> = [];
+
+      const approveOperatorId =
+        submission.type === "new"
+          ? (proposedStation?.operator_id ?? null)
+          : stationId
+            ? ((await tx.query.stations.findFirst({ where: { id: stationId }, columns: { operator_id: true } }))?.operator_id ?? null)
+            : null;
+
+      if (approveOperatorId) {
+        const dupEntries = proposedCellRows
+          .filter((c) => c.operation !== "delete" && c.rat)
+          .map((c) => {
+            const details = (c.lte ?? c.gsm ?? c.umts ?? c.nr) as Record<string, unknown> | null;
+            return { rat: c.rat!, details, excludeCellId: c.target_cell_id ?? undefined };
+          })
+          .filter((e): e is typeof e & { details: Record<string, unknown> } => e.details !== null);
+        if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, approveOperatorId);
+      }
 
       /* eslint-disable no-await-in-loop */
       for (const proposed of proposedCellRows) {

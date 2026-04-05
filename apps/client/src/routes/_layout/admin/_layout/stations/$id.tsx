@@ -296,6 +296,8 @@ function StationDetailForm({
     toggleRat: handleToggleRat,
     changeCell: handleCellChange,
     addCell: handleAddCell,
+    cloneCell: handleCloneCell,
+    clonedIds,
     deleteCell: handleDeleteCell,
   } = useCellDrafts<LocalCell>({
     initialCells: sortAndMapCells(station?.cells ?? []),
@@ -623,6 +625,8 @@ function StationDetailForm({
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}
+              onCloneCell={handleCloneCell}
+              clonedIds={clonedIds}
               onDeleteCell={handleDeleteCell}
               getDiffBadges={getStationDiffBadges}
               getCellProps={getStationCellProps}

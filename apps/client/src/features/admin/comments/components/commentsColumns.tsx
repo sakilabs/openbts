@@ -106,12 +106,13 @@ export function createCommentsColumns({
       size: 300,
       cell: ({ getValue }) => {
         const content = getValue<string>();
+        const preview = content.replace(/\s*\n\s*/g, " ").trim();
         return (
           <Tooltip>
             <TooltipTrigger className="text-left max-w-full">
-              <p className="text-sm line-clamp-2 whitespace-pre-wrap">{content}</p>
+              <p className="text-sm line-clamp-2">{preview}</p>
             </TooltipTrigger>
-            {content.length > 100 && (
+            {(content.length > 100 || content.includes("\n")) && (
               <TooltipContent side="bottom" className="max-w-sm">
                 <p className="text-xs whitespace-pre-wrap">{content}</p>
               </TooltipContent>

@@ -101,7 +101,7 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     table: "cells",
     buildCondition: buildBooleanEq(cells.is_confirmed),
   },
-  notes: {
+  cell_notes: {
     table: "cells",
     buildCondition: buildLikeAny(cells.notes),
   },

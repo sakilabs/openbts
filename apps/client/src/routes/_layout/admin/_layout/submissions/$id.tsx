@@ -248,6 +248,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     toggleRat: handleToggleRat,
     changeCell: handleCellChange,
     addCell: handleAddCell,
+    cloneCell: handleCloneCell,
+    clonedIds,
     deleteCell: handleDeleteCell,
   } = useCellDrafts<LocalCell>({
     initialCells,
@@ -474,6 +476,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}
+              onCloneCell={!isFormDisabled ? handleCloneCell : undefined}
+              clonedIds={clonedIds}
               onDeleteCell={handleDeleteCell}
               ratPillsDisabled={isReadOnly}
               showAddButton={!isFormDisabled}

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useReactTable, getCoreRowModel, getPaginationRowModel } from "@tanstack/react-table";
 import { useTablePagination } from "@/hooks/useTablePageSize";
+import { cn } from "@/lib/utils";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { createLocationsColumns } from "./locationsColumns";
@@ -38,7 +39,7 @@ export function LocationsDataTable({
   const { t, i18n } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
 
-  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const columns = useMemo(
     () => createLocationsColumns({ t, tCommon, locale: i18n.language, sort, sortBy, onSort }),
@@ -71,7 +72,7 @@ export function LocationsDataTable({
     isFetchingMore && hasMore && isOnLastLoadedPage && currentPageRows < pagination.pageSize ? pagination.pageSize - currentPageRows : 0;
 
   return (
-    <div ref={containerRef} className="h-full overflow-x-auto overflow-y-auto">
+    <div ref={containerRef} className={cn("h-full overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}>
       <DataTable.Root table={table}>
         <DataTable.Table>
           <DataTable.Header />
