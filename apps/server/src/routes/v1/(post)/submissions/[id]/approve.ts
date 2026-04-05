@@ -471,7 +471,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 if (d) {
                   const [updated] = await tx
                     .update(gsmCells)
-                    .set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm })
+                    .set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm, updatedAt: new Date() })
                     .where(eq(gsmCells.cell_id, targetCellId))
                     .returning();
                   newDetails = updated ?? null;
@@ -483,7 +483,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 if (d) {
                   const [updated] = await tx
                     .update(umtsCells)
-                    .set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid })
+                    .set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid, updatedAt: new Date() })
                     .where(eq(umtsCells.cell_id, targetCellId))
                     .returning();
                   newDetails = updated ?? null;
@@ -495,7 +495,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                 if (d) {
                   const [updated] = await tx
                     .update(lteCells)
-                    .set({ tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, earfcn: d.earfcn, supports_iot: d.supports_iot })
+                    .set({ tac: d.tac, enbid: d.enbid, clid: d.clid, pci: d.pci, earfcn: d.earfcn, supports_iot: d.supports_iot, updatedAt: new Date() })
                     .where(eq(lteCells.cell_id, targetCellId))
                     .returning();
                   newDetails = updated ?? null;
@@ -515,6 +515,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
                       pci: d.pci,
                       arfcn: d.arfcn,
                       supports_nr_redcap: d.supports_nr_redcap,
+                      updatedAt: new Date(),
                     })
                     .where(eq(nrCells.cell_id, targetCellId))
                     .returning();
