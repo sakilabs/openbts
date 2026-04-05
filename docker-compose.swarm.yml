@@ -55,7 +55,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 5s
     deploy:
       replicas: 5
       update_config:
