@@ -42,6 +42,10 @@ services:
       - AXIOM_TOKEN=${AXIOM_TOKEN}
       - AXIOM_DATASET=${AXIOM_DATASET:-openbts}
       - NTM_USERAGENT=${NTM_USERAGENT}
+      # VAPID push notifications (fill in after running: web-push generate-vapid-keys --json):
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
     volumes:
       - uploads-volume:/app/uploads
     networks:

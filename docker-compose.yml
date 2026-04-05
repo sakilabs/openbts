@@ -43,6 +43,10 @@ services:
       # Resend (email)
       - RESEND_API_KEY=
       - RESEND_FROM=noreply@openbts.sakilabs.com
+      # VAPID push notifications (fill in after running: web-push generate-vapid-keys --json):
+      - VAPID_SUBJECT=
+      - VAPID_PUBLIC_KEY=
+      - VAPID_PRIVATE_KEY=
       # AXIOM HQ logging
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts
