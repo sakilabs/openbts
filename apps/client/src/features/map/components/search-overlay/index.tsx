@@ -202,7 +202,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   useEffect(() => {
     const OPERATOR_KEYBINDS: Record<string, number> = { "1": 26001, "2": 26002, "3": 26003, "4": 26006 };
-    const RAT_KEYBINDS: Record<string, string> = { g: "gsm", u: "umts", l: "lte", n: "5g", i: "iot" };
+    const RAT_KEYBINDS: Record<string, string> = { g: "GSM", u: "UMTS", l: "LTE", n: "NR", i: "iot" };
 
     function onKeyDown(e: globalThis.KeyboardEvent) {
       if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;

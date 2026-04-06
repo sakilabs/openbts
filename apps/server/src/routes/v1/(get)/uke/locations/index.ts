@@ -49,7 +49,7 @@ const schemaRoute = {
     page: z.coerce.number().min(1).default(1),
     rat: z
       .string()
-      .regex(/^(?:cdma|umts|gsm|gsm-r|lte|5g|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|5g|iot))*$/i)
+      .regex(/^(?:cdma|umts|gsm|gsm-r|lte|nr|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|nr|iot))*$/i)
       .optional()
       .transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
     operators: z
@@ -127,7 +127,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   const requestedRats = rat ?? [];
   type RatType = "GSM" | "UMTS" | "LTE" | "NR" | "CDMA" | "IOT";
-  const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" } as const;
+  const ratMap: Record<string, RatType> = { gsm: "GSM", umts: "UMTS", lte: "LTE", nr: "NR", cdma: "CDMA", iot: "IOT" } as const;
   const wantsGsmR = requestedRats.includes("gsm-r");
   const standardRats = requestedRats.filter((r) => r !== "gsm-r");
   const mappedRats: RatType[] = standardRats.map((r) => ratMap[r]).filter((r): r is RatType => r !== undefined);

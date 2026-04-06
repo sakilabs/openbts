@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-04-05
+    Last updated: 2026-04-06
   version: 1.0.0
 
 servers:
@@ -414,7 +414,7 @@ paths:
           schema: { type: integer, minimum: 1, default: 1 }
         - name: rat
           in: query
-          description: Comma-separated (cdma, umts, gsm, lte, 5g, iot)
+          description: Comma-separated (cdma, umts, gsm, lte, nr, iot)
           schema: { type: string }
         - name: operators
           in: query

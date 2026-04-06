@@ -26,7 +26,7 @@ const schemaRoute = {
     page: z.coerce.number().min(1).default(1),
     rat: z
       .string()
-      .regex(/^(?:cdma|umts|gsm|gsm-r|lte|5g|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|5g|iot))*$/i)
+      .regex(/^(?:cdma|umts|gsm|gsm-r|lte|nr|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|nr|iot))*$/i)
       .optional()
       .transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
     operators: z
@@ -156,7 +156,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           if (station_id) conditions.push(eq(fields.station_id, station_id));
           if (operatorId) conditions.push(eq(fields.operator_id, operatorId));
           if (rat) {
-            const ratMap: Record<string, string> = { gsm: "GSM", "gsm-r": "GSM", umts: "UMTS", lte: "LTE", "5g": "NR", cdma: "CDMA", iot: "IOT" };
+            const ratMap: Record<string, string> = { gsm: "GSM", "gsm-r": "GSM", umts: "UMTS", lte: "LTE", nr: "NR", cdma: "CDMA", iot: "IOT" };
             const wantsGsmR = rat.includes("gsm-r");
             const wantsGsm = rat.includes("gsm");
             const standardRats = rat.filter((r) => r !== "gsm" && r !== "gsm-r");

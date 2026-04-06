@@ -544,8 +544,15 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
 
   const formValues = useStore(form.store, (s) => s.values);
   const isDirty = computeHasChanges(
-    formValues.mode, formValues.action, formValues.newStation, formValues.location,
-    formValues.cells, formValues.submitterNote, formValues.networksId, formValues.networksName, formValues.mnoName,
+    formValues.mode,
+    formValues.action,
+    formValues.newStation,
+    formValues.location,
+    formValues.cells,
+    formValues.submitterNote,
+    formValues.networksId,
+    formValues.networksName,
+    formValues.mnoName,
   );
   useBeforeUnloadGuard(isDirty);
 

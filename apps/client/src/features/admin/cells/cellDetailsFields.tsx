@@ -185,7 +185,11 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
               }}
               disabled={disabled}
             >
-              <SelectTrigger className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")} onKeyDown={navigateRowHorizontal} data-nav-cell>
+              <SelectTrigger
+                className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")}
+                onKeyDown={navigateRowHorizontal}
+                data-nav-cell
+              >
                 <SelectValue>{nrTypeLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent className="min-w-48">

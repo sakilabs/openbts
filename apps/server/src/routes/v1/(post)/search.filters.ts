@@ -24,12 +24,7 @@ const stringListSchema = z
   .pipe(z.array(z.string().min(1)).min(1));
 const ratListSchema = z
   .string()
-  .transform((value) =>
-    splitList(value).map((item) => {
-      const upper = item.toUpperCase();
-      return upper === "5G" ? "NR" : upper;
-    }),
-  )
+  .transform((value) => splitList(value).map((item) => item.toUpperCase()))
   .pipe(z.array(z.enum(["GSM", "UMTS", "LTE", "NR"])).min(1));
 const booleanSchema = z.union([z.boolean(), z.string()]).transform((v) => v === true || v === "true");
 
@@ -251,7 +246,7 @@ export type GroupedFilters = {
   extraIdentificators: SQL[];
 };
 
-const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(\d+(?:,\s*\d+)*)|(true|false)|([a-zA-Z][a-zA-Z0-9]*(?:,\s*[a-zA-Z][a-zA-Z0-9]*)*))/gi;
+const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|([a-zA-Z0-9][a-zA-Z0-9]*(?:,\s*[a-zA-Z0-9][a-zA-Z0-9]*)*)|(\d+(?:,\s*\d+)*))/gi;
 
 type FilterMatch = {
   key: string;
@@ -264,9 +259,9 @@ const parseFilterMatch = (match: RegExpMatchArray): FilterMatch | null => {
   if (!key) return null;
 
   const stringValue = match[2] ?? match[3];
-  const numericValue = match[4];
-  const booleanValue = match[5];
-  const alphanumericValue = match[6];
+  const booleanValue = match[4];
+  const alphanumericValue = match[5];
+  const numericValue = match[6];
 
   if (stringValue !== undefined) return { key, value: stringValue, raw: match[0] };
   if (numericValue !== undefined) return { key, value: numericValue, raw: match[0] };
