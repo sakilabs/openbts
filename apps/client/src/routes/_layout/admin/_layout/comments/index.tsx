@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useTablePagination } from "@/hooks/useTablePageSize";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,14 +29,14 @@ import type { AdminComment } from "@/features/admin/comments/types";
 import type { LightboxPhoto } from "@/components/lightbox";
 
 const EMPTY_COMMENTS: AdminComment[] = [];
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 
 function AdminCommentsPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
   const queryClient = useQueryClient();
 
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved">("all");
@@ -50,11 +51,11 @@ function AdminCommentsPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-comments", pageIndex, pageSize, debouncedSearch, statusFilter, sortBy, sort],
+    queryKey: ["admin-comments", pagination.pageIndex, pagination.pageSize, debouncedSearch, statusFilter, sortBy, sort],
     queryFn: () => {
       const params = new URLSearchParams({
-        limit: String(pageSize),
-        offset: String(pageIndex * pageSize),
+        limit: String(pagination.pageSize),
+        offset: String(pagination.pageIndex * pagination.pageSize),
         sortBy,
         sort,
       });
@@ -159,15 +160,10 @@ function AdminCommentsPage() {
     (col: "createdAt" | "id") => {
       setSortBy(col);
       setSort((prev) => (sortBy === col ? (prev === "desc" ? "asc" : "desc") : "desc"));
-      setPageIndex(0);
+      setPagination((p) => ({ ...p, pageIndex: 0 }));
     },
-    [sortBy],
+    [sortBy, setPagination],
   );
-
-  const handlePageSizeChange = useCallback((size: number) => {
-    setPageSize(size);
-    setPageIndex(0);
-  }, []);
 
   return (
     <>
@@ -179,7 +175,7 @@ function AdminCommentsPage() {
               value={statusFilter}
               onValueChange={(v) => {
                 setStatusFilter(v as typeof statusFilter);
-                setPageIndex(0);
+                setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
             >
               <SelectTrigger className="w-36">
@@ -199,7 +195,7 @@ function AdminCommentsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPageIndex(0);
+                setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
               className="pl-8"
             />
@@ -209,13 +205,13 @@ function AdminCommentsPage() {
           data={data?.data ?? EMPTY_COMMENTS}
           isLoading={isLoading}
           total={data?.totalCount ?? 0}
-          pageIndex={pageIndex}
-          pageSize={pageSize}
+          containerRef={containerRef}
+          pagination={pagination}
+          setPagination={setPagination}
+          pageSizeOptions={pageSizeOptions}
           sortBy={sortBy}
           sort={sort}
           onSort={handleSort}
-          onPageChange={setPageIndex}
-          onPageSizeChange={handlePageSizeChange}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onApprove={approveMutation.mutate}
