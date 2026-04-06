@@ -21,11 +21,11 @@ export function DetailInputCell({ field, placeholder, value, error, disabled, ma
     if (e.key === "Enter" || (e.key === "ArrowDown" && e.ctrlKey)) {
       e.preventDefault();
       const nextTr = tr.nextElementSibling as HTMLElement | null;
-      nextTr?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus();
+      nextTr?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus({ focusVisible: true });
     } else if (e.key === "ArrowUp" && e.ctrlKey) {
       e.preventDefault();
       const prevTr = tr.previousElementSibling as HTMLElement | null;
-      prevTr?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus();
+      prevTr?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus({ focusVisible: true });
     }
   };
 

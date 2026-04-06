@@ -8,6 +8,6 @@ export function navigateRowHorizontal<T extends HTMLElement>(e: KeyboardEvent<T>
   const idx = focusable.indexOf(e.currentTarget);
   if (idx === -1) return;
   e.preventDefault();
-  if (e.key === "ArrowRight") focusable[idx + 1]?.focus();
-  else focusable[idx - 1]?.focus();
+  if (e.key === "ArrowRight") focusable[idx + 1]?.focus({ focusVisible: true });
+  else focusable[idx - 1]?.focus({ focusVisible: true });
 }
