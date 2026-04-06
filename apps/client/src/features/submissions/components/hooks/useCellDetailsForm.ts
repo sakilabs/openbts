@@ -48,18 +48,40 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
     return [...cells, ...deletedCells];
   }, [cells, originalCells, isNewStation, rat]);
 
+  const stableOrderRef = useRef<string[] | null>(null);
+
   const sortedCells = useMemo(() => {
     const clidKey = rat === "GSM" || rat === "UMTS" ? "cid" : "clid";
-    return [...mergedCells].sort((a, b) => {
+    const bandSort = (a: ProposedCellForm, b: ProposedCellForm) => {
       const bandA = a.band_id !== null ? (bandValueMap.get(a.band_id) ?? 0) : 0;
       const bandB = b.band_id !== null ? (bandValueMap.get(b.band_id) ?? 0) : 0;
       if (bandA !== bandB) return bandA - bandB;
-      const d = a.details as Record<string, unknown>;
-      const e = b.details as Record<string, unknown>;
-      const clidA = (d[clidKey] as number) ?? 0;
-      const clidB = (e[clidKey] as number) ?? 0;
+      const detailsA = a.details as Record<string, unknown>;
+      const detailsB = b.details as Record<string, unknown>;
+      const clidA = (detailsA[clidKey] as number) ?? 0;
+      const clidB = (detailsB[clidKey] as number) ?? 0;
       return clidA - clidB;
-    });
+    };
+
+    if (bandValueMap.size === 0 || stableOrderRef.current === null) {
+      const initial = [...mergedCells].sort(bandSort);
+      if (bandValueMap.size > 0) stableOrderRef.current = initial.map((c) => c.id);
+      return initial;
+    }
+
+    const presentIds = new Set(mergedCells.map((c) => c.id));
+    const result = stableOrderRef.current.filter((id) => presentIds.has(id));
+    const inResult = new Set(result);
+
+    for (const cell of mergedCells) {
+      if (inResult.has(cell.id)) continue;
+      result.push(cell.id);
+      inResult.add(cell.id);
+    }
+
+    stableOrderRef.current = result;
+    const orderMap = new Map(result.map((id, i) => [id, i]));
+    return [...mergedCells].sort((a, b) => (orderMap.get(a.id) ?? Infinity) - (orderMap.get(b.id) ?? Infinity));
   }, [mergedCells, bandValueMap, rat]);
 
   const originalsMap = useMemo(() => buildOriginalCellsMap(originalCells), [originalCells]);

@@ -169,7 +169,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("pci", d.pci);
       if (d.pci !== undefined && d.pci > 503) errors.pci = "validation.pciRangeInvalid";
       optionalNonNegative("earfcn", d.earfcn);
-      if (d.earfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("LTE", band.value, d.earfcn))
+      if (d.earfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("LTE", band.value, d.earfcn, band.duplex))
         errors.earfcn = "validation.arfcnBandMismatch";
       break;
     }

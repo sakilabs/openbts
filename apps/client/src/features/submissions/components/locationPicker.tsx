@@ -453,6 +453,24 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
     });
   }, [map, location.latitude, location.longitude]);
 
+  const matchedLocationIdRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (location.latitude === null || location.longitude === null) {
+      matchedLocationIdRef.current = null;
+      return;
+    }
+    const lat = roundCoord(location.latitude);
+    const lng = roundCoord(location.longitude);
+    const match = viewportLocations.find((l) => roundCoord(l.latitude) === lat && roundCoord(l.longitude) === lng);
+    if (match) {
+      if (matchedLocationIdRef.current !== match.id) {
+        matchedLocationIdRef.current = match.id;
+        callbackRefs.current.onExistingLocationSelect(match);
+      }
+    } else matchedLocationIdRef.current = null;
+  }, [location.latitude, location.longitude, viewportLocations]);
+
   const handleDragEnd = useCallback(
     (lngLat: { lng: number; lat: number }) => {
       lastInternalCoordsRef.current = { lat: lngLat.lat, lng: lngLat.lng };

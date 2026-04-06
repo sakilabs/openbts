@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-06
+
+### 🚀 Enhancements
+
+- Cell editor fields now support keyboard navigation: `Ctrl+Arrow Left/Right` to move between cells in a row, `Ctrl+Arrow Up/Down` or `Enter` to jump between rows on detail fields
+- Submission form cell sort order is now stable, editing a cell value no longer causes it to jump to a different position in the table
+- Submission form now warns before leaving the page (browser beforeunload + route blocker) when there are unsaved changes
+- LocationPicker now automatically detects when manually typed coordinates match an existing location and reuses it instead of creating a new one
+
+### 🩹 Fixes
+
+- Fixed EARFCN validation not distinguishing between FDD and TDD bands at the same frequency (e.g. LTE B7 vs B38 at 2600 MHz) on both client and server
+
 # 2026-04-05
 
 ### 🚀 Enhancements

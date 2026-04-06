@@ -172,5 +172,6 @@
     "deleteTooltip": "Usuń zgłoszenie",
     "confirmDelete": "Czy na pewno chcesz usunąć to zgłoszenie?",
     "confirmDeleteDesc": "Ta akcja jest nieodwracalna. Zgłoszenie zostanie trwale usunięte."
-  }
+  },
+  "unsavedChangesConfirm": "Masz niezapisane zmiany. Czy na pewno chcesz opuścić stronę?"
 }

@@ -1,5 +1,7 @@
+import type { KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { navigateRowHorizontal } from "../rowNav";
 
 export type DetailInputCellProps = {
   field: string;
@@ -12,6 +14,21 @@ export type DetailInputCellProps = {
 };
 
 export function DetailInputCell({ field, placeholder, value, error, disabled, max, onDetailChange }: DetailInputCellProps) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    navigateRowHorizontal(e);
+    const tr = (e.target as HTMLElement).closest("tr");
+    if (!tr) return;
+    if (e.key === "Enter" || (e.key === "ArrowDown" && e.ctrlKey)) {
+      e.preventDefault();
+      const nextTr = tr.nextElementSibling as HTMLElement | null;
+      nextTr?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus();
+    } else if (e.key === "ArrowUp" && e.ctrlKey) {
+      e.preventDefault();
+      const prevTr = tr.previousElementSibling as HTMLElement | null;
+      prevTr?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus();
+    }
+  };
+
   return (
     <td className="px-1.5 py-1">
       <Input
@@ -20,7 +37,10 @@ export function DetailInputCell({ field, placeholder, value, error, disabled, ma
         max={max}
         placeholder={placeholder}
         value={value}
+        data-field={field}
+        data-nav-cell
         onChange={(e) => onDetailChange(field, e.target.value ? Number.parseInt(e.target.value, 10) : undefined)}
+        onKeyDown={handleKeyDown}
         className={cn("h-7 w-24 font-mono text-sm", error && "border-destructive")}
         disabled={disabled}
       />

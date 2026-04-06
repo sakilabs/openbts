@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Band } from "@/types/station";
 import { useBandSelection } from "./hooks/useBandSelection";
+import { navigateRowHorizontal } from "./rowNav";
 import { getBandName } from "@/features/station-details/frequencyCalc";
 import { CellDetailsFields } from "./cellDetailsFields";
 import type { RAT_ORDER } from "./rat";
@@ -92,7 +93,11 @@ export const CellEditRow = memo(function CellEditRow({
           onValueChange={(v) => handleBandValueChange(v ? Number.parseInt(v, 10) : null)}
           disabled={disabled}
         >
-          <SelectTrigger className="h-7 w-20 text-sm">
+          <SelectTrigger
+            className="h-7 w-20 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+            onKeyDown={navigateRowHorizontal}
+            data-nav-cell
+          >
             <SelectValue>{bandValue === null ? "-" : bandValue === 0 ? t("stations:cells.unknownBand") : bandValue}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -112,7 +117,11 @@ export const CellEditRow = memo(function CellEditRow({
         <td className="px-3 py-1">
           {hasDuplexChoice ? (
             <Select value={duplex ?? "_none"} onValueChange={(v) => handleDuplexChange(v === "_none" ? null : v)} disabled={disabled}>
-              <SelectTrigger className="h-7 w-20 text-sm">
+              <SelectTrigger
+                className="h-7 w-20 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+                onKeyDown={navigateRowHorizontal}
+                data-nav-cell
+              >
                 <SelectValue>{duplex ?? "-"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -145,6 +154,8 @@ export const CellEditRow = memo(function CellEditRow({
           placeholder={t("stations:cells.notesPlaceholder")}
           value={localCell.notes}
           onChange={(e) => onChange(localCell._localId, { notes: e.target.value })}
+          onKeyDown={navigateRowHorizontal}
+          data-nav-cell
           className="h-7 w-28 text-sm"
           disabled={disabled}
         />

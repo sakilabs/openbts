@@ -149,8 +149,9 @@ export function calcExactFrequency(rat: string, bandValue: number, arfcn: number
  * @param rat - "UMTS", "LTE", "NR"
  * @param bandFreqValue - Band frequency value
  * @param arfcn - The ARFCN/EARFCN/NR-ARFCN to validate
+ * @param duplex - "FDD" or "TDD" (required to distinguish e.g. B7 vs B38 at 2600 MHz)
  */
-export function isARFCNValidForBand(rat: string, bandFreqValue: number, arfcn: number): boolean {
+export function isARFCNValidForBand(rat: string, bandFreqValue: number, arfcn: number, duplex?: string | null): boolean {
   switch (rat) {
     case "UMTS": {
       const bandName = UMTS_BAND_NAMES[bandFreqValue];
@@ -160,7 +161,8 @@ export function isARFCNValidForBand(rat: string, bandFreqValue: number, arfcn: n
       return arfcn >= bandDef.range[0] && arfcn <= bandDef.range[1];
     }
     case "LTE": {
-      const bandName = LTE_BAND_NAMES[bandFreqValue];
+      let bandName = LTE_BAND_NAMES[bandFreqValue];
+      if (bandFreqValue === 2600 && duplex === "TDD") bandName = "b38";
       if (!bandName) return false;
       const bandDef = LTE_BANDS.find((b) => b.name === bandName);
       if (!bandDef) return false;

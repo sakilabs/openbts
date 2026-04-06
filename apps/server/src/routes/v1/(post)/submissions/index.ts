@@ -164,7 +164,7 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
   if (input.cells && input.cells.length > 0) {
     const bandIds = [...new Set(input.cells.filter((c) => c.band_id !== null && c.band_id !== undefined).map((c) => c.band_id!))];
     if (bandIds.length > 0) {
-      const bandRows = await db.query.bands.findMany({ where: { id: { in: bandIds } }, columns: { id: true, rat: true, value: true } });
+      const bandRows = await db.query.bands.findMany({ where: { id: { in: bandIds } }, columns: { id: true, rat: true, value: true, duplex: true } });
       const bandMap = new Map(bandRows.map((b) => [b.id, b]));
       for (const cell of input.cells) {
         if (cell.operation === "delete" || !cell.band_id || !cell.rat || !cell.details) continue;
@@ -173,7 +173,7 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
         const details = cell.details as Record<string, unknown>;
         const arfcn = (details["earfcn"] ?? details["arfcn"]) as number | null | undefined;
         if (arfcn === null || arfcn === undefined) continue;
-        if (!isARFCNValidForBand(cell.rat, band.value, arfcn))
+        if (!isARFCNValidForBand(cell.rat, band.value, arfcn, band.duplex))
           throw new ErrorResponse("BAD_REQUEST", { message: `ARFCN ${arfcn} is not valid for band ${band.value} (${cell.rat})` });
       }
     }

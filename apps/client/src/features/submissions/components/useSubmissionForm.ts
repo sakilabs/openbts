@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells
 import { validateForm, validateCells, hasErrors, type FormErrors } from "../utils/validation";
 import { hasFormChanges, type OriginalState } from "../utils/equality";
 import { bandsQueryOptions } from "@/features/shared/queries";
+import { useBeforeUnloadGuard } from "@/hooks/useBeforeUnloadGuard";
 import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
 import type { UkeStation } from "@/types/station";
 
@@ -540,6 +541,13 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       cells: [],
     });
   }, [showErrors, form.state.values]);
+
+  const formValues = useStore(form.store, (s) => s.values);
+  const isDirty = computeHasChanges(
+    formValues.mode, formValues.action, formValues.newStation, formValues.location,
+    formValues.cells, formValues.submitterNote, formValues.networksId, formValues.networksName, formValues.mnoName,
+  );
+  useBeforeUnloadGuard(isDirty);
 
   return {
     form,

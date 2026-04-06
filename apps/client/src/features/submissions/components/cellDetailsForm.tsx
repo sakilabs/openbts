@@ -19,6 +19,7 @@ import { CellDetailsFields } from "@/features/admin/cells/cellDetailsFields";
 import { useBandSelection } from "@/features/admin/cells/hooks/useBandSelection";
 import { getBandName } from "@/features/station-details/frequencyCalc";
 import { useCellDetailsForm } from "./hooks/useCellDetailsForm";
+import { navigateRowHorizontal } from "@/features/admin/cells/rowNav";
 import { CollapsibleHeader } from "./subcomponents/CollapsibleHeader";
 import { CellsTableHeaders } from "./subcomponents/CellsTableHeaders";
 
@@ -144,7 +145,18 @@ const DebouncedNotesInput = memo(function DebouncedNotesInput({
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
-  return <Input type="text" placeholder={placeholder} value={local} onChange={handleChange} className="h-7 w-28 text-sm" disabled={disabled} />;
+  return (
+    <Input
+      type="text"
+      placeholder={placeholder}
+      value={local}
+      onChange={handleChange}
+      onKeyDown={navigateRowHorizontal}
+      data-nav-cell
+      className="h-7 w-28 text-sm"
+      disabled={disabled}
+    />
+  );
 });
 
 const CellRow = memo(function CellRow({
@@ -212,7 +224,11 @@ const CellRow = memo(function CellRow({
           value={bandValue?.toString() ?? ""}
           onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}
         >
-          <SelectTrigger className={`h-7 w-20 text-sm ${error?.band_id ? "border-destructive" : ""}`}>
+          <SelectTrigger
+            className={`h-7 w-20 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50 ${error?.band_id ? "border-destructive" : ""}`}
+            onKeyDown={navigateRowHorizontal}
+            data-nav-cell
+          >
             <SelectValue>{bandValue ? bandValue : t("common:placeholder.selectBand")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -236,7 +252,11 @@ const CellRow = memo(function CellRow({
               value={duplex ?? "_none"}
               onValueChange={(value) => handleDuplexChange(value === "_none" ? null : value)}
             >
-              <SelectTrigger className="h-7 w-20 text-sm">
+              <SelectTrigger
+                className="h-7 w-20 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+                onKeyDown={navigateRowHorizontal}
+                data-nav-cell
+              >
                 <SelectValue>{duplex ?? "-"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
