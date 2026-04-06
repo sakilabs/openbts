@@ -20,41 +20,45 @@ type LayerConfig = {
 };
 
 function ensureMapLayersExist(map: MapLibreGL.Map, config: LayerConfig, imageTracker: Set<string>): void {
-  if (!map.getSource(config.sourceId)) {
-    map.addSource(config.sourceId, {
-      type: "geojson",
-      data: { type: "FeatureCollection", features: [] },
-    });
-    imageTracker.clear();
-  }
+  try {
+    if (!map.getSource(config.sourceId)) {
+      map.addSource(config.sourceId, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      imageTracker.clear();
+    }
 
-  if (!map.getLayer(config.circleLayerId)) {
-    map.addLayer({
-      id: config.circleLayerId,
-      type: "circle",
-      source: config.sourceId,
-      filter: ["!", ["get", "isMultiOperator"]],
-      paint: {
-        "circle-color": ["get", "color"],
-        "circle-radius": 6,
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
-      },
-    });
-  }
+    if (!map.getLayer(config.circleLayerId)) {
+      map.addLayer({
+        id: config.circleLayerId,
+        type: "circle",
+        source: config.sourceId,
+        filter: ["!", ["get", "isMultiOperator"]],
+        paint: {
+          "circle-color": ["get", "color"],
+          "circle-radius": 6,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff",
+        },
+      });
+    }
 
-  if (!map.getLayer(config.symbolLayerId)) {
-    map.addLayer({
-      id: config.symbolLayerId,
-      type: "symbol",
-      source: config.sourceId,
-      filter: ["get", "isMultiOperator"],
-      layout: {
-        "icon-image": ["get", "pieImageId"],
-        "icon-size": 0.5,
-        "icon-allow-overlap": true,
-      },
-    });
+    if (!map.getLayer(config.symbolLayerId)) {
+      map.addLayer({
+        id: config.symbolLayerId,
+        type: "symbol",
+        source: config.sourceId,
+        filter: ["get", "isMultiOperator"],
+        layout: {
+          "icon-image": ["get", "pieImageId"],
+          "icon-size": 0.5,
+          "icon-allow-overlap": true,
+        },
+      });
+    }
+  } catch {
+    // Layer may not exist
   }
 }
 

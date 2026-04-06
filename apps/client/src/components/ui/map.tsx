@@ -474,7 +474,8 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
       map.remove();
       dispatchMap({ type: "TEARDOWN" });
     };
-  }, [projection, clearStyleTimeout, resolvedTheme, viewport]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projection, clearStyleTimeout]);
 
   useEffect(() => {
     if (!mapInstance || !isControlled || !viewport) return;

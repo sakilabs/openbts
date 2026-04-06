@@ -149,21 +149,23 @@ export function useMapLayer({
     if (!map || !isLoaded) return;
 
     const ensureLayersExist = () => {
-      if (!map) return;
+      try {
+        if (!map.getSource(SOURCE_ID)) {
+          map.addSource(SOURCE_ID, { type: "geojson", data: geoJSONRef.current });
+          addedImagesRef.current.clear();
+        }
 
-      if (!map.getSource(SOURCE_ID)) {
-        map.addSource(SOURCE_ID, { type: "geojson", data: geoJSONRef.current });
-        addedImagesRef.current.clear();
-      }
-
-      if (pointStyle === "markers") {
-        if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(MARKER_SINGLE_LAYER_CONFIG);
-        if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(MARKER_MULTI_LAYER_CONFIG);
-        syncMarkerImages(map, geoJSONRef.current.features, addedImagesRef.current);
-      } else {
-        if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(CIRCLE_LAYER_CONFIG);
-        if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(SYMBOL_LAYER_CONFIG);
-        syncPieImages(map, geoJSONRef.current.features, addedImagesRef.current);
+        if (pointStyle === "markers") {
+          if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(MARKER_SINGLE_LAYER_CONFIG);
+          if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(MARKER_MULTI_LAYER_CONFIG);
+          syncMarkerImages(map, geoJSONRef.current.features, addedImagesRef.current);
+        } else {
+          if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(CIRCLE_LAYER_CONFIG);
+          if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(SYMBOL_LAYER_CONFIG);
+          syncPieImages(map, geoJSONRef.current.features, addedImagesRef.current);
+        }
+      } catch {
+        // Layers may not exist
       }
     };
 

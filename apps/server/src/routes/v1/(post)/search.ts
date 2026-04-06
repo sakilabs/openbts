@@ -170,7 +170,9 @@ const resolveQueryStationIds = async (searchQuery: string, limit: number): Promi
   const fuzzyPromise = db
     .select({ id: stations.id })
     .from(stations)
-    .where(and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE '%${searchQuery}%'`))
+    .where(
+      and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE ${"%" + searchQuery + "%"}`),
+    )
     .orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
     .limit(limit)
     .then((rows) => rows.map((r) => r.id))
@@ -306,7 +308,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const fuzzyIds = await db
     .select({ id: stations.id })
     .from(stations)
-    .where(and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE '%${searchQuery}%'`))
+    .where(
+      and(ne(stations.status, "inactive"), sql`${stations.station_id} % ${searchQuery} OR ${stations.station_id} ILIKE ${"%" + searchQuery + "%"}`),
+    )
     .orderBy(sql`similarity(${stations.station_id}, ${searchQuery}) DESC`)
     .limit(limit)
     .catch(() => []);

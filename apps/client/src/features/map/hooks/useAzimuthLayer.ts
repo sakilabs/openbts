@@ -79,13 +79,13 @@ export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom, li
     if (!map || !isLoaded || !enabled) return;
 
     const ensureLayersExist = () => {
-      const beforeLayer = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
+      try {
+        const beforeLayer = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
 
-      if (!map.getSource(AZIMUTHS_SOURCE_ID)) {
-        map.addSource(AZIMUTHS_SOURCE_ID, { type: "geojson", data: geoJSONRef.current });
-      }
-      if (!map.getLayer(AZIMUTHS_LINE_LAYER_ID)) {
-        map.addLayer(createAzimuthLayerConfig(minZoom), beforeLayer);
+        if (!map.getSource(AZIMUTHS_SOURCE_ID)) map.addSource(AZIMUTHS_SOURCE_ID, { type: "geojson", data: geoJSONRef.current });
+        if (!map.getLayer(AZIMUTHS_LINE_LAYER_ID)) map.addLayer(createAzimuthLayerConfig(minZoom), beforeLayer);
+      } catch {
+        // Layer may not exist
       }
     };
 

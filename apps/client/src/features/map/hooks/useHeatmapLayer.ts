@@ -24,39 +24,43 @@ export function useHeatmapLayer({
     if (!map || !isLoaded || !enabled) return;
 
     const add = () => {
-      if (!map.getSource(SOURCE_ID) || map.getLayer(HEATMAP_LAYER_ID)) return;
-      const beforeId = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
-      map.addLayer(
-        {
-          id: HEATMAP_LAYER_ID,
-          type: "heatmap",
-          source: SOURCE_ID,
-          paint: {
-            "heatmap-weight": ["interpolate", ["linear"], ["get", "stationCount"], 0, 0, 6, 1],
-            "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 5, 1, 13, 3],
-            "heatmap-color": [
-              "interpolate",
-              ["linear"],
-              ["heatmap-density"],
-              0,
-              "rgba(0,0,0,0)",
-              0.15,
-              "rgba(0,80,255,0.4)",
-              0.35,
-              "rgba(0,200,255,0.65)",
-              0.6,
-              "rgba(255,200,0,0.8)",
-              0.8,
-              "rgba(255,80,0,0.9)",
-              1,
-              "rgba(220,0,0,1)",
-            ],
-            "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 5, 20, 10, 40, 14, 70],
-            "heatmap-opacity": showStationsRef.current ? FADE_OPACITY : FIXED_OPACITY,
-          },
-        } as maplibregl.LayerSpecification,
-        beforeId,
-      );
+      try {
+        if (!map.getSource(SOURCE_ID) || map.getLayer(HEATMAP_LAYER_ID)) return;
+        const beforeId = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
+        map.addLayer(
+          {
+            id: HEATMAP_LAYER_ID,
+            type: "heatmap",
+            source: SOURCE_ID,
+            paint: {
+              "heatmap-weight": ["interpolate", ["linear"], ["get", "stationCount"], 0, 0, 6, 1],
+              "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 5, 1, 13, 3],
+              "heatmap-color": [
+                "interpolate",
+                ["linear"],
+                ["heatmap-density"],
+                0,
+                "rgba(0,0,0,0)",
+                0.15,
+                "rgba(0,80,255,0.4)",
+                0.35,
+                "rgba(0,200,255,0.65)",
+                0.6,
+                "rgba(255,200,0,0.8)",
+                0.8,
+                "rgba(255,80,0,0.9)",
+                1,
+                "rgba(220,0,0,1)",
+              ],
+              "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 5, 20, 10, 40, 14, 70],
+              "heatmap-opacity": showStationsRef.current ? FADE_OPACITY : FIXED_OPACITY,
+            },
+          } as maplibregl.LayerSpecification,
+          beforeId,
+        );
+      } catch {
+        // Layer may not exist
+      }
     };
 
     add();
