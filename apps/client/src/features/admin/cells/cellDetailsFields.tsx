@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { DetailInputCell, DetailComputedCell } from "@/features/admin/cells/components/detailFieldCells";
 import { calculateComputedValues } from "@/features/admin/cells/calculateComputedValues";
+import { navigateRowHorizontal } from "./rowNav";
 
 const NR_TYPE_OPTIONS = [
   { value: "nsa", label: "NSA (Non-Standalone)" },
@@ -47,6 +48,8 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             <Checkbox
               checked={bandValue === 1800 ? false : ((d.e_gsm as boolean) ?? false)}
               onCheckedChange={(checked) => onDetailChange("e_gsm", checked === true)}
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
               disabled={disabled || (rat === "GSM" && bandValue === 1800)}
             />
           </td>
@@ -150,6 +153,8 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             <Checkbox
               checked={(d.supports_iot as boolean) ?? false}
               onCheckedChange={(checked) => onDetailChange("supports_iot", checked === true)}
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
               disabled={disabled}
             />
           </td>
@@ -180,7 +185,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
               }}
               disabled={disabled}
             >
-              <SelectTrigger className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")}>
+              <SelectTrigger className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")} onKeyDown={navigateRowHorizontal} data-nav-cell>
                 <SelectValue>{nrTypeLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent className="min-w-48">
@@ -242,6 +247,8 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             <Checkbox
               checked={(d.supports_nr_redcap as boolean) ?? false}
               onCheckedChange={(checked) => onDetailChange("supports_nr_redcap", checked === true)}
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
               disabled={disabled || (nrType !== "sa" && d.supports_nr_redcap !== true)}
             />
           </td>

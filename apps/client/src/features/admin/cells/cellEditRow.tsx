@@ -164,6 +164,8 @@ export const CellEditRow = memo(function CellEditRow({
         <Checkbox
           checked={localCell.is_confirmed}
           onCheckedChange={(checked) => onChange(localCell._localId, { is_confirmed: checked === true })}
+          onKeyDown={navigateRowHorizontal}
+          data-nav-cell
           disabled={disabled}
         />
       </td>
@@ -174,6 +176,8 @@ export const CellEditRow = memo(function CellEditRow({
               variant="ghost"
               size="sm"
               onClick={() => onClone(localCell._localId)}
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
               className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
               disabled={disabled}
             >
@@ -185,6 +189,8 @@ export const CellEditRow = memo(function CellEditRow({
               variant="ghost"
               size="sm"
               onClick={() => onDelete(localCell._localId)}
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
             >
               <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
