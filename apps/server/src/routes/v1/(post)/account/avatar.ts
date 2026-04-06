@@ -56,7 +56,6 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
       if (anyPart.type !== "file") continue;
 
       const filePart = part as MultipartFile;
-      if (!filePart.mimetype.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
 
       const fileUuid = crypto.randomUUID();
       const filename = `${fileUuid}.webp`;

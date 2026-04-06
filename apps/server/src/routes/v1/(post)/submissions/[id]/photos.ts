@@ -84,8 +84,6 @@ async function handler(
       }
       if (anyPart.type !== "file" || !anyPart.file) continue;
       const filePart = part as MultipartFile;
-      if (!filePart.mimetype.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
-
       if (existingCount.length + savedPaths.length >= MAX_PHOTOS_PER_SUBMISSION) break;
 
       const fileUuid = crypto.randomUUID();
