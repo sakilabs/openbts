@@ -154,7 +154,7 @@ async function handler(
       }),
     );
     if (error instanceof ErrorResponse) throw error;
-    throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+    throw error;
   }
 
   await createAuditLog(
