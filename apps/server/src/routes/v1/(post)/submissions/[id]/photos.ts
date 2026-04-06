@@ -103,7 +103,7 @@ async function handler(
 
       let sharpInput: sharp.SharpInput;
       let sharpOptions: sharp.SharpOptions | undefined;
-      if (isHeic(filePart.mimetype)) {
+      if (isHeic(detected.mime)) {
         const { data, width, height } = await decodeHeicToRaw(inputBuffer);
         sharpInput = data;
         sharpOptions = { raw: { width, height, channels: 4 } };
