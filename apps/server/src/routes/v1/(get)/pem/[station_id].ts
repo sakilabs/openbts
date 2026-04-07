@@ -176,25 +176,19 @@ function parseWmsReports(features: WmsFeature[]): PemReport[] {
   }, []);
 }
 
-async function fetchWmsReports(identityName: string, lat: number, lng: number): Promise<PemReport[]> {
-  const res = await fetch(`${WMS_URL}?${buildWmsParams(identityName, lat, lng, 200).toString()}`);
-  if (!res.ok) throw new ErrorResponse("INTERNAL_SERVER_ERROR");
-  const json = (await res.json()) as WmsResponse;
-  if (!json.features?.length) throw new ErrorResponse("NOT_FOUND");
-  const data = parseWmsReports(json.features);
-  if (!data.length) throw new ErrorResponse("NOT_FOUND");
-  return data;
-}
-
-async function fetchLatestWmsDate(identityName: string, lat: number, lng: number): Promise<string | null> {
+async function fetchWmsReports(identityName: string, lat: number, lng: number): Promise<PemReport[] | null> {
   const res = await fetch(`${WMS_URL}?${buildWmsParams(identityName, lat, lng, 200).toString()}`);
   if (!res.ok) return null;
   const json = (await res.json()) as WmsResponse;
   if (!json.features?.length) return null;
-  return json.features.reduce<string | null>((max, f) => {
-    if (!max || f.properties.date > max) return f.properties.date;
-    return max;
-  }, null);
+  const data = parseWmsReports(json.features);
+  return data.length ? data : null;
+}
+
+function pickLatest(a: PemReport[] | null, b: PemReport[] | null): PemReport[] | null {
+  if (!a) return b;
+  if (!b) return a;
+  return parsePublishedAt(a[0]!.date) >= parsePublishedAt(b[0]!.date) ? a : b;
 }
 
 async function handler(req: FastifyRequest<Params>, res: ReplyPayload<JSONBody<PemReport[]>>) {
@@ -204,24 +198,25 @@ async function handler(req: FastifyRequest<Params>, res: ReplyPayload<JSONBody<P
   const entityName = MNC_TO_ENTITY[mnc];
   const cacheKey = `pem:${station_id}:${lat}:${lng}:${mnc}`;
 
+  const [installationsResult, wmsResult] = await Promise.all([
+    entityName ? fetchInstallations(station_id, entityName) : Promise.resolve(null),
+    fetchWmsReports(station_id, lat, lng),
+  ]);
+
+  const fresh = pickLatest(installationsResult, wmsResult);
+
   const cached = await redis.get(cacheKey);
   if (cached) {
     const cachedResponse = JSON.parse(cached) as { data: PemReport[] };
     const cachedLatestDate = cachedResponse.data[0]?.date ?? null;
+    const freshLatestDate = fresh?.[0]?.date ?? null;
 
-    const latestDate = entityName
-      ? ((await fetchInstallations(station_id, entityName))?.[0]?.date ?? null)
-      : await fetchLatestWmsDate(station_id, lat, lng);
-
-    if (latestDate === null || latestDate <= (cachedLatestDate ?? "")) return res.send(cachedResponse);
+    if (!freshLatestDate || parsePublishedAt(freshLatestDate) <= parsePublishedAt(cachedLatestDate ?? "")) return res.send(cachedResponse);
   }
 
-  let data: PemReport[] | null = null;
+  if (!fresh) throw new ErrorResponse("NOT_FOUND");
 
-  if (entityName) data = await fetchInstallations(station_id, entityName);
-  if (!data) data = await fetchWmsReports(station_id, lat, lng);
-
-  const response = { data };
+  const response = { data: fresh };
   await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(response));
   return res.send(response);
 }
