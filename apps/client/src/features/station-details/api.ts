@@ -14,7 +14,8 @@ export type PemReport = {
   feature_id: string;
 };
 
-export const fetchPemReports = (stationId: string, lat: number, lng: number) => fetchApiData<PemReport[]>(`pem/${stationId}?lat=${lat}&lng=${lng}`);
+export const fetchPemReports = (stationId: string, lat: number, lng: number, operator: number) =>
+  fetchApiData<PemReport[]>(`pem/${stationId}?lat=${lat}&lng=${lng}&operator=${operator}`);
 
 export type StationPhoto = {
   id: number; // locationPhotos.id

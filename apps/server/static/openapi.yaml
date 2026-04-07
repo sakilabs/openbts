@@ -3015,10 +3015,10 @@ paths:
       summary: Get PEM measurement reports for a station
       description: |
         Returns a deduplicated list of electromagnetic field (PEM) measurement reports
-        from SI2PEM for the given station. Uses WMS GetFeatureInfo with a +-0.01 bounding
-        box around the provided coordinates. Results are cached for 24 hours with
+        from SI2PEM for the given station. Queries the SI2PEM installations API first, falling back to WMS
+        GetFeatureInfo if no results are found. Results are cached for 24 hours with
         automatic cache invalidation when a newer report is published.
-        Reports are sorted by year and date descending.
+        Reports are sorted by published date descending.
       parameters:
         - name: station_id
           in: path
@@ -3035,6 +3035,11 @@ paths:
           required: true
           description: Longitude of the station
           schema: { type: number, format: double }
+        - name: operator
+          in: query
+          required: true
+          description: Operator MNC (e.g. 26002 for T-Mobile). Used to map to the SI2PEM legal entity name.
+          schema: { type: integer }
       responses:
         "200":
           description: OK

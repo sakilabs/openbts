@@ -110,8 +110,9 @@ export function StationDetailsBody({
   });
 
   const { data: pemReports } = useQuery({
-    queryKey: ["station-pem", station?.station_id, station?.location.latitude, station?.location.longitude],
-    queryFn: () => fetchPemReports(station!.station_id!.replace(/^[TO]-/, ""), station!.location.latitude, station!.location.longitude),
+    queryKey: ["station-pem", station?.station_id, station?.location.latitude, station?.location.longitude, station?.operator?.mnc],
+    queryFn: () =>
+      fetchPemReports(station!.station_id!.replace(/^[TO]-/, ""), station!.location.latitude, station!.location.longitude, station!.operator.mnc),
     staleTime: 1000 * 60 * 60,
     enabled: source === "internal" && !!station?.station_id,
     retry: false,
