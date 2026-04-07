@@ -215,15 +215,17 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     setShowFilters((prev) => !prev);
   }
 
-  function handleFilterPanelBlur(e: React.FocusEvent) {
-    if (!preferences.hideFiltersOnMapClick) return;
-    const relatedTarget = e.relatedTarget as Node | null;
-    const isInsidePanel = filterPanelRef.current?.contains(relatedTarget);
-    const isToggleButton = (relatedTarget as Element)?.closest("[data-filter-toggle]");
-    if (!isInsidePanel && !isToggleButton) {
+  useEffect(() => {
+    if (!preferences.hideFiltersOnMapClick || !showFilters) return;
+    function onMouseDown(e: MouseEvent) {
+      const target = e.target as Node | null;
+      if (filterPanelRef.current?.contains(target)) return;
+      if ((target as Element)?.closest("[data-filter-toggle]")) return;
       setShowFilters(false);
     }
-  }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [preferences.hideFiltersOnMapClick, showFilters]);
 
   useEffect(() => {
     const OPERATOR_KEYBINDS: Record<string, number> = { "1": 26001, "2": 26002, "3": 26003, "4": 26006 };
@@ -354,7 +356,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         )}
 
         {showFilters && !isMobile && (
-          <fieldset ref={filterPanelRef} tabIndex={-1} onBlur={handleFilterPanelBlur}>
+          <fieldset ref={filterPanelRef} tabIndex={-1}>
             <FilterPanel
               filters={filters}
               operators={operators}
