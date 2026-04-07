@@ -1,5 +1,5 @@
-import path from "node:path";
 import dotenv from "dotenv";
+import path from "node:path";
 
 import { logger } from "./logger.js";
 import { runMigrate } from "./migrate.js";

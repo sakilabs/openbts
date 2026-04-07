@@ -1,16 +1,18 @@
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
-import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
+import { Suspense, lazy, useCallback, useMemo, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+
 import { useMap } from "@/components/ui/map";
-import { useRadioLinesLayer } from "../hooks/useRadioLinesLayer";
-import { radioLinesToGeoJSON } from "../geojson";
-import { RadioLinePopupContent } from "./radioLinePopupContent";
-import type { RadioLine } from "@/types/station";
-import type { DuplexRadioLink } from "../utils";
-import { groupRadioLinesIntoLinks } from "../utils";
 import { usePreferences } from "@/hooks/usePreferences";
 import { queryClient } from "@/lib/queryClient";
+import type { RadioLine } from "@/types/station";
+
+import { radioLinesToGeoJSON } from "../geojson";
+import { useRadioLinesLayer } from "../hooks/useRadioLinesLayer";
+import type { DuplexRadioLink } from "../utils";
+import { groupRadioLinesIntoLinks } from "../utils";
+import { RadioLinePopupContent } from "./radioLinePopupContent";
 
 const RadioLineDetailsDialog = lazy(() =>
   import("@/features/station-details/components/radioLineDetailsDialog").then((m) => ({ default: m.RadioLineDetailsDialog })),

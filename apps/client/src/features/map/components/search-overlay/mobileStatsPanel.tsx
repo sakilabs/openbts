@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils.js";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip.js";
+
 import { Spinner } from "@/components/ui/spinner.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.js";
 import i18n from "@/i18n/config.js";
+import { cn } from "@/lib/utils.js";
 import type { StationSource } from "@/types/station.js";
 
 type MobileStatsPanelProps = {

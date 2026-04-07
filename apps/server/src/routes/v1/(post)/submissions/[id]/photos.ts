@@ -1,21 +1,20 @@
-import { z } from "zod/v4";
-import path from "node:path";
-import fs from "node:fs/promises";
-import sharp from "sharp";
-import { fileTypeFromBuffer } from "file-type";
+import type { MultipartFile } from "@fastify/multipart";
+import { attachments, submissionPhotos } from "@openbts/drizzle";
 import * as ExifReader from "exifreader";
+import type { FastifyRequest } from "fastify/types/request.js";
+import { fileTypeFromBuffer } from "file-type";
+import fs from "node:fs/promises";
+import path from "node:path";
+import sharp from "sharp";
+import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
-import { isHeic, decodeHeicToRaw } from "../../../../../utils/image.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { getRuntimeSettings } from "../../../../../services/settings.service.js";
-import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { attachments, submissionPhotos } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
-import type { MultipartFile } from "@fastify/multipart";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
+import { getRuntimeSettings } from "../../../../../services/settings.service.js";
+import { decodeHeicToRaw, isHeic } from "../../../../../utils/image.js";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 const MAX_PHOTOS_PER_SUBMISSION = 5;

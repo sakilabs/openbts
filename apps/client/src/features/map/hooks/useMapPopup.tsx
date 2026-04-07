@@ -1,9 +1,11 @@
-import { useCallback, useRef } from "react";
-import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
-import type { StationSource, LocationInfo, StationWithoutCells, UkeStation } from "@/types/station";
+import { useCallback, useRef } from "react";
+import { createRoot } from "react-dom/client";
+
 import { queryClient } from "@/lib/queryClient";
+import type { LocationInfo, StationSource, StationWithoutCells, UkeStation } from "@/types/station";
+
 import { PopupContent } from "../components/popupContent";
 
 type UseMapPopupArgs = {

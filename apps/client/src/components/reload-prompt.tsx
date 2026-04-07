@@ -1,9 +1,10 @@
-import { useEffect, useCallback } from "react";
-import { useRegisterSW } from "virtual:pwa-register/react";
-import { useRouter } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowReloadHorizontalIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useRouter } from "@tanstack/react-router";
+import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useRegisterSW } from "virtual:pwa-register/react";
+
 import { Button } from "@/components/ui/button";
 
 export function ReloadPrompt() {

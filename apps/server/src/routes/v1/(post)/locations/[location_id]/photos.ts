@@ -1,20 +1,19 @@
-import { z } from "zod/v4";
-import path from "node:path";
-import fs from "node:fs/promises";
-import sharp from "sharp";
+import type { MultipartFile } from "@fastify/multipart";
+import { attachments, locationPhotos } from "@openbts/drizzle";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { fileTypeFromBuffer } from "file-type";
+import fs from "node:fs/promises";
+import path from "node:path";
+import sharp from "sharp";
+import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
-import { isHeic, decodeHeicToRaw } from "../../../../../utils/image.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { attachments, locationPhotos } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
-import type { MultipartFile } from "@fastify/multipart";
+import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
+import { decodeHeicToRaw, isHeic } from "../../../../../utils/image.js";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;

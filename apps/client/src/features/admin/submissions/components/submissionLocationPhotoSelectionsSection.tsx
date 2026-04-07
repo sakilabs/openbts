@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Camera01Icon, Image01Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Lightbox } from "@/components/lightbox";
 import type { LocationPhoto } from "@/features/station-details/api";
 

@@ -1,26 +1,24 @@
+import {
+  proposedCells,
+  proposedGSMCells,
+  proposedLTECells,
+  proposedNRCells,
+  proposedStations,
+  proposedUMTSCells,
+  stations,
+  submissions,
+  users,
+} from "@openbts/drizzle";
+import { type SQL, and, count, eq, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
-import { count, eq, and, sql, type SQL } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
-import {
-  stations,
-  submissions,
-  users,
-  proposedCells,
-  proposedGSMCells,
-  proposedUMTSCells,
-  proposedLTECells,
-  proposedNRCells,
-  proposedStations,
-} from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
@@ -40,7 +38,6 @@ const schemaRoute = {
     offset: z.coerce.number().min(0).default(0),
     status: z.enum(["pending", "approved", "rejected"]).optional(),
     type: z.enum(["new", "update", "delete"]).optional(),
-    submitter_id: z.string().optional(),
     search: z.string().optional(),
   }),
   response: {
@@ -79,7 +76,7 @@ type ResponseBody = { data: ResponseData[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
   if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
-  const { limit, offset, status, type, submitter_id, search } = req.query;
+  const { limit, offset, status, type, search } = req.query;
 
   const session = req.userSession;
   const apiToken = req.apiToken;
@@ -88,15 +85,8 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const userId = session?.user?.id ?? apiToken?.referenceId;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
-  const hasAdminPermission = (await verifyPermissions(userId, { submissions: ["read"] })) || false;
-
   const buildConditions = (t: typeof submissions) => {
-    const conds: SQL[] = [];
-    if (!hasAdminPermission) {
-      conds.push(eq(t.submitter_id, userId));
-    } else if (submitter_id) {
-      conds.push(eq(t.submitter_id, submitter_id));
-    }
+    const conds: SQL[] = [eq(t.submitter_id, userId)];
     if (status) conds.push(eq(t.status, status));
     if (type) conds.push(eq(t.type, type));
     if (search?.trim()) {
@@ -104,11 +94,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       const like = `%${trimmed}%`;
       conds.push(sql`(
         ${t.id}::text ILIKE ${trimmed + "%"}
-        OR EXISTS (
-          SELECT 1 FROM ${users}
-          WHERE ${users.id} = ${t.submitter_id}
-          AND (${users.name} ILIKE ${like} OR ${users.username} ILIKE ${like})
-        )
         OR EXISTS (
           SELECT 1 FROM ${stations}
           WHERE ${stations.id} = ${t.station_id}

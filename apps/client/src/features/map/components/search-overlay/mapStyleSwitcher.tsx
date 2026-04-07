@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, type MouseEvent, type KeyboardEvent } from "react";
+import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+import { CARTO_STYLE_URLS, type MapStyle, useMap, useResolvedTheme } from "@/components/ui/map";
+import { type CartoVariant, usePreferences } from "@/hooks/usePreferences";
 import { cn } from "@/lib/utils";
-import { useMap, useResolvedTheme, type MapStyle, CARTO_STYLE_URLS } from "@/components/ui/map";
-import { usePreferences, type CartoVariant } from "@/hooks/usePreferences";
 
 const CARTO_THUMBNAILS: Record<"dark" | "light", string> = {
   dark: "https://a.basemaps.cartocdn.com/dark_all/13/4400/2686.png",

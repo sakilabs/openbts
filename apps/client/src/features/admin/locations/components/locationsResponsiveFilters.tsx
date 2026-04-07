@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
+
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { LocationsFilters } from "./locationsFilters";
 import type { Operator, Region } from "@/types/station";
+
 import type { LocationFilters } from "../hooks/useLocationsData";
+import { LocationsFilters } from "./locationsFilters";
 
 interface LocationsResponsiveFiltersProps {
   isOpen: boolean;

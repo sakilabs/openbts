@@ -1,17 +1,17 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { Add01Icon, AirportTowerIcon, SignalFull02Icon, TaskDaily01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { TaskDaily01Icon, Add01Icon, AirportTowerIcon, SignalFull02Icon } from "@hugeicons/core-free-icons";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
-import { authClient } from "@/lib/authClient";
-import { useUserLists } from "@/features/lists/hooks/useUserLists";
-import { updateList } from "@/features/lists/api";
 import type { UserListSummary } from "@/features/lists/api";
+import { updateList } from "@/features/lists/api";
+import { useUserLists } from "@/features/lists/hooks/useUserLists";
+import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 
 const CreateListDialog = lazy(() => import("./createListDialog").then((m) => ({ default: m.CreateListDialog })));

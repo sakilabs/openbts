@@ -1,5 +1,5 @@
-import type { StationFilters, LocationWithStations, UkeLocationWithPermits, RadioLine, UkePermit } from "@/types/station";
 import { API_BASE, fetchJson } from "@/lib/api";
+import type { LocationWithStations, RadioLine, StationFilters, UkeLocationWithPermits, UkePermit } from "@/types/station";
 
 export type LocationsResponse = {
   data: LocationWithStations[];

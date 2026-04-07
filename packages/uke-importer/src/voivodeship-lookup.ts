@@ -1,10 +1,10 @@
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { featureCollection, point, polygon } from "@turf/helpers";
+import type { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import geojsonRbush from "geojson-rbush";
 import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
-import geojsonRbush from "geojson-rbush";
-import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import { point, polygon, featureCollection } from "@turf/helpers";
-import type { FeatureCollection, Feature, Polygon, MultiPolygon } from "geojson";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const geojsonPath = path.join(__dirname, "..", "poland.voivodeships.max.json");

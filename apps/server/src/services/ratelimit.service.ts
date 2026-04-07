@@ -1,9 +1,9 @@
+import type { FastifyRequest } from "fastify";
+
+import type { redis } from "../database/redis.js";
+import type { TokenTier, UserRole } from "../interfaces/auth.interface.js";
 import { generateFingerprint } from "../utils/fingerprint.js";
 import { logger } from "../utils/logger.js";
-
-import type { FastifyRequest } from "fastify";
-import type { TokenTier, UserRole } from "../interfaces/auth.interface.js";
-import type { redis } from "../database/redis.js";
 
 export type RateLimitTier = {
   max: number;

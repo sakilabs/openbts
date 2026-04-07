@@ -1,6 +1,7 @@
-import { bands, regions, ukeLocations, ukeOperators, type ratEnum, type BandVariant } from "@openbts/drizzle";
-import { and, inArray, isNull, sql } from "drizzle-orm";
+import { type BandVariant, bands, type ratEnum, regions, ukeLocations, ukeOperators } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
+import { and, inArray, isNull, sql } from "drizzle-orm";
+
 import { BATCH_SIZE } from "./config.js";
 import { chunk, stripCompanySuffixForName } from "./utils.js";
 

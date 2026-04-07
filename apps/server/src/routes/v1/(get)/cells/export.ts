@@ -1,19 +1,18 @@
+import { bands, cells, locations, regions, stations } from "@openbts/drizzle";
+import { and, eq, inArray, max } from "drizzle-orm";
+import type { FastifyReply } from "fastify";
+import type { FastifyRequest } from "fastify/types/request.js";
 // oxlint-disable no-await-in-loop
 import { createReadStream, existsSync } from "node:fs";
 import { readdir, stat, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { Worker } from "node:worker_threads";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { join, dirname } from "node:path";
+import { Worker } from "node:worker_threads";
 import { z } from "zod/v4";
-import { max, and, inArray, eq } from "drizzle-orm";
 
-import redis from "../../../../database/redis.js";
 import db from "../../../../database/psql.js";
-import { bands, cells, locations, regions, stations } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
-import type { FastifyReply } from "fastify";
+import redis from "../../../../database/redis.js";
 import type { Route } from "../../../../interfaces/routes.interface.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

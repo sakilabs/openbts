@@ -1,5 +1,5 @@
+import { cells, gsmCells, lteCells, stations, umtsCells } from "@openbts/drizzle";
 import { and, eq, ne, or } from "drizzle-orm";
-import { cells, gsmCells, umtsCells, lteCells, stations } from "@openbts/drizzle";
 
 import db from "../database/psql.js";
 import { ErrorResponse } from "../errors.js";

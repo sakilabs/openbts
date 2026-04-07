@@ -1,9 +1,11 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { createRoot } from "react-dom/client";
 import MapLibreGL from "maplibre-gl";
-import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
-import { syncPieImages, syncMarkerImages } from "../pieChart";
+import { type ReactNode, useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
+
 import type { MapPointStyle } from "@/hooks/usePreferences";
+
+import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
+import { syncMarkerImages, syncPieImages } from "../pieChart";
 
 type FeatureClickData = {
   coordinates: [number, number];

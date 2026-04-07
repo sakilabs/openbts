@@ -1,8 +1,11 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { CollapsibleTrigger } from "@/components/ui/collapsible";
+import { HugeiconsIcon } from "@hugeicons/react";
+
 import { Button } from "@/components/ui/button";
+import { CollapsibleTrigger } from "@/components/ui/collapsible";
 import { RAT_ICONS } from "@/features/shared/rat";
+import { cn } from "@/lib/utils";
+
 import type { RatType } from "../../types";
 
 type DiffCounts = {
@@ -23,8 +26,8 @@ function DiffBadge({ count, color, label }: { count: number; color: string; labe
   if (count <= 0) return null;
 
   return (
-    <span className={`text-xs text-${color}-600 flex items-center gap-1`}>
-      <span className={`size-1.5 rounded-full bg-${color}-500`} />
+    <span className={cn("text-xs flex items-center gap-1", `text-${color}-600`)}>
+      <span className={cn("size-1.5 rounded-full", `bg-${color}-500`)} />
       {count}
       <span className="hidden sm:inline">{label}</span>
     </span>

@@ -1,16 +1,15 @@
-import { z } from "zod/v4";
 import { hash } from "@node-rs/argon2";
 import * as schema from "@openbts/drizzle";
+import type { FastifyRequest } from "fastify/types/request.js";
+import { z } from "zod/v4";
 
+import { ARGON2_OPTIONS } from "../../../../constants.js";
 import db from "../../../../database/psql.js";
 import { redis } from "../../../../database/redis.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { ARGON2_OPTIONS } from "../../../../constants.js";
-import { passkeyVerifiedKey } from "../../../../plugins/auth/hooks.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
+import { passkeyVerifiedKey } from "../../../../plugins/auth/hooks.js";
 
 const schemaRoute = {
   body: z.object({

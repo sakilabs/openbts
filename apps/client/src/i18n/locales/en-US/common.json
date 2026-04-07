@@ -37,7 +37,8 @@
     "update": "Update",
     "updating": "Updating...",
     "restore": "Restore",
-    "noChanges": "No changes to save"
+    "noChanges": "No changes to save",
+    "retry": "Try again"
   },
   "labels": {
     "id": "ID",

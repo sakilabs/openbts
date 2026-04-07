@@ -1,13 +1,12 @@
-import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { createFileRoute, Link, Outlet, useLocation, useMatches } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { AirportTowerIcon } from "@hugeicons/core-free-icons";
-import { APP_NAME } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { AppSidebar } from "@/components/layout/app-sidebar";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Link, Outlet, createFileRoute, useLocation, useMatches } from "@tanstack/react-router";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { AuthGuard } from "@/components/auth/authGuard";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
@@ -15,6 +14,8 @@ import { NotificationsBell } from "@/features/notifications/components/Notificat
 import { useAppBadge } from "@/features/notifications/useAppBadge";
 import { useTwoFactorRedirect } from "@/hooks/useTwoFactorRedirect";
 import { useWindowControlsOverlay } from "@/hooks/useWindowControlsOverlay";
+import { APP_NAME } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export interface BreadcrumbSegment {
   titleKey: string;

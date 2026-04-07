@@ -1,10 +1,12 @@
+import { ArrowLeft01Icon, ArrowRight01Icon, Camera01Icon, Cancel01Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, ArrowLeft01Icon, ArrowRight01Icon, Upload04Icon, Camera01Icon } from "@hugeicons/core-free-icons";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+
 import { Spinner } from "@/components/ui/spinner";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { cn } from "@/lib/utils";
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" };
 const MONTH_FORMAT: Intl.DateTimeFormatOptions = { year: "numeric", month: "short" };
@@ -76,7 +78,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label="Photo viewer"
-      className={`fixed inset-0 z-200 flex items-center justify-center transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
+      className={cn("fixed inset-0 z-200 flex items-center justify-center transition-opacity duration-200", visible ? "opacity-100" : "opacity-0")}
     >
       <div className="absolute inset-0 bg-black/90 cursor-pointer" onClick={onClose} />
 
@@ -129,7 +131,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
             key={activePhoto.attachment_uuid}
             src={`/uploads/${activePhoto.attachment_uuid}.webp`}
             alt={activePhoto.note ?? ""}
-            className={`max-w-full max-h-[calc(90vh-4rem)] object-contain rounded-lg motion-reduce:transition-none ${imgAnimClass}`}
+            className={cn("max-w-full max-h-[calc(90vh-4rem)] object-contain rounded-lg", imgAnimClass)}
             onLoad={handleImgLoad}
           />
         </div>

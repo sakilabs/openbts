@@ -1,29 +1,23 @@
-import { lazy, Suspense, useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
-  Share08Icon,
-  Delete02Icon,
-  MoreHorizontalCircle01Icon,
-  Globe02Icon,
-  SecurityLockIcon,
   AirportTowerIcon,
-  SignalFull02Icon,
   Calendar03Icon,
+  Delete02Icon,
+  Globe02Icon,
+  MoreHorizontalCircle01Icon,
   PencilEdit02Icon,
+  SecurityLockIcon,
+  Share08Icon,
+  SignalFull02Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
-import { authClient } from "@/lib/authClient";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,12 +28,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { useUserLists } from "@/features/lists/hooks/useUserLists";
-import { deleteList, updateList } from "@/features/lists/api";
 import type { UserListSummary } from "@/features/lists/api";
+import { deleteList, updateList } from "@/features/lists/api";
+import { useUserLists } from "@/features/lists/hooks/useUserLists";
+import { authClient } from "@/lib/authClient";
+import { cn } from "@/lib/utils";
 
 const CreateListDialog = lazy(() => import("./createListDialog").then((m) => ({ default: m.CreateListDialog })));
 

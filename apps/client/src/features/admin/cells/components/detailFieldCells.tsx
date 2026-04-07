@@ -1,6 +1,8 @@
 import type { KeyboardEvent } from "react";
+
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+
 import { navigateRowHorizontal } from "../rowNav";
 
 export type DetailInputCellProps = {

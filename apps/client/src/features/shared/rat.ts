@@ -1,4 +1,4 @@
-import { SignalFull02Icon, Wifi01Icon, SmartPhone01Icon, FlashIcon, RadioIcon, AirdropIcon } from "@hugeicons/core-free-icons";
+import { AirdropIcon, FlashIcon, RadioIcon, SignalFull02Icon, SmartPhone01Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 
 export const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"] as const;

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchApiData } from "@/lib/api";
+
 import type { RuntimeSettings } from "@/features/admin/settings/api";
+import { fetchApiData } from "@/lib/api";
 
 export type { RuntimeSettings, Announcement } from "@/features/admin/settings/api";
 

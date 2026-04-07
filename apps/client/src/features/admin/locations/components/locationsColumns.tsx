@@ -1,11 +1,13 @@
+import { AirportTowerIcon, MapPinIcon, Sorting05Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { MapPinIcon, AirportTowerIcon, Sorting05Icon } from "@hugeicons/core-free-icons";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { LocationWithStations, LocationSortBy, LocationSortDirection } from "@/types/station";
-import { formatRelativeTime, formatFullDate } from "@/lib/format";
+import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+import type { LocationSortBy, LocationSortDirection, LocationWithStations } from "@/types/station";
 
 interface SortableHeaderProps {
   label: string;
@@ -26,7 +28,7 @@ function SortableHeader({ label, column, sort, sortBy, onSort }: SortableHeaderP
       {label}
       <HugeiconsIcon
         icon={Sorting05Icon}
-        className={`size-3.5 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground/40"}`}
+        className={cn("size-3.5 transition-colors", isActive ? "text-foreground" : "text-muted-foreground/40")}
         style={isActive && sort === "asc" ? { transform: "scaleY(-1)" } : undefined}
       />
     </button>

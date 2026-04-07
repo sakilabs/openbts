@@ -1,5 +1,5 @@
 import { createAccessControl } from "better-auth/plugins/access";
-import { defaultStatements, adminAc } from "better-auth/plugins/admin/access";
+import { adminAc, defaultStatements } from "better-auth/plugins/admin/access";
 
 const statement = {
   ...defaultStatements,
@@ -15,6 +15,7 @@ const statement = {
   uke_permits: ["read"],
   user_lists: ["read", "create", "update", "delete"],
   comments: ["read", "create", "delete", "update"],
+  user: ["search"],
 } as const;
 
 export const accessControl = createAccessControl(statement);
@@ -45,6 +46,7 @@ export const editorRole = accessControl.newRole({
   uke_permits: ["read"],
   uke_permits_orphaned: ["read"],
   comments: ["delete", "read", "update", "create"],
+  user: ["search"],
 });
 
 export const adminRole = accessControl.newRole({
@@ -61,4 +63,5 @@ export const adminRole = accessControl.newRole({
   uke_permits_orphaned: ["read"],
   user_lists: ["read", "create", "update", "delete"],
   comments: ["read", "create", "delete", "update"],
+  user: ["search"],
 });

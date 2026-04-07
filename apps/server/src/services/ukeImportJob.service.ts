@@ -1,17 +1,17 @@
-import { Worker } from "node:worker_threads";
-import { fileURLToPath } from "node:url";
-import { join, dirname } from "node:path";
-
+import { deletedEntries } from "@openbts/drizzle";
 import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 import { cleanupDownloads } from "@openbts/uke-importer/utils";
+import { lt } from "drizzle-orm";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { Worker } from "node:worker_threads";
+
+import { db } from "../database/psql.js";
+import redis from "../database/redis.js";
+import { logger } from "../utils/logger.js";
+import { notifyUkeUpdate } from "./notification.service.js";
 import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
 import { takeStatsSnapshot } from "./statsSnapshot.service.js";
-import { notifyUkeUpdate } from "./notification.service.js";
-import { logger } from "../utils/logger.js";
-import redis from "../database/redis.js";
-import { deletedEntries } from "@openbts/drizzle";
-import { db } from "../database/psql.js";
-import { lt } from "drizzle-orm";
 
 type ImportStepKey =
   | "stations"

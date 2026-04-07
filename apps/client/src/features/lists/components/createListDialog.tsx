@@ -1,15 +1,15 @@
-import { useState, type JSX } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type JSX, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { createList } from "@/features/lists/api";
+import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;

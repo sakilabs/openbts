@@ -1,8 +1,9 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { DetailInputCell, DetailComputedCell } from "@/features/admin/cells/components/detailFieldCells";
 import { calculateComputedValues } from "@/features/admin/cells/calculateComputedValues";
+import { DetailComputedCell, DetailInputCell } from "@/features/admin/cells/components/detailFieldCells";
+import { cn } from "@/lib/utils";
+
 import { navigateRowHorizontal } from "./rowNav";
 
 const NR_TYPE_OPTIONS = [

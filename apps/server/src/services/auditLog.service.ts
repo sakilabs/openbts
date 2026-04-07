@@ -1,8 +1,8 @@
-import db from "../database/psql.js";
-import { auditLogs, type AuditAction, type AuditSource } from "@openbts/drizzle";
+import { type AuditAction, type AuditSource, auditLogs } from "@openbts/drizzle";
+import type { FastifyRequest } from "fastify/types/request.js";
 
 import type { Database } from "../database/psql.js";
-import type { FastifyRequest } from "fastify/types/request.js";
+import db from "../database/psql.js";
 
 type AuditActionType = (typeof AuditAction.enumValues)[number];
 type AuditSourceType = (typeof AuditSource.enumValues)[number];

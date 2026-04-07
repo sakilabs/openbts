@@ -135,6 +135,16 @@
     "userListsDisabled": "User lists are disabled"
   },
   "users": {
+    "picker": {
+      "searchPlaceholder": "Search users...",
+      "noUsers": "No users found",
+      "noMatch": "No users match \"{{search}}\"",
+      "error": "Failed to load users",
+      "showing": "Showing {{shown}} of {{total}}",
+      "selected_one": "{{count}} user",
+      "selected_other": "{{count}} users",
+      "allUsers": "All users"
+    },
     "table": {
       "name": "Name",
       "email": "Email",

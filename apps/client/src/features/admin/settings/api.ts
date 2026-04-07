@@ -1,4 +1,4 @@
-import { fetchJson, API_BASE } from "@/lib/api";
+import { API_BASE, fetchJson } from "@/lib/api";
 
 export interface Announcement {
   message: string;

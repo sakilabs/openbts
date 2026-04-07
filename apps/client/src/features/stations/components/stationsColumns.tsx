@@ -1,14 +1,16 @@
-import { memo } from "react";
+import { FlashIcon, MapPinIcon, SignalFull02Icon, SmartPhone01Icon, Sorting05Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { SignalFull02Icon, Wifi01Icon, SmartPhone01Icon, FlashIcon, MapPinIcon, Sorting05Icon } from "@hugeicons/core-free-icons";
+import { memo } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Station, StationSortBy, StationSortDirection } from "@/types/station";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import { formatRelativeTime, formatFullDate } from "@/lib/format";
 import { RAT_ORDER } from "@/features/map/constants";
+import { formatFullDate, formatRelativeTime } from "@/lib/format";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+import type { Station, StationSortBy, StationSortDirection } from "@/types/station";
 
 const RAT_CONFIG = {
   GSM: { icon: SignalFull02Icon, color: "bg-amber-500/10 text-amber-600 dark:text-amber-400", label: "2G" },
@@ -20,7 +22,7 @@ const RAT_CONFIG = {
 const TechBadge = memo(({ rat }: { rat: keyof typeof RAT_CONFIG }) => {
   const config = RAT_CONFIG[rat];
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${config.color}`}>
+    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium", config.color)}>
       <HugeiconsIcon icon={config.icon} className="size-3" />
       {config.label}
     </span>
@@ -52,7 +54,7 @@ function SortableHeader({ label, column, sort, sortBy, onSort }: SortableHeaderP
       {label}
       <HugeiconsIcon
         icon={Sorting05Icon}
-        className={`size-3.5 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground/40"}`}
+        className={cn("size-3.5 transition-colors", isActive ? "text-foreground" : "text-muted-foreground/40")}
         style={isActive && sort === "asc" ? { transform: "scaleY(-1)" } : undefined}
       />
     </button>

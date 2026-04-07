@@ -1,22 +1,24 @@
-import { useState, useRef, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Camera01Icon, Cancel01Icon, Image01Icon, PencilEdit02Icon, StarIcon, Tick02Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
+import type { LocationPhoto } from "@/features/station-details/api";
 import {
   fetchLocationPhotos,
   fetchStationPhotos,
   setStationPhotoSelection,
-  uploadLocationPhotos,
   updateLocationPhotoNote,
   updateLocationPhotoTakenAt,
+  uploadLocationPhotos,
 } from "@/features/station-details/api";
-import type { LocationPhoto } from "@/features/station-details/api";
+import { cn } from "@/lib/utils";
 
 type Props = { stationId: number; locationId: number };
 
@@ -183,7 +185,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   if (locationPhotos.length === 0) {
     return (
       <div
-        className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+        className={cn("border rounded-xl overflow-hidden transition-colors", isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "")}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -208,7 +210,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
 
   return (
     <div
-      className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+      className={cn("border rounded-xl overflow-hidden transition-colors", isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "")}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -241,9 +243,11 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
               key={photo.id}
               role="button"
               tabIndex={0}
-              className={`relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
-                isSelected ? "border-primary" : "border-transparent"
-              } bg-muted`}
+              className={cn(
+                "relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all",
+                isSelected ? "border-primary" : "border-transparent",
+                isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "",
+              )}
               onClick={() => toggleSelect(photo)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
@@ -253,7 +257,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                 <img
                   src={`/uploads/${photo.attachment_uuid}.webp`}
                   alt={photo.note ?? ""}
-                  className={`w-full h-full object-cover transition-opacity ${isSelected ? "" : "opacity-40"}`}
+                  className={cn("w-full h-full object-cover transition-opacity", isSelected ? "" : "opacity-40")}
                   loading="lazy"
                 />
                 {isMain && (

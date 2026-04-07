@@ -1,17 +1,16 @@
+import { userLists } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
 import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
-import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { userLists } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 const updateSchema = createUpdateSchema(userLists, {
   stations: z.object({ internal: z.array(z.number()), uke: z.array(z.number()) }).optional(),

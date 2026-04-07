@@ -1,7 +1,6 @@
-import { Logger, AxiomJSTransport, ConsoleTransport } from "@axiomhq/logging";
 import { Axiom } from "@axiomhq/js";
-
 import type { Transport } from "@axiomhq/logging";
+import { AxiomJSTransport, ConsoleTransport, Logger } from "@axiomhq/logging";
 
 function serializeError(err: unknown): { name: string; message: string; stack?: string; cause?: unknown } {
   if (err instanceof Error) {

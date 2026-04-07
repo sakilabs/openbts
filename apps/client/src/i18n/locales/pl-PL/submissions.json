@@ -105,7 +105,7 @@
   },
   "table": {
     "cells": "Ilość komórek",
-    "searchPlaceholder": "Szukaj po ID, stacji lub użytkowniku...",
+    "searchPlaceholder": "Szukaj po ID stacji lub ID zgłoszenia...",
     "empty": "Brak zgłoszeń do wyświetlenia",
     "emptyHint": "Brak zgłoszeń pasujących do wybranych filtrów",
     "emptyHintUser": "Nie złożyłeś jeszcze żadnych zgłoszeń. Zacznij od utworzenia nowego zgłoszenia"

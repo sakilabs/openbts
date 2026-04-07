@@ -1,17 +1,19 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { SecurityLockIcon } from "@hugeicons/core-free-icons";
-import { showApiError } from "@/lib/api";
-import { authClient } from "@/lib/authClient";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import type { AdminUser } from "@/features/admin/users/types";
+import { showApiError } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
+
 import { SectionHeader } from "./common";
 
 const ROLES = ["user", "editor", "admin"] as const;

@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
+
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { UnassignedPermitsFilters } from "./filters";
 import type { Operator, Region } from "@/types/station";
+
 import type { UnassignedPermitsFilters as FiltersType } from "../hooks/useUnassignedPermitsData";
+import { UnassignedPermitsFilters } from "./filters";
 
 interface UnassignedPermitsResponsiveFiltersProps {
   isOpen: boolean;

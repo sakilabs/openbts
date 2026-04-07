@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { calculateComputedValues } from "@/features/admin/cells/calculateComputedValues";
+import { cn } from "@/lib/utils";
 
 const cellClassName = "px-2 py-1 font-mono text-xs text-muted-foreground";
 

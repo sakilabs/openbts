@@ -1,24 +1,26 @@
-import { lazy, memo, Suspense, useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight02Icon, Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/lib/operatorUtils";
-import { isPermitExpired } from "@/lib/dateUtils";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Suspense, lazy, memo, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { usePreferences } from "@/hooks/usePreferences";
+import { isPermitExpired } from "@/lib/dateUtils";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+
+import type { DuplexRadioLink } from "../utils";
 import {
+  buildRadiolineShareUrl,
   calculateDistance,
+  calculateLinkTotalSpeed,
+  calculateRadiolineSpeed,
+  formatBandwidth,
   formatDistance,
   formatFrequency,
-  formatBandwidth,
   formatSpeed,
   getLinkTypeStyle,
-  buildRadiolineShareUrl,
-  calculateRadiolineSpeed,
-  calculateLinkTotalSpeed,
 } from "../utils";
-import type { DuplexRadioLink } from "../utils";
-import { cn } from "@/lib/utils";
 
 const AddToListPopover = lazy(() => import("@/features/lists/components/addToListPopover").then((m) => ({ default: m.AddToListPopover })));
 

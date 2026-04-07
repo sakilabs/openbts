@@ -1,4 +1,4 @@
-import { fetchStatsSummary, fetchStatsPermits, fetchStatsHistory, fetchStatsVoivodeships } from "./api";
+import { fetchStatsHistory, fetchStatsPermits, fetchStatsSummary, fetchStatsVoivodeships } from "./api";
 
 export function statsSummaryQueryOptions(operatorId?: number) {
   return {

@@ -1,22 +1,24 @@
+import { ArrowDown01Icon, Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Search02Icon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { cn, toggleValue } from "@/lib/utils";
+
 import { Checkbox as UICheckbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import {
   Combobox,
-  ComboboxChips,
   ComboboxChip,
+  ComboboxChips,
   ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
+import { Separator } from "@/components/ui/separator";
+import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
+import { cn, toggleValue } from "@/lib/utils";
 import type { Operator, Region } from "@/types/station";
+
 import type { UnassignedPermitsFilters } from "../hooks/useUnassignedPermitsData";
 
 type UnassignedPermitsFiltersProps = {

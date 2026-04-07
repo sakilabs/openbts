@@ -1,10 +1,12 @@
-import type { ReactNode } from "react";
-import { useRouter } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { SecurityLockIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useRouter } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/authClient";
+
 import { RequireAuth } from "./requireAuth";
 
 interface RequireRoleProps {

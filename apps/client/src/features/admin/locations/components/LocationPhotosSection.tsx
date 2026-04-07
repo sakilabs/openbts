@@ -1,10 +1,10 @@
 import { PhotosSection } from "@/components/photosSection";
 import {
+  deleteLocationPhoto,
   fetchLocationPhotos,
-  uploadLocationPhotos,
   updateLocationPhotoNote,
   updateLocationPhotoTakenAt,
-  deleteLocationPhoto,
+  uploadLocationPhotos,
 } from "@/features/station-details/api";
 
 type Props = { locationId: number };

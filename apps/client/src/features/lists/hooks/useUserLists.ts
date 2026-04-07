@@ -1,5 +1,6 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+
 import { fetchUserLists } from "../api";
 
 const LIMIT = 50;

@@ -1,14 +1,14 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Logout02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
-import { ElipsisIcon } from "@/components/ui/elipsis-icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveAvatarUrl } from "@/lib/format";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ElipsisIcon } from "@/components/ui/elipsis-icon";
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/authClient";
-import { useTranslation } from "react-i18next";
+import { resolveAvatarUrl } from "@/lib/format";
 
 export function NavUser({ data: session }: { data: ReturnType<typeof authClient.useSession>["data"] }) {
   const { isMobile } = useSidebar();

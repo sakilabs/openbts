@@ -1,9 +1,9 @@
-import { PUBLIC_ROUTES } from "../constants.js";
-import { getCurrentUser, verifyApiKey } from "../plugins/betterauth.plugin.js";
-import { ErrorResponse } from "../errors.js";
-import { getRuntimeSettings } from "../services/settings.service.js";
-
 import type { FastifyReply, FastifyRequest } from "fastify";
+
+import { PUBLIC_ROUTES } from "../constants.js";
+import { ErrorResponse } from "../errors.js";
+import { getCurrentUser, verifyApiKey } from "../plugins/betterauth.plugin.js";
+import { getRuntimeSettings } from "../services/settings.service.js";
 
 const TWO_FACTOR_ALLOWED = [
   "/api/v1/auth/get-session",
@@ -18,8 +18,8 @@ const TWO_FACTOR_ALLOWED = [
   "/api/v1/auth/two-factor/verify-backup-code",
   "/api/v1/auth/two-factor/view-backup-codes",
 ];
-import type { Route } from "../interfaces/routes.interface.js";
 import type { ApiToken } from "../interfaces/fastify.interface.js";
+import type { Route } from "../interfaces/routes.interface.js";
 
 export async function authHook(req: FastifyRequest, _: FastifyReply) {
   const route = req.routeOptions as unknown as Route;

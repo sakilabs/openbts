@@ -1,6 +1,7 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { SubmissionForm } from "@/features/submissions/components/submissionForm";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
+
 import { RequireAuth } from "@/components/auth/requireAuth";
+import { SubmissionForm } from "@/features/submissions/components/submissionForm";
 import { useSettings } from "@/hooks/useSettings";
 
 type SubmissionSearch = {

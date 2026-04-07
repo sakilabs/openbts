@@ -1,6 +1,7 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { ListsPageContent } from "@/features/lists/components/listsPage";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
+
 import { RequireAuth } from "@/components/auth/requireAuth";
+import { ListsPageContent } from "@/features/lists/components/listsPage";
 import { useSettings } from "@/hooks/useSettings";
 
 function ListsPage() {

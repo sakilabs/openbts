@@ -1,6 +1,6 @@
-import { readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
 import pkg from "node-sql-parser";
+import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
 import ora from "ora";
 const { Parser } = pkg;
 

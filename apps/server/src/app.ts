@@ -1,25 +1,24 @@
-import { randomUUID } from "node:crypto";
-import { resolve } from "node:path";
-import debug from "debug";
-import Fastify from "fastify";
 import cors from "@fastify/cors";
 import staticServe from "@fastify/static";
 import scalarReference from "@scalar/fastify-api-reference";
+import debug from "debug";
+import Fastify from "fastify";
+import { type ZodTypeProvider, hasZodFastifySchemaValidationErrors, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
 import type { $ZodIssue } from "zod/v4/core";
-import { serializerCompiler, validatorCompiler, hasZodFastifySchemaValidationErrors, type ZodTypeProvider } from "fastify-type-provider-zod";
 
 import { dlogger } from "./config.js";
 import { APIv1Controller } from "./controllers/v1.controller.js";
+import { redisReady } from "./database/redis.js";
+import { type ErrorResponse, ValidationError } from "./errors.js";
 import { OnRequestHook } from "./hooks/onRequest.hook.js";
 import { OnSendHook } from "./hooks/onSend.hook.js";
 import { PreHandlerHook } from "./hooks/preHandler.hook.js";
-import { initRuntimeSettings } from "./services/settings.service.js";
-import { redisReady } from "./database/redis.js";
-import { ValidationError, type ErrorResponse } from "./errors.js";
-import { registerRateLimit } from "./plugins/ratelimit.plugin.js";
-import { logger, serializeError } from "./utils/logger.js";
-
 import type { FastifyZodInstance } from "./interfaces/fastify.interface.js";
+import { registerRateLimit } from "./plugins/ratelimit.plugin.js";
+import { initRuntimeSettings } from "./services/settings.service.js";
+import { logger, serializeError } from "./utils/logger.js";
 
 function flattenZodIssues(issues: $ZodIssue[], pathPrefix: string[] = []): { field: string; validationMessage: string }[] {
   return issues.flatMap((issue) => {

@@ -1,11 +1,10 @@
-import { and, count, eq, gte, lte, sql, type SQL } from "drizzle-orm";
+import { deletedEntries } from "@openbts/drizzle";
+import { type SQL, and, count, eq, gte, lte, sql } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
-import { deletedEntries } from "@openbts/drizzle";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 

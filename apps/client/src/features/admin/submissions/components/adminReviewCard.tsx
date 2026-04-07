@@ -1,11 +1,12 @@
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { UserCheck02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTranslation } from "react-i18next";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatFullDate, resolveAvatarUrl } from "@/lib/format";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
+import { formatFullDate, resolveAvatarUrl } from "@/lib/format";
 
 type AdminReviewCardProps = {
   submission: SubmissionDetail;

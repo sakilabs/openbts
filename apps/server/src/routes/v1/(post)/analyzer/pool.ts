@@ -1,6 +1,7 @@
-import { Worker } from "node:worker_threads";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { join, dirname } from "node:path";
+import { Worker } from "node:worker_threads";
+
 import type { CellInput, LookupMaps } from "./logic.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

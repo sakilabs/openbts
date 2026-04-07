@@ -1,12 +1,13 @@
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { SentIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import type { SubmissionMode, StationAction, ProposedStationForm } from "../types";
+
 import type { SearchStation } from "../api";
+import type { ProposedStationForm, StationAction, SubmissionMode } from "../types";
 
 export interface SubmitSectionProps {
   mode: SubmissionMode;

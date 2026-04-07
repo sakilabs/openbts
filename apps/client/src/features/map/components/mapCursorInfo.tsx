@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+
 import { useMap } from "@/components/ui/map";
-import { calculateDistance, calculateBearing, calculateTA } from "../utils";
 import { Separator } from "@/components/ui/separator";
-import { formatCoordinates } from "@/lib/gpsUtils";
 import { usePreferences } from "@/hooks/usePreferences";
+import { formatCoordinates } from "@/lib/gpsUtils";
+import { cn } from "@/lib/utils";
+
+import { calculateBearing, calculateDistance, calculateTA } from "../utils";
 
 const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 

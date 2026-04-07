@@ -1,30 +1,29 @@
+import {
+  attachments,
+  locationPhotos,
+  proposedCells,
+  proposedGSMCells,
+  proposedLTECells,
+  proposedLocations,
+  proposedNRCells,
+  proposedStations,
+  proposedUMTSCells,
+  stations,
+  submissionLocationPhotoSelections,
+  submissions,
+  users,
+} from "@openbts/drizzle";
+import { asc, eq } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
-import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { eq, asc } from "drizzle-orm";
-import {
-  stations,
-  submissions,
-  users,
-  proposedCells,
-  proposedGSMCells,
-  proposedUMTSCells,
-  proposedLTECells,
-  proposedNRCells,
-  proposedStations,
-  proposedLocations,
-  submissionLocationPhotoSelections,
-  locationPhotos,
-  attachments,
-} from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);

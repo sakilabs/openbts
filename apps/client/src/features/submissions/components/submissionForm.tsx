@@ -1,19 +1,20 @@
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTranslation } from "react-i18next";
 
-import { StationSelector } from "./stationSelector";
-import { LocationPicker } from "./locationPicker";
-import { NewStationForm } from "./newStationForm";
-import { RatSelector } from "./ratSelector";
+import { useSettings } from "@/hooks/useSettings";
+
 import { ActionSelector } from "./actionSelector";
-import { SubmitSection } from "./submitSection";
 import { CellsSection } from "./cellsSection";
 import { ExtraIdentificatorsSection } from "./extraIdentificatorsSection";
+import { LocationPicker } from "./locationPicker";
+import { NewStationForm } from "./newStationForm";
 import { PhotoUploadSection } from "./photoUploadSection";
+import { RatSelector } from "./ratSelector";
+import { StationSelector } from "./stationSelector";
 import { SubmissionLocationPhotoSelector } from "./submissionLocationPhotoSelector";
+import { SubmitSection } from "./submitSection";
 import { useSubmissionForm } from "./useSubmissionForm";
-import { useSettings } from "@/hooks/useSettings";
 
 export interface SubmissionFormProps {
   preloadStationId?: number;

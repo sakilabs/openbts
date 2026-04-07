@@ -1,5 +1,5 @@
 import { PhotosSection } from "@/components/photosSection";
-import { fetchSubmissionPhotos, deleteSubmissionPhoto, updateSubmissionPhotoNote, updateSubmissionPhotoTakenAt } from "@/features/submissions/api";
+import { deleteSubmissionPhoto, fetchSubmissionPhotos, updateSubmissionPhotoNote, updateSubmissionPhotoTakenAt } from "@/features/submissions/api";
 
 type Props = { submissionId: string; readOnly?: boolean };
 

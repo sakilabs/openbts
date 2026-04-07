@@ -1,10 +1,11 @@
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Globe02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+
 import type { SearchStation } from "../api";
 
 export interface ExtraIdentificatorsSectionProps {

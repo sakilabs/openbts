@@ -1,4 +1,4 @@
-import { Clock01Icon, Tick02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Clock01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 
 export const SUBMISSION_STATUS = {
   pending: {

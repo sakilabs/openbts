@@ -1,14 +1,13 @@
-import { eq } from "drizzle-orm";
 import { locations, stations } from "@openbts/drizzle";
+import { eq } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { createAuditLog } from "../../../../services/auditLog.service.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { IdParams, Route, EmptyResponse } from "../../../../interfaces/routes.interface.js";
+import type { EmptyResponse, IdParams, Route } from "../../../../interfaces/routes.interface.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 const schemaRoute = {
   params: z.object({

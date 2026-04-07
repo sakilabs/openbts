@@ -1,6 +1,7 @@
-import { useState, useEffect, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
 import type { QueryClient } from "@tanstack/react-query";
+import { type ReactNode, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { BackendUnavailableError } from "@/lib/api";
 
 export function BackendStatusProvider({ queryClient, children }: { queryClient: QueryClient; children: ReactNode }) {

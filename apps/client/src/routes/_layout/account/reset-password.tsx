@@ -1,14 +1,14 @@
+import { useForm } from "@tanstack/react-form";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 
-import { authClient } from "@/lib/authClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/authClient";
 
 type ResetPasswordSearch = {
   token?: string;

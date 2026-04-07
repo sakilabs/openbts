@@ -1,15 +1,14 @@
-import { eq, or, and, sql, inArray, ne, type SQL } from "drizzle-orm";
-import { stations, cells, locations, operators, gsmCells, umtsCells, lteCells, nrCells, extraIdentificators, regions } from "@openbts/drizzle";
+import { cells, extraIdentificators, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
+import { type SQL, and, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../database/psql.js";
 import { ErrorResponse } from "../../../errors.js";
-import { parseFilterQuery, groupFiltersByTable, hasFilters, type GroupedFilters } from "./search.filters.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
+import { type GroupedFilters, groupFiltersByTable, hasFilters, parseFilterQuery } from "./search.filters.js";
 
 const stationsSelectSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSelectSchema = createSelectSchema(cells);

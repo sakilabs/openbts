@@ -1,16 +1,18 @@
+import MapLibreGL from "maplibre-gl";
 import { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import MapLibreGL from "maplibre-gl";
-import {
-  RADIOLINES_SOURCE_ID,
-  RADIOLINES_ENDPOINTS_SOURCE_ID,
-  RADIOLINES_LINE_LAYER_ID,
-  RADIOLINES_HITBOX_LAYER_ID,
-  RADIOLINES_ENDPOINT_LAYER_ID,
-  POINT_LAYER_ID,
-} from "../constants";
+
 import { normalizeOperatorName } from "@/lib/operatorUtils";
+
 import { RadioLineTooltipContent } from "../components/radioLineTooltipContent";
+import {
+  POINT_LAYER_ID,
+  RADIOLINES_ENDPOINTS_SOURCE_ID,
+  RADIOLINES_ENDPOINT_LAYER_ID,
+  RADIOLINES_HITBOX_LAYER_ID,
+  RADIOLINES_LINE_LAYER_ID,
+  RADIOLINES_SOURCE_ID,
+} from "../constants";
 import type { DuplexRadioLink } from "../utils";
 import { findDuplexLinkByRadioLineId } from "../utils";
 

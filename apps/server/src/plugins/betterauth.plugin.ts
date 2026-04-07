@@ -1,21 +1,20 @@
-import { fromNodeHeaders } from "better-auth/node";
-import { betterAuth, type GenericEndpointContext } from "better-auth";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
-import { admin, multiSession, twoFactor, username } from "better-auth/plugins";
 import { apiKey } from "@better-auth/api-key";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { passkey } from "@better-auth/passkey";
 import { hash, verify } from "@node-rs/argon2";
 import * as schema from "@openbts/drizzle";
+import { type GenericEndpointContext, betterAuth } from "better-auth";
+import { fromNodeHeaders } from "better-auth/node";
+import { admin, multiSession, twoFactor, username } from "better-auth/plugins";
+import type { FastifyRequest } from "fastify";
 
+import { APP_NAME, ARGON2_OPTIONS } from "../constants.js";
 import { db } from "../database/psql.js";
 import { redis } from "../database/redis.js";
-import { APP_NAME, ARGON2_OPTIONS } from "../constants.js";
-import { accessControl, adminRole, editorRole, userRole } from "./auth/permissions.js";
-import { beforeAuthHook, afterAuthHook } from "./auth/hooks.js";
-import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mail.js";
-
-import type { FastifyRequest } from "fastify";
 import type { UserRole } from "../interfaces/auth.interface.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../lib/mail.js";
+import { afterAuthHook, beforeAuthHook } from "./auth/hooks.js";
+import { accessControl, adminRole, editorRole, userRole } from "./auth/permissions.js";
 
 export function mapHeaders(headers: { [s: string]: unknown } | ArrayLike<unknown>) {
   const entries = Object.entries(headers);

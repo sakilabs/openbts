@@ -1,5 +1,5 @@
 import { API_BASE, fetchJson } from "@/lib/api";
-import type { Station, RadioLine, UkeLocationWithPermits } from "@/types/station";
+import type { RadioLine, Station, UkeLocationWithPermits } from "@/types/station";
 
 export type UserListSummary = {
   id: number;

@@ -12,7 +12,14 @@
     "unicorn/prefer-number-properties": "error",
     "unicorn/prefer-set-has": "error",
     "no-else-return": "error",
-    "react/self-closing-comp": "error"
+    "react/self-closing-comp": "error",
+    "sort-imports": [
+      "error",
+      {
+        "memberSyntaxSortOrder": ["none", "all", "multiple", "single"],
+        "ignoreDeclarationSort": true
+      }
+    ]
   },
   "options": {
     "typeAware": true

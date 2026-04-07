@@ -1,15 +1,16 @@
-import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { fetchJson, API_BASE } from "@/lib/api";
-import { authClient } from "@/lib/authClient";
+import { Navigate, createFileRoute, useNavigate } from "@tanstack/react-router";
+
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AdminUser, Session } from "@/features/admin/users/types";
-import { UserDetailHeader } from "@/features/admin/users/components/UserDetailHeader";
-import { UserInfoCard } from "@/features/admin/users/components/UserInfoCard";
+import { DangerZoneCard } from "@/features/admin/users/components/DangerZoneCard";
 import { ManageUserCard } from "@/features/admin/users/components/ManageUserCard";
 import { SessionsCard } from "@/features/admin/users/components/SessionsCard";
-import { DangerZoneCard } from "@/features/admin/users/components/DangerZoneCard";
+import { UserDetailHeader } from "@/features/admin/users/components/UserDetailHeader";
+import { UserInfoCard } from "@/features/admin/users/components/UserInfoCard";
+import type { AdminUser, Session } from "@/features/admin/users/types";
+import { API_BASE, fetchJson } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
 
 function AdminUserDetailPage() {
   const { id: userId } = Route.useParams();

@@ -1,18 +1,19 @@
+import { isARFCNValidForBand } from "@/features/station-details/frequencyCalc";
+import type { Band } from "@/types/station";
+
+import type { SearchStation } from "../api";
 import type {
-  ProposedStationForm,
-  ProposedLocationForm,
-  ProposedCellForm,
-  RatType,
   GSMCellDetails,
-  UMTSCellDetails,
   LTECellDetails,
   NRCellDetails,
+  ProposedCellForm,
+  ProposedLocationForm,
+  ProposedStationForm,
+  RatType,
   SubmissionMode,
+  UMTSCellDetails,
 } from "../types";
-import type { SearchStation } from "../api";
-import type { Band } from "@/types/station";
-import { isARFCNValidForBand } from "@/features/station-details/frequencyCalc";
-import { findDuplicateCids, findDuplicateEnbidClids, type CellLike } from "./cellDuplicates";
+import { type CellLike, findDuplicateCids, findDuplicateEnbidClids } from "./cellDuplicates";
 
 export type StationErrors = {
   station_id?: string;

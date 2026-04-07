@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { CheckmarkCircle02Icon, FingerPrintIcon, SecurityLockIcon, ViewIcon, ViewOffSlashIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { SecurityLockIcon, FingerPrintIcon, ViewIcon, ViewOffSlashIcon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 
-import { authClient } from "@/lib/authClient";
-import { fetchJson, API_BASE } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { API_BASE, fetchJson } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 
 const EMPTY_ERRORS: (string | undefined)[] = [];

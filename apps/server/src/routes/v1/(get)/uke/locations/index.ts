@@ -1,11 +1,12 @@
-import { sql, type SQL, inArray, and, count, eq, desc } from "drizzle-orm";
+import { bands, operators, regions, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { type SQL, and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
-import { bands, operators, ukePermits, ukeLocations, regions, ukePermitSectors } from "@openbts/drizzle";
+
 import db from "../../../../../database/psql.js";
 import redis from "../../../../../database/redis.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 

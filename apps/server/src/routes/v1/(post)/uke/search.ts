@@ -1,12 +1,11 @@
+import { operators, ukeLocations, ukeOperators, ukePermits, ukeRadiolines } from "@openbts/drizzle";
 import { eq, ilike, or } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
-import { operators, ukeLocations, ukeOperators, ukePermits, ukeRadiolines } from "@openbts/drizzle";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 

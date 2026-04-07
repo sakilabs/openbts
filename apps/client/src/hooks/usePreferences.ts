@@ -1,4 +1,4 @@
-import { useSyncExternalStore, useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export type GpsFormat = "decimal" | "dms";
 export type NavigationApp = "google-maps" | "apple-maps" | "waze" | "osmand";

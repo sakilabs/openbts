@@ -1,14 +1,15 @@
-import type { StationSource, LocationWithStations, UkeLocationWithPermits, RadioLine } from "@/types/station";
 import { getOperatorColor, resolveOperatorMnc } from "@/lib/operatorUtils";
+import type { LocationWithStations, RadioLine, StationSource, UkeLocationWithPermits } from "@/types/station";
+
 import {
   calculateDistance,
+  calculateLinkTotalSpeed,
+  calculateRadiolineSpeed,
+  formatBandwidth,
   formatDistance,
   formatFrequency,
-  formatBandwidth,
   formatSpeed,
   groupRadioLinesIntoLinks,
-  calculateRadiolineSpeed,
-  calculateLinkTotalSpeed,
 } from "./utils";
 
 export const DEFAULT_COLOR = "#3b82f6";

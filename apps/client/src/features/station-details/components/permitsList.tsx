@@ -1,16 +1,18 @@
-import { useMemo, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { AlertCircleIcon, ArrowDown01Icon, DocumentCodeIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { DocumentCodeIcon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { type ReactNode, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Badge } from "@/components/ui/badge";
-import type { UkePermit } from "@/types/station";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fetchApiData } from "@/lib/api";
 import { isPermitExpired, isRecent } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
+import type { UkePermit } from "@/types/station";
+
 import { RAT_ICONS } from "../utils";
 
 async function fetchPermits(stationId: number, isUkeSource: boolean): Promise<UkePermit[]> {

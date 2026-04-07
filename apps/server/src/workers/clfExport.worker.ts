@@ -1,12 +1,13 @@
-import { parentPort } from "node:worker_threads";
-import { writeFile, mkdir } from "node:fs/promises";
+import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
+import { and, eq, inArray } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
-import { and, inArray, eq } from "drizzle-orm";
+import { parentPort } from "node:worker_threads";
+
 import db from "../database/psql.js";
-import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
-import { convertToCLF, type ClfFormat } from "../utils/clf-export.js";
+import { type ClfFormat, convertToCLF } from "../utils/clf-export.js";
 
 if (!parentPort) throw new Error("This file must be run as a worker thread");
 

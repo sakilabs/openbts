@@ -1,16 +1,16 @@
-import { fetchApiData, postApiData, fetchJson, API_BASE } from "@/lib/api";
-import { reverseGeocode as reverseGeocodeWithMapbox, type GeocodingResult } from "@/lib/mapboxGeocoding";
-import type { Location, CellDetails, LocationWithStations, Station, Region, Operator, UkeLocationWithPermits } from "@/types/station";
-import type { SubmissionFormData, CellFormDetails, RatType } from "./types";
 import type { SubmissionDetail, SubmissionRow } from "@/features/admin/submissions/types";
+import { API_BASE, fetchApiData, fetchJson, postApiData } from "@/lib/api";
+import { type GeocodingResult, reverseGeocode as reverseGeocodeWithMapbox } from "@/lib/mapboxGeocoding";
+import type { CellDetails, Location, LocationWithStations, Operator, Region, Station, UkeLocationWithPermits } from "@/types/station";
+
+import type { CellFormDetails, RatType, SubmissionFormData } from "./types";
 
 export { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
 
 export type MySubmissionsResponse = { data: SubmissionRow[]; totalCount: number };
 
-export async function fetchMySubmissions(limit = 20, offset = 0, submitterId?: string): Promise<MySubmissionsResponse> {
+export async function fetchMySubmissions(limit = 20, offset = 0): Promise<MySubmissionsResponse> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  if (submitterId) params.set("submitter_id", submitterId);
   return fetchJson<MySubmissionsResponse>(`${API_BASE}/submissions?${params.toString()}`);
 }
 

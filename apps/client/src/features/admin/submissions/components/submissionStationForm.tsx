@@ -1,16 +1,18 @@
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { AirportTowerIcon, Globe02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTranslation } from "react-i18next";
+
+import { OperatorSelect } from "@/components/operator-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { OperatorSelect } from "@/components/operator-select";
-import { cn } from "@/lib/utils";
-import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
+import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
 import type { Operator, Station } from "@/types/station";
-import type { SubmissionDetail } from "@/features/admin/submissions/types";
+
 import { ChangeBadge } from "./common";
 
 type ExtraIdentificatorsType = {

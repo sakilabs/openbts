@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { formatFullDate } from "@/lib/format";
+
 import type { DeletedEntry } from "../types";
 
 const SOURCE_TABLE_LABELS: Record<string, string> = {

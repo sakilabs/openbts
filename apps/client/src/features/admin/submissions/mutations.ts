@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchJson, API_BASE } from "@/lib/api";
-import type { ProposedLocationForm } from "@/features/submissions/types";
+
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
+import type { ProposedLocationForm } from "@/features/submissions/types";
+import { API_BASE, fetchJson } from "@/lib/api";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;

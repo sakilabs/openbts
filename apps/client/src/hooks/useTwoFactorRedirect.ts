@@ -1,6 +1,7 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+
 import { TwoFactorRequiredError } from "@/lib/api";
 
 export function useTwoFactorRedirect() {

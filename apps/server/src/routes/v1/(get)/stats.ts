@@ -1,10 +1,11 @@
+import { cells, locations, stations, ukeImportMetadata, ukeLocations, ukePermits, ukeRadiolines } from "@openbts/drizzle";
 import { and, count, desc, eq, max, or } from "drizzle-orm";
-import { z } from "zod/v4";
 import type { FastifyRequest } from "fastify/types/request.js";
+import { z } from "zod/v4";
+
+import db from "../../../database/psql.js";
 import type { ReplyPayload } from "../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../interfaces/routes.interface.js";
-import db from "../../../database/psql.js";
-import { ukeImportMetadata, stations, cells, ukePermits, ukeLocations, locations, ukeRadiolines } from "@openbts/drizzle";
 
 interface Response {
   lastUpdated: {

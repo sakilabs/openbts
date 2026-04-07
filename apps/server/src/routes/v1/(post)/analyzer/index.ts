@@ -1,14 +1,14 @@
-import { createHash } from "node:crypto";
+import { locations, operators, regions, stations } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-orm/zod";
-import { stations, operators, locations, regions } from "@openbts/drizzle";
+import type { FastifyRequest } from "fastify/types/request.js";
+import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 
-import redis from "../../../../database/redis.js";
 import db from "../../../../database/psql.js";
-import type { FastifyRequest } from "fastify/types/request.js";
+import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { groupCellsByMnc, pairKey, type CellInput, type AnalyzerResult, type LookupMaps } from "./logic.js";
+import { type AnalyzerResult, type CellInput, type LookupMaps, groupCellsByMnc, pairKey } from "./logic.js";
 import { analyzerPool } from "./pool.js";
 
 const MAX_CELLS = 20_000;

@@ -1,4 +1,4 @@
-import type { ProposedCellForm, ProposedStationForm, ProposedLocationForm, CellPayload } from "../types";
+import type { CellPayload, ProposedCellForm, ProposedLocationForm, ProposedStationForm } from "../types";
 
 function isMeaningfulValue(v: unknown): boolean {
   if (v === undefined || v === null) return false;

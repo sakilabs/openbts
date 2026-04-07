@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { APP_NAME } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import {
   Timeline,
   TimelineContent,
@@ -14,11 +12,14 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from "@/components/reui/timeline";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NetworksIcon from "@/features/station-details/components/logos/networks.svg?react";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
-import TmobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
-import PlusIcon from "@/features/station-details/components/logos/plus.svg?react";
 import PlayIcon from "@/features/station-details/components/logos/play.svg?react";
+import PlusIcon from "@/features/station-details/components/logos/plus.svg?react";
+import TmobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
+import { APP_NAME } from "@/lib/api";
 
 const markdownClasses =
   "space-y-4 text-sm text-muted-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-foreground [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-foreground [&_p]:leading-relaxed [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_strong]:text-foreground";

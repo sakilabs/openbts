@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CellDetailsForm } from "./cellDetailsForm";
+
 import type { ProposedCellForm, RatType } from "../types";
 import type { CellError } from "../utils/validation";
+import { CellDetailsForm } from "./cellDetailsForm";
 
 export interface CellsSectionProps {
   selectedRats: RatType[];

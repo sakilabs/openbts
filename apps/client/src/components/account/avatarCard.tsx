@@ -1,16 +1,16 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { Delete02Icon, Upload04Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
+import { Suspense, lazy, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { UserIcon, Upload04Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 
-import { authClient } from "@/lib/authClient";
-import { fetchJson, API_BASE } from "@/lib/api";
-import { resolveAvatarUrl } from "@/lib/format";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { API_BASE, fetchJson } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
+import { resolveAvatarUrl } from "@/lib/format";
 
 const AvatarCropDialog = lazy(() => import("./avatarCropDialog").then((m) => ({ default: m.AvatarCropDialog })));
 

@@ -1,8 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PencilEdit02Icon, Delete02Icon } from "@hugeicons/core-free-icons";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
+
 import type { StationAction } from "../types";
 
 export interface ActionSelectorProps {

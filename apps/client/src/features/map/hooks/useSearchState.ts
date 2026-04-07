@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent, type FocusEvent, type KeyboardEvent } from "react";
+import { type ChangeEvent, type FocusEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+
 import type { FilterKeyword, ParsedFilter } from "../types";
 
 type OverlayType = "autocomplete" | "results" | null;

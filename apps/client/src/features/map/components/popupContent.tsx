@@ -1,16 +1,18 @@
-import { lazy, memo, Suspense, useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { Image01Icon, Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Share08Icon, Tick02Icon, Image01Icon } from "@hugeicons/core-free-icons";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import { getStationBands, getPermitBands } from "../utils";
+import { useQuery } from "@tanstack/react-query";
+import { Suspense, lazy, memo, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Lightbox } from "@/components/lightbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchLocationPhotos } from "@/features/station-details/api";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
-import { Lightbox } from "@/components/lightbox";
-import { fetchLocationPhotos } from "@/features/station-details/api";
-import type { LocationInfo, StationWithoutCells, StationSource, UkeStation } from "@/types/station";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import type { LocationInfo, StationSource, StationWithoutCells, UkeStation } from "@/types/station";
+
+import { getPermitBands, getStationBands } from "../utils";
 
 const AddToListPopover = lazy(() => import("@/features/lists/components/addToListPopover").then((m) => ({ default: m.AddToListPopover })));
 

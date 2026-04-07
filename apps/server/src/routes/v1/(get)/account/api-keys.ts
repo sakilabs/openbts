@@ -1,18 +1,16 @@
+import { apikeys } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { redis } from "../../../../database/redis.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { apikeys } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
+import type { TokenTier } from "../../../../interfaces/auth.interface.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { DEFAULT_TIER_LIMITS } from "../../../../services/ratelimit.service.js";
 import { DEFAULT_QUOTA_LIMITS } from "../../../../services/quota.service.js";
-
-import type { TokenTier } from "../../../../interfaces/auth.interface.js";
+import { DEFAULT_TIER_LIMITS } from "../../../../services/ratelimit.service.js";
 
 const apiKeySchema = createSelectSchema(apikeys)
   .pick({ id: true, name: true, start: true, expiresAt: true, createdAt: true, enabled: true })

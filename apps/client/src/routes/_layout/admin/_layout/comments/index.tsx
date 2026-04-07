@@ -1,16 +1,13 @@
-import { useState, useCallback, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useTablePagination } from "@/hooks/useTablePageSize";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+import type { LightboxPhoto } from "@/components/lightbox";
+import { Lightbox } from "@/components/lightbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,12 +18,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lightbox } from "@/components/lightbox";
-import { fetchJson, API_BASE, showApiError } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { CommentsDataTable } from "@/features/admin/comments/components/commentsDataTable";
 import type { AdminComment } from "@/features/admin/comments/types";
-import type { LightboxPhoto } from "@/components/lightbox";
+import { UserPickerPopover } from "@/features/admin/users/components/UserPickerPopover";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useTablePagination } from "@/hooks/useTablePageSize";
+import { API_BASE, fetchJson, showApiError } from "@/lib/api";
 
 const EMPTY_COMMENTS: AdminComment[] = [];
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
@@ -43,6 +45,8 @@ function AdminCommentsPage() {
   const [sortBy, setSortBy] = useState<"createdAt" | "id">("createdAt");
   const [sort, setSort] = useState<"asc" | "desc">("desc");
 
+  const [selectedAuthorIds, setSelectedAuthorIds] = useState<string[]>([]);
+
   const [deleteTarget, setDeleteTarget] = useState<AdminComment | null>(null);
   const [editTarget, setEditTarget] = useState<AdminComment | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -51,7 +55,7 @@ function AdminCommentsPage() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-comments", pagination.pageIndex, pagination.pageSize, debouncedSearch, statusFilter, sortBy, sort],
+    queryKey: ["admin-comments", pagination.pageIndex, pagination.pageSize, debouncedSearch, statusFilter, sortBy, sort, selectedAuthorIds],
     queryFn: () => {
       const params = new URLSearchParams({
         limit: String(pagination.pageSize),
@@ -61,6 +65,7 @@ function AdminCommentsPage() {
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter !== "all") params.set("status", statusFilter);
+      if (selectedAuthorIds.length > 0) params.set("author_ids", selectedAuthorIds.join(","));
       return fetchJson<{ data: AdminComment[]; totalCount: number }>(`${API_BASE}/comments?${params}`).then(
         (res) => res ?? { data: [], totalCount: 0 },
       );
@@ -188,6 +193,13 @@ function AdminCommentsPage() {
               </SelectContent>
             </Select>
           </div>
+          <UserPickerPopover
+            selectedUserIds={selectedAuthorIds}
+            onSelectionChange={(ids) => {
+              setSelectedAuthorIds(ids);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
+          />
           <div className="relative max-w-sm">
             <HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input

@@ -1,3 +1,4 @@
+import { type SQL, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
   bigint,
@@ -15,7 +16,6 @@ import {
   unique,
   varchar,
 } from "drizzle-orm/pg-core";
-import { type SQL, sql } from "drizzle-orm";
 
 export const UKEPermissionType = pgEnum("uke_permission_type", ["zmP", "P"]);
 export const DuplexType = pgEnum("duplex", ["FDD", "TDD"]);

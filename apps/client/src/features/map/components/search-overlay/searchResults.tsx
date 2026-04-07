@@ -1,10 +1,12 @@
-import { useTranslation } from "react-i18next";
+import { AirportTowerIcon, Location04Icon, MapsIcon, Route02Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { MapsIcon, Search01Icon, AirportTowerIcon, Route02Icon, Location04Icon } from "@hugeicons/core-free-icons";
-import type { Station } from "@/types/station";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import type { GeocodingResult } from "@/lib/mapboxGeocoding";
+import { useTranslation } from "react-i18next";
+
 import { Spinner } from "@/components/ui/spinner";
+import type { GeocodingResult } from "@/lib/mapboxGeocoding";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import type { Station } from "@/types/station";
+
 import type { UkeSearchPermitStation, UkeSearchRadioline } from "../../searchApi";
 
 const EMPTY_PERMITS: UkeSearchPermitStation[] = [];
@@ -45,7 +47,8 @@ export function SearchResults({
 
   if (!show) return null;
 
-  const hasResults = !!gpsResult || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0;
+  const hasResults =
+    !!gpsResult || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0;
 
   return (
     <div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -88,9 +91,7 @@ export function SearchResults({
                   <span className="text-sm font-bold font-mono group-hover:text-primary transition-colors">
                     {gpsResult.lat.toFixed(6)}, {gpsResult.lng.toFixed(6)}
                   </span>
-                  {gpsResult.address && (
-                    <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{gpsResult.address}</p>
-                  )}
+                  {gpsResult.address && <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{gpsResult.address}</p>}
                 </div>
               </button>
             </div>

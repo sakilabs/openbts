@@ -1,12 +1,11 @@
+import type { RouteOptions } from "fastify";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { dlogger } from "../config.js";
-import { logger } from "../utils/logger.js";
-
-import type { RouteOptions } from "fastify";
 import type { FastifyZodInstance } from "../interfaces/fastify.interface.js";
+import { logger } from "../utils/logger.js";
 
 function walk(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((file) => (file.isDirectory() ? walk(join(dir, file.name)) : join(dir, file.name)));

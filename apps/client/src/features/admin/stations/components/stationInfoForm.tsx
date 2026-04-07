@@ -1,16 +1,17 @@
-import { useTranslation } from "react-i18next";
+import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
+import { useTranslation } from "react-i18next";
+
+import { OperatorSelect } from "@/components/operator-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { OperatorSelect } from "@/components/operator-select";
-import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
-import type { Operator, UkeStation, LocationWithStations, Location } from "@/types/station";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+import type { Location, LocationWithStations, Operator, UkeStation } from "@/types/station";
 
 type StationInfoFormProps = {
   stationDbId?: number;

@@ -1,9 +1,10 @@
-import { useMemo, useCallback, useRef } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { fetchApiData, fetchJson, API_BASE } from "@/lib/api";
-import { operatorsQueryOptions, bandsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
+import { useCallback, useMemo, useRef } from "react";
+
 import { parseFilters } from "@/features/map/filters";
+import { bandsQueryOptions, operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
+import { API_BASE, fetchApiData, fetchJson } from "@/lib/api";
 import type { Station, StationFilters, StationSortBy, StationSortDirection } from "@/types/station";
 
 const FETCH_LIMIT = 120;

@@ -1,28 +1,28 @@
+import { type BandVariant, deletedEntries, type ratEnum, stationsPermits, ukePermits } from "@openbts/drizzle";
+import { and, eq, lt } from "drizzle-orm";
 /* eslint-disable no-await-in-loop */
 import path from "node:path";
 import url from "node:url";
 
-import { ukePermits, stationsPermits, deletedEntries, type ratEnum, type BandVariant } from "@openbts/drizzle";
-import { and, lt, eq } from "drizzle-orm";
 import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, STATIONS_URL } from "./config.js";
 import {
   chunk,
   convertDMSToDD,
+  createLogger,
   downloadFile,
   ensureDownloadDir,
   parseExcelDate,
   readSheetAsJson,
   stripCompanySuffixForName,
-  createLogger,
 } from "./utils.js";
 
 const logger = createLogger("stations");
-import { getLastImportedFileNames, recordImportMetadata } from "./import-check.js";
-import { scrapeXlsxLinks } from "./scrape.js";
-import { upsertBands, getOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
 import { db } from "@openbts/drizzle/db";
 
+import { getLastImportedFileNames, recordImportMetadata } from "./import-check.js";
+import { scrapeXlsxLinks } from "./scrape.js";
 import type { RawUkeData } from "./types.js";
+import { upsertBands, getOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
 
 function parseBandFromLabel(
   label: string,

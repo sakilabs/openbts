@@ -1,28 +1,27 @@
+import { ArrowDown01Icon, Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Search02Icon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 
-import { cn, toggleValue } from "@/lib/utils";
 import { Checkbox as UICheckbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import {
   Combobox,
-  ComboboxChips,
   ComboboxChip,
+  ComboboxChips,
   ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
-import { useSearchState } from "@/features/map/hooks/useSearchState";
+import { GoogleAd } from "@/components/ui/google-ad";
+import { Separator } from "@/components/ui/separator";
 import { AutocompleteDropdown } from "@/features/map/components/search-overlay/autocompleteDropdown";
 import { FILTER_KEYWORDS } from "@/features/map/constants";
 import { parseFilters } from "@/features/map/filters";
-import { GoogleAd } from "@/components/ui/google-ad";
-
+import { useSearchState } from "@/features/map/hooks/useSearchState";
+import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
+import { cn, toggleValue } from "@/lib/utils";
 import type { Operator, Region, StationFilters } from "@/types/station";
 
 const RAT_OPTIONS = [

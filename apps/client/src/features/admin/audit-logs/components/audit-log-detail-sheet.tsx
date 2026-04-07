@@ -1,11 +1,13 @@
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { formatFullDate, resolveAvatarUrl } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
 import { type AuditLogEntry, TABLE_LABELS, getActionStyle } from "../constants";
 import { ChangesTable } from "./changes-table";
-import { Link } from "@tanstack/react-router";
 
 interface AuditLogDetailSheetProps {
   entry: AuditLogEntry | null;

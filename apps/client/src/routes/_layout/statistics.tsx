@@ -1,13 +1,14 @@
-import { lazy, Suspense, startTransition, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { type ReactNode, Suspense, lazy, startTransition, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { UkeKpiCards, InternalKpiCards } from "@/features/statistics/components/kpiCards";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { GoogleAd } from "@/components/ui/google-ad";
-import { statsSummaryQueryOptions, statsPermitsQueryOptions, statsVoivodeshipsQueryOptions } from "@/features/statistics/queries";
+import { Skeleton } from "@/components/ui/skeleton";
 import { operatorsQueryOptions } from "@/features/shared/queries";
+import { InternalKpiCards, UkeKpiCards } from "@/features/statistics/components/kpiCards";
+import { statsPermitsQueryOptions, statsSummaryQueryOptions, statsVoivodeshipsQueryOptions } from "@/features/statistics/queries";
 
 const UkeDistributionCharts = lazy(() =>
   import("@/features/statistics/components/distributionCharts").then((m) => ({ default: m.UkeDistributionCharts })),

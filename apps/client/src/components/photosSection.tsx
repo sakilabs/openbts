@@ -1,21 +1,20 @@
-import { useRef, useState, useCallback, useLayoutEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowDown01Icon,
+  Cancel01Icon,
   Delete02Icon,
   Image01Icon,
-  StarIcon,
-  Upload04Icon,
   PencilEdit02Icon,
+  StarIcon,
   Tick02Icon,
-  Cancel01Icon,
+  Upload04Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+
+import { Lightbox } from "@/components/lightbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,9 +26,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
-import { Lightbox } from "@/components/lightbox";
+import { cn } from "@/lib/utils";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 function isNew(createdAt: string) {
@@ -190,7 +192,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
     <>
       <Collapsible defaultOpen>
         <div
-          className={`border rounded-xl overflow-hidden transition-colors ${isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : ""}`}
+          className={cn("border rounded-xl overflow-hidden transition-colors", isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "")}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}

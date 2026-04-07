@@ -37,7 +37,8 @@
     "update": "Zaktualizuj",
     "updating": "Aktualizowanie...",
     "restore": "Przywróć",
-    "noChanges": "Brak zmian do zapisania"
+    "noChanges": "Brak zmian do zapisania",
+    "retry": "Spróbuj ponownie"
   },
   "labels": {
     "id": "ID",

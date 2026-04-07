@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Image01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
+
 import { fetchStationPhotos } from "../api";
 
 type Props = { stationId: number; onOpenPhotoTab: () => void };

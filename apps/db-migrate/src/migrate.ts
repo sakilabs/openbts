@@ -1,18 +1,19 @@
+import { sql } from "@openbts/drizzle/db";
+import cliProgress from "cli-progress";
+
 import { loadLegacyData } from "./executors/loaders.js";
-import { logger } from "./logger.js";
 import { prepareBands, prepareCells, prepareLocations, prepareStations } from "./executors/transformers.js";
 import {
-  fetchRegionIds,
+  db,
   fetchBandIds,
+  fetchRegionIds,
   pruneTables,
   writeBands,
   writeCellsAndDetails,
   writeLocations,
   writeStations,
-  db,
 } from "./executors/writers.js";
-import { sql } from "@openbts/drizzle/db";
-import cliProgress from "cli-progress";
+import { logger } from "./logger.js";
 
 export interface MigratorOptions {
   directory?: string;

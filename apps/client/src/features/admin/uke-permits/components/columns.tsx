@@ -1,11 +1,12 @@
+import { FileAttachmentIcon, MapPinIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { MapPinIcon, FileAttachmentIcon } from "@hugeicons/core-free-icons";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { UkeStation } from "@/types/station";
-import { getOperatorColor } from "@/lib/operatorUtils";
 import { getPermitBands } from "@/features/map/utils";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import type { UkeStation } from "@/types/station";
 
 type CreateColumnsOptions = {
   t: TFunction;

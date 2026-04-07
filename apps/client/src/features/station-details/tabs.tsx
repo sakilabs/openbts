@@ -1,4 +1,4 @@
-import { Note01Icon, Message01Icon, SignalFull02Icon, Image01Icon } from "@hugeicons/core-free-icons";
+import { Image01Icon, Message01Icon, Note01Icon, SignalFull02Icon } from "@hugeicons/core-free-icons";
 
 export type TabId = "specs" | "permits" | "comments" | "photos";
 

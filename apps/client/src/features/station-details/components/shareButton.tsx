@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Share08Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 type ShareButtonProps = {
   title?: string;
@@ -48,11 +50,11 @@ export function ShareButton({ title, text, url, size = "sm", className }: ShareB
 
   return (
     <Tooltip>
-      <TooltipTrigger onClick={handleShare} className={`${buttonPadding} hover:bg-muted rounded transition-colors cursor-pointer ${className ?? ""}`}>
+      <TooltipTrigger onClick={handleShare} className={cn(buttonPadding, "hover:bg-muted rounded transition-colors cursor-pointer", className)}>
         {copied ? (
-          <HugeiconsIcon icon={Tick02Icon} className={`${iconSize} text-emerald-500`} />
+          <HugeiconsIcon icon={Tick02Icon} className={cn(iconSize, "text-emerald-500")} />
         ) : (
-          <HugeiconsIcon icon={Share08Icon} className={`${iconSize} text-muted-foreground`} />
+          <HugeiconsIcon icon={Share08Icon} className={cn(iconSize, "text-muted-foreground")} />
         )}
       </TooltipTrigger>
       <TooltipContent>{copied ? t("common:actions.copied") : t("common:actions.share")}</TooltipContent>

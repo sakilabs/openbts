@@ -1,5 +1,6 @@
-import { createContext, useContext, memo, useMemo, type ReactNode } from "react";
-import { flexRender, type Table as TableInstance, type Row, type Header as HeaderType, type HeaderGroup } from "@tanstack/react-table";
+import { type HeaderGroup, type Header as HeaderType, type Row, type Table as TableInstance, flexRender } from "@tanstack/react-table";
+import { type ReactNode, createContext, memo, useContext, useMemo } from "react";
+
 import { cn } from "@/lib/utils";
 
 // Context for sharing table instance

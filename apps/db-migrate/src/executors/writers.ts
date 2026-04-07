@@ -1,7 +1,6 @@
-/* eslint-disable no-await-in-loop */
-import { eq, sql } from "drizzle-orm";
-
 import {
+  type BandVariant,
+  type DuplexType,
   bands,
   cells,
   gsmCells,
@@ -9,17 +8,18 @@ import {
   lteCells,
   nrCells,
   operators,
+  type ratEnum,
   regions,
   stations,
   umtsCells,
-  type ratEnum,
-  type DuplexType,
-  type BandVariant,
 } from "@openbts/drizzle";
-import { db } from "@openbts/drizzle/db";
 import type { Database } from "@openbts/drizzle/db";
-import type { PreparedBandKey, PreparedCell, PreparedLocation, PreparedOperator, PreparedRegion, PreparedStation } from "./transformers.js";
+import { db } from "@openbts/drizzle/db";
+/* eslint-disable no-await-in-loop */
+import { eq, sql } from "drizzle-orm";
+
 import { logger } from "../logger.js";
+import type { PreparedBandKey, PreparedCell, PreparedLocation, PreparedOperator, PreparedRegion, PreparedStation } from "./transformers.js";
 
 export interface RegionIdMap extends Map<string, number> {}
 export interface OperatorIdMap extends Map<number, number> {}

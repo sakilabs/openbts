@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { patchLocation, deleteLocation } from "./api";
+
+import { deleteLocation, patchLocation } from "./api";
 
 export function usePatchLocationMutation(locationId: number) {
   const queryClient = useQueryClient();

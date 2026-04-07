@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+
 import MapView from "@/features/map/components/mapView";
 
 function Page() {

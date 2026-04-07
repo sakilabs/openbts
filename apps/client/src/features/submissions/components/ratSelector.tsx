@@ -1,9 +1,10 @@
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { SignalFull02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils";
 import { RAT_OPTIONS } from "@/features/shared/rat";
+import { cn } from "@/lib/utils";
+
 import type { RatType } from "../types";
 
 type RatSelectorProps = {

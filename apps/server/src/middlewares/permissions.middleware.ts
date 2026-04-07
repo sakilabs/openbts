@@ -1,9 +1,9 @@
-import { getRuntimeSettings } from "../services/settings.service.js";
-import { ErrorResponse } from "../errors.js";
-import { auth } from "../plugins/betterauth.plugin.js";
+import type { FastifyReply, FastifyRequest } from "fastify";
 
-import type { FastifyRequest, FastifyReply } from "fastify";
+import { ErrorResponse } from "../errors.js";
 import type { Route } from "../interfaces/routes.interface.js";
+import { auth } from "../plugins/betterauth.plugin.js";
+import { getRuntimeSettings } from "../services/settings.service.js";
 
 const permissionSchema = {
   cells: ["read", "create", "update", "delete"],
@@ -17,6 +17,7 @@ const permissionSchema = {
   users: ["create", "list", "set-role", "ban", "impersonate", "delete", "set-password"],
   session: ["list", "delete", "revoke"],
   user_lists: ["read", "create", "update", "delete"],
+  user: ["search"],
 } as const;
 
 type PermissionSchema = typeof permissionSchema;

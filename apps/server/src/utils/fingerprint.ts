@@ -1,6 +1,5 @@
-import { createHash } from "node:crypto";
-
 import type { FastifyRequest } from "fastify";
+import { createHash } from "node:crypto";
 
 interface BrowserProperties {
   userAgent: string;

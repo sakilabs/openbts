@@ -1,32 +1,33 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { createColumnHelper, flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { AlertCircleIcon, ArrowRight01Icon, Cancel01Icon, File02Icon, Location01Icon, Tag01Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation } from "@tanstack/react-query";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { createColumnHelper, flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+
+import { RequireAuth } from "@/components/auth/requireAuth";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
-import { RequireAuth } from "@/components/auth/requireAuth";
-import { postApiData, showApiError } from "@/lib/api";
-import { detectFormat, parseFile, type FileFormat, type ParsedRow } from "@/lib/analyzer-parsers";
-import type { Operator, Region } from "@/types/station";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RAT_ICONS } from "@/features/shared/rat";
+import { type FileFormat, type ParsedRow, detectFormat, parseFile } from "@/lib/analyzer-parsers";
+import { postApiData, showApiError } from "@/lib/api";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import type { Operator, Region } from "@/types/station";
 const StationDetailsDialog = lazy(() =>
   import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
 );
-import { useTablePagination } from "@/hooks/useTablePageSize";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useIsMobile } from "@/hooks/useMobile";
-import { cn } from "@/lib/utils";
-import { formatDuration } from "@/lib/format";
+import { useTablePagination } from "@/hooks/useTablePageSize";
 import { getBandFromEarfcn, getBandFromUarfcn, getBandMhz } from "@/lib/band-utils";
+import { formatDuration } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type AnalyzerLocation = {
   id: number;

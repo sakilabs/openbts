@@ -1,18 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
+import { Add01Icon, AlertCircleIcon, Delete02Icon, PencilEdit02Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon, AlertCircleIcon, PencilEdit02Icon, Delete02Icon, Add01Icon } from "@hugeicons/core-free-icons";
-import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { showApiError } from "@/lib/api";
-import { authClient } from "@/lib/authClient";
-import { formatShortDate } from "@/lib/format";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,11 +18,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
+import type { SubmissionRow } from "@/features/admin/submissions/types";
 import { deleteSubmission } from "@/features/submissions/api";
 import { useMySubmissions } from "@/features/submissions/hooks/useMySubmissions";
-import type { SubmissionRow } from "@/features/admin/submissions/types";
+import { showApiError } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
+import { formatShortDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const ESTIMATED_ROW_HEIGHT = 56;
 

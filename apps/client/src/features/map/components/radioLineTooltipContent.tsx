@@ -1,9 +1,10 @@
-import { memo } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { memo } from "react";
 
 import { cn } from "@/lib/utils";
-import { getLinkTypeStyle, type RadioLinkType } from "../utils";
+
+import { type RadioLinkType, getLinkTypeStyle } from "../utils";
 
 export type RadioLineTooltipContentProps = {
   color: string;

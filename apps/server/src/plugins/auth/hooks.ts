@@ -1,12 +1,11 @@
-import { getSessionFromCtx, APIError, createAuthMiddleware } from "better-auth/api";
 import { hash } from "@node-rs/argon2";
 import * as schema from "@openbts/drizzle";
+import type { AuthContext, MiddlewareContext, MiddlewareOptions } from "better-auth";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 
+import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, ARGON2_OPTIONS } from "../../constants.js";
 import { db } from "../../database/psql.js";
 import { redis } from "../../database/redis.js";
-import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, ARGON2_OPTIONS } from "../../constants.js";
-
-import type { AuthContext, MiddlewareContext, MiddlewareOptions } from "better-auth";
 
 type HookCtx = MiddlewareContext<MiddlewareOptions, AuthContext & { returned?: unknown; responseHeaders?: Headers }>;
 

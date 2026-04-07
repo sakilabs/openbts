@@ -1,21 +1,22 @@
+import { deletedEntries, extraIdentificators, type ratEnum, stations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { unlinkSync } from "node:fs";
 /* eslint-disable no-await-in-loop */
 import path from "node:path";
-import url from "node:url";
-import { unlinkSync } from "node:fs";
 import readline from "node:readline";
+import url from "node:url";
 import XLSX from "xlsx";
 
-import { ukePermits, ukePermitSectors, deletedEntries, extraIdentificators, stations, type ratEnum } from "@openbts/drizzle";
-import { BATCH_SIZE, DOWNLOAD_DIR, REGION_BY_TERYT_PREFIX, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP } from "./config.ts";
-import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, createLogger } from "./utils.ts";
+import { BATCH_SIZE, DOWNLOAD_DIR, PERMITS_DEVICES_URL, PERMIT_FILE_OPERATOR_MAP, REGION_BY_TERYT_PREFIX } from "./config.ts";
+import { chunk, convertDMSToDD, createLogger, downloadFile, ensureDownloadDir } from "./utils.ts";
 
 const logger = createLogger("device-registry");
+import { db } from "@openbts/drizzle/db";
+import { and, eq, inArray, lt } from "drizzle-orm/sql/expressions/conditions";
+
 import { getLastImportedFileNames, recordImportMetadata } from "./import-check.ts";
 import { scrapePermitDeviceLinks } from "./scrape.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
-import { db } from "@openbts/drizzle/db";
-import { and, eq, inArray, lt } from "drizzle-orm/sql/expressions/conditions";
 
 const voivodeshipCache = new Map<string, string | null>();
 function findVoivodeshipCached(lon: number, lat: number): string | null {

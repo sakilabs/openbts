@@ -1,26 +1,27 @@
-import { useState, useRef, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import QRCodeStyling from "qr-code-styling";
-import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AlertCircleIcon,
   ArrowLeftIcon,
-  FingerPrintIcon,
-  LockIcon,
-  InformationCircleIcon,
-  Copy01Icon,
   CheckmarkCircle02Icon,
+  Copy01Icon,
+  FingerPrintIcon,
+  InformationCircleIcon,
+  LockIcon,
 } from "@hugeicons/core-free-icons";
-import { authClient } from "@/lib/authClient";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Link, Navigate, createFileRoute } from "@tanstack/react-router";
+import QRCodeStyling from "qr-code-styling";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
+import { Timeline, TimelineIndicator, TimelineItem, TimelineSeparator, TimelineTitle } from "@/components/reui/timeline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Timeline, TimelineIndicator, TimelineItem, TimelineSeparator, TimelineTitle } from "@/components/reui/timeline";
+import { authClient } from "@/lib/authClient";
+import { cn } from "@/lib/utils";
 
 type TwoFactorSearch = {
   totpURI?: string;

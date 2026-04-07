@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { SOURCE_ID, POINT_LAYER_ID } from "../constants";
+
+import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
 
 const HEATMAP_LAYER_ID = "stations-heatmap";
 

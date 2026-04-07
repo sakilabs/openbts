@@ -1,19 +1,18 @@
+import { submissions } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { getRuntimeSettings } from "../../../../../services/settings.service.js";
-import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
-import { logger } from "../../../../../utils/logger.js";
-import { submissions } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
+import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
+import { getRuntimeSettings } from "../../../../../services/settings.service.js";
+import { logger } from "../../../../../utils/logger.js";
 
 const submissionsSelectSchema = createSelectSchema(submissions);
 

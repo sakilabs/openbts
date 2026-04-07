@@ -1,9 +1,8 @@
-import dotenv from "dotenv";
-import postgres from "postgres";
-import { inArray } from "drizzle-orm";
-
 import { extraIdentificators, stations } from "@openbts/drizzle";
 import { db, sql as newSql } from "@openbts/drizzle/db";
+import dotenv from "dotenv";
+import { inArray } from "drizzle-orm";
+import postgres from "postgres";
 
 dotenv.config();
 

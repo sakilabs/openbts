@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
 import { PL, US } from "country-flag-icons/react/3x2";
+import { useTranslation } from "react-i18next";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { supportedLanguages, type SupportedLanguage } from "@/i18n/config";
+import { type SupportedLanguage, supportedLanguages } from "@/i18n/config";
 import { authClient } from "@/lib/authClient";
 
 const flagComponents: Record<string, React.ComponentType<{ className?: string }>> = {

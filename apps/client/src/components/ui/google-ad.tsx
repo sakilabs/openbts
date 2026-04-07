@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+
 import { authClient } from "@/lib/authClient";
+import { cn } from "@/lib/utils";
 
 declare global {
   interface Window {

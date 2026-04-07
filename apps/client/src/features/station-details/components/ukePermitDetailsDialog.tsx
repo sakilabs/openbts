@@ -1,23 +1,25 @@
-import { useTranslation } from "react-i18next";
+import { Add01Icon, Cancel01Icon, Globe02Icon, Location01Icon, MapsLocation01Icon, Tag01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Cancel01Icon, Globe02Icon, Location01Icon, Tag01Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
-import { CopyButton } from "./copyButton";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
+
 import { Separator } from "@/components/ui/separator";
-import { ShareButton } from "./shareButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { usePreferences } from "@/hooks/usePreferences";
+import { useSettings } from "@/hooks/useSettings";
+import { authClient } from "@/lib/authClient";
+import { formatFullDate, formatRelativeTime } from "@/lib/format";
+import { formatCoordinates } from "@/lib/gpsUtils";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import type { UkeStation } from "@/types/station";
+
+import { CopyButton } from "./copyButton";
 import { NavigationLinks } from "./navLinks";
 import { PermitsList } from "./permitsList";
-import type { UkeStation } from "@/types/station";
-import { usePreferences } from "@/hooks/usePreferences";
-import { formatCoordinates } from "@/lib/gpsUtils";
-import { formatRelativeTime, formatFullDate } from "@/lib/format";
-import { useQuery } from "@tanstack/react-query";
-import { fetchUkePermitsByStationId } from "@/features/map/api";
-import { authClient } from "@/lib/authClient";
-import { useSettings } from "@/hooks/useSettings";
+import { ShareButton } from "./shareButton";
 
 type UkeStationDetailsDialogProps = {
   station: UkeStation | null;

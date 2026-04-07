@@ -1,11 +1,10 @@
-import { sql, count, and, or, eq, gte, lte, inArray, ilike } from "drizzle-orm";
+import { AuditAction, auditLogs, users } from "@openbts/drizzle";
+import { and, count, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
-import { AuditAction, auditLogs, users } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
@@ -20,6 +19,7 @@ const schemaRoute = {
     record_id: z.string().optional(),
     actions: z.string().optional(),
     invoked_by: z.string().optional(),
+    user_ids: z.string().optional(),
     search: z.string().optional(),
     from: z.string().optional(),
     to: z.string().optional(),
@@ -44,7 +44,7 @@ type AuditLogWithUser = z.infer<typeof auditLogSchema> & {
 type ResponseBody = { data: AuditLogWithUser[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit, offset, table_name, record_id, actions, invoked_by, search, from, to, sort } = req.query;
+  const { limit, offset, table_name, record_id, actions, invoked_by, user_ids, search, from, to, sort } = req.query;
 
   const actionList = actions
     ? actions.split(",").filter((a): a is (typeof AuditAction.enumValues)[number] => AuditAction.enumValues.includes(a as never))
@@ -57,6 +57,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     if (actionList.length === 1) conditions.push(eq(fields.action, actionList[0]!));
     else if (actionList.length > 1) conditions.push(inArray(fields.action, actionList));
     if (invoked_by) conditions.push(eq(fields.invoked_by, invoked_by));
+    if (user_ids) {
+      const ids = user_ids.split(",").filter(Boolean);
+      if (ids.length === 1) conditions.push(eq(fields.invoked_by, ids[0]!));
+      else if (ids.length > 1) conditions.push(inArray(fields.invoked_by, ids));
+    }
     if (search) {
       const term = `%${search}%`;
       const subquery = db

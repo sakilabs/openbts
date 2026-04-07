@@ -1,12 +1,13 @@
+import figlet from "figlet";
 import cluster from "node:cluster";
 import { availableParallelism } from "node:os";
-import figlet from "figlet";
+
 import App from "./app.js";
 import { port } from "./config.js";
-import { installProcessErrorHandlers, logger } from "./utils/logger.js";
-import { startImportJob } from "./services/ukeImportJob.service.js";
-import { cleanupOrphanedSubmissions } from "./services/submissionCleanup.service.js";
 import redis from "./database/redis.js";
+import { cleanupOrphanedSubmissions } from "./services/submissionCleanup.service.js";
+import { startImportJob } from "./services/ukeImportJob.service.js";
+import { installProcessErrorHandlers, logger } from "./utils/logger.js";
 
 const workerCount = Number(process.env.WORKERS) || availableParallelism();
 

@@ -1,4 +1,4 @@
-import { workerData, parentPort } from "node:worker_threads";
+import { parentPort, workerData } from "node:worker_threads";
 
 if (!parentPort) throw new Error("This file must be run as a worker thread");
 

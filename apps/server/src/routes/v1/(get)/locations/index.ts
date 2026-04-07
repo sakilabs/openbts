@@ -1,12 +1,11 @@
+import { cells, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
+import { and, count, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
-import { sql, count, and } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
-import { locations, regions, stations, operators, cells, lteCells, nrCells } from "@openbts/drizzle";
 import { ErrorResponse } from "../../../../errors.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 

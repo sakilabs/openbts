@@ -1,40 +1,42 @@
-import { type Dispatch, type SetStateAction, useState, useCallback, useMemo, useRef, type RefObject, type ReactNode } from "react";
-import { Trans, useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import type { Operator, StationFilters, StationSource } from "@/types/station";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Database02Icon,
-  ArrowDown01Icon,
-  File02Icon,
-  InformationCircleIcon,
-  FilterIcon,
   AirportTowerIcon,
-  Route02Icon,
+  ArrowDown01Icon,
+  Database02Icon,
+  File02Icon,
+  FilterIcon,
   Fire02Icon,
+  InformationCircleIcon,
   Navigation03Icon,
+  Route02Icon,
 } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
+import { type Dispatch, type ReactNode, type RefObject, type SetStateAction, useCallback, useMemo, useRef, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "./checkbox";
-import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
-import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
-import { fetchStats, type DataStats } from "../../statsApi";
-import { fetchUkeRadioLineOperators } from "@/features/shared/api";
-import type { UkeOperator } from "@/features/shared/api";
-import { usePreferences } from "@/hooks/usePreferences";
 import {
   Combobox,
-  ComboboxChips,
   ComboboxChip,
+  ComboboxChips,
   ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { Slider } from "@/components/ui/slider";
+import type { UkeOperator } from "@/features/shared/api";
+import { fetchUkeRadioLineOperators } from "@/features/shared/api";
+import { usePreferences } from "@/hooks/usePreferences";
+import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+import type { Operator, StationFilters, StationSource } from "@/types/station";
+
+import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../../constants";
+import { type DataStats, fetchStats } from "../../statsApi";
+import { Checkbox } from "./checkbox";
 
 const PRIORITY_RADIOLINE_OPERATORS = ["T-Mobile Polska", "Towerlink Poland", "P4", "ORANGE POLSKA"];
 

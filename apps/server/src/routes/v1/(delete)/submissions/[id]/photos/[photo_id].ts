@@ -1,17 +1,16 @@
-import { z } from "zod/v4";
-import { eq, and } from "drizzle-orm";
-import path from "node:path";
+import { attachments, submissionPhotos } from "@openbts/drizzle";
+import { and, eq } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import fs from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
-import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
-import { createAuditLog } from "../../../../../../services/auditLog.service.js";
-import { submissionPhotos, attachments } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 

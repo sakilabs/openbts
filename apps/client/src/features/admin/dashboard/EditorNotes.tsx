@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import notes from "./editor-notes.md?raw";
 
 const PLUGINS = [remarkGfm];

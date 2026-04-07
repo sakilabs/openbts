@@ -1,5 +1,7 @@
 import type { TFunction } from "i18next";
+
 import { getTableHeaders } from "@/features/admin/cells/cellsTableHeaders";
+
 import type { RatType } from "../../types";
 
 type CellsTableHeadersProps = {

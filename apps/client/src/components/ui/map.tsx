@@ -1,8 +1,11 @@
 "use client";
 
-import MapLibreGL, { type PopupOptions, type MarkerOptions } from "maplibre-gl";
+import { Cancel01Icon, CompassIcon, Location01Icon, MaximizeIcon, MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { HugeiconsIcon } from "@hugeicons/react";
+import MapLibreGL, { type MarkerOptions, type PopupOptions } from "maplibre-gl";
 import {
+  type ReactNode,
   createContext,
   forwardRef,
   useCallback,
@@ -15,19 +18,17 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, MinusSignIcon, PlusSignIcon, Location01Icon, MaximizeIcon, CompassIcon } from "@hugeicons/core-free-icons";
-
-import { cn } from "@/lib/utils";
-import { useClickOutside } from "@/hooks/useClickOutside";
-import { Spinner } from "./spinner";
-import { usePreferences, type GpsFormat } from "@/hooks/usePreferences";
-import { formatCoordinates } from "@/lib/gpsUtils";
 import { useTranslation } from "react-i18next";
+
 import { NavigationLinks } from "@/features/station-details/components/navLinks";
+import { useClickOutside } from "@/hooks/useClickOutside";
+import { type GpsFormat, usePreferences } from "@/hooks/usePreferences";
+import { formatCoordinates } from "@/lib/gpsUtils";
+import { cn } from "@/lib/utils";
+
+import { Spinner } from "./spinner";
 
 // Check document class for theme (works with next-themes, etc.)
 function getDocumentTheme(): Theme | null {

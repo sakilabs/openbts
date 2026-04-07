@@ -1,6 +1,7 @@
+import { submissionPhotos, submissions } from "@openbts/drizzle";
+import { and, eq, isNotNull, lt, notExists } from "drizzle-orm";
+
 import db from "../database/psql.js";
-import { submissions, submissionPhotos } from "@openbts/drizzle";
-import { and, isNotNull, lt, notExists, eq } from "drizzle-orm";
 import { logger } from "../utils/logger.js";
 
 export async function cleanupOrphanedSubmissions(): Promise<void> {

@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 function extractCoords(input: string): { lat: number; lng: number } | null {
   // Google Maps: https://www.google.com/maps?q=52.123,21.456

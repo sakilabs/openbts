@@ -1,6 +1,6 @@
 import type { LegacyBaseStationRow, LegacyCellRow, LegacyLocationRow } from "../legacyTypes.js";
 import { logger } from "../logger.js";
-import { mapDuplex, mapStandardToRat, stripNotes, toInt, type Rat } from "../utils.js";
+import { type Rat, mapDuplex, mapStandardToRat, stripNotes, toInt } from "../utils.js";
 
 function safeDate(value: string | null | undefined, context: { type: string; id: number; field: string }): Date | null {
   if (!value || value === "0000-00-00 00:00:00" || value.trim() === "") {

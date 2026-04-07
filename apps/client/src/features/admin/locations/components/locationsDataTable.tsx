@@ -1,12 +1,14 @@
+import { getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactTable, getCoreRowModel, getPaginationRowModel } from "@tanstack/react-table";
-import { useTablePagination } from "@/hooks/useTablePageSize";
-import { cn } from "@/lib/utils";
+
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { useTablePagination } from "@/hooks/useTablePageSize";
+import { cn } from "@/lib/utils";
+import type { LocationSortBy, LocationSortDirection, LocationWithStations } from "@/types/station";
+
 import { createLocationsColumns } from "./locationsColumns";
-import type { LocationWithStations, LocationSortBy, LocationSortDirection } from "@/types/station";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 

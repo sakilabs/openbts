@@ -1,38 +1,37 @@
 import {
-  submissions,
-  proposedCells,
-  proposedStations,
-  proposedLocations,
-  submissionLocationPhotoSelections,
   locationPhotos,
+  proposedCells,
+  proposedLocations,
+  proposedStations,
   stations,
+  submissionLocationPhotoSelections,
+  submissions,
 } from "@openbts/drizzle";
-import { inArray, eq, and, count } from "drizzle-orm";
 import { isARFCNValidForBand } from "@openbts/shared/frequency";
-import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
+import { and, count, eq, inArray } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { checkCellDuplicatesBatch } from "../../../../services/cellDuplicateCheck.service.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
-import { notifyStaffNewSubmission } from "../../../../services/notification.service.js";
-import {
-  gsmInsertSchema,
-  umtsInsertSchema,
-  lteInsertSchema,
-  nrInsertSchemaBase,
-  isNonEmpty,
-  validateCellDuplicates,
-  insertProposedCellDetails,
-  makeDetailsRatRefine,
-} from "../../../../utils/submission.helpers.js";
-import { logger } from "../../../../utils/logger.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { checkCellDuplicatesBatch } from "../../../../services/cellDuplicateCheck.service.js";
+import { notifyStaffNewSubmission } from "../../../../services/notification.service.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
+import { logger } from "../../../../utils/logger.js";
+import {
+  gsmInsertSchema,
+  insertProposedCellDetails,
+  isNonEmpty,
+  lteInsertSchema,
+  makeDetailsRatRefine,
+  nrInsertSchemaBase,
+  umtsInsertSchema,
+  validateCellDuplicates,
+} from "../../../../utils/submission.helpers.js";
 
 const submissionsSelectSchema = createSelectSchema(submissions);
 

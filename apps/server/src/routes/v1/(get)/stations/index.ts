@@ -1,14 +1,13 @@
+import { bands, cells, extraIdentificators, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
+import { and, count, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
-import { sql, count, and } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { locations, stations, cells, bands, operators, regions, extraIdentificators, lteCells, nrCells } from "@openbts/drizzle";
 
 const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });

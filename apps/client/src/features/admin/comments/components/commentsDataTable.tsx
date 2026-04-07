@@ -1,10 +1,12 @@
-import { useMemo, type Ref } from "react";
+import { type PaginationState, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { type Ref, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactTable, getCoreRowModel, type PaginationState } from "@tanstack/react-table";
+
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { createCommentsColumns } from "./commentsColumns";
+
 import type { AdminComment } from "../types";
+import { createCommentsColumns } from "./commentsColumns";
 
 interface CommentsDataTableProps {
   data: AdminComment[];

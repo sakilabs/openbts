@@ -1,4 +1,4 @@
-import { fetchJson, API_BASE } from "@/lib/api";
+import { API_BASE, fetchJson } from "@/lib/api";
 import type { LocationWithStations } from "@/types/station";
 
 type LocationsResponse = { data: LocationWithStations[]; totalCount: number };

@@ -1,6 +1,7 @@
-import type { Cell, UkePermit, UkeStation, UkeLocationWithPermits, RadioLine, LocationInfo } from "@/types/station";
-import { RAT_ORDER } from "./constants";
 import { isPermitExpired } from "@/lib/dateUtils";
+import type { Cell, LocationInfo, RadioLine, UkeLocationWithPermits, UkePermit, UkeStation } from "@/types/station";
+
+import { RAT_ORDER } from "./constants";
 
 export function toLocationInfo(loc: {
   id: number;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function useScrolled() {
   const ref = useRef<HTMLDivElement>(null);

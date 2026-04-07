@@ -1,5 +1,6 @@
-import type { RAT_ORDER } from "../cells/rat";
 import type { LocationPhoto } from "@/features/station-details/api";
+
+import type { RAT_ORDER } from "../cells/rat";
 
 export type SubmissionUser = {
   id: string;

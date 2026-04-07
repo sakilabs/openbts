@@ -1,11 +1,12 @@
+import { bands, cells, operators, stations, ukePermits } from "@openbts/drizzle";
 import { count, countDistinct, eq } from "drizzle-orm";
-import { z } from "zod/v4";
 import type { FastifyRequest } from "fastify/types/request.js";
-import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
-import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { z } from "zod/v4";
+
 import db from "../../../../../database/psql.js";
 import redis from "../../../../../database/redis.js";
-import { ukePermits, bands, operators, cells, stations } from "@openbts/drizzle";
+import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const CACHE_TTL = 86400; // 24h
 

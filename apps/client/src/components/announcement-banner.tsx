@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef } from "react";
+import { Alert02Icon, AlertCircleIcon, ArrowDown01Icon, Cancel01Icon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { InformationCircleIcon, Alert02Icon, AlertCircleIcon, Cancel01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+import { useCallback, useRef, useState } from "react";
+
 import { useSettings } from "@/hooks/useSettings";
+import { cn } from "@/lib/utils";
 
 const DISMISSED_KEY = "openbts:dismissed-announcement";
 

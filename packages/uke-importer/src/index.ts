@@ -1,8 +1,9 @@
-import { importStations, associateStationsWithPermits } from "./stations.js";
-import { importRadiolines } from "./radiolines.js";
-import { importPermitDevices } from "./device-registry.ts";
-import { cleanupDownloads } from "./utils.js";
 import { sql } from "@openbts/drizzle/db";
+
+import { importPermitDevices } from "./device-registry.ts";
+import { importRadiolines } from "./radiolines.js";
+import { associateStationsWithPermits, importStations } from "./stations.js";
+import { cleanupDownloads } from "./utils.js";
 
 async function main(): Promise<void> {
   try {

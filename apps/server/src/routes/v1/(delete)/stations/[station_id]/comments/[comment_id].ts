@@ -1,18 +1,16 @@
-import path from "node:path";
-import fs from "node:fs/promises";
-
-import { stationComments, attachments } from "@openbts/drizzle";
+import { attachments, stationComments } from "@openbts/drizzle";
 import { eq, inArray } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
-import { createAuditLog } from "../../../../../../services/auditLog.service.js";
-import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
-import type { Route, EmptyResponse } from "../../../../../../interfaces/routes.interface.js";
+import type { EmptyResponse, Route } from "../../../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 

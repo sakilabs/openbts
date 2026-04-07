@@ -1,5 +1,5 @@
-import type { Band, Operator, Region } from "@/types/station";
 import type { RatType } from "@/features/shared/rat";
+import type { Band, Operator, Region } from "@/types/station";
 
 export type { RatType };
 

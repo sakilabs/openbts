@@ -1,33 +1,34 @@
-import { useState, useMemo, useCallback, useEffect, type ReactNode, type KeyboardEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  ShieldUserIcon,
-  Message01Icon,
-  SentIcon,
+  Alert02Icon,
+  AlertCircleIcon,
   Cancel01Icon,
   CheckmarkCircle02Icon,
-  AlertCircleIcon,
   DatabaseIcon,
-  Alert02Icon,
   Image01Icon,
+  Message01Icon,
+  SentIcon,
+  ShieldUserIcon,
   TaskDaily01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  fetchSettings,
-  patchSettings,
-  cleanupSubmissions,
-  cleanupRejectedPhotos,
   type RuntimeSettings,
   type SettingsPatch,
+  cleanupRejectedPhotos,
+  cleanupSubmissions,
+  fetchSettings,
+  patchSettings,
 } from "@/features/admin/settings/api";
+import { cn } from "@/lib/utils";
 
 function Toggle({ checked, onChange, disabled = false }: { checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
   return (

@@ -1,18 +1,10 @@
+import { Add01Icon, Alert02Icon, CheckmarkCircle02Icon, Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, Copy01Icon, Tick02Icon, Alert02Icon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 
-import { authClient } from "@/lib/authClient";
-import { fetchJson, API_BASE } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +15,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { API_BASE, fetchJson } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
+import { cn } from "@/lib/utils";
 
 type ApiKeyInfo = {
   id: string;
@@ -85,7 +86,7 @@ const UsageBar = memo(function UsageBar({ used, max, reset, label }: { used: num
         {reset !== null && used > 0 ? <span className="text-[10px] text-muted-foreground tabular-nums">{formatResetTime(reset)}</span> : null}
       </div>
       <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${isHigh ? "bg-destructive" : "bg-muted-foreground/30"}`} style={{ width: `${pct}%` }} />
+        <div className={cn(`h-full transition-all`, isHigh ? "bg-destructive" : "bg-muted-foreground/30")} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -206,7 +207,10 @@ function CreateKeyDialog({
                   <button
                     type="button"
                     onClick={() => setExpiresIn(opt)}
-                    className={`text-xs transition-colors ${expiresIn === opt ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                    className={cn(
+                      `text-xs transition-colors`,
+                      expiresIn === opt ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground",
+                    )}
                   >
                     {t(`apiKeys.dialog.expiresOptions.${opt}`)}
                   </button>

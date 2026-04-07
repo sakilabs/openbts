@@ -1,16 +1,18 @@
+import { Add01Icon, ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, Add01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import type { Band } from "@/types/station";
-import { RAT_ICONS, RAT_ORDER, ratToGenLabel } from "./rat";
-import { getTableHeaders } from "./cellsTableHeaders";
-import { CellEditRow } from "./cellEditRow";
-import type { CellDraftBase } from "./cellEditRow";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
+import { cn } from "@/lib/utils";
+import type { Band } from "@/types/station";
+
+import type { CellDraftBase } from "./cellEditRow";
+import { CellEditRow } from "./cellEditRow";
+import { getTableHeaders } from "./cellsTableHeaders";
+import { RAT_ICONS, RAT_ORDER, ratToGenLabel } from "./rat";
 
 export type DiffBadges = {
   added?: number;

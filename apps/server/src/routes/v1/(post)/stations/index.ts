@@ -1,18 +1,17 @@
-import { bands, locations, operators, stations, cells, gsmCells, umtsCells, lteCells, nrCells } from "@openbts/drizzle";
-import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
+import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, stations, umtsCells } from "@openbts/drizzle";
+import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
 import { syncStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
 import { logger } from "../../../../utils/logger.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
-import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const stationsInsertSchema = createInsertSchema(stations);
 const stationSchema = createSelectSchema(stations).omit({ status: true });

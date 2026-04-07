@@ -1,10 +1,11 @@
+import { AppleIcon, GoogleMapsIcon, MapsLocation01Icon, WazeIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { GoogleMapsIcon, AppleIcon, WazeIcon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { useTranslation } from "react-i18next";
-import { usePreferences, type NavigationApp } from "@/hooks/usePreferences";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import type { JSX } from "react/jsx-runtime";
+
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { type NavigationApp, usePreferences } from "@/hooks/usePreferences";
 
 type NavIconComponent = (props: { className?: string }) => JSX.Element;
 

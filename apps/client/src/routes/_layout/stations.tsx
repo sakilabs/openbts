@@ -1,5 +1,6 @@
-import { lazy, Suspense, useCallback, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Suspense, lazy, useCallback, useState } from "react";
+
 import { StationsListLayout } from "@/features/stations/components/stationsFilterLayout";
 import { useStationsData } from "@/features/stations/hooks/useStationsData";
 import type { Station } from "@/types/station";

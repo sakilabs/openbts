@@ -1,23 +1,23 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMap } from "@/components/ui/map";
-import { usePreferences } from "@/hooks/usePreferences";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
-import type { StationFilters, StationSource, LocationInfo, StationWithoutCells, UkeStation, UkeLocationWithPermits } from "@/types/station";
+import { useMap } from "@/components/ui/map";
+import { fetchStation, fetchUkePermit } from "@/features/station-details/api";
+import { usePreferences } from "@/hooks/usePreferences";
+import { showApiError } from "@/lib/api";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import type { LocationInfo, StationFilters, StationSource, StationWithoutCells, UkeLocationWithPermits, UkeStation } from "@/types/station";
+
 import type { LocationsResponse } from "../api";
 import { fetchLocationWithStations } from "../api";
-import { fetchStation, fetchUkePermit } from "@/features/station-details/api";
-
+import { POINT_LAYER_ID } from "../constants";
 import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { useAzimuthLayer } from "../hooks/useAzimuthLayer";
+import { useHeatmapLayer } from "../hooks/useHeatmapLayer";
+import { useMapLayer } from "../hooks/useMapLayer";
+import { useUrlSync } from "../hooks/useURLSync";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
-import { useUrlSync } from "../hooks/useURLSync";
-import { useMapLayer } from "../hooks/useMapLayer";
-import { useHeatmapLayer } from "../hooks/useHeatmapLayer";
-import { useAzimuthLayer } from "../hooks/useAzimuthLayer";
-import { showApiError } from "@/lib/api";
-import { POINT_LAYER_ID } from "../constants";
 
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const EMPTY_UKE_LOCATIONS: UkeLocationWithPermits[] = [];

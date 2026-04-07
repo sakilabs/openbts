@@ -1,19 +1,12 @@
-import { useState, useMemo, useCallback } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { AlertCircleIcon, Delete02Icon, Globe02Icon, ListViewIcon, LockIcon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Delete02Icon, Globe02Icon, LockIcon, AlertCircleIcon, ListViewIcon } from "@hugeicons/core-free-icons";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/lib/format";
-import { DataTable } from "@/components/ui/data-table";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,10 +17,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Input } from "@/components/ui/input";
+import { type UserListSummary, deleteList, fetchUserLists } from "@/features/lists/api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useTablePagination } from "@/hooks/useTablePageSize";
-import { fetchUserLists, deleteList, type UserListSummary } from "@/features/lists/api";
+import { resolveAvatarUrl } from "@/lib/format";
 import { formatShortDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 

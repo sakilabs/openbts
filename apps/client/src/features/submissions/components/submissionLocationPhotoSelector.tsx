@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowExpand01Icon, Camera01Icon, Image01Icon, Tick02Icon, Upload04Icon } from "@hugeicons/core-free-icons";
-import { Spinner } from "@/components/ui/spinner";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Lightbox } from "@/components/lightbox";
-import { fetchLocationPhotos, fetchStationPhotos } from "@/features/station-details/api";
+import { Spinner } from "@/components/ui/spinner";
 import type { LocationPhoto } from "@/features/station-details/api";
+import { fetchLocationPhotos, fetchStationPhotos } from "@/features/station-details/api";
+import { cn } from "@/lib/utils";
 
 type Props = {
   stationId: number;
@@ -108,9 +110,11 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                 key={photo.id}
                 role="button"
                 tabIndex={0}
-                className={`relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
-                  isSelected ? "border-primary" : "border-transparent"
-                } bg-muted`}
+                className={cn(
+                  "relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all bg-muted",
+                  isSelected && "border-primary",
+                  !isSelected && "border-transparent",
+                )}
                 onClick={() => toggleSelect(photo)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
@@ -120,7 +124,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                   <img
                     src={`/uploads/${photo.attachment_uuid}.webp`}
                     alt={photo.note ?? ""}
-                    className={`w-full h-full object-cover transition-opacity ${isSelected ? "" : "opacity-40"}`}
+                    className={cn("w-full h-full object-cover transition-opacity", !isSelected && "opacity-40")}
                     loading="lazy"
                   />
                   {isAssigned && (

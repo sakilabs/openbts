@@ -1,26 +1,45 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { PaginationState } from "@/hooks/useTablePageSize";
-import { useTranslation } from "react-i18next";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { AlertCircleIcon, Cancel01Icon, Search01Icon, Sorting05Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AlertCircleIcon, Search01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { fetchJson, API_BASE } from "@/lib/api";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { useTablePagination } from "@/hooks/useTablePageSize";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { Input } from "@/components/ui/input";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionListItem } from "@/features/admin/submissions/types";
+import { UserPickerPopover } from "@/features/admin/users/components/UserPickerPopover";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import type { PaginationState } from "@/hooks/useTablePageSize";
+import { useTablePagination } from "@/hooks/useTablePageSize";
+import { API_BASE, fetchJson } from "@/lib/api";
 import { formatShortDate, resolveAvatarUrl } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 
 const columnHelper = createColumnHelper<SubmissionListItem>();
+
+function SortableHeader({ label, sort, onToggle }: { label: string; sort: "asc" | "desc"; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1 hover:text-foreground -ml-1 px-1 py-0.5 rounded transition-colors"
+      onClick={onToggle}
+    >
+      {label}
+      <HugeiconsIcon
+        icon={Sorting05Icon}
+        className="size-3.5 text-foreground transition-colors"
+        style={sort === "asc" ? { transform: "scaleY(-1)" } : undefined}
+      />
+    </button>
+  );
+}
 
 function AdminSubmissionsListPage() {
   "use no memo";
@@ -36,8 +55,13 @@ function AdminSubmissionsListPage() {
     const saved = localStorage.getItem("admin:submissions:type");
     return saved === "all" || saved === "new" || saved === "update" || saved === "delete" ? saved : "all";
   });
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(() => {
+    const saved = localStorage.getItem("admin:submissions:sort");
+    return saved === "desc" ? "desc" : "asc";
+  });
   const [searchInput, setSearchInput] = useState(q ?? "");
   const debouncedSearch = useDebouncedValue(searchInput.trim(), 300) || undefined;
+  const [selectedSubmitterIds, setSelectedSubmitterIds] = useState<string[]>([]);
 
   useEffect(() => {
     void navigate({
@@ -65,6 +89,15 @@ function AdminSubmissionsListPage() {
     [navigate],
   );
 
+  const handleSortToggle = useCallback(() => {
+    setSortOrder((prev) => {
+      const next = prev === "asc" ? "desc" : "asc";
+      localStorage.setItem("admin:submissions:sort", next);
+      return next;
+    });
+    void navigate({ from: Route.fullPath, search: (s) => ({ ...s, page: 0 }), replace: true });
+  }, [navigate]);
+
   const {
     containerRef,
     pagination: sizePagination,
@@ -86,7 +119,17 @@ function AdminSubmissionsListPage() {
   );
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, debouncedSearch],
+    queryKey: [
+      "admin",
+      "submissions",
+      pagination.pageIndex,
+      pagination.pageSize,
+      statusFilter,
+      typeFilter,
+      debouncedSearch,
+      sortOrder,
+      selectedSubmitterIds,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
@@ -94,7 +137,9 @@ function AdminSubmissionsListPage() {
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (typeFilter !== "all") params.set("type", typeFilter);
       if (debouncedSearch) params.set("search", debouncedSearch);
-      return fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions?${params.toString()}`);
+      if (selectedSubmitterIds.length > 0) params.set("submitter_ids", selectedSubmitterIds.join(","));
+      params.set("sort", sortOrder);
+      return fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions/admin?${params.toString()}`);
     },
     placeholderData: keepPreviousData,
     staleTime: 0,
@@ -177,7 +222,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => <span className="text-xs font-mono bg-muted px-2 py-1 rounded">{getValue().length}</span>,
       }),
       columnHelper.accessor("createdAt", {
-        header: t("common:labels.submitted"),
+        header: () => <SortableHeader label={t("common:labels.submitted")} sort={sortOrder} onToggle={handleSortToggle} />,
         size: 120,
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
@@ -187,7 +232,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
     ],
-    [t, i18n.language],
+    [t, i18n.language, sortOrder, handleSortToggle],
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);
@@ -250,26 +295,29 @@ function AdminSubmissionsListPage() {
           </div>
         </div>
 
-        <div className="relative">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
-          />
-          <Input
-            className="h-8 pl-8 pr-8 w-full sm:w-72"
-            placeholder={t("table.searchPlaceholder")}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-          {searchInput ? (
-            <button
-              type="button"
-              onClick={() => setSearchInput("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
-            </button>
-          ) : null}
+        <div className="flex items-center gap-2">
+          <UserPickerPopover selectedUserIds={selectedSubmitterIds} onSelectionChange={setSelectedSubmitterIds} />
+          <div className="relative">
+            <HugeiconsIcon
+              icon={Search01Icon}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
+            />
+            <Input
+              className="h-8 pl-8 pr-8 w-full sm:w-72"
+              placeholder={t("table.searchPlaceholder")}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            {searchInput ? (
+              <button
+                type="button"
+                onClick={() => setSearchInput("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 

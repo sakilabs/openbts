@@ -1,6 +1,8 @@
-import { useState, useMemo, useCallback, useRef, type Dispatch, type SetStateAction } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { type Dispatch, type SetStateAction, useCallback, useMemo, useRef, useState } from "react";
+
 import { operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
+
 import { fetchUnassignedPermits } from "../api";
 
 const STORAGE_KEY = "admin:uke-permits:filters";

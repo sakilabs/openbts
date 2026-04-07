@@ -1,10 +1,10 @@
-import { RateLimitService } from "../services/ratelimit.service.js";
-import { QuotaService } from "../services/quota.service.js";
+import type { FastifyReply, FastifyRequest } from "fastify";
+
 import { redis } from "../database/redis.js";
 import { ErrorResponse } from "../errors.js";
-
-import type { FastifyReply, FastifyRequest } from "fastify";
 import type { FastifyZodInstance } from "../interfaces/fastify.interface.js";
+import { QuotaService } from "../services/quota.service.js";
+import { RateLimitService } from "../services/ratelimit.service.js";
 
 declare module "fastify" {
   interface FastifyInstance {

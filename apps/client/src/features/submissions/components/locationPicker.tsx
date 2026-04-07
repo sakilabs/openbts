@@ -1,30 +1,32 @@
-import { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { Link } from "@tanstack/react-router";
+import { Loading01Icon, Location01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Location01Icon, Loading01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MapControls, Map as MapGL, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Map as MapGL, useMap, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
-import { POLAND_CENTER, PICKER_LAYER_IDS, PICKER_NEARBY_RADIUS_METERS, PICKER_UKE_LAYER_IDS } from "@/features/map/constants";
-import { useMapBounds } from "@/features/map/hooks/useMapBounds";
-import { getOperatorData } from "@/features/map/geojson";
-import { calculateDistance, groupPermitsByStation } from "@/features/map/utils";
-import { reverseGeocode, fetchLocationsInViewport, fetchUkeLocationsInViewport, type GeocodingResult } from "../api";
-import { regionsQueryOptions } from "@/features/shared/queries";
-import type { LocationWithStations, Region, UkeLocationWithPermits, UkeStation, Location } from "@/types/station";
-import type { ProposedLocationForm } from "../types";
 import { ChangeBadge } from "@/features/admin/submissions/components/common";
+import { PICKER_LAYER_IDS, PICKER_NEARBY_RADIUS_METERS, PICKER_UKE_LAYER_IDS, POLAND_CENTER } from "@/features/map/constants";
+import { getOperatorData } from "@/features/map/geojson";
+import { useMapBounds } from "@/features/map/hooks/useMapBounds";
+import { calculateDistance, groupPermitsByStation } from "@/features/map/utils";
+import { regionsQueryOptions } from "@/features/shared/queries";
+import { cn } from "@/lib/utils";
+import type { Location, LocationWithStations, Region, UkeLocationWithPermits, UkeStation } from "@/types/station";
+
+import { type GeocodingResult, fetchLocationsInViewport, fetchUkeLocationsInViewport, reverseGeocode } from "../api";
+import type { ProposedLocationForm } from "../types";
 import type { LocationErrors } from "../utils/validation";
-import { useLocationPickerState } from "./useLocationPickerState";
-import { usePickerMapLayers } from "./usePickerMapLayers";
 import { NearbyLocationsPanel } from "./NearbyLocationsPanel";
 import { UkeStationPanelOverlay } from "./UkeStationPanelOverlay";
+import { useLocationPickerState } from "./useLocationPickerState";
+import { usePickerMapLayers } from "./usePickerMapLayers";
 
 function roundCoord(value: number): number {
   return Math.round(value * 1000000) / 1000000;
@@ -249,7 +251,7 @@ export function LocationPicker({
               placeholder="52.2297"
               value={location.latitude ?? ""}
               onChange={(e) => onLocationChange({ latitude: e.target.value ? Number.parseFloat(e.target.value) : null })}
-              className={`h-8 font-mono text-sm ${errors?.latitude ? "border-destructive" : ""}`}
+              className={cn("h-8 font-mono text-sm", errors?.latitude && "border-destructive")}
             />
             {errors?.latitude && <p className="text-xs text-destructive">{t(errors.latitude)}</p>}
             {locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.latitude.toFixed(6)} />}
@@ -265,7 +267,7 @@ export function LocationPicker({
               placeholder="21.0122"
               value={location.longitude ?? ""}
               onChange={(e) => onLocationChange({ longitude: e.target.value ? Number.parseFloat(e.target.value) : null })}
-              className={`h-8 font-mono text-sm ${errors?.longitude ? "border-destructive" : ""}`}
+              className={cn("h-8 font-mono text-sm", errors?.longitude && "border-destructive")}
             />
             {errors?.longitude && <p className="text-xs text-destructive">{t(errors.longitude)}</p>}
             {locationDiffs?.coords && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.longitude.toFixed(6)} />}
@@ -280,7 +282,7 @@ export function LocationPicker({
             value={location.region_id?.toString() ?? ""}
             onValueChange={(value) => onLocationChange({ region_id: value ? Number.parseInt(value, 10) : null })}
           >
-            <SelectTrigger className={`h-8 text-sm ${errors?.region_id ? "border-destructive" : ""}`}>
+            <SelectTrigger className={cn("h-8 text-sm", errors?.region_id && "border-destructive")}>
               <SelectValue>
                 {location.region_id ? regions.find((r) => r.id === location.region_id)?.name : t("locationPicker.regionPlaceholder")}
               </SelectValue>

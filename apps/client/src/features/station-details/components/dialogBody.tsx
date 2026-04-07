@@ -1,11 +1,7 @@
-import { useMemo, useRef, useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  InformationCircleIcon,
   Globe02Icon,
   Image01Icon,
+  InformationCircleIcon,
   Location01Icon,
   MapsLocation01Icon,
   Message01Icon,
@@ -13,27 +9,33 @@ import {
   SignalFull02Icon,
   Tag01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Separator } from "@/components/ui/separator";
-import { CellTable } from "./cellTable";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RAT_ORDER } from "@/features/map/constants";
-import { ExtraIdentificatorsDisplay } from "./extraIdentificators";
-import { PermitsList } from "./permitsList";
-import { CommentsList } from "./commentsList";
-import { PhotoGallery } from "./photoGallery";
-import { CopyButton } from "./copyButton";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { NavigationLinks } from "./navLinks";
-import { groupCellsByRat } from "../utils";
-import { TAB_OPTIONS, type TabId } from "../tabs";
-import { fetchStationPhotos } from "../api";
-import { fetchApiData } from "@/lib/api";
-import { useSettings } from "@/hooks/useSettings";
 import { usePreferences } from "@/hooks/usePreferences";
+import { useSettings } from "@/hooks/useSettings";
+import { fetchApiData } from "@/lib/api";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import { cn } from "@/lib/utils";
 import type { Station, StationComment } from "@/types/station";
+
+import { fetchStationPhotos } from "../api";
+import { TAB_OPTIONS, type TabId } from "../tabs";
+import { groupCellsByRat } from "../utils";
+import { CellTable } from "./cellTable";
+import { CommentsList } from "./commentsList";
+import { CopyButton } from "./copyButton";
+import { ExtraIdentificatorsDisplay } from "./extraIdentificators";
+import { NavigationLinks } from "./navLinks";
+import { PermitsList } from "./permitsList";
+import { PhotoGallery } from "./photoGallery";
 
 type StationDetailsBodyProps = {
   stationId: number;

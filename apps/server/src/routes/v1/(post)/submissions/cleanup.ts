@@ -1,23 +1,22 @@
+import {
+  proposedCells,
+  proposedGSMCells,
+  proposedLTECells,
+  proposedLocations,
+  proposedNRCells,
+  proposedStations,
+  proposedUMTSCells,
+} from "@openbts/drizzle";
 import { inArray } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import {
-  proposedCells,
-  proposedGSMCells,
-  proposedUMTSCells,
-  proposedLTECells,
-  proposedNRCells,
-  proposedStations,
-  proposedLocations,
-} from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 const schemaRoute = {
   response: {

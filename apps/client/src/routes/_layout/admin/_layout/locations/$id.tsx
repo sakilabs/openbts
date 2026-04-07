@@ -1,15 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { AirportTowerIcon, ArrowLeft01Icon, ArrowRight01Icon, Location01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, Location01Icon, AirportTowerIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,15 +17,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { LocationPicker } from "@/features/submissions/components/locationPicker";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fetchLocationDetail } from "@/features/admin/locations/api";
 import { LocationPhotosSection } from "@/features/admin/locations/components/LocationPhotosSection";
-import { usePatchLocationMutation, useDeleteLocationMutation } from "@/features/admin/locations/mutations";
-import { cn } from "@/lib/utils";
-import { showApiError } from "@/lib/api";
-import { useScrolled } from "@/hooks/useScrolled";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { useDeleteLocationMutation, usePatchLocationMutation } from "@/features/admin/locations/mutations";
+import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { useScrolled } from "@/hooks/useScrolled";
+import { showApiError } from "@/lib/api";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
 
 function AdminLocationDetailPage() {
   const { id } = Route.useParams();

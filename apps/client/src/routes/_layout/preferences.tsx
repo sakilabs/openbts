@@ -1,19 +1,20 @@
-import { Trans, useTranslation } from "react-i18next";
+import { AppleIcon, GoogleMapsIcon, InformationCircleIcon, WazeIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { GoogleMapsIcon, AppleIcon, WazeIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
-import { OsmAndIcon } from "@/features/station-details/components/navLinks";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
-import { usePreferences, type UserPreferences } from "@/hooks/usePreferences";
-import { toggleValue, cn } from "@/lib/utils";
-import { authClient } from "@/lib/authClient";
-import { usePushSubscription } from "@/features/notifications/usePushSubscription";
-import { fetchPushPreferences, updatePushPreferences, type PushPreferences } from "@/features/notifications/api";
 import type { JSX } from "react";
+import { Trans, useTranslation } from "react-i18next";
+
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { type PushPreferences, fetchPushPreferences, updatePushPreferences } from "@/features/notifications/api";
+import { usePushSubscription } from "@/features/notifications/usePushSubscription";
+import { OsmAndIcon } from "@/features/station-details/components/navLinks";
+import { type UserPreferences, usePreferences } from "@/hooks/usePreferences";
+import { authClient } from "@/lib/authClient";
+import { cn, toggleValue } from "@/lib/utils";
 
 type RadioOption = { value: string; labelKey: string; descKey?: string; example?: string };
 type NavIconComponent = (props: { className?: string }) => JSX.Element;

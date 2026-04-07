@@ -1,10 +1,12 @@
-import { useMemo, useCallback, type Dispatch, type Ref, type SetStateAction } from "react";
+import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { type Dispatch, type Ref, type SetStateAction, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
+
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { createUnassignedPermitsColumns } from "./columns";
 import type { UkeStation } from "@/types/station";
+
+import { createUnassignedPermitsColumns } from "./columns";
 
 interface PaginationState {
   pageIndex: number;

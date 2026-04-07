@@ -3,8 +3,8 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-04-06
-  version: 1.0.0
+    Last updated: 2026-04-07
+  version: 1.0.1
 
 servers:
   - url: https://openbts.sakilabs.com/api/v1
@@ -733,7 +733,11 @@ paths:
           schema: { type: integer, minimum: 0, default: 0 }
         - name: search
           in: query
-          description: "Search across comment content, author name/username, and station ID"
+          description: "Search across comment content and station ID"
+          schema: { type: string }
+        - name: author_ids
+          in: query
+          description: "Comma-separated list of author user IDs to filter by"
           schema: { type: string }
         - name: status
           in: query
@@ -1635,7 +1639,8 @@ paths:
   /submissions:
     get:
       tags: [Submissions]
-      summary: List submissions
+      summary: List own submissions
+      description: Returns only submissions belonging to the authenticated user.
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1652,14 +1657,99 @@ paths:
         - name: type
           in: query
           schema: { type: string, enum: [new, update, delete] }
-        - name: submitter_id
-          in: query
-          description: Filter by submitter user ID (admin only)
-          schema: { type: string, format: uuid }
         - name: search
           in: query
-          description: Search by submission ID, submitter name/username, or station ID
+          description: Search by submission ID prefix or station ID
           schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionWithRelations" } }
+                  totalCount: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /admin/users/search:
+    get:
+      tags: [Admin]
+      summary: Search users (picker)
+      description: Returns a lightweight list of users for use in filter pickers. Requires `search:user` permission
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: search
+          in: query
+          description: Filter by name or username
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, total]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name]
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        username: { type: string, nullable: true }
+                        image: { type: string, nullable: true }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions/admin:
+    get:
+      tags: [Submissions]
+      summary: List all submissions (admin)
+      description: Returns all submissions across all users. Requires `submissions:read` permission.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, approved, rejected] }
+        - name: type
+          in: query
+          schema: { type: string, enum: [new, update, delete] }
+        - name: submitter_ids
+          in: query
+          description: Comma-separated list of submitter user IDs to filter by
+          schema: { type: string }
+        - name: search
+          in: query
+          description: Search by submission ID prefix or station ID
+          schema: { type: string }
+        - name: sort
+          in: query
+          description: Sort direction by createdAt. Defaults to asc (oldest first).
+          schema: { type: string, enum: [asc, desc], default: asc }
       responses:
         "200":
           description: OK
@@ -2003,7 +2093,6 @@ paths:
       summary: Clean up old submissions
       description: Deletes proposed data (cells, stations, locations) for submissions older than 1 month
       security:
-        - ApiKeyAuth: []
         - CookieAuth: []
       responses:
         "200":
@@ -2386,6 +2475,10 @@ paths:
         - name: invoked_by
           in: query
           schema: { type: string, format: uuid }
+        - name: user_ids
+          in: query
+          description: Comma-separated list of user IDs to filter by actor
+          schema: { type: string }
         - name: search
           in: query
           description: Search across user name, username, and email

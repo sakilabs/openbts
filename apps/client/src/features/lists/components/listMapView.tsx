@@ -1,21 +1,21 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState, type JSX } from "react";
 import { useQuery } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
+import { type JSX, Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
-import { StationsLayer, DEFAULT_FILTERS, locationQueryKey, loadMapFilters, saveMapFilters } from "@/features/map/components/stationsLayer";
-import { MapSearchOverlay } from "@/features/map/components/search-overlay";
-import { useMapPopup } from "@/features/map/hooks/useMapPopup";
-import { useMapBounds } from "@/features/map/hooks/useMapBounds";
-import { fetchLocationWithStations } from "@/features/map/api";
-import { toLocationInfo } from "@/features/map/utils";
 import { useListDetail } from "@/features/lists/hooks/useListDetail";
-import { useSettings } from "@/hooks/useSettings";
-import { usePreferences } from "@/hooks/usePreferences";
-import { authClient } from "@/lib/authClient";
 import type { LocationsResponse } from "@/features/map/api";
-import type { LocationWithStations, StationSource, StationFilters, StationWithoutCells, UkeStation, RadioLine, Station } from "@/types/station";
-import { POLAND_CENTER, POLAND_BOUNDS } from "@/features/map/constants";
+import { fetchLocationWithStations } from "@/features/map/api";
+import { MapSearchOverlay } from "@/features/map/components/search-overlay";
+import { DEFAULT_FILTERS, StationsLayer, loadMapFilters, locationQueryKey, saveMapFilters } from "@/features/map/components/stationsLayer";
+import { POLAND_BOUNDS, POLAND_CENTER } from "@/features/map/constants";
+import { useMapBounds } from "@/features/map/hooks/useMapBounds";
+import { useMapPopup } from "@/features/map/hooks/useMapPopup";
+import { toLocationInfo } from "@/features/map/utils";
+import { usePreferences } from "@/hooks/usePreferences";
+import { useSettings } from "@/hooks/useSettings";
+import { authClient } from "@/lib/authClient";
+import type { LocationWithStations, RadioLine, Station, StationFilters, StationSource, StationWithoutCells, UkeStation } from "@/types/station";
 
 const RadioLinesLayer = lazy(() => import("@/features/map/components/radioLinesLayer"));
 const StationDetailsDialog = lazy(() =>

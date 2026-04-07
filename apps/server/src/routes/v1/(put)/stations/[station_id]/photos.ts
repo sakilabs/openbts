@@ -1,15 +1,14 @@
+import { locationPhotos, stationPhotoSelections } from "@openbts/drizzle";
+import { and, eq, inArray } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
-import { eq, inArray, and } from "drizzle-orm";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import { stationPhotoSelections, locationPhotos } from "@openbts/drizzle";
-import { createAuditLog } from "../../../../../services/auditLog.service.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
 
 const schemaRoute = {
   params: z.object({ station_id: z.coerce.number() }),

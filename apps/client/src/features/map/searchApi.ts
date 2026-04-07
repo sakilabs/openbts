@@ -1,6 +1,8 @@
-import type { Operator, Station, UkeLocation, UkePermit } from "@/types/station";
 import { postApiData } from "@/lib/api";
 import { forwardGeocode } from "@/lib/mapboxGeocoding";
+import type { Operator, Station, UkeLocation, UkePermit } from "@/types/station";
+
+import { POLAND_BOUNDS } from "./constants";
 import type { OSMResult } from "./types";
 
 const GPS_REGEX = /([+-]?\d+\.\d+)[,\s]+\s*([+-]?\d+\.\d+)/;
@@ -11,6 +13,7 @@ export function parseGpsCoordinates(query: string): { lat: number; lng: number }
   const lat = Number.parseFloat(match[1]!);
   const lng = Number.parseFloat(match[2]!);
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  if (lng < POLAND_BOUNDS[0][0] || lat < POLAND_BOUNDS[0][1] || lng > POLAND_BOUNDS[1][0] || lat > POLAND_BOUNDS[1][1]) return null;
   return { lat, lng };
 }
 

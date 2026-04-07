@@ -1,5 +1,5 @@
-import { fetchJson, API_BASE } from "@/lib/api";
-import type { Station, Cell } from "@/types/station";
+import { API_BASE, fetchJson } from "@/lib/api";
+import type { Cell, Station } from "@/types/station";
 
 export async function patchStation(stationId: number, body: Record<string, unknown>) {
   return fetchJson<{ data: Station }>(`${API_BASE}/stations/${stationId}`, {

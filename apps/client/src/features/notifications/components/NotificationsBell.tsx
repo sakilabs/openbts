@@ -1,13 +1,16 @@
-import { Link } from "@tanstack/react-router";
+import { Add01Icon, Cancel01Icon, Notification01Icon, Notification02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Notification01Icon, Tick02Icon, Cancel01Icon, Notification02Icon, Add01Icon } from "@hugeicons/core-free-icons";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { formatRelativeTime } from "@/lib/format";
+
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/authClient";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { formatRelativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+import type { Notification } from "../api";
 import { useNotifications } from "../useNotifications";
 import { usePushSubscription } from "../usePushSubscription";
-import type { Notification } from "../api";
 
 function NotificationItem({ notification, onRead }: { notification: Notification; onRead: (id: string) => void }) {
   const { t } = useTranslation("notifications");
@@ -25,9 +28,9 @@ function NotificationItem({ notification, onRead }: { notification: Notification
 
   const content = (
     <>
-      <HugeiconsIcon icon={icon} size={16} className={`mt-0.5 shrink-0 ${iconColor}`} />
+      <HugeiconsIcon icon={icon} size={16} className={cn("mt-0.5 shrink-0", iconColor)} />
       <div className="min-w-0 flex-1">
-        <p className={`text-sm font-medium truncate ${notification.readAt ? "text-muted-foreground" : ""}`}>{notification.title}</p>
+        <p className={cn("text-sm font-medium truncate", notification.readAt ? "text-muted-foreground" : "")}>{notification.title}</p>
         {submitterName && <p className="text-xs text-muted-foreground truncate">{t("submittedBy", { name: submitterName })}</p>}
         {stationId && <p className="text-xs text-muted-foreground truncate">{t("station", { stationId })}</p>}
         {reviewerNote && <p className="text-xs text-muted-foreground truncate italic">{reviewerNote}</p>}

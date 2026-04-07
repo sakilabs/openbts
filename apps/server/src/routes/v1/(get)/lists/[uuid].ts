@@ -1,28 +1,27 @@
-import { z } from "zod/v4";
+import {
+  bands,
+  cells,
+  locations,
+  operators,
+  radioLinesManufacturers,
+  radiolinesAntennaTypes,
+  regions,
+  stations,
+  ukeLocations,
+  ukePermitSectors,
+  ukePermits,
+  userLists,
+} from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
+import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { getRuntimeSettings } from "../../../../services/settings.service.js";
-import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import {
-  stations,
-  userLists,
-  cells,
-  bands,
-  locations,
-  regions,
-  operators,
-  ukeLocations,
-  ukePermits,
-  ukePermitSectors,
-  radioLinesManufacturers,
-  radiolinesAntennaTypes,
-} from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 const ukePermitSectorResponseSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 

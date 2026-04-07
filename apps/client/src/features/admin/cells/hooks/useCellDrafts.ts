@@ -1,9 +1,11 @@
-import { useState, useMemo, useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
-import { toast } from "sonner";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RAT_ORDER, getSharedDetailFields } from "../rat";
-import type { CellDraftBase } from "../cellEditRow";
+import { toast } from "sonner";
+
 import type { Band } from "@/types/station";
+
+import type { CellDraftBase } from "../cellEditRow";
+import { RAT_ORDER, getSharedDetailFields } from "../rat";
 
 type UseCellDraftsOptions<T extends CellDraftBase> = {
   initialCells: T[];

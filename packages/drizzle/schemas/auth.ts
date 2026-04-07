@@ -1,7 +1,8 @@
 import { boolean, check, index, integer, jsonb, pgEnum, pgSchema, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
-import { nanoid } from "nanoid";
-import { locations, stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
+import { nanoid } from "nanoid";
+
+import { locations, stations } from "./bts.ts";
 
 export const NotificationType = pgEnum("notification_type", ["submission_approved", "submission_rejected", "new_submission"]);
 export const CommentStatus = pgEnum("comment_status", ["pending", "approved"]);

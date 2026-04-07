@@ -1,9 +1,9 @@
-import webpush from "web-push";
+import { notifications, pushSubscriptions, users } from "@openbts/drizzle";
 import { and, eq, inArray, sql } from "drizzle-orm";
+import webpush from "web-push";
 
 import db from "../database/psql.js";
-import { notifications, pushSubscriptions, users } from "@openbts/drizzle";
-import { t, getLabels } from "../i18n/index.js";
+import { getLabels, t } from "../i18n/index.js";
 import { logger } from "../utils/logger.js";
 
 const { VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } = process.env;

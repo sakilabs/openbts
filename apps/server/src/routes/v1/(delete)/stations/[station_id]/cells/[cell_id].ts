@@ -1,14 +1,13 @@
-import { cells, gsmCells, umtsCells, lteCells, nrCells, stations } from "@openbts/drizzle";
+import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../../errors.js";
-import { createAuditLog } from "../../../../../../services/auditLog.service.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
-import type { Route, EmptyResponse } from "../../../../../../interfaces/routes.interface.js";
+import type { EmptyResponse, Route } from "../../../../../../interfaces/routes.interface.js";
+import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 
 const schemaRoute = {
   params: z.object({

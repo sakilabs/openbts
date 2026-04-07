@@ -1,35 +1,34 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Download04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Download04Icon } from "@hugeicons/core-free-icons";
-import { createFileRoute } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Combobox,
-  ComboboxChips,
   ComboboxChip,
+  ComboboxChips,
   ComboboxChipsInput,
   ComboboxContent,
   ComboboxEmpty,
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-
-import { fetchOperators, fetchBands, fetchRegions } from "@/features/shared/api";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { fetchBands, fetchOperators, fetchRegions } from "@/features/shared/api";
+import { EXTENDED_RAT_OPTIONS } from "@/features/shared/rat";
 import { API_BASE } from "@/lib/api";
 import { formatDuration } from "@/lib/format";
+import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
 import { cn, toggleValue } from "@/lib/utils";
-import { getOperatorColor, TOP4_MNCS } from "@/lib/operatorUtils";
-import { EXTENDED_RAT_OPTIONS } from "@/features/shared/rat";
 import type { Operator } from "@/types/station";
 
 async function downloadExport(url: string, format: string): Promise<boolean> {

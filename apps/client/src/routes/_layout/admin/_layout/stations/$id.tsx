@@ -1,30 +1,31 @@
-import { useMemo, useCallback, useReducer, useEffect, useRef, useState } from "react";
-import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { fetchUkePermitsByStationId } from "@/features/map/api";
-import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { fetchApiData, showApiError } from "@/lib/api";
-import type { ProposedLocationForm } from "@/features/submissions/types";
-import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
+
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Station, Cell, Band, UkeStation } from "@/types/station";
-import { RAT_ORDER } from "@/features/admin/cells/rat";
-import { CellsEditor } from "@/features/admin/cells/cellsEditor";
 import type { DiffBadges } from "@/features/admin/cells/cellsEditor";
-import { operatorsQueryOptions, bandsQueryOptions } from "@/features/admin/queries";
-import { useSaveStationMutation, type LocalCell, isCellModified } from "@/features/admin/stations/mutations";
-import { shallowEqual } from "@/lib/shallowEqual";
+import { CellsEditor } from "@/features/admin/cells/cellsEditor";
+import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
+import { RAT_ORDER } from "@/features/admin/cells/rat";
+import { bandsQueryOptions, operatorsQueryOptions } from "@/features/admin/queries";
+import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
 import { StationDetailHeader } from "@/features/admin/stations/components/stationDetailHeader";
 import { StationInfoForm } from "@/features/admin/stations/components/stationInfoForm";
-import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
 import { StationPhotoSelector } from "@/features/admin/stations/components/StationPhotoSelector";
+import { type LocalCell, isCellModified, useSaveStationMutation } from "@/features/admin/stations/mutations";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { setStationPhotoSelection, uploadLocationPhotos } from "@/features/station-details/api";
 import { PhotoUploadSection } from "@/features/submissions/components/photoUploadSection";
-import { uploadLocationPhotos, setStationPhotoSelection } from "@/features/station-details/api";
+import type { ProposedLocationForm } from "@/features/submissions/types";
+import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
 import { useSettings } from "@/hooks/useSettings";
+import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
+import { shallowEqual } from "@/lib/shallowEqual";
+import type { Band, Cell, Station, UkeStation } from "@/types/station";
 
 function cellToLocal(cell: Cell): LocalCell {
   return {

@@ -1,26 +1,28 @@
-import { useReducer, useMemo, useCallback, useState } from "react";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { AlertCircleIcon, ArrowDown01Icon, Cancel01Icon, Search01Icon, Sorting05Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AlertCircleIcon, Search01Icon, Cancel01Icon, Sorting05Icon, ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { Input } from "@/components/ui/input";
-import { fetchJson, API_BASE } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/lib/format";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { useCallback, useMemo, useReducer, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTablePagination } from "@/hooks/useTablePageSize";
-import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
 import { AuditLogDetailSheet } from "@/features/admin/audit-logs/components/audit-log-detail-sheet";
-import { type AuditLogEntry, getActionStyle, TABLE_LABELS, TABLE_OPTIONS, ACTION_GROUPS } from "../../../../features/admin/audit-logs/constants";
+import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
+import { UserPickerPopover } from "@/features/admin/users/components/UserPickerPopover";
+import { useTablePagination } from "@/hooks/useTablePageSize";
+import { API_BASE, fetchJson } from "@/lib/api";
+import { resolveAvatarUrl } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+import { ACTION_GROUPS, type AuditLogEntry, TABLE_LABELS, TABLE_OPTIONS, getActionStyle } from "../../../../features/admin/audit-logs/constants";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 
@@ -162,19 +164,20 @@ function AdminAuditLogsPage() {
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
   const { tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort, selectedEntry } = filterState;
 
-  const [userFilterInput, setUserFilterInput] = useState("");
-  const debouncedUserFilter = useDebouncedValue(userFilterInput, 300);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
-  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || recordIdFilter || userFilterInput);
-  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, recordIdFilter, userFilterInput].filter(Boolean).length;
+  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || recordIdFilter || selectedUserIds.length);
+  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, recordIdFilter, selectedUserIds.length > 0].filter(
+    Boolean,
+  ).length;
 
   const clearAllFilters = useCallback(() => {
     dispatchFilter({ type: "CLEAR_FILTERS" });
-    setUserFilterInput("");
+    setSelectedUserIds([]);
     resetPage();
   }, [resetPage]);
 
@@ -189,7 +192,7 @@ function AdminAuditLogsPage() {
       dateFrom,
       dateTo,
       recordIdFilter,
-      debouncedUserFilter,
+      selectedUserIds,
       sort,
     ],
     queryFn: async () => {
@@ -200,7 +203,7 @@ function AdminAuditLogsPage() {
       if (tableFilter) params.set("table_name", tableFilter);
       if (actionsFilter.length > 0) params.set("actions", actionsFilter.join(","));
       if (recordIdFilter) params.set("record_id", recordIdFilter);
-      if (debouncedUserFilter) params.set("search", debouncedUserFilter);
+      if (selectedUserIds.length > 0) params.set("user_ids", selectedUserIds.join(","));
       if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
       if (dateTo) {
         const to = new Date(dateTo);
@@ -388,22 +391,13 @@ function AdminAuditLogsPage() {
             />
           </div>
 
-          <div className="relative">
-            <HugeiconsIcon
-              icon={Search01Icon}
-              className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none"
-            />
-            <Input
-              className="h-8 pl-7 w-44"
-              placeholder={t("auditLogs.filters.userSearch")}
-              autoComplete="off"
-              value={userFilterInput}
-              onChange={(e) => {
-                setUserFilterInput(e.target.value);
-                resetPage();
-              }}
-            />
-          </div>
+          <UserPickerPopover
+            selectedUserIds={selectedUserIds}
+            onSelectionChange={(ids) => {
+              setSelectedUserIds(ids);
+              resetPage();
+            }}
+          />
 
           <DatePickerButton
             value={dateFrom}

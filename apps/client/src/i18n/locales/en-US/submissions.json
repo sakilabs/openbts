@@ -105,7 +105,7 @@
   },
   "table": {
     "cells": "Cell Count",
-    "searchPlaceholder": "Search by ID, station, or user...",
+    "searchPlaceholder": "Search by station ID or submission ID...",
     "empty": "No submissions to display",
     "emptyHint": "No submissions matching selected filters",
     "emptyHintUser": "You haven't submitted any stations yet. Start by creating a new submission"

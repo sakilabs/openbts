@@ -1,14 +1,15 @@
-import { useEffect, useRef } from "react";
 import type MapLibreGL from "maplibre-gl";
+import { useEffect, useRef } from "react";
+
 import {
-  PICKER_SOURCE_ID,
   PICKER_CIRCLE_LAYER_ID,
-  PICKER_SYMBOL_LAYER_ID,
   PICKER_LAYER_IDS,
-  PICKER_UKE_SOURCE_ID,
+  PICKER_SOURCE_ID,
+  PICKER_SYMBOL_LAYER_ID,
   PICKER_UKE_CIRCLE_LAYER_ID,
-  PICKER_UKE_SYMBOL_LAYER_ID,
   PICKER_UKE_LAYER_IDS,
+  PICKER_UKE_SOURCE_ID,
+  PICKER_UKE_SYMBOL_LAYER_ID,
 } from "@/features/map/constants";
 import { syncPieImages } from "@/features/map/pieChart";
 

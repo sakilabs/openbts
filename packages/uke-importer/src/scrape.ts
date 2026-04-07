@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+
 import { absolutize } from "./utils.js";
 
 async function fetchHtml(targetUrl: string): Promise<string> {

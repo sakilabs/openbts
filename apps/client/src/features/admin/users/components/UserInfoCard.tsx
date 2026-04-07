@@ -1,9 +1,11 @@
-import { UserIcon, CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, CheckmarkCircle02Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { AdminUser } from "@/features/admin/users/types";
-import { SectionHeader, InfoRow } from "./common";
+
+import { InfoRow, SectionHeader } from "./common";
 
 export function UserInfoCard({ user }: { user: AdminUser }) {
   return (

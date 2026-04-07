@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from "react";
-import type { StationFilters } from "@/types/station.js";
+
 import { toggleValue } from "@/lib/utils.js";
+import type { StationFilters } from "@/types/station.js";
+
 import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../constants.js";
 
 type UseFilterHandlersArgs = {

@@ -1,27 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  createSubmission,
-  updateSubmission,
-  deleteSubmission,
-  fetchSubmissionForEdit,
-  fetchStationForSubmission,
-  uploadSubmissionPhotos,
-  type SearchStation,
-} from "../api";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
-import { showApiError } from "@/lib/api";
-import { generateCellId, computeCellPayloads, cellsToPayloads, ukePermitsToCells } from "../utils/cells";
-import { validateForm, validateCells, hasErrors, type FormErrors } from "../utils/validation";
-import { hasFormChanges, type OriginalState } from "../utils/equality";
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { useBeforeUnloadGuard } from "@/hooks/useBeforeUnloadGuard";
-import type { SubmissionMode, StationAction, ProposedStationForm, ProposedLocationForm, ProposedCellForm, RatType } from "../types";
+import { showApiError } from "@/lib/api";
 import type { UkeStation } from "@/types/station";
+
+import {
+  type SearchStation,
+  createSubmission,
+  deleteSubmission,
+  fetchStationForSubmission,
+  fetchSubmissionForEdit,
+  updateSubmission,
+  uploadSubmissionPhotos,
+} from "../api";
+import type { ProposedCellForm, ProposedLocationForm, ProposedStationForm, RatType, StationAction, SubmissionMode } from "../types";
+import { cellsToPayloads, computeCellPayloads, generateCellId, ukePermitsToCells } from "../utils/cells";
+import { type OriginalState, hasFormChanges } from "../utils/equality";
+import { type FormErrors, hasErrors, validateCells, validateForm } from "../utils/validation";
 
 export type FormValues = {
   mode: SubmissionMode;

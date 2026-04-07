@@ -1,4 +1,4 @@
-import { fetchApiData, fetchJson, postApiData, API_BASE } from "@/lib/api";
+import { API_BASE, fetchApiData, fetchJson, postApiData } from "@/lib/api";
 
 export type Notification = {
   id: string;

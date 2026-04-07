@@ -1,7 +1,9 @@
-import { useTheme } from "@/components/theme-provider";
-import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { Alert02Icon, CheckmarkCircle02Icon, InformationCircleIcon, MultiplicationSignCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CheckmarkCircle02Icon, InformationCircleIcon, Alert02Icon, MultiplicationSignCircleIcon } from "@hugeicons/core-free-icons";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
+
+import { useTheme } from "@/components/theme-provider";
+
 import { Spinner } from "./spinner";
 
 const Toaster = ({ ...props }: ToasterProps) => {

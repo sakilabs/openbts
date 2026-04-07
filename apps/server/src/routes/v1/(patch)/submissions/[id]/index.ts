@@ -1,30 +1,29 @@
+import { proposedCells, proposedLocations, proposedStations, submissions } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
-import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
+import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { checkCellDuplicatesBatch, getOperatorIdForStation } from "../../../../../services/cellDuplicateCheck.service.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
-import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import {
-  gsmInsertSchema,
-  umtsInsertSchema,
-  lteInsertSchema,
-  nrInsertSchemaBase,
   detailsSelectSchema,
-  proposedCellsSelectSchema,
-  isNonEmpty,
-  validateCellDuplicates,
+  gsmInsertSchema,
   insertProposedCellDetails,
+  isNonEmpty,
+  lteInsertSchema,
   makeDetailsRatRefine,
+  nrInsertSchemaBase,
+  proposedCellsSelectSchema,
+  umtsInsertSchema,
+  validateCellDuplicates,
 } from "../../../../../utils/submission.helpers.js";
-import { submissions, proposedCells, proposedStations, proposedLocations } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
-import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
-import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const submissionsSelectSchema = createSelectSchema(submissions);
 

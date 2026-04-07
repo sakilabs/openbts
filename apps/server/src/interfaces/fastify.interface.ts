@@ -7,8 +7,9 @@ import type {
   RawServerDefault,
   RouteGenericInterface,
 } from "fastify";
-import type { auth } from "../plugins/betterauth.plugin.js";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+
+import type { auth } from "../plugins/betterauth.plugin.js";
 
 export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 type ApiKey = Awaited<ReturnType<typeof auth.api.getApiKey>>;

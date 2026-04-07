@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef } from "react";
 import type MapLibreGL from "maplibre-gl";
-import { AZIMUTHS_SOURCE_ID, AZIMUTHS_LINE_LAYER_ID, POINT_LAYER_ID } from "../constants";
-import type { UkeLocationWithPermits } from "@/types/station";
-import { destinationPoint } from "../utils";
+import { useEffect, useMemo, useRef } from "react";
+
 import { getOperatorColor } from "@/lib/operatorUtils";
+import type { UkeLocationWithPermits } from "@/types/station";
+
+import { AZIMUTHS_LINE_LAYER_ID, AZIMUTHS_SOURCE_ID, POINT_LAYER_ID } from "../constants";
 import { DEFAULT_COLOR } from "../geojson";
+import { destinationPoint } from "../utils";
 
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 

@@ -1,7 +1,8 @@
-import { unlinkSync, existsSync, mkdirSync, writeFileSync, rmdirSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { URL } from "node:url";
 import * as XLSX from "xlsx";
+
 import { DOWNLOAD_DIR } from "./config.js";
 
 export function convertDMSToDD(input: string): number | null {

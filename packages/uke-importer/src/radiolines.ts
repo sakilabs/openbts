@@ -1,18 +1,17 @@
+import { deletedEntries, radioLinesManufacturers, radiolinesAntennaTypes, radiolinesTransmitterTypes, ukeRadiolines } from "@openbts/drizzle";
+import { db } from "@openbts/drizzle/db";
+import { sql } from "drizzle-orm";
+import { lt } from "drizzle-orm";
 /* eslint-disable no-await-in-loop */
 import path from "node:path";
 import url from "node:url";
 
-import { radiolinesAntennaTypes, radioLinesManufacturers, radiolinesTransmitterTypes, ukeRadiolines, deletedEntries } from "@openbts/drizzle";
 import { BATCH_SIZE, DOWNLOAD_DIR, RADIOLINES_URL } from "./config.js";
-import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
-import { scrapeXlsxLinks } from "./scrape.js";
-import { upsertUkeOperators } from "./upserts.js";
-import { db } from "@openbts/drizzle/db";
-import { sql } from "drizzle-orm";
-import { lt } from "drizzle-orm";
 import { getLastImportedFileNames, recordImportMetadata } from "./import-check.js";
-
+import { scrapeXlsxLinks } from "./scrape.js";
 import type { RawRadioLineData } from "./types.js";
+import { upsertUkeOperators } from "./upserts.js";
+import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
 function isNonEmptyName<T extends { name: string | undefined }>(v: T): v is T & { name: string } {
   return typeof v.name === "string" && v.name.length > 0;
 }

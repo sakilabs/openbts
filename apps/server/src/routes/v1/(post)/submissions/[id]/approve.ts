@@ -1,34 +1,33 @@
-import { eq, inArray, and } from "drizzle-orm";
+import {
+  cells,
+  extraIdentificators,
+  gsmCells,
+  locationPhotos,
+  locations,
+  lteCells,
+  nrCells,
+  stationPhotoSelections,
+  stations,
+  submissions,
+  umtsCells,
+} from "@openbts/drizzle";
+import { and, eq, inArray } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
 import { ErrorResponse } from "../../../../../errors.js";
-import { getRuntimeSettings } from "../../../../../services/settings.service.js";
-import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
-import { syncStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
-import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
-import { computeGnbidLength } from "../../../../../utils/submission.helpers.js";
-import { checkCellDuplicatesBatch } from "../../../../../services/cellDuplicateCheck.service.js";
-import { logger } from "../../../../../utils/logger.js";
-import {
-  submissions,
-  stations,
-  cells,
-  locations,
-  gsmCells,
-  umtsCells,
-  lteCells,
-  nrCells,
-  extraIdentificators,
-  locationPhotos,
-  stationPhotoSelections,
-} from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../../services/auditLog.service.js";
+import { checkCellDuplicatesBatch } from "../../../../../services/cellDuplicateCheck.service.js";
+import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
+import { getRuntimeSettings } from "../../../../../services/settings.service.js";
+import { syncStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
+import { logger } from "../../../../../utils/logger.js";
+import { computeGnbidLength } from "../../../../../utils/submission.helpers.js";
 
 const submissionsSelectSchema = createSelectSchema(submissions);
 

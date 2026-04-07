@@ -1,4 +1,5 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
+
 import { ListMapView } from "@/features/lists/components/listMapView";
 import { useSettings } from "@/hooks/useSettings";
 

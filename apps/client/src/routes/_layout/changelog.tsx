@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { createFileRoute } from "@tanstack/react-router";
 
 const REMARK_PLUGINS = [remarkGfm];
 

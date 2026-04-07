@@ -1,6 +1,7 @@
-import { sql, count, countDistinct } from "drizzle-orm";
+import { statsSnapshots, ukePermits } from "@openbts/drizzle";
+import { count, countDistinct, sql } from "drizzle-orm";
+
 import { db } from "../database/psql.js";
-import { ukePermits, statsSnapshots } from "@openbts/drizzle";
 import { logger } from "../utils/logger.js";
 
 export async function takeStatsSnapshot(): Promise<void> {

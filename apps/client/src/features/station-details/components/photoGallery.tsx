@@ -1,11 +1,14 @@
-import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Camera01Icon, Image01Icon, Note02Icon, StarIcon, Upload04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Image01Icon, StarIcon, Note02Icon, Upload04Icon, Camera01Icon } from "@hugeicons/core-free-icons";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Lightbox } from "@/components/lightbox";
-import { fetchStationPhotos, setStationPhotoSelection, type StationPhoto } from "../api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+import { type StationPhoto, fetchStationPhotos, setStationPhotoSelection } from "../api";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 function isNew(createdAt: string) {
@@ -112,7 +115,10 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
             ) : null}
             {photo.note ? (
               <span
-                className={`absolute top-1.5 right-1.5 bg-black/60 text-white/80 rounded-full p-1 transition-opacity ${isAdmin && !photo.is_main ? "group-hover:opacity-0" : ""}`}
+                className={cn(
+                  "absolute top-1.5 right-1.5 bg-black/60 text-white/80 rounded-full p-1 transition-opacity",
+                  isAdmin && !photo.is_main ? "group-hover:opacity-0" : "",
+                )}
                 title={photo.note}
               >
                 <HugeiconsIcon icon={Note02Icon} className="size-3" />

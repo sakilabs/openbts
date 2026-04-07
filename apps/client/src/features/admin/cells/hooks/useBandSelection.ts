@@ -1,4 +1,5 @@
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
+
 import type { Band } from "@/types/station";
 
 export function useBandSelection(bands: Band[], rat: string, bandId: number) {

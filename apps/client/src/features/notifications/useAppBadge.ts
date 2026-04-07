@@ -1,7 +1,9 @@
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+
+import { API_BASE, fetchJson } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
-import { fetchJson, API_BASE } from "@/lib/api";
+
 import { fetchNotifications } from "./api";
 
 const PRIVILEGED_ROLES = new Set(["admin"]);

@@ -1,31 +1,6 @@
 import { defineRelations } from "drizzle-orm";
 
 import {
-  bands,
-  cells,
-  locations,
-  operators,
-  regions,
-  stations,
-  ukePermits,
-  ukePermitSectors,
-  radioLinesManufacturers,
-  radiolinesAntennaTypes,
-  radiolinesTransmitterTypes,
-  ukeRadiolines,
-  stationsPermits,
-  gsmCells,
-  umtsCells,
-  lteCells,
-  nrCells,
-  extraIdentificators,
-  ukeLocations,
-  ukeOperators,
-  ukeImportMetadata,
-  deletedEntries,
-  statsSnapshots,
-} from "./bts.ts";
-import {
   accounts,
   apikeys,
   attachments,
@@ -41,7 +16,31 @@ import {
   users,
 } from "./auth.ts";
 import {
-  submissions,
+  bands,
+  cells,
+  deletedEntries,
+  extraIdentificators,
+  gsmCells,
+  locations,
+  lteCells,
+  nrCells,
+  operators,
+  radioLinesManufacturers,
+  radiolinesAntennaTypes,
+  radiolinesTransmitterTypes,
+  regions,
+  stations,
+  stationsPermits,
+  statsSnapshots,
+  ukeImportMetadata,
+  ukeLocations,
+  ukeOperators,
+  ukePermitSectors,
+  ukePermits,
+  ukeRadiolines,
+  umtsCells,
+} from "./bts.ts";
+import {
   proposedCells,
   proposedGSMCells,
   proposedLTECells,
@@ -49,8 +48,9 @@ import {
   proposedNRCells,
   proposedStations,
   proposedUMTSCells,
-  submissionPhotos,
   submissionLocationPhotoSelections,
+  submissionPhotos,
+  submissions,
 } from "./submissions.ts";
 
 export const relations = defineRelations(

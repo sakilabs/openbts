@@ -140,6 +140,18 @@
     "userListsDisabled": "Listy użytkowników są wyłączone"
   },
   "users": {
+    "picker": {
+      "searchPlaceholder": "Szukaj użytkowników...",
+      "noUsers": "Nie znaleziono użytkowników",
+      "noMatch": "Brak użytkowników pasujących do \"{{search}}\"",
+      "error": "Nie udało się załadować użytkowników",
+      "showing": "Wyświetlanie {{shown}} z {{total}}",
+      "selected_one": "{{count}} użytkownik",
+      "selected_few": "{{count}} użytkownicy",
+      "selected_many": "{{count}} użytkowników",
+      "selected_other": "{{count}} użytkowników",
+      "allUsers": "Wszyscy użytkownicy"
+    },
     "table": {
       "name": "Nazwa",
       "email": "Email",

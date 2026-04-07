@@ -1,27 +1,27 @@
-import { memo, useState, useEffect, useRef, useCallback } from "react";
-import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
-import { useTranslation } from "react-i18next";
+import { Copy01Icon, Delete02Icon, DeletePutBackIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon, DeletePutBackIcon, Copy01Icon } from "@hugeicons/core-free-icons";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { getCellDiffStatus, type CellDiffStatus } from "../utils/cells";
-import type { RatType, ProposedCellForm } from "../types";
-import type { CellError } from "../utils/validation";
-import type { Band } from "@/types/station";
-
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CellDetailsFields } from "@/features/admin/cells/cellDetailsFields";
 import { useBandSelection } from "@/features/admin/cells/hooks/useBandSelection";
-import { getBandName } from "@/features/station-details/frequencyCalc";
-import { useCellDetailsForm } from "./hooks/useCellDetailsForm";
 import { navigateRowHorizontal } from "@/features/admin/cells/rowNav";
-import { CollapsibleHeader } from "./subcomponents/CollapsibleHeader";
+import { getBandName } from "@/features/station-details/frequencyCalc";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
+import { cn } from "@/lib/utils";
+import type { Band } from "@/types/station";
+
+import type { ProposedCellForm, RatType } from "../types";
+import { type CellDiffStatus, getCellDiffStatus } from "../utils/cells";
+import type { CellError } from "../utils/validation";
+import { useCellDetailsForm } from "./hooks/useCellDetailsForm";
 import { CellsTableHeaders } from "./subcomponents/CellsTableHeaders";
+import { CollapsibleHeader } from "./subcomponents/CollapsibleHeader";
 
 type CellDetailsFormProps = {
   rat: RatType;
@@ -225,7 +225,7 @@ const CellRow = memo(function CellRow({
           onValueChange={(value) => handleBandValueChange(value ? Number.parseInt(value, 10) : null)}
         >
           <SelectTrigger
-            className={`h-7 w-20 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50 ${error?.band_id ? "border-destructive" : ""}`}
+            className={cn("h-7 w-20 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50", error?.band_id && "border-destructive")}
             onKeyDown={navigateRowHorizontal}
             data-nav-cell
           >

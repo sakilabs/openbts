@@ -1,17 +1,16 @@
+import { attachments, submissionPhotos } from "@openbts/drizzle";
 import { inArray } from "drizzle-orm";
-import { z } from "zod/v4";
-import path from "node:path";
+import type { FastifyRequest } from "fastify/types/request.js";
 import fs from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
-import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { verifyPermissions } from "../../../../plugins/auth/utils.js";
-import { submissionPhotos, attachments } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { verifyPermissions } from "../../../../plugins/auth/utils.js";
+import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 

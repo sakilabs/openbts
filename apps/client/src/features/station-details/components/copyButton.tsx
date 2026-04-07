@@ -1,8 +1,9 @@
+import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick02Icon, Copy01Icon } from "@hugeicons/core-free-icons";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function CopyButton({ text }: { text: string }) {
   const { t } = useTranslation(["stationDetails", "common"]);

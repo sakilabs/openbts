@@ -1,10 +1,12 @@
-import { useMemo, useCallback, useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { getSharedDetailFields } from "@/features/shared/rat";
-import { generateCellId, getCellDiffStatus, buildOriginalCellsMap } from "../../utils/cells";
-import type { RatType, ProposedCellForm, GSMCellDetails, UMTSCellDetails, LTECellDetails, NRCellDetails } from "../../types";
+
+import type { GSMCellDetails, LTECellDetails, NRCellDetails, ProposedCellForm, RatType, UMTSCellDetails } from "../../types";
+import { buildOriginalCellsMap, generateCellId, getCellDiffStatus } from "../../utils/cells";
 
 function getDefaultCellDetails(rat: RatType): ProposedCellForm["details"] {
   switch (rat) {

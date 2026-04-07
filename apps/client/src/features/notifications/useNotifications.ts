@@ -1,7 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchNotifications, markAllRead as apiMarkAllRead, markRead as apiMarkRead } from "./api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { authClient } from "@/lib/authClient";
+
 import type { NotificationsResponse } from "./api";
+import { markAllRead as apiMarkAllRead, markRead as apiMarkRead, fetchNotifications } from "./api";
 
 export function useNotifications() {
   const { data: session } = authClient.useSession();

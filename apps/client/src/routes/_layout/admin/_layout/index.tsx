@@ -1,37 +1,36 @@
-import { useState, lazy, Suspense } from "react";
-import { useQueries, useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
-  TaskDone02Icon,
-  Clock01Icon,
-  MessageMultiple01Icon,
   AlertCircleIcon,
+  ArrowDown01Icon,
   ArrowRight01Icon,
   ArrowUp01Icon,
-  ArrowDown01Icon,
-  MinusSignIcon,
-  CheckmarkCircle02Icon,
   Cancel01Icon,
+  CheckmarkCircle02Icon,
+  Clock01Icon,
   Delete02Icon,
+  MessageMultiple01Icon,
+  MinusSignIcon,
+  TaskDone02Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { useMutation, useQueries } from "@tanstack/react-query";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { Suspense, lazy, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { queryClient } from "@/lib/queryClient";
-import { API_BASE } from "@/lib/api";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import type { AdminComment } from "@/features/admin/comments/types";
+
 import { Lightbox, type LightboxPhoto } from "@/components/lightbox";
+import type { AdminComment } from "@/features/admin/comments/types";
+import { API_BASE } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import { queryClient } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 
 const EditorNotes = lazy(() => import("@/features/admin/dashboard/EditorNotes").then((m) => ({ default: m.EditorNotes })));
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import { getActionStyle } from "@/features/admin/audit-logs/constants";
-import { formatRelativeTime, formatShortDate, resolveAvatarUrl } from "@/lib/format";
 import {
   fetchDashboardStats,
   fetchDashboardDelta,
@@ -40,7 +39,9 @@ import {
   fetchRecentAuditLogs,
   fetchImportStatus,
 } from "@/features/admin/dashboard/api";
+import { SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { StepStatus } from "@/features/admin/uke-import/api";
+import { formatRelativeTime, formatShortDate, resolveAvatarUrl } from "@/lib/format";
 
 const STEP_ICON: Record<StepStatus, { icon: IconSvgElement | null; className: string }> = {
   success: { icon: CheckmarkCircle02Icon, className: "text-emerald-500" },

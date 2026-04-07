@@ -1,5 +1,5 @@
-import type { Cell } from "@/types/station";
 import { RAT_ICONS } from "@/features/shared/rat";
+import type { Cell } from "@/types/station";
 
 export { RAT_ICONS };
 

@@ -1,18 +1,20 @@
+import { Copy01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon, Copy01Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Band } from "@/types/station";
-import { useBandSelection } from "./hooks/useBandSelection";
-import { navigateRowHorizontal } from "./rowNav";
 import { getBandName } from "@/features/station-details/frequencyCalc";
+import { cn } from "@/lib/utils";
+import type { Band } from "@/types/station";
+
 import { CellDetailsFields } from "./cellDetailsFields";
+import { useBandSelection } from "./hooks/useBandSelection";
 import type { RAT_ORDER } from "./rat";
+import { navigateRowHorizontal } from "./rowNav";
 
 export type CellDraftBase = {
   _localId: string;

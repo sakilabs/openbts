@@ -1,9 +1,11 @@
-import { type ReactNode, type RefObject, type KeyboardEvent } from "react";
-import { useTranslation } from "react-i18next";
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils.js";
+import { type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Spinner } from "@/components/ui/spinner.js";
+import { cn } from "@/lib/utils.js";
+
 import type { ParsedFilter } from "../../types.js";
 
 type SearchInputProps = {

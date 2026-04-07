@@ -1,18 +1,18 @@
-import { useState, useEffect } from "react";
+import type { DialogRootChangeEventDetails } from "@base-ui/react/dialog";
+import { FingerPrintIcon, GithubIcon, GoogleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useForm } from "@tanstack/react-form";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { GoogleIcon, GithubIcon, FingerPrintIcon } from "@hugeicons/core-free-icons";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/authClient";
-import type { DialogRootChangeEventDetails } from "@base-ui/react/dialog";
 
 interface AuthDialogProps {
   open: boolean;

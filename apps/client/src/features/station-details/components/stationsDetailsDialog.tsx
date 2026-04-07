@@ -1,22 +1,24 @@
+import { Cancel01Icon, PencilEdit02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon, PencilEdit02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { Link } from "@tanstack/react-router";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { usePreferences } from "@/hooks/usePreferences";
+import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
+import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { getHardwareLeaseOperator } from "@/lib/stationUtils";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
-import { useSettings } from "@/hooks/useSettings";
-import { usePreferences } from "@/hooks/usePreferences";
-import { formatRelativeTime, formatFullDate } from "@/lib/format";
+
 import { fetchStation } from "../api";
+import type { TabId } from "../tabs";
 import { StationDetailsBody } from "./dialogBody";
 import { MainPhotoPanel } from "./mainPhotoPanel";
 import { ShareButton } from "./shareButton";
-import type { TabId } from "../tabs";
 
 type StationDetailsDialogProps = {
   stationId: number | null;

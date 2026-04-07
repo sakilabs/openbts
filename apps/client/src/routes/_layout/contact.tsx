@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Alert02Icon, GithubIcon, Mail01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Mail01Icon, GithubIcon, Alert02Icon, SentIcon } from "@hugeicons/core-free-icons";
+import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ContactLink {
   icon: typeof Mail01Icon;

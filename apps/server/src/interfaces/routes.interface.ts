@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifySchema } from "fastify";
-import type { RouteGenericInterface } from "fastify/types/route.js";
 import type { FastifyRequest } from "fastify/types/request.js";
+import type { RouteGenericInterface } from "fastify/types/route.js";
+
 import type { ReplyPayload } from "./fastify.interface.js";
 
 export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = unknown> = U extends void

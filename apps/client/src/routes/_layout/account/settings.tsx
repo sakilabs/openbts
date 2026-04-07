@@ -1,8 +1,3 @@
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { UserIcon, SecurityLockIcon, ComputerIcon, Alert02Icon, Key01Icon, CheckmarkCircle02Icon, Alert01Icon } from "@hugeicons/core-free-icons";
 import {
   AccountSettingsCards,
   DeleteAccountCard,
@@ -12,15 +7,21 @@ import {
   TwoFactorCard,
   UpdateUsernameCard,
 } from "@daveyplate/better-auth-ui";
-import { PasswordCard } from "@/components/account/passwordCard";
-import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/authClient";
-import { fetchJson, API_BASE } from "@/lib/api";
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { Alert01Icon, Alert02Icon, CheckmarkCircle02Icon, ComputerIcon, Key01Icon, SecurityLockIcon, UserIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
 import { ApiKeysCard } from "@/components/account/apikeysCard";
 import { AvatarCard } from "@/components/account/avatarCard";
+import { PasswordCard } from "@/components/account/passwordCard";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { API_BASE, fetchJson } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
 
 function SectionHeader({ icon, title, description }: { icon: typeof UserIcon; title: string; description?: string }) {
   return (

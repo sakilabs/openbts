@@ -13,9 +13,10 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { users, locationPhotos } from "./auth.ts";
-import { bands, cells, NRType, operators, ratEnum, regions, stations } from "./bts.ts";
 import { sql } from "drizzle-orm/sql";
+
+import { locationPhotos, users } from "./auth.ts";
+import { NRType, bands, cells, operators, ratEnum, regions, stations } from "./bts.ts";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
 export const SubmissionTypeEnum = pgEnum("submission_type", ["new", "update", "delete"]);

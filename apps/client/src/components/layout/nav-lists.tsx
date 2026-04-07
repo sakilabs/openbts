@@ -1,11 +1,10 @@
-import { lazy, memo, Suspense, useState, useEffect, useMemo } from "react";
+import { Add01Icon, ArrowRight01Icon, TaskDaily01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { TaskDaily01Icon, Add01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
-import { Link, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation } from "@tanstack/react-router";
+import { Suspense, lazy, memo, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { authClient } from "@/lib/authClient";
-import { fetchUserLists } from "@/features/lists/api";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
@@ -17,6 +16,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { fetchUserLists } from "@/features/lists/api";
+import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 
 const NAV_STORAGE_KEY = "nav-collapsed-state";

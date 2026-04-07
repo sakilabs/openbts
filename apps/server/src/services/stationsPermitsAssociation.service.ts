@@ -1,8 +1,9 @@
 import { stationsPermits, ukeLocations, ukePermits } from "@openbts/drizzle";
-import db from "../database/psql.js";
-import { sql } from "drizzle-orm";
 import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
+import { sql } from "drizzle-orm";
 import { eq, notExists } from "drizzle-orm/sql/expressions/conditions";
+
+import db from "../database/psql.js";
 
 export async function pruneStationsPermits(): Promise<void> {
   await db.execute(sql`TRUNCATE TABLE ${stationsPermits} RESTART IDENTITY;`);

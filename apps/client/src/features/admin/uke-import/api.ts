@@ -1,4 +1,4 @@
-import { fetchJson, API_BASE } from "@/lib/api";
+import { API_BASE, fetchJson } from "@/lib/api";
 
 export type ImportStepKey = "stations" | "radiolines" | "permits" | "prune_associations" | "associate" | "cleanup";
 export type StepStatus = "pending" | "running" | "success" | "skipped" | "error";

@@ -1,16 +1,18 @@
-import { useState } from "react";
-import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
-import { useTranslation } from "react-i18next";
+import { AlertCircleIcon, ArrowDown01Icon, BatteryLowIcon, Clock01Icon, WifiConnected01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { WifiConnected01Icon, BatteryLowIcon, AlertCircleIcon, ArrowDown01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
-import type { Cell } from "@/types/station";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { isRecent } from "@/lib/dateUtils";
-import { RAT_ICONS } from "../utils";
+import { cn } from "@/lib/utils";
+import type { Cell } from "@/types/station";
+
 import { calcExactFrequency, getBandName } from "../frequencyCalc";
+import { RAT_ICONS } from "../utils";
 
 type CellTableProps = {
   rat: string;

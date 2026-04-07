@@ -1,17 +1,16 @@
+import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
 import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
+import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
+import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
-import { cells, gsmCells, umtsCells, lteCells, nrCells, stations } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
-import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
-import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
   .omit({

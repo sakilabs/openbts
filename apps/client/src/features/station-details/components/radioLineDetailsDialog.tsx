@@ -1,44 +1,46 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Cancel01Icon,
+  Activity01Icon,
+  ArrowRight02Icon,
+  Building02Icon,
   Calendar03Icon,
+  Cancel01Icon,
+  DashboardSpeed01Icon,
+  FlashIcon,
+  HashtagIcon,
+  HorizontalResizeIcon,
   Location01Icon,
+  Radio01Icon,
+  Rotate01Icon,
   RulerIcon,
   Satellite01Icon,
   SignalFull02Icon,
-  FlashIcon,
-  Building02Icon,
-  Activity01Icon,
-  Radio01Icon,
-  HorizontalResizeIcon,
-  Rotate01Icon,
-  DashboardSpeed01Icon,
-  ArrowRight02Icon,
-  HashtagIcon,
 } from "@hugeicons/core-free-icons";
-import { getOperatorColor, resolveOperatorMnc, normalizeOperatorName } from "@/lib/operatorUtils";
-import { isPermitExpired } from "@/lib/dateUtils";
-import { cn } from "@/lib/utils";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
-import { usePreferences } from "@/hooks/usePreferences";
-import { formatCoordinates } from "@/lib/gpsUtils";
-import { CopyButton } from "./copyButton";
-import { ShareButton } from "./shareButton";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { DuplexRadioLink } from "@/features/map/utils";
 import {
+  buildRadiolineShareUrl,
   calculateDistance,
-  formatDistance,
+  calculateLinkTotalSpeed,
+  calculateRadiolineSpeed,
   formatBandwidth,
+  formatDistance,
   formatFrequency,
   formatSpeed,
   getLinkTypeStyle,
-  buildRadiolineShareUrl,
-  calculateRadiolineSpeed,
-  calculateLinkTotalSpeed,
 } from "@/features/map/utils";
-import type { DuplexRadioLink } from "@/features/map/utils";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { usePreferences } from "@/hooks/usePreferences";
+import { isPermitExpired } from "@/lib/dateUtils";
+import { formatCoordinates } from "@/lib/gpsUtils";
+import { getOperatorColor, normalizeOperatorName, resolveOperatorMnc } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+
+import { CopyButton } from "./copyButton";
+import { ShareButton } from "./shareButton";
 
 type RadioLineDetailsDialogProps = {
   link: DuplexRadioLink;

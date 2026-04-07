@@ -1,14 +1,16 @@
+import { Building02Icon, Globe02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Building02Icon, Globe02Icon } from "@hugeicons/core-free-icons";
 
+import { OperatorSelect } from "@/components/operator-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { OperatorSelect } from "@/components/operator-select";
 import { operatorsQueryOptions } from "@/features/shared/queries";
-import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand, MNO_NAME_ONLY_MNCS } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+
 import type { ProposedStationForm } from "../types";
 import type { StationErrors } from "../utils/validation";
 
@@ -47,7 +49,7 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
               value={station.station_id}
               maxLength={16}
               onChange={(e) => onStationChange({ ...station, station_id: e.target.value })}
-              className={`h-8 font-mono text-sm ${errors?.station_id ? "border-destructive" : ""}`}
+              className={cn("h-8 font-mono text-sm", errors?.station_id && "border-destructive")}
             />
             {errors?.station_id ? (
               <p className="text-xs text-destructive">{t(errors.station_id)}</p>
@@ -64,7 +66,7 @@ export function NewStationForm({ station, errors, onStationChange }: NewStationF
               operators={operators}
               value={station.operator_id}
               onChange={(value) => onStationChange({ ...station, operator_id: value })}
-              className={`h-8 text-sm ${errors?.operator_id ? "border-destructive" : ""}`}
+              className={cn("h-8 text-sm", errors?.operator_id && "border-destructive")}
             />
             {errors?.operator_id && <p className="text-xs text-destructive">{t(errors.operator_id)}</p>}
           </div>

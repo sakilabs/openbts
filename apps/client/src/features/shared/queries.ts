@@ -1,4 +1,4 @@
-import { fetchOperators, fetchBands, fetchRegions } from "./api";
+import { fetchBands, fetchOperators, fetchRegions } from "./api";
 
 export function operatorsQueryOptions() {
   return {

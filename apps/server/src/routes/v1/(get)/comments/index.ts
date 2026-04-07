@@ -1,12 +1,11 @@
-import { sql, count, and } from "drizzle-orm";
+import { operators, stationComments, stations, users } from "@openbts/drizzle";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
+import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.ts";
 import { ErrorResponse } from "../../../../errors.ts";
-import { stationComments, users, stations, operators } from "@openbts/drizzle";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.ts";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.ts";
 
@@ -26,6 +25,7 @@ const schemaRoute = {
     limit: z.coerce.number().min(1).max(100).default(25),
     offset: z.coerce.number().min(0).default(0),
     search: z.string().optional(),
+    author_ids: z.string().optional(),
     status: z.enum(["pending", "approved"]).optional(),
     sortBy: z.enum(["createdAt", "id"]).default("createdAt"),
     sort: z.enum(["asc", "desc"]).default("desc"),
@@ -45,7 +45,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const userId = req.userSession?.user.id;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
 
-  const { limit, offset, search, status, sortBy, sort } = req.query;
+  const { limit, offset, search, author_ids, status, sortBy, sort } = req.query;
 
   const buildWhereConditions = (fields: typeof stationComments) => {
     const conditions: ReturnType<typeof sql>[] = [];
@@ -55,16 +55,17 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sql`(
         ${fields.content} ILIKE ${like}
         OR EXISTS (
-          SELECT 1 FROM ${users}
-          WHERE ${users.id} = ${fields.user_id}
-          AND (${users.name} ILIKE ${like} OR ${users.username} ILIKE ${like})
-        )
-        OR EXISTS (
           SELECT 1 FROM ${stations}
           WHERE ${stations.id} = ${fields.station_id}
           AND ${stations.station_id} ILIKE ${like}
         )
       )`);
+    }
+
+    if (author_ids) {
+      const ids = author_ids.split(",").filter(Boolean);
+      if (ids.length === 1) conditions.push(eq(fields.user_id, ids[0]!));
+      else if (ids.length > 1) conditions.push(inArray(fields.user_id, ids));
     }
 
     if (status) conditions.push(sql`${fields.status} = ${status}`);

@@ -1,17 +1,18 @@
-import { useState, useCallback, type ChangeEvent } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { Add01Icon, AirportTowerIcon, PencilEdit02Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, AirportTowerIcon, Add01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { useQuery } from "@tanstack/react-query";
+import { type ChangeEvent, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import { formatCoordinates } from "@/lib/gpsUtils";
-import { usePreferences } from "@/hooks/usePreferences";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { searchStations, type SearchStation } from "../api";
+import { usePreferences } from "@/hooks/usePreferences";
+import { formatCoordinates } from "@/lib/gpsUtils";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
+
+import { type SearchStation, searchStations } from "../api";
 import type { SubmissionMode } from "../types";
 
 type StationSelectorProps = {

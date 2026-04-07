@@ -1,19 +1,20 @@
+import { AuthUIProvider } from "@daveyplate/better-auth-ui";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { HeadContent, Outlet, Link as RouterLink, createRootRoute, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { createRootRoute, HeadContent, Outlet, Link as RouterLink, useNavigate } from "@tanstack/react-router";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
-import { AuthUIProvider } from "@daveyplate/better-auth-ui";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ErrorBoundary } from "@/components/error-boundary";
+
 import { BackendStatusProvider } from "@/components/backend-status";
-import { Toaster } from "@/components/ui/sonner";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { ReloadPrompt } from "@/components/reload-prompt";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { plPLAuthLocalization } from "@/i18n/authLocalization";
+import i18n from "@/i18n/config";
 import { authClient } from "@/lib/authClient";
 import { queryClient } from "@/lib/queryClient";
-import i18n from "@/i18n/config";
-import { plPLAuthLocalization } from "@/i18n/authLocalization";
 import "@/index.css";
 
 declare global {

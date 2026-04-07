@@ -1,37 +1,38 @@
-import { useState, useRef, useMemo, memo, useCallback, useEffect, type KeyboardEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { FilterIcon } from "@hugeicons/core-free-icons";
-import { cn } from "@/lib/utils.js";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
+import { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.js";
+import { bandsQueryOptions, operatorsQueryOptions } from "@/features/shared/queries.js";
+import { useIsMobile } from "@/hooks/useMobile.js";
+import { usePreferences } from "@/hooks/usePreferences.js";
+import { reverseGeocode } from "@/lib/mapboxGeocoding.js";
+import { cn } from "@/lib/utils.js";
+import type { Station, StationFilters, StationSource } from "@/types/station.js";
+
+import { FILTER_KEYWORDS } from "../../constants.js";
+import { parseFilters } from "../../filters.js";
+import { useFilterHandlers } from "../../hooks/useFilterHandlers.js";
+import { useSearchState } from "../../hooks/useSearchState.js";
 import {
+  type UkeSearchPermitStation,
+  type UkeSearchRadioline,
+  parseGpsCoordinates,
   searchLocations,
   searchStations,
   searchUkePermits,
-  parseGpsCoordinates,
-  type UkeSearchPermitStation,
-  type UkeSearchRadioline,
 } from "../../searchApi.js";
-import { reverseGeocode } from "@/lib/mapboxGeocoding.js";
-import { operatorsQueryOptions, bandsQueryOptions } from "@/features/shared/queries.js";
-import { AutocompleteDropdown } from "./autocompleteDropdown.js";
-import { FilterPanel } from "./filterPanel.js";
-import { SearchResults } from "./searchResults.js";
-import { MapStyleSwitcher } from "./mapStyleSwitcher.js";
 import { MapCursorInfo } from "../mapCursorInfo.js";
-import { SearchInput } from "./searchInput.js";
+import { AutocompleteDropdown } from "./autocompleteDropdown.js";
 import { FilterButton } from "./filterButton.js";
-import { StationCounter } from "./stationCounter.js";
+import { FilterPanel } from "./filterPanel.js";
+import { MapStyleSwitcher } from "./mapStyleSwitcher.js";
 import { MobileStatsPanel } from "./mobileStatsPanel.js";
-import { FILTER_KEYWORDS } from "../../constants.js";
-import { parseFilters } from "../../filters.js";
-import { useSearchState } from "../../hooks/useSearchState.js";
-import { useFilterHandlers } from "../../hooks/useFilterHandlers.js";
-import { useIsMobile } from "@/hooks/useMobile.js";
-import { usePreferences } from "@/hooks/usePreferences.js";
-
-import type { Station, StationFilters, StationSource } from "@/types/station.js";
+import { SearchInput } from "./searchInput.js";
+import { SearchResults } from "./searchResults.js";
+import { StationCounter } from "./stationCounter.js";
 
 type MapSearchOverlayProps = {
   locationCount: number;

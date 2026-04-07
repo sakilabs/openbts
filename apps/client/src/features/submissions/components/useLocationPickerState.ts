@@ -1,4 +1,5 @@
 import { useReducer } from "react";
+
 import type { LocationWithStations, UkeLocationWithPermits, UkeStation } from "@/types/station";
 
 export type NearbyPanel = {

@@ -1,29 +1,30 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
-import { fetchApiData, showApiError } from "@/lib/api";
-import type { ProposedLocationForm } from "@/features/submissions/types";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Band, Cell, Station } from "@/types/station";
-import { RAT_ORDER } from "@/features/admin/cells/rat";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
-import { operatorsQueryOptions, bandsQueryOptions } from "@/features/admin/queries";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
-import type { SubmissionDetail } from "@/features/admin/submissions/types";
-import { SubmissionDetailHeader } from "@/features/admin/submissions/components/submissionDetailHeader";
-import { SubmitterCard } from "@/features/admin/submissions/components/submitterCard";
-import { SubmissionStationForm } from "@/features/admin/submissions/components/submissionStationForm";
+import { RAT_ORDER } from "@/features/admin/cells/rat";
+import { bandsQueryOptions, operatorsQueryOptions } from "@/features/admin/queries";
 import { AdminReviewCard } from "@/features/admin/submissions/components/adminReviewCard";
+import { SubmissionDetailHeader } from "@/features/admin/submissions/components/submissionDetailHeader";
 import { SubmissionDiffDetailCells } from "@/features/admin/submissions/components/submissionDiffRowCells";
-import { useSaveSubmissionMutation, useApproveSubmissionMutation, useRejectSubmissionMutation } from "@/features/admin/submissions/mutations";
-import { SubmissionPhotosSection } from "@/features/admin/submissions/components/submissionPhotosSection";
 import { SubmissionLocationPhotoSelectionsSection } from "@/features/admin/submissions/components/submissionLocationPhotoSelectionsSection";
+import { SubmissionPhotosSection } from "@/features/admin/submissions/components/submissionPhotosSection";
+import { SubmissionStationForm } from "@/features/admin/submissions/components/submissionStationForm";
+import { SubmitterCard } from "@/features/admin/submissions/components/submitterCard";
+import { useApproveSubmissionMutation, useRejectSubmissionMutation, useSaveSubmissionMutation } from "@/features/admin/submissions/mutations";
+import type { SubmissionDetail } from "@/features/admin/submissions/types";
+import type { ProposedLocationForm } from "@/features/submissions/types";
+import { fetchApiData, showApiError } from "@/lib/api";
+import type { Band, Cell, Station } from "@/types/station";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;

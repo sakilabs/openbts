@@ -1,9 +1,9 @@
-import { auth } from "../../plugins/betterauth.plugin.js";
-import { ErrorResponse } from "../../errors.js";
-import { logger } from "../../utils/logger.js";
-
-import type { FastifyRequest } from "fastify/types/request.js";
 import type { FastifyReply } from "fastify";
+import type { FastifyRequest } from "fastify/types/request.js";
+
+import { ErrorResponse } from "../../errors.js";
+import { auth } from "../../plugins/betterauth.plugin.js";
+import { logger } from "../../utils/logger.js";
 
 async function handler(req: FastifyRequest, res: FastifyReply) {
   try {

@@ -1,11 +1,9 @@
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,11 +15,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
-import { showApiError } from "@/lib/api";
-import { useScrolled } from "@/hooks/useScrolled";
-import { getOperatorColor } from "@/lib/operatorUtils";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDeleteStationMutation } from "@/features/admin/stations/mutations";
+import { useScrolled } from "@/hooks/useScrolled";
+import { showApiError } from "@/lib/api";
+import { getOperatorColor } from "@/lib/operatorUtils";
+import { cn } from "@/lib/utils";
 import type { Operator, Station } from "@/types/station";
 
 type StationDetailHeaderProps = {

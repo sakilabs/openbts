@@ -1,7 +1,7 @@
+import { proposedCells, proposedGSMCells, proposedLTECells, proposedNRCells, proposedUMTSCells } from "@openbts/drizzle";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
-import { proposedCells, proposedGSMCells, proposedUMTSCells, proposedLTECells, proposedNRCells } from "@openbts/drizzle";
 import { ErrorResponse } from "../errors.js";
 
 export const gsmInsertSchema = createInsertSchema(proposedGSMCells)

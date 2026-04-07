@@ -1,48 +1,50 @@
-import React, { useMemo, useState, type ComponentProps } from "react";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
   AddCircleIcon,
   AirportTowerIcon,
   AnalyticsUpIcon,
-  DatabaseIcon,
   DashboardSquare01Icon,
+  DatabaseIcon,
   Delete02Icon,
   Download04Icon,
   FileAttachmentIcon,
+  FileBracesIcon,
   FileSearchIcon,
   GitBranchIcon,
   InformationCircleIcon,
   LegalDocument01Icon,
-  Login01Icon,
   Location01Icon,
+  Login01Icon,
   Mail01Icon,
   MapsIcon,
   Message01Icon,
+  NewsIcon,
   Note01Icon,
+  SecurityLockIcon,
   SentIcon,
   Settings02Icon,
-  SecurityLockIcon,
   TaskDaily01Icon,
   Upload04Icon,
   UserGroupIcon,
-  FileBracesIcon,
-  NewsIcon,
 } from "@hugeicons/core-free-icons";
-import { useTranslation } from "react-i18next";
-import { NavMain } from "./nav-main";
-import { NavLists } from "./nav-lists";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { AuthDialog } from "@/components/auth/authDialog";
-import { authClient } from "@/lib/authClient";
-import { APP_NAME } from "@/lib/api";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import { NavUser } from "./nav-user";
+import React, { type ComponentProps, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { AuthDialog } from "@/components/auth/authDialog";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { GoogleAd } from "@/components/ui/google-ad";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useSettings } from "@/hooks/useSettings";
 import { useWindowControlsOverlay } from "@/hooks/useWindowControlsOverlay";
+import { APP_NAME } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
+import { cn } from "@/lib/utils";
+
+import { NavLists } from "./nav-lists";
+import { NavMain } from "./nav-main";
+import { NavUser } from "./nav-user";
 
 const navMainConfig = [
   {
