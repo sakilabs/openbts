@@ -56,7 +56,7 @@ const schemaRoute = {
 };
 
 type InstallationResult = {
-  base_station: { id: number; identity_name: string };
+  base_station: { id: number; identity_name: string } | null;
   published_at: string;
   entity: string;
   installation_file: string | null;
@@ -118,7 +118,7 @@ async function fetchInstallations(stationId: string, entityName: string): Promis
       source: r.entity,
       number: r.reference_no ?? "",
       intensity: 0,
-      feature_id: r.base_station.identity_name,
+      feature_id: r.base_station?.identity_name ?? "",
     });
   }
 
