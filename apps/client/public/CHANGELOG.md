@@ -21,7 +21,6 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
-- Removed Google OAuth provider from the login dialog
 - Photo section empty state icon opacity increased for better visibility
 
 # 2026-04-06
