@@ -14,6 +14,7 @@
     "example": "Example"
   },
   "searchResults": {
+    "gps": "GPS Coordinates",
     "locations": "Geographic Locations",
     "stations": "Base Stations",
     "radiolines": "Radiolines",

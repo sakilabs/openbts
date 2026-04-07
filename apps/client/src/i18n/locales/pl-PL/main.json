@@ -14,6 +14,7 @@
     "example": "Przykład"
   },
   "searchResults": {
+    "gps": "Współrzędne GPS",
     "locations": "Lokalizacje geograficzne",
     "stations": "Stacje bazowe",
     "radiolines": "Linie radiowe",

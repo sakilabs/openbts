@@ -5,7 +5,15 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { FilterIcon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils.js";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.js";
-import { searchLocations, searchStations, searchUkePermits, type UkeSearchPermitStation, type UkeSearchRadioline } from "../../searchApi.js";
+import {
+  searchLocations,
+  searchStations,
+  searchUkePermits,
+  parseGpsCoordinates,
+  type UkeSearchPermitStation,
+  type UkeSearchRadioline,
+} from "../../searchApi.js";
+import { reverseGeocode } from "@/lib/mapboxGeocoding.js";
 import { operatorsQueryOptions, bandsQueryOptions } from "@/features/shared/queries.js";
 import { AutocompleteDropdown } from "./autocompleteDropdown.js";
 import { FilterPanel } from "./filterPanel.js";
@@ -128,6 +136,17 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   const isUkeSource = filters.source === "uke";
 
+  const gpsCoords = useMemo(() => parseGpsCoordinates(debouncedQuery), [debouncedQuery]);
+
+  const { data: reverseGeocodeResult, isLoading: isReverseGeocodeLoading } = useQuery({
+    queryKey: ["reverse-geocode", gpsCoords?.lat, gpsCoords?.lng],
+    queryFn: () => reverseGeocode(gpsCoords!.lat, gpsCoords!.lng),
+    enabled: !!gpsCoords,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const gpsResult = gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng, address: reverseGeocodeResult?.display_name ?? null } : null;
+
   const shouldSearchLocations = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
 
   const { data: locationResults = [], isLoading: isLocationSearchLoading } = useQuery({
@@ -155,11 +174,16 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   const permitResults = isUkeSource ? (ukeSearchResult?.stations ?? []) : [];
   const radiolineResults = isUkeSource ? (ukeSearchResult?.radiolines ?? []) : [];
 
-  const isSearching = isLocationSearchLoading || isStationSearchLoading || isUkeSearchLoading;
+  const isSearching = isLocationSearchLoading || isStationSearchLoading || isUkeSearchLoading || isReverseGeocodeLoading;
   const showAutocomplete = !isUkeSource && activeOverlay === "autocomplete" && autocompleteOptions.length > 0;
   const showResults =
     activeOverlay === "results" &&
-    (isSearching || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0);
+    (isSearching ||
+      !!gpsResult ||
+      locationResults.length > 0 ||
+      stationResults.length > 0 ||
+      permitResults.length > 0 ||
+      radiolineResults.length > 0);
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     handleChipKeyDown(e);
@@ -315,6 +339,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           <SearchResults
             show
             isLoading={isSearching}
+            gpsResult={gpsResult}
             locationResults={locationResults}
             stationResults={stationResults}
             permitResults={permitResults}

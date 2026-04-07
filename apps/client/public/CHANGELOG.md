@@ -18,6 +18,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Submission photo uploads now automatically extract EXIF date (DateTimeOriginal/DateTimeDigitized) as the "taken at" value when not provided manually
 - Added `DELETE /cells` endpoint for batch-deleting cells with audit logging
 - Scheduled jobs (UKE import, submission cleanup) now use a Redis-based leader election so only one server instance runs them at a time in multi-replica deployments
+- Search now accepts GPS coordinates in all formats: `gps:48.1234,16.5678`, `48.1234,16.5678`, `48.1234 16.5678`, `+48.1234 +16.5678` etc. It returns nearby stations and shows a fly-to result with reverse-geocoded address
+- Clicking a location or GPS coordinate search result now drops a pulsing blue dot on the map at the exact point. The dot is hidden automatically if a station marker is already present there
 
 ### 🩹 Fixes
 

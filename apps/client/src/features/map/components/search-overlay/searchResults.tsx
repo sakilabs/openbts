@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { MapsIcon, Search01Icon, AirportTowerIcon, Route02Icon } from "@hugeicons/core-free-icons";
+import { MapsIcon, Search01Icon, AirportTowerIcon, Route02Icon, Location04Icon } from "@hugeicons/core-free-icons";
 import type { Station } from "@/types/station";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { GeocodingResult } from "@/lib/mapboxGeocoding";
@@ -10,9 +10,12 @@ import type { UkeSearchPermitStation, UkeSearchRadioline } from "../../searchApi
 const EMPTY_PERMITS: UkeSearchPermitStation[] = [];
 const EMPTY_RADIOLINES: UkeSearchRadioline[] = [];
 
+type GpsResult = { lat: number; lng: number; address: string | null };
+
 type SearchResultsProps = {
   show: boolean;
   isLoading: boolean;
+  gpsResult?: GpsResult | null;
   locationResults: GeocodingResult[];
   stationResults: Station[];
   permitResults?: UkeSearchPermitStation[];
@@ -27,6 +30,7 @@ type SearchResultsProps = {
 export function SearchResults({
   show,
   isLoading,
+  gpsResult,
   locationResults,
   stationResults,
   permitResults = EMPTY_PERMITS,
@@ -41,7 +45,7 @@ export function SearchResults({
 
   if (!show) return null;
 
-  const hasResults = locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0;
+  const hasResults = !!gpsResult || locationResults.length > 0 || stationResults.length > 0 || permitResults.length > 0 || radiolineResults.length > 0;
 
   return (
     <div className="mt-2 bg-background/95 backdrop-blur-md ring-1 ring-foreground/10 rounded-xl shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -59,6 +63,36 @@ export function SearchResults({
             <div>
               <p className="text-sm font-medium">{t("search.noResults")}</p>
               <p className="text-xs text-muted-foreground">{t("search.noResultsHint")}</p>
+            </div>
+          </div>
+        )}
+
+        {gpsResult && !isLoading && (
+          <div className="border-b last:border-0">
+            <div className="px-4 py-2 bg-muted/30 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-sm">
+              <HugeiconsIcon icon={Location04Icon} className="size-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("searchResults.gps")}</span>
+            </div>
+            <div className="p-1">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onLocationSelect?.(gpsResult.lat, gpsResult.lng);
+                  onClose();
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent transition-all text-left group cursor-pointer"
+              >
+                <HugeiconsIcon icon={Location04Icon} className="size-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold font-mono group-hover:text-primary transition-colors">
+                    {gpsResult.lat.toFixed(6)}, {gpsResult.lng.toFixed(6)}
+                  </span>
+                  {gpsResult.address && (
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{gpsResult.address}</p>
+                  )}
+                </div>
+              </button>
             </div>
           </div>
         )}

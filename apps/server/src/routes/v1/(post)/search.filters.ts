@@ -224,6 +224,17 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
     buildCondition: buildBooleanEq(nrCells.supports_nr_redcap),
   },
 
+  // gps
+  gps: {
+    table: "locations",
+    buildCondition: (value: FilterValue) => {
+      const [latStr = "", lngStr = ""] = String(value).split(",");
+      const lat = Number.parseFloat(latStr.trim());
+      const lng = Number.parseFloat(lngStr.trim());
+      return sql`ST_DWithin(${locations.point}::geography, ST_MakePoint(${lng}, ${lat})::geography, 1000)`;
+    },
+  },
+
   // locations
   region: {
     table: "locations",
@@ -286,7 +297,7 @@ export type GroupedFilters = {
 };
 
 const filterRegex =
-  /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|(\d{4}-\d{2}-\d{2})|([a-zA-Z0-9][a-zA-Z0-9]*(?:,\s*[a-zA-Z0-9][a-zA-Z0-9]*)*)|(\d+(?:,\s*\d+)*))/gi;
+  /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|(\d{4}-\d{2}-\d{2})|([a-zA-Z0-9][a-zA-Z0-9]*(?:,\s*[a-zA-Z0-9][a-zA-Z0-9]*)*)|([+-]?\d+\.\d+,\s*[+-]?\d+\.\d+)|(\d+(?:,\s*\d+)*))/gi;
 
 type FilterMatch = {
   key: string;
@@ -302,11 +313,13 @@ const parseFilterMatch = (match: RegExpMatchArray): FilterMatch | null => {
   const booleanValue = match[4];
   const dateValue = match[5];
   const alphanumericValue = match[6];
-  const numericValue = match[7];
+  const coordinateValue = match[7];
+  const numericValue = match[8];
 
   if (stringValue !== undefined) return { key, value: stringValue, raw: match[0] };
   if (booleanValue !== undefined) return { key, value: booleanValue === "true", raw: match[0] };
   if (dateValue !== undefined) return { key, value: dateValue, raw: match[0] };
+  if (coordinateValue !== undefined) return { key, value: coordinateValue, raw: match[0] };
   if (numericValue !== undefined) return { key, value: numericValue, raw: match[0] };
   if (alphanumericValue !== undefined) return { key, value: alphanumericValue, raw: match[0] };
 
@@ -324,6 +337,8 @@ const createEmptyGroupedFilters = (): GroupedFilters => ({
   extraIdentificators: [],
 });
 
+const implicitGpsRegex = /([+-]?\d+\.\d+)[,\s]+\s*([+-]?\d+\.\d+)/;
+
 export function parseFilterQuery(query: string): { filters: ParsedFilters; remainingQuery: string } {
   const filters: ParsedFilters = {};
   let remainingQuery = query;
@@ -335,6 +350,18 @@ export function parseFilterQuery(query: string): { filters: ParsedFilters; remai
 
     filters[parsed.key] = parsed.value;
     remainingQuery = remainingQuery.replace(parsed.raw, "").trim();
+  }
+
+  if (!filters.gps) {
+    const gpsMatch = remainingQuery.match(implicitGpsRegex);
+    if (gpsMatch) {
+      const lat = Number.parseFloat(gpsMatch[1]!);
+      const lng = Number.parseFloat(gpsMatch[2]!);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        filters.gps = `${lat},${lng}`;
+        remainingQuery = remainingQuery.replace(gpsMatch[0], "").trim();
+      }
+    }
   }
 
   return { filters, remainingQuery };

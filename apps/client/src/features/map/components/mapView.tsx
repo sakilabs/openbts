@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
+import { Map as LibreMap, MapControls, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
 import { POLAND_CENTER, POLAND_BOUNDS } from "../constants";
 import { StationsLayer, DEFAULT_FILTERS, loadMapFilters, saveMapFilters } from "./stationsLayer";
 import type { StationFilters, StationSource, Station, LocationInfo, StationWithoutCells, UkeStation, UkeLocationWithPermits } from "@/types/station";
@@ -195,12 +195,19 @@ function MapViewInner() {
     updatePopupStations(toLocationInfo(popupLocationData), popupLocationData.stations as StationWithoutCells[], activePopupLocation.source);
   }, [popupLocationData, activePopupLocation, updatePopupStations]);
 
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
   const handleLocationSelect = useCallback(
     (lat: number, lng: number) => {
       map?.flyTo({ center: [lng, lat], zoom: 15, essential: true, speed: 1.5 });
+      setSelectedLocation({ lat, lng });
     },
     [map],
   );
+
+  const showSelectedDot =
+    selectedLocation !== null &&
+    !locations.some((loc) => Math.abs(loc.latitude - selectedLocation.lat) < 0.0001 && Math.abs(loc.longitude - selectedLocation.lng) < 0.0001);
 
   const filtersRef = useRef(filters);
   useLayoutEffect(() => {
@@ -326,6 +333,16 @@ function MapViewInner() {
         showHeatmap={filters.showHeatmap}
         onToggleHeatmap={handleToggleHeatmap}
       />
+      {showSelectedDot && selectedLocation && (
+        <MapMarker longitude={selectedLocation.lng} latitude={selectedLocation.lat}>
+          <MarkerContent>
+            <div className="relative flex items-center justify-center">
+              <div className="absolute h-5 w-5 animate-ping rounded-full bg-blue-500/40" />
+              <div className="relative h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-md" />
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      )}
       <StationsLayer
         filters={filters}
         onFiltersChange={setFilters}
