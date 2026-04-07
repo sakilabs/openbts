@@ -34,7 +34,7 @@ export const fetchDashboardStats = () => fetchApiData<DashboardStats>("stats");
 export const fetchDashboardDelta = () => fetchApiData<DashboardDelta>("stats/delta");
 
 export const fetchPendingSubmissions = () =>
-  fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions?status=pending&limit=25&offset=0`);
+  fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions/admin?status=pending&limit=25&offset=0`);
 
 export const fetchPendingComments = () =>
   fetchJson<{ data: AdminComment[]; totalCount: number }>(`${API_BASE}/comments?status=pending&limit=25&offset=0`);
