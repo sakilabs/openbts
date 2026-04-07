@@ -26,7 +26,7 @@ import { formatCoordinates } from "@/lib/gpsUtils";
 import { cn } from "@/lib/utils";
 import type { Station, StationComment } from "@/types/station";
 
-import { fetchStationPhotos } from "../api";
+import { fetchPemReports, fetchStationPhotos } from "../api";
 import { TAB_OPTIONS, type TabId } from "../tabs";
 import { groupCellsByRat } from "../utils";
 import { CellTable } from "./cellTable";
@@ -107,6 +107,14 @@ export function StationDetailsBody({
     queryFn: () => fetchApiData<StationComment[]>(`stations/${stationId}/comments`, { allowedErrors: [404, 403] }).then((data) => data ?? []),
     staleTime: 1000 * 60 * 5,
     enabled: source === "internal" && !!settings?.enableStationComments,
+  });
+
+  const { data: pemReports } = useQuery({
+    queryKey: ["station-pem", station?.station_id, station?.location.latitude, station?.location.longitude],
+    queryFn: () => fetchPemReports(station!.station_id!.replace(/^[TO]-/, ""), station!.location.latitude, station!.location.longitude),
+    staleTime: 1000 * 60 * 60,
+    enabled: source === "internal" && !!station?.station_id,
+    retry: false,
   });
 
   const tabCounts: Partial<Record<TabId, number>> = {
@@ -239,7 +247,10 @@ export function StationDetailsBody({
                               <TooltipTrigger
                                 render={
                                   <a
-                                    href={`https://si2pem.gov.pl/installations/?base_station=${station.station_id.replace(/^[TO]-/, "")}&page_size=25`}
+                                    href={
+                                      pemReports?.[0]?.url ??
+                                      `https://si2pem.gov.pl/installations/?base_station=${station.station_id.replace(/^[TO]-/, "")}&page_size=25`
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
@@ -260,7 +271,7 @@ export function StationDetailsBody({
                                   </a>
                                 }
                               />
-                              <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
+                              <TooltipContent>{pemReports?.[0] ? t("specs.si2pemReportLink") : t("specs.si2pemLink")}</TooltipContent>
                             </Tooltip>
                           ) : null}
                         </div>

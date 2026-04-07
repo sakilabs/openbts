@@ -29,6 +29,7 @@ tags:
   - name: UKE
   - name: Lists
   - name: Comments
+  - name: PEM
 
 paths:
   /health:
@@ -3008,6 +3009,48 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /pem/{station_id}:
+    get:
+      tags: [PEM]
+      summary: Get PEM measurement reports for a station
+      description: |
+        Returns a deduplicated list of electromagnetic field (PEM) measurement reports
+        from SI2PEM for the given station. Uses WMS GetFeatureInfo with a +-0.01 bounding
+        box around the provided coordinates. Results are cached for 24 hours with
+        automatic cache invalidation when a newer report is published.
+        Reports are sorted by year and date descending.
+      parameters:
+        - name: station_id
+          in: path
+          required: true
+          description: Station identifier string (e.g. "KSC0601" or "90")
+          schema: { type: string }
+        - name: lat
+          in: query
+          required: true
+          description: Latitude of the station
+          schema: { type: number, format: double }
+        - name: lng
+          in: query
+          required: true
+          description: Longitude of the station
+          schema: { type: number, format: double }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PemReport" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -3162,6 +3205,18 @@ components:
                 message: Internal server error
 
   schemas:
+    PemReport:
+      type: object
+      required: [url, date, year, source, number, intensity, feature_id]
+      properties:
+        url: { type: string, description: "URL to the PDF measurement report" }
+        date: { type: string, format: date, description: "Date of the measurement" }
+        year: { type: integer, description: "Year of the measurement" }
+        source: { type: string, description: "Source institution name" }
+        number: { type: string, description: "Report number" }
+        intensity: { type: number, description: "Measured field intensity" }
+        feature_id: { type: string, description: "GeoServer feature ID" }
+
     ApiError:
       type: object
       required: [errors]

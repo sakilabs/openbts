@@ -16,6 +16,7 @@ import { formatCoordinates } from "@/lib/gpsUtils";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { UkeStation } from "@/types/station";
 
+import { fetchPemReports } from "../api";
 import { CopyButton } from "./copyButton";
 import { NavigationLinks } from "./navLinks";
 import { PermitsList } from "./permitsList";
@@ -45,6 +46,14 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
     queryFn: () => (station ? fetchUkePermitsByStationId(station.station_id, station.operator?.mnc) : Promise.resolve([])),
     enabled: !!station,
     staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: pemReports } = useQuery({
+    queryKey: ["station-pem", station?.station_id, station?.location?.latitude, station?.location?.longitude],
+    queryFn: () => fetchPemReports(station!.station_id, station!.location!.latitude, station!.location!.longitude),
+    staleTime: 1000 * 60 * 60,
+    enabled: !!station?.station_id && !!station?.location,
+    retry: false,
   });
 
   if (!station) return null;
@@ -187,7 +196,10 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                         <TooltipTrigger
                           render={
                             <a
-                              href={`https://si2pem.gov.pl/installations/?base_station=${station_id.replace(/^[TO]-/, "")}&page_size=25`}
+                              href={
+                                pemReports?.[0]?.url ??
+                                `https://si2pem.gov.pl/installations/?base_station=${station_id.replace(/^[TO]-/, "")}&page_size=25`
+                              }
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
@@ -208,7 +220,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                             </a>
                           }
                         />
-                        <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
+                        <TooltipContent>{pemReports?.[0] ? t("specs.si2pemReportLink") : t("specs.si2pemLink")}</TooltipContent>
                       </Tooltip>
                     ) : null}
                   </div>

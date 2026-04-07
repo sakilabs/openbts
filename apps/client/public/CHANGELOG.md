@@ -22,6 +22,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Clicking a location or GPS coordinate search result now drops a pulsing blue dot on the map at the exact point. The dot is hidden automatically if a station marker is already present there
 - Added new UserPicker for `/admin/audit-logs` and `/admin/submissions`
 - Changed the default sorting on `/admin/submissions` to DESC
+- Added support for fetching latest SI2PEM raport
 
 ### 🩹 Fixes
 
