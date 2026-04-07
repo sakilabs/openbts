@@ -223,7 +223,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                   <tr
                     key={cell.id}
                     className={cn(
-                      "border-b last:border-0 hover:bg-muted/20",
+                      "border-b last:border-b-0 hover:bg-muted/20",
                       isNew && "border-l-2 border-l-green-500",
                       isUpdated && "border-l-2 border-l-amber-500",
                     )}
