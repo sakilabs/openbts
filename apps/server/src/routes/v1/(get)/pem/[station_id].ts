@@ -198,25 +198,18 @@ async function handler(req: FastifyRequest<Params>, res: ReplyPayload<JSONBody<P
   const entityName = MNC_TO_ENTITY[mnc];
   const cacheKey = `pem:${station_id}:${lat}:${lng}:${mnc}`;
 
+  const cached = await redis.get(cacheKey);
+  if (cached) return res.send(JSON.parse(cached) as { data: PemReport[] });
+
   const [installationsResult, wmsResult] = await Promise.all([
     entityName ? fetchInstallations(station_id, entityName) : Promise.resolve(null),
     fetchWmsReports(station_id, lat, lng),
   ]);
 
-  const fresh = pickLatest(installationsResult, wmsResult);
+  const data = pickLatest(installationsResult, wmsResult);
+  if (!data) throw new ErrorResponse("NOT_FOUND");
 
-  const cached = await redis.get(cacheKey);
-  if (cached) {
-    const cachedResponse = JSON.parse(cached) as { data: PemReport[] };
-    const cachedLatestDate = cachedResponse.data[0]?.date ?? null;
-    const freshLatestDate = fresh?.[0]?.date ?? null;
-
-    if (!freshLatestDate || parsePublishedAt(freshLatestDate) <= parsePublishedAt(cachedLatestDate ?? "")) return res.send(cachedResponse);
-  }
-
-  if (!fresh) throw new ErrorResponse("NOT_FOUND");
-
-  const response = { data: fresh };
+  const response = { data };
   await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(response));
   return res.send(response);
 }
