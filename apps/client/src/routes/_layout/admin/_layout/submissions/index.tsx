@@ -324,7 +324,7 @@ function AdminSubmissionsListPage() {
       <div
         ref={containerRef}
         className={cn(
-          "flex-1 h-full overflow-x-auto",
+          "flex-1 min-h-0 overflow-x-auto",
           sizePagination.pageSize > autoPageSize ? "overflow-y-auto overscroll-y-contain" : "overflow-y-clip",
         )}
       >

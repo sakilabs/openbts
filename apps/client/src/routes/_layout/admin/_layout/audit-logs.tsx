@@ -431,7 +431,7 @@ function AdminAuditLogsPage() {
 
       <div
         ref={containerRef}
-        className={cn("flex-1 h-full overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}
+        className={cn("flex-1 min-h-0 overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}
       >
         <DataTable.Root table={table}>
           <DataTable.Table>
