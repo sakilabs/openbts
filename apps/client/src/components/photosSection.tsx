@@ -253,27 +253,29 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                       role="button"
                       tabIndex={0}
                       className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-zoom-in"
-                      onClick={() => setLightboxIndex(idx)}
+                      onClick={(e) => {
+                        if (e.target instanceof Node && e.currentTarget.contains(e.target)) setLightboxIndex(idx);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
                       }}
                     >
                       {!readOnly && setMainFn && !photo.is_main ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="h-7 text-xs px-2.5"
+                        <button
+                          type="button"
+                          className="flex items-center justify-center size-6 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors disabled:opacity-50"
                           onClick={(e) => {
                             e.stopPropagation();
                             setMainMutation.mutate(photo.id);
                           }}
                           disabled={setMainMutation.isPending}
+                          title={t("photos.setAsMain")}
                         >
-                          {t("photos.setAsMain")}
-                        </Button>
+                          <HugeiconsIcon icon={StarIcon} className="size-3.5" />
+                        </button>
                       ) : null}
                       {!readOnly ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <Popover
                             open={editState?.id === photo.id}
                             onOpenChange={(open) => {
@@ -282,7 +284,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                           >
                             <PopoverTrigger
                               type="button"
-                              className="flex items-center justify-center size-7 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors"
+                              className="flex items-center justify-center size-6 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openEdit(photo);
@@ -341,10 +343,10 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                               e.stopPropagation();
                               setDeletePhotoId(photo.id);
                             }}
-                            className="flex items-center gap-1.5 px-3 h-7 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700"
+                            className="flex items-center justify-center size-6 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+                            title={t("photos.remove")}
                           >
                             <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-                            {t("photos.remove")}
                           </button>
                         </div>
                       ) : null}
