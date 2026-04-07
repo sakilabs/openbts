@@ -21,7 +21,7 @@ export function OperatorSelect({ operators, value, onChange, disabled, className
 
   const { topOperators, restOperators } = useMemo(
     () => ({
-      topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)),
+      topOperators: operators.filter((op) => TOP4_MNCS.includes(op.mnc)).sort((a, b) => TOP4_MNCS.indexOf(a.mnc) - TOP4_MNCS.indexOf(b.mnc)),
       restOperators: operators.filter((op) => !TOP4_MNCS.includes(op.mnc)),
     }),
     [operators],
