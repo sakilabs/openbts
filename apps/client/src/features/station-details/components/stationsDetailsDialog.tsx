@@ -175,7 +175,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
           </div>
 
           {source === "internal" && !!stationId && preferences.showStationPhotoPanel && (
-            <div className="absolute top-0 left-full pl-3 hidden md:flex h-full max-h-[calc(100dvh-2rem)] [@media(max-aspect-ratio:5/4)]:hidden">
+            <div className="absolute top-0 left-full pl-3 hidden lg:flex h-full max-h-[calc(100dvh-2rem)]">
               <MainPhotoPanel stationId={stationId} onOpenPhotoTab={() => setActiveTab("photos")} />
             </div>
           )}

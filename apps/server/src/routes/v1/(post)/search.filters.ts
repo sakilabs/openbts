@@ -1,5 +1,5 @@
-import { sql, inArray, or, type SQL } from "drizzle-orm";
-import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations, extraIdentificators } from "@openbts/drizzle";
+import { sql, inArray, or, gte, lte, type SQL } from "drizzle-orm";
+import { stations, cells, gsmCells, umtsCells, lteCells, nrCells, locations, extraIdentificators, stationPhotoSelections } from "@openbts/drizzle";
 import { z } from "zod/v4";
 
 export type FilterValue = string | number | boolean;
@@ -62,6 +62,19 @@ const buildLikeAny =
     return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
   };
 
+const buildDateGte =
+  <T>(column: T) =>
+  (value: FilterValue) =>
+    gte(column as never, new Date(String(value)));
+
+const buildDateLte =
+  <T>(column: T) =>
+  (value: FilterValue) => {
+    const date = new Date(String(value));
+    date.setHours(23, 59, 59, 999);
+    return lte(column as never, date);
+  };
+
 const buildInArrayFromSubquery =
   <T>(column: T, buildSubquery: (values: number[]) => SQL) =>
   (value: FilterValue) =>
@@ -81,6 +94,32 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   mnc: {
     table: "stations",
     buildCondition: buildInArrayFromSubquery(stations.operator_id, (values) => sql`(SELECT id FROM operators WHERE mnc IN ${values})`),
+  },
+
+  created_after: {
+    table: "stations",
+    buildCondition: buildDateGte(stations.createdAt),
+  },
+  created_before: {
+    table: "stations",
+    buildCondition: buildDateLte(stations.createdAt),
+  },
+  updated_after: {
+    table: "stations",
+    buildCondition: buildDateGte(stations.updatedAt),
+  },
+  updated_before: {
+    table: "stations",
+    buildCondition: buildDateLte(stations.updatedAt),
+  },
+
+  has_photo: {
+    table: "stations",
+    buildCondition: (value: FilterValue) => {
+      const hasPhoto = parseBoolean(value);
+      const subquery = sql`(SELECT 1 FROM ${stationPhotoSelections} WHERE ${stationPhotoSelections.station_id} = ${stations.id})`;
+      return hasPhoto ? sql`EXISTS ${subquery}` : sql`NOT EXISTS ${subquery}`;
+    },
   },
 
   // cells
@@ -246,7 +285,8 @@ export type GroupedFilters = {
   extraIdentificators: SQL[];
 };
 
-const filterRegex = /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|([a-zA-Z0-9][a-zA-Z0-9]*(?:,\s*[a-zA-Z0-9][a-zA-Z0-9]*)*)|(\d+(?:,\s*\d+)*))/gi;
+const filterRegex =
+  /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|(\d{4}-\d{2}-\d{2})|([a-zA-Z0-9][a-zA-Z0-9]*(?:,\s*[a-zA-Z0-9][a-zA-Z0-9]*)*)|(\d+(?:,\s*\d+)*))/gi;
 
 type FilterMatch = {
   key: string;
@@ -260,12 +300,14 @@ const parseFilterMatch = (match: RegExpMatchArray): FilterMatch | null => {
 
   const stringValue = match[2] ?? match[3];
   const booleanValue = match[4];
-  const alphanumericValue = match[5];
-  const numericValue = match[6];
+  const dateValue = match[5];
+  const alphanumericValue = match[6];
+  const numericValue = match[7];
 
   if (stringValue !== undefined) return { key, value: stringValue, raw: match[0] };
-  if (numericValue !== undefined) return { key, value: numericValue, raw: match[0] };
   if (booleanValue !== undefined) return { key, value: booleanValue === "true", raw: match[0] };
+  if (dateValue !== undefined) return { key, value: dateValue, raw: match[0] };
+  if (numericValue !== undefined) return { key, value: numericValue, raw: match[0] };
   if (alphanumericValue !== undefined) return { key, value: alphanumericValue, raw: match[0] };
 
   return null;

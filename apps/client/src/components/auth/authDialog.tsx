@@ -63,7 +63,7 @@ function OAuthButtons() {
 
   return (
     <div className="grid grid-cols-2 gap-2.5">
-      {OAUTH_PROVIDERS.map(({ id, label, icon }) => (
+      {OAUTH_PROVIDERS.filter(({ id }) => id !== "google").map(({ id, label, icon }) => (
         <Button
           key={id}
           type="button"

@@ -302,6 +302,9 @@ importers:
       drizzle-orm:
         specifier: 1.0.0-beta.20
         version: 1.0.0-beta.20(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(@types/pg@8.20.0)(mssql@11.0.1(@azure/core-client@1.10.1))(postgres@3.4.8)(zod@4.3.6)
+      exifreader:
+        specifier: 4.38.0
+        version: 4.38.0
       fast-jwt:
         specifier: 6.1.0
         version: 6.1.0
@@ -4204,6 +4207,10 @@ packages:
       '@types/react':
         optional: true
 
+  '@xmldom/xmldom@0.9.9':
+    resolution: {integrity: sha512-qycIHAucxy/LXAYIjmLmtQ8q9GPnMbnjG1KXhWm9o5sCr6pOYDATkMPiTNa6/v8eELyqOQ2FsEqeoFYmgv/gJg==}
+    engines: {node: '>=14.6'}
+
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
     engines: {node: '>=6.5'}
@@ -5261,6 +5268,9 @@ packages:
   execa@9.6.1:
     resolution: {integrity: sha512-9Be3ZoN4LmYR90tUoVu2te2BsbzHfhJyfEiAVfz7N5/zv+jduIfLrV2xdQXOHbaD6KgpGdO9PRPM1Y4Q9QkPkA==}
     engines: {node: ^18.19.0 || >=20.5.0}
+
+  exifreader@4.38.0:
+    resolution: {integrity: sha512-uUFJS7H1mToAUoqO8uX/EkAYRYyvwr+JuRBKtWv6kDbTJoB+woiddDULGm42Em02N0CIwk/TTJqLwzM2Iygbiw==}
 
   express-rate-limit@8.3.2:
     resolution: {integrity: sha512-77VmFeJkO0/rvimEDuUC5H30oqUC4EyOhyGccfqoLebB0oiEYfM7nwPrsDsBL1gsTpwfzX8SFy2MT3TDyRq+bg==}
@@ -11518,7 +11528,7 @@ snapshots:
 
   '@types/mssql@9.1.11(@azure/core-client@1.10.1)':
     dependencies:
-      '@types/node': 24.10.9
+      '@types/node': 20.19.37
       tarn: 3.0.2
       tedious: 19.2.1(@azure/core-client@1.10.1)
     transitivePeerDependencies:
@@ -11559,7 +11569,7 @@ snapshots:
 
   '@types/readable-stream@4.0.23':
     dependencies:
-      '@types/node': 24.10.9
+      '@types/node': 20.19.37
 
   '@types/resolve@1.20.2': {}
 
@@ -11731,6 +11741,9 @@ snapshots:
       warning: 4.0.3
     optionalDependencies:
       '@types/react': 19.2.14
+
+  '@xmldom/xmldom@0.9.9':
+    optional: true
 
   abort-controller@3.0.0:
     dependencies:
@@ -12744,6 +12757,10 @@ snapshots:
       signal-exit: 4.1.0
       strip-final-newline: 4.0.0
       yoctocolors: 2.1.2
+
+  exifreader@4.38.0:
+    optionalDependencies:
+      '@xmldom/xmldom': 0.9.9
 
   express-rate-limit@8.3.2(express@5.2.1):
     dependencies:
@@ -15434,7 +15451,7 @@ snapshots:
       '@azure/identity': 4.13.1
       '@azure/keyvault-keys': 4.10.0(@azure/core-client@1.10.1)
       '@js-joda/core': 5.7.0
-      '@types/node': 24.10.9
+      '@types/node': 20.19.37
       bl: 6.1.6
       iconv-lite: 0.6.3
       js-md4: 0.3.2
@@ -15450,7 +15467,7 @@ snapshots:
       '@azure/identity': 4.13.1
       '@azure/keyvault-keys': 4.10.0(@azure/core-client@1.10.1)
       '@js-joda/core': 5.7.0
-      '@types/node': 24.10.9
+      '@types/node': 20.19.37
       bl: 6.1.6
       iconv-lite: 0.7.2
       js-md4: 0.3.2

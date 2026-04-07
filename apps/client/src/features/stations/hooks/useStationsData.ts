@@ -22,7 +22,11 @@ function buildSearchQuery({ query, filters, regionNames }: SearchWithFiltersPara
 
   if (filters.operators.length && !existingKeys.has("mnc")) filterParts.push(`mnc:${filters.operators.join(",")}`);
   if (filters.bands.length && !existingKeys.has("band")) filterParts.push(`band:${filters.bands.join(",")}`);
-  if (filters.rat.length && !existingKeys.has("rat")) filterParts.push(`rat:${filters.rat.join(",")}`);
+  if (filters.rat.length && !existingKeys.has("rat")) {
+    const rats = filters.rat.filter((r) => r !== "iot");
+    if (rats.length) filterParts.push(`rat:${rats.join(",")}`);
+    if (filters.rat.includes("iot") && !existingKeys.has("supports_iot")) filterParts.push("supports_iot:true");
+  }
   if (regionNames.length && !existingKeys.has("region")) filterParts.push(`region:${regionNames.join(",")}`);
 
   return filterParts.join(" ").trim();

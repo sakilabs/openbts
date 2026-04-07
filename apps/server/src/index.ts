@@ -6,8 +6,55 @@ import { port } from "./config.js";
 import { installProcessErrorHandlers, logger } from "./utils/logger.js";
 import { startImportJob } from "./services/ukeImportJob.service.js";
 import { cleanupOrphanedSubmissions } from "./services/submissionCleanup.service.js";
+import redis from "./database/redis.js";
 
 const workerCount = Number(process.env.WORKERS) || availableParallelism();
+
+const SCHEDULER_LOCK_KEY = "scheduler:leader";
+const SCHEDULER_LOCK_TTL = 30;
+
+async function tryAcquireSchedulerLock(): Promise<boolean> {
+  const acquired = await redis.set(SCHEDULER_LOCK_KEY, process.env.HOSTNAME ?? process.pid.toString(), {
+    expiration: { type: "EX", value: SCHEDULER_LOCK_TTL },
+    condition: "NX",
+  });
+  return !!acquired;
+}
+
+async function renewSchedulerLock(): Promise<boolean> {
+  const holder = await redis.get(SCHEDULER_LOCK_KEY);
+  const identity = process.env.HOSTNAME ?? process.pid.toString();
+  if (holder !== identity) return false;
+  await redis.expire(SCHEDULER_LOCK_KEY, SCHEDULER_LOCK_TTL);
+  return true;
+}
+
+async function runAsScheduler() {
+  const renewInterval = setInterval(
+    async () => {
+      const renewed = await renewSchedulerLock().catch(() => false);
+      if (!renewed) {
+        clearInterval(renewInterval);
+        logger.info("scheduler_lock_lost", { msg: "Lost scheduler leadership, will retry" });
+        setTimeout(() => void tryBecomeScheduler(), SCHEDULER_LOCK_TTL * 1000);
+      }
+    },
+    (SCHEDULER_LOCK_TTL / 2) * 1000,
+  );
+
+  scheduleDailyImport();
+  scheduleSubmissionCleanup();
+}
+
+async function tryBecomeScheduler() {
+  const isLeader = await tryAcquireSchedulerLock().catch(() => false);
+  if (isLeader) {
+    logger.info("scheduler_leader_elected", { identity: process.env.HOSTNAME ?? process.pid.toString() });
+    await runAsScheduler();
+  } else {
+    setTimeout(() => void tryBecomeScheduler(), SCHEDULER_LOCK_TTL * 1000);
+  }
+}
 
 function scheduleDailyImport() {
   const now = new Date();
@@ -52,8 +99,7 @@ if (cluster.isPrimary) {
     workerPorts.set(w.id, workerPort);
   });
 
-  scheduleDailyImport();
-  scheduleSubmissionCleanup();
+  void tryBecomeScheduler();
 } else {
   installProcessErrorHandlers();
   const workerPort = Number(process.env.WORKER_PORT) || port;

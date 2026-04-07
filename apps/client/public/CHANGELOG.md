@@ -1,6 +1,29 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-07
+
+### 🚀 Enhancements
+
+- Search filters now support date range filtering: `created_after:`, `created_before:`, `updated_after:`, `updated_before:` (YYYY-MM-DD format)
+- Search filters now support `has_photo:` to filter stations with or without photos
+- Cell table now shows an amber left border and clock icon badge on cells updated in the last 30 days (in addition to the existing green "new" indicator)
+- "New" and "updated" cell badges now show the exact date in their tooltip
+- Photo gallery and photo section now show a "NEW" badge on photos uploaded in the last 7 days
+- Lightbox now has smooth open/close and slide transitions, a loading spinner while images load, and a photo counter indicator
+- Lightbox navigation buttons are now centered vertically and have active press feedback
+- Photo edit popover (note, taken at) now opens inline on the photo overlay instead of below a metadata row
+- Photo grid items now have a subtle zoom-on-hover effect and staggered fade-in animation
+- Station photo panel is now visible starting from `lg` breakpoint instead of `md`
+- Submission photo uploads now automatically extract EXIF date (DateTimeOriginal/DateTimeDigitized) as the "taken at" value when not provided manually
+- Added `DELETE /cells` endpoint for batch-deleting cells with audit logging
+- Scheduled jobs (UKE import, submission cleanup) now use a Redis-based leader election so only one server instance runs them at a time in multi-replica deployments
+
+### 🩹 Fixes
+
+- Removed Google OAuth provider from the login dialog
+- Photo section empty state icon opacity increased for better visibility
+
 # 2026-04-06
 
 ### 🚀 Enhancements

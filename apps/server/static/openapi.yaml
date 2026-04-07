@@ -276,6 +276,29 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
+    delete:
+      tags: [Cells]
+      summary: Batch delete cells
+      description: Deletes multiple cells by ID. Also updates the `updatedAt` timestamp on all affected stations.
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items: { type: integer, minimum: 1 }
+                  minItems: 1
+      responses:
+        "204": { description: No Content }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
     post:
       tags: [Cells]
       summary: Create cell

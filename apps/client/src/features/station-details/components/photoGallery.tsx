@@ -7,9 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Lightbox } from "@/components/lightbox";
 import { fetchStationPhotos, setStationPhotoSelection, type StationPhoto } from "../api";
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+function isNew(createdAt: string) {
+  return Date.now() - new Date(createdAt).getTime() < SEVEN_DAYS_MS;
+}
+
 type Props = { stationId: number; isAdmin: boolean };
 
-function PhotoMeta({ photo, locale, showNote }: { photo: StationPhoto; locale: string; showNote?: boolean }) {
+function PhotoMeta({ photo, locale }: { photo: StationPhoto; locale: string }) {
   const { t } = useTranslation("stationDetails");
   const username = photo.author?.username ?? t("photos.unknownUser");
 
@@ -28,7 +33,6 @@ function PhotoMeta({ photo, locale, showNote }: { photo: StationPhoto; locale: s
           <span className="tabular-nums">{new Date(photo.taken_at).toLocaleDateString(locale, { year: "numeric", month: "short" })}</span>
         </div>
       ) : null}
-      {showNote && photo.note ? <span className="italic text-muted-foreground">{photo.note}</span> : null}
     </div>
   );
 }
@@ -69,7 +73,7 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
   if (!photos || photos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-        <HugeiconsIcon icon={Image01Icon} className="size-10 mb-3 opacity-20" />
+        <HugeiconsIcon icon={Image01Icon} className="size-10 mb-3 opacity-40" />
         <p className="text-sm font-medium">{t("photos.noPhotos")}</p>
         <p className="text-xs mt-1 text-muted-foreground">{t("photos.noPhotosHint")}</p>
       </div>
@@ -83,7 +87,11 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {photos.map((photo, idx) => (
-          <div key={photo.id} className="relative group">
+          <div
+            key={photo.id}
+            className="relative group rounded-lg overflow-hidden animate-in fade-in zoom-in-95 duration-300 motion-reduce:animate-none"
+            style={{ animationDelay: `${Math.min(idx * 50, 400)}ms`, animationFillMode: "both" }}
+          >
             <img
               role="button"
               tabIndex={0}
@@ -91,7 +99,7 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
               alt=""
               loading="lazy"
               decoding="async"
-              className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+              className="w-full aspect-square object-cover cursor-pointer transition-[transform,opacity] duration-200 group-hover:scale-[1.03] group-hover:opacity-90"
               onClick={() => setLightboxIndex(idx)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
@@ -103,8 +111,16 @@ export function PhotoGallery({ stationId, isAdmin }: Props) {
               </span>
             ) : null}
             {photo.note ? (
-              <span className="absolute top-1.5 right-1.5 bg-black/60 text-white/80 rounded-full p-1" title={photo.note}>
+              <span
+                className={`absolute top-1.5 right-1.5 bg-black/60 text-white/80 rounded-full p-1 transition-opacity ${isAdmin && !photo.is_main ? "group-hover:opacity-0" : ""}`}
+                title={photo.note}
+              >
                 <HugeiconsIcon icon={Note02Icon} className="size-3" />
+              </span>
+            ) : null}
+            {isNew(photo.createdAt) ? (
+              <span className="absolute bottom-1.5 left-1.5 bg-amber-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none group-hover:opacity-0 transition-opacity">
+                NEW
               </span>
             ) : null}
             <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 px-2 py-1.5 rounded-b-lg bg-linear-to-t from-black/70 to-transparent text-white text-[11px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">

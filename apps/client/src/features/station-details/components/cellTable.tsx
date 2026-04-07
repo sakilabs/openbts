@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useTranslation } from "react-i18next";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { WifiConnected01Icon, BatteryLowIcon, AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { WifiConnected01Icon, BatteryLowIcon, AlertCircleIcon, ArrowDown01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
 import type { Cell } from "@/types/station";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,7 +18,7 @@ type CellTableProps = {
 };
 
 export function CellTable({ rat, cells }: CellTableProps) {
-  const { t } = useTranslation(["stationDetails", "common"]);
+  const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const [open, setOpen] = useState(true);
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
 
@@ -212,6 +212,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
             <tbody>
               {cells.map((cell) => {
                 const isNew = isRecent(cell.createdAt);
+                const isUpdated = !isNew && isRecent(cell.updatedAt);
                 const arfcnForCalc =
                   rat === "UMTS" ? cell.details?.arfcn : rat === "LTE" ? cell.details?.earfcn : rat === "NR" ? cell.details?.arfcn : null;
                 const freqInfo = calcExactFrequency(rat, Number(cell.band.value), arfcnForCalc, cell.band.duplex);
@@ -219,8 +220,15 @@ export function CellTable({ rat, cells }: CellTableProps) {
                 const hasTooltip = freqInfo || bandName;
                 const bandLabel = Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : cell.band.value;
                 return (
-                  <tr key={cell.id} className={cn("border-b last:border-0 hover:bg-muted/20")}>
-                    <td className={cn("px-4 py-2 font-mono", isNew && "border-l-2 border-l-green-500")}>
+                  <tr
+                    key={cell.id}
+                    className={cn(
+                      "border-b last:border-0 hover:bg-muted/20",
+                      isNew && "border-l-2 border-l-green-500",
+                      isUpdated && "border-l-2 border-l-amber-500",
+                    )}
+                  >
+                    <td className="px-4 py-2 font-mono">
                       <div className="flex items-center gap-1.5 whitespace-nowrap">
                         {hasTooltip ? (
                           <Tooltip>
@@ -333,12 +341,35 @@ export function CellTable({ rat, cells }: CellTableProps) {
                             <TooltipTrigger>
                               <Badge
                                 variant="secondary"
-                                className="bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-1.5 py-0 cursor-help"
+                                className="bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] px-1.5 py-0 cursor-help whitespace-nowrap"
                               >
                                 {t("common:submissionType.new")}
                               </Badge>
                             </TooltipTrigger>
-                            <TooltipContent>{t("specs.newCellTooltip")}</TooltipContent>
+                            <TooltipContent>
+                              <p>{t("specs.newCellTooltip")}</p>
+                              <p className="opacity-75">
+                                {new Date(cell.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {isUpdated && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1 py-0 cursor-help inline-flex items-center"
+                              >
+                                <HugeiconsIcon icon={Clock01Icon} className="size-3" />
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("specs.updatedCellTooltip")}</p>
+                              <p className="opacity-75">
+                                {new Date(cell.updatedAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
+                              </p>
+                            </TooltipContent>
                           </Tooltip>
                         )}
                       </div>

@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import sharp from "sharp";
 import { fileTypeFromBuffer } from "file-type";
+import * as ExifReader from "exifreader";
 
 import db from "../../../../../database/psql.js";
 import { isHeic, decodeHeicToRaw } from "../../../../../utils/image.js";
@@ -19,6 +20,21 @@ import type { MultipartFile } from "@fastify/multipart";
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 const MAX_PHOTOS_PER_SUBMISSION = 5;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+function extractExifDate(buffer: Buffer): Date | null {
+  try {
+    const tags = ExifReader.load(buffer);
+    const raw = tags["DateTimeOriginal"]?.description ?? tags["DateTimeDigitized"]?.description;
+    if (!raw) return null;
+    // EXIF date format: "YYYY:MM:DD HH:MM:SS"
+    const [datePart, timePart] = raw.split(" ");
+    if (!datePart || !timePart) return null;
+    const date = new Date(`${datePart.replaceAll(":", "-")}T${timePart}`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+}
 
 async function ensureUploadDir() {
   try {
@@ -99,6 +115,8 @@ async function handler(
       const detected = await fileTypeFromBuffer(inputBuffer);
       if (!detected || !detected.mime.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
 
+      const exifDate = extractExifDate(inputBuffer);
+
       let sharpInput: sharp.SharpInput;
       let sharpOptions: sharp.SharpOptions | undefined;
       if (isHeic(detected.mime)) {
@@ -136,6 +154,8 @@ async function handler(
         const parsed = new Date(takenAtRaw);
         if (Number.isNaN(parsed.getTime())) throw new ErrorResponse("BAD_REQUEST", { message: "Invalid takenAt date" });
         taken_at = parsed;
+      } else if (exifDate) {
+        taken_at = exifDate;
       }
       const [photoRow] = await db.insert(submissionPhotos).values({ submission_id: id, attachment_id: newAttachment.id, note, taken_at }).returning();
       if (!photoRow) throw new ErrorResponse("FAILED_TO_CREATE");

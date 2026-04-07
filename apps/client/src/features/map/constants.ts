@@ -54,6 +54,11 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   // Station filters
   { key: "bts_id:", description: "Station ID (partial match)", availableOn: ["map", "stations"] },
   { key: "mnc:", description: "Operator MNC code", availableOn: ["map"] },
+  { key: "has_photo:", description: "Has photo (true, false)", availableOn: ["map", "stations"] },
+  { key: "created_after:", description: "Created after date (YYYY-MM-DD)", availableOn: ["map", "stations"] },
+  { key: "created_before:", description: "Created before date (YYYY-MM-DD)", availableOn: ["map", "stations"] },
+  { key: "updated_after:", description: "Updated after date (YYYY-MM-DD)", availableOn: ["map", "stations"] },
+  { key: "updated_before:", description: "Updated before date (YYYY-MM-DD)", availableOn: ["map", "stations"] },
 
   // Location filters
   { key: "city:", description: "City name (partial match)", availableOn: ["map", "stations"] },
