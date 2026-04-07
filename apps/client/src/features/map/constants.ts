@@ -60,6 +60,9 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   { key: "updated_after:", description: "Updated after date (YYYY-MM-DD)", availableOn: ["map", "stations"] },
   { key: "updated_before:", description: "Updated before date (YYYY-MM-DD)", availableOn: ["map", "stations"] },
 
+  // GPS filter
+  { key: "gps:", description: "GPS coordinates (lat,lng)", availableOn: ["map", "stations"] },
+
   // Location filters
   { key: "city:", description: "City name (partial match)", availableOn: ["map", "stations"] },
   { key: "address:", description: "Address (partial match)", availableOn: ["map", "stations"] },
