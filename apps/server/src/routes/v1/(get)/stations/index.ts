@@ -1,5 +1,5 @@
 import { bands, cells, extraIdentificators, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
-import { and, count, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -137,7 +137,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const iotRequested = requestedRats.includes("iot");
 
   const buildStationConditions = (stationFields: typeof stations): ReturnType<typeof sql>[] => {
-    const conditions: ReturnType<typeof sql>[] = [];
+    const conditions: ReturnType<typeof sql>[] = [eq(stationFields.status, "published")];
 
     if (operatorIds.length) {
       conditions.push(

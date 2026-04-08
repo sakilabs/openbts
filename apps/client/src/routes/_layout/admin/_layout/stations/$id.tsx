@@ -573,7 +573,7 @@ function StationDetailForm({
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-wrap gap-3 p-3">
-          <div className="flex-[1.5_0_300px] space-y-2">
+          <div className="flex-[2.5_0_420px] space-y-2">
             <StationInfoForm
               stationDbId={station?.id}
               stationId={stationId}

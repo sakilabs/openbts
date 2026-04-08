@@ -47,6 +47,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const offset = limit ? (page - 1) * limit : undefined;
 
   const rows = await db.query.cells.findMany({
+    where: {
+      station: { status: "published" },
+    },
     with: {
       station: {
         columns: { status: false },

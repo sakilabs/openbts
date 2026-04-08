@@ -58,6 +58,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
   const station = await db.query.stations.findFirst({
     where: {
       id: id,
+      status: "published",
     },
     with: {
       cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },

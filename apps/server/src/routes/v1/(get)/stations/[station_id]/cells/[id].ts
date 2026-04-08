@@ -45,7 +45,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 
   const station = await db.query.stations.findFirst({
     where: {
-      RAW: (fields, { eq }) => eq(fields.id, station_id),
+      id: station_id,
+      status: "published",
     },
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
