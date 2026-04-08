@@ -125,7 +125,22 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
       ) : null}
 
       <div className="relative z-10 flex flex-col items-center gap-3 max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-        <div className="relative flex items-center justify-center min-w-16 min-h-16">
+        <div
+          className="relative flex items-center justify-center min-w-16 min-h-16"
+          onClick={(e) => {
+            if (photos.length <= 1) return;
+            if (!window.matchMedia("(pointer: coarse)").matches) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            if (x < 0.33) {
+              setNavDirection("left");
+              onPrev();
+            } else if (x > 0.67) {
+              setNavDirection("right");
+              onNext();
+            }
+          }}
+        >
           {imgAnimClass === "opacity-0" ? <Spinner className="absolute text-white/60 size-6" /> : null}
           <img
             key={activePhoto.attachment_uuid}
