@@ -8,6 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, IdParams, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { deleteLocationWithPhotos } from "../../../../utils/location.helpers.js";
 
 const schemaRoute = {
   params: z.object({
@@ -35,33 +36,20 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
         columns: { id: true, rat: true },
       });
       const cellIds = stationCells.map((c) => c.id);
-      if (cellIds.length === 0) {
-        await tx.delete(stations).where(eq(stations.id, stationId));
-        await createAuditLog(
-          {
-            action: "stations.delete",
-            table_name: "stations",
-            record_id: stationId,
-            old_values: station,
-            new_values: null,
-          },
-          req,
-          tx,
-        );
-        return;
+      if (cellIds.length > 0) {
+        const gsmIds = stationCells.filter((c) => c.rat === "GSM").map((c) => c.id);
+        const umtsIds = stationCells.filter((c) => c.rat === "UMTS").map((c) => c.id);
+        const lteIds = stationCells.filter((c) => c.rat === "LTE").map((c) => c.id);
+        const nrIds = stationCells.filter((c) => c.rat === "NR").map((c) => c.id);
+
+        if (gsmIds.length > 0) await tx.delete(gsmCells).where(inArray(gsmCells.cell_id, gsmIds));
+        if (umtsIds.length > 0) await tx.delete(umtsCells).where(inArray(umtsCells.cell_id, umtsIds));
+        if (lteIds.length > 0) await tx.delete(lteCells).where(inArray(lteCells.cell_id, lteIds));
+        if (nrIds.length > 0) await tx.delete(nrCells).where(inArray(nrCells.cell_id, nrIds));
+
+        await tx.delete(cells).where(inArray(cells.id, cellIds));
       }
 
-      const gsmIds = stationCells.filter((c) => c.rat === "GSM").map((c) => c.id);
-      const umtsIds = stationCells.filter((c) => c.rat === "UMTS").map((c) => c.id);
-      const lteIds = stationCells.filter((c) => c.rat === "LTE").map((c) => c.id);
-      const nrIds = stationCells.filter((c) => c.rat === "NR").map((c) => c.id);
-
-      if (gsmIds.length > 0) await tx.delete(gsmCells).where(inArray(gsmCells.cell_id, gsmIds));
-      if (umtsIds.length > 0) await tx.delete(umtsCells).where(inArray(umtsCells.cell_id, umtsIds));
-      if (lteIds.length > 0) await tx.delete(lteCells).where(inArray(lteCells.cell_id, lteIds));
-      if (nrIds.length > 0) await tx.delete(nrCells).where(inArray(nrCells.cell_id, nrIds));
-
-      await tx.delete(cells).where(inArray(cells.id, cellIds));
       await tx.delete(stations).where(eq(stations.id, stationId));
 
       await createAuditLog(
@@ -75,6 +63,15 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
         req,
         tx,
       );
+
+      if (station.location_id) {
+        const remaining = await tx.query.stations.findFirst({
+          where: { location_id: station.location_id },
+          columns: { id: true },
+        });
+
+        if (!remaining) await deleteLocationWithPhotos(tx, station.location_id);
+      }
     });
 
     return res.status(204).send();

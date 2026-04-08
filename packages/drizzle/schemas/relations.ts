@@ -428,6 +428,11 @@ export const relations = defineRelations(
         to: helpers.locations.id,
         optional: false,
       }),
+      attachment: helpers.one.attachments({
+        from: helpers.locationPhotos.attachment_id,
+        to: helpers.attachments.id,
+        optional: false,
+      }),
       uploadedBy: helpers.one.users({
         from: helpers.locationPhotos.uploaded_by,
         to: helpers.users.id,
