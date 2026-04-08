@@ -10,6 +10,7 @@ export async function cleanupOrphanedSubmissions(): Promise<void> {
     .delete(submissions)
     .where(
       and(
+        eq(submissions.status, "pending"),
         isNotNull(submissions.pending_photos),
         lt(submissions.createdAt, cutoff),
         notExists(db.select({ id: submissionPhotos.id }).from(submissionPhotos).where(eq(submissionPhotos.submission_id, submissions.id))),

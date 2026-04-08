@@ -1,8 +1,13 @@
-import { AirportTowerIcon, Globe02Icon } from "@hugeicons/core-free-icons";
+import { AirportTowerIcon, Globe02Icon, SquareArrowExpand01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { OperatorSelect } from "@/components/operator-select";
+
+const StationDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +66,7 @@ export function SubmissionStationForm({
   isDeleteSubmission,
 }: SubmissionStationFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
+  const [stationDialogOpen, setStationDialogOpen] = useState(false);
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!extraIdsForm.networks_id;
   const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !extraIdsForm.networks_id && !!extraIdsForm.mno_name;
   const showSection = showExtraIdsFields || showMnoNameOnly;
@@ -73,6 +79,16 @@ export function SubmissionStationForm({
             <HugeiconsIcon icon={AirportTowerIcon} className="size-4 text-muted-foreground" />
             <span className="font-semibold text-sm">{t("stationInfo.title")}</span>
           </div>
+          {currentStation && (
+            <button
+              type="button"
+              onClick={() => setStationDialogOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
+            >
+              <HugeiconsIcon icon={SquareArrowExpand01Icon} className="size-3.5" />
+              {t("common:actions.view")}
+            </button>
+          )}
         </div>
         <div className="px-4 py-3 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -190,6 +206,12 @@ export function SubmissionStationForm({
             currentLocation={currentStation?.location ?? null}
           />
         </div>
+      )}
+
+      {currentStation && stationDialogOpen && (
+        <Suspense>
+          <StationDetailsDialog stationId={currentStation.id} source="internal" onClose={() => setStationDialogOpen(false)} />
+        </Suspense>
       )}
     </>
   );
