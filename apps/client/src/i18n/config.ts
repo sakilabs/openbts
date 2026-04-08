@@ -120,7 +120,6 @@ void i18n.use(initReactI18next).init({
     bindI18nStore: "added removed",
     transKeepBasicHtmlNodesFor: ["br", "strong", "i", "p", "em"],
   },
-  showSupportNotice: false,
 });
 
 export default i18n;

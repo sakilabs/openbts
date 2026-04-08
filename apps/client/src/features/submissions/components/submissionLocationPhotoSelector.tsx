@@ -1,7 +1,7 @@
 import { ArrowExpand01Icon, Camera01Icon, Image01Icon, Tick02Icon, Upload04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Lightbox } from "@/components/lightbox";
@@ -32,14 +32,6 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
     queryFn: () => fetchStationPhotos(stationId),
     staleTime: 1000 * 60 * 5,
   });
-
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (!loadingStation && stationPhotos.length > 0 && !initializedRef.current) {
-      initializedRef.current = true;
-      onSelectionChange(stationPhotos.map((p) => p.id));
-    }
-  }, [loadingStation, stationPhotos, onSelectionChange]);
 
   const assignedIds = new Set(stationPhotos.map((p) => p.id));
   const selectedSet = new Set(selectedIds);
