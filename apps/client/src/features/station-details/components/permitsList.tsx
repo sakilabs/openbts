@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { UKESourceBadge } from "@/components/uke-source-badge";
 import { fetchApiData } from "@/lib/api";
 import { isPermitExpired, isRecent } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
@@ -218,17 +219,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                             </TooltipContent>
                           </Tooltip>
                         )}
-                        {permit.source && (
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "text-[10px] px-1.5 py-0 font-semibold whitespace-nowrap bg-muted text-muted-foreground",
-                              permit.source === "device_registry" && "ring-1 ring-blue-500/30",
-                            )}
-                          >
-                            {permit.source === "device_registry" ? t("permits.sourceDeviceRegistry") : t("permits.sourcePermits")}
-                          </Badge>
-                        )}
+                        {permit.source && <UKESourceBadge source={permit.source} />}
                       </div>
                     </td>
                     <td className="px-4 py-2.5">

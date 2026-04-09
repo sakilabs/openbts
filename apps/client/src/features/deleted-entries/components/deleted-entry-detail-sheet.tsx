@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { UKESourceBadge } from "@/components/uke-source-badge";
 import { formatFullDate } from "@/lib/format";
 
 import type { DeletedEntry } from "../types";
@@ -8,12 +9,6 @@ import type { DeletedEntry } from "../types";
 const SOURCE_TABLE_LABELS: Record<string, string> = {
   uke_permits: "UKE Permits",
   uke_radiolines: "UKE Radiolines",
-};
-
-const SOURCE_TYPE_LABELS: Record<string, string> = {
-  permits: "Permits",
-  device_registry: "Device Registry",
-  radiolines: "Radiolines",
 };
 
 function Value({ value }: { value: unknown }): React.ReactNode {
@@ -86,7 +81,9 @@ export function DeletedEntryDetailSheet({ entry, open, onOpenChange }: DeletedEn
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("deletedEntries.columns.sourceType")}</span>
-                <span className="text-sm font-medium">{SOURCE_TYPE_LABELS[entry.source_type] ?? entry.source_type}</span>
+                <span className="text-sm font-medium">
+                  <UKESourceBadge source={entry.source_type} />
+                </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("deletedEntries.columns.sourceId")}</span>

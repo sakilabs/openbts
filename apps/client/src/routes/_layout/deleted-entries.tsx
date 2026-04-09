@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UKESourceBadge } from "@/components/uke-source-badge";
 import { DatePickerButton } from "@/features/admin/audit-logs/components/date-picker-button";
 import { DeletedEntryDetailSheet } from "@/features/deleted-entries/components/deleted-entry-detail-sheet";
 import type { DeletedEntry } from "@/features/deleted-entries/types";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { API_BASE, fetchJson } from "@/lib/api";
-import { cn } from "@/lib/utils";
 
 function formatDeletedDate(dateString: string, locale: string): string {
   return new Date(dateString).toLocaleDateString(locale, {
@@ -190,24 +190,7 @@ function DeletedEntriesPage() {
       columnHelper.accessor("source_type", {
         header: t("deletedEntries.columns.sourceType"),
         size: 140,
-        cell: ({ getValue }) => {
-          const value = getValue();
-          const colorMap: Record<string, string> = {
-            permits: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400",
-            device_registry: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
-            radiolines: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400",
-          };
-          return (
-            <span
-              className={cn(
-                "inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border",
-                colorMap[value],
-              )}
-            >
-              {SOURCE_TYPE_LABELS[value] ?? value}
-            </span>
-          );
-        },
+        cell: ({ getValue }) => <UKESourceBadge source={getValue()} />,
       }),
       columnHelper.accessor("source_id", {
         header: t("deletedEntries.columns.sourceId"),
