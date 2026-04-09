@@ -29,6 +29,8 @@
     "decisionNumber": "Numer decyzji",
     "expiryDate": "Data ważności",
     "sourceUke": "Źródło: Urząd Komunikacji Elektronicznej (UKE)",
+    "sourcePermits": "Pozwolenia",
+    "sourceDeviceRegistry": "Rejestr urządzeń",
     "noPermits": "Brak pozwoleń UKE dla tej stacji",
     "decisionTypeP": "Pozwolenie",
     "decisionTypeZmP": "Zmiana Pozwolenia",

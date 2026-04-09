@@ -29,6 +29,8 @@
     "decisionNumber": "Decision Number",
     "expiryDate": "Expiry Date",
     "sourceUke": "Source: Office of Electronic Communications (UKE)",
+    "sourcePermits": "Permits",
+    "sourceDeviceRegistry": "Device Registry",
     "noPermits": "No UKE permits for this station",
     "decisionTypeP": "Permit",
     "decisionTypeZmP": "Permit Change",

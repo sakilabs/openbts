@@ -101,7 +101,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
         <>
           <button
             type="button"
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 p-3 text-white hover:bg-white/10 active:bg-white/20 active:scale-95 rounded-full transition-[colors,transform]"
+            className="hidden md:block absolute left-3 top-1/2 -translate-y-1/2 z-10 p-3 text-white hover:bg-white/10 active:bg-white/20 active:scale-95 rounded-full transition-[colors,transform]"
             aria-label="Previous photo"
             onClick={() => {
               setNavDirection("left");
@@ -112,7 +112,7 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
           </button>
           <button
             type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-3 text-white hover:bg-white/10 active:bg-white/20 active:scale-95 rounded-full transition-[colors,transform]"
+            className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 z-10 p-3 text-white hover:bg-white/10 active:bg-white/20 active:scale-95 rounded-full transition-[colors,transform]"
             aria-label="Next photo"
             onClick={() => {
               setNavDirection("right");

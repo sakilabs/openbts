@@ -202,7 +202,7 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                 return (
                   <tr key={permit.id} className={cn("hover:bg-muted/20 transition-colors")}>
                     <td className={cn("px-4 py-2.5 font-mono font-medium", isNew && "border-l-2 border-l-green-500")}>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span>
                           {permit.band?.value ? (Number(permit.band.value) === 0 ? t("stations:cells.unknownBand") : permit.band.value) : "-"}
                         </span>
@@ -218,14 +218,25 @@ function CollapsiblePermitGroup({ rat, ratPermits, t, i18n, showAntennaData }: C
                             </TooltipContent>
                           </Tooltip>
                         )}
+                        {permit.source && (
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "text-[10px] px-1.5 py-0 font-semibold whitespace-nowrap bg-muted text-muted-foreground",
+                              permit.source === "device_registry" && "ring-1 ring-blue-500/30",
+                            )}
+                          >
+                            {permit.source === "device_registry" ? t("permits.sourceDeviceRegistry") : t("permits.sourcePermits")}
+                          </Badge>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-mono text-xs">{permit.decision_number}</span>
                         <Tooltip>
-                          <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-bold uppercase cursor-help">
-                            {permit.decision_type}
+                          <TooltipTrigger className="font-mono text-[10px] text-muted-foreground cursor-help">
+                            [{permit.decision_type}]
                           </TooltipTrigger>
                           <TooltipContent>
                             {permit.decision_type === "zmP" ? t("permits.decisionTypeZmP") : t("permits.decisionTypeP")}

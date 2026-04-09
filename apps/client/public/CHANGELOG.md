@@ -1,6 +1,14 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-09
+
+### 🚀 Enhancements
+
+- Lightbox arrow navigation buttons are now hidden on mobile; tap left/right side of the image to navigate instead
+- UKE permit rows now show a source badge (Permits / Device Registry) next to the band column
+- Station photo panel is now visible starting from `xl` breakpoint instead of `lg`
+
 # 2026-04-07
 
 ### 🚀 Enhancements
