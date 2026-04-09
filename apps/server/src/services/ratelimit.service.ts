@@ -71,9 +71,9 @@ export class RateLimitService {
 
     this.options = {
       ...this.defaultOptions,
+      ...options,
       tiers: { ...this.defaultOptions.tiers, ...options.tiers },
       roles: { ...this.defaultOptions.roles, ...options.roles },
-      ...options,
       routes: options.routes ?? this.defaultOptions.routes,
     };
   }
@@ -255,9 +255,9 @@ export class RateLimitService {
   updateOptions(options: Partial<RateLimitOptions>): void {
     this.options = {
       ...this.options,
+      ...options,
       tiers: { ...this.options.tiers, ...options.tiers },
       roles: { ...this.options.roles, ...options.roles },
-      ...options,
       routes: options.routes ?? this.options.routes,
     };
   }

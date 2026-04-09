@@ -60,9 +60,9 @@ export class QuotaService {
 
     this.options = {
       ...this.defaultOptions,
+      ...options,
       tiers: { ...this.defaultOptions.tiers, ...options.tiers },
       roles: { ...this.defaultOptions.roles, ...options.roles },
-      ...options,
     };
   }
 

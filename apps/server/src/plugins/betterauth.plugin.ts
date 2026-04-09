@@ -190,6 +190,9 @@ export const auth = betterAuth({
           };
         },
       },
+      rateLimit: {
+        enabled: false,
+      },
     }),
     multiSession(),
     username({
