@@ -113,6 +113,7 @@ parentPort.on("message", async (params: WorkerParams) => {
             lte_enbid: lteCells.enbid,
             lte_clid: lteCells.clid,
             lte_ecid: lteCells.ecid,
+            lte_pci: lteCells.pci,
           })
           .from(cells)
           .innerJoin(lteCells, eq(lteCells.cell_id, cells.id))
@@ -126,7 +127,15 @@ parentPort.on("message", async (params: WorkerParams) => {
 
     const nrQuery = runNr
       ? db
-          .select({ ...commonSelect, nr_nrtac: nrCells.nrtac, nr_gnbid: nrCells.gnbid, nr_clid: nrCells.clid, nr_nci: nrCells.nci })
+          .select({
+            ...commonSelect,
+            nr_nrtac: nrCells.nrtac,
+            nr_gnbid: nrCells.gnbid,
+            nr_clid: nrCells.clid,
+            nr_nci: nrCells.nci,
+            nr_pci: nrCells.pci,
+            nr_arfcn: nrCells.arfcn,
+          })
           .from(cells)
           .innerJoin(nrCells, eq(nrCells.cell_id, cells.id))
           .innerJoin(stations, eq(cells.station_id, stations.id))
@@ -223,6 +232,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           enbid: row.lte_enbid,
           clid: row.lte_clid,
           ecid: row.lte_ecid,
+          pci: row.lte_pci,
           rat: "LTE",
           band_value: row.band_value,
           band_name: row.band_name as string,
@@ -250,6 +260,8 @@ parentPort.on("message", async (params: WorkerParams) => {
           gnbid: row.nr_gnbid,
           clid: row.nr_clid,
           nci: row.nr_nci,
+          pci: row.nr_pci,
+          arfcn: row.nr_arfcn ?? null,
           rat: "NR",
           band_value: row.band_value,
           band_name: row.band_name as string,

@@ -13,6 +13,7 @@ export interface CellExportData {
   clid?: number | null;
   ecid?: number | null;
   gnbid?: number | null;
+  pci?: number | null;
   nci?: bigint | null;
   rat: "GSM" | "CDMA" | "UMTS" | "LTE" | "NR";
   band_value?: number | null;
@@ -331,7 +332,8 @@ export function toNTM(cell: CellExportData): string | null {
     case "LTE": {
       const ci = cell.clid ?? NTM_UNKNOWN;
       const tac = cell.tac ?? NTM_UNKNOWN;
-      const enb = cell.enbid ?? NTM_UNKNOWN;
+      const enbid = cell.enbid ?? NTM_UNKNOWN;
+      const pci = cell.pci ?? NTM_UNKNOWN;
       const earfcn = getEarfcn(cell.operator_mnc, cell.band_value, cell.band_duplex);
 
       let location = getNTMLocation(cell);
@@ -345,17 +347,18 @@ export function toNTM(cell: CellExportData): string | null {
         if (unique.length > 0) location += ` [5G: ${unique.join("|")}]`;
       }
 
-      return `4G;${mcc};${mnc};${ci};${tac};${enb};${NTM_UNKNOWN};${lat};${lon};${location};${earfcn}`;
+      return `4G;${mcc};${mnc};${ci};${tac};${enbid};${pci};${lat};${lon};${location};${earfcn}`;
     }
     case "NR": {
       const nci = cell.nci ?? NTM_UNKNOWN;
       const tac = cell.nrtac ?? NTM_UNKNOWN;
+      const pci = cell.pci ?? NTM_UNKNOWN;
       const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
 
       let location = getNTMLocation(cell);
       if (nrDesig) location += ` [${nrDesig}]`;
 
-      return `5G;${mcc};${mnc};${nci};${tac};;${NTM_UNKNOWN};${lat};${lon};${location};${NTM_UNKNOWN}`;
+      return `5G;${mcc};${mnc};${nci};${tac};;${pci};${lat};${lon};${location};${NTM_UNKNOWN}`;
     }
     case "CDMA": {
       const bid = cell.cid ?? NTM_UNKNOWN;
@@ -396,15 +399,15 @@ export function toNetMonitor(cell: CellExportData): string | null {
     case "LTE": {
       const tac = cell.tac ?? 0;
       const ci = cell.ecid ?? 0;
-      const pci = "";
+      const pci = cell.pci ?? "";
       const earfcn = getEarfcn(cell.operator_mnc, cell.band_value, cell.band_duplex);
       return `L;${mcc};${mnc};${tac};${ci};${pci};${earfcn !== NTM_UNKNOWN ? earfcn : ""};${lat};${lon};${accuracy};${description}`;
     }
     case "NR": {
       const tac = cell.nrtac ?? 0;
       const nci = cell.nci ?? 0;
-      const pci = "";
-      const arfcn = "";
+      const pci = cell.pci ?? "";
+      const arfcn = cell.arfcn ?? "";
       return `N;${mcc};${mnc};${tac};${nci};${pci};${arfcn};${lat};${lon};${accuracy};${description}`;
     }
     case "CDMA": {
