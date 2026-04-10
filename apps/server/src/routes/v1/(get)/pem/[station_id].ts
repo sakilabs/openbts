@@ -100,7 +100,7 @@ async function fetchInstallations(stationId: string, entityName: string): Promis
   const json = (await res.json()) as InstallationsResponse;
   if (!json.count || !json.results?.length) return null;
 
-  const withReports = json.results.filter((r) => r.report_file !== null && r.report_file !== "");
+  const withReports = json.results.filter((r) => r.report_file !== null && r.report_file !== "" && r.base_station?.identity_name === stationId);
   if (!withReports.length) return null;
 
   const sorted = [...withReports].sort((a, b) => parsePublishedAt(b.published_at) - parsePublishedAt(a.published_at));
