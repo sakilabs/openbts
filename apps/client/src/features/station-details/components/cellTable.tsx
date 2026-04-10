@@ -311,7 +311,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         <td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
                         <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.type === "sa" ? (cell.details?.arfcn ?? "-") : "-"}</td>
+                        <td className="px-4 py-2 font-mono">{cell.details?.arfcn ?? "-"}</td>
                       </>
                     )}
                     <td className="px-4 py-2">
