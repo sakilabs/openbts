@@ -127,6 +127,9 @@ services:
 
   pgbouncer:
     image: dhi.io/pgbouncer:1.25
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - target: 6432
         published: 6432
