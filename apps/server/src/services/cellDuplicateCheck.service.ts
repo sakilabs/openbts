@@ -1,4 +1,4 @@
-import { cells, gsmCells, lteCells, stations, umtsCells } from "@openbts/drizzle";
+import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
 import { and, eq, ne, or } from "drizzle-orm";
 
 import db from "../database/psql.js";
@@ -162,6 +162,50 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
   }
 
   await Promise.all(checks);
+}
+
+export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pci: number, excludeCellId?: number) {
+  const existing = await db
+    .select({ id: lteCells.cell_id })
+    .from(lteCells)
+    .innerJoin(cells, eq(cells.id, lteCells.cell_id))
+    .where(
+      and(
+        eq(cells.station_id, stationId),
+        eq(cells.band_id, bandId),
+        eq(lteCells.pci, pci),
+        excludeCellId ? ne(lteCells.cell_id, excludeCellId) : undefined,
+      ),
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new ErrorResponse("DUPLICATE_ENTRY", {
+      message: `An LTE cell with PCI ${pci} already exists on this band for this station`,
+    });
+  }
+}
+
+export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci: number, excludeCellId?: number) {
+  const existing = await db
+    .select({ id: nrCells.cell_id })
+    .from(nrCells)
+    .innerJoin(cells, eq(cells.id, nrCells.cell_id))
+    .where(
+      and(
+        eq(cells.station_id, stationId),
+        eq(cells.band_id, bandId),
+        eq(nrCells.pci, pci),
+        excludeCellId ? ne(nrCells.cell_id, excludeCellId) : undefined,
+      ),
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new ErrorResponse("DUPLICATE_ENTRY", {
+      message: `An NR cell with PCI ${pci} already exists on this band for this station`,
+    });
+  }
 }
 
 export async function getOperatorIdForStation(stationId: number): Promise<number | null> {

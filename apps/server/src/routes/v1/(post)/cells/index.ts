@@ -12,6 +12,8 @@ import { createAuditLog } from "../../../../services/auditLog.service.js";
 import {
   checkGSMDuplicate,
   checkLTEDuplicate,
+  checkLTEPCIDuplicate,
+  checkNRPCIDuplicate,
   checkUMTSDuplicate,
   getOperatorIdForStation,
 } from "../../../../services/cellDuplicateCheck.service.js";
@@ -95,6 +97,16 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
           const d = req.body.details as z.infer<typeof lteInsertSchema>;
           await checkLTEDuplicate(d.enbid, d.clid, operatorId);
         }
+      }
+    }
+
+    if (req.body.details && req.body.station_id && req.body.band_id) {
+      if (req.body.rat === "LTE") {
+        const d = req.body.details as z.infer<typeof lteInsertSchema>;
+        if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(req.body.station_id, req.body.band_id, d.pci);
+      } else if (req.body.rat === "NR") {
+        const d = req.body.details as z.infer<typeof nrInsertSchema>;
+        if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(req.body.station_id, req.body.band_id, d.pci);
       }
     }
 

@@ -14,9 +14,19 @@ const splitList = (value: string) =>
     .split(",")
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
+
+const HEX_PREFIX_REGEX = /^0x([0-9a-f]+)$/i;
+const HEX_LETTERS_REGEX = /^[0-9a-f]+$/i;
+const parseNumericOrHex = (item: string): number => {
+  const prefixMatch = HEX_PREFIX_REGEX.exec(item);
+  if (prefixMatch) return Number.parseInt(prefixMatch[1]!, 16);
+  if (/[a-f]/i.test(item) && HEX_LETTERS_REGEX.test(item)) return Number.parseInt(item, 16);
+  return Number(item);
+};
+
 const numericListSchema = z
   .string()
-  .transform((value) => splitList(value).map((item) => Number(item)))
+  .transform((value) => splitList(value).map(parseNumericOrHex))
   .pipe(z.array(z.number().int()).min(1));
 const stringListSchema = z
   .string()

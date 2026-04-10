@@ -179,7 +179,6 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
                     nrtac: undefined,
                     clid: undefined,
                     gnbid: undefined,
-                    arfcn: undefined,
                     supports_nr_redcap: undefined,
                   });
                 else onDetailChange("type", value as "nsa" | "sa");
@@ -244,7 +243,7 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             placeholder="ARFCN"
             value={(d.arfcn as number) ?? ""}
             error={!!detailErrors?.arfcn}
-            disabled={nsaLock(d.arfcn)}
+            disabled={disabled}
             max={3279165}
             onDetailChange={onDetailChange}
           />

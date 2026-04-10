@@ -9,7 +9,12 @@ import { ErrorResponse } from "../../../../../../errors.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
-import { checkGSMDuplicate, checkLTEDuplicate } from "../../../../../../services/cellDuplicateCheck.service.js";
+import {
+  checkGSMDuplicate,
+  checkLTEDuplicate,
+  checkLTEPCIDuplicate,
+  checkNRPCIDuplicate,
+} from "../../../../../../services/cellDuplicateCheck.service.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -56,7 +61,7 @@ const nrCellsUpdateSchema = createUpdateSchema(nrCells)
   .strict()
   .superRefine((data, ctx) => {
     if (data.type === "nsa") {
-      for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
+      for (const field of ["nrtac", "clid", "gnbid"] as const) {
         if (data[field] !== null && data[field] !== undefined)
           ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
       }
@@ -121,7 +126,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (req.body.details && cell.rat === "NR") {
     const nrDetails = req.body.details as z.infer<typeof nrCellsUpdateSchema>;
     if (nrDetails.type === undefined && cell.nr?.type === "nsa") {
-      for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
+      for (const field of ["nrtac", "clid", "gnbid"] as const) {
         if (nrDetails[field] !== null && nrDetails[field] !== undefined) {
           throw new ErrorResponse("BAD_REQUEST", { message: `${field} must not be set for NSA NR cells` });
         }
@@ -129,6 +134,17 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       if (nrDetails.supports_nr_redcap === true) {
         throw new ErrorResponse("BAD_REQUEST", { message: "supports_nr_redcap must not be set for NSA NR cells" });
       }
+    }
+  }
+
+  if (req.body.details) {
+    const effectiveBandId = req.body.band_id ?? cell.band_id;
+    if (cell.rat === "LTE") {
+      const d = req.body.details as z.infer<typeof lteCellsUpdateSchema>;
+      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(station_id, effectiveBandId, d.pci, cell_id);
+    } else if (cell.rat === "NR") {
+      const d = req.body.details as z.infer<typeof nrCellsUpdateSchema>;
+      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, effectiveBandId, d.pci, cell_id);
     }
   }
 

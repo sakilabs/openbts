@@ -1,6 +1,15 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-10
+
+### 🚀 Enhancements
+
+- PCI duplicate checks are now enforced for LTE and NR cells on create, update, and submission approval
+- NR NSA cells now allow setting ARFCN (previously it was cleared/locked alongside SA-only fields)
+- Search filters now accept hexadecimal values (e.g. `0x1A2B` or raw hex like `ABCD`) in numeric filter fields
+- Lightbox photo metadata (author, dates, note) now uses a stacked two-line layout for better readability
+
 # 2026-04-09
 
 ### 🚀 Enhancements

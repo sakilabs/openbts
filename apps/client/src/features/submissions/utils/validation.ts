@@ -183,10 +183,8 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("gnbid", d.gnbid);
       optionalNonNegative("clid", d.clid);
       optionalNonNegative("pci", d.pci);
-      if (d.type === "sa") {
-        optionalNonNegative("arfcn", d.arfcn);
-        if (d.arfcn !== undefined && !isARFCNValidForBand("NR", band?.value ?? 0, d.arfcn)) errors.arfcn = "validation.arfcnBandMismatch";
-      }
+      optionalNonNegative("arfcn", d.arfcn);
+      if (d.arfcn !== undefined && !isARFCNValidForBand("NR", band?.value ?? 0, d.arfcn)) errors.arfcn = "validation.arfcnBandMismatch";
       break;
     }
   }

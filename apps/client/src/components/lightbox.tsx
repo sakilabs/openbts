@@ -150,18 +150,20 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
             onLoad={handleImgLoad}
           />
         </div>
-        <div className="flex items-center gap-2.5 text-white/80 text-xs">
-          <span className="font-medium">@{activePhoto.author?.username ?? "-"}</span>
-          <div className="flex items-center gap-1.5">
-            <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
-            <span className="tabular-nums">{new Date(activePhoto.createdAt).toLocaleDateString(i18n.language, DATE_FORMAT)}</span>
-          </div>
-          {activePhoto.taken_at ? (
+        <div className="flex flex-col items-center gap-1 text-white/80 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="font-medium">@{activePhoto.author?.username ?? "-"}</span>
             <div className="flex items-center gap-1.5">
-              <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
-              <span className="tabular-nums">{new Date(activePhoto.taken_at).toLocaleDateString(i18n.language, MONTH_FORMAT)}</span>
+              <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
+              <span className="tabular-nums">{new Date(activePhoto.createdAt).toLocaleDateString(i18n.language, DATE_FORMAT)}</span>
             </div>
-          ) : null}
+            {activePhoto.taken_at ? (
+              <div className="flex items-center gap-1.5">
+                <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
+                <span className="tabular-nums">{new Date(activePhoto.taken_at).toLocaleDateString(i18n.language, MONTH_FORMAT)}</span>
+              </div>
+            ) : null}
+          </div>
           {activePhoto.note ? <span className="italic text-white/60">{activePhoto.note}</span> : null}
         </div>
       </div>

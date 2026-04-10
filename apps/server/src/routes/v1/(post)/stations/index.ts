@@ -56,7 +56,7 @@ const nrInsertSchema = createInsertSchema(nrCells)
   })
   .superRefine((data, ctx) => {
     if (data.type === "nsa") {
-      for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
+      for (const field of ["nrtac", "clid", "gnbid"] as const) {
         if (data[field] !== null && data[field] !== undefined)
           ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
       }

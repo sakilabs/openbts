@@ -10,7 +10,13 @@ import { ErrorResponse } from "../../../../../../errors.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
-import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../../../services/cellDuplicateCheck.service.js";
+import {
+  checkGSMDuplicate,
+  checkLTEDuplicate,
+  checkLTEPCIDuplicate,
+  checkNRPCIDuplicate,
+  checkUMTSDuplicate,
+} from "../../../../../../services/cellDuplicateCheck.service.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
 const cellsInsertSchema = createInsertSchema(cells)
@@ -116,6 +122,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         /* eslint-disable-next-line no-await-in-loop */
         await checkLTEDuplicate(d.enbid, d.clid, station.operator_id);
       }
+    }
+  }
+
+  for (const cell of cellsData) {
+    if (!cell.details || !cell.band_id) continue;
+    if (cell.rat === "LTE") {
+      const d = cell.details as z.infer<typeof lteInsertSchema>;
+      /* eslint-disable-next-line no-await-in-loop */
+      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(station_id, cell.band_id, d.pci);
+    } else if (cell.rat === "NR") {
+      const d = cell.details as z.infer<typeof nrInsertSchema>;
+      /* eslint-disable-next-line no-await-in-loop */
+      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, cell.band_id, d.pci);
     }
   }
 

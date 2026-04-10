@@ -18,7 +18,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { checkCellDuplicatesBatch } from "../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
 import { notifyStaffNewSubmission } from "../../../../services/notification.service.js";
 import { getRuntimeSettings } from "../../../../services/settings.service.js";
 import { logger } from "../../../../utils/logger.js";
@@ -40,7 +40,7 @@ const proposedStationInsert = createInsertSchema(proposedStations).omit({ create
 const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 const nrInsertSchema = nrInsertSchemaBase.superRefine((data, ctx) => {
   if (data.type === "nsa") {
-    for (const field of ["nrtac", "clid", "gnbid", "arfcn"] as const) {
+    for (const field of ["nrtac", "clid", "gnbid"] as const) {
       if (data[field] !== null && data[field] !== undefined)
         ctx.addIssue({ code: "custom", message: `${field} must not be set for NSA NR cells`, path: [field] });
     }
@@ -195,6 +195,18 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
       .filter((cell) => cell.details && cell.operation !== "delete")
       .map((cell) => ({ rat: cell.rat!, details: cell.details as Record<string, unknown>, excludeCellId: cell.target_cell_id ?? undefined }));
     if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, operatorId);
+  }
+
+  if (stationId !== null && input.cells && input.cells.length > 0) {
+    /* eslint-disable no-await-in-loop */
+    for (const cell of input.cells) {
+      if (cell.operation === "delete" || !cell.band_id || !cell.details) continue;
+      const excludeCellId = cell.target_cell_id ?? undefined;
+      const d = cell.details as { pci?: number | null };
+      if (cell.rat === "LTE" && d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(stationId, cell.band_id, d.pci, excludeCellId);
+      else if (cell.rat === "NR" && d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(stationId, cell.band_id, d.pci, excludeCellId);
+    }
+    /* eslint-enable no-await-in-loop */
   }
 
   if (type === "update" && targetStation) {

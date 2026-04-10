@@ -22,7 +22,7 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { checkCellDuplicatesBatch } from "../../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../../../../services/cellDuplicateCheck.service.js";
 import { createAndDeliverNotification } from "../../../../../services/notification.service.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import { syncStationsPermitsAssociations } from "../../../../../services/stationsPermitsAssociation.service.js";
@@ -435,6 +435,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           })
           .filter((e): e is typeof e & { details: Record<string, unknown> } => e.details !== null);
         if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, approveOperatorId);
+      }
+
+      if (stationId) {
+        for (const proposed of proposedCellRows) {
+          if (proposed.operation === "delete" || !proposed.band_id) continue;
+          const excludeCellId = proposed.target_cell_id ?? undefined;
+          if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined) {
+            await checkLTEPCIDuplicate(stationId, proposed.band_id, proposed.lte.pci, excludeCellId);
+          } else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined) {
+            await checkNRPCIDuplicate(stationId, proposed.band_id, proposed.nr.pci, excludeCellId);
+          }
+        }
       }
 
       /* eslint-disable no-await-in-loop */

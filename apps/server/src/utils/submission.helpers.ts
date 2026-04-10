@@ -74,6 +74,7 @@ export function isNonEmpty(value: unknown): boolean {
 interface CellWithDetails {
   rat?: string | null;
   operation?: string | null;
+  band_id?: number | null;
   details?: unknown;
 }
 
@@ -103,6 +104,20 @@ export function validateCellDuplicates(cells: CellWithDetails[]): void {
     const key = `${d.enbid}:${d.clid}`;
     if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate eNBID+CLID (${d.enbid}+${d.clid}) found in LTE cells` });
     seen.add(key);
+  }
+
+  for (const rat of ["LTE", "NR"] as const) {
+    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
+    const pciByBand = new Map<number, Set<number>>();
+    for (const cell of ratCells) {
+      const d = cell.details as { pci?: number | null } | undefined;
+      const bandId = cell.band_id;
+      if (d?.pci === null || d?.pci === undefined || bandId === null || bandId === undefined) continue;
+      const bandSet = pciByBand.get(bandId) ?? new Set<number>();
+      if (bandSet.has(d.pci)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate PCI ${d.pci} found on the same band in ${rat} cells` });
+      bandSet.add(d.pci);
+      pciByBand.set(bandId, bandSet);
+    }
   }
 }
 
