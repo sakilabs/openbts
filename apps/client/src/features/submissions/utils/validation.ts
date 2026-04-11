@@ -14,6 +14,7 @@ import type {
   UMTSCellDetails,
 } from "../types";
 import { type CellLike, findDuplicateCids, findDuplicateEnbidClids } from "./cellDuplicates";
+import { buildOriginalCellsMap, getCellDiffStatus } from "./cells";
 
 export type StationErrors = {
   station_id?: string;
@@ -45,6 +46,7 @@ type ValidationContext = {
   location: ProposedLocationForm;
   cells: ProposedCellForm[];
   bands?: Band[];
+  originalCells?: ProposedCellForm[];
 };
 
 export function validateForm(ctx: ValidationContext): FormErrors {
@@ -60,7 +62,7 @@ export function validateForm(ctx: ValidationContext): FormErrors {
   const locationErrors = validateLocation(ctx.location);
   if (Object.keys(locationErrors).length > 0) errors.location = locationErrors;
 
-  const cellErrors = validateCells(ctx.cells, ctx.bands);
+  const cellErrors = validateCells(ctx.cells, ctx.bands, ctx.originalCells);
   if (Object.keys(cellErrors).length > 0) errors.cells = cellErrors;
 
   return errors;
@@ -91,11 +93,14 @@ function validateLocation(location: ProposedLocationForm): LocationErrors {
   return errors;
 }
 
-export function validateCells(cells: ProposedCellForm[], bands?: Band[]): Record<string, CellError> {
+export function validateCells(cells: ProposedCellForm[], bands?: Band[], originalCells?: ProposedCellForm[]): Record<string, CellError> {
   const errors: Record<string, CellError> = {};
   const bandMap = bands ? new Map(bands.map((b) => [b.id, b])) : null;
+  const originalsMap = originalCells ? buildOriginalCellsMap(originalCells) : new Map<number, ProposedCellForm>();
 
   for (const cell of cells) {
+    const diffStatus = getCellDiffStatus(cell, originalsMap);
+    if (diffStatus === "unchanged") continue;
     const band = cell.band_id !== null ? (bandMap?.get(cell.band_id) ?? null) : null;
     const cellError = validateCell(cell, band);
     if (Object.keys(cellError).length > 0) errors[cell.id] = cellError;

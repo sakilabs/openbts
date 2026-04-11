@@ -146,6 +146,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         location: value.location,
         cells: activeCells,
         bands: allBands,
+        originalCells: value.originalCells,
       });
 
       if (hasErrors(errors)) {
@@ -529,9 +530,9 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const cellErrors = useMemo(() => {
     if (!showErrors) return undefined;
     const currentCells = form.state.values.cells;
-    const errors = validateCells(currentCells, allBands);
+    const errors = validateCells(currentCells, allBands, form.state.values.originalCells);
     return Object.keys(errors).length > 0 ? errors : undefined;
-  }, [showErrors, form.state.values.cells, allBands]);
+  }, [showErrors, form.state.values.cells, form.state.values.originalCells, allBands]);
 
   const formErrors = useMemo((): FormErrors => {
     if (!showErrors) return {};
