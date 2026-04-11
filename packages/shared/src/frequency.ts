@@ -50,17 +50,35 @@ const NR_GLOBAL: NRGlobalDef[] = [
   { frefOffsHz: 24250.08, deltaFGlobal: 0.06, nrefOffs: 2016667, range: [2016667, 3279165] },
 ];
 
-export const LTE_BAND_NAMES: Record<number, string> = {
-  700: "b28",
-  800: "b20",
-  850: "b5",
-  900: "b8",
-  1800: "b3",
-  1900: "b2",
-  2100: "b1",
-  2600: "b7",
-  3500: "b42",
-  3600: "b43",
+type NRBandDef = { name: string; range: [number, number]; duplex?: string };
+const NR_FREQ_TO_BANDS: Record<number, NRBandDef[]> = {
+  700: [{ name: "n28", range: [151600, 160600] }],
+  800: [{ name: "n20", range: [158200, 164166] }],
+  900: [{ name: "n8", range: [185000, 192000] }],
+  1800: [{ name: "n3", range: [361000, 376000] }],
+  2100: [{ name: "n1", range: [422000, 434000] }],
+  2600: [
+    { name: "n7", range: [524000, 538000], duplex: "FDD" },
+    { name: "n41", range: [499200, 537999], duplex: "TDD" },
+  ],
+  3500: [{ name: "n78", range: [620000, 653333] }],
+};
+
+type LTEFreqBandDef = { name: string; duplex?: string };
+const LTE_FREQ_TO_BANDS: Record<number, LTEFreqBandDef[]> = {
+  700: [{ name: "b28" }],
+  800: [{ name: "b20" }],
+  850: [{ name: "b5" }],
+  900: [{ name: "b8" }],
+  1800: [{ name: "b3" }],
+  1900: [{ name: "b2" }],
+  2100: [{ name: "b1" }],
+  2600: [
+    { name: "b7", duplex: "FDD" },
+    { name: "b38", duplex: "TDD" },
+  ],
+  3500: [{ name: "b42" }],
+  3600: [{ name: "b43" }],
 };
 
 export const UMTS_BAND_NAMES: Record<number, string> = {
@@ -73,25 +91,10 @@ export const UMTS_BAND_NAMES: Record<number, string> = {
   2100: "Band I",
 };
 
-export function getNrBandName(bandValue: number, duplex: string | null | undefined): string | null {
-  switch (bandValue) {
-    case 700:
-      return "n28";
-    case 800:
-      return "n20";
-    case 900:
-      return "n8";
-    case 1800:
-      return "n3";
-    case 2100:
-      return "n1";
-    case 2600:
-      return duplex === "TDD" ? "n41" : "n7";
-    case 3500:
-      return "n78";
-    default:
-      return null;
-  }
+export function getNRBandName(bandValue: number, duplex: string | null | undefined): string | null {
+  const bands = NR_FREQ_TO_BANDS[bandValue];
+  if (!bands) return null;
+  return bands.find((b) => !b.duplex || b.duplex === duplex)?.name ?? null;
 }
 
 function calcNrFrequency(nrarfcn: number): number | null {
@@ -103,15 +106,21 @@ function calcNrFrequency(nrarfcn: number): number | null {
 
 export type FrequencyInfo = { frequency: string | null; bandName: string | null };
 
+function getLTEBandName(bandValue: number, duplex: string | null | undefined): string | null {
+  const bands = LTE_FREQ_TO_BANDS[bandValue];
+  if (!bands) return null;
+  return bands.find((b) => !b.duplex || b.duplex === duplex)?.name ?? null;
+}
+
 export function getBandName(rat: string, bandValue: number, duplex?: string | null): string | null {
   if (bandValue === 0) return null;
   switch (rat) {
     case "UMTS":
       return UMTS_BAND_NAMES[bandValue] ?? null;
     case "LTE":
-      return LTE_BAND_NAMES[bandValue] ?? null;
+      return getLTEBandName(bandValue, duplex);
     case "NR":
-      return getNrBandName(bandValue, duplex);
+      return getNRBandName(bandValue, duplex);
     default:
       return null;
   }
@@ -130,7 +139,7 @@ export function calcExactFrequency(rat: string, bandValue: number, arfcn: number
       break;
     case "NR": {
       const freq = calcNrFrequency(arfcn);
-      if (freq !== null) result = { freq, bandName: getNrBandName(bandValue, duplex) };
+      if (freq !== null) result = { freq, bandName: getNRBandName(bandValue, duplex) };
       break;
     }
     default:
@@ -161,15 +170,18 @@ export function isARFCNValidForBand(rat: string, bandFreqValue: number, arfcn: n
       return arfcn >= bandDef.range[0] && arfcn <= bandDef.range[1];
     }
     case "LTE": {
-      let bandName = LTE_BAND_NAMES[bandFreqValue];
-      if (bandFreqValue === 2600 && duplex === "TDD") bandName = "b38";
+      const bandName = getLTEBandName(bandFreqValue, duplex);
       if (!bandName) return false;
       const bandDef = LTE_BANDS.find((b) => b.name === bandName);
       if (!bandDef) return false;
       return arfcn >= bandDef.range[0] && arfcn <= bandDef.range[1];
     }
-    case "NR":
-      return NR_GLOBAL.some((def) => arfcn >= def.range[0] && arfcn <= def.range[1]);
+    case "NR": {
+      const nrBands = NR_FREQ_TO_BANDS[bandFreqValue];
+      if (!nrBands) return NR_GLOBAL.some((def) => arfcn >= def.range[0] && arfcn <= def.range[1]);
+      const candidates = duplex ? nrBands.filter((b) => !b.duplex || b.duplex === duplex) : nrBands;
+      return candidates.some((b) => arfcn >= b.range[0] && arfcn <= b.range[1]);
+    }
     default:
       return true;
   }

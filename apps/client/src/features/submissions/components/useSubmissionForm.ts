@@ -150,6 +150,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
 
       if (hasErrors(errors)) {
         setShowErrors(true);
+        const messages = collectErrorMessages(errors);
+        for (const msg of messages) toast.error(t(msg));
         return;
       }
 
@@ -589,4 +591,32 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       handleMnoNameChange,
     },
   };
+}
+
+function collectErrorMessages(errors: FormErrors): string[] {
+  const messages: string[] = [];
+
+  if (errors.general) messages.push(errors.general);
+  if (errors.station) for (const msg of Object.values(errors.station)) if (msg) messages.push(msg);
+  if (errors.location) for (const msg of Object.values(errors.location)) if (msg) messages.push(msg);
+
+  if (errors.cells) {
+    const seen = new Set<string>();
+    for (const cellError of Object.values(errors.cells)) {
+      if (cellError.band_id && !seen.has(cellError.band_id)) {
+        seen.add(cellError.band_id);
+        messages.push(cellError.band_id);
+      }
+      if (cellError.details) {
+        for (const msg of Object.values(cellError.details)) {
+          if (msg && !seen.has(msg)) {
+            seen.add(msg);
+            messages.push(msg);
+          }
+        }
+      }
+    }
+  }
+
+  return messages;
 }
