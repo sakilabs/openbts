@@ -189,7 +189,8 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("clid", d.clid);
       optionalNonNegative("pci", d.pci);
       optionalNonNegative("arfcn", d.arfcn);
-      if (d.arfcn !== undefined && !isARFCNValidForBand("NR", band?.value ?? 0, d.arfcn, band?.duplex)) errors.arfcn = "validation.arfcnBandMismatch";
+      if (d.arfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("NR", band.value, d.arfcn, band?.duplex))
+        errors.arfcn = "validation.arfcnBandMismatch";
       break;
     }
   }
