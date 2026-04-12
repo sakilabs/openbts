@@ -1,5 +1,5 @@
 import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -21,11 +21,12 @@ type WorkerParams = {
   regionCodes?: string[];
   rat?: ("GSM" | "UMTS" | "LTE" | "NR" | "IOT")[];
   bandIds?: number[];
+  since?: string;
 };
 
 parentPort.on("message", async (params: WorkerParams) => {
   try {
-    const { format, operatorMncs, regionCodes, rat, bandIds } = params;
+    const { format, operatorMncs, regionCodes, rat, bandIds, since } = params;
 
     let resolvedOperatorIds: number[] | undefined;
     if (operatorMncs && operatorMncs.length > 0) {
@@ -45,6 +46,7 @@ parentPort.on("message", async (params: WorkerParams) => {
 
     const baseConditions = [...stationConditions];
     if (bandIds && bandIds.length > 0) baseConditions.push(inArray(bands.value, bandIds));
+    if (since) baseConditions.push(gte(cells.updatedAt, new Date(since)));
 
     const runGsm = !rat || rat.includes("GSM");
     const runUmts = !rat || rat.includes("UMTS");

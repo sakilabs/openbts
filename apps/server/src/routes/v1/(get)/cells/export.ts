@@ -1,5 +1,5 @@
 import { bands, cells, locations, regions, stations } from "@openbts/drizzle";
-import { and, eq, inArray, max } from "drizzle-orm";
+import { and, eq, gte, inArray, max } from "drizzle-orm";
 import type { FastifyReply } from "fastify";
 import type { FastifyRequest } from "fastify/types/request.js";
 // oxlint-disable no-await-in-loop
@@ -83,6 +83,10 @@ const schemaRoute = {
               .filter((n) => !Number.isNaN(n))
           : undefined,
       ),
+    since: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
   }),
 };
 
@@ -93,11 +97,13 @@ async function getLastModified({
   regionCodes,
   rat,
   bandIds,
+  since,
 }: {
   operatorMncs?: number[];
   regionCodes?: string[];
   rat?: ("GSM" | "UMTS" | "LTE" | "NR" | "IOT")[];
   bandIds?: number[];
+  since?: string;
 }): Promise<Date | null> {
   let resolvedOperatorIds: number[] | undefined;
   if (operatorMncs && operatorMncs.length > 0) {
@@ -111,6 +117,7 @@ async function getLastModified({
   if (resolvedOperatorIds && resolvedOperatorIds.length > 0) conditions.push(inArray(stations.operator_id, resolvedOperatorIds));
   if (regionCodes && regionCodes.length > 0) conditions.push(inArray(regions.code, regionCodes));
   if (bandIds && bandIds.length > 0) conditions.push(inArray(bands.value, bandIds));
+  if (since) conditions.push(gte(cells.updatedAt, new Date(since)));
   if (rat && rat.length > 0) {
     const ratSet = new Set(rat);
     const dbRats: ("GSM" | "UMTS" | "LTE" | "NR" | "IOT")[] = [];
@@ -134,11 +141,11 @@ async function getLastModified({
 }
 
 async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
-  const { format, operators: operatorMncs, regions: regionCodes, rat, bands: bandIds } = req.query;
-  const cacheKey = `clf:export:${JSON.stringify({ format, operatorMncs, regionCodes, rat, bandIds })}`;
+  const { format, operators: operatorMncs, regions: regionCodes, rat, bands: bandIds, since } = req.query;
+  const cacheKey = `clf:export:${JSON.stringify({ format, operatorMncs, regionCodes, rat, bandIds, since })}`;
   const lastModifiedKey = `${cacheKey}:lm`;
 
-  const lastModified = await getLastModified({ operatorMncs, regionCodes, rat, bandIds });
+  const lastModified = await getLastModified({ operatorMncs, regionCodes, rat, bandIds, since });
   const lastModifiedIso = lastModified?.toISOString() ?? null;
   const [cachedLm, cachedTmpPath] = await Promise.all([redis.get(lastModifiedKey), redis.get(cacheKey)]);
 
@@ -153,6 +160,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {
         regionCodes,
         rat,
         bandIds,
+        since,
       });
       worker.on("message", ({ success, tmpPath, error }: { success: boolean; tmpPath?: string; error?: string }) => {
         void worker.terminate();
