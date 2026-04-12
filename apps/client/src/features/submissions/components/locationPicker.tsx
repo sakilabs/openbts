@@ -120,7 +120,7 @@ type LocationPickerProps = {
   onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
   onExistingLocationSelect?: (location: LocationWithStations) => void;
   onUkeStationSelect?: (station: UkeStation) => void;
-  locationDiffs?: { coords: boolean; city: boolean; address: boolean } | null;
+  locationDiffs?: { coords: boolean; city: boolean; address: boolean; region: boolean } | null;
   currentLocation?: Location | null;
   showEditLocationLink?: boolean;
 };
@@ -215,6 +215,7 @@ export function LocationPicker({
             onExistingLocationSelect={handleExistingLocationSelect}
             showUkeLocations={showUkeLocations}
             onUkeStationSelect={onUkeStationSelect}
+            currentLocation={locationDiffs?.coords ? currentLocation : null}
           />
           <MapControls showZoom showLocate position="bottom-right" />
         </MapGL>
@@ -296,6 +297,7 @@ export function LocationPicker({
             </SelectContent>
           </Select>
           {errors?.region_id && <p className="text-xs text-destructive">{t(errors.region_id)}</p>}
+          {locationDiffs?.region && currentLocation && <ChangeBadge label={t("diff.current")} current={currentLocation.region.name} />}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -341,15 +343,31 @@ function SelectedLocationMarker() {
   );
 }
 
+function CurrentLocationMarker() {
+  return (
+    <div className="relative flex items-center justify-center">
+      <div className="h-3.5 w-3.5 rounded-full bg-red-500 border-2 border-white shadow-md" />
+    </div>
+  );
+}
+
 type PickerMapInnerProps = {
   location: ProposedLocationForm;
   onCoordinatesSet: (lat: number, lon: number) => void;
   onExistingLocationSelect: (loc: LocationWithStations) => void;
   showUkeLocations: boolean;
   onUkeStationSelect?: (station: UkeStation) => void;
+  currentLocation?: Location | null;
 };
 
-function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, showUkeLocations, onUkeStationSelect }: PickerMapInnerProps) {
+function PickerMapInner({
+  location,
+  onCoordinatesSet,
+  onExistingLocationSelect,
+  showUkeLocations,
+  onUkeStationSelect,
+  currentLocation,
+}: PickerMapInnerProps) {
   const { map, isLoaded } = useMap();
   const { bounds } = useMapBounds({ map, isLoaded, debounceMs: 500 });
   const { nearbyPanel, ukeStationPanel, dispatchPanel } = useLocationPickerState();
@@ -507,6 +525,13 @@ function PickerMapInner({ location, onCoordinatesSet, onExistingLocationSelect, 
 
   return (
     <>
+      {currentLocation ? (
+        <MapMarker longitude={currentLocation.longitude} latitude={currentLocation.latitude}>
+          <MarkerContent>
+            <CurrentLocationMarker />
+          </MarkerContent>
+        </MapMarker>
+      ) : null}
       {location.latitude !== null && location.longitude !== null ? (
         <MapMarker longitude={location.longitude} latitude={location.latitude} draggable onDragEnd={handleDragEnd}>
           <MarkerContent>

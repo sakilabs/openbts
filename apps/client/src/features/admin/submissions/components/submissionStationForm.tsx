@@ -43,7 +43,7 @@ type SubmissionStationFormProps = {
   currentOperator?: Operator | null;
   currentStation: Station | null;
   stationDiffs: { station_id: boolean; operator_id: boolean; notes: boolean } | null;
-  locationDiffs: { coords: boolean; city: boolean; address: boolean } | null;
+  locationDiffs: { coords: boolean; city: boolean; address: boolean; region: boolean } | null;
   isFormDisabled: boolean;
   isDeleteSubmission: boolean;
 };

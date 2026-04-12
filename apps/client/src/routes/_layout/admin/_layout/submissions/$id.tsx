@@ -352,6 +352,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       coords: proposed.latitude !== cur.latitude || proposed.longitude !== cur.longitude,
       city: (proposed.city ?? "") !== (cur.city ?? ""),
       address: (proposed.address ?? "") !== (cur.address ?? ""),
+      region: proposed.region_id !== cur.region.id,
     };
   }, [submission, currentStation]);
 

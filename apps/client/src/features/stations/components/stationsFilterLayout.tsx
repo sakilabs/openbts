@@ -57,13 +57,17 @@ export function StationsListLayout({ data, onRowClick, headerActions, children }
   const handleSort = useCallback(
     (column: StationSortBy) => {
       if (sortBy === column) {
-        setSort((prev) => (prev === "desc" ? "asc" : "desc"));
+        if (sort === "desc") setSort("asc");
+        else {
+          setSortBy(undefined);
+          setSort("desc");
+        }
       } else {
         setSortBy(column);
         setSort("desc");
       }
     },
-    [sortBy, setSort, setSortBy],
+    [sort, sortBy, setSort, setSortBy],
   );
 
   return (

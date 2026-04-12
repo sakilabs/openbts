@@ -437,19 +437,18 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, approveOperatorId);
       }
 
+      /* eslint-disable no-await-in-loop */
       if (stationId) {
         for (const proposed of proposedCellRows) {
           if (proposed.operation === "delete" || !proposed.band_id) continue;
           const excludeCellId = proposed.target_cell_id ?? undefined;
-          if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined) {
+          if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined)
             await checkLTEPCIDuplicate(stationId, proposed.band_id, proposed.lte.pci, excludeCellId);
-          } else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined) {
+          else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined)
             await checkNRPCIDuplicate(stationId, proposed.band_id, proposed.nr.pci, excludeCellId);
-          }
         }
       }
 
-      /* eslint-disable no-await-in-loop */
       for (const proposed of proposedCellRows) {
         switch (proposed.operation) {
           case "add": {

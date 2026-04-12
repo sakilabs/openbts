@@ -65,7 +65,7 @@ const fetchStationsList = async (params: FetchStationsParams): Promise<StationsR
   if (params.filters.rat.length) searchParams.set("rat", params.filters.rat.join(","));
   if (params.regionNames.length) searchParams.set("regions", params.regionNames.join(","));
   searchParams.set("sort", params.sort);
-  if (params.sortBy) searchParams.set("sortBy", params.sortBy);
+  searchParams.set("sortBy", params.sortBy ?? "updatedAt");
 
   return fetchJson<StationsResponse>(`${API_BASE}/stations?${searchParams.toString()}`);
 };
@@ -103,7 +103,7 @@ function stateToParams(state: FullState): URLSearchParams {
   if (state.regions.length) next.set("regions", state.regions.join(","));
   if (state.q) next.set("q", state.q);
   if (state.order !== "desc") next.set("order", state.order);
-  if (state.sort && state.sort !== "updatedAt") next.set("sort", state.sort);
+  if (state.sort && (state.sort !== "updatedAt" || state.q.trim().length > 0)) next.set("sort", state.sort);
   return next;
 }
 
@@ -122,7 +122,7 @@ function paramsToState(searchParams: URLSearchParams): FullState {
     regions: parseNumberArrayParam(searchParams.get("regions")),
     q: searchParams.get("q") ?? "",
     order: (searchParams.get("order") as StationSortDirection) ?? "desc",
-    sort: (searchParams.get("sort") as StationSortBy | undefined) ?? "updatedAt",
+    sort: searchParams.get("sort") as StationSortBy | undefined,
   };
 }
 
@@ -163,6 +163,7 @@ export function useStationsData() {
   const searchQuery = state.q;
   const sort = state.order;
   const sortBy = state.sort;
+  const isSearchMode = searchQuery.trim().length > 0;
 
   const setFilters = useCallback(
     (newFilters: StationFilters | ((prev: StationFilters) => StationFilters)) => {
@@ -199,7 +200,8 @@ export function useStationsData() {
   const setSearchQuery = useCallback(
     (value: string | ((prev: string) => string)) => {
       const resolved = typeof value === "function" ? value(stateRef.current.q) : value;
-      commit({ q: resolved });
+      const enteringSearch = stateRef.current.q.trim().length === 0 && resolved.trim().length > 0;
+      commit(enteringSearch ? { q: resolved, sort: undefined } : { q: resolved });
     },
     [commit],
   );
@@ -249,30 +251,29 @@ export function useStationsData() {
     },
     staleTime: 1000 * 60 * 5,
     refetchOnMount: "always",
-    enabled: searchQuery.trim().length === 0,
+    enabled: !isSearchMode,
   });
 
   const combinedSearchQuery = useMemo(() => {
-    if (searchQuery.trim().length === 0) return "";
+    if (!isSearchMode) return "";
     return buildSearchQuery({
       query: searchQuery,
       filters,
       regionNames: selectedRegionNames,
     });
-  }, [searchQuery, filters, selectedRegionNames]);
+  }, [isSearchMode, searchQuery, filters, selectedRegionNames]);
 
-  const searchSortBy = searchQuery.trim().length > 0 && sortBy === "updatedAt" ? "relevance" : sortBy;
-
+  const searchQuerySortBy = searchParams.has("sort") ? sortBy : undefined;
   const { data: searchResults = [], isLoading: isSearching } = useQuery({
-    queryKey: ["station-search-table", combinedSearchQuery, sort, searchSortBy],
-    queryFn: () => searchStations(combinedSearchQuery, sort, searchSortBy),
+    queryKey: ["station-search-table", combinedSearchQuery, sort, searchQuerySortBy],
+    queryFn: () => searchStations(combinedSearchQuery, sort, searchQuerySortBy),
     enabled: combinedSearchQuery.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 
   const stations = useMemo(() => {
-    return searchQuery.trim().length > 0 ? searchResults : (data?.pages.flatMap((page) => page.data) ?? []);
-  }, [data, searchQuery, searchResults]);
+    return isSearchMode ? searchResults : (data?.pages.flatMap((page) => page.data) ?? []);
+  }, [data, isSearchMode, searchResults]);
 
   const totalStationsFromApi = useMemo(() => {
     if (!data?.pages.length) return undefined;
@@ -290,7 +291,7 @@ export function useStationsData() {
     operators,
     regions,
     uniqueBandValues,
-    totalStations: searchQuery.trim().length > 0 ? undefined : totalStationsFromApi,
+    totalStations: isSearchMode ? undefined : totalStationsFromApi,
 
     filters,
     setFilters,
@@ -300,15 +301,15 @@ export function useStationsData() {
 
     sort,
     setSort,
-    sortBy: searchQuery.trim().length > 0 ? searchSortBy : sortBy,
+    sortBy: isSearchMode ? sortBy : (sortBy ?? "updatedAt"),
     setSortBy,
 
     searchQuery,
     setSearchQuery,
 
-    isLoading: searchQuery.trim().length > 0 ? isSearching : isLoading,
+    isLoading: isSearchMode ? isSearching : isLoading,
     isFetching,
-    hasMore: searchQuery.trim().length > 0 ? false : hasNextPage,
-    loadMore: hasNextPage && searchQuery.trim().length === 0 ? fetchNextPage : undefined,
+    hasMore: isSearchMode ? false : hasNextPage,
+    loadMore: hasNextPage && !isSearchMode ? fetchNextPage : undefined,
   };
 }
