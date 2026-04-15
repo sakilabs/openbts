@@ -233,7 +233,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
       </div>
 
       <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleFileChange} />
-      <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-96 overflow-y-auto">
+      <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
         {locationPhotos.map((photo) => {
           const isSelected = selected.has(photo.id);
           const isMain = mainId === photo.id;

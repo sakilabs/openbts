@@ -263,7 +263,7 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                 </Button>
               </div>
             ) : (
-              <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-96 overflow-y-auto">
+              <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
                 {existingPhotos.map((photo, idx) => (
                   <div key={`existing-${photo.id}`} className="relative group rounded-lg overflow-hidden border bg-muted">
                     <div className="relative aspect-square">

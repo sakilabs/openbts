@@ -1,4 +1,4 @@
-import { Loading01Icon, Location01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
+import { Location01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapControls, Map as MapGL, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { ChangeBadge } from "@/features/admin/submissions/components/common";
 import { PICKER_LAYER_IDS, PICKER_NEARBY_RADIUS_METERS, PICKER_UKE_LAYER_IDS, POLAND_CENTER } from "@/features/map/constants";
 import { getOperatorData } from "@/features/map/geojson";
@@ -231,11 +232,7 @@ export function LocationPicker({
             disabled={!hasCoordinates || isFetchingAddress}
             className="h-8 text-xs"
           >
-            {isFetchingAddress ? (
-              <HugeiconsIcon icon={Loading01Icon} className="size-3.5 animate-spin" />
-            ) : (
-              <HugeiconsIcon icon={Location01Icon} className="size-3.5" />
-            )}
+            {isFetchingAddress ? <Spinner className="size-3.5" /> : <HugeiconsIcon icon={Location01Icon} className="size-3.5" />}
             {t("locationPicker.fetchAddress")}
           </Button>
         </div>

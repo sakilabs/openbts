@@ -76,3 +76,10 @@ export async function updateLocationPhotoTakenAt(locationId: number, photoId: nu
 export async function deleteLocationPhoto(locationId: number, photoId: number): Promise<void> {
   await fetchJson(`${API_BASE}/locations/${locationId}/photos/${photoId}`, { method: "DELETE" });
 }
+
+export async function fetchElevation(latitude: number, longitude: number): Promise<number> {
+  const res = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${latitude}&longitude=${longitude}`);
+  if (!res.ok) throw new Error("Failed to fetch elevation");
+  const data = (await res.json()) as { elevation: number[] };
+  return data.elevation[0];
+}

@@ -50,13 +50,15 @@
   },
   "submissionSelector": {
     "title": "Select Station",
+    "new": "New",
+    "existing": "Existing",
     "existingStation": "Existing Station",
     "newStationHint": "Fill in station and location details below"
   },
   "actionSelector": {
     "title": "Select Action",
-    "update": "Station Update",
-    "delete": "Station Deletion"
+    "update": "Update",
+    "delete": "Deletion"
   },
   "ratSelector": {
     "title": "Radio Technologies",

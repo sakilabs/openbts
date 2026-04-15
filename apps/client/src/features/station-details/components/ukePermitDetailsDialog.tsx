@@ -1,4 +1,4 @@
-import { Add01Icon, Cancel01Icon, Globe02Icon, Location01Icon, MapsLocation01Icon, Tag01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Cancel01Icon, Globe02Icon, Location01Icon, MapsLocation01Icon, MountainIcon, Tag01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -16,7 +16,7 @@ import { formatCoordinates } from "@/lib/gpsUtils";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { UkeStation } from "@/types/station";
 
-import { fetchPemReports } from "../api";
+import { fetchElevation, fetchPemReports } from "../api";
 import { CopyButton } from "./copyButton";
 import { NavigationLinks } from "./navLinks";
 import { PermitsList } from "./permitsList";
@@ -53,6 +53,14 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
     queryFn: () => fetchPemReports(station!.station_id, station!.location!.latitude, station!.location!.longitude, station!.operator!.mnc!),
     staleTime: 1000 * 60 * 60,
     enabled: !!station?.station_id && !!station?.location && !!station?.operator?.mnc,
+    retry: false,
+  });
+
+  const { data: elevation } = useQuery({
+    queryKey: ["elevation", station?.location?.latitude, station?.location?.longitude],
+    queryFn: () => fetchElevation(station!.location!.latitude, station!.location!.longitude),
+    staleTime: 1000 * 60 * 60 * 24,
+    enabled: !!station?.location && preferences.showElevation,
     retry: false,
   });
 
@@ -225,6 +233,14 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                     ) : null}
                   </div>
                 </div>
+
+                {elevation !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <HugeiconsIcon icon={MountainIcon} className="size-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-muted-foreground">{t("common:labels.elevation")}:</span>
+                    <span className="text-sm font-medium">{elevation} m</span>
+                  </div>
+                )}
 
                 {stationLocation && (!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                   <div className="sm:col-span-2 pt-3 border-t border-border/50">

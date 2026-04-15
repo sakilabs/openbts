@@ -280,7 +280,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         </form.Subscribe>
       </div>
 
-      <div className="flex-[2.5_0_500px] max-md:flex-[1_1_auto] max-md:min-w-0">
+      <div className="flex-[3_0_500px] min-w-0 max-md:flex-[1_1_auto]">
         <form.Subscribe
           selector={(s) => ({
             selectedRats: s.values.selectedRats,

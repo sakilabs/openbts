@@ -49,6 +49,7 @@
     "latitude": "Szerokość geograficzna",
     "longitude": "Długość geograficzna",
     "coordinates": "GPS",
+    "elevation": "Wysokość n.p.m.",
     "location": "Lokalizacja",
     "standards": "Standardy",
     "standard": "Standard",

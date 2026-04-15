@@ -182,6 +182,27 @@ function AboutPage() {
             Przedstawione logo i nazwy operatorów oraz serwisu SI2PEM są własnością ich prawnych właścicieli. Wykorzystanie w serwisie {APP_NAME} ma
             wyłącznie charakter informacyjny i nie oznacza afiliacji ani poparcia ze strony tych podmiotów.
           </p>
+          <p className="text-sm text-muted-foreground">
+            Dane o wysokości n.p.m. pochodzą z{" "}
+            <a
+              href="https://open-meteo.com/en/docs/elevation-api"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline hover:opacity-80"
+            >
+              Open-Meteo Elevation API
+            </a>
+            , opartego na modelu{" "}
+            <a
+              href="https://doi.org/10.5270/ESA-c5d3d65"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline hover:opacity-80"
+            >
+              Copernicus DEM GLO-90
+            </a>{" "}
+            © ESA.
+          </p>
         </section>
       </div>
     </main>

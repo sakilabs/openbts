@@ -128,6 +128,17 @@ const GROUPS: PreferenceGroup[] = [
           },
         ],
       },
+      {
+        items: [
+          {
+            type: "checkbox",
+            key: "showElevation",
+            labelKey: "preferences.showElevation",
+            hintKey: "preferences.showElevationHint",
+            itemLabelKey: "preferences.showElevationLabel",
+          },
+        ],
+      },
     ],
   },
   {

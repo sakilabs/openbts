@@ -228,7 +228,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                 ) : null}
               </div>
             ) : (
-              <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {photos.map((photo, idx) => (
                   <div
                     key={photo.id}

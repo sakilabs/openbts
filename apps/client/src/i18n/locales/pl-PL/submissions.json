@@ -50,13 +50,15 @@
   },
   "submissionSelector": {
     "title": "Wybierz stację",
+    "new": "Nowa",
+    "existing": "Istniejąca",
     "existingStation": "Istniejąca stacja",
     "newStationHint": "Wypełnij poniżej dane stacji i lokalizacji"
   },
   "actionSelector": {
     "title": "Wybierz akcję",
-    "update": "Aktualizacja stacji",
-    "delete": "Usunięcie stacji"
+    "update": "Aktualizacja",
+    "delete": "Usunięcie"
   },
   "ratSelector": {
     "title": "Technologie radiowe",

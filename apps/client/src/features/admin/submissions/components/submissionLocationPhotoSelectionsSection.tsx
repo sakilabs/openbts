@@ -26,7 +26,7 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
           <span className="font-semibold text-sm">{t("photos.selectedLocationPhotos")}</span>
           <span className="text-xs text-muted-foreground">({photos.length})</span>
         </div>
-        <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
           {photos.map((photo, idx) => (
             <div key={photo.id} className="group relative rounded-lg overflow-hidden border bg-muted">
               <div

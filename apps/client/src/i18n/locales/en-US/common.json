@@ -49,6 +49,7 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "coordinates": "Coordinates",
+    "elevation": "Elevation",
     "location": "Location",
     "standards": "Standards",
     "standard": "Standard",

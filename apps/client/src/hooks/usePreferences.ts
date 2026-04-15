@@ -18,6 +18,7 @@ export interface UserPreferences {
   mapRightClickMeasure: boolean;
   mapMeasureCircle: boolean;
   showStationPhotoPanel: boolean;
+  showElevation: boolean;
   showAzimuths: boolean;
   hideFiltersOnMapClick: boolean;
   azimuthsMinZoom: number;
@@ -39,6 +40,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   mapRightClickMeasure: false,
   mapMeasureCircle: false,
   showStationPhotoPanel: true,
+  showElevation: false,
   showAzimuths: false,
   hideFiltersOnMapClick: false,
   azimuthsMinZoom: 14,

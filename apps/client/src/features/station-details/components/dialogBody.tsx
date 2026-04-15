@@ -5,6 +5,7 @@ import {
   Location01Icon,
   MapsLocation01Icon,
   Message01Icon,
+  MountainIcon,
   Note01Icon,
   SignalFull02Icon,
   Tag01Icon,
@@ -26,7 +27,7 @@ import { formatCoordinates } from "@/lib/gpsUtils";
 import { cn } from "@/lib/utils";
 import type { Station, StationComment } from "@/types/station";
 
-import { fetchPemReports, fetchStationPhotos } from "../api";
+import { fetchElevation, fetchPemReports, fetchStationPhotos } from "../api";
 import { TAB_OPTIONS, type TabId } from "../tabs";
 import { groupCellsByRat } from "../utils";
 import { CellTable } from "./cellTable";
@@ -115,6 +116,14 @@ export function StationDetailsBody({
       fetchPemReports(station!.station_id!.replace(/^[TO]-/, ""), station!.location.latitude, station!.location.longitude, station!.operator.mnc),
     staleTime: 1000 * 60 * 60,
     enabled: source === "internal" && !!station?.station_id,
+    retry: false,
+  });
+
+  const { data: elevation } = useQuery({
+    queryKey: ["elevation", station?.location.latitude, station?.location.longitude],
+    queryFn: () => fetchElevation(station!.location.latitude, station!.location.longitude),
+    staleTime: 1000 * 60 * 60 * 24,
+    enabled: source === "internal" && !!station?.location && preferences.showElevation,
     retry: false,
   });
 
@@ -279,6 +288,13 @@ export function StationDetailsBody({
                       </div>
                       {station.extra_identificators && (
                         <ExtraIdentificatorsDisplay data={station.extra_identificators} operatorMnc={station.operator?.mnc} />
+                      )}
+                      {elevation !== undefined && (
+                        <div className="flex items-center gap-2">
+                          <HugeiconsIcon icon={MountainIcon} className="size-4 text-muted-foreground shrink-0" />
+                          <span className="text-sm text-muted-foreground">{t("common:labels.elevation")}:</span>
+                          <span className="text-sm font-medium">{elevation} m</span>
+                        </div>
                       )}
                       {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
                         <div className="sm:col-span-2 pt-3 border-t border-border/50">
