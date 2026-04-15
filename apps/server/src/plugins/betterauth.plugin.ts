@@ -177,6 +177,7 @@ export const auth = betterAuth({
     apiKey({
       apiKeyHeaders: ["authorization"],
       enableMetadata: true,
+      defaultPrefix: "sk_",
       permissions: {
         defaultPermissions: async (_referenceId: string, _ctx: GenericEndpointContext) => {
           return {
