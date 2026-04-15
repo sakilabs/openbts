@@ -1,4 +1,4 @@
-import { Add01Icon, Alert02Icon, CheckmarkCircle02Icon, Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Alert02Icon, CheckmarkCircle02Icon, CodeIcon, Copy01Icon, SecurityLockIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { memo, useState } from "react";
@@ -49,6 +49,11 @@ type ApiKeyInfo = {
 
 const EXPIRY_OPTIONS = ["1d", "3d", "7d", "30d", "90d", "1y", "never"] as const;
 const MAX_KEYS = 1;
+const MAX_PK_KEYS = 2;
+
+function isPublishableKey(key: ApiKeyInfo): boolean {
+  return key.start?.startsWith("pk_") ?? false;
+}
 
 const EXPIRY_SECONDS: Record<string, number> = {
   "1d": 86400,
@@ -136,6 +141,8 @@ function KeyCreatedDialog({ apiKey, open, onClose }: { apiKey: string; open: boo
   );
 }
 
+type KeyType = "secret" | "publishable";
+
 function CreateKeyDialog({
   open,
   onOpenChange,
@@ -148,9 +155,18 @@ function CreateKeyDialog({
   const { t } = useTranslation(["settings", "common"]);
   const [name, setName] = useState("");
   const [expiresIn, setExpiresIn] = useState("7d");
+  const [keyType, setKeyType] = useState<KeyType>("secret");
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      if (keyType === "publishable") {
+        const result = await fetchJson<{ data: { key: string } }>(`${API_BASE}/account/publishable-keys`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name.trim() }),
+        });
+        return { key: result.data.key };
+      }
       const result = await authClient.apiKey.create({
         name: name.trim(),
         expiresIn: EXPIRY_SECONDS[expiresIn],
@@ -163,9 +179,27 @@ function CreateKeyDialog({
       onOpenChange(false);
       setName("");
       setExpiresIn("7d");
+      setKeyType("secret");
     },
     onError: (err: Error) => toast.error(err.message),
   });
+
+  const KEY_TYPES: { value: KeyType; icon: typeof SecurityLockIcon; label: string; description: string; tag: string }[] = [
+    {
+      value: "secret",
+      icon: SecurityLockIcon,
+      label: t("apiKeys.dialog.typeSecret"),
+      description: t("apiKeys.dialog.typeSecretDesc"),
+      tag: t("apiKeys.dialog.typeSecretTag"),
+    },
+    {
+      value: "publishable",
+      icon: CodeIcon,
+      label: t("apiKeys.dialog.typePublishable"),
+      description: t("apiKeys.dialog.typePublishableDesc"),
+      tag: t("apiKeys.dialog.typePublishableTag"),
+    },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -177,48 +211,98 @@ function CreateKeyDialog({
 
         <div className="space-y-3">
           <div className="space-y-1.5">
+            <Label>{t("apiKeys.dialog.typeLabel")}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {KEY_TYPES.map(({ value, icon, label, description, tag }) => {
+                const active = keyType === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setKeyType(value)}
+                    className={cn(
+                      "relative rounded-lg border p-3 text-left transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      active
+                        ? "border-primary/60 bg-primary/4 ring-1 ring-inset ring-primary/15"
+                        : "border-border hover:border-muted-foreground/30 hover:bg-muted/40",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div
+                        className={cn(
+                          "flex items-center justify-center size-6 rounded-md transition-colors",
+                          active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        <HugeiconsIcon icon={icon} className="size-3.5" />
+                      </div>
+                      {active && (
+                        <div className="size-4 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5">
+                          <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-2.5 text-primary-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <p className={cn("text-xs font-semibold leading-none mb-1", active ? "text-foreground" : "text-foreground/80")}>{label}</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug mb-2">{description}</p>
+                    <span
+                      className={cn(
+                        "inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-sm",
+                        active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {tag}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="api-key-name">{t("apiKeys.dialog.nameLabel")}</Label>
             <Input
               id="api-key-name"
-              placeholder={t("apiKeys.dialog.namePlaceholder")}
+              placeholder={keyType === "publishable" ? t("apiKeys.dialog.namePlaceholderPublishable") : t("apiKeys.dialog.namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="off"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>{t("apiKeys.dialog.expiresLabel")}</Label>
-            <Select value={expiresIn} onValueChange={(v) => v && setExpiresIn(v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {EXPIRY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {t(`apiKeys.dialog.expiresOptions.${opt}`)}
-                  </SelectItem>
+          {keyType === "secret" && (
+            <div className="space-y-1.5">
+              <Label>{t("apiKeys.dialog.expiresLabel")}</Label>
+              <Select value={expiresIn} onValueChange={(v) => v && setExpiresIn(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {t(`apiKeys.dialog.expiresOptions.${opt}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
+                {EXPIRY_OPTIONS.map((opt, i) => (
+                  <span key={opt}>
+                    <button
+                      type="button"
+                      onClick={() => setExpiresIn(opt)}
+                      className={cn(
+                        "text-xs transition-colors",
+                        expiresIn === opt ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {t(`apiKeys.dialog.expiresOptions.${opt}`)}
+                    </button>
+                    {i < EXPIRY_OPTIONS.length - 1 && <span className="text-muted-foreground/50 text-xs ml-1.5">·</span>}
+                  </span>
                 ))}
-              </SelectContent>
-            </Select>
-            <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
-              {EXPIRY_OPTIONS.map((opt, i) => (
-                <span key={opt}>
-                  <button
-                    type="button"
-                    onClick={() => setExpiresIn(opt)}
-                    className={cn(
-                      `text-xs transition-colors`,
-                      expiresIn === opt ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {t(`apiKeys.dialog.expiresOptions.${opt}`)}
-                  </button>
-                  {i < EXPIRY_OPTIONS.length - 1 && <span className="text-muted-foreground/50 text-xs ml-1.5">·</span>}
-                </span>
-              ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -253,6 +337,9 @@ export function ApiKeysCard({ userId }: { userId: string }) {
     queryFn: () => fetchJson<{ data: ApiKeyInfo[] }>(`${API_BASE}/account/api-keys`).then((r) => r.data),
   });
 
+  const secretKeys = keys.filter((k) => !isPublishableKey(k));
+  const publishableKeys = keys.filter(isPublishableKey);
+
   const revokeMutation = useMutation({
     mutationFn: async (keyId: string) => {
       const result = await authClient.apiKey.delete({ keyId });
@@ -266,17 +353,13 @@ export function ApiKeysCard({ userId }: { userId: string }) {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  function formatDate(dateStr: string) {
-    return new Intl.DateTimeFormat(i18n.language, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(new Date(dateStr));
-  }
-
   function handleCreated(key: string) {
     setCreatedKey(key);
     void qc.invalidateQueries({ queryKey: ["account", "api-keys", userId] });
+  }
+
+  function formatDate(dateStr: string) {
+    return new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric", year: "numeric" }).format(new Date(dateStr));
   }
 
   if (isLoading) {
@@ -316,62 +399,85 @@ export function ApiKeysCard({ userId }: { userId: string }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {keys.map((key) => (
-                      <tr key={key.id} className="border-b last:border-b-0">
-                        <td className="px-4 py-2.5">
-                          <p className="font-medium text-sm">{key.name ?? "Unnamed"}</p>
-                          <p className="text-xs text-muted-foreground">{t("apiKeys.created", { date: formatDate(key.createdAt) })}</p>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-mono">{key.start ?? "-"}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {key.expiresAt ? (
-                            <span className="text-xs">{formatDate(key.expiresAt)}</span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-xs">
-                              <span className="size-1.5 rounded-full bg-emerald-500" />
-                              {t("apiKeys.expiresNever")}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2.5 min-w-32">
-                          <div className="space-y-2">
-                            {key.rateLimit.max !== null ? (
-                              <UsageBar
-                                used={key.rateLimit.used}
-                                max={key.rateLimit.max}
-                                reset={key.rateLimit.reset}
-                                label={t("apiKeys.usage.minute")}
-                              />
+                    {keys.map((key) => {
+                      const isPk = isPublishableKey(key);
+                      return (
+                        <tr key={key.id} className="border-b last:border-b-0">
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-medium text-sm">{key.name ?? "Unnamed"}</p>
+                              <span
+                                className={cn(
+                                  "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+                                  isPk ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {t(isPk ? "apiKeys.typeBadge.publishable" : "apiKeys.typeBadge.secret")}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{t("apiKeys.created", { date: formatDate(key.createdAt) })}</p>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-mono">{key.start ?? "-"}</span>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            {isPk ? (
+                              <span className="text-xs text-muted-foreground">{t("common:status.never")}</span>
+                            ) : key.expiresAt ? (
+                              <span className="text-xs">{formatDate(key.expiresAt)}</span>
                             ) : (
-                              <span className="text-xs text-muted-foreground">{t("apiKeys.usage.minute")} ∞</span>
+                              <span className="inline-flex items-center gap-1 text-xs">
+                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                {t("apiKeys.expiresNever")}
+                              </span>
                             )}
-                            {key.quota.max !== null ? (
-                              <UsageBar used={key.quota.used} max={key.quota.max} reset={key.quota.reset} label={t("apiKeys.usage.weekly")} />
-                            ) : (
-                              <span className="text-xs text-muted-foreground">{t("apiKeys.usage.weekly")} ∞</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Button
-                            variant="outline"
-                            size="xs"
-                            className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-                            onClick={() => setRevokeTarget(key)}
-                          >
-                            {t("apiKeys.revokeKey")}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-4 py-2.5 min-w-32">
+                            <div className="space-y-2">
+                              {key.rateLimit.max !== null ? (
+                                <UsageBar
+                                  used={key.rateLimit.used}
+                                  max={key.rateLimit.max}
+                                  reset={key.rateLimit.reset}
+                                  label={t("apiKeys.usage.minute")}
+                                />
+                              ) : (
+                                <span className="text-xs text-muted-foreground">{t("apiKeys.usage.minute")} ∞</span>
+                              )}
+                              {!isPk && (
+                                <>
+                                  {key.quota.max !== null ? (
+                                    <UsageBar used={key.quota.used} max={key.quota.max} reset={key.quota.reset} label={t("apiKeys.usage.weekly")} />
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">{t("apiKeys.usage.weekly")} ∞</span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+                              onClick={() => setRevokeTarget(key)}
+                            >
+                              {t("apiKeys.revokeKey")}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </CardContent>
             <CardFooter className="justify-between">
-              <span className="text-xs text-muted-foreground">{t("apiKeys.keysUsed", { count: keys.length, max: MAX_KEYS })}</span>
+              <span className="text-xs text-muted-foreground">
+                {t("apiKeys.keysUsed", { count: secretKeys.length, max: MAX_KEYS })}
+                {" · "}
+                {t("apiKeys.pkKeysUsed", { count: publishableKeys.length, max: MAX_PK_KEYS })}
+              </span>
               <Button size="sm" onClick={() => setCreateOpen(true)}>
                 <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" className="size-3.5" />
                 {t("apiKeys.createKey")}

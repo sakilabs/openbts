@@ -168,11 +168,24 @@
     "revokeSuccess": "API key revoked successfully",
     "noKeys": "No API keys yet",
     "noKeysDescription": "Create an API key to access the OpenBTS API programmatically.",
+    "typeBadge": {
+      "secret": "Secret",
+      "publishable": "Public"
+    },
+    "pkKeysUsed": "{{count}} of {{max}} public keys used",
     "dialog": {
       "title": "Create API Key",
-      "description": "This key will have read-only access to public API endpoints.",
+      "description": "Choose a key type based on where it will be used.",
+      "typeLabel": "Key Type",
+      "typeSecret": "Secret key",
+      "typeSecretDesc": "For server-side use only. Never expose publicly.",
+      "typeSecretTag": "sk_...",
+      "typePublishable": "Publishable key",
+      "typePublishableDesc": "Safe for client-side apps, scripts, and curl.",
+      "typePublishableTag": "pk_...",
       "nameLabel": "Name",
       "namePlaceholder": "e.g. Production server",
+      "namePlaceholderPublishable": "e.g. My map app",
       "expiresLabel": "Expires In",
       "expiresOptions": {
         "1d": "1 day",

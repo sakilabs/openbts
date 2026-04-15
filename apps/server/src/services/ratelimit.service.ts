@@ -38,6 +38,14 @@ export const DEFAULT_TIER_LIMITS: Required<NonNullable<RateLimitOptions["tiers"]
   unlimited: { max: Number.POSITIVE_INFINITY, window: 60 },
 };
 
+export const DEFAULT_PK_TIER_LIMITS: Record<string, RateLimitTier> = {
+  basic: { max: 120, window: 60 },
+  pro: { max: 600, window: 60 },
+  unlimited: { max: Number.POSITIVE_INFINITY, window: 60 },
+};
+
+export const DEFAULT_IP_LIMIT: RateLimitTier = { max: 30, window: 120 };
+
 export class RateLimitService {
   private redis: typeof redis;
   private prefix = "ratelimit:";
@@ -97,9 +105,18 @@ export class RateLimitService {
       return `${this.prefix}user:${userId}${useRouteKey ? `:${route}` : ""}`;
     }
 
+    if (req.publishableKey) {
+      const keyId = req.publishableKey.id;
+      return `${this.prefix}pk:${keyId}${useRouteKey ? `:${route}` : ""}`;
+    }
+
     const fingerprint = generateFingerprint(req);
-    if (!fingerprint) return null;
-    return `${this.prefix}unauth:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
+    if (fingerprint) return `${this.prefix}unauth:${fingerprint}${useRouteKey ? `:${route}` : ""}`;
+
+    const ip = req.ip;
+    if (ip && ip !== "unknown") return `${this.prefix}ip:${ip}${useRouteKey ? `:${route}` : ""}`;
+
+    return null;
   }
 
   /**
@@ -172,6 +189,8 @@ export class RateLimitService {
       if (apiKeyRateLimit) return apiKeyRateLimit;
     }
 
+    if (req.publishableKey) return DEFAULT_PK_TIER_LIMITS[req.publishableKey.tier] ?? (DEFAULT_PK_TIER_LIMITS.basic as RateLimitTier);
+
     if (req.userSession?.user) {
       if (req.userSession.user.role) {
         const role = req.userSession.user.role as UserRole;
@@ -181,6 +200,8 @@ export class RateLimitService {
 
       return this.options.roles.user ?? { max: this.options.max, window: this.options.window };
     }
+
+    if (!generateFingerprint(req)) return DEFAULT_IP_LIMIT;
 
     const guestLimit = this.options.roles.guest;
     return guestLimit ?? { max: this.options.max, window: this.options.window };

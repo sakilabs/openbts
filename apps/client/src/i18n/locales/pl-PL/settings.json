@@ -168,11 +168,24 @@
     "revokeSuccess": "Klucz API został unieważniony",
     "noKeys": "Brak kluczy API",
     "noKeysDescription": "Utwórz klucz API, aby programistycznie korzystać z API OpenBTS.",
+    "typeBadge": {
+      "secret": "Tajny",
+      "publishable": "Publiczny"
+    },
+    "pkKeysUsed": "{{count}} z {{max}} kluczy publicznych użytych",
     "dialog": {
       "title": "Utwórz klucz API",
-      "description": "Ten klucz będzie miał dostęp tylko do odczytu publicznych endpointów API.",
+      "description": "Wybierz typ klucza w zależności od miejsca użycia.",
+      "typeLabel": "Typ klucza",
+      "typeSecret": "Klucz tajny",
+      "typeSecretDesc": "Tylko do użytku serwerowego. Nigdy nie ujawniaj publicznie.",
+      "typeSecretTag": "sk_...",
+      "typePublishable": "Klucz publiczny",
+      "typePublishableDesc": "Bezpieczny w aplikacjach klienckich, skryptach i curl.",
+      "typePublishableTag": "pk_...",
       "nameLabel": "Nazwa",
       "namePlaceholder": "np. Serwer produkcyjny",
+      "namePlaceholderPublishable": "np. Moja aplikacja mapowa",
       "expiresLabel": "Wygasa za",
       "expiresOptions": {
         "1d": "1 dzień",

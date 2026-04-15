@@ -10,9 +10,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Analyzer: warning filter dropdown is now grouped into "Mismatch" and "Other" sections
 - Analyzer: identifiers column is now sortable (by eNBID for LTE, by LAC+CID for GSM, by LAC+RNC for UMTS)
 - Photo cards redesigned across all photo components: hover-to-reveal overlay replaced with a dedicated zoom button (top-right); card footer now shows a full-width Edit / Remove button group instead of a metadata row with an icon-only edit button
-- Photo selection components (`/submission`, `/admin/stations/$id`): tapping the card now toggles selection; the checkmark indicator is visual-only; the zoom button opens the lightbox — consistent interaction model across all photo grids
+- Photo selection components (`/submission`, `/admin/stations/$id`): tapping the card now toggles selection; the checkmark indicator is visual-only; the zoom button opens the lightbox
 - "NEW" badge on photos is now consistently shown at the bottom-left corner across all photo components
 - SI2PEM button is hidden for virtual stations
+- Added publishable keys for the public usage
 
 ### 🩹 Fixes
 

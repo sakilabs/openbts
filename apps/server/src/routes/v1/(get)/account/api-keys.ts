@@ -10,7 +10,7 @@ import type { TokenTier } from "../../../../interfaces/auth.interface.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { DEFAULT_QUOTA_LIMITS } from "../../../../services/quota.service.js";
-import { DEFAULT_TIER_LIMITS } from "../../../../services/ratelimit.service.js";
+import { DEFAULT_PK_TIER_LIMITS, DEFAULT_TIER_LIMITS } from "../../../../services/ratelimit.service.js";
 
 const apiKeySchema = createSelectSchema(apikeys)
   .pick({ id: true, name: true, start: true, expiresAt: true, createdAt: true, enabled: true })
@@ -60,14 +60,20 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
   const result: ApiKeyResponse[] = await Promise.all(
     keys.map(async (key) => {
       let tier: TokenTier = "basic";
+      let isPublishable = false;
       try {
-        if (key.metadata) tier = (JSON.parse(key.metadata) as { tier?: TokenTier }).tier ?? "basic";
+        if (key.metadata) {
+          const meta = JSON.parse(key.metadata) as { tier?: TokenTier; type?: string };
+          tier = meta.tier ?? "basic";
+          isPublishable = meta.type === "publishable";
+        }
       } catch {
         // malformed metadata, default to basic
       }
-      const limits = DEFAULT_TIER_LIMITS[tier] ?? DEFAULT_TIER_LIMITS.basic;
+      const tierLimits = isPublishable ? DEFAULT_PK_TIER_LIMITS : DEFAULT_TIER_LIMITS;
+      const limits = tierLimits[tier] ?? tierLimits.basic;
 
-      const redisKey = `ratelimit:api:${key.id}`;
+      const redisKey = isPublishable ? `ratelimit:pk:${key.id}` : `ratelimit:api:${key.id}`;
       const quotaRedisKey = `quota:api:${key.id}`;
       const [countStr, ttl, quotaCountStr, quotaTtl] = await Promise.all([
         redis.get(redisKey),

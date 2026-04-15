@@ -18,6 +18,7 @@ const TWO_FACTOR_ALLOWED = [
   "/api/v1/auth/two-factor/verify-backup-code",
   "/api/v1/auth/two-factor/view-backup-codes",
 ];
+import type { TokenTier } from "../interfaces/auth.interface.ts";
 import type { ApiToken } from "../interfaces/fastify.interface.js";
 import type { Route } from "../interfaces/routes.interface.js";
 
@@ -50,6 +51,24 @@ export async function authHook(req: FastifyRequest, _: FastifyReply) {
   if (authHeader) {
     const apiKey = String(authHeader).trim();
     if (!apiKey) throw new ErrorResponse("UNAUTHORIZED");
+
+    if (apiKey.startsWith("pk_")) {
+      const { valid, key } = await verifyApiKey(apiKey);
+      if (!valid || !key) throw new ErrorResponse("UNAUTHORIZED");
+
+      let meta: Record<string, unknown> = {};
+      try {
+        if (key.metadata) meta = JSON.parse(key.metadata as unknown as string);
+      } catch {}
+      if (meta.type !== "publishable") throw new ErrorResponse("UNAUTHORIZED");
+
+      const pkTier = (meta.tier as TokenTier | undefined) ?? "basic";
+      req.publishableKey = { id: key.id, name: key.name ?? null, tier: pkTier };
+
+      const allowGuest = route?.config?.allowGuestAccess && !settings.enforceAuthForAllRoutes;
+      if (!allowGuest) throw new ErrorResponse("UNAUTHORIZED");
+      return;
+    }
 
     let routePermissions: Record<string, string[]> | undefined;
     if (route?.config?.permissions) {
