@@ -1,8 +1,25 @@
-import { AlertCircleIcon, ArrowRight01Icon, Cancel01Icon, File02Icon, Location01Icon, Tag01Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import {
+  AlertCircleIcon,
+  ArrowRight01Icon,
+  Cancel01Icon,
+  File02Icon,
+  Location01Icon,
+  Sorting05Icon,
+  Tag01Icon,
+  Upload04Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { createColumnHelper, flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  type SortingState,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -11,7 +28,7 @@ import { RequireAuth } from "@/components/auth/requireAuth";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RAT_ICONS } from "@/features/shared/rat";
@@ -88,13 +105,21 @@ const MNC_NAMES: Record<number, string> = {
   26034: "NetWorks",
 };
 
-const MISMATCH_WARNINGS = new Set(["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "uarfcn_mismatch", "earfcn_mismatch"]);
-
-const ALL_WARNINGS = ["lac_mismatch", "tac_mismatch", "pci_mismatch", "rnc_mismatch", "uarfcn_mismatch", "earfcn_mismatch", "enbid_only"] as const;
+const MISMATCH_WARNINGS = new Set([
+  "lac_mismatch",
+  "tac_mismatch",
+  "pci_mismatch",
+  "pci_missing",
+  "rnc_mismatch",
+  "uarfcn_mismatch",
+  "earfcn_mismatch",
+]);
 
 const WARNING_I18N_KEY: Record<string, string> = {
   enbid_only: "warning.enbidOnly",
 };
+
+const SORT_ASC_STYLE = { transform: "scaleY(-1)" };
 
 const RAT_BADGE_CLASS: Record<string, string> = {
   GSM: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
@@ -182,6 +207,7 @@ function AnalyzerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const analyzeStartRef = useRef<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
@@ -299,13 +325,16 @@ function AnalyzerPage() {
     () => ({
       all: t("common:status.all"),
       any: t("filter.anyWarning"),
-      lac_mismatch: t("warning.lacMismatch"),
-      tac_mismatch: t("warning.tacMismatch"),
-      pci_mismatch: t("warning.pciMismatch"),
-      rnc_mismatch: t("warning.rncMismatch"),
-      uarfcn_mismatch: t("warning.uarfcnMismatch"),
-      earfcn_mismatch: t("warning.earfcnMismatch"),
+      lac_mismatch: "LAC · GSM/UMTS",
+      tac_mismatch: "TAC · LTE",
+      pci_mismatch: "PCI · LTE",
+      pci_missing: t("warning.pciMissing"),
+      rnc_mismatch: "RNC · UMTS",
+      uarfcn_mismatch: "UARFCN · UMTS",
+      earfcn_mismatch: "EARFCN · LTE",
       enbid_only: t("warning.enbidOnly"),
+      mismatchGroup: t("filter.mismatchGroup"),
+      otherGroup: t("filter.otherGroup"),
     }),
     [t],
   );
@@ -430,15 +459,45 @@ function AnalyzerPage() {
       }),
       columnHelper.accessor((r) => r.parsedRow, {
         id: "identifiers",
-        header: t("table.identifiers"),
+        header: ({ column }) => {
+          const sorted = column.getIsSorted();
+          return (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 hover:text-foreground -ml-1 px-1 py-0.5 rounded transition-colors"
+              onClick={column.getToggleSortingHandler()}
+            >
+              {t("table.identifiers")}
+              <HugeiconsIcon
+                icon={Sorting05Icon}
+                className={cn("size-3.5 transition-colors", sorted ? "text-foreground" : "text-muted-foreground/40")}
+                style={sorted === "asc" ? SORT_ASC_STYLE : undefined}
+              />
+            </button>
+          );
+        },
         size: 180,
+        sortingFn: (rowA, rowB) => {
+          const a = rowA.original.parsedRow;
+          const b = rowB.original.parsedRow;
+          if (a.rat === "LTE" && b.rat === "LTE") return a.enbid - b.enbid;
+          if (a.rat === "GSM" && b.rat === "GSM") {
+            const lacDiff = a.lac - b.lac;
+            return lacDiff !== 0 ? lacDiff : a.cid - b.cid;
+          }
+          if (a.rat === "UMTS" && b.rat === "UMTS") {
+            const lacDiff = a.lac - b.lac;
+            return lacDiff !== 0 ? lacDiff : (a.rnc ?? 0) - (b.rnc ?? 0);
+          }
+          return 0;
+        },
         cell: ({ getValue, row }) => {
           const cell = getValue();
           const warnings = row.original.result?.warnings ?? [];
 
           const matched = row.original.result?.cell;
 
-          const ids: { label: string; value: number | null; dbValue?: number | null; warn?: boolean }[] = (() => {
+          const ids: { label: string; value: number | null; dbValue?: number | null; warn?: boolean; missing?: boolean }[] = (() => {
             switch (cell.rat) {
               case "GSM":
                 return [
@@ -466,7 +525,13 @@ function AnalyzerPage() {
                   { label: "eNBID", value: cell.enbid },
                   { label: "CLID", value: cell.clid },
                   { label: "TAC", value: cell.tac, dbValue: matched?.rat === "LTE" ? matched.tac : null, warn: warnings.includes("tac_mismatch") },
-                  { label: "PCI", value: cell.pci, dbValue: matched?.rat === "LTE" ? matched.pci : null, warn: warnings.includes("pci_mismatch") },
+                  {
+                    label: "PCI",
+                    value: cell.pci,
+                    dbValue: matched?.rat === "LTE" ? matched.pci : null,
+                    warn: warnings.includes("pci_mismatch"),
+                    missing: warnings.includes("pci_missing"),
+                  },
                   ...(cell.earfcn !== undefined
                     ? [
                         {
@@ -489,29 +554,37 @@ function AnalyzerPage() {
 
           return (
             <div className="flex flex-wrap items-center gap-1">
-              {ids.map(({ label, value, dbValue, warn }) => (
-                <span
-                  key={label}
-                  className={cn(
-                    "inline-flex items-center rounded-md text-[11px] font-medium",
-                    warn ? "bg-destructive/10 text-destructive px-1.5 py-0.5" : "bg-muted px-1.5 py-0.5 text-muted-foreground",
-                  )}
-                >
-                  <span className="mr-0.5 opacity-60">{label}</span>
-                  <span className="font-mono font-semibold">{value}</span>
-                  {warn && dbValue !== null && dbValue !== undefined && (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <span className="inline-flex items-center">
-                          <HugeiconsIcon icon={ArrowRight01Icon} className="mx-0.5 size-3 opacity-50" />
-                          <span className="font-mono font-semibold underline decoration-dotted">{dbValue}</span>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>{t("warning.dbValue")}</TooltipContent>
-                    </Tooltip>
-                  )}
-                </span>
-              ))}
+              {ids.map(({ label, value, dbValue, warn, missing }) => {
+                let stateClass = "bg-muted px-1.5 py-0.5 text-muted-foreground";
+                if (warn) stateClass = "bg-destructive/10 text-destructive px-1.5 py-0.5";
+                else if (missing) stateClass = "bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-200 px-1.5 py-0.5";
+                return (
+                  <span key={label} className={cn("inline-flex items-center rounded-md text-[11px] font-medium", stateClass)}>
+                    <span className="mr-0.5 opacity-60">{label}</span>
+                    {warn && dbValue !== null && dbValue !== undefined && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="inline-flex items-center">
+                            <span className="font-mono font-semibold underline decoration-dotted">{dbValue}</span>
+                            <HugeiconsIcon icon={ArrowRight01Icon} className="mx-0.5 size-3 opacity-50" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("warning.dbValue")}</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {missing ? (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span className="font-mono font-semibold underline decoration-dotted cursor-help">{value}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("warning.pciMissingFromDb")}</TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="font-mono font-semibold">{value}</span>
+                    )}
+                  </span>
+                );
+              })}
               {extraWarnings.map((w) => (
                 <span
                   key={w}
@@ -603,9 +676,11 @@ function AnalyzerPage() {
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: effectivePagination },
+    state: { pagination: effectivePagination, sorting },
     onPaginationChange: setPagination,
+    onSortingChange: setSorting,
   });
 
   return (
@@ -804,11 +879,21 @@ function AnalyzerPage() {
                 <SelectContent className="min-w-56">
                   <SelectItem value="all">{t("common:status.all")}</SelectItem>
                   <SelectItem value="any">{t("filter.anyWarning")}</SelectItem>
-                  {ALL_WARNINGS.map((w) => (
-                    <SelectItem key={w} value={w}>
-                      {warningLabels[w as keyof typeof warningLabels]}
-                    </SelectItem>
-                  ))}
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>{warningLabels.mismatchGroup}</SelectLabel>
+                    <SelectItem value="lac_mismatch">{warningLabels.lac_mismatch}</SelectItem>
+                    <SelectItem value="tac_mismatch">{warningLabels.tac_mismatch}</SelectItem>
+                    <SelectItem value="rnc_mismatch">{warningLabels.rnc_mismatch}</SelectItem>
+                    <SelectItem value="pci_mismatch">{warningLabels.pci_mismatch}</SelectItem>
+                    <SelectItem value="uarfcn_mismatch">{warningLabels.uarfcn_mismatch}</SelectItem>
+                    <SelectItem value="earfcn_mismatch">{warningLabels.earfcn_mismatch}</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>{warningLabels.otherGroup}</SelectLabel>
+                    <SelectItem value="pci_missing">{warningLabels.pci_missing}</SelectItem>
+                    <SelectItem value="enbid_only">{warningLabels.enbid_only}</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>

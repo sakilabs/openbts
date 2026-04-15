@@ -2366,7 +2366,8 @@ paths:
                           items:
                             {
                               type: string,
-                              enum: [lac_mismatch, rnc_mismatch, uarfcn_mismatch, tac_mismatch, pci_mismatch, earfcn_mismatch, enbid_only],
+                              enum:
+                                [lac_mismatch, rnc_mismatch, uarfcn_mismatch, tac_mismatch, pci_mismatch, pci_missing, earfcn_mismatch, enbid_only],
                             }
                         station:
                           $ref: "#/components/schemas/AnalyzerStation"

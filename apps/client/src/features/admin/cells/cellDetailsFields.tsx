@@ -173,15 +173,17 @@ export function CellDetailsFields({ rat, bandValue, details, detailErrors, disab
             <Select
               value={nrType}
               onValueChange={(value) => {
-                if (value === "nsa")
-                  onDetailsBulkChange?.({
-                    type: "nsa",
-                    nrtac: undefined,
-                    clid: undefined,
-                    gnbid: undefined,
-                    supports_nr_redcap: undefined,
-                  });
-                else onDetailChange("type", value as "nsa" | "sa");
+                if (value === "nsa") {
+                  if (onDetailsBulkChange)
+                    onDetailsBulkChange({
+                      type: "nsa",
+                      nrtac: undefined,
+                      clid: undefined,
+                      gnbid: undefined,
+                      supports_nr_redcap: undefined,
+                    });
+                  else onDetailChange("type", "nsa");
+                } else onDetailChange("type", value as "nsa" | "sa");
               }}
               disabled={disabled}
             >

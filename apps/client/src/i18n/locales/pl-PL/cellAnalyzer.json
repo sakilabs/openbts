@@ -34,16 +34,14 @@
   "filter": {
     "anyWarning": "Dowolne ostrzeżenie",
     "status": "Status",
-    "warning": "Ostrzeżenia"
+    "warning": "Ostrzeżenia",
+    "mismatchGroup": "Niezgodności",
+    "otherGroup": "Inne"
   },
   "warning": {
-    "lacMismatch": "LAC zmieniony",
-    "rncMismatch": "RNC zmieniony",
-    "tacMismatch": "TAC zmieniony",
-    "pciMismatch": "PCI zmieniony",
-    "uarfcnMismatch": "UARFCN zmieniony",
-    "earfcnMismatch": "EARFCN zmieniony",
-    "enbidOnly": "Dopasowano tylko po eNBID",
+    "pciMissing": "Brak PCI",
+    "pciMissingFromDb": "Ta wartość nie istnieje w bazie danych",
+    "enbidOnly": "Tylko eNBID",
     "dbValue": "Wartość z bazy danych"
   },
   "errors": {

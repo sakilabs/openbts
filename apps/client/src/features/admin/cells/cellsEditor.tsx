@@ -1,6 +1,6 @@
 import { Add01Icon, ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type ReactNode, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,13 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   readOnly?: boolean;
 };
 
+const TAC_LAC_FIELD: Partial<Record<string, string>> = {
+  GSM: "lac",
+  UMTS: "lac",
+  LTE: "tac",
+  NR: "nrtac",
+};
+
 type RatTableProps<T extends CellDraftBase> = {
   cells: T[];
   headers: string[];
@@ -87,6 +94,34 @@ function RatTable<T extends CellDraftBase>({
   onDeleteCell,
 }: RatTableProps<T>) {
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
+  const cellsRef = useRef(cells);
+  cellsRef.current = cells;
+
+  const handleCellChange = useCallback(
+    (localId: string, patch: Partial<CellDraftBase>) => {
+      onCellChange(localId, patch);
+
+      const current = cellsRef.current;
+      if (!patch.details || current.length < 2) return;
+      const rat = current[0]?.rat;
+      if (!rat) return;
+      const field = TAC_LAC_FIELD[rat];
+      if (!field) return;
+      const changedCell = current.find((c) => c._localId === localId);
+      if (!changedCell) return;
+      const newVal = patch.details[field];
+      if (newVal === changedCell.details[field]) return;
+      for (const sibling of current) {
+        if (sibling._localId === localId) continue;
+        const next = { ...sibling.details };
+        if (newVal === undefined) delete next[field];
+        else next[field] = newVal;
+        onCellChange(sibling._localId, { details: next });
+      }
+    },
+    [onCellChange],
+  );
+
   return (
     <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">
       <table className="w-full text-sm">
@@ -112,7 +147,7 @@ function RatTable<T extends CellDraftBase>({
                   leftBorderClass={isCloned ? "border-l-2 border-l-sky-500" : cellProps.leftBorderClass}
                   showDelete={cellProps.showDelete}
                   rowClassName={isCloned ? "bg-sky-500/5" : cellProps.rowClassName}
-                  onChange={onCellChange}
+                  onChange={handleCellChange}
                   onClone={onCloneCell}
                   onDelete={onDeleteCell}
                 />

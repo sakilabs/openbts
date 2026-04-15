@@ -125,7 +125,8 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       if (primary) {
         const warnings: string[] = [];
         if (primary.tac !== null && primary.tac !== cell.tac) warnings.push("tac_mismatch");
-        if (primary.pci !== null && primary.pci !== cell.pci) warnings.push("pci_mismatch");
+        if (primary.pci === null) warnings.push("pci_missing");
+        else if (primary.pci !== cell.pci) warnings.push("pci_mismatch");
         if (cell.earfcn !== undefined && primary.earfcn !== null && primary.earfcn !== cell.earfcn) warnings.push("earfcn_mismatch");
         return {
           status: "found",

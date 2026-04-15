@@ -1,6 +1,19 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-15
+
+### 🚀 Enhancements
+
+- Cell editor: editing TAC/LAC on one cell now syncs the value across all sibling cells of the same RAT in the same editor session
+- Analyzer: added `pci_missing` warning for LTE cells where PCI is absent in the database
+- Analyzer: warning filter dropdown is now grouped into "Mismatch" and "Other" sections
+- Analyzer: identifiers column is now sortable (by eNBID for LTE, by LAC+CID for GSM, by LAC+RNC for UMTS)
+
+### 🩹 Fixes
+
+- Fixed NR cell type change to NSA not applying
+
 # 2026-04-12
 
 ### 🩹 Fixes

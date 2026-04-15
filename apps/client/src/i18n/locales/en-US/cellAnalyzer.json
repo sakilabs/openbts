@@ -34,16 +34,14 @@
   "filter": {
     "anyWarning": "Any warning",
     "status": "Status",
-    "warning": "Warnings"
+    "warning": "Warnings",
+    "mismatchGroup": "Mismatch",
+    "otherGroup": "Other"
   },
   "warning": {
-    "lacMismatch": "LAC changed",
-    "rncMismatch": "RNC changed",
-    "tacMismatch": "TAC changed",
-    "pciMismatch": "PCI changed",
-    "uarfcnMismatch": "UARFCN changed",
-    "earfcnMismatch": "EARFCN changed",
-    "enbidOnly": "Matched by eNBID only",
+    "pciMissing": "PCI missing",
+    "pciMissingFromDb": "This value is missing from the database",
+    "enbidOnly": "eNBID only",
     "dbValue": "Value from database"
   },
   "errors": {
