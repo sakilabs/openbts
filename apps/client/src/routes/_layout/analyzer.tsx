@@ -115,6 +115,10 @@ const MISMATCH_WARNINGS = new Set([
   "earfcn_mismatch",
 ]);
 
+const WARNING_FILTER_ALIASES: Partial<Record<string, string[]>> = {
+  pci_mismatch: ["pci_mismatch", "pci_missing"],
+};
+
 const WARNING_I18N_KEY: Record<string, string> = {
   enbid_only: "warning.enbidOnly",
 };
@@ -387,7 +391,10 @@ function AnalyzerPage() {
         if (!result) return acc;
         if (warningFilter === "any") {
           if (result.warnings.length === 0) return acc;
-        } else if (!result.warnings.includes(warningFilter)) return acc;
+        } else {
+          const matches = WARNING_FILTER_ALIASES[warningFilter] ?? [warningFilter];
+          if (!matches.some((w) => result.warnings.includes(w))) return acc;
+        }
       }
 
       acc.push({ parsedRow: row, index, result });
