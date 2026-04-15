@@ -162,12 +162,9 @@ export default class App {
 
           const hostname = new URL(origin).hostname;
           const isLocalhost = process.env.NODE_ENV !== "production" && hostname === "localhost";
-          if (isLocalhost || hostname === "btsearch.pl") {
-            cb(null, true);
-            return;
-          }
+          const isOwnDomain = hostname === "btsearch.pl";
 
-          cb(new Error("CORS origin not allowed"), false);
+          cb(null, isLocalhost || isOwnDomain ? true : origin);
         },
         credentials: true,
         allowedHeaders: ["content-type", "x-api-key", "authorization"],

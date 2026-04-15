@@ -31,6 +31,9 @@ export function generateFingerprint(req: FastifyRequest): string | null {
 
   if (properties.userAgent === "unknown" || properties.acceptHeaders === "unknown") return null;
 
+  const hasBrowserSignal = properties.language !== "unknown" || properties.secChUa !== "unknown";
+  if (!hasBrowserSignal) return null;
+
   const knownCount = Object.values(properties).filter((val) => val !== "unknown").length;
   if (knownCount < 3) return null;
 
