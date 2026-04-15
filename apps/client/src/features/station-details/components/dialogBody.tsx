@@ -131,6 +131,7 @@ export function StationDetailsBody({
     ...(photos !== undefined ? { photos: photos.length } : {}),
     ...(comments !== undefined ? { comments: comments.length } : {}),
   };
+  const showSI2PEMLink = !!station?.station_id && !station.station_id.startsWith("O-") && !station.station_id.startsWith("N");
   const visibleTabs = useMemo(
     () =>
       source === "uke"
@@ -252,7 +253,7 @@ export function StationDetailsBody({
                         <span className="text-sm font-mono font-medium">{station.station_id}</span>
                         <div className="flex items-center gap-1">
                           <CopyButton text={station.station_id || ""} />
-                          {station.station_id ? (
+                          {showSI2PEMLink ? (
                             <Tooltip>
                               <TooltipTrigger
                                 render={

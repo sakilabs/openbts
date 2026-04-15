@@ -10,6 +10,7 @@ import {
   PencilEdit02Icon,
   Tick02Icon,
   Upload04Icon,
+  ZoomInAreaIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -265,7 +266,7 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
             ) : (
               <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
                 {existingPhotos.map((photo, idx) => (
-                  <div key={`existing-${photo.id}`} className="relative group rounded-lg overflow-hidden border bg-muted">
+                  <div key={`existing-${photo.id}`} className="rounded-lg overflow-hidden border bg-muted">
                     <div className="relative aspect-square">
                       <img
                         src={`/uploads/${photo.attachment_uuid}.webp`}
@@ -273,48 +274,17 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-zoom-in"
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 size-8 sm:size-6 rounded-full bg-black/50 ring-1 ring-white/30 shadow-sm flex items-center justify-center cursor-pointer"
                         onClick={() => setLightboxIndex(idx)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);
-                        }}
+                        aria-label="View full size"
                       >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteTarget({ type: "existing", id: photo.id });
-                          }}
-                          className="flex items-center gap-1.5 px-3 h-7 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700"
-                        >
-                          <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-                          {t("photos.remove")}
-                        </button>
-                      </div>
+                        <HugeiconsIcon icon={ZoomInAreaIcon} className="size-3 text-white" />
+                      </button>
                     </div>
 
-                    <div className="px-2 pt-1.5 pb-1 text-[10px] flex items-start justify-between gap-1">
-                      <div className="min-w-0 space-y-0.5">
-                        <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <HugeiconsIcon icon={Upload04Icon} className="size-2.5 shrink-0" />
-                          <span className="tabular-nums truncate">
-                            {new Date(photo.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
-                          </span>
-                        </div>
-                        {photo.taken_at ? (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <HugeiconsIcon icon={Camera01Icon} className="size-2.5 shrink-0" />
-                            <span className="tabular-nums truncate">
-                              {new Date(photo.taken_at).toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
-                            </span>
-                          </div>
-                        ) : null}
-                        {photo.note ? <p className="truncate italic text-muted-foreground">{photo.note}</p> : null}
-                      </div>
+                    <div className="grid grid-cols-2 divide-x border-t">
                       <Popover
                         open={existingEditState?.id === photo.id}
                         onOpenChange={(open) => {
@@ -324,9 +294,10 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                         <PopoverTrigger
                           type="button"
                           onClick={() => openExistingEdit(photo)}
-                          className="mt-0.5 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                          className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                         >
-                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3" />
+                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                          {t("common:actions.edit")}
                         </PopoverTrigger>
                         <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
                           <div className="flex flex-col gap-1.5">
@@ -378,50 +349,33 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                           </div>
                         </PopoverContent>
                       </Popover>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget({ type: "existing", id: photo.id })}
+                        className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-destructive hover:bg-accent transition-colors"
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                        {t("photos.remove")}
+                      </button>
                     </div>
                   </div>
                 ))}
 
                 {photos.map((file, idx) => (
-                  <div key={`local-${file.name}-${idx}`} className="relative group rounded-lg overflow-hidden border bg-muted">
+                  <div key={`local-${file.name}-${idx}`} className="rounded-lg overflow-hidden border bg-muted">
                     <div className="relative aspect-square">
                       <img src={previewUrls[idx]} alt={file.name} className="w-full h-full object-cover" />
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-zoom-in"
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 size-8 sm:size-6 rounded-full bg-black/50 ring-1 ring-white/30 shadow-sm flex items-center justify-center cursor-pointer"
                         onClick={() => setLightboxIndex(existingPhotos.length + idx)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") setLightboxIndex(existingPhotos.length + idx);
-                        }}
+                        aria-label="View full size"
                       >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteTarget({ type: "local", index: idx });
-                          }}
-                          className="flex items-center gap-1.5 px-3 h-7 rounded-md bg-red-600 text-white text-xs font-medium hover:bg-red-700"
-                        >
-                          <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-                          {t("photos.remove")}
-                        </button>
-                      </div>
+                        <HugeiconsIcon icon={ZoomInAreaIcon} className="size-3 text-white" />
+                      </button>
                     </div>
 
-                    <div className="px-2 pt-1.5 pb-1 text-[10px] flex items-start justify-between gap-1">
-                      <div className="min-w-0 space-y-0.5">
-                        <p className="truncate font-medium text-foreground/70">{file.name}</p>
-                        {takenAts[idx] ? (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <HugeiconsIcon icon={Camera01Icon} className="size-2.5 shrink-0" />
-                            <span className="tabular-nums truncate">
-                              {takenAts[idx]!.toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
-                            </span>
-                          </div>
-                        ) : null}
-                        {notes[idx] ? <p className="truncate italic text-muted-foreground">{notes[idx]}</p> : null}
-                      </div>
+                    <div className="grid grid-cols-2 divide-x border-t">
                       <Popover
                         open={localEditState?.index === idx}
                         onOpenChange={(open) => {
@@ -431,9 +385,10 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                         <PopoverTrigger
                           type="button"
                           onClick={() => openLocalEdit(idx)}
-                          className="mt-0.5 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                          className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                         >
-                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3" />
+                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                          {t("common:actions.edit")}
                         </PopoverTrigger>
                         <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
                           <div className="flex flex-col gap-1.5">
@@ -468,6 +423,14 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                           </div>
                         </PopoverContent>
                       </Popover>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget({ type: "local", index: idx })}
+                        className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-destructive hover:bg-accent transition-colors"
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+                        {t("photos.remove")}
+                      </button>
                     </div>
                   </div>
                 ))}

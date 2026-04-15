@@ -1,4 +1,4 @@
-import { ArrowExpand01Icon, Camera01Icon, Image01Icon, Tick02Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { Camera01Icon, Image01Icon, Tick02Icon, Upload04Icon, ZoomInAreaIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
@@ -9,6 +9,11 @@ import { Spinner } from "@/components/ui/spinner";
 import type { LocationPhoto } from "@/features/station-details/api";
 import { fetchLocationPhotos, fetchStationPhotos } from "@/features/station-details/api";
 import { cn } from "@/lib/utils";
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+function isNew(createdAt: string) {
+  return Date.now() - new Date(createdAt).getTime() < SEVEN_DAYS_MS;
+}
 
 type Props = {
   stationId: number;
@@ -92,7 +97,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
             {t("photos.selectionCount", { selected: selectedSet.size, total: locationPhotos.length })}
           </span>
         </div>
-        <div className="p-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-80 overflow-y-auto">
+        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
           {locationPhotos.map((photo, idx) => {
             const isSelected = selectedSet.has(photo.id);
             const isAssigned = assignedIds.has(photo.id);
@@ -103,9 +108,8 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                 role="button"
                 tabIndex={0}
                 className={cn(
-                  "relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all bg-muted",
-                  isSelected && "border-primary",
-                  !isSelected && "border-transparent",
+                  "rounded-lg overflow-hidden border-2 transition-colors bg-muted cursor-pointer select-none focus:outline-none",
+                  isSelected ? "border-primary" : "border-transparent",
                 )}
                 onClick={() => toggleSelect(photo)}
                 onKeyDown={(e) => {
@@ -116,7 +120,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                   <img
                     src={`/uploads/${photo.attachment_uuid}.webp`}
                     alt={photo.note ?? ""}
-                    className={cn("w-full h-full object-cover transition-opacity", !isSelected && "opacity-40")}
+                    className={cn("w-full h-full object-cover transition-opacity", selectedSet.size > 0 && !isSelected && "opacity-40")}
                     loading="lazy"
                   />
                   {isAssigned && (
@@ -124,24 +128,32 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                       {t("photos.alreadyAssigned")}
                     </span>
                   )}
-                  {isSelected && (
-                    <div className="absolute top-1 right-1 size-4 rounded-full bg-primary flex items-center justify-center">
-                      <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />
-                    </div>
-                  )}
                   <button
                     type="button"
-                    className="absolute bottom-1 right-1 size-5 rounded bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                    className="absolute top-1 right-1 size-8 sm:size-6 rounded-full bg-black/50 ring-1 ring-white/30 shadow-sm flex items-center justify-center cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLightboxIndex(idx);
                     }}
-                    aria-label={t("common:actions.view", "View")}
+                    aria-label="View full size"
                   >
-                    <HugeiconsIcon icon={ArrowExpand01Icon} className="size-3 text-white" />
+                    <HugeiconsIcon icon={ZoomInAreaIcon} className="size-3 text-white" />
                   </button>
+                  {isNew(photo.createdAt) ? (
+                    <span className="absolute bottom-1.5 left-1.5 bg-amber-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none pointer-events-none">
+                      NEW
+                    </span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      "absolute bottom-1 right-1 size-4 rounded-full border-2 flex items-center justify-center pointer-events-none transition-colors",
+                      isSelected ? "bg-primary border-primary" : "bg-black/30 border-white/70",
+                    )}
+                  >
+                    {isSelected && <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />}
+                  </span>
                 </div>
-                <div className="px-2 pt-1 pb-1 text-[10px] space-y-0.5">
+                <div className="px-2 pt-1 pb-1 text-[11px] space-y-0.5">
                   <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <HugeiconsIcon icon={Upload04Icon} className="size-2.5 shrink-0" />

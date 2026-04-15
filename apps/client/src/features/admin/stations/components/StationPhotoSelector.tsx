@@ -1,10 +1,11 @@
-import { Camera01Icon, Cancel01Icon, Image01Icon, PencilEdit02Icon, StarIcon, Tick02Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Image01Icon, PencilEdit02Icon, StarIcon, Tick02Icon, Upload04Icon, ZoomInAreaIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { Lightbox } from "@/components/lightbox";
 import { Button } from "@/components/ui/button";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,10 +21,15 @@ import {
 } from "@/features/station-details/api";
 import { cn } from "@/lib/utils";
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+function isNew(createdAt: string) {
+  return Date.now() - new Date(createdAt).getTime() < SEVEN_DAYS_MS;
+}
+
 type Props = { stationId: number; locationId: number };
 
 export function StationPhotoSelector({ stationId, locationId }: Props) {
-  const { t, i18n } = useTranslation("submissions");
+  const { t } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
@@ -48,6 +54,13 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   const mainId = mainIdOverride === "unset" ? (stationPhotos.find((p) => p.is_main)?.id ?? null) : mainIdOverride;
 
   const [editState, setEditState] = useState<{ id: number; note: string; takenAt: Date | null } | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const prevLightbox = useCallback(
+    () => setLightboxIndex((i) => (i !== null ? (i - 1 + locationPhotos.length) % locationPhotos.length : null)),
+    [locationPhotos.length],
+  );
+  const nextLightbox = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % locationPhotos.length : null)), [locationPhotos.length]);
 
   const editMutation = useMutation({
     mutationFn: async ({
@@ -209,172 +222,180 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   }
 
   return (
-    <div
-      className={cn("border rounded-xl overflow-hidden transition-colors", isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "")}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-    >
-      <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
-          <span className="font-semibold text-sm">{t("photos.label")}</span>
-          <span className="text-xs text-muted-foreground">
-            {t("photos.selectionCount", { selected: selected.size, total: locationPhotos.length })}
-          </span>
+    <>
+      <div
+        className={cn("border rounded-xl overflow-hidden transition-colors", isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "")}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
+            <span className="font-semibold text-sm">{t("photos.label")}</span>
+            <span className="text-xs text-muted-foreground">
+              {t("photos.selectionCount", { selected: selected.size, total: locationPhotos.length })}
+            </span>
+          </div>
+          {isDirty && (
+            <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="h-7 text-xs gap-1.5">
+              {saveMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
+              {t("photos.saveSelection")}
+            </Button>
+          )}
         </div>
-        {isDirty && (
-          <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="h-7 text-xs gap-1.5">
-            {saveMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
-            {t("photos.saveSelection")}
-          </Button>
-        )}
-      </div>
 
-      <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleFileChange} />
-      <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-        {locationPhotos.map((photo) => {
-          const isSelected = selected.has(photo.id);
-          const isMain = mainId === photo.id;
+        <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleFileChange} />
+        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+          {locationPhotos.map((photo) => {
+            const isSelected = selected.has(photo.id);
+            const isMain = mainId === photo.id;
 
-          return (
-            <div
-              key={photo.id}
-              role="button"
-              tabIndex={0}
-              className={cn(
-                "relative group rounded-lg overflow-hidden border-2 cursor-pointer transition-all",
-                isSelected ? "border-primary" : "border-transparent",
-                isDragging ? "ring-2 ring-primary border-primary bg-primary/5" : "",
-              )}
-              onClick={() => toggleSelect(photo)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
-              }}
-            >
-              <div className="relative aspect-square">
-                <img
-                  src={`/uploads/${photo.attachment_uuid}.webp`}
-                  alt={photo.note ?? ""}
-                  className={cn("w-full h-full object-cover transition-opacity", isSelected ? "" : "opacity-40")}
-                  loading="lazy"
-                />
-                {isMain && (
-                  <span className="absolute top-1 left-1 bg-amber-500 text-white rounded-full p-0.5">
-                    <HugeiconsIcon icon={StarIcon} className="size-3" />
-                  </span>
+            return (
+              <div
+                key={photo.id}
+                role="button"
+                tabIndex={0}
+                className={cn(
+                  "rounded-lg overflow-hidden border-2 transition-colors bg-muted cursor-pointer select-none focus:outline-none",
+                  isSelected ? "border-primary" : "border-transparent",
                 )}
-                {isSelected && (
-                  <div className="absolute top-1 right-1 size-4 rounded-full bg-primary flex items-center justify-center">
-                    <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />
-                  </div>
-                )}
-                {isSelected && !isMain && (
+                onClick={() => toggleSelect(photo)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
+                }}
+              >
+                <div className="relative aspect-square">
+                  <img
+                    src={`/uploads/${photo.attachment_uuid}.webp`}
+                    alt={photo.note ?? ""}
+                    className={cn("w-full h-full object-cover transition-opacity", isSelected ? "" : "opacity-40")}
+                    loading="lazy"
+                  />
+                  {isMain && (
+                    <span className="absolute top-1 left-1 bg-amber-500 text-white rounded-full p-0.5">
+                      <HugeiconsIcon icon={StarIcon} className="size-3" />
+                    </span>
+                  )}
                   <button
                     type="button"
-                    className="absolute inset-x-0 bottom-0 py-1 bg-black/60 text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1"
+                    className="absolute top-1 right-1 size-8 sm:size-6 rounded-full bg-black/50 ring-1 ring-white/30 shadow-sm flex items-center justify-center cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMain(photo.id);
+                      setLightboxIndex(locationPhotos.indexOf(photo));
+                    }}
+                    aria-label="View full size"
+                  >
+                    <HugeiconsIcon icon={ZoomInAreaIcon} className="size-3 text-white" />
+                  </button>
+                  {isNew(photo.createdAt) ? (
+                    <span className="absolute bottom-1.5 left-1.5 bg-amber-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none pointer-events-none">
+                      NEW
+                    </span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      "absolute bottom-1 right-1 size-4 rounded-full border-2 flex items-center justify-center pointer-events-none transition-colors",
+                      isSelected ? "bg-primary border-primary" : "bg-black/30 border-white/70",
+                    )}
+                  >
+                    {isSelected && <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />}
+                  </span>
+                </div>
+                <div className={cn("border-t", isSelected && !isMain ? "grid grid-cols-2 divide-x" : "")}>
+                  {isSelected && !isMain && (
+                    <button
+                      type="button"
+                      className="flex items-center justify-center py-2 text-xs text-muted-foreground hover:text-amber-500 hover:bg-accent transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMain(photo.id);
+                      }}
+                      title={t("photos.setAsMain")}
+                    >
+                      <HugeiconsIcon icon={StarIcon} className="size-3.5" />
+                    </button>
+                  )}
+                  <Popover
+                    open={editState?.id === photo.id}
+                    onOpenChange={(open) => {
+                      if (!open) setEditState(null);
                     }}
                   >
-                    <HugeiconsIcon icon={StarIcon} className="size-3" />
-                    {t("photos.setAsMain")}
-                  </button>
-                )}
-              </div>
-              <div className="px-2 pt-1.5 pb-1 text-[10px] flex items-start justify-between gap-1">
-                <div className="min-w-0 space-y-0.5">
-                  <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <HugeiconsIcon icon={Upload04Icon} className="size-2.5 shrink-0" />
-                    <span className="tabular-nums truncate">
-                      {new Date(photo.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
-                    </span>
-                  </div>
-                  {photo.taken_at ? (
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <HugeiconsIcon icon={Camera01Icon} className="size-2.5 shrink-0" />
-                      <span className="tabular-nums truncate">
-                        {new Date(photo.taken_at).toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
-                      </span>
-                    </div>
-                  ) : null}
-                  {photo.note ? <p className="truncate italic text-muted-foreground">{photo.note}</p> : null}
+                    <PopoverTrigger
+                      type="button"
+                      onClick={(e) => openEdit(photo, e)}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    >
+                      <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                      {t("common:actions.edit")}
+                    </PopoverTrigger>
+                    <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
+                        <input
+                          value={editState?.note ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setEditState((prev) => (prev ? { ...prev, note: v } : prev));
+                          }}
+                          maxLength={100}
+                          placeholder={t("photos.notePlaceholder")}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
+                        <DatePickerInput
+                          value={editState?.takenAt ?? null}
+                          onChange={(v) => setEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => setEditState(null)}>
+                          <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+                          {t("common:actions.cancel")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            editMutation.mutate({
+                              id: photo.id,
+                              note: editState?.note ?? "",
+                              takenAt: editState?.takenAt?.toISOString() ?? null,
+                              originalNote: photo.note ?? "",
+                              originalTakenAt: photo.taken_at ?? null,
+                            })
+                          }
+                          disabled={editMutation.isPending}
+                        >
+                          {editMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
+                          {t("common:actions.save")}
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <Popover
-                  open={editState?.id === photo.id}
-                  onOpenChange={(open) => {
-                    if (!open) setEditState(null);
-                  }}
-                >
-                  <PopoverTrigger
-                    type="button"
-                    onClick={(e) => openEdit(photo, e)}
-                    className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
-                  >
-                    <HugeiconsIcon icon={PencilEdit02Icon} className="size-3" />
-                  </PopoverTrigger>
-                  <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
-                      <input
-                        value={editState?.note ?? ""}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setEditState((prev) => (prev ? { ...prev, note: v } : prev));
-                        }}
-                        maxLength={100}
-                        placeholder={t("photos.notePlaceholder")}
-                        className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                      <DatePickerInput
-                        value={editState?.takenAt ?? null}
-                        onChange={(v) => setEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
-                      />
-                    </div>
-                    <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => setEditState(null)}>
-                        <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
-                        {t("common:actions.cancel")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          editMutation.mutate({
-                            id: photo.id,
-                            note: editState?.note ?? "",
-                            takenAt: editState?.takenAt?.toISOString() ?? null,
-                            originalNote: photo.note ?? "",
-                            originalTakenAt: photo.taken_at ?? null,
-                          })
-                        }
-                        disabled={editMutation.isPending}
-                      >
-                        {editMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
-                        {t("common:actions.save")}
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
               </div>
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadMutation.isPending}
-          className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
-        >
-          {uploadMutation.isPending ? <Spinner className="size-5" /> : <HugeiconsIcon icon={Upload04Icon} className="size-5 text-muted-foreground" />}
-          <span className="text-xs text-muted-foreground">{t("photos.add")}</span>
-        </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadMutation.isPending}
+            className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
+          >
+            {uploadMutation.isPending ? (
+              <Spinner className="size-5" />
+            ) : (
+              <HugeiconsIcon icon={Upload04Icon} className="size-5 text-muted-foreground" />
+            )}
+            <span className="text-xs text-muted-foreground">{t("photos.add")}</span>
+          </button>
+        </div>
       </div>
-    </div>
+      <Lightbox photos={locationPhotos} index={lightboxIndex} onClose={closeLightbox} onPrev={prevLightbox} onNext={nextLightbox} />
+    </>
   );
 }

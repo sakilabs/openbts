@@ -37,29 +37,31 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
   const location = useLocation();
 
   const getInitialState = useCallback(() => {
-    if (typeof window === "undefined") {
-      return items.reduce<Record<string, boolean>>((acc, item) => {
-        acc[item.key] = DEFAULT_OPEN_KEYS.has(item.key) || (item.items?.some((sub) => sub.url === location.pathname) ?? false);
-        return acc;
-      }, {});
-    }
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored) as Record<string, boolean>;
-      }
-    } catch {}
-    return items.reduce<Record<string, boolean>>((acc, item) => {
+    const defaults = items.reduce<Record<string, boolean>>((acc, item) => {
       acc[item.key] = DEFAULT_OPEN_KEYS.has(item.key) || (item.items?.some((sub) => sub.url === location.pathname) ?? false);
       return acc;
     }, {});
+    if (typeof window === "undefined") return defaults;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Record<string, boolean>;
+        return items.reduce<Record<string, boolean>>((acc, item) => {
+          acc[item.key] = item.key in parsed ? parsed[item.key] : defaults[item.key];
+          return acc;
+        }, {});
+      }
+    } catch {}
+    return defaults;
   }, [items, location.pathname]);
 
   const [openState, setOpenState] = useState<Record<string, boolean>>(getInitialState);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(openState));
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const existing = stored ? (JSON.parse(stored) as Record<string, boolean>) : {};
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...openState }));
     } catch {}
   }, [openState]);
 

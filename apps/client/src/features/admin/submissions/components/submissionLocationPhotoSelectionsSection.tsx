@@ -28,7 +28,7 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
         </div>
         <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
           {photos.map((photo, idx) => (
-            <div key={photo.id} className="group relative rounded-lg overflow-hidden border bg-muted">
+            <div key={photo.id} className="rounded-lg overflow-hidden border bg-muted">
               <div
                 role="button"
                 tabIndex={0}
@@ -39,7 +39,6 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
                 }}
               >
                 <img src={`/uploads/${photo.attachment_uuid}.webp`} alt={photo.note ?? ""} className="w-full h-full object-cover" loading="lazy" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="px-2 pt-1 pb-1 text-[10px] space-y-0.5">
                 <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
