@@ -44,7 +44,7 @@ export const DEFAULT_PK_TIER_LIMITS: Record<string, RateLimitTier> = {
   unlimited: { max: Number.POSITIVE_INFINITY, window: 60 },
 };
 
-export const DEFAULT_IP_LIMIT: RateLimitTier = { max: 30, window: 120 };
+export const DEFAULT_IP_LIMIT: RateLimitTier = { max: 20, window: 300 };
 
 export class RateLimitService {
   private redis: typeof redis;
