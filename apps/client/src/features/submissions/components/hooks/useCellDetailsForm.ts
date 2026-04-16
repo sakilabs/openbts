@@ -8,6 +8,13 @@ import { getSharedDetailFields } from "@/features/shared/rat";
 import type { GSMCellDetails, LTECellDetails, NRCellDetails, ProposedCellForm, RatType, UMTSCellDetails } from "../../types";
 import { buildOriginalCellsMap, generateCellId, getCellDiffStatus } from "../../utils/cells";
 
+const TAC_LAC_FIELD: Partial<Record<string, string>> = {
+  GSM: "lac",
+  UMTS: "lac",
+  LTE: "tac",
+  NR: "nrtac",
+};
+
 function getDefaultCellDetails(rat: RatType): ProposedCellForm["details"] {
   switch (rat) {
     case "GSM":
@@ -184,10 +191,11 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
 
   const handleDetailsChange = useCallback(
     (id: string, field: string, value: number | boolean | string | undefined) => {
+      const syncSiblings = TAC_LAC_FIELD[rat] === field && cells.length >= 2;
       onCellsChange(
         rat,
         cells.map((cell) => {
-          if (cell.id !== id) return cell;
+          if (cell.id !== id && !syncSiblings) return cell;
           const newDetails = { ...cell.details } as Record<string, unknown>;
           if (value === undefined) delete newDetails[field];
           else newDetails[field] = value;
