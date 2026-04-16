@@ -13,7 +13,7 @@ import {
   RADIOLINES_LINE_LAYER_ID,
   RADIOLINES_SOURCE_ID,
 } from "../constants";
-import type { DuplexRadioLink } from "../utils";
+import type { DuplexRadioLink, RadioLinkType } from "../utils";
 import { findDuplexLinkByRadioLineId } from "../utils";
 
 type UseRadioLinesLayerArgs = {
@@ -23,7 +23,7 @@ type UseRadioLinesLayerArgs = {
   endpointsGeoJSON: GeoJSON.FeatureCollection;
   duplexLinks: DuplexRadioLink[];
   minZoom: number;
-  onFeatureClick: (link: DuplexRadioLink, coordinates: [number, number]) => void;
+  onFeatureClick: (links: DuplexRadioLink[], coordinates: [number, number]) => void;
 };
 
 function createLineLayerConfig(minzoom: number): maplibregl.LayerSpecification {
@@ -71,9 +71,8 @@ const ALL_LAYERS = [RADIOLINES_LINE_LAYER_ID, RADIOLINES_HITBOX_LAYER_ID, RADIOL
 
 type ActiveTooltip = {
   popup: maplibregl.Popup;
-  container: HTMLDivElement;
   root: ReturnType<typeof createRoot>;
-  activeRadioLineId: number;
+  cacheKey: string;
 };
 
 function destroyTooltip(state: ActiveTooltip | null): null {
@@ -82,8 +81,8 @@ function destroyTooltip(state: ActiveTooltip | null): null {
   return null;
 }
 
-function buildTooltip(state: ActiveTooltip | null, radioLineId: number): ActiveTooltip {
-  if (state?.activeRadioLineId === radioLineId) return state;
+function buildTooltip(state: ActiveTooltip | null, cacheKey: string): ActiveTooltip {
+  if (state?.cacheKey === cacheKey) return state;
 
   state?.root.unmount();
   state?.popup.remove();
@@ -98,10 +97,33 @@ function buildTooltip(state: ActiveTooltip | null, radioLineId: number): ActiveT
     offset: 10,
   }).setDOMContent(container);
 
-  return { popup, container, root, activeRadioLineId: radioLineId };
+  return { popup, root, cacheKey };
 }
 
 type Direction = { freq: string; bandwidth: string | null; polarization: string | null; forward: boolean };
+
+type TooltipEntry = {
+  radioLineId: number;
+  color: string;
+  operatorName: string;
+  distance: string;
+  directionCount: number;
+  directions: Direction[];
+  linkType: RadioLinkType | undefined;
+  totalSpeed: string | null | undefined;
+};
+
+function deduplicateByGroupId(features: maplibregl.MapGeoJSONFeature[], duplexLinks: DuplexRadioLink[]): DuplexRadioLink[] {
+  const seen = new Set<string>();
+  const result: DuplexRadioLink[] = [];
+  for (const f of features) {
+    const link = findDuplexLinkByRadioLineId(f.properties?.radioLineId, duplexLinks);
+    if (!link || seen.has(link.groupId)) continue;
+    seen.add(link.groupId);
+    result.push(link);
+  }
+  return result;
+}
 
 function parseDirections(raw: string | undefined): Direction[] {
   try {
@@ -153,14 +175,12 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     const handleClick = (e: maplibregl.MapLayerMouseEvent) => {
       if (isNearStation(e.point)) return;
 
-      const radioLineId = e.features?.[0]?.properties?.radioLineId;
-      if (!radioLineId) return;
-
-      const link = findDuplexLinkByRadioLineId(radioLineId, stableRefs.current.duplexLinks);
-      if (!link) return;
+      const allFeatures = map.queryRenderedFeatures(e.point, { layers: [...HITBOX_LAYERS] });
+      const links = deduplicateByGroupId(allFeatures, stableRefs.current.duplexLinks);
+      if (!links.length) return;
 
       tooltipRef.current = destroyTooltip(tooltipRef.current);
-      stableRefs.current.onFeatureClick(link, [e.lngLat.lng, e.lngLat.lat]);
+      stableRefs.current.onFeatureClick(links, [e.lngLat.lng, e.lngLat.lat]);
     };
 
     const handleMouseEnter = () => {
@@ -168,37 +188,51 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     };
 
     const handleMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
-      const props = e.features?.[0]?.properties;
-
-      if (isNearStation(e.point) || !props?.operatorName) {
+      if (isNearStation(e.point)) {
         tooltipRef.current = destroyTooltip(tooltipRef.current);
         return;
       }
 
-      const {
-        radioLineId,
-        color = "#3b82f6",
-        operatorName,
-        distanceFormatted: distance = "",
-        directionCount = 1,
-        directionsJson,
-        linkType,
-        totalSpeed,
-      } = props;
+      const allFeatures = map.queryRenderedFeatures(e.point, { layers: [...HITBOX_LAYERS] });
+      const uniqueLinks = deduplicateByGroupId(allFeatures, stableRefs.current.duplexLinks);
+      const entries: TooltipEntry[] = uniqueLinks.map((link) => {
+        const p = allFeatures.find((f) => f.properties?.radioLineId === link.directions[0].id)?.properties ?? {};
+        return {
+          radioLineId: link.directions[0].id,
+          color: p.color ?? "#3b82f6",
+          operatorName: p.operatorName ?? "",
+          distance: p.distanceFormatted ?? "",
+          directionCount: p.directionCount ?? 1,
+          directions: parseDirections(p.directionsJson),
+          linkType: p.linkType as RadioLinkType | undefined,
+          totalSpeed: p.totalSpeed,
+        };
+      });
 
-      const tooltip = buildTooltip(tooltipRef.current, radioLineId);
+      if (!entries.length) {
+        tooltipRef.current = destroyTooltip(tooltipRef.current);
+        return;
+      }
+
+      const cacheKey = entries.map((entry) => entry.radioLineId).join(",");
+      const tooltip = buildTooltip(tooltipRef.current, cacheKey);
       tooltipRef.current = tooltip;
 
       tooltip.root.render(
-        <RadioLineTooltipContent
-          color={color}
-          operatorName={normalizeOperatorName(operatorName)}
-          distanceFormatted={distance}
-          directions={parseDirections(directionsJson)}
-          directionCount={directionCount}
-          linkType={linkType}
-          totalSpeed={totalSpeed}
-        />,
+        <div className={entries.length > 1 ? "divide-y divide-border/40" : undefined}>
+          {entries.map((entry) => (
+            <RadioLineTooltipContent
+              key={entry.radioLineId}
+              color={entry.color}
+              operatorName={normalizeOperatorName(entry.operatorName)}
+              distanceFormatted={entry.distance}
+              directions={entry.directions}
+              directionCount={entry.directionCount}
+              linkType={entry.linkType}
+              totalSpeed={entry.totalSpeed}
+            />
+          ))}
+        </div>,
       );
       tooltip.popup.setLngLat(e.lngLat).addTo(map);
     };

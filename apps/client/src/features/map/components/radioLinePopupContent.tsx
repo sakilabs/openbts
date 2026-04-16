@@ -71,21 +71,25 @@ function PopupShareButton({ link }: { link: DuplexRadioLink }) {
   );
 }
 
+export function RadioLineFooter({ coordinates }: { coordinates: [number, number] }) {
+  const { preferences } = usePreferences();
+  return (
+    <div className="px-3 py-1.5 border-t border-border/50">
+      <span className="text-[9px] text-muted-foreground font-mono">
+        GPS: {formatCoordinates(coordinates[1], coordinates[0], preferences.gpsFormat)}
+      </span>
+    </div>
+  );
+}
+
 type RadioLinePopupContentProps = {
   link: DuplexRadioLink;
-  coordinates: [number, number];
   showAddToList?: boolean;
   onOpenDetails: (link: DuplexRadioLink) => void;
 };
 
-export const RadioLinePopupContent = memo(function RadioLinePopupContent({
-  link,
-  coordinates,
-  showAddToList = false,
-  onOpenDetails,
-}: RadioLinePopupContentProps) {
+export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link, showAddToList = false, onOpenDetails }: RadioLinePopupContentProps) {
   const { t } = useTranslation(["main", "common"]);
-  const { preferences } = usePreferences();
 
   const first = link.directions[0];
   const operatorName = first.operator?.name ?? t("unknownOperator");
@@ -97,7 +101,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
   const totalSpeed = calculateLinkTotalSpeed(link);
 
   return (
-    <div className="w-72 text-sm">
+    <div className="w-72 text-sm relative">
       <button type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => onOpenDetails(link)}>
         <div className="flex items-center gap-1.5 min-w-0">
           <div className="size-2 rounded-[2px] shrink-0" style={{ backgroundColor: color }} />
@@ -181,10 +185,7 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({
         </div>
       </button>
 
-      <div className="px-3 py-1.5 border-t border-border/50 flex items-center gap-2">
-        <span className="text-[9px] text-muted-foreground font-mono flex-1">
-          GPS: {formatCoordinates(coordinates[1], coordinates[0], preferences.gpsFormat)}
-        </span>
+      <div className="absolute bottom-2 right-2 flex items-center gap-1">
         {showAddToList && (
           <Suspense>
             <AddToListPopover radiolineIds={link.directions.map((d) => d.id)} />

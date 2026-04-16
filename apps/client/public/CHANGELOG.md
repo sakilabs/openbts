@@ -3,6 +3,12 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 # 2026-04-15
 
+### 🩹 Fixes
+
+- All radiolines are now properly shown in the tooltip and popup when they overlap
+
+# 2026-04-15
+
 ### 🚀 Enhancements
 
 - Cell editor: editing TAC/LAC on one cell now syncs the value across all sibling cells of the same RAT in the same editor session

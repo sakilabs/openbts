@@ -12,7 +12,7 @@ import { radioLinesToGeoJSON } from "../geojson";
 import { useRadioLinesLayer } from "../hooks/useRadioLinesLayer";
 import type { DuplexRadioLink } from "../utils";
 import { groupRadioLinesIntoLinks } from "../utils";
-import { RadioLinePopupContent } from "./radioLinePopupContent";
+import { RadioLineFooter, RadioLinePopupContent } from "./radioLinePopupContent";
 
 const RadioLineDetailsDialog = lazy(() =>
   import("@/features/station-details/components/radioLineDetailsDialog").then((m) => ({ default: m.RadioLineDetailsDialog })),
@@ -59,7 +59,7 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, showAd
   );
 
   const handleFeatureClick = useCallback(
-    (link: DuplexRadioLink, coordinates: [number, number]) => {
+    (links: DuplexRadioLink[], coordinates: [number, number]) => {
       if (!map) return;
 
       cleanupPopup();
@@ -72,7 +72,10 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, showAd
 
       root.render(
         <QueryClientProvider client={queryClient}>
-          <RadioLinePopupContent link={link} coordinates={coordinates} showAddToList={showAddToList} onOpenDetails={handleOpenDetails} />
+          {links.map((link) => (
+            <RadioLinePopupContent key={link.groupId} link={link} showAddToList={showAddToList} onOpenDetails={handleOpenDetails} />
+          ))}
+          <RadioLineFooter coordinates={coordinates} />
         </QueryClientProvider>,
       );
 
