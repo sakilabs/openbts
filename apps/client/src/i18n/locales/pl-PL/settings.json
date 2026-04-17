@@ -12,6 +12,7 @@
     "navAppleMaps": "Apple Maps",
     "navWaze": "Waze",
     "navOsmAnd": "OsmAnd",
+    "navOpenStreetMap": "OpenStreetMap",
     "openWith": "Otwórz w {{app}}",
     "navDisplayMode": "Styl przycisków nawigacji",
     "navDisplayModeHint": "Wybierz sposób wyświetlania linków nawigacyjnych w szczegółach stacji",

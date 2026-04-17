@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 export type GpsFormat = "decimal" | "dms";
-export type NavigationApp = "google-maps" | "apple-maps" | "waze" | "osmand";
+export type NavigationApp = "google-maps" | "apple-maps" | "waze" | "osmand" | "openstreetmap";
 export type NavLinksDisplay = "inline" | "buttons";
 export type MapPointStyle = "dots" | "markers";
 export type CartoVariant = "auto" | "dark" | "light";

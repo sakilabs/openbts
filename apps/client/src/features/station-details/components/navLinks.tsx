@@ -7,6 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type NavigationApp, usePreferences } from "@/hooks/usePreferences";
 
+import OsmSvg from "../../../components/ui/osm.svg?react";
+
 type NavIconComponent = (props: { className?: string }) => JSX.Element;
 
 const hugeIcon = (icon: typeof GoogleMapsIcon): NavIconComponent => {
@@ -29,6 +31,10 @@ export function OsmAndIcon({ className }: { className?: string }) {
       />
     </svg>
   );
+}
+
+export function OpenStreetMapIcon({ className }: { className?: string }) {
+  return <OsmSvg className={className} />;
 }
 
 type NavigationLinksProps = {
@@ -58,6 +64,11 @@ export const NAV_APP_CONFIG: Record<NavigationApp, { label: string; Icon: NavIco
     label: "OsmAnd",
     Icon: OsmAndIcon,
     url: (lat, lng) => `https://osmand.net/go?lat=${lat}&lon=${lng}&z=16`,
+  },
+  openstreetmap: {
+    label: "OpenStreetMap",
+    Icon: OpenStreetMapIcon,
+    url: (lat, lng) => `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}&layers=D`,
   },
 };
 

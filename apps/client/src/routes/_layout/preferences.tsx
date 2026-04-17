@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { type PushPreferences, fetchPushPreferences, updatePushPreferences } from "@/features/notifications/api";
 import { usePushSubscription } from "@/features/notifications/usePushSubscription";
-import { OsmAndIcon } from "@/features/station-details/components/navLinks";
+import { OpenStreetMapIcon, OsmAndIcon } from "@/features/station-details/components/navLinks";
 import { type UserPreferences, usePreferences } from "@/hooks/usePreferences";
 import { authClient } from "@/lib/authClient";
 import { cn, toggleValue } from "@/lib/utils";
@@ -99,6 +99,7 @@ const GROUPS: PreferenceGroup[] = [
               { value: "apple-maps", labelKey: "preferences.navAppleMaps", icon: hugeIcon(AppleIcon) },
               { value: "waze", labelKey: "preferences.navWaze", icon: hugeIcon(WazeIcon) },
               { value: "osmand", labelKey: "preferences.navOsmAnd", icon: OsmAndIcon },
+              { value: "openstreetmap", labelKey: "preferences.navOpenStreetMap", icon: OpenStreetMapIcon },
             ],
           },
         ],
