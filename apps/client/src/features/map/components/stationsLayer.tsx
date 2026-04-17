@@ -231,7 +231,6 @@ export function StationsLayer({
     map,
     isLoaded,
     filters,
-    zoom,
     onInitialize: handleUrlInitialize,
   });
 

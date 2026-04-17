@@ -148,17 +148,23 @@ export function radioLinesToGeoJSON(radioLines: RadioLine[]): {
       },
     });
 
+    const sharedEndpointProps = {
+      groupId: link.groupId,
+      radioLineId: first.id,
+      color,
+      operatorName: first.operator?.name ?? "",
+      operatorMnc: first.operator?.mnc ?? null,
+      isExpired: link.isExpired,
+      distanceFormatted,
+      directionsJson,
+      directionCount: link.directions.length,
+      linkType: link.linkType,
+      totalSpeed: totalSpeed !== null && totalSpeed !== undefined ? formatSpeed(totalSpeed) : null,
+    };
+
     endpointFeatures.push(
-      createPointFeature(link.a.longitude, link.a.latitude, {
-        groupId: link.groupId,
-        radioLineId: first.id,
-        color,
-      }),
-      createPointFeature(link.b.longitude, link.b.latitude, {
-        groupId: link.groupId,
-        radioLineId: first.id,
-        color,
-      }),
+      createPointFeature(link.a.longitude, link.a.latitude, sharedEndpointProps),
+      createPointFeature(link.b.longitude, link.b.latitude, sharedEndpointProps),
     );
   }
 

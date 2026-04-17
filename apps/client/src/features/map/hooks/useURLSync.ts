@@ -6,7 +6,6 @@ type UseUrlSyncArgs = {
   map: maplibregl.Map | null;
   isLoaded: boolean;
   filters: StationFilters;
-  zoom: number;
   onInitialize: (data: {
     filters?: StationFilters;
     center?: [number, number];
@@ -184,8 +183,12 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
   return `#${mapPart}${tokens.length > 0 ? `~${tokens.join("~")}` : ""}`;
 }
 
-export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUrlSyncArgs) {
+export function useUrlSync({ map, isLoaded, filters, onInitialize }: UseUrlSyncArgs) {
   const isInitialized = useRef(false);
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
   useEffect(() => {
     if (!isLoaded || !map || isInitialized.current) return;
@@ -226,9 +229,24 @@ export function useUrlSync({ map, isLoaded, filters, zoom, onInitialize }: UseUr
   }, [isLoaded, map, onInitialize]);
 
   useEffect(() => {
+    if (!isLoaded || !map) return;
+
+    const handleMoveEnd = () => {
+      if (!isInitialized.current) return;
+      const newUrl = `${window.location.pathname}${buildUrlHash(filtersRef.current, map)}`;
+      window.history.replaceState(null, "", newUrl);
+    };
+
+    map.on("moveend", handleMoveEnd);
+    return () => {
+      map.off("moveend", handleMoveEnd);
+    };
+  }, [isLoaded, map]);
+
+  useEffect(() => {
     if (!isLoaded || !map || !isInitialized.current) return;
 
-    const newUrl = `${window.location.pathname}${buildUrlHash(filters, map, zoom)}`;
+    const newUrl = `${window.location.pathname}${buildUrlHash(filters, map)}`;
     window.history.replaceState(null, "", newUrl);
-  }, [filters, isLoaded, map, zoom]);
+  }, [filters, isLoaded, map]);
 }
