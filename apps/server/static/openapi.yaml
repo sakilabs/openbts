@@ -4096,12 +4096,12 @@ components:
         latitude: { type: number }
         updatedAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
+        region: { $ref: "#/components/schemas/Region" }
     UkeLocationWithPermits:
       allOf:
         - $ref: "#/components/schemas/UkeLocation"
         - type: object
           properties:
-            region: { $ref: "#/components/schemas/Region" }
             permits: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperator" } }
     UkeOperator:
       type: object

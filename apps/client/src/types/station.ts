@@ -190,13 +190,13 @@ export type UkeOperator = {
 
 export type UkeLocation = {
   id: number;
-  region_id: number;
   city: string | null;
   address: string | null;
   longitude: number;
   latitude: number;
   updatedAt: string;
   createdAt: string;
+  region: Region;
 };
 
 export type UkePermitSector = {
@@ -247,7 +247,7 @@ export type UkeStation = {
     address: string | null;
     latitude: number;
     longitude: number;
-    region?: Region;
+    region: Region;
   } | null;
 };
 

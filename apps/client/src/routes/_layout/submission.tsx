@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_layout/submission")({
   validateSearch: (search: Record<string, unknown>): SubmissionSearch => ({
     station: search.station as string | undefined,
     edit: search.edit as string | undefined,
-    uke: search.uke as string | undefined,
+    uke: typeof search.uke === "string" || typeof search.uke === "number" ? String(search.uke) : undefined,
   }),
   staticData: {
     titleKey: "items.submitStation",

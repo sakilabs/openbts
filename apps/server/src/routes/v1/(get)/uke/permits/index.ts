@@ -1,4 +1,4 @@
-import { bands, operators, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { bands, operators, regions, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
 import { type SQL, and, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -10,9 +10,10 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
 const ukePermitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, operator_id: true, location_id: true });
-const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true });
+const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true, region_id: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
+const regionsSchema = createSelectSchema(regions);
 const sectorsSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 const schemaRoute = {
   querystring: z.object({
@@ -63,7 +64,7 @@ const schemaRoute = {
         ukePermitsSchema.extend({
           band: bandsSchema,
           operator: operatorsSchema,
-          location: ukeLocationsSchema,
+          location: ukeLocationsSchema.extend({ region: regionsSchema }),
           sectors: z.array(sectorsSchema).optional(),
         }),
       ),
@@ -76,7 +77,7 @@ type ReqQuery = {
 type Permit = z.infer<typeof ukePermitsSchema> & {
   band?: z.infer<typeof bandsSchema>;
   operator?: z.infer<typeof operatorsSchema>;
-  location?: z.infer<typeof ukeLocationsSchema>;
+  location?: z.infer<typeof ukeLocationsSchema> & { region: z.infer<typeof regionsSchema> };
   sectors?: z.infer<typeof sectorsSchema>[];
 };
 
@@ -132,6 +133,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         location: {
           columns: {
             point: false,
+            region_id: false,
+          },
+          with: {
+            region: true,
           },
         },
         sectors: {

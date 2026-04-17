@@ -7,6 +7,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Radioline endpoint dots now shows the full tooltip info like before
 - Map URL and localStorage now update when panning, not only when zooming
+- UKE permits endpoint now returns region object with location instead of region_id
+- `?uke=` param no longer coerces station_id to a number on `/submission` page
 
 # 2026-04-15
 
