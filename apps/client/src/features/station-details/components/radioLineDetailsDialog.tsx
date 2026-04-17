@@ -148,18 +148,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                   <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
                     {operatorName}
                   </h2>
-                  {linkTypeStyle ? (
-                    <span
-                      className={cn(
-                        "px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border",
-                        linkTypeStyle.bg,
-                        linkTypeStyle.text,
-                        linkTypeStyle.border,
-                      )}
-                    >
-                      {link.linkType}
-                    </span>
-                  ) : null}
+                  {linkTypeStyle ? <span className={cn("text-[10px] font-bold uppercase", linkTypeStyle.text)}>{link.linkType}</span> : null}
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <span className="font-medium text-foreground/90">{formatDistance(distance)}</span>
@@ -334,7 +323,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                               <span className="font-mono text-xs">{dir.permit.number || "-"}</span>
                               {dir.permit.decision_type && (
                                 <Tooltip>
-                                  <TooltipTrigger className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[11px] font-bold uppercase cursor-help">
+                                  <TooltipTrigger className="text-[11px] font-bold text-muted-foreground uppercase cursor-help">
                                     {dir.permit.decision_type}
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -354,9 +343,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                                 <span className="text-destructive font-medium">
                                   {new Date(dir.permit.expiry_date).toLocaleDateString(i18n.language)}
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded bg-destructive/10 text-destructive text-[11px] font-bold uppercase">
-                                  {t("common:status.expired")}
-                                </span>
+                                <span className="text-destructive text-[11px] font-bold uppercase">{t("common:status.expired")}</span>
                               </div>
                             ) : (
                               <span>{new Date(dir.permit.expiry_date).toLocaleDateString(i18n.language)}</span>

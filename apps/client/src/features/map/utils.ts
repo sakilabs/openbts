@@ -104,11 +104,11 @@ export function getPermitBands(permits: UkePermit[]): string[] {
 export function formatBandwidth(bandwidth: string): string {
   const num = Number(bandwidth);
   if (Number.isNaN(num)) return bandwidth;
-  return num >= 1000 ? `${(num / 1000).toFixed(2)} Gb/s` : `${num} Mb/s`;
+  return num >= 1000 ? `${(num / 1000).toFixed(2)} Gbps` : `${num} Mbps`;
 }
 
 export function formatSpeed(mbps: number): string {
-  return mbps >= 1000 ? `${(mbps / 1000).toFixed(2)} Gb/s` : `~${Math.round(mbps)} Mb/s`;
+  return mbps >= 1000 ? `${(mbps / 1000).toFixed(2)} Gbps` : `~${Math.round(mbps)} Mbps`;
 }
 
 const MODULATION_NORMALIZE_REGEX = /[\s\-_]/g;

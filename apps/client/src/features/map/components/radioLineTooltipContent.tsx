@@ -32,20 +32,21 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
       <div className="flex items-center gap-2 px-2.5 py-1.5">
         <span className="size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: color }} aria-hidden />
         <span className="text-xs font-medium truncate">{operatorName}</span>
-        <span className="ml-auto text-[10px] font-mono text-muted-foreground whitespace-nowrap">{distanceFormatted}</span>
-        {linkTypeStyle && linkType && (
-          <span
-            className={cn(
-              "px-1.5 py-px rounded-full text-[8px] font-bold uppercase border",
-              linkTypeStyle.bg,
-              linkTypeStyle.text,
-              linkTypeStyle.border,
-            )}
-          >
-            {linkType}
-          </span>
-        )}
-        {totalSpeed && <span className="text-[10px] font-mono font-semibold text-emerald-600 whitespace-nowrap">{totalSpeed}</span>}
+        <div className="ml-auto flex items-center text-[10px] font-mono whitespace-nowrap">
+          <span className="text-muted-foreground">{distanceFormatted}</span>
+          {linkTypeStyle && linkType && (
+            <>
+              <span className="text-muted-foreground/40">/</span>
+              <span className={cn("font-bold uppercase", linkTypeStyle.text)}>{linkType}</span>
+            </>
+          )}
+          {totalSpeed && (
+            <>
+              <span className="text-muted-foreground/40">/</span>
+              <span className="font-semibold text-emerald-600">{totalSpeed}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {directions.length > 0 && (

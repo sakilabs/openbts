@@ -74,8 +74,8 @@ function PopupShareButton({ link }: { link: DuplexRadioLink }) {
 export function RadioLineFooter({ coordinates }: { coordinates: [number, number] }) {
   const { preferences } = usePreferences();
   return (
-    <div className="px-3 py-1.5 border-t border-border/50">
-      <span className="text-[9px] text-muted-foreground font-mono">
+    <div className="px-3 py-1.5 border-t border-border/50 flex items-center">
+      <span className="text-[10px] text-muted-foreground font-mono">
         GPS: {formatCoordinates(coordinates[1], coordinates[0], preferences.gpsFormat)}
       </span>
     </div>
@@ -109,32 +109,23 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
           {permitNumber && <span className="text-[9px] text-muted-foreground font-mono shrink-0">{permitNumber}</span>}
         </div>
 
-        <div className="flex flex-wrap gap-1 mt-1.5 pl-3.5">
-          <span className="px-1 py-px rounded-md bg-muted text-[9px] font-mono font-medium text-muted-foreground border border-border/50">
-            {formatDistance(distance)}
-          </span>
-          {linkTypeStyle ? (
-            <span
-              className={cn(
-                "px-1 py-px rounded-md text-[8px] uppercase tracking-wider border",
-                linkTypeStyle.bg,
-                linkTypeStyle.text,
-                linkTypeStyle.border,
-              )}
-            >
-              {link.linkType}
-            </span>
-          ) : null}
-          {totalSpeed !== null && totalSpeed !== undefined ? (
-            <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[9px] font-mono font-semibold text-emerald-600 border border-emerald-500/20">
-              {formatSpeed(totalSpeed)}
-            </span>
-          ) : null}
-          {link.isExpired && (
-            <span className="px-1 py-px rounded-md bg-destructive/10 text-[9px] font-semibold uppercase tracking-wider text-destructive border border-destructive/20">
-              {t("common:status.expired")}
-            </span>
-          )}
+        <div className="flex items-center gap-2 mt-1.5 pl-3.5">
+          <div className="flex items-center text-[9px] font-mono whitespace-nowrap">
+            <span className="text-muted-foreground">{formatDistance(distance)}</span>
+            {linkTypeStyle ? (
+              <>
+                <span className="text-muted-foreground/40">/</span>
+                <span className={cn("font-bold uppercase", linkTypeStyle.text)}>{link.linkType}</span>
+              </>
+            ) : null}
+            {totalSpeed !== null && totalSpeed !== undefined ? (
+              <>
+                <span className="text-muted-foreground/40">/</span>
+                <span className="font-semibold text-emerald-600">{formatSpeed(totalSpeed)}</span>
+              </>
+            ) : null}
+          </div>
+          {link.isExpired && <span className="text-[9px] font-bold uppercase text-destructive">{t("common:status.expired")}</span>}
         </div>
 
         <div className="mt-2 pl-3.5 space-y-1.5">
@@ -145,17 +136,9 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
               dir.link.ch_width && dir.link.modulation_type ? calculateRadiolineSpeed(dir.link.ch_width, dir.link.modulation_type) : null;
             const dirSpeedBadge = (() => {
               if (dirCalcSpeed !== null && dirCalcSpeed !== undefined)
-                return (
-                  <span className="px-1 py-px rounded-md bg-emerald-500/10 text-[9px] font-mono font-medium text-emerald-600 border border-emerald-500/20">
-                    {formatSpeed(dirCalcSpeed)}
-                  </span>
-                );
+                return <span className="text-[9px] font-mono font-semibold text-emerald-600">{formatSpeed(dirCalcSpeed)}</span>;
               if (dir.link.bandwidth)
-                return (
-                  <span className="px-1 py-px rounded-md bg-muted text-[9px] font-mono font-medium text-muted-foreground border border-border/50">
-                    {formatBandwidth(dir.link.bandwidth)}
-                  </span>
-                );
+                return <span className="text-[9px] font-mono font-medium text-muted-foreground">{formatBandwidth(dir.link.bandwidth)}</span>;
               return null;
             })();
             return (
@@ -167,15 +150,9 @@ export const RadioLinePopupContent = memo(function RadioLinePopupContent({ link,
                     {isForward ? "B" : "A"}
                   </span>
                 )}
-                <div className="flex flex-wrap gap-1">
-                  <span className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold tracking-wider text-muted-foreground border border-border/50">
-                    {formatFrequency(dir.link.freq)}
-                  </span>
-                  {dir.link.polarization && (
-                    <span className="px-1 py-px rounded-md bg-muted text-[8px] font-bold text-muted-foreground border border-border/50">
-                      {dir.link.polarization}
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <span className="text-[9px] font-mono font-semibold text-foreground/80">{formatFrequency(dir.link.freq)}</span>
+                  {dir.link.polarization && <span className="text-[9px] font-bold text-muted-foreground">{dir.link.polarization}</span>}
                   {dirSpeedBadge}
                   {dirExpired && <span className="size-1.5 rounded-full bg-destructive shrink-0 mt-1" title={t("common:status.expired")} />}
                 </div>
