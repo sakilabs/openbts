@@ -1,0 +1,25 @@
+{
+  "name": "@openbts/discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch src/index.ts",
+    "start": "node dist/index.js",
+    "deploy-commands": "tsx src/deploy-commands.ts"
+  },
+  "dependencies": {
+    "bufferutil": "^4.1.0",
+    "discord.js": "14.21.0",
+    "dotenv": "17.4.0",
+    "redis": "5.11.0",
+    "zlib-sync": "^0.1.10"
+  },
+  "devDependencies": {
+    "@openbts/typescript-configs": "workspace:*",
+    "@types/node": "24.3.0",
+    "tsx": "4.21.0",
+    "typescript": "5.8.3"
+  }
+}

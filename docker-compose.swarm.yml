@@ -75,6 +75,24 @@ services:
         constraints:
           - node.role == manager
 
+  discord-bot:
+    image: btsearch-discord-bot:${COMMIT_SHA}
+    environment:
+      - DISCORD_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_IMPORT_CHANNEL_ID=${DISCORD_BOT_IMPORT_CHANNEL_ID}
+      - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
+      - API_KEY=${DISCORD_BOT_API_KEY}
+      - API_BASE_URL=${DISCORD_BOT_API_BASE_URL}
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
   client:
     image: btsearch-client:${COMMIT_SHA}
     ports:

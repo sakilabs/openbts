@@ -1,7 +1,7 @@
-import { deletedEntries } from "@openbts/drizzle";
+import { deletedEntries, stations, ukePermits, ukeRadiolines } from "@openbts/drizzle";
 import { associateStationsWithPermits } from "@openbts/uke-importer/stations";
 import { cleanupDownloads } from "@openbts/uke-importer/utils";
-import { lt } from "drizzle-orm";
+import { and, count, eq, gte, lt } from "drizzle-orm";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
@@ -11,7 +11,7 @@ import redis from "../database/redis.js";
 import { logger } from "../utils/logger.js";
 import { notifyUkeUpdate } from "./notification.service.js";
 import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
-import { takeStatsSnapshot } from "./statsSnapshot.service.js";
+import { getSnapshotDelta, takeStatsSnapshot } from "./statsSnapshot.service.js";
 
 type ImportStepKey =
   | "stations"
@@ -39,6 +39,49 @@ interface ImportJobStatus {
   finishedAt?: string;
   steps: ImportStep[];
   error?: string;
+}
+
+interface ImportDelta {
+  stations: { added: number };
+  permits: { added: number; updated: number; deleted: number };
+  radiolines: { added: number; deleted: number };
+}
+
+const IMPORT_COMPLETE_CHANNEL = "uke:import:complete";
+
+async function computeImportDelta(startedAt: string): Promise<ImportDelta> {
+  const since = new Date(startedAt);
+
+  const [stationsAdded, permitsAdded, permitsUpdated, permitsDeleted, radiolinesAdded, radiolinesDeleted] = await Promise.all([
+    db.select({ count: count() }).from(stations).where(gte(stations.createdAt, since)),
+    db.select({ count: count() }).from(ukePermits).where(gte(ukePermits.createdAt, since)),
+    db
+      .select({ count: count() })
+      .from(ukePermits)
+      .where(and(gte(ukePermits.updatedAt, since), lt(ukePermits.createdAt, since))),
+    db
+      .select({ count: count() })
+      .from(deletedEntries)
+      .where(and(eq(deletedEntries.source_table, "uke_permits"), gte(deletedEntries.deleted_at, since))),
+    db.select({ count: count() }).from(ukeRadiolines).where(gte(ukeRadiolines.createdAt, since)),
+    db
+      .select({ count: count() })
+      .from(deletedEntries)
+      .where(and(eq(deletedEntries.source_table, "uke_radiolines"), gte(deletedEntries.deleted_at, since))),
+  ]);
+
+  return {
+    stations: { added: stationsAdded[0]?.count ?? 0 },
+    permits: {
+      added: permitsAdded[0]?.count ?? 0,
+      updated: permitsUpdated[0]?.count ?? 0,
+      deleted: permitsDeleted[0]?.count ?? 0,
+    },
+    radiolines: {
+      added: radiolinesAdded[0]?.count ?? 0,
+      deleted: radiolinesDeleted[0]?.count ?? 0,
+    },
+  };
 }
 
 const STEP_KEYS: ImportStepKey[] = [
@@ -290,6 +333,14 @@ async function runJob(
     await saveJob(job);
     if (stationsChanged || radiolinesChanged || permitsChanged) {
       notifyUkeUpdate().catch((e) => logger.error("Failed to send UKE update notifications", { error: e instanceof Error ? e.message : String(e) }));
+      Promise.all([computeImportDelta(job.startedAt!), getSnapshotDelta().catch(() => null)])
+        .then(([delta, snapshotDelta]) =>
+          redis.publish(
+            IMPORT_COMPLETE_CHANNEL,
+            JSON.stringify({ state: "success", startedAt: job.startedAt, finishedAt: job.finishedAt, delta, snapshotDelta }),
+          ),
+        )
+        .catch((e) => logger.error("Failed to publish import complete event", { error: e instanceof Error ? e.message : String(e) }));
     }
   } catch (e) {
     job.state = "error";
