@@ -4,7 +4,7 @@ set -e
 export COMMIT_SHA=$(git log --invert-grep --grep="^feat: swap \`OpenBTS\` to \`BTSearch\`" -1 --format="%h")
 
 if [[ "$1" == "swarm" ]]; then
-  COMMIT_SHA=$COMMIT_SHA docker compose build client server
+  COMMIT_SHA=$COMMIT_SHA docker compose build client server discord-bot
   docker build -t btsearch-postgres -f docker/postgres/Dockerfile .
   set -a && source .env && set +a
   docker stack deploy -c docker-compose.swarm.yml btsearch

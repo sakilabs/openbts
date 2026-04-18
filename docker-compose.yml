@@ -1,6 +1,15 @@
 version: "3.8"
 
 services:
+  discord-bot:
+    image: btsearch-discord-bot:${COMMIT_SHA}
+    build:
+      context: .
+      dockerfile: apps/discord-bot/Dockerfile
+    depends_on:
+      - server
+    restart: unless-stopped
+
   client:
     image: btsearch-client:${COMMIT_SHA}
     build:
