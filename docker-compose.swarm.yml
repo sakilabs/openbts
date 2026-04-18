@@ -80,9 +80,11 @@ services:
     environment:
       - DISCORD_TOKEN=${DISCORD_BOT_TOKEN}
       - DISCORD_IMPORT_CHANNEL_ID=${DISCORD_BOT_IMPORT_CHANNEL_ID}
+      - DISCORD_GUILD_ID=${DISCORD_BOT_GUILD_ID}
       - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
       - API_KEY=${DISCORD_BOT_API_KEY}
       - API_BASE_URL=${DISCORD_BOT_API_BASE_URL}
+      - PUBLIC_BASE_URL=${DISCORD_BOT_PUBLIC_BASE_URL}
     networks:
       - internal
     deploy:
