@@ -26,18 +26,51 @@ const teamMembers: TeamMember[] = [
     name: "Krzysztof Niemczyk",
     role: "Administrator bazy danych i serwisu",
     description: "Kwestie merytoryczne związane z danymi w bazie, zapytania odnośnie potencjalnej współpracy.",
-    initials: "KN",
+    initials: "K",
     links: [{ icon: Mail01Icon, label: "k.niemczyk@btsearch.pl", href: "mailto:k.niemczyk@btsearch.pl" }],
   },
   {
     name: "ririxi",
     role: "Opiekun techniczny projektu",
-    description: "Rozwój i utrzymanie serwisu oraz kwestie techniczne.",
-    initials: "RX",
+    description:
+      "Rozwój i utrzymanie serwisu oraz kwestie techniczne. Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
+    initials: "R",
     avatarUrl: "https://github.com/rxri.png",
     links: [
+      { icon: Mail01Icon, label: "ririxi@btsearch.pl", href: "mailto:ririxi@btsearch.pl" },
       { icon: Mail01Icon, label: "dev@ririxi.dev", href: "mailto:dev@ririxi.dev" },
       { icon: GithubIcon, label: "GitHub", href: "https://github.com/rxri" },
+    ],
+  },
+];
+
+const editors: TeamMember[] = [
+  {
+    name: "Adam Kukulski",
+    role: "Edytor bazy danych",
+    description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
+    initials: "A",
+    avatarUrl: "/uploads/62297db8-6093-4477-861c-637973a16ff3.webp",
+    links: [{ icon: Mail01Icon, label: "adamkukulski12@o2.pl", href: "mailto:adamkukulski12@o2.pl" }],
+  },
+  {
+    name: "Michał Deneka",
+    role: "Edytor bazy danych",
+    description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
+    initials: "M",
+    links: [{ icon: Mail01Icon, label: "denekamichal06@gmail.com", href: "mailto:denekamichal06@gmail.com" }],
+  },
+  {
+    name: "Wiktoria",
+    role: "Edytor bazy danych",
+    description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
+    initials: "W",
+    links: [
+      {
+        icon: Mail01Icon,
+        label: "gawrysiukwiki@gmail.com",
+        href: "mailto:gawrysiukwiki@gmail.com",
+      },
     ],
   },
 ];
@@ -58,6 +91,48 @@ function ContactPage() {
           <h2 className="text-xl font-semibold">Zespół</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {teamMembers.map((member) => (
+              <Card key={member.name}>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Avatar size="lg">
+                      {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt={member.name} />}
+                      <AvatarFallback>{member.initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <CardTitle className="truncate">{member.name}</CardTitle>
+                      <p className="text-xs text-muted-foreground">{member.role}</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">{member.description}</p>
+                  {member.links.length > 0 && (
+                    <div className="space-y-2">
+                      {member.links.map((link) => (
+                        <a
+                          key={link.href}
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <HugeiconsIcon icon={link.icon} className="size-4 shrink-0" />
+                          <span className="truncate">{link.label}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-xl font-semibold">Edytorzy</h2>
+          <p className="text-sm text-muted-foreground">Tutaj znajdziesz kontakt do naszych edytorów</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {editors.map((member) => (
               <Card key={member.name}>
                 <CardHeader>
                   <div className="flex items-center gap-3">

@@ -642,7 +642,7 @@ function StationDetailForm({
 export const Route = createFileRoute("/_layout/admin/_layout/stations/$id")({
   component: AdminStationDetailPage,
   validateSearch: (search: Record<string, unknown>) => ({
-    uke: search.uke as string | undefined,
+    uke: typeof search.uke === "string" || typeof search.uke === "number" ? String(search.uke) : undefined,
   }),
   staticData: {
     titleKey: "breadcrumbs.editStation",
