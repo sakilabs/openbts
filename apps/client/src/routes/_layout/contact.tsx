@@ -73,6 +73,19 @@ const editors: TeamMember[] = [
       },
     ],
   },
+  {
+    name: "Gabriel",
+    role: "Edytor bazy danych",
+    description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
+    initials: "G",
+    links: [
+      {
+        icon: Mail01Icon,
+        label: "gabrielbilnik890@outlook.com",
+        href: "mailto:gabrielbilnik890@outlook.com",
+      },
+    ],
+  },
 ];
 
 function ContactPage() {
