@@ -26,13 +26,13 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
           <span className="font-semibold text-sm">{t("photos.selectedLocationPhotos")}</span>
           <span className="text-xs text-muted-foreground">({photos.length})</span>
         </div>
-        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="p-3 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
           {photos.map((photo, idx) => (
             <div key={photo.id} className="rounded-lg overflow-hidden border bg-muted">
               <div
                 role="button"
                 tabIndex={0}
-                className="relative aspect-square cursor-zoom-in"
+                className="relative h-36 cursor-zoom-in"
                 onClick={() => setLightboxIndex(idx)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") setLightboxIndex(idx);

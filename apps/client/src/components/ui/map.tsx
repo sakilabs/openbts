@@ -173,7 +173,7 @@ const googleSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
       ],
       tileSize: 256,
       maxzoom: 18,
-      attribution: "Map data &copy;2026 Google Satellite imagery &copy;2026 NASA",
+      attribution: "Map data &copy;2026 Google Satellite imagery and respective authors",
     },
   },
   layers: [

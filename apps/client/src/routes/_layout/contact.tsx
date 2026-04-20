@@ -51,14 +51,14 @@ const editors: TeamMember[] = [
     description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
     initials: "A",
     avatarUrl: "/uploads/62297db8-6093-4477-861c-637973a16ff3.webp",
-    links: [{ icon: Mail01Icon, label: "adamkukulski12@o2.pl", href: "mailto:adamkukulski12@o2.pl" }],
+    links: [{ icon: Mail01Icon, label: "a.kukulski@btsearch.pl", href: "mailto:a.kukulski@btsearch.pl" }],
   },
   {
     name: "Michał Deneka",
     role: "Edytor bazy danych",
     description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
     initials: "M",
-    links: [{ icon: Mail01Icon, label: "denekamichal06@gmail.com", href: "mailto:denekamichal06@gmail.com" }],
+    links: [{ icon: Mail01Icon, label: "m.deneka@btsearch.pl", href: "mailto:m.deneka@btsearch.pl" }],
   },
   {
     name: "Wiktoria",
@@ -68,8 +68,8 @@ const editors: TeamMember[] = [
     links: [
       {
         icon: Mail01Icon,
-        label: "gawrysiukwiki@gmail.com",
-        href: "mailto:gawrysiukwiki@gmail.com",
+        label: "w.gawrysiuk@btsearch.pl",
+        href: "mailto:w.gawrysiuk@btsearch.pl",
       },
     ],
   },
@@ -81,8 +81,8 @@ const editors: TeamMember[] = [
     links: [
       {
         icon: Mail01Icon,
-        label: "gabrielbilnik890@outlook.com",
-        href: "mailto:gabrielbilnik890@outlook.com",
+        label: "g.bilnik@btsearch.pl",
+        href: "mailto:g.bilnik@btsearch.pl",
       },
     ],
   },

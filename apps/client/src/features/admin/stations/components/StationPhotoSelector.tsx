@@ -247,7 +247,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
         </div>
 
         <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleFileChange} />
-        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+        <div className="p-3 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 max-h-96 overflow-y-auto">
           {locationPhotos.map((photo) => {
             const isSelected = selected.has(photo.id);
             const isMain = mainId === photo.id;
@@ -266,7 +266,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                   if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
                 }}
               >
-                <div className="relative aspect-square">
+                <div className="relative h-36">
                   <img
                     src={`/uploads/${photo.attachment_uuid}.webp`}
                     alt={photo.note ?? ""}
@@ -384,7 +384,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadMutation.isPending}
-            className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
+            className="h-36 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
           >
             {uploadMutation.isPending ? (
               <Spinner className="size-5" />

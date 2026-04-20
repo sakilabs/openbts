@@ -229,14 +229,14 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                 ) : null}
               </div>
             ) : (
-              <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto custom-scrollbar">
+              <div className="p-3 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 max-h-96 overflow-y-auto custom-scrollbar">
                 {photos.map((photo, idx) => (
                   <div
                     key={photo.id}
                     className="rounded-lg overflow-hidden border bg-muted animate-in fade-in zoom-in-95 duration-300 motion-reduce:animate-none"
                     style={{ animationDelay: `${Math.min(idx * 40, 400)}ms`, animationFillMode: "both" }}
                   >
-                    <div className="relative aspect-square">
+                    <div className="relative h-36">
                       <img
                         src={`/uploads/${photo.attachment_uuid}.webp`}
                         alt={photo.note ?? ""}
@@ -353,7 +353,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadMutation.isPending}
-                    className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
+                    className="h-36 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
                   >
                     {uploadMutation.isPending ? (
                       <Spinner className="size-5" />

@@ -97,7 +97,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
             {t("photos.selectionCount", { selected: selectedSet.size, total: locationPhotos.length })}
           </span>
         </div>
-        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
+        <div className="p-3 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 max-h-80 overflow-y-auto">
           {locationPhotos.map((photo, idx) => {
             const isSelected = selectedSet.has(photo.id);
             const isAssigned = assignedIds.has(photo.id);
@@ -116,7 +116,7 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                   if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
                 }}
               >
-                <div className="relative aspect-square">
+                <div className="relative h-36">
                   <img
                     src={`/uploads/${photo.attachment_uuid}.webp`}
                     alt={photo.note ?? ""}
