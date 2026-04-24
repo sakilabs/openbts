@@ -18,7 +18,7 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
 
     const { latitude: lat, longitude: lng } = location;
 
-    const azimuthColors = new Map<number, Set<string>>();
+    const azimuthColors = new Map<number, string[]>();
 
     for (const permit of location.permits) {
       if (!permit.sectors?.length) continue;
@@ -26,29 +26,31 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
       for (const sector of permit.sectors) {
         if (sector.azimuth == null) continue;
         const existing = azimuthColors.get(sector.azimuth);
-        if (existing) existing.add(color);
-        else azimuthColors.set(sector.azimuth, new Set([color]));
+        if (existing) existing.push(color);
+        else azimuthColors.set(sector.azimuth, [color]);
       }
     }
 
-    for (const [azimuth, colorSet] of azimuthColors) {
-      const colors = [...colorSet];
+    for (const [azimuth, colorList] of azimuthColors) {
+      const uniqueColors = [...new Set(colorList)];
 
-      if (colors.length === 1) {
+      if (uniqueColors.length === 1) {
         const [destLat, destLng] = destinationPoint(lat, lng, azimuth, lineLength);
-        features.push({
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: [
-              [lng, lat],
-              [destLng, destLat],
-            ],
-          },
-          properties: { azimuth, color: colors[0] },
-        });
+        for (const color of colorList) {
+          features.push({
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [lng, lat],
+                [destLng, destLat],
+              ],
+            },
+            properties: { azimuth, color },
+          });
+        }
       } else {
-        const totalSegments = colors.length * 4;
+        const totalSegments = uniqueColors.length * 4;
         for (let i = 0; i < totalSegments; i++) {
           const [startLat, startLng] = destinationPoint(lat, lng, azimuth, (i / totalSegments) * lineLength);
           const [endLat, endLng] = destinationPoint(lat, lng, azimuth, ((i + 1) / totalSegments) * lineLength);
@@ -61,7 +63,7 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
                 [endLng, endLat],
               ],
             },
-            properties: { azimuth, color: colors[i % colors.length] },
+            properties: { azimuth, color: uniqueColors[i % uniqueColors.length] },
           });
         }
       }

@@ -41,7 +41,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (!location) throw new ErrorResponse("NOT_FOUND");
 
   try {
-    const [updated] = await db.update(locations).set(req.body).where(eq(locations.id, id)).returning();
+    const [updated] = await db
+      .update(locations)
+      .set({ ...req.body, updatedAt: new Date() })
+      .where(eq(locations.id, id))
+      .returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
     const updatedWithRegion = await db.query.locations.findFirst({
