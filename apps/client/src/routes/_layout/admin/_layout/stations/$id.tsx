@@ -208,7 +208,7 @@ function formReducer(state: ReturnType<typeof getInitialFormState>, action: Form
     case "SET_CONFIRMED":
       return { ...state, isConfirmed: action.payload };
     case "PATCH_LOCATION":
-      return { ...state, location: { ...state.location, ...action.payload }, existingLocationId: null };
+      return { ...state, location: { ...state.location, ...action.payload } };
     case "SET_LOCATION":
       return { ...state, location: action.payload, existingLocationId: null };
     case "SET_EXISTING_LOCATION":

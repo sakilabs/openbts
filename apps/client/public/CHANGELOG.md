@@ -7,6 +7,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Azimuth lines from different operators sharing the same bearing at one location now render as alternating color segments instead of overlapping
 - Updating location's data now updates updatedAt for all stations at that location
+- Changing lat/lng on a station now patches the existing location record instead of deleting it and creating a new one
 
 # 2026-04-20
 

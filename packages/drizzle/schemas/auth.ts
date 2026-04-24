@@ -202,6 +202,7 @@ export const twoFactors = AuthSchema.table(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    verified: boolean("verified").notNull().default(false),
   },
   (table) => [index("twoFactors_secret_idx").on(table.secret), index("twoFactors_userId_idx").on(table.userId)],
 );

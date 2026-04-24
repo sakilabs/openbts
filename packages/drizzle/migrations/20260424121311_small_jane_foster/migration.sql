@@ -1,0 +1,1 @@
+ALTER TABLE "auth"."two_factors" ADD COLUMN "verified" boolean DEFAULT false NOT NULL;
