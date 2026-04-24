@@ -9,6 +9,9 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Updating location's data now updates updatedAt for all stations at that location
 - Changing lat/lng on a station now patches the existing location record instead of deleting it and creating a new one
 - PCI duplicates checks now take EARFCN/ARFCN into account before determining if the PCI is duplicated on the same band (e.g. on band with TDD duplex)
+- Fixed map crash when switching map styles while layer event listeners (click, hover) were still attached
+- Fullscreen button is now hidden on devices that don't support the Fullscreen API (e.g. iOS Safari)
+- Radioline tooltip is no longer shown on touch devices, which was preventing the popup from opening on tap
 
 # 2026-04-20
 

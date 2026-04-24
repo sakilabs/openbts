@@ -2,6 +2,7 @@ import MapLibreGL from "maplibre-gl";
 import { type ReactNode, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
+import { onBeforeStyleChange } from "@/components/ui/map";
 import type { MapPointStyle } from "@/hooks/usePreferences";
 
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
@@ -248,17 +249,32 @@ export function useMapLayer({
       tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
 
+    const attachLayerListeners = () => {
+      for (const layerId of LAYER_IDS) {
+        map.on("mousedown", layerId, handleMouseDown);
+        map.on("click", layerId, handleClick);
+        map.on("contextmenu", layerId, handleContextMenu);
+        map.on("mouseenter", layerId, handleMouseEnter);
+        map.on("mousemove", layerId, handleMouseMove);
+        map.on("mouseleave", layerId, handleMouseLeave);
+      }
+    };
+
+    const detachLayerListeners = () => {
+      for (const layerId of LAYER_IDS) {
+        map.off("mousedown", layerId, handleMouseDown);
+        map.off("click", layerId, handleClick);
+        map.off("contextmenu", layerId, handleContextMenu);
+        map.off("mouseenter", layerId, handleMouseEnter);
+        map.off("mousemove", layerId, handleMouseMove);
+        map.off("mouseleave", layerId, handleMouseLeave);
+      }
+    };
+
     ensureLayersExist();
     map.on("styledata", ensureLayersExist);
-
-    for (const layerId of LAYER_IDS) {
-      map.on("mousedown", layerId, handleMouseDown);
-      map.on("click", layerId, handleClick);
-      map.on("contextmenu", layerId, handleContextMenu);
-      map.on("mouseenter", layerId, handleMouseEnter);
-      map.on("mousemove", layerId, handleMouseMove);
-      map.on("mouseleave", layerId, handleMouseLeave);
-    }
+    attachLayerListeners();
+    const unsubscribe = onBeforeStyleChange(map, detachLayerListeners);
 
     const addedImages = addedImagesRef.current;
 
@@ -267,15 +283,8 @@ export function useMapLayer({
 
       if (isMapValid) {
         map.off("styledata", ensureLayersExist);
-
-        for (const layerId of LAYER_IDS) {
-          map.off("mousedown", layerId, handleMouseDown);
-          map.off("click", layerId, handleClick);
-          map.off("contextmenu", layerId, handleContextMenu);
-          map.off("mouseenter", layerId, handleMouseEnter);
-          map.off("mousemove", layerId, handleMouseMove);
-          map.off("mouseleave", layerId, handleMouseLeave);
-        }
+        unsubscribe();
+        detachLayerListeners();
 
         try {
           for (const layerId of LAYER_IDS) {

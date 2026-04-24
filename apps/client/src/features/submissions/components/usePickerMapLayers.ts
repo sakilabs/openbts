@@ -1,6 +1,7 @@
 import type MapLibreGL from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
+import { onBeforeStyleChange } from "@/components/ui/map";
 import {
   PICKER_CIRCLE_LAYER_ID,
   PICKER_LAYER_IDS,
@@ -89,16 +90,26 @@ function attachCursorHandlers(map: MapLibreGL.Map, layerIds: readonly string[]):
     map.getCanvas().style.cursor = "";
   };
 
-  for (const layerId of layerIds) {
-    map.on("mouseenter", layerId, handleMouseEnter);
-    map.on("mouseleave", layerId, handleMouseLeave);
-  }
+  const attach = () => {
+    for (const layerId of layerIds) {
+      map.on("mouseenter", layerId, handleMouseEnter);
+      map.on("mouseleave", layerId, handleMouseLeave);
+    }
+  };
 
-  return () => {
+  const detach = () => {
     for (const layerId of layerIds) {
       map.off("mouseenter", layerId, handleMouseEnter);
       map.off("mouseleave", layerId, handleMouseLeave);
     }
+  };
+
+  attach();
+  const unsubscribe = onBeforeStyleChange(map, detach);
+
+  return () => {
+    detach();
+    unsubscribe();
   };
 }
 

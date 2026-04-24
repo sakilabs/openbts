@@ -323,8 +323,8 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
                               <span className="font-mono text-xs">{dir.permit.number || "-"}</span>
                               {dir.permit.decision_type && (
                                 <Tooltip>
-                                  <TooltipTrigger className="text-[11px] font-bold text-muted-foreground uppercase cursor-help">
-                                    {dir.permit.decision_type}
+                                  <TooltipTrigger className="font-mono text-[10px] text-muted-foreground cursor-help">
+                                    [{dir.permit.decision_type}]
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     {dir.permit.decision_type === "zmP"

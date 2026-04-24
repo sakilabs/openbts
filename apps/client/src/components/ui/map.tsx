@@ -86,6 +86,33 @@ type MapContextValue = {
 
 const MapContext = createContext<MapContextValue | null>(null);
 
+/**
+ * Callbacks to remove event listeners before switching map styles.
+ *
+ * Changing the map style destroys all layers, so any click/hover listeners
+ * attached to those layers must be removed first or they'll crash.
+ */
+const beforeStyleChangeCallbacks = new WeakMap<MapLibreGL.Map, Set<() => void>>();
+
+function onBeforeStyleChange(map: MapLibreGL.Map, callback: () => void): () => void {
+  let set = beforeStyleChangeCallbacks.get(map);
+  if (!set) {
+    set = new Set();
+    beforeStyleChangeCallbacks.set(map, set);
+  }
+  set.add(callback);
+  return () => {
+    set.delete(callback);
+  };
+}
+
+function fireBeforeStyleChange(map: MapLibreGL.Map): void {
+  const set = beforeStyleChangeCallbacks.get(map);
+  if (set) {
+    for (const cb of set) cb();
+  }
+}
+
 function getViewport(map: MapLibreGL.Map): MapViewport {
   const center = map.getCenter();
   return {
@@ -513,7 +540,9 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
 
     clearStyleTimeout();
     currentStyleRef.current = newStyle;
-    queueMicrotask(() => dispatchMap({ type: "SET_STYLE_LOADED", value: false }));
+    dispatchMap({ type: "SET_STYLE_LOADED", value: false });
+
+    fireBeforeStyleChange(mapInstance);
 
     const isRasterStyle =
       newStyle === osmRasterStyle ||
@@ -1181,7 +1210,7 @@ function MapControls({
             </ControlButton>
           </ControlGroup>
         )}
-        {showFullscreen && (
+        {showFullscreen && typeof document !== "undefined" && document.fullscreenEnabled && (
           <ControlGroup>
             <ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
               <HugeiconsIcon icon={MaximizeIcon} className="size-4" />
@@ -1527,14 +1556,24 @@ function MapRoute({
       onMouseLeave?.();
     };
 
-    map.on("click", layerId, handleClick);
-    map.on("mouseenter", layerId, handleMouseEnter);
-    map.on("mouseleave", layerId, handleMouseLeave);
+    const attach = () => {
+      map.on("click", layerId, handleClick);
+      map.on("mouseenter", layerId, handleMouseEnter);
+      map.on("mouseleave", layerId, handleMouseLeave);
+    };
 
-    return () => {
+    const detach = () => {
       map.off("click", layerId, handleClick);
       map.off("mouseenter", layerId, handleMouseEnter);
       map.off("mouseleave", layerId, handleMouseLeave);
+    };
+
+    attach();
+    const unsubscribe = onBeforeStyleChange(map, detach);
+
+    return () => {
+      detach();
+      unsubscribe();
     };
   }, [isLoaded, map, layerId, onClick, onMouseEnter, onMouseLeave, interactive]);
 
@@ -1780,20 +1819,30 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
       map.getCanvas().style.cursor = "";
     };
 
-    map.on("click", clusterLayerId, handleClusterClick);
-    map.on("click", unclusteredLayerId, handlePointClick);
-    map.on("mouseenter", clusterLayerId, handleMouseEnterCluster);
-    map.on("mouseleave", clusterLayerId, handleMouseLeaveCluster);
-    map.on("mouseenter", unclusteredLayerId, handleMouseEnterPoint);
-    map.on("mouseleave", unclusteredLayerId, handleMouseLeavePoint);
+    const attach = () => {
+      map.on("click", clusterLayerId, handleClusterClick);
+      map.on("click", unclusteredLayerId, handlePointClick);
+      map.on("mouseenter", clusterLayerId, handleMouseEnterCluster);
+      map.on("mouseleave", clusterLayerId, handleMouseLeaveCluster);
+      map.on("mouseenter", unclusteredLayerId, handleMouseEnterPoint);
+      map.on("mouseleave", unclusteredLayerId, handleMouseLeavePoint);
+    };
 
-    return () => {
+    const detach = () => {
       map.off("click", clusterLayerId, handleClusterClick);
       map.off("click", unclusteredLayerId, handlePointClick);
       map.off("mouseenter", clusterLayerId, handleMouseEnterCluster);
       map.off("mouseleave", clusterLayerId, handleMouseLeaveCluster);
       map.off("mouseenter", unclusteredLayerId, handleMouseEnterPoint);
       map.off("mouseleave", unclusteredLayerId, handleMouseLeavePoint);
+    };
+
+    attach();
+    const unsubscribe = onBeforeStyleChange(map, detach);
+
+    return () => {
+      detach();
+      unsubscribe();
     };
   }, [isLoaded, map, clusterLayerId, unclusteredLayerId, sourceId, onClusterClick, onPointClick]);
 
@@ -1804,6 +1853,7 @@ export {
   MapComponent as Map,
   useMap,
   useResolvedTheme,
+  onBeforeStyleChange,
   MapMarker,
   MarkerContent,
   MarkerPopup,
