@@ -236,8 +236,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(cellWhere!);
     }
 
-    if (cutoff)
-      conditions.push(sql`(${stationFields.updatedAt} >= ${cutoff.toISOString()} OR ${stationFields.createdAt} >= ${cutoff.toISOString()})`);
+    if (cutoff) conditions.push(sql`${stationFields.createdAt} >= ${cutoff.toISOString()}`);
 
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
@@ -270,7 +269,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sql`EXISTS (
         SELECT 1 FROM ${stations}
         WHERE ${stations.location_id} = ${locFields.id}
-        AND (${stations.updatedAt} >= ${cutoff.toISOString()} OR ${stations.createdAt} >= ${cutoff.toISOString()})
+        AND ${stations.createdAt} >= ${cutoff.toISOString()})
       )`);
     }
     if (hasStationFilters) {
