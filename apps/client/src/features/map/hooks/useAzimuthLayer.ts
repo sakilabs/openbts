@@ -18,16 +18,24 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
 
     const { latitude: lat, longitude: lng } = location;
 
+    const azimuthColors = new Map<number, Set<string>>();
+
     for (const permit of location.permits) {
       if (!permit.sectors?.length) continue;
-
       const color = permit.operator?.mnc ? getOperatorColor(permit.operator.mnc) : DEFAULT_COLOR;
-
       for (const sector of permit.sectors) {
         if (sector.azimuth == null) continue;
+        const existing = azimuthColors.get(sector.azimuth);
+        if (existing) existing.add(color);
+        else azimuthColors.set(sector.azimuth, new Set([color]));
+      }
+    }
 
-        const [destLat, destLng] = destinationPoint(lat, lng, sector.azimuth, lineLength);
+    for (const [azimuth, colorSet] of azimuthColors) {
+      const colors = [...colorSet];
 
+      if (colors.length === 1) {
+        const [destLat, destLng] = destinationPoint(lat, lng, azimuth, lineLength);
         features.push({
           type: "Feature",
           geometry: {
@@ -37,11 +45,25 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
               [destLng, destLat],
             ],
           },
-          properties: {
-            azimuth: sector.azimuth,
-            color,
-          },
+          properties: { azimuth, color: colors[0] },
         });
+      } else {
+        const totalSegments = colors.length * 4;
+        for (let i = 0; i < totalSegments; i++) {
+          const [startLat, startLng] = destinationPoint(lat, lng, azimuth, (i / totalSegments) * lineLength);
+          const [endLat, endLng] = destinationPoint(lat, lng, azimuth, ((i + 1) / totalSegments) * lineLength);
+          features.push({
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [startLng, startLat],
+                [endLng, endLat],
+              ],
+            },
+            properties: { azimuth, color: colors[i % colors.length] },
+          });
+        }
       }
     }
   }

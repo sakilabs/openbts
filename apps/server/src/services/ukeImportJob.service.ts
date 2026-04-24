@@ -14,9 +14,9 @@ import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPer
 import { getSnapshotDelta, takeStatsSnapshot } from "./statsSnapshot.service.js";
 
 type ImportStepKey =
-  | "stations"
-  | "radiolines"
   | "permits"
+  | "radiolines"
+  | "device_registry"
   | "prune_deleted_entries"
   | "prune_associations"
   | "cleanup_orphaned_uke_locations"
@@ -85,9 +85,9 @@ async function computeImportDelta(startedAt: string): Promise<ImportDelta> {
 }
 
 const STEP_KEYS: ImportStepKey[] = [
-  "stations",
-  "radiolines",
   "permits",
+  "radiolines",
+  "device_registry",
   "prune_deleted_entries",
   "prune_associations",
   "cleanup_orphaned_uke_locations",
@@ -167,9 +167,9 @@ export async function getImportJobStatus(): Promise<ImportJobStatus> {
 }
 
 export async function startImportJob(options: {
-  importStations?: boolean;
-  importRadiolines?: boolean;
   importPermits?: boolean;
+  importRadiolines?: boolean;
+  importDeviceRegistry?: boolean;
 }): Promise<ImportJobStatus> {
   const acquired = await redis.set(REDIS_LOCK_KEY, "1", { expiration: { type: "EX", value: LOCK_TTL_SECONDS }, condition: "NX" });
   if (!acquired) return getImportJobStatus();
@@ -187,34 +187,34 @@ export async function startImportJob(options: {
 
 async function runJob(
   job: ImportJobStatus,
-  options: { importStations?: boolean; importRadiolines?: boolean; importPermits?: boolean },
+  options: { importPermits?: boolean; importRadiolines?: boolean; importDeviceRegistry?: boolean },
 ): Promise<void> {
   const {
-    importStations: shouldImportStations = true,
-    importRadiolines: shouldImportRadiolines = false,
     importPermits: shouldImportPermits = true,
+    importRadiolines: shouldImportRadiolines = false,
+    importDeviceRegistry: shouldImportDeviceRegistry = true,
   } = options;
 
-  let stationsChanged = false;
-  let radiolinesChanged = false;
   let permitsChanged = false;
+  let radiolinesChanged = false;
+  let deviceRegistryChanged = false;
 
   try {
-    if (shouldImportStations) {
-      markRunning(job, "stations");
+    if (shouldImportPermits) {
+      markRunning(job, "permits");
       await saveJob(job);
       try {
-        stationsChanged = await runInWorker("importStations");
-        if (stationsChanged) markSuccess(job, "stations");
-        else markSkipped(job, "stations");
+        permitsChanged = await runInWorker("importPermits");
+        if (permitsChanged) markSuccess(job, "permits");
+        else markSkipped(job, "permits");
         await saveJob(job);
       } catch (e) {
-        markError(job, "stations");
+        markError(job, "permits");
         await saveJob(job);
         throw e;
       }
     } else {
-      markSkipped(job, "stations");
+      markSkipped(job, "permits");
       await saveJob(job);
     }
 
@@ -236,21 +236,21 @@ async function runJob(
       await saveJob(job);
     }
 
-    if (shouldImportPermits) {
-      markRunning(job, "permits");
+    if (shouldImportDeviceRegistry) {
+      markRunning(job, "device_registry");
       await saveJob(job);
       try {
-        permitsChanged = await runInWorker("importPermitDevices");
-        if (permitsChanged) markSuccess(job, "permits");
-        else markSkipped(job, "permits");
+        deviceRegistryChanged = await runInWorker("importDeviceRegistry");
+        if (deviceRegistryChanged) markSuccess(job, "device_registry");
+        else markSkipped(job, "device_registry");
         await saveJob(job);
       } catch (e) {
-        markError(job, "permits");
+        markError(job, "device_registry");
         await saveJob(job);
         throw e;
       }
     } else {
-      markSkipped(job, "permits");
+      markSkipped(job, "device_registry");
       await saveJob(job);
     }
 
@@ -268,7 +268,7 @@ async function runJob(
       throw e;
     }
 
-    if (stationsChanged || permitsChanged) {
+    if (permitsChanged || deviceRegistryChanged) {
       markRunning(job, "cleanup_orphaned_uke_locations");
       await saveJob(job);
       try {
@@ -311,7 +311,7 @@ async function runJob(
       await saveJob(job);
     }
 
-    if (stationsChanged || permitsChanged) {
+    if (permitsChanged || deviceRegistryChanged) {
       markRunning(job, "snapshot");
       await saveJob(job);
       try {
@@ -331,7 +331,7 @@ async function runJob(
     job.state = "success";
     job.finishedAt = new Date().toISOString();
     await saveJob(job);
-    if (stationsChanged || radiolinesChanged || permitsChanged) {
+    if (permitsChanged || radiolinesChanged || deviceRegistryChanged) {
       notifyUkeUpdate().catch((e) => logger.error("Failed to send UKE update notifications", { error: e instanceof Error ? e.message : String(e) }));
       Promise.all([computeImportDelta(job.startedAt!), getSnapshotDelta().catch(() => null)])
         .then(([delta, snapshotDelta]) =>

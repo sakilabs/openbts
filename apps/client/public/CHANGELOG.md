@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-24
+
+### 🩹 Fixes
+
+- Azimuth lines from different operators sharing the same bearing at one location now render as alternating color segments instead of overlapping
+- Updating location's data now updates updatedAt for all stations at that location
+
 # 2026-04-20
 
 ### 🚀 Enhancements

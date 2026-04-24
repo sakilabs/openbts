@@ -39,9 +39,9 @@
     "noCommentsToModerate": "No comments to moderate",
     "openImportPage": "Open import page",
     "importSteps": {
-      "stations": "Stations",
-      "radiolines": "Radiolines",
       "permits": "Permits",
+      "radiolines": "Radiolines",
+      "device_registry": "Device Registry",
       "prune_deleted_entries": "Prune deleted",
       "prune_associations": "Prune associations",
       "cleanup_orphaned_uke_locations": "Cleanup orphaned",
@@ -196,9 +196,9 @@
   "ukeImport": {
     "title": "UKE Import",
     "subtitle": "Import data from UKE (Urząd Komunikacji Elektronicznej)",
-    "importStations": "Import stations",
-    "importRadiolines": "Import radiolines",
     "importPermits": "Import permits",
+    "importRadiolines": "Import radiolines",
+    "importDeviceRegistry": "Import device registry",
     "startImport": "Start Import",
     "alreadyRunning": "Import is already in progress",
     "status": {
@@ -208,9 +208,9 @@
       "error": "Failed"
     },
     "steps": {
-      "stations": "Import stations",
-      "radiolines": "Import radiolines",
       "permits": "Import permits",
+      "radiolines": "Import radiolines",
+      "device_registry": "Import device registry",
       "prune_deleted_entries": "Prune old deleted entries",
       "prune_associations": "Prune station-permit associations",
       "cleanup_orphaned_uke_locations": "Clean up orphaned UKE locations",

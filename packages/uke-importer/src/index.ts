@@ -1,17 +1,17 @@
 import { sql } from "@openbts/drizzle/db";
 
-import { importPermitDevices } from "./device-registry.ts";
+import { importDeviceRegistry } from "./device-registry.ts";
 import { importRadiolines } from "./radiolines.js";
-import { associateStationsWithPermits, importStations } from "./stations.js";
+import { associateStationsWithPermits, importPermits } from "./stations.js";
 import { cleanupDownloads } from "./utils.js";
 
 async function main(): Promise<void> {
   try {
     const dateStart = new Date();
     console.log(`UKE Importer started at ${dateStart.toISOString()}`);
-    await importStations();
+    await importPermits();
     await importRadiolines();
-    await importPermitDevices();
+    await importDeviceRegistry();
     await associateStationsWithPermits();
     const dateEnd = new Date();
     console.log(`UKE Importer finished at ${dateEnd.toISOString()}`);

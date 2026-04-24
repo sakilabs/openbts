@@ -44,9 +44,9 @@
     "noCommentsToModerate": "Brak komentarzy do moderacji",
     "openImportPage": "Otwórz stronę importu",
     "importSteps": {
-      "stations": "Stacje",
-      "radiolines": "Radiolinie",
       "permits": "Pozwolenia",
+      "radiolines": "Radiolinie",
+      "device_registry": "Rejestr urządzeń",
       "prune_deleted_entries": "Czyszczenie usuniętych",
       "prune_associations": "Czyszczenie powiązań",
       "cleanup_orphaned_uke_locations": "Czyszczenie osieroconych",
@@ -203,9 +203,9 @@
   "ukeImport": {
     "title": "Import UKE",
     "subtitle": "Importuj dane z UKE (Urząd Komunikacji Elektronicznej)",
-    "importStations": "Importuj stacje",
-    "importRadiolines": "Importuj radiolinie",
     "importPermits": "Importuj pozwolenia",
+    "importRadiolines": "Importuj radiolinie",
+    "importDeviceRegistry": "Importuj rejestr urządzeń",
     "startImport": "Rozpocznij import",
     "alreadyRunning": "Import jest już w toku",
     "status": {
@@ -215,9 +215,9 @@
       "error": "Błąd"
     },
     "steps": {
-      "stations": "Import stacji",
-      "radiolines": "Import radiolinii",
       "permits": "Import pozwoleń",
+      "radiolines": "Import radiolinii",
+      "device_registry": "Import rejestru urządzeń",
       "prune_deleted_entries": "Usuwanie starych usuniętych wpisów",
       "prune_associations": "Czyszczenie powiązań stacji z pozwoleniami",
       "cleanup_orphaned_uke_locations": "Usuwanie lokalizacji UKE bez powiązanych pozwoleń",

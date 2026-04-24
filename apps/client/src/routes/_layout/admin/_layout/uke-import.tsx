@@ -67,9 +67,9 @@ function UkeImportPage() {
   const { t } = useTranslation(["admin", "common"]);
   const queryClient = useQueryClient();
 
-  const [importStations, setImportStations] = useState(true);
-  const [importRadiolines, setImportRadiolines] = useState(true);
   const [importPermits, setImportPermits] = useState(true);
+  const [importRadiolines, setImportRadiolines] = useState(true);
+  const [importDeviceRegistry, setImportDeviceRegistry] = useState(true);
 
   const { data: status } = useQuery({
     queryKey: ["uke-import-status"],
@@ -95,9 +95,9 @@ function UkeImportPage() {
           <div className="rounded-lg border bg-card p-4">
             <h3 className="text-sm font-semibold leading-none mb-4">{t("ukeImport.title")}</h3>
             <div className="space-y-3">
-              <label htmlFor="import-stations" className="flex items-center gap-2 cursor-pointer">
-                <Checkbox id="import-stations" checked={importStations} onCheckedChange={(val) => setImportStations(!!val)} disabled={isRunning} />
-                <span className="text-sm">{t("ukeImport.importStations")}</span>
+              <label htmlFor="import-permits" className="flex items-center gap-2 cursor-pointer">
+                <Checkbox id="import-permits" checked={importPermits} onCheckedChange={(val) => setImportPermits(!!val)} disabled={isRunning} />
+                <span className="text-sm">{t("ukeImport.importPermits")}</span>
               </label>
               <label htmlFor="import-radiolines" className="flex items-center gap-2 cursor-pointer">
                 <Checkbox
@@ -108,14 +108,19 @@ function UkeImportPage() {
                 />
                 <span className="text-sm">{t("ukeImport.importRadiolines")}</span>
               </label>
-              <label htmlFor="import-permits" className="flex items-center gap-2 cursor-pointer">
-                <Checkbox id="import-permits" checked={importPermits} onCheckedChange={(val) => setImportPermits(!!val)} disabled={isRunning} />
-                <span className="text-sm">{t("ukeImport.importPermits")}</span>
+              <label htmlFor="import-device-registry" className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  id="import-device-registry"
+                  checked={importDeviceRegistry}
+                  onCheckedChange={(val) => setImportDeviceRegistry(!!val)}
+                  disabled={isRunning}
+                />
+                <span className="text-sm">{t("ukeImport.importDeviceRegistry")}</span>
               </label>
             </div>
             <div className="mt-4">
               <Button
-                onClick={() => startMutation.mutate({ importStations, importRadiolines, importPermits })}
+                onClick={() => startMutation.mutate({ importPermits, importRadiolines, importDeviceRegistry })}
                 disabled={isRunning || startMutation.isPending}
               >
                 {startMutation.isPending ? <Spinner className="size-4 mr-2" /> : null}

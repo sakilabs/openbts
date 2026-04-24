@@ -15,9 +15,9 @@ console.log = (...args: unknown[]) => {
 
 try {
   switch (task) {
-    case "importStations": {
-      const { importStations } = await import("@openbts/uke-importer/stations");
-      await importStations();
+    case "importPermits": {
+      const { importPermits } = await import("@openbts/uke-importer/stations");
+      await importPermits();
       break;
     }
     case "importRadiolines": {
@@ -25,9 +25,9 @@ try {
       await importRadiolines();
       break;
     }
-    case "importPermitDevices": {
-      const { importPermitDevices } = await import("@openbts/uke-importer/device-registry");
-      await importPermitDevices();
+    case "importDeviceRegistry": {
+      const { importDeviceRegistry } = await import("@openbts/uke-importer/device-registry");
+      await importDeviceRegistry();
       break;
     }
     default:

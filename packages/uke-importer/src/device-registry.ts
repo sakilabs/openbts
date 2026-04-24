@@ -535,7 +535,7 @@ async function processChunk(
   return insertedCount;
 }
 
-export async function importPermitDevices(): Promise<boolean> {
+export async function importDeviceRegistry(): Promise<boolean> {
   logger.log("Starting import from device registry...");
   logger.log("Scraping file links from:", PERMITS_DEVICES_URL);
   const links = await scrapePermitDeviceLinks(PERMITS_DEVICES_URL);

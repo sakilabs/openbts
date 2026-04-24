@@ -8,9 +8,9 @@ import { startImportJob } from "../../../../services/ukeImportJob.service.js";
 
 const importStepSchema = z.object({
   key: z.enum([
-    "stations",
-    "radiolines",
     "permits",
+    "radiolines",
+    "device_registry",
     "prune_deleted_entries",
     "prune_associations",
     "cleanup_orphaned_uke_locations",
@@ -33,9 +33,9 @@ const importJobStatusSchema = z.object({
 
 const schemaRoute = {
   body: z.object({
-    importStations: z.boolean().optional().default(true),
-    importRadiolines: z.boolean().optional().default(true),
     importPermits: z.boolean().optional().default(true),
+    importRadiolines: z.boolean().optional().default(true),
+    importDeviceRegistry: z.boolean().optional().default(true),
   }),
   response: {
     200: z.object({

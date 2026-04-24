@@ -1,4 +1,4 @@
-import { locations } from "@openbts/drizzle";
+import { locations, stations } from "@openbts/drizzle";
 import { eq } from "drizzle-orm";
 import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -53,6 +53,29 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       { action: "locations.update", table_name: "locations", record_id: id, old_values: location, new_values: updatedWithRegion ?? updated },
       req,
     );
+
+    const linkedStations = await db.query.stations.findMany({
+      where: { location_id: id },
+    });
+    if (linkedStations.length > 0) {
+      const now = new Date();
+      await db.update(stations).set({ updatedAt: now }).where(eq(stations.location_id, id));
+      await Promise.all(
+        linkedStations.map((station) =>
+          createAuditLog(
+            {
+              action: "stations.update",
+              table_name: "stations",
+              record_id: station.id,
+              old_values: station,
+              new_values: { ...station, updatedAt: now },
+              metadata: { reason: "locations.update", location_id: id },
+            },
+            req,
+          ),
+        ),
+      );
+    }
 
     return res.send({
       data: updated,

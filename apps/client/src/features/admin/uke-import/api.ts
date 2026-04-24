@@ -1,6 +1,6 @@
 import { API_BASE, fetchJson } from "@/lib/api";
 
-export type ImportStepKey = "stations" | "radiolines" | "permits" | "prune_associations" | "associate" | "cleanup";
+export type ImportStepKey = "permits" | "radiolines" | "device_registry" | "prune_associations" | "associate" | "cleanup";
 export type StepStatus = "pending" | "running" | "success" | "skipped" | "error";
 export type JobState = "idle" | "running" | "success" | "error";
 
@@ -20,9 +20,9 @@ export interface ImportJobStatus {
 }
 
 export interface StartImportPayload {
-  importStations?: boolean;
-  importRadiolines?: boolean;
   importPermits?: boolean;
+  importRadiolines?: boolean;
+  importDeviceRegistry?: boolean;
 }
 
 export async function fetchImportStatus(): Promise<ImportJobStatus> {

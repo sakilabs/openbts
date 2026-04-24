@@ -7,9 +7,9 @@ import { getImportJobStatus } from "../../../../../services/ukeImportJob.service
 
 const importStepSchema = z.object({
   key: z.enum([
-    "stations",
-    "radiolines",
     "permits",
+    "radiolines",
+    "device_registry",
     "prune_deleted_entries",
     "prune_associations",
     "cleanup_orphaned_uke_locations",

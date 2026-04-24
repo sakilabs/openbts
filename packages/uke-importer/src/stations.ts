@@ -140,7 +140,7 @@ async function insertUkePermits(
   }
 }
 
-export async function importStations(): Promise<boolean> {
+export async function importPermits(): Promise<boolean> {
   logger.log("Starting stations import...");
   logger.log("Scraping file links from:", STATIONS_URL);
   const unfiltered = await scrapeXlsxLinks(STATIONS_URL);

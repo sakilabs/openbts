@@ -2824,9 +2824,9 @@ paths:
             schema:
               type: object
               properties:
-                importStations: { type: boolean, default: true }
-                importRadiolines: { type: boolean, default: true }
                 importPermits: { type: boolean, default: true }
+                importRadiolines: { type: boolean, default: true }
+                importDeviceRegistry: { type: boolean, default: true }
       responses:
         "200":
           description: OK
@@ -4403,7 +4403,8 @@ components:
           items:
             type: object
             properties:
-              key: { type: string, enum: [stations, radiolines, permits, prune_associations, cleanup_orphaned_uke_locations, associate, cleanup] }
+              key:
+                { type: string, enum: [permits, radiolines, device_registry, prune_associations, cleanup_orphaned_uke_locations, associate, cleanup] }
               status: { type: string, enum: [pending, running, success, skipped, error] }
               startedAt: { type: string, nullable: true }
               finishedAt: { type: string, nullable: true }
