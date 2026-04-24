@@ -269,7 +269,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sql`EXISTS (
         SELECT 1 FROM ${stations}
         WHERE ${stations.location_id} = ${locFields.id}
-        AND ${stations.createdAt} >= ${cutoff.toISOString()})
+        AND ${stations.createdAt} >= ${cutoff.toISOString()}
       )`);
     }
     if (hasStationFilters) {
