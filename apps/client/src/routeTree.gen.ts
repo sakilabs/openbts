@@ -30,6 +30,7 @@ import { Route as LayoutListsUuidRouteImport } from './routes/_layout/lists/$uui
 import { Route as LayoutAdminLayoutRouteImport } from './routes/_layout/admin/_layout'
 import { Route as LayoutAccountTwoFactorRouteImport } from './routes/_layout/account/two-factor'
 import { Route as LayoutAccountSubmissionsRouteImport } from './routes/_layout/account/submissions'
+import { Route as LayoutAccountSignOutRouteImport } from './routes/_layout/account/sign-out'
 import { Route as LayoutAccountSettingsRouteImport } from './routes/_layout/account/settings'
 import { Route as LayoutAccountResetPasswordRouteImport } from './routes/_layout/account/reset-password'
 import { Route as LayoutAdminLayoutIndexRouteImport } from './routes/_layout/admin/_layout/index'
@@ -153,6 +154,11 @@ const LayoutAccountSubmissionsRoute =
     path: '/account/submissions',
     getParentRoute: () => LayoutRoute,
   } as any)
+const LayoutAccountSignOutRoute = LayoutAccountSignOutRouteImport.update({
+  id: '/account/sign-out',
+  path: '/account/sign-out',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAccountSettingsRoute = LayoutAccountSettingsRouteImport.update({
   id: '/account/settings',
   path: '/account/settings',
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/tos': typeof LayoutTosRoute
   '/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
+  '/account/sign-out': typeof LayoutAccountSignOutRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/account/two-factor': typeof LayoutAccountTwoFactorRoute
   '/admin': typeof LayoutAdminLayoutRouteWithChildren
@@ -310,6 +317,7 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
+  '/account/sign-out': typeof LayoutAccountSignOutRoute
   '/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/account/two-factor': typeof LayoutAccountTwoFactorRoute
   '/lists/$uuid': typeof LayoutListsUuidRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
+  '/_layout/account/sign-out': typeof LayoutAccountSignOutRoute
   '/_layout/account/submissions': typeof LayoutAccountSubmissionsRoute
   '/_layout/account/two-factor': typeof LayoutAccountTwoFactorRoute
   '/_layout/admin/_layout': typeof LayoutAdminLayoutRouteWithChildren
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/tos'
     | '/account/reset-password'
     | '/account/settings'
+    | '/account/sign-out'
     | '/account/submissions'
     | '/account/two-factor'
     | '/admin'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account/reset-password'
     | '/account/settings'
+    | '/account/sign-out'
     | '/account/submissions'
     | '/account/two-factor'
     | '/lists/$uuid'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/_layout/'
     | '/_layout/account/reset-password'
     | '/_layout/account/settings'
+    | '/_layout/account/sign-out'
     | '/_layout/account/submissions'
     | '/_layout/account/two-factor'
     | '/_layout/admin/_layout'
@@ -642,6 +654,13 @@ declare module '@tanstack/react-router' {
       path: '/account/submissions'
       fullPath: '/account/submissions'
       preLoaderRoute: typeof LayoutAccountSubmissionsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/account/sign-out': {
+      id: '/_layout/account/sign-out'
+      path: '/account/sign-out'
+      fullPath: '/account/sign-out'
+      preLoaderRoute: typeof LayoutAccountSignOutRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/account/settings': {
@@ -837,6 +856,7 @@ interface LayoutRouteChildren {
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutAccountResetPasswordRoute: typeof LayoutAccountResetPasswordRoute
   LayoutAccountSettingsRoute: typeof LayoutAccountSettingsRoute
+  LayoutAccountSignOutRoute: typeof LayoutAccountSignOutRoute
   LayoutAccountSubmissionsRoute: typeof LayoutAccountSubmissionsRoute
   LayoutAccountTwoFactorRoute: typeof LayoutAccountTwoFactorRoute
   LayoutAdminLayoutRoute: typeof LayoutAdminLayoutRouteWithChildren
@@ -859,6 +879,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutAccountResetPasswordRoute: LayoutAccountResetPasswordRoute,
   LayoutAccountSettingsRoute: LayoutAccountSettingsRoute,
+  LayoutAccountSignOutRoute: LayoutAccountSignOutRoute,
   LayoutAccountSubmissionsRoute: LayoutAccountSubmissionsRoute,
   LayoutAccountTwoFactorRoute: LayoutAccountTwoFactorRoute,
   LayoutAdminLayoutRoute: LayoutAdminLayoutRouteWithChildren,

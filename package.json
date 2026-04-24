@@ -28,6 +28,10 @@
   },
   "packageManager": "pnpm@10.27.0",
   "pnpm": {
+    "overrides": {
+      "@better-auth/core": "1.6.8",
+      "better-call": "2.0.3"
+    },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
       "@swc/core",

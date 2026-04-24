@@ -26,16 +26,16 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "dotenv": "17.4.0",
-    "drizzle-orm": "1.0.0-beta.20",
-    "nanoid": "5.1.7",
-    "postgres": "3.4.8",
-    "redis": "5.11.0",
+    "dotenv": "17.4.2",
+    "drizzle-orm": "1.0.0-beta.22",
+    "nanoid": "5.1.9",
+    "postgres": "3.4.9",
+    "redis": "5.12.1",
     "tsx": "4.21.0"
   },
   "devDependencies": {
     "@openbts/typescript-configs": "workspace:*",
     "@types/node": "24.10.9",
-    "drizzle-kit": "1.0.0-beta.20"
+    "drizzle-kit": "1.0.0-beta.23"
   }
 }

@@ -70,6 +70,8 @@ function AppProviders({ children }: AppProvidersProps) {
         providers: ["github", "google"],
       }}
       passkey
+      multiSession
+      deleteUser={true}
       twoFactor={["totp"]}
       localization={localization}
     >

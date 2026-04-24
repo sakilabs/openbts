@@ -27,13 +27,13 @@
   },
   "dependencies": {
     "@openbts/drizzle": "workspace:*",
-    "@turf/boolean-point-in-polygon": "7.3.4",
-    "@turf/helpers": "7.3.4",
+    "@turf/boolean-point-in-polygon": "7.3.5",
+    "@turf/helpers": "7.3.5",
     "cheerio": "1.2.0",
-    "dotenv": "17.4.0",
-    "drizzle-orm": "1.0.0-beta.20",
+    "dotenv": "17.4.2",
+    "drizzle-orm": "1.0.0-beta.22",
     "geojson-rbush": "~3.2.0",
-    "postgres": "3.4.8",
+    "postgres": "3.4.9",
     "tsx": "4.21.0",
     "xlsx": "0.18.5"
   },

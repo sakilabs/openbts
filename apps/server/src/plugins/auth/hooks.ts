@@ -1,13 +1,16 @@
 import { hash } from "@node-rs/argon2";
 import * as schema from "@openbts/drizzle";
-import type { AuthContext, MiddlewareContext, MiddlewareOptions } from "better-auth";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 
 import { API_KEYS_LIMIT, API_KEY_COOLDOWN_SECONDS, ARGON2_OPTIONS } from "../../constants.js";
 import { db } from "../../database/psql.js";
 import { redis } from "../../database/redis.js";
 
-type HookCtx = MiddlewareContext<MiddlewareOptions, AuthContext & { returned?: unknown; responseHeaders?: Headers }>;
+type HookCtx = {
+  path: string;
+  body?: Record<string, unknown>;
+  context: { returned?: unknown; responseHeaders?: Headers };
+};
 
 export const PASSKEY_VERIFIED_TTL = 5 * 60; // 5 minutes
 export const passkeyVerifiedKey = (userId: string) => `passkey-verified:${userId}`;

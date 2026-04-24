@@ -1,10 +1,11 @@
 import {
-  AccountSettingsCards,
+  ChangeEmailCard,
   DeleteAccountCard,
   PasskeysCard,
   ProvidersCard,
   SessionsCard,
   TwoFactorCard,
+  UpdateNameCard,
   UpdateUsernameCard,
 } from "@daveyplate/better-auth-ui";
 import { Alert01Icon, Alert02Icon, CheckmarkCircle02Icon, ComputerIcon, Key01Icon, SecurityLockIcon, UserIcon } from "@hugeicons/core-free-icons";
@@ -195,7 +196,8 @@ function AccountSettingsPage() {
             <SectionHeader icon={UserIcon} title={t("account.title")} description={t("account.description")} />
             <div className="space-y-3">
               <AvatarCard />
-              <AccountSettingsCards className="gap-3" />
+              <UpdateNameCard />
+              <ChangeEmailCard />
               <EmailVerificationCard email={session.user.email} emailVerified={session.user.emailVerified} />
               <UpdateUsernameCard />
               <ProvidersCard />
