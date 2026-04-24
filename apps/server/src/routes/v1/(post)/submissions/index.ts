@@ -202,9 +202,11 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
     for (const cell of input.cells) {
       if (cell.operation === "delete" || !cell.band_id || !cell.details) continue;
       const excludeCellId = cell.target_cell_id ?? undefined;
-      const d = cell.details as { pci?: number | null };
-      if (cell.rat === "LTE" && d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(stationId, cell.band_id, d.pci, excludeCellId);
-      else if (cell.rat === "NR" && d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(stationId, cell.band_id, d.pci, excludeCellId);
+      const d = cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null };
+      if (cell.rat === "LTE" && d.pci !== null && d.pci !== undefined)
+        await checkLTEPCIDuplicate(stationId, cell.band_id, d.pci, d.earfcn, excludeCellId);
+      else if (cell.rat === "NR" && d.pci !== null && d.pci !== undefined)
+        await checkNRPCIDuplicate(stationId, cell.band_id, d.pci, d.arfcn, excludeCellId);
     }
     /* eslint-enable no-await-in-loop */
   }

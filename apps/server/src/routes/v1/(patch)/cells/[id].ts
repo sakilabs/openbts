@@ -124,10 +124,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     const effectiveBandId = req.body.band_id ?? cell.band_id;
     if (cell.rat === "LTE") {
       const d = req.body.details as z.infer<typeof lteUpdateSchema>;
-      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(cell.station_id, effectiveBandId, d.pci, id);
+      if (d.pci !== null && d.pci !== undefined) {
+        const effectiveEARFCN = d.earfcn !== undefined ? d.earfcn : (cell.lte?.earfcn ?? null);
+        await checkLTEPCIDuplicate(cell.station_id, effectiveBandId, d.pci, effectiveEARFCN, id);
+      }
     } else if (cell.rat === "NR") {
       const d = req.body.details as z.infer<typeof nrUpdateSchema>;
-      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(cell.station_id, effectiveBandId, d.pci, id);
+      if (d.pci !== null && d.pci !== undefined) {
+        const effectiveARFCN = d.arfcn !== undefined ? d.arfcn : (cell.nr?.arfcn ?? null);
+        await checkNRPCIDuplicate(cell.station_id, effectiveBandId, d.pci, effectiveARFCN, id);
+      }
     }
   }
 

@@ -130,11 +130,11 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     if (cell.rat === "LTE") {
       const d = cell.details as z.infer<typeof lteInsertSchema>;
       /* eslint-disable-next-line no-await-in-loop */
-      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(station_id, cell.band_id, d.pci);
+      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(station_id, cell.band_id, d.pci, d.earfcn);
     } else if (cell.rat === "NR") {
       const d = cell.details as z.infer<typeof nrInsertSchema>;
       /* eslint-disable-next-line no-await-in-loop */
-      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, cell.band_id, d.pci);
+      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, cell.band_id, d.pci, d.arfcn);
     }
   }
 

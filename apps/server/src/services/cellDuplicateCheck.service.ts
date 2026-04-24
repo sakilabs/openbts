@@ -1,5 +1,5 @@
 import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
-import { and, eq, ne, or } from "drizzle-orm";
+import { and, eq, isNull, ne, or } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { ErrorResponse } from "../errors.js";
@@ -164,7 +164,7 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
   await Promise.all(checks);
 }
 
-export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pci: number, excludeCellId?: number) {
+export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pci: number, earfcn?: number | null, excludeCellId?: number) {
   const existing = await db
     .select({ id: lteCells.cell_id })
     .from(lteCells)
@@ -174,6 +174,7 @@ export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pc
         eq(cells.station_id, stationId),
         eq(cells.band_id, bandId),
         eq(lteCells.pci, pci),
+        earfcn !== null && earfcn !== undefined ? or(isNull(lteCells.earfcn), eq(lteCells.earfcn, earfcn)) : undefined,
         excludeCellId ? ne(lteCells.cell_id, excludeCellId) : undefined,
       ),
     )
@@ -186,7 +187,7 @@ export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pc
   }
 }
 
-export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci: number, excludeCellId?: number) {
+export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci: number, arfcn?: number | null, excludeCellId?: number) {
   const existing = await db
     .select({ id: nrCells.cell_id })
     .from(nrCells)
@@ -196,6 +197,7 @@ export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci
         eq(cells.station_id, stationId),
         eq(cells.band_id, bandId),
         eq(nrCells.pci, pci),
+        arfcn !== null && arfcn !== undefined ? or(isNull(nrCells.arfcn), eq(nrCells.arfcn, arfcn)) : undefined,
         excludeCellId ? ne(nrCells.cell_id, excludeCellId) : undefined,
       ),
     )

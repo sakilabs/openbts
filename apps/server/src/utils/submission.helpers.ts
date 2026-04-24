@@ -108,15 +108,15 @@ export function validateCellDuplicates(cells: CellWithDetails[]): void {
 
   for (const rat of ["LTE", "NR"] as const) {
     const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
-    const pciByBand = new Map<number, Set<number>>();
+    const seen = new Set<string>();
     for (const cell of ratCells) {
-      const d = cell.details as { pci?: number | null } | undefined;
+      const d = cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null } | undefined;
       const bandId = cell.band_id;
       if (d?.pci === null || d?.pci === undefined || bandId === null || bandId === undefined) continue;
-      const bandSet = pciByBand.get(bandId) ?? new Set<number>();
-      if (bandSet.has(d.pci)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate PCI ${d.pci} found on the same band in ${rat} cells` });
-      bandSet.add(d.pci);
-      pciByBand.set(bandId, bandSet);
+      const arfcn = rat === "LTE" ? (d.earfcn ?? null) : (d.arfcn ?? null);
+      const key = `${bandId}:${d.pci}:${arfcn ?? ""}`;
+      if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate PCI ${d.pci} found on the same band in ${rat} cells` });
+      seen.add(key);
     }
   }
 }

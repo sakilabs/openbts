@@ -443,9 +443,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           if (proposed.operation === "delete" || !proposed.band_id) continue;
           const excludeCellId = proposed.target_cell_id ?? undefined;
           if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined)
-            await checkLTEPCIDuplicate(stationId, proposed.band_id, proposed.lte.pci, excludeCellId);
+            await checkLTEPCIDuplicate(stationId, proposed.band_id, proposed.lte.pci, proposed.lte.earfcn, excludeCellId);
           else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined)
-            await checkNRPCIDuplicate(stationId, proposed.band_id, proposed.nr.pci, excludeCellId);
+            await checkNRPCIDuplicate(stationId, proposed.band_id, proposed.nr.pci, proposed.nr.arfcn, excludeCellId);
         }
       }
 

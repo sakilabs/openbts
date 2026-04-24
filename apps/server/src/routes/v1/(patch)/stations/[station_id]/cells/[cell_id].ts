@@ -105,7 +105,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     where: {
       AND: [{ id: cell_id }, { station_id: station_id }],
     },
-    with: { nr: true },
+    with: { lte: true, nr: true },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
 
@@ -141,10 +141,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     const effectiveBandId = req.body.band_id ?? cell.band_id;
     if (cell.rat === "LTE") {
       const d = req.body.details as z.infer<typeof lteCellsUpdateSchema>;
-      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(station_id, effectiveBandId, d.pci, cell_id);
+      if (d.pci !== null && d.pci !== undefined) {
+        const effectiveEARFCN = d.earfcn !== undefined ? d.earfcn : (cell.lte?.earfcn ?? null);
+        await checkLTEPCIDuplicate(station_id, effectiveBandId, d.pci, effectiveEARFCN, cell_id);
+      }
     } else if (cell.rat === "NR") {
       const d = req.body.details as z.infer<typeof nrCellsUpdateSchema>;
-      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, effectiveBandId, d.pci, cell_id);
+      if (d.pci !== null && d.pci !== undefined) {
+        const effectiveARFCN = d.arfcn !== undefined ? d.arfcn : (cell.nr?.arfcn ?? null);
+        await checkNRPCIDuplicate(station_id, effectiveBandId, d.pci, effectiveARFCN, cell_id);
+      }
     }
   }
 

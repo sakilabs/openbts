@@ -103,10 +103,10 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
     if (req.body.details && req.body.station_id && req.body.band_id) {
       if (req.body.rat === "LTE") {
         const d = req.body.details as z.infer<typeof lteInsertSchema>;
-        if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(req.body.station_id, req.body.band_id, d.pci);
+        if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(req.body.station_id, req.body.band_id, d.pci, d.earfcn);
       } else if (req.body.rat === "NR") {
         const d = req.body.details as z.infer<typeof nrInsertSchema>;
-        if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(req.body.station_id, req.body.band_id, d.pci);
+        if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(req.body.station_id, req.body.band_id, d.pci, d.arfcn);
       }
     }
 
