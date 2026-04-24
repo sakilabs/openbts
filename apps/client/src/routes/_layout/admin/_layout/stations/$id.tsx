@@ -612,7 +612,7 @@ function StationDetailForm({
                 onTakenAtsChange={setPhotoTakenAts}
               />
             ) : (
-              station?.location?.id && <StationPhotoSelector stationId={station.id} locationId={station.location.id} />
+              !!station?.location?.id && <StationPhotoSelector stationId={station.id} locationId={station.location.id} />
             )}
             {!isCreateMode && station && settings?.enableStationComments && <StationCommentsSection stationId={station.id} />}
           </div>
