@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { I18nextProvider } from "react-i18next";
 
 import { BackendStatusProvider } from "@/components/backend-status";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ReloadPrompt } from "@/components/reload-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -23,6 +24,9 @@ declare global {
       identify: (userId: string, traits?: Record<string, unknown>) => void;
       clearUserId: () => void;
     };
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+    __adsenseClient?: string;
   }
 }
 
@@ -79,6 +83,7 @@ function AppProviders({ children }: AppProvidersProps) {
       <ErrorBoundary>{children}</ErrorBoundary>
       <Toaster />
       <ReloadPrompt />
+      <CookieConsentBanner />
     </AuthUIProvider>
   );
 }
@@ -108,12 +113,7 @@ export const Route = createRootRoute({
       scripts: adClient
         ? [
             {
-              children: `window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);}`,
-            },
-            {
-              src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClient}`,
-              async: true,
-              crossOrigin: "anonymous" as const,
+              children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};if(c==='accepted'){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+window.__adsenseClient;document.head.appendChild(s);}})();`,
             },
           ]
         : [],

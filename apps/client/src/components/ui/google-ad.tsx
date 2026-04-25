@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { useCookieConsent } from "@/hooks/useCookieConsent";
 import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,8 @@ function pushAd() {
 
 export function GoogleAd({ adSlot, adFormat = "auto", className }: GoogleAdProps) {
   const { data: session } = authClient.useSession();
-  const shouldRenderAd = !!AD_CLIENT && !PRIVILEGED_ROLES.has(session?.user?.role as string);
+  const { consent } = useCookieConsent();
+  const shouldRenderAd = !!AD_CLIENT && !PRIVILEGED_ROLES.has(session?.user?.role as string) && consent === "accepted";
   const pushed = useRef(false);
 
   useEffect(() => {

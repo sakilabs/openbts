@@ -1,4 +1,4 @@
-import { AppleIcon, GoogleMapsIcon, InformationCircleIcon, WazeIcon } from "@hugeicons/core-free-icons";
+import { AppleIcon, GoogleMapsIcon, InformationCircleIcon, ShieldUserIcon, WazeIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -13,8 +13,11 @@ import { type PushPreferences, fetchPushPreferences, updatePushPreferences } fro
 import { usePushSubscription } from "@/features/notifications/usePushSubscription";
 import { OpenStreetMapIcon, OsmAndIcon } from "@/features/station-details/components/navLinks";
 import { type UserPreferences, usePreferences } from "@/hooks/usePreferences";
+import { useCookieConsent } from "@/hooks/useCookieConsent";
 import { authClient } from "@/lib/authClient";
 import { cn, toggleValue } from "@/lib/utils";
+
+const PRIVILEGED_ROLES = new Set(["admin", "editor"]);
 
 type RadioOption = { value: string; labelKey: string; descKey?: string; example?: string };
 type NavIconComponent = (props: { className?: string }) => JSX.Element;
@@ -482,6 +485,47 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
   );
 }
 
+function PrivacySection({ t }: { t: (key: string) => string }) {
+  const { consent, accept, reject, reset } = useCookieConsent();
+  const { data: session } = authClient.useSession();
+
+  if (PRIVILEGED_ROLES.has(session?.user?.role as string)) return null;
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-base font-semibold">{t("preferences.privacy")}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-xl border bg-card p-4 space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon icon={ShieldUserIcon} className="size-4 text-muted-foreground" />
+              <p className="text-sm font-semibold">{t("preferences.adConsent")}</p>
+            </div>
+            <p className="text-sm text-muted-foreground">{t("preferences.adConsentHint")}</p>
+          </div>
+          <PrefToggle
+            checked={consent === "accepted"}
+            disabled={false}
+            onChange={(v) => (v ? accept() : reject())}
+            label={t("preferences.adConsentLabel")}
+          />
+          {consent === null ? (
+            <p className="text-xs text-muted-foreground px-3">{t("preferences.adConsentPending")}</p>
+          ) : (
+            <button
+              type="button"
+              onClick={reset}
+              className="cursor-pointer px-3 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              {t("preferences.adConsentResetAction")}
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function PreferencesPage() {
   const { t } = useTranslation("settings");
   const { preferences, updatePreferences } = usePreferences();
@@ -531,6 +575,7 @@ function PreferencesPage() {
         ))}
 
         <NotificationsSection t={t} />
+        <PrivacySection t={t} />
       </div>
     </main>
   );

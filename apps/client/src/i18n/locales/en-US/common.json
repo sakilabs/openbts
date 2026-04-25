@@ -190,6 +190,13 @@
     "updateAvailable": "A new version is available",
     "updateDescription": "Reload to get the latest features and fixes."
   },
+  "cookieConsent": {
+    "title": "We use cookies",
+    "description": "This site uses advertising cookies to serve relevant ads that help keep it free. You can change this at any time in Preferences.",
+    "learnMore": "Learn more",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
   "forbidden": {
     "title": "Access denied",
     "description": "You don't have permission to view this page."

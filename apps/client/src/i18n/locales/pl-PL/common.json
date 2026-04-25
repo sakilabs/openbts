@@ -179,6 +179,13 @@
     "updateAvailable": "Dostępna jest nowa wersja",
     "updateDescription": "Odśwież, aby uzyskać najnowsze funkcje i poprawki."
   },
+  "cookieConsent": {
+    "title": "Używamy plików cookie",
+    "description": "Strona używa reklamowych plików cookie, aby wyświetlać trafne reklamy, które pomagają utrzymać ją bezpłatną. Możesz to zmienić w dowolnym momencie w Preferencjach.",
+    "learnMore": "Dowiedz się więcej",
+    "accept": "Akceptuję",
+    "decline": "Odrzucam"
+  },
   "forbidden": {
     "title": "Brak dostępu",
     "description": "Nie masz uprawnień do wyświetlenia tej strony."

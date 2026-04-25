@@ -71,7 +71,15 @@
     "submissionUpdatesLabel": "Powiadamiaj mnie o decyzjach dotyczących zgłoszeń",
     "newSubmissions": "Nowe zgłoszenia",
     "newSubmissionsHint": "Otrzymuj powiadomienie, gdy użytkownicy nadeślą nowe dane do weryfikacji",
-    "newSubmissionsLabel": "Powiadamiaj mnie o nowych zgłoszeniach"
+    "newSubmissionsLabel": "Powiadamiaj mnie o nowych zgłoszeniach",
+    "privacy": "Prywatność",
+    "adConsent": "Reklamowe pliki cookie",
+    "adConsentHint": "Zezwól na spersonalizowane reklamy, które pomagają utrzymać serwis bezpłatnym. Reklamy są wyświetlane tylko po wyrażeniu zgody.",
+    "adConsentLabel": "Zezwól na reklamowe pliki cookie",
+    "adConsentPending": "Nie dokonano jeszcze wyboru — baner będzie się wyświetlał do momentu podjęcia decyzji.",
+    "adConsentReset": "Resetuj zgodę",
+    "adConsentResetHint": "Usuń swój wybór dotyczący reklam i pokaż ponownie baner zgody przy następnym wejściu.",
+    "adConsentResetAction": "Zresetuj mój wybór"
   },
   "page": {
     "title": "Ustawienia konta",
