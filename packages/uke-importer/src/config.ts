@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import path from "node:path";
 
-dotenv.config();
+config();
 
 export const DATABASE_URL = process.env.DATABASE_URL as string;
 if (!DATABASE_URL) throw new Error("DATABASE_URL is not set");
@@ -19,7 +19,10 @@ export const PERMIT_FILE_OPERATOR_MAP: Record<string, string> = {
   polkomtel: "Plus",
 };
 
+export const KMZ_OUTPUT_DIR = process.env.KMZ_OUTPUT_DIR ?? "kmz_output";
+
 export const BATCH_SIZE = 1000;
+export const KMZ_BATCH_SIZE = 10000;
 
 export const REGION_BY_TERYT_PREFIX: Record<string, { name: string; code: string }> = {
   "02": { name: "Dolnośląskie", code: "DLN" },

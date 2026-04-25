@@ -165,7 +165,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const location = useLocation();
 
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar variant="inset" collapsible="icon" {...props}>
       {isWCO && isMacOS ? (
         <SidebarHeader style={{ height: "env(titlebar-area-height, 3rem)", WebkitAppRegion: "drag", appRegion: "drag" } as React.CSSProperties} />
       ) : !isWCO ? (
@@ -203,7 +203,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
               <span>{t("items.preferences")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
+          <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
             <div className="grid grid-cols-2 gap-1">
               <ThemeToggle />
               <LanguageSwitcher />
@@ -223,10 +223,10 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           )}
           {session?.user && <NavUser data={session} />}
-          <SidebarMenuItem>
-            <GoogleAd adSlot="5258756297" adFormat="rectangle" className="w-full h-62.5" />
+          <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+            <GoogleAd key={location.pathname} adSlot="4992722827" adFormat="rectangle" className="w-full h-62.5" />
           </SidebarMenuItem>
-          <SidebarMenuItem>
+          <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
             <div className="flex items-center justify-between px-2 py-1 text-[10px] text-muted-foreground">
               {(import.meta.env.VITE_GIT_COMMIT || import.meta.env.VITE_APP_VERSION) && (
                 <div

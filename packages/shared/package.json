@@ -8,6 +8,14 @@
     "./frequency": {
       "types": "./src/frequency.ts",
       "default": "./dist/src/frequency.js"
+    },
+    "./operatorUtils": {
+      "types": "./src/operatorUtils.ts",
+      "default": "./dist/src/operatorUtils.js"
+    },
+    "./radiolinesUtils": {
+      "types": "./src/radiolinesUtils.ts",
+      "default": "./dist/src/radiolinesUtils.js"
     }
   },
   "scripts": {

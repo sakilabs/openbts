@@ -21,6 +21,13 @@ interface GoogleAdProps {
 
 const PRIVILEGED_ROLES = new Set(["admin", "editor"]);
 
+const MIN_HEIGHTS: Record<AdFormat, string> = {
+  auto: "100px",
+  horizontal: "90px",
+  rectangle: "200px",
+  vertical: "600px",
+};
+
 function pushAd() {
   try {
     (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -31,21 +38,26 @@ function pushAd() {
 
 export function GoogleAd({ adSlot, adFormat = "auto", className }: GoogleAdProps) {
   const { data: session } = authClient.useSession();
-  const initialized = useRef(false);
+  const shouldRenderAd = !!AD_CLIENT && !PRIVILEGED_ROLES.has(session?.user?.role as string);
+  const pushed = useRef(false);
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    if (!shouldRenderAd) {
+      pushed.current = false;
+      return;
+    }
+    if (pushed.current) return;
+    pushed.current = true;
     pushAd();
-  }, []);
+  }, [shouldRenderAd]);
 
-  if (PRIVILEGED_ROLES.has(session?.user?.role as string) || !AD_CLIENT) return null;
+  if (!shouldRenderAd) return null;
 
   return (
-    <div className={cn("overflow-hidden", className)}>
+    <div className={cn("w-full", className)}>
       <ins
         className="adsbygoogle"
-        style={{ display: "block" }}
+        style={{ display: "block", minHeight: MIN_HEIGHTS[adFormat] }}
         data-ad-client={AD_CLIENT}
         data-ad-slot={adSlot}
         data-ad-format={adFormat}

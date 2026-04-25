@@ -43,7 +43,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
   const EXTRA_IDENTIFICATORS_MNCS = new Set([26002, 26003]); // T-Mobile, Orange
-  const MNO_NAME_ONLY_MNCS = new Set([26001]); // Plus
+  const MNO_NAME_ONLY_MNCS = new Set([26001, 26006]); // Plus, Play
 
   if (station.operator_id) {
     const operator = await db.query.operators.findFirst({ where: { id: station.operator_id } });
@@ -51,10 +51,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
     if (mnc !== null && MNO_NAME_ONLY_MNCS.has(mnc) && (networks_id || networks_name))
       throw new ErrorResponse("BAD_REQUEST", { message: "This operator only supports mno_name" });
-
-    if (mnc !== null && !EXTRA_IDENTIFICATORS_MNCS.has(mnc) && !MNO_NAME_ONLY_MNCS.has(mnc)) {
+    if (mnc !== null && !EXTRA_IDENTIFICATORS_MNCS.has(mnc) && !MNO_NAME_ONLY_MNCS.has(mnc))
       throw new ErrorResponse("BAD_REQUEST", { message: "This operator does not support extra identifiers" });
-    }
   }
 
   const existing = await db.query.extraIdentificators.findFirst({

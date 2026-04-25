@@ -14,7 +14,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { GoogleAd } from "@/components/ui/google-ad";
 import { Separator } from "@/components/ui/separator";
 import { AutocompleteDropdown } from "@/features/map/components/search-overlay/autocompleteDropdown";
 import { FILTER_KEYWORDS } from "@/features/map/constants";
@@ -351,8 +350,6 @@ export function StationsFilters({
             </ComboboxContent>
           </Combobox>
         </div>
-
-        <GoogleAd adSlot="5258756297" adFormat="rectangle" className="w-full" />
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
           {totalStations !== undefined

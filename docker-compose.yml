@@ -60,8 +60,10 @@ services:
       - AXIOM_TOKEN=
       - AXIOM_DATASET=openbts
       - NTM_USERAGENT=
+      - KMZ_OUTPUT_DIR=/app/kmz
     volumes:
       - uploads-volume:/app/uploads
+      - kmz-volume:/app/kmz
     depends_on:
       - postgres
       - redis
@@ -106,3 +108,4 @@ volumes:
   postgres-volume:
   uploads-volume:
   redis-volume:
+  kmz-volume:

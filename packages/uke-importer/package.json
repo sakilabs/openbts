@@ -1,6 +1,6 @@
 {
   "name": "@openbts/uke-importer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,19 +19,30 @@
     "./utils": {
       "types": "./src/utils.ts",
       "default": "./dist/utils.js"
+    },
+    "./kmz/stations": {
+      "types": "./src/kmz/stations.ts",
+      "default": "./dist/kmz/stations.js"
+    },
+    "./kmz/radiolines": {
+      "types": "./src/kmz/radiolines.ts",
+      "default": "./dist/kmz/radiolines.js"
     }
   },
   "scripts": {
     "build": "tsgo",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "kmz": "tsx src/kmz/index.ts"
   },
   "dependencies": {
     "@openbts/drizzle": "workspace:*",
+    "@openbts/shared": "workspace:*",
     "@turf/boolean-point-in-polygon": "7.3.5",
     "@turf/helpers": "7.3.5",
     "cheerio": "1.2.0",
     "dotenv": "17.4.2",
     "drizzle-orm": "1.0.0-beta.22",
+    "fflate": "^0.8.2",
     "geojson-rbush": "~3.2.0",
     "postgres": "3.4.9",
     "tsx": "4.21.0",

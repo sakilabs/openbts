@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-04-26
+
+### 🚀 Enhancements
+
+- Added collapsed sidebar support
+- Added initial support for generating KMZ files for UKE data
+
 # 2026-04-24
 
 ### 🩹 Fixes
@@ -127,7 +134,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Admin user detail page now shows whether the user's email address has been verified
 - Station details and UKE permit dialogs now show a **SI2PEM** logo instead of `S` letter
 - Map filter panel now shows keyboard shortcut hints inline next to each filter control
-- Map filter keybinds updated: operators `1–4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
+- Map filter keybinds updated: operators `1-4` now map to Plus, T-Mobile, Orange, Play respectively; RAT filters can be toggled with `Shift` + first letter (`G`, `U`, `L`, `N`, `I`)
 - Search filters now support `earfcn:` (LTE EARFCN value) and `cell_notes:` (cell notes partial match)
 - Cell rows in the cell editor now have a **Clone** button that duplicates the row in-place with a brief highlight; cloned cells are now treated as newly added (no server ID)
 - Cell editor and station details form now use a non-shrinking flex layout that wraps to a column when the viewport is too narrow instead of squeezing

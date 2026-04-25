@@ -12,7 +12,9 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "nav-collapsed-state";
@@ -35,6 +37,7 @@ type NavItem = {
 
 export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
   const location = useLocation();
+  const { state } = useSidebar();
 
   const getInitialState = useCallback(() => {
     const defaults = items.reduce<Record<string, boolean>>((acc, item) => {
@@ -68,6 +71,34 @@ export const NavMain = memo(function NavMain({ items }: { items: NavItem[] }) {
   const handleOpenChange = (key: string, open: boolean) => {
     setOpenState((prev) => ({ ...prev, [key]: open }));
   };
+
+  if (state === "collapsed") {
+    return (
+      <SidebarGroup>
+        <SidebarMenu>
+          {items.flatMap((item) =>
+            (item.items ?? []).map((subItem) => (
+              <SidebarMenuItem key={subItem.href ?? subItem.url}>
+                <Tooltip>
+                  <SidebarMenuButton
+                    render={
+                      subItem.href
+                        ? <TooltipTrigger render={<a href={subItem.href} target="_blank" rel="noopener noreferrer" />} />
+                        : <TooltipTrigger render={<Link to={subItem.url} />} />
+                    }
+                    isActive={!subItem.href && location.pathname === subItem.url}
+                  >
+                    {subItem.icon && <HugeiconsIcon icon={subItem.icon} />}
+                  </SidebarMenuButton>
+                  <TooltipContent side="right">{subItem.title}</TooltipContent>
+                </Tooltip>
+              </SidebarMenuItem>
+            )),
+          )}
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
 
   return (
     <SidebarGroup>

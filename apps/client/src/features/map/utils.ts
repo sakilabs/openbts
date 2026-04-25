@@ -1,5 +1,29 @@
+import {
+  calculateBearing,
+  calculateDistance,
+  calculateRadiolineSpeed,
+  destinationPoint,
+  formatBandwidth,
+  formatDistance,
+  formatFrequency,
+  formatSpeed,
+  getModulationBits,
+} from "@openbts/shared/radiolinesUtils";
+
 import { isPermitExpired } from "@/lib/dateUtils";
 import type { Cell, LocationInfo, RadioLine, UkeLocationWithPermits, UkePermit, UkeStation } from "@/types/station";
+
+export {
+  calculateBearing,
+  calculateDistance,
+  calculateRadiolineSpeed,
+  destinationPoint,
+  formatBandwidth,
+  formatDistance,
+  formatFrequency,
+  formatSpeed,
+  getModulationBits,
+};
 
 import { RAT_ORDER } from "./constants";
 
@@ -13,9 +37,6 @@ export function toLocationInfo(loc: {
 }): LocationInfo {
   return { id: loc.id, city: loc.city, address: loc.address, region: loc.region?.name, latitude: loc.latitude, longitude: loc.longitude };
 }
-
-const DEG_TO_RAD = Math.PI / 180;
-const EARTH_RADIUS_M = 6_371_000;
 
 const TA_STEP = {
   GSM: 554, // ~554 m per step
@@ -101,57 +122,6 @@ export function getPermitBands(permits: UkePermit[]): string[] {
   return sortBands([...new Set(bands)]);
 }
 
-export function formatBandwidth(bandwidth: string): string {
-  const num = Number(bandwidth);
-  if (Number.isNaN(num)) return bandwidth;
-  return num >= 1000 ? `${(num / 1000).toFixed(2)} Gbps` : `${num} Mbps`;
-}
-
-export function formatSpeed(mbps: number): string {
-  return mbps >= 1000 ? `${(mbps / 1000).toFixed(2)} Gbps` : `~${Math.round(mbps)} Mbps`;
-}
-
-const MODULATION_NORMALIZE_REGEX = /[\s\-_]/g;
-const QAM_REGEX = /(\d+)QAM/;
-
-const MODULATION_BITS: Record<string, number> = {
-  BPSK: 1,
-  QPSK: 2,
-  "4QAM": 2,
-  "8QAM": 3,
-  "16QAM": 4,
-  "32QAM": 5,
-  "64QAM": 6,
-  "128QAM": 7,
-  "256QAM": 8,
-  "512QAM": 9,
-  "1024QAM": 10,
-  "2048QAM": 11,
-  "4096QAM": 12,
-};
-
-export function getModulationBits(modulationType: string): number | null {
-  const normalized = modulationType.toUpperCase().replace(MODULATION_NORMALIZE_REGEX, "");
-  if (MODULATION_BITS[normalized] !== null && MODULATION_BITS[normalized] !== undefined) return MODULATION_BITS[normalized];
-
-  if (normalized.includes("QPSK")) return 2;
-  if (normalized.includes("BPSK")) return 1;
-
-  const match = normalized.match(QAM_REGEX);
-  if (match) {
-    const bits = Math.log2(Number.parseInt(match[1], 10));
-    if (Number.isInteger(bits) && bits >= 1 && bits <= 14) return bits;
-  }
-
-  return null;
-}
-
-export function calculateRadiolineSpeed(chWidth: number, modulationType: string): number | null {
-  const n = getModulationBits(modulationType);
-  if (n == null) return null;
-  return chWidth * n * 0.85;
-}
-
 export function calculateLinkTotalSpeed(link: DuplexRadioLink): number | null {
   let total = 0;
   let anyCalculated = false;
@@ -169,61 +139,12 @@ export function calculateLinkTotalSpeed(link: DuplexRadioLink): number | null {
   return anyCalculated ? total : null;
 }
 
-export function formatDistance(meters: number): string {
-  return meters >= 1000 ? `${(meters / 1000).toFixed(2)} km` : `${Math.round(meters)} m`;
-}
-
-export function formatFrequency(freqMhz: number): string {
-  if (freqMhz < 1000) return `${freqMhz} MHz`;
-  const ghz = freqMhz / 1000;
-  return `${Number.isInteger(ghz) ? ghz : ghz.toFixed(1)} GHz`;
-}
-
-function toRad(deg: number): number {
-  return deg * DEG_TO_RAD;
-}
-
-export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const φ1 = toRad(lat1);
-  const φ2 = toRad(lat2);
-  const Δφ = toRad(lat2 - lat1);
-  const Δλ = toRad(lon2 - lon1);
-
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return EARTH_RADIUS_M * c;
-}
-
 export function buildRadiolineShareUrl(link: DuplexRadioLink): string {
   const distance = calculateDistance(link.a.latitude, link.a.longitude, link.b.latitude, link.b.longitude);
   const zoom = Math.max(8, Math.min(14, Math.round(14.5 - Math.log2(distance / 1000))));
   const lat = ((link.a.latitude + link.b.latitude) / 2).toFixed(6);
   const lng = ((link.a.longitude + link.b.longitude) / 2).toFixed(6);
   return `${window.location.origin}/#map=${zoom}/${lat}/${lng}~fr~R${link.directions[0].id}`;
-}
-
-export function destinationPoint(lat: number, lon: number, bearingDeg: number, distanceM: number): [number, number] {
-  const φ1 = toRad(lat);
-  const λ1 = toRad(lon);
-  const brng = toRad(bearingDeg);
-  const δ = distanceM / EARTH_RADIUS_M;
-
-  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(brng));
-  const λ2 = λ1 + Math.atan2(Math.sin(brng) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
-
-  return [φ2 * (180 / Math.PI), λ2 * (180 / Math.PI)];
-}
-
-export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const φ1 = toRad(lat1);
-  const φ2 = toRad(lat2);
-  const Δλ = toRad(lon2 - lon1);
-
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-
-  return (Math.atan2(y, x) * (180 / Math.PI) + 360) % 360;
 }
 
 const LINK_TYPE_STYLES: Record<string, { bg: string; text: string; border: string }> = {

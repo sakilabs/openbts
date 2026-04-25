@@ -4,7 +4,6 @@ import { type ReactNode, Suspense, lazy, startTransition, useEffect, useRef, use
 import { useTranslation } from "react-i18next";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { GoogleAd } from "@/components/ui/google-ad";
 import { Skeleton } from "@/components/ui/skeleton";
 import { operatorsQueryOptions } from "@/features/shared/queries";
 import { InternalKpiCards, UkeKpiCards } from "@/features/statistics/components/kpiCards";
@@ -113,8 +112,6 @@ function StatisticsPage() {
           <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
-
-        <GoogleAd adSlot="8438752705" adFormat="horizontal" className="w-full" />
 
         <section className="space-y-6">
           <div className="space-y-4">

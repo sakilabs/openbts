@@ -464,6 +464,9 @@ importers:
       '@openbts/drizzle':
         specifier: workspace:*
         version: link:../drizzle
+      '@openbts/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@turf/boolean-point-in-polygon':
         specifier: 7.3.5
         version: 7.3.5
@@ -479,6 +482,9 @@ importers:
       drizzle-orm:
         specifier: 1.0.0-beta.22
         version: 1.0.0-beta.22(@types/mssql@9.1.11(@azure/core-client@1.10.1))(@types/pg@8.20.0)(mssql@11.0.1(@azure/core-client@1.10.1))(postgres@3.4.9)(zod@4.3.6)
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.2
       geojson-rbush:
         specifier: ~3.2.0
         version: 3.2.0
@@ -5521,6 +5527,9 @@ packages:
 
   fetch-retry@6.0.0:
     resolution: {integrity: sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag==}
+
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
   figlet@1.11.0:
     resolution: {integrity: sha512-EEx3OS/l2bFqcUNN2NM9FPJp8vAMrgbCxsbl2hbcJNNxOEwVe3mEzrhan7TbJQViZa8mMqhihlbCaqD+LyYKTQ==}
@@ -13206,6 +13215,8 @@ snapshots:
       web-streams-polyfill: 3.3.3
 
   fetch-retry@6.0.0: {}
+
+  fflate@0.8.2: {}
 
   figlet@1.11.0:
     dependencies:

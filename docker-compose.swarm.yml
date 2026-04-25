@@ -46,8 +46,10 @@ services:
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - KMZ_OUTPUT_DIR=/app/kmz
     volumes:
       - uploads-volume:/app/uploads
+      - kmz-volume:/app/kmz
     networks:
       - internal
     healthcheck:
@@ -200,3 +202,6 @@ volumes:
   redis-volume:
     external: true
     name: btsearch_redis-volume
+  kmz-volume:
+    external: true
+    name: btsearch_kmz-volume
