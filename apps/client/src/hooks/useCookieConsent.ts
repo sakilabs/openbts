@@ -44,6 +44,7 @@ function updateGtagConsent(granted: boolean) {
       ad_storage: granted ? "granted" : "denied",
       ad_user_data: granted ? "granted" : "denied",
       ad_personalization: granted ? "granted" : "denied",
+      analytics_storage: granted ? "granted" : "denied",
     });
   } catch {
     // ignore
@@ -73,7 +74,7 @@ function writeConsent(value: CookieConsent | null) {
     // ignore
   }
   updateGtagConsent(value === "accepted");
-  if (value === "accepted") loadAdsenseScript();
+  if (value !== null) loadAdsenseScript();
   for (const listener of listeners) listener();
 }
 

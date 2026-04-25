@@ -113,7 +113,7 @@ export const Route = createRootRoute({
       scripts: adClient
         ? [
             {
-              children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};if(c==='accepted'){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+window.__adsenseClient;document.head.appendChild(s);}})();`,
+              children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted,analytics_storage:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};if(c==='accepted'||c==='rejected'){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+window.__adsenseClient;document.head.appendChild(s);}})();`,
             },
           ]
         : [],
