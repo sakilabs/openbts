@@ -94,6 +94,15 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,woff2,png,svg}"],
       },
       pwaAssets: { disabled: false, config: true },
+      workbox: {
+        navigateFallbackDenylist: [/^\/kmz/],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/kmz"),
+            handler: "NetworkOnly",
+          },
+        ],
+      },
     }),
     // babel({
     // 	apply: "build",
