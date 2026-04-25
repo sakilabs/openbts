@@ -6,7 +6,7 @@ declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { denylist: [/^\/api\//, /^\/uploads\//] }));
+registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { denylist: [/^\/api\//, /^\/uploads\//, /^\/kmz/] }));
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") void self.skipWaiting();
