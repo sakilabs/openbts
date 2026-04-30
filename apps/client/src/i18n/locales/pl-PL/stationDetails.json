@@ -11,8 +11,7 @@
     "internalNotes": "Notatki wewnętrzne",
     "newCellTooltip": "Ta komórka została dodana w ciągu ostatnich 30 dni",
     "updatedCellTooltip": "Ta komórka została zaktualizowana w ciągu ostatnich 30 dni",
-    "si2pemLink": "Znajdź raport instalacji na SI2PEM",
-    "si2pemReportLink": "Otwórz najnowszy raport pomiarów PEM"
+    "si2pemLink": "Kliknij aby zobaczyć raporty PEM z SI2PEM"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} pozwolenie",

@@ -11,8 +11,7 @@
     "internalNotes": "Internal Notes",
     "newCellTooltip": "This cell was added in the last 30 days",
     "updatedCellTooltip": "This cell was updated in the last 30 days",
-    "si2pemLink": "Find installation report on SI2PEM",
-    "si2pemReportLink": "Open latest PEM measurement report"
+    "si2pemLink": "Click to see all PEM reports from SI2PEM"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} permit",

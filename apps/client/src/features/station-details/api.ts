@@ -4,14 +4,23 @@ import type { Station, UkePermit } from "@/types/station";
 export const fetchStation = (id: number) => fetchApiData<Station>(`stations/${id}`);
 export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`);
 
+type PemReportDetails =
+  | {
+      document_url: string;
+      lab_name: string;
+    }
+  | {
+      document_url: string;
+      installation_document: string;
+      lab_name: string;
+    };
+
 export type PemReport = {
-  url: string;
+  station_id: string;
+  source: "map" | "search";
   date: string;
-  year: number;
-  source: string;
-  number: string;
-  intensity: number;
-  feature_id: string;
+  type: "planned_measurement" | "map_measurement" | "search_measurement";
+  details: PemReportDetails;
 };
 
 export const fetchPemReports = (stationId: string, lat: number, lng: number, operator: number) =>

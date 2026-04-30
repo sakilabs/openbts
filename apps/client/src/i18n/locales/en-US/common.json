@@ -41,6 +41,7 @@
     "retry": "Try again"
   },
   "labels": {
+    "generated": "Generated",
     "id": "ID",
     "stationId": "Station ID",
     "operator": "Operator",

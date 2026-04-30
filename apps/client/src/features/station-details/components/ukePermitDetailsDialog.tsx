@@ -1,9 +1,20 @@
-import { Add01Icon, Cancel01Icon, Globe02Icon, Location01Icon, MapsLocation01Icon, MountainIcon, Tag01Icon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  Cancel01Icon,
+  FileSearchIcon,
+  GlobalIcon,
+  Globe02Icon,
+  Location01Icon,
+  MapsLocation01Icon,
+  MountainIcon,
+  Tag01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
@@ -199,37 +210,50 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                   <span className="font-mono text-sm font-medium">{station_id}</span>
                   <div className="flex items-center gap-1">
                     <CopyButton text={station_id} />
-                    {station_id ? (
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <a
-                              href={
-                                pemReports?.[0]?.url ??
-                                `https://si2pem.gov.pl/installations/?base_station=${station_id.replace(/^[TO]-/, "")}&page_size=25`
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                            >
-                              <span
-                                aria-hidden="true"
-                                className="block h-3.5 bg-[#2e2e5a] dark:bg-[#9898ce]"
-                                style={{
-                                  aspectRatio: "2435/521",
-                                  maskImage: "url(/si2pem.svg)",
-                                  WebkitMaskImage: "url(/si2pem.svg)",
-                                  maskSize: "contain",
-                                  WebkitMaskSize: "contain",
-                                  maskRepeat: "no-repeat",
-                                  WebkitMaskRepeat: "no-repeat",
-                                }}
-                              />
-                            </a>
-                          }
-                        />
-                        <TooltipContent>{pemReports?.[0] ? t("specs.si2pemReportLink") : t("specs.si2pemLink")}</TooltipContent>
-                      </Tooltip>
+                    {station_id && pemReports && pemReports.length > 0 ? (
+                      <DropdownMenu>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <DropdownMenuTrigger className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0" />
+                            }
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="block h-3.5 bg-[#2e2e5a] dark:bg-[#9898ce]"
+                              style={{
+                                aspectRatio: "2435/521",
+                                maskImage: "url(/si2pem.svg)",
+                                WebkitMaskImage: "url(/si2pem.svg)",
+                                maskSize: "contain",
+                                WebkitMaskSize: "contain",
+                                maskRepeat: "no-repeat",
+                                WebkitMaskRepeat: "no-repeat",
+                              }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="start" sideOffset={4} className="min-w-72">
+                          {pemReports?.map((report) => {
+                            const Icon = report.source === "search" ? FileSearchIcon : GlobalIcon;
+                            return (
+                              <DropdownMenuItem
+                                key={`${report.station_id}_${report.date}`}
+                                render={<a target="_blank" href={report.details.document_url} />}
+                              >
+                                <HugeiconsIcon icon={Icon} className="size-4 text-muted-foreground shrink-0" />
+                                <div className="flex-1 justify-between">
+                                  <span className="text-sm block">{report.details.lab_name}</span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {report.date} | {t(`common:labels.${report.source}`)}
+                                  </span>
+                                </div>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     ) : null}
                   </div>
                 </div>

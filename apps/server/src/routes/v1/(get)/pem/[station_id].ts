@@ -17,17 +17,33 @@ const MNC_TO_ENTITY: Record<number, string> = {
   26006: "P4 Sp. z o.o.",
 };
 
-interface PemReport {
-  url: string;
-  date: string;
-  year: number;
-  source: string;
-  number: string;
-  intensity: number;
-  feature_id: string;
-}
+type Params = { Params: { station_id: string }; Querystring: { lat: number; lng: number; operator: number; planned: number } };
 
-type Params = { Params: { station_id: string }; Querystring: { lat: number; lng: number; operator: number } };
+const plannedMeasurement = z.object({
+  from_date: z.string(),
+  to_date: z.string(),
+  lab_name: z.string(),
+});
+
+const mapMeasurement = z.object({
+  document_url: z.url(),
+  lab_name: z.string(),
+});
+
+const searchMeasurement = z.object({
+  document_url: z.url(),
+  installation_document: z.url(),
+  lab_name: z.string(),
+});
+
+const PemReportResponse = z.object({
+  station_id: z.string(),
+  source: z.enum(["map", "search"]),
+  date: z.string(),
+  type: z.enum(["planned_measurement", "map_measurement", "search_measurement"]),
+  details: z.union([plannedMeasurement, mapMeasurement, searchMeasurement]),
+});
+type PemReport = z.infer<typeof PemReportResponse>;
 
 const schemaRoute = {
   params: z.object({
@@ -37,20 +53,11 @@ const schemaRoute = {
     lat: z.coerce.number(),
     lng: z.coerce.number(),
     operator: z.coerce.number(),
+    planned: z.number().optional(),
   }),
   response: {
     200: z.object({
-      data: z.array(
-        z.object({
-          url: z.string(),
-          date: z.string(),
-          year: z.number(),
-          source: z.string(),
-          number: z.string(),
-          intensity: z.number(),
-          feature_id: z.string(),
-        }),
-      ),
+      data: z.array(PemReportResponse),
     }),
   },
 };
@@ -112,13 +119,15 @@ async function fetchInstallations(stationId: string, entityName: string): Promis
     if (seen.has(url)) continue;
     seen.add(url);
     reports.push({
-      url,
+      station_id: r.base_station?.identity_name ?? "",
+      source: "search",
       date: r.published_at,
-      year: new Date(parsePublishedAt(r.published_at)).getFullYear(),
-      source: r.entity,
-      number: r.reference_no ?? "",
-      intensity: 0,
-      feature_id: r.base_station?.identity_name ?? "",
+      type: "search_measurement",
+      details: {
+        document_url: url,
+        installation_document: r.installation_file ?? "",
+        lab_name: r.entity,
+      },
     });
   }
 
@@ -128,6 +137,7 @@ async function fetchInstallations(stationId: string, entityName: string): Promis
 type WmsFeature = {
   id: string;
   properties: {
+    identity_names: string | null;
     url: string | null;
     date: string;
     year: number;
@@ -139,15 +149,16 @@ type WmsFeature = {
 
 type WmsResponse = { features: WmsFeature[] };
 
-function buildWmsParams(identityName: string, lat: number, lng: number, featureCount: number): URLSearchParams {
+function buildWmsParams(identityName: string, lat: number, lng: number, featureCount: number, needPlannedMeasurement = false): URLSearchParams {
   const bbox = `${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}`;
+  const layers = `measures${needPlannedMeasurement ? ",planned_measures" : ""}`;
   return new URLSearchParams({
     SERVICE: "WMS",
     VERSION: "1.1.1",
     REQUEST: "GetFeatureInfo",
     SRS: "EPSG:4326",
-    LAYERS: "measures",
-    QUERY_LAYERS: "measures",
+    LAYERS: layers,
+    QUERY_LAYERS: layers,
     INFO_FORMAT: "application/json",
     FEATURE_COUNT: String(featureCount),
     WIDTH: "100",
@@ -168,10 +179,19 @@ function parseWmsReports(features: WmsFeature[]): PemReport[] {
   });
   const seen = new Set<string>();
   return sorted.reduce<PemReport[]>((acc, feature) => {
-    const { url, date, year, source, number, intensity } = feature.properties;
+    const { url, date, source, identity_names } = feature.properties;
     if (!url || seen.has(url)) return acc;
     seen.add(url);
-    acc.push({ url, date, year, source, number, intensity, feature_id: feature.id });
+    acc.push({
+      station_id: identity_names ?? "",
+      source: "map",
+      date,
+      type: "map_measurement",
+      details: {
+        document_url: url,
+        lab_name: source,
+      },
+    });
     return acc;
   }, []);
 }
