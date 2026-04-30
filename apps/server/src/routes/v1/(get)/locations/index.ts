@@ -173,8 +173,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
   const buildStationFilter = (stationFields: typeof stations) => {
-    if (!hasStationFilters && !cutoff) return undefined;
-    const conditions: ReturnType<typeof sql>[] = [];
+    const conditions: ReturnType<typeof sql>[] = [sql`${stationFields.status} = 'published'`];
 
     if (operatorIds.length) {
       conditions.push(
@@ -252,6 +251,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         OR EXISTS (
           SELECT 1 FROM ${stations}
           WHERE ${stations.location_id} = ${locFields.id}
+          AND ${stations.status} = 'published'
           AND ${stations.station_id} LIKE ${like}
         )
       )`);
@@ -269,6 +269,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sql`EXISTS (
         SELECT 1 FROM ${stations}
         WHERE ${stations.location_id} = ${locFields.id}
+        AND ${stations.status} = 'published'
         AND ${stations.createdAt} >= ${cutoff.toISOString()}
       )`);
     }
@@ -306,6 +307,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
+						AND ${stations.status} = 'published'
 						${operatorCond}
 						AND ${sql.join(cellAndConditions, sql` AND `)}
 					)`);
@@ -323,6 +325,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
+						AND ${stations.status} = 'published'
 						${operatorCond}
 						${iotBandCond}
 						AND (
@@ -339,6 +342,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						SELECT 1
 						FROM ${stations}
 						WHERE ${stations.location_id} = ${locFields.id}
+						AND ${stations.status} = 'published'
 						${operatorCond}
 					)
 				`);
@@ -349,6 +353,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					SELECT 1
 					FROM ${stations}
 					WHERE ${stations.location_id} = ${locFields.id}
+					AND ${stations.status} = 'published'
 				)
 			`);
     }
@@ -367,7 +372,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           region: true,
           stations: {
             columns: { status: false, location_id: false },
-            where: hasStationFilters || cutoff ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
+            where: { RAW: (fields) => buildStationFilter(fields) ?? sql`true` },
             with: {
               operator: true,
             },
