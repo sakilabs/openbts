@@ -3,11 +3,11 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 
-async function navigateClient(client: WindowClient, url: string): Promise<void> {
+async function navigateExistingClient(client: WindowClient, url: string): Promise<void> {
   try {
     await client.navigate(url);
   } catch {
-    await self.clients.openWindow(url);
+    // ignore stale clients
   }
 }
 
@@ -23,7 +23,7 @@ self.addEventListener("message", (event) => {
         .skipWaiting()
         .then(() => self.clients.claim())
         .then(() => self.clients.matchAll({ type: "window" }))
-        .then((clients) => Promise.all(clients.map((client) => navigateClient(client, client.url)))),
+        .then((clients) => Promise.all(clients.map((client) => navigateExistingClient(client, client.url)))),
     );
   }
 });
@@ -68,7 +68,11 @@ self.addEventListener("notificationclick", (event) => {
         const existing = clients.find((c) => c.url.includes(self.location.origin));
         if (existing) {
           await existing.focus();
-          await navigateClient(existing, url);
+          try {
+            await existing.navigate(url);
+          } catch {
+            await self.clients.openWindow(url);
+          }
           return;
         }
 
