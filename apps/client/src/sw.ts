@@ -3,6 +3,14 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 
+async function navigateClient(client: WindowClient, url: string): Promise<void> {
+  try {
+    await client.navigate(url);
+  } catch {
+    await self.clients.openWindow(url);
+  }
+}
+
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
@@ -15,7 +23,7 @@ self.addEventListener("message", (event) => {
         .skipWaiting()
         .then(() => self.clients.claim())
         .then(() => self.clients.matchAll({ type: "window" }))
-        .then((clients) => Promise.all(clients.map((c) => c.navigate(c.url)))),
+        .then((clients) => Promise.all(clients.map((client) => navigateClient(client, client.url)))),
     );
   }
 });
@@ -56,10 +64,15 @@ self.addEventListener("notificationclick", (event) => {
       notificationId
         ? fetch(`/api/v1/notifications/${notificationId}/read`, { method: "PATCH", credentials: "include" }).catch(() => {})
         : Promise.resolve(),
-      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
         const existing = clients.find((c) => c.url.includes(self.location.origin));
-        if (existing) return existing.focus().then(() => existing.navigate(url));
-        return self.clients.openWindow(url);
+        if (existing) {
+          await existing.focus();
+          await navigateClient(existing, url);
+          return;
+        }
+
+        await self.clients.openWindow(url);
       }),
     ]),
   );
