@@ -463,6 +463,15 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
       }
     };
 
+    const _originalQueryRenderedFeatures = map.queryRenderedFeatures.bind(map);
+    map.queryRenderedFeatures = (...args: Parameters<MapLibreGL.Map["queryRenderedFeatures"]>) => {
+      try {
+        return _originalQueryRenderedFeatures(...args);
+      } catch {
+        return [];
+      }
+    };
+
     const styleDataHandler = () => {
       clearStyleTimeout();
       // Delay to ensure style is fully processed before allowing layer operations

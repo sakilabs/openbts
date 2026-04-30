@@ -9,12 +9,16 @@ precacheAndRoute(self.__WB_MANIFEST);
 registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { denylist: [/^\/api\//, /^\/uploads\//, /^\/kmz/] }));
 
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") void self.skipWaiting();
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    event.waitUntil(
+      self.skipWaiting()
+        .then(() => self.clients.claim())
+        .then(() => self.clients.matchAll({ type: "window" }))
+        .then((clients) => Promise.all(clients.map((c) => c.navigate(c.url)))),
+    );
+  }
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
-});
 
 type PushPayload = {
   title?: string;
