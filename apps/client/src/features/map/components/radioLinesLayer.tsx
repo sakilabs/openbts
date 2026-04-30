@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import MapLibreGL from "maplibre-gl";
+import { Popup } from "maplibre-gl";
 import { Suspense, lazy, useCallback, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -33,7 +33,7 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, showAd
   const { preferences } = usePreferences();
   const [selectedLink, setSelectedLink] = useState<DuplexRadioLink | null>(null);
 
-  const popupRef = useRef<MapLibreGL.Popup | null>(null);
+  const popupRef = useRef<Popup | null>(null);
   const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
   const duplexLinks = useMemo(() => groupRadioLinesIntoLinks(radioLines), [radioLines]);
@@ -79,7 +79,7 @@ export default function RadioLinesLayer({ radioLines, pendingRadiolineId, showAd
         </QueryClientProvider>,
       );
 
-      const popup = new MapLibreGL.Popup({
+      const popup = new Popup({
         closeButton: true,
         closeOnClick: true,
         maxWidth: "none",

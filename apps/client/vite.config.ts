@@ -92,6 +92,7 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,woff2,png,svg}"],
+        globIgnores: ["sw.js"],
       },
       pwaAssets: { disabled: false, config: true },
     }),

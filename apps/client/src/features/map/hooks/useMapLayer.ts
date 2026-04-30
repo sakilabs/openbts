@@ -1,4 +1,4 @@
-import MapLibreGL from "maplibre-gl";
+import { type GeoJSONSource, Popup } from "maplibre-gl";
 import { type ReactNode, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -49,7 +49,7 @@ function buildTooltip(state: ActiveTooltip | null, locationId: number): ActiveTo
 
   const container = document.createElement("div");
   const root = createRoot(container);
-  const popup = new MapLibreGL.Popup({
+  const popup = new Popup({
     closeButton: false,
     closeOnClick: false,
     className: "station-hover-tooltip",
@@ -302,14 +302,12 @@ export function useMapLayer({
   useEffect(() => {
     if (!map || !isLoaded) return;
 
-    const source = map.getSource(SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
+    const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
     if (!source) return;
 
-    if (pointStyle === "markers") {
-      syncMarkerImages(map, geoJSON.features, addedImagesRef.current);
-    } else {
-      syncPieImages(map, geoJSON.features, addedImagesRef.current);
-    }
-    source.setData(geoJSON);
+    if (pointStyle === "markers") syncMarkerImages(map, geoJSON.features, addedImagesRef.current);
+    else syncPieImages(map, geoJSON.features, addedImagesRef.current);
+
+    void source.setData(geoJSON);
   }, [map, isLoaded, geoJSON, pointStyle]);
 }

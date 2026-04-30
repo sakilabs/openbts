@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import MapLibreGL from "maplibre-gl";
+import { LngLatBounds } from "maplibre-gl";
 import { type JSX, Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
@@ -127,7 +127,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   const listRadiolines = listData?.radiolines;
   useEffect(() => {
     if (!map || !isLoaded || !listStations) return;
-    const bounds = new MapLibreGL.LngLatBounds();
+    const bounds = new LngLatBounds();
     for (const station of listStations) {
       if (station.location) bounds.extend([station.location.longitude, station.location.latitude]);
     }

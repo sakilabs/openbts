@@ -1,4 +1,4 @@
-import type MapLibreGL from "maplibre-gl";
+import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 
 import { getOperatorColor } from "@/lib/operatorUtils";
@@ -14,7 +14,7 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
   const features: GeoJSON.Feature[] = [];
 
   for (const location of locations) {
-    if (location.latitude == null || location.longitude == null || !location.permits?.length) continue;
+    if (location.latitude === null || location.longitude === null || !location.permits?.length) continue;
 
     const { latitude: lat, longitude: lng } = location;
 
@@ -131,6 +131,6 @@ export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom, li
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
-    (map.getSource(AZIMUTHS_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined)?.setData(geoJSON);
+    void (map.getSource(AZIMUTHS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(geoJSON);
   }, [map, isLoaded, enabled, geoJSON]);
 }

@@ -1,4 +1,4 @@
-import type MapLibreGL from "maplibre-gl";
+import type { GeoJSONSource, Map as MaplibreMap } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
 import { onBeforeStyleChange } from "@/components/ui/map";
@@ -21,7 +21,7 @@ type LayerConfig = {
   layerIds: readonly string[];
 };
 
-function ensureMapLayersExist(map: MapLibreGL.Map, config: LayerConfig, imageTracker: Set<string>): void {
+function ensureMapLayersExist(map: MaplibreMap, config: LayerConfig, imageTracker: Set<string>): void {
   try {
     if (!map.getSource(config.sourceId)) {
       map.addSource(config.sourceId, {
@@ -64,7 +64,7 @@ function ensureMapLayersExist(map: MapLibreGL.Map, config: LayerConfig, imageTra
   }
 }
 
-function cleanupMapLayers(map: MapLibreGL.Map, config: LayerConfig, imageTracker: Set<string>): void {
+function cleanupMapLayers(map: MaplibreMap, config: LayerConfig, imageTracker: Set<string>): void {
   for (const layerId of config.layerIds) {
     try {
       map.removeLayer(layerId);
@@ -82,7 +82,7 @@ function cleanupMapLayers(map: MapLibreGL.Map, config: LayerConfig, imageTracker
   imageTracker.clear();
 }
 
-function attachCursorHandlers(map: MapLibreGL.Map, layerIds: readonly string[]): () => void {
+function attachCursorHandlers(map: MaplibreMap, layerIds: readonly string[]): () => void {
   const handleMouseEnter = () => {
     map.getCanvas().style.cursor = "pointer";
   };
@@ -114,7 +114,7 @@ function attachCursorHandlers(map: MapLibreGL.Map, layerIds: readonly string[]):
 }
 
 type UsePickerMapLayersArgs = {
-  map: MapLibreGL.Map | null;
+  map: MaplibreMap | null;
   isLoaded: boolean;
   geoJSON: GeoJSON.FeatureCollection;
   ukeGeoJSON: GeoJSON.FeatureCollection;
@@ -160,11 +160,11 @@ export function usePickerMapLayers({ map, isLoaded, geoJSON, ukeGeoJSON, showUke
   // Update picker layer data
   useEffect(() => {
     if (!map || !isLoaded) return;
-    const source = map.getSource(PICKER_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
+    const source = map.getSource(PICKER_SOURCE_ID) as GeoJSONSource | undefined;
     if (!source) return;
 
     syncPieImages(map, geoJSON.features, addedImagesRef.current);
-    source.setData(geoJSON);
+    void source.setData(geoJSON);
   }, [map, isLoaded, geoJSON]);
 
   // Setup UKE layers (conditional)
@@ -195,10 +195,10 @@ export function usePickerMapLayers({ map, isLoaded, geoJSON, ukeGeoJSON, showUke
   // Update UKE layer data
   useEffect(() => {
     if (!map || !isLoaded || !showUkeLocations) return;
-    const source = map.getSource(PICKER_UKE_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined;
+    const source = map.getSource(PICKER_UKE_SOURCE_ID) as GeoJSONSource | undefined;
     if (!source) return;
 
     syncPieImages(map, ukeGeoJSON.features, addedUkeImagesRef.current);
-    source.setData(ukeGeoJSON);
+    void source.setData(ukeGeoJSON);
   }, [map, isLoaded, showUkeLocations, ukeGeoJSON]);
 }

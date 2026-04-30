@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import MapLibreGL from "maplibre-gl";
+import { Popup } from "maplibre-gl";
 import { useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -29,7 +29,7 @@ type UseMapPopupReturn = {
 };
 
 export function useMapPopup({ map, showAddToList, onOpenStationDetails, onOpenUkeStationDetails, onClose }: UseMapPopupArgs): UseMapPopupReturn {
-  const popupRef = useRef<MapLibreGL.Popup | null>(null);
+  const popupRef = useRef<Popup | null>(null);
   const popupRootRef = useRef<ReturnType<typeof createRoot> | null>(null);
 
   const renderPopup = useCallback(
@@ -78,7 +78,7 @@ export function useMapPopup({ map, showAddToList, onOpenStationDetails, onOpenUk
       popupRootRef.current = createRoot(container);
       renderPopup(location, stations, ukeStations, source);
 
-      const popup = new MapLibreGL.Popup({
+      const popup = new Popup({
         closeButton: true,
         closeOnClick: true,
         maxWidth: "none",

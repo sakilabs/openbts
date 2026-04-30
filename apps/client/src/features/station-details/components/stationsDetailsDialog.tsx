@@ -52,6 +52,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
   if (!stationId) return null;
 
   const operatorColor = station ? getOperatorColor(station.operator.mnc) : "#3b82f6";
+  const leaseOperator = station ? getHardwareLeaseOperator(station.station_id, station.operator.mnc) : null;
 
   return (
     <>
@@ -80,12 +81,12 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                         <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
                           {station.operator.name}
                         </h2>
-                        {getHardwareLeaseOperator(station.station_id) ? (
+                        {leaseOperator ? (
                           <Tooltip>
                             <TooltipTrigger className="text-sm text-muted-foreground font-mono font-medium cursor-help underline decoration-dashed decoration-amber-500/50 underline-offset-2 shrink-0">
                               {station.station_id}
                             </TooltipTrigger>
-                            <TooltipContent>{t("dialog.hardwareLease", { operator: getHardwareLeaseOperator(station.station_id) })}</TooltipContent>
+                            <TooltipContent>{t("dialog.hardwareLease", { operator: leaseOperator })}</TooltipContent>
                           </Tooltip>
                         ) : (
                           <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>

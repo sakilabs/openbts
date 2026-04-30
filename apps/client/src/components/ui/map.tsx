@@ -3,7 +3,21 @@
 import { Cancel01Icon, CompassIcon, Location01Icon, MaximizeIcon, MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { HugeiconsIcon } from "@hugeicons/react";
-import MapLibreGL, { type MarkerOptions, type PopupOptions } from "maplibre-gl";
+import {
+  type GeoJSONSource,
+  type MapGeoJSONFeature,
+  type MapMouseEvent,
+  type MapOptions,
+  Map as MaplibreMap,
+  Marker,
+  type MarkerOptions,
+  Popup,
+  type PopupOptions,
+  type ProjectionSpecification,
+  type StyleSpecification,
+  setWorkerUrl,
+} from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import {
   type ReactNode,
   createContext,
@@ -29,6 +43,8 @@ import { formatCoordinates } from "@/lib/gpsUtils";
 import { cn } from "@/lib/utils";
 
 import { Spinner } from "./spinner";
+
+setWorkerUrl(maplibreWorkerUrl);
 
 // Check document class for theme (works with next-themes, etc.)
 function getDocumentTheme(): Theme | null {
@@ -78,7 +94,7 @@ function useResolvedTheme(themeProp?: "light" | "dark"): "light" | "dark" {
 type MapStyle = "carto" | "osm" | "openfreemap" | "satellite" | "esriSatellite" | "opentopomap";
 
 type MapContextValue = {
-  map: MapLibreGL.Map | null;
+  map: MaplibreMap | null;
   isLoaded: boolean;
   mapStyle: MapStyle;
   setMapStyle: (style: MapStyle) => void;
@@ -92,9 +108,9 @@ const MapContext = createContext<MapContextValue | null>(null);
  * Changing the map style destroys all layers, so any click/hover listeners
  * attached to those layers must be removed first or they'll crash.
  */
-const beforeStyleChangeCallbacks = new WeakMap<MapLibreGL.Map, Set<() => void>>();
+const beforeStyleChangeCallbacks = new WeakMap<MaplibreMap, Set<() => void>>();
 
-function onBeforeStyleChange(map: MapLibreGL.Map, callback: () => void): () => void {
+function onBeforeStyleChange(map: MaplibreMap, callback: () => void): () => void {
   let set = beforeStyleChangeCallbacks.get(map);
   if (!set) {
     set = new Set();
@@ -106,14 +122,14 @@ function onBeforeStyleChange(map: MapLibreGL.Map, callback: () => void): () => v
   };
 }
 
-function fireBeforeStyleChange(map: MapLibreGL.Map): void {
+function fireBeforeStyleChange(map: MaplibreMap): void {
   const set = beforeStyleChangeCallbacks.get(map);
   if (set) {
     for (const cb of set) cb();
   }
 }
 
-function getViewport(map: MapLibreGL.Map): MapViewport {
+function getViewport(map: MaplibreMap): MapViewport {
   const center = map.getCenter();
   return {
     center: [center.lng, center.lat],
@@ -131,7 +147,7 @@ function useMap() {
   return context;
 }
 
-type MapStyleOption = string | MapLibreGL.StyleSpecification;
+type MapStyleOption = string | StyleSpecification;
 
 export const CARTO_STYLE_URLS = {
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
@@ -140,7 +156,7 @@ export const CARTO_STYLE_URLS = {
 
 const defaultStyles = CARTO_STYLE_URLS;
 
-const osmRasterStyle: MapLibreGL.StyleSpecification = {
+const osmRasterStyle: StyleSpecification = {
   version: 8,
   sources: {
     "osm-raster-tiles": {
@@ -161,7 +177,7 @@ const osmRasterStyle: MapLibreGL.StyleSpecification = {
   ],
 };
 
-const opentopomapRasterStyle: MapLibreGL.StyleSpecification = {
+const opentopomapRasterStyle: StyleSpecification = {
   version: 8,
   sources: {
     "opentopomap-raster-tiles": {
@@ -187,7 +203,7 @@ const opentopomapRasterStyle: MapLibreGL.StyleSpecification = {
   ],
 };
 
-const googleSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
+const googleSatelliteRasterStyle: StyleSpecification = {
   version: 8,
   sources: {
     "google-satellite-tiles": {
@@ -213,7 +229,7 @@ const googleSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
   ],
 };
 
-const esriSatelliteRasterStyle: MapLibreGL.StyleSpecification = {
+const esriSatelliteRasterStyle: StyleSpecification = {
   version: 8,
   sources: {
     "esri-satellite-tiles": {
@@ -312,7 +328,7 @@ type MapProps = {
   /** Initial map style preset (default: "carto") */
   initialMapStyle?: MapStyle;
   /** Map projection type. Use `{ type: "globe" }` for 3D globe view. */
-  projection?: MapLibreGL.ProjectionSpecification;
+  projection?: ProjectionSpecification;
   /**
    * Controlled viewport. When provided with onViewportChange,
    * the map becomes controlled and viewport is driven by this prop.
@@ -324,9 +340,9 @@ type MapProps = {
    * Receives the new viewport state to update your state.
    */
   onViewportChange?: (viewport: MapViewport) => void;
-} & Omit<MapLibreGL.MapOptions, "container" | "style">;
+} & Omit<MapOptions, "container" | "style">;
 
-type MapRef = MapLibreGL.Map;
+type MapRef = MaplibreMap;
 
 const DefaultLoader = () => (
   <div className="absolute inset-0 flex items-center justify-center">
@@ -339,12 +355,12 @@ const DefaultLoader = () => (
 );
 
 type MapInstanceState = {
-  mapInstance: MapLibreGL.Map | null;
+  mapInstance: MaplibreMap | null;
   isLoaded: boolean;
   isStyleLoaded: boolean;
 };
 type MapInstanceAction =
-  | { type: "INIT"; map: MapLibreGL.Map }
+  | { type: "INIT"; map: MaplibreMap }
   | { type: "SET_LOADED" }
   | { type: "SET_STYLE_LOADED"; value?: boolean }
   | { type: "TEARDOWN" };
@@ -425,7 +441,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     localStorage.setItem("map-style", style);
   }, []);
 
-  useImperativeHandle(ref, () => mapInstance as MapLibreGL.Map, [mapInstance]);
+  useImperativeHandle(ref, () => mapInstance as MaplibreMap, [mapInstance]);
 
   const clearStyleTimeout = useCallback(() => {
     if (styleTimeoutRef.current) {
@@ -441,7 +457,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     const initialStyle = effectiveThemeRef.current === "dark" ? initStyles.dark : initStyles.light;
     currentStyleRef.current = initialStyle;
 
-    const map = new MapLibreGL.Map({
+    const map = new MaplibreMap({
       container: containerRef.current,
       style: initialStyle,
       renderWorldCopies: false,
@@ -464,7 +480,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     };
 
     const _originalQueryRenderedFeatures = map.queryRenderedFeatures.bind(map);
-    map.queryRenderedFeatures = (...args: Parameters<MapLibreGL.Map["queryRenderedFeatures"]>) => {
+    map.queryRenderedFeatures = (...args: Parameters<MaplibreMap["queryRenderedFeatures"]>) => {
       try {
         return _originalQueryRenderedFeatures(...args);
       } catch {
@@ -598,8 +614,8 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
 });
 
 type MarkerContextValue = {
-  marker: MapLibreGL.Marker;
-  map: MapLibreGL.Map | null;
+  marker: Marker;
+  map: MaplibreMap | null;
 };
 
 const MarkerContext = createContext<MarkerContextValue | null>(null);
@@ -675,7 +691,7 @@ function MapMarker({
   }, [onClick, onMouseEnter, onMouseLeave, onDragStart, onDrag, onDragEnd]);
 
   const marker = useMemo(() => {
-    const markerInstance = new MapLibreGL.Marker({
+    const markerInstance = new Marker({
       element: document.createElement("div"),
       draggable,
       offset: markerOffset,
@@ -795,7 +811,7 @@ function MarkerPopup({
   const container = useMemo(() => document.createElement("div"), []);
 
   const popup = useMemo(() => {
-    const popupInstance = new MapLibreGL.Popup({
+    const popupInstance = new Popup({
       offset: popupOffset ?? 16,
       maxWidth: popupMaxWidth,
       anchor: popupAnchor,
@@ -868,7 +884,7 @@ function MarkerTooltip({
   const container = useMemo(() => document.createElement("div"), []);
 
   const tooltip = useMemo(() => {
-    const tooltipInstance = new MapLibreGL.Popup({
+    const tooltipInstance = new Popup({
       offset: tooltipOffset ?? 16,
       maxWidth: tooltipMaxWidth,
       anchor: tooltipAnchor,
@@ -961,7 +977,7 @@ type UserLocationMarkerProps = {
 function UserLocationMarker({ longitude, latitude, accuracy, gpsFormat }: UserLocationMarkerProps) {
   const { map } = useMap();
   const { t } = useTranslation("main");
-  const markerRef = useRef<MapLibreGL.Marker | null>(null);
+  const markerRef = useRef<Marker | null>(null);
   const [markerEl, setMarkerEl] = useState<HTMLDivElement | null>(null);
   const [popupContainer, setPopupContainer] = useState<HTMLDivElement | null>(null);
 
@@ -972,8 +988,8 @@ function UserLocationMarker({ longitude, latitude, accuracy, gpsFormat }: UserLo
     if (!map) return;
     const el = document.createElement("div");
     const container = document.createElement("div");
-    const popup = new MapLibreGL.Popup({ closeButton: true, closeOnClick: true, offset: 16 }).setDOMContent(container);
-    const marker = new MapLibreGL.Marker({ element: el }).setLngLat([longitude, latitude]).setPopup(popup).addTo(map);
+    const popup = new Popup({ closeButton: true, closeOnClick: true, offset: 16 }).setDOMContent(container);
+    const marker = new Marker({ element: el }).setLngLat([longitude, latitude]).setPopup(popup).addTo(map);
     markerRef.current = marker;
     animFromRef.current = { longitude, latitude };
     setMarkerEl(el);
@@ -1395,7 +1411,7 @@ function MapPopup({
   }, [onClose]);
 
   const popup = useMemo(() => {
-    const popupInstance = new MapLibreGL.Popup({
+    const popupInstance = new Popup({
       offset: mapPopupOffset ?? 16,
       maxWidth: mapPopupMaxWidth,
       anchor: mapPopupAnchor,
@@ -1539,9 +1555,9 @@ function MapRoute({
   useEffect(() => {
     if (!isLoaded || !map || coordinates.length < 2) return;
 
-    const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+    const source = map.getSource(sourceId) as GeoJSONSource;
     if (source) {
-      source.setData({
+      void source.setData({
         type: "Feature",
         properties: {},
         geometry: { type: "LineString", coordinates },
@@ -1736,9 +1752,9 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
   useEffect(() => {
     if (!isLoaded || !map || typeof data === "string") return;
 
-    const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+    const source = map.getSource(sourceId) as GeoJSONSource;
     if (source) {
-      source.setData(data);
+      void source.setData(data);
     }
   }, [isLoaded, map, data, sourceId]);
 
@@ -1777,8 +1793,8 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
 
     // Cluster click handler - zoom into cluster
     const handleClusterClick = async (
-      e: MapLibreGL.MapMouseEvent & {
-        features?: MapLibreGL.MapGeoJSONFeature[];
+      e: MapMouseEvent & {
+        features?: MapGeoJSONFeature[];
       },
     ) => {
       const features = map.queryRenderedFeatures(e.point, {
@@ -1795,7 +1811,7 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
         onClusterClick(clusterId, coordinates, pointCount);
       } else {
         // Default behavior: zoom to cluster expansion zoom
-        const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+        const source = map.getSource(sourceId) as GeoJSONSource;
         const zoom = await source.getClusterExpansionZoom(clusterId);
         map.easeTo({
           center: coordinates,
@@ -1806,8 +1822,8 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
 
     // Unclustered point click handler
     const handlePointClick = (
-      e: MapLibreGL.MapMouseEvent & {
-        features?: MapLibreGL.MapGeoJSONFeature[];
+      e: MapMouseEvent & {
+        features?: MapGeoJSONFeature[];
       },
     ) => {
       if (!onPointClick || !e.features?.length) return;

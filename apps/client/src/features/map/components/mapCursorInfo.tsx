@@ -68,7 +68,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
 
   const updateSavedSources = useCallback(() => {
     const measurements = savedMeasurementsRef.current;
-    savedLineSourceRef.current?.setData({
+    void savedLineSourceRef.current?.setData({
       type: "FeatureCollection",
       features: measurements.map(({ marker, cursor }) => ({
         type: "Feature",
@@ -82,7 +82,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         },
       })),
     });
-    savedCircleSourceRef.current?.setData(
+    void savedCircleSourceRef.current?.setData(
       circleEnabledRef.current && circleVisibleRef.current
         ? {
             type: "FeatureCollection",
@@ -118,8 +118,8 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         if (marker && cursor) {
           if (circleVisibleRef.current) {
             const radius = calculateDistance(marker.latitude, marker.longitude, cursor.lat, cursor.lng);
-            circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
-          } else circleSourceRef.current?.setData(EMPTY_FC);
+            void circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
+          } else void circleSourceRef.current?.setData(EMPTY_FC);
         }
       } else if (e.key === "Escape") {
         savedMeasurementsRef.current = [];
@@ -266,7 +266,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
       const marker = activeMarkerRef.current;
       if (marker) {
         sourcesPopulated.current = true;
-        lineSourceRef.current?.setData({
+        void lineSourceRef.current?.setData({
           type: "Feature",
           properties: {},
           geometry: {
@@ -279,14 +279,12 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         });
         if (circleEnabledRef.current && circleVisibleRef.current) {
           const radius = calculateDistance(marker.latitude, marker.longitude, lat, lng);
-          circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
-        } else {
-          circleSourceRef.current?.setData(EMPTY_FC);
-        }
+          void circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
+        } else void circleSourceRef.current?.setData(EMPTY_FC);
       } else if (sourcesPopulated.current) {
         sourcesPopulated.current = false;
-        lineSourceRef.current?.setData(EMPTY_FC);
-        circleSourceRef.current?.setData(EMPTY_FC);
+        void lineSourceRef.current?.setData(EMPTY_FC);
+        void circleSourceRef.current?.setData(EMPTY_FC);
       }
     };
 
@@ -312,7 +310,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
 
     if (markerLat !== null && markerLng !== null && cursor) {
       sourcesPopulated.current = true;
-      lineSourceRef.current?.setData({
+      void lineSourceRef.current?.setData({
         type: "Feature",
         properties: {},
         geometry: {
@@ -325,14 +323,12 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
       });
       if (circleEnabled && circleVisibleRef.current) {
         const radius = calculateDistance(markerLat, markerLng, cursor.lat, cursor.lng);
-        circleSourceRef.current?.setData(generateCirclePolygon(markerLat, markerLng, radius));
-      } else {
-        circleSourceRef.current?.setData(EMPTY_FC);
-      }
+        void circleSourceRef.current?.setData(generateCirclePolygon(markerLat, markerLng, radius));
+      } else void circleSourceRef.current?.setData(EMPTY_FC);
     } else {
       sourcesPopulated.current = false;
-      lineSourceRef.current?.setData(EMPTY_FC);
-      circleSourceRef.current?.setData(EMPTY_FC);
+      void lineSourceRef.current?.setData(EMPTY_FC);
+      void circleSourceRef.current?.setData(EMPTY_FC);
     }
   }, [map, isLoaded, markerLat, markerLng, circleEnabled]);
 

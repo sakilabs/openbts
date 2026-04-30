@@ -131,7 +131,8 @@ export function StationDetailsBody({
     ...(photos !== undefined ? { photos: photos.length } : {}),
     ...(comments !== undefined ? { comments: comments.length } : {}),
   };
-  const showSI2PEMLink = !!station?.station_id && !station.station_id.startsWith("O-") && !station.station_id.startsWith("N");
+  const showSI2PEMLink =
+    !!station?.station_id && !(station.station_id.startsWith("N") && (station.operator.mnc === 26002 || station.operator.mnc === 26003));
   const visibleTabs = useMemo(
     () =>
       source === "uke"

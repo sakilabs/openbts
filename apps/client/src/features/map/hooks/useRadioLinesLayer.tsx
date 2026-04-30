@@ -1,4 +1,4 @@
-import MapLibreGL from "maplibre-gl";
+import { type GeoJSONSource, Popup } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -90,7 +90,7 @@ function buildTooltip(state: ActiveTooltip | null, cacheKey: string): ActiveTool
 
   const container = document.createElement("div");
   const root = createRoot(container);
-  const popup = new MapLibreGL.Popup({
+  const popup = new Popup({
     closeButton: false,
     closeOnClick: false,
     className: "radioline-tooltip",
@@ -298,7 +298,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
 
   useEffect(() => {
     if (!map || !isLoaded) return;
-    (map.getSource(RADIOLINES_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined)?.setData(linesGeoJSON);
-    (map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID) as MapLibreGL.GeoJSONSource | undefined)?.setData(endpointsGeoJSON);
+    void (map.getSource(RADIOLINES_SOURCE_ID) as GeoJSONSource | undefined)?.setData(linesGeoJSON);
+    void (map.getSource(RADIOLINES_ENDPOINTS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(endpointsGeoJSON);
   }, [map, isLoaded, linesGeoJSON, endpointsGeoJSON]);
 }
