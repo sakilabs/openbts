@@ -150,7 +150,7 @@ type WmsFeature = {
 type WmsResponse = { features: WmsFeature[] };
 
 function buildWmsParams(identityName: string, lat: number, lng: number, featureCount: number, needPlannedMeasurement = false): URLSearchParams {
-  const bbox = `${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}`;
+  const bbox = `${lng - 0.02},${lat - 0.02},${lng + 0.02},${lat + 0.02}`;
   const layers = `measures${needPlannedMeasurement ? ",planned_measures" : ""}`;
   return new URLSearchParams({
     SERVICE: "WMS",
