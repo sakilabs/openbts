@@ -101,6 +101,9 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       output: {
+        entryFileNames: "assets/[name]-[hash:8].js",
+        chunkFileNames: "assets/[name]-[hash:8].js",
+        assetFileNames: "assets/[name]-[hash:8][extname]",
         comments: {
           annotation: true,
         },
