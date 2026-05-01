@@ -126,14 +126,29 @@ export const Route = createRootRoute({
   component: RootComponent,
   head: () => {
     const adClient = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
+    const rybbitSiteId = import.meta.env.VITE_RYBBIT_SITE_ID as string | undefined;
+    const gitCommit = import.meta.env.VITE_GIT_COMMIT as string | undefined;
     return {
-      scripts: adClient
-        ? [
-            {
-              children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted,analytics_storage:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};})();`,
-            },
-          ]
-        : [],
+      scripts: [
+        ...(rybbitSiteId
+          ? [
+              {
+                src: "https://statistics.btsearch.pl/api/script.js",
+                "data-site-id": rybbitSiteId,
+                "data-skip-patterns": ["/admin/**"],
+                ...(gitCommit ? { "data-tag": gitCommit } : {}),
+                defer: true,
+              },
+            ]
+          : []),
+        ...(adClient
+          ? [
+              {
+                children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted,analytics_storage:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};})();`,
+              },
+            ]
+          : []),
+      ],
     };
   },
 });
