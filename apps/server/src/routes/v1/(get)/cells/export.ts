@@ -137,7 +137,7 @@ async function getLastModified({
     .leftJoin(regions, eq(locations.region_id, regions.id))
     .where(and(...conditions));
 
-  return result?.lastModified ?? null;
+  return result?.lastModified ? new Date(result.lastModified) : null;
 }
 
 async function handler(req: FastifyRequest<ReqQuery>, res: FastifyReply) {

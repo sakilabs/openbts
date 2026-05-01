@@ -45,7 +45,10 @@ const schemaRoute = {
   },
 };
 
-const stationsLastUpdatedQuery = db.select({ value: max(stations.updatedAt) }).from(stations).prepare("stats_stations_last_updated");
+const stationsLastUpdatedQuery = db
+  .select({ value: max(stations.updatedAt) })
+  .from(stations)
+  .prepare("stats_stations_last_updated");
 const permitsImportQuery = db
   .select({ value: max(ukeImportMetadata.last_import_date) })
   .from(ukeImportMetadata)
@@ -77,9 +80,9 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
   ]);
 
   const lastUpdated: Response["lastUpdated"] = {
-    stations: stationsLastUpdatedResult[0]?.value?.toISOString() ?? null,
-    stations_permits: permitsImportResult[0]?.value?.toISOString() ?? null,
-    radiolines: radiolinesImportResult[0]?.value?.toISOString() ?? null,
+    stations: stationsLastUpdatedResult[0]?.value ? new Date(stationsLastUpdatedResult[0].value).toISOString() : null,
+    stations_permits: permitsImportResult[0]?.value ? new Date(permitsImportResult[0].value).toISOString() : null,
+    radiolines: radiolinesImportResult[0]?.value ? new Date(radiolinesImportResult[0].value).toISOString() : null,
   };
 
   const [locationsCount, stationsCount, cellsCount, ukeLocationsCount, ukePermitsCount, ukeRadiolinesCount] = countResults;
