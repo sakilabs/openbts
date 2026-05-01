@@ -1,4 +1,5 @@
 import { bands, cells, extraIdentificators, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
+import { sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -52,14 +53,9 @@ const schemaRoute = {
   },
 };
 
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
-  const { id } = req.params;
-
-  const station = await db.query.stations.findFirst({
-    where: {
-      id: id,
-      status: "published",
-    },
+const stationByIdQuery = db.query.stations
+  .findFirst({
+    where: { id: sql.placeholder("id"), status: "published" },
     with: {
       cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
       location: { columns: { point: false, region_id: false }, with: { region: true } },
@@ -67,7 +63,13 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
       extra_identificators: { columns: { station_id: false } },
     },
     columns: { status: false, operator_id: false, location_id: false },
-  });
+  })
+  .prepare("station_by_id");
+
+async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
+  const { id } = req.params;
+
+  const station = await stationByIdQuery.execute({ id });
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
   const cells: CellResponse[] = (station.cells as CellWithRats[]).map((cell) => {

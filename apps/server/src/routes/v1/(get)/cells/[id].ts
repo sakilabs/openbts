@@ -1,4 +1,5 @@
 import { bands, cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
+import { sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -47,23 +48,17 @@ type CellWithRat = z.infer<typeof cellsSchema> & {
   nr?: z.infer<typeof nrCellsSchema> | null;
 };
 
+const cellByIdQuery = db.query.cells
+  .findFirst({
+    where: { id: sql.placeholder("id"), station: { status: "published" } },
+    with: { station: true, band: true, gsm: true, umts: true, lte: true, nr: true },
+  })
+  .prepare("cell_by_id");
+
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { id } = req.params;
 
-  const cell = await db.query.cells.findFirst({
-    where: {
-      id: id,
-      station: { status: "published" },
-    },
-    with: {
-      station: true,
-      band: true,
-      gsm: true,
-      umts: true,
-      lte: true,
-      nr: true,
-    },
-  });
+  const cell = await cellByIdQuery.execute({ id });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
 
   const { gsm, umts, lte, nr, ...rest } = cell as CellWithRat;

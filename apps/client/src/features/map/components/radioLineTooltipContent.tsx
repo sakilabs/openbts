@@ -74,7 +74,7 @@ export const RadioLineTooltipContent = memo(function RadioLineTooltipContent({
             const isLastDirection = index === directions.length - 1;
 
             return (
-              <div key={`${dir.freq}-${dir.polarization}-${dir.forward}`}>
+              <div key={`${dir.freq}-${dir.polarization}-${dir.forward}-${index}`}>
                 <div className="flex items-center gap-2">
                   {directionCount > 1 && (
                     <span className="flex items-center gap-px text-[9px] font-bold text-muted-foreground shrink-0">

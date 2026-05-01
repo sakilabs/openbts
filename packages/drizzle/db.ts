@@ -1,7 +1,7 @@
+import { refineGenericPgCodecs, textToDate, textToDateWithTz } from "drizzle-orm/pg-core/codecs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import * as schema from "./schemas/index.js";
 import { relations } from "./schemas/relations.ts";
 
 const connectionString = process.env.DATABASE_URL;
@@ -18,8 +18,12 @@ export const sql = postgres(connectionString, {
 
 export const db = drizzle({
   client: sql,
-  schema,
   relations,
+  jit: true,
+  codecs: refineGenericPgCodecs({
+    timestamp: { normalize: textToDate },
+    timestamptz: { normalize: textToDateWithTz },
+  }),
 });
 
 export type Database = typeof db;

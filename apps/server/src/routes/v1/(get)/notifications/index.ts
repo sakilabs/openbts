@@ -1,5 +1,5 @@
 import { notifications } from "@openbts/drizzle";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -28,6 +28,27 @@ const schemaRoute = {
 type ReqQuery = { Querystring: { limit: number; offset: number } };
 type ResponseData = { data: z.infer<typeof notificationSchema>[]; totalUnread: number; total: number };
 
+const notificationsQuery = db.query.notifications
+  .findMany({
+    where: { userId: sql.placeholder("userId") },
+    orderBy: { createdAt: "desc" },
+    limit: sql.placeholder("limit"),
+    offset: sql.placeholder("offset"),
+  })
+  .prepare("notifications_by_user");
+
+const notificationsTotalQuery = db
+  .select({ total: count() })
+  .from(notifications)
+  .where(eq(notifications.userId, sql.placeholder("userId")))
+  .prepare("notifications_total");
+
+const notificationsUnreadQuery = db
+  .select({ total: count() })
+  .from(notifications)
+  .where(and(eq(notifications.userId, sql.placeholder("userId")), isNull(notifications.readAt)))
+  .prepare("notifications_unread");
+
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
@@ -36,17 +57,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const userId = session.user.id;
 
   const [rows, [totalRow], [unreadRow]] = await Promise.all([
-    db.query.notifications.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      limit,
-      offset,
-    }),
-    db.select({ total: count() }).from(notifications).where(eq(notifications.userId, userId)),
-    db
-      .select({ total: count() })
-      .from(notifications)
-      .where(and(eq(notifications.userId, userId), isNull(notifications.readAt))),
+    notificationsQuery.execute({ userId, limit, offset }),
+    notificationsTotalQuery.execute({ userId }),
+    notificationsUnreadQuery.execute({ userId }),
   ]);
 
   return res.send({

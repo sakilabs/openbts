@@ -45,26 +45,35 @@ const schemaRoute = {
   },
 };
 
+const stationsLastUpdatedQuery = db.select({ value: max(stations.updatedAt) }).from(stations).prepare("stats_stations_last_updated");
+const permitsImportQuery = db
+  .select({ value: max(ukeImportMetadata.last_import_date) })
+  .from(ukeImportMetadata)
+  .where(and(eq(ukeImportMetadata.status, "success"), inArray(ukeImportMetadata.import_type, ["permits", "device_registry"])))
+  .prepare("stats_permits_last_import");
+const radiolinesImportQuery = db
+  .select({ value: max(ukeImportMetadata.last_import_date) })
+  .from(ukeImportMetadata)
+  .where(and(eq(ukeImportMetadata.status, "success"), eq(ukeImportMetadata.import_type, "radiolines")))
+  .prepare("stats_radiolines_last_import");
+const locationsCountQuery = db.select({ value: count() }).from(locations).prepare("stats_locations_count");
+const stationsCountQuery = db.select({ value: count() }).from(stations).prepare("stats_stations_count");
+const cellsCountQuery = db.select({ value: count() }).from(cells).prepare("stats_cells_count");
+const ukeLocationsCountQuery = db.select({ value: count() }).from(ukeLocations).prepare("stats_uke_locations_count");
+const ukePermitsCountQuery = db.select({ value: count() }).from(ukePermits).prepare("stats_uke_permits_count");
+const ukeRadiolinesCountQuery = db.select({ value: count() }).from(ukeRadiolines).prepare("stats_uke_radiolines_count");
+
 async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>) {
   const [stationsLastUpdatedResult, permitsImportResult, radiolinesImportResult, ...countResults] = await Promise.all([
-    db.select({ value: max(stations.updatedAt) }).from(stations),
-
-    db
-      .select({ value: max(ukeImportMetadata.last_import_date) })
-      .from(ukeImportMetadata)
-      .where(and(eq(ukeImportMetadata.status, "success"), inArray(ukeImportMetadata.import_type, ["permits", "device_registry"]))),
-
-    db
-      .select({ value: max(ukeImportMetadata.last_import_date) })
-      .from(ukeImportMetadata)
-      .where(and(eq(ukeImportMetadata.status, "success"), eq(ukeImportMetadata.import_type, "radiolines"))),
-
-    db.select({ value: count() }).from(locations),
-    db.select({ value: count() }).from(stations),
-    db.select({ value: count() }).from(cells),
-    db.select({ value: count() }).from(ukeLocations),
-    db.select({ value: count() }).from(ukePermits),
-    db.select({ value: count() }).from(ukeRadiolines),
+    stationsLastUpdatedQuery.execute(),
+    permitsImportQuery.execute(),
+    radiolinesImportQuery.execute(),
+    locationsCountQuery.execute(),
+    stationsCountQuery.execute(),
+    cellsCountQuery.execute(),
+    ukeLocationsCountQuery.execute(),
+    ukePermitsCountQuery.execute(),
+    ukeRadiolinesCountQuery.execute(),
   ]);
 
   const lastUpdated: Response["lastUpdated"] = {

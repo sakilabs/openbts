@@ -19,8 +19,10 @@ const schemaRoute = {
   },
 };
 
+const bandsQuery = db.query.bands.findMany().prepare("bands_all");
+
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<Bands[]>>) {
-  const bands = await db.query.bands.findMany();
+  const bands = await bandsQuery.execute();
   return res.send({ data: bands });
 }
 

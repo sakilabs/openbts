@@ -28,8 +28,6 @@ function getAppVersion(): string {
   }
 }
 
-// const ReactCompilerConfig = {};
-
 // https://vite.dev/config/
 export default defineConfig({
   define: {
@@ -96,14 +94,6 @@ export default defineConfig({
       },
       pwaAssets: { disabled: false, config: true },
     }),
-    // babel({
-    // 	apply: "build",
-    // 	filter: /\.[jt]sx?$/,
-    // 	babelConfig: {
-    // 		presets: ["@babel/preset-typescript"],
-    // 		plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
-    // 	},
-    // }),
   ],
   optimizeDeps: {
     include: ["react", "react-dom", "react-i18next", "maplibre-gl", "@hugeicons/react"],
@@ -167,6 +157,7 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "./src"),
     },
+    dedupe: ["zod"],
   },
   server: {
     warmup: {

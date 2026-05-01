@@ -18,8 +18,10 @@ const schemaRoute = {
 };
 type ResponseData = z.infer<typeof operatorsSchema>;
 
+const operatorsQuery = db.query.operators.findMany().prepare("operators_all");
+
 async function handler(_req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseData[]>>) {
-  const operators = await db.query.operators.findMany();
+  const operators = await operatorsQuery.execute();
   return res.send({ data: operators });
 }
 
