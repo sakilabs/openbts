@@ -57,7 +57,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       record_id: photo_id,
       old_values: photo,
       new_values: updated,
-      metadata: { location_id: locationPhotos.location_id },
+      metadata: { location_id },
     },
     req,
   );

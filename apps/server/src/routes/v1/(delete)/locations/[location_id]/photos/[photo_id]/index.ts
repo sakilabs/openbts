@@ -51,7 +51,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       table_name: "location_photos",
       record_id: photo_id,
       old_values: photo,
-      metadata: { location_id: locationPhotos.location_id },
+      metadata: { location_id },
     },
     req,
   );
