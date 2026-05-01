@@ -1,5 +1,7 @@
-import { refineGenericPgCodecs, textToDate, textToDateWithTz } from "drizzle-orm/pg-core/codecs";
+import { refineCodecs } from "drizzle-orm/codecs";
+import { textToDate, textToDateWithTz } from "drizzle-orm/pg-core/codecs";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { postgresJsCodecs } from "drizzle-orm/postgres-js/codecs";
 import postgres from "postgres";
 
 import { relations } from "./schemas/relations.ts";
@@ -20,7 +22,7 @@ export const db = drizzle({
   client: sql,
   relations,
   jit: true,
-  codecs: refineGenericPgCodecs({
+  codecs: refineCodecs(postgresJsCodecs, {
     timestamp: { normalize: textToDate },
     timestamptz: { normalize: textToDateWithTz },
   }),
