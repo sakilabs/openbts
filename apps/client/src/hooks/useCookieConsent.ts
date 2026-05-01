@@ -51,10 +51,13 @@ function updateGtagConsent(granted: boolean) {
   }
 }
 
-function loadAdsenseScript() {
+let adsenseScriptLoaded = false;
+
+export function loadAdsenseScript() {
+  if (adsenseScriptLoaded) return;
   const client = window.__adsenseClient;
   if (!client) return;
-  if (document.querySelector('script[src*="adsbygoogle.js"]')) return;
+  adsenseScriptLoaded = true;
   const s = document.createElement("script");
   s.async = true;
   s.crossOrigin = "anonymous";
@@ -74,7 +77,6 @@ function writeConsent(value: CookieConsent | null) {
     // ignore
   }
   updateGtagConsent(value === "accepted");
-  if (value !== null) loadAdsenseScript();
   for (const listener of listeners) listener();
 }
 

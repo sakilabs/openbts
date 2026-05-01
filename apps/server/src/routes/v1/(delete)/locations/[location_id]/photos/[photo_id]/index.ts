@@ -45,7 +45,16 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     await db.delete(attachments).where(eq(attachments.id, attachment.id));
   }
 
-  await createAuditLog({ action: "location_photos.delete", table_name: "location_photos", record_id: photo_id, old_values: photo }, req);
+  await createAuditLog(
+    {
+      action: "location_photos.delete",
+      table_name: "location_photos",
+      record_id: photo_id,
+      old_values: photo,
+      metadata: { location_id: locationPhotos.location_id },
+    },
+    req,
+  );
 
   return res.code(204).send({});
 }

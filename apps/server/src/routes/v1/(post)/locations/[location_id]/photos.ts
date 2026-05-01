@@ -129,7 +129,16 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     throw new ErrorResponse("INTERNAL_SERVER_ERROR");
   }
 
-  await createAuditLog({ action: "location_photos.create", table_name: "location_photos", record_id: location_id, new_values: insertedRows }, req);
+  await createAuditLog(
+    {
+      action: "location_photos.create",
+      table_name: "location_photos",
+      record_id: location_id,
+      new_values: insertedRows,
+      metadata: { location_id: location.id },
+    },
+    req,
+  );
 
   return res.code(201).send({ data: insertedRows });
 }

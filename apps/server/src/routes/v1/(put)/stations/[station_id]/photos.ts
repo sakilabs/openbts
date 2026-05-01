@@ -78,6 +78,9 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         location_photo_id,
         is_main: location_photo_id === (main_id !== null && main_id !== undefined && selected.includes(main_id) ? main_id : null),
       })),
+      metadata: {
+        station_id,
+      },
     },
     req,
   );

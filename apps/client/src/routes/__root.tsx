@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ReloadPrompt } from "@/components/reload-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { loadAdsenseScript, useCookieConsent } from "@/hooks/useCookieConsent";
 import { plPLAuthLocalization } from "@/i18n/authLocalization";
 import i18n from "@/i18n/config";
 import { authClient } from "@/lib/authClient";
@@ -32,6 +33,21 @@ declare global {
 
 type AuthLinkProps = { href: string; className?: string; children: ReactNode };
 type AppProvidersProps = { children: ReactNode };
+
+const ADS_PRIVILEGED_ROLES = new Set(["admin", "editor"]);
+
+function AdsLoader() {
+  const { data: session, isPending } = authClient.useSession();
+  const { consent } = useCookieConsent();
+  const isPrivileged = ADS_PRIVILEGED_ROLES.has(session?.user?.role as string);
+
+  useEffect(() => {
+    if (isPending || consent === null || isPrivileged) return;
+    loadAdsenseScript();
+  }, [consent, isPrivileged, isPending]);
+
+  return null;
+}
 
 function RybbitIdentify() {
   const { data: session } = authClient.useSession();
@@ -79,6 +95,7 @@ function AppProviders({ children }: AppProvidersProps) {
       twoFactor={["totp"]}
       localization={localization}
     >
+      <AdsLoader />
       <RybbitIdentify />
       <ErrorBoundary>{children}</ErrorBoundary>
       <Toaster />
@@ -113,7 +130,7 @@ export const Route = createRootRoute({
       scripts: adClient
         ? [
             {
-              children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted,analytics_storage:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};if(c==='accepted'||c==='rejected'){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+window.__adsenseClient;document.head.appendChild(s);}})();`,
+              children: `(function(){window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}window.gtag=gtag;window.__adsenseClient=${JSON.stringify(adClient)};var c=null;try{c=localStorage.getItem('openbts:cookie-consent');}catch(e){}var granted=c==='accepted'?'granted':'denied';gtag('consent','default',{ad_storage:granted,ad_user_data:granted,ad_personalization:granted,analytics_storage:granted});window.googlefc=window.googlefc||{};window.googlefc.controlledMessagingFunction=function(m){m.proceed(false);};})();`,
             },
           ]
         : [],

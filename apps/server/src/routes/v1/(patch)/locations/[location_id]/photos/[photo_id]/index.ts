@@ -51,7 +51,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     .returning();
 
   await createAuditLog(
-    { action: "location_photos.update", table_name: "location_photos", record_id: photo_id, old_values: photo, new_values: updated },
+    {
+      action: "location_photos.update",
+      table_name: "location_photos",
+      record_id: photo_id,
+      old_values: photo,
+      new_values: updated,
+      metadata: { location_id: locationPhotos.location_id },
+    },
     req,
   );
 
