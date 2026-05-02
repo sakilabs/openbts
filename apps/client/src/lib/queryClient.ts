@@ -29,7 +29,7 @@ export const queryClient = new QueryClient({
         if (error instanceof TwoFactorRequiredError) return false;
         return failureCount < 3;
       },
-      throwOnError: (error) => error instanceof BackendUnavailableError,
+      throwOnError: false,
     },
   },
 });

@@ -150,17 +150,17 @@ async function validateSubmission(input: SingleSubmission): Promise<void> {
 
   if (stationId !== null && !targetStation) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
 
-  if (duplicateStation)
+  if (duplicateStation) {
     throw new ErrorResponse("BAD_REQUEST", {
-      message: "A station with the provided station_id and operator already exists. Use `existing` mode",
+      message: "Station with the provided station_id and operator already exists. Use `existing` mode",
     });
+  }
 
   if (type === "new" && existingLocation && existingLocation.stations && existingLocation.stations.length > 0)
     throw new ErrorResponse("BAD_REQUEST", { message: "The station is already registered at this location" });
 
-  if (input.cells && input.cells.length > 0) validateCellDuplicates(input.cells);
-
   if (input.cells && input.cells.length > 0) {
+    validateCellDuplicates(input.cells);
     const bandIds = [...new Set(input.cells.filter((c) => c.band_id !== null && c.band_id !== undefined).map((c) => c.band_id!))];
     if (bandIds.length > 0) {
       const bandRows = await db.query.bands.findMany({ where: { id: { in: bandIds } }, columns: { id: true, rat: true, value: true, duplex: true } });

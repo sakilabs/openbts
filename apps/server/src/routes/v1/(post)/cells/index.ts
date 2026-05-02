@@ -191,7 +191,7 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
     return res.send({ data: { ...inserted, details } as ResponseData });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
-    throw new ErrorResponse("FAILED_TO_CREATE");
+    throw (new ErrorResponse("FAILED_TO_CREATE"), { cause: error });
   }
 }
 

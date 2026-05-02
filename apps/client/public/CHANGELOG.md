@@ -1,6 +1,18 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-05-02
+
+### 🚀 Enhancements
+
+- POST requests now automatically carry an idempotency key
+- Backend unavailable banner now appears as a dismissible toast at the bottom of the screen without interrupting the current view
+
+### 🩹 Fixes
+
+- Fixed UMTS TA step distance; corrected from ~78 m to ~39 m per chip (one-way)
+- Cookie consent banner no longer flashes for privileged roles while the session is still loading
+
 # 2026-04-30
 
 ### 🩹 Fixes

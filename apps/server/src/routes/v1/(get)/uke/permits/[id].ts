@@ -66,7 +66,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
     });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
-    throw new ErrorResponse("INTERNAL_SERVER_ERROR");
+    throw (new ErrorResponse("INTERNAL_SERVER_ERROR"), { cause: error });
   }
 }
 

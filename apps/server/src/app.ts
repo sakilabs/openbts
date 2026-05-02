@@ -167,7 +167,7 @@ export default class App {
           cb(null, isLocalhost || isOwnDomain ? true : origin);
         },
         credentials: true,
-        allowedHeaders: ["content-type", "x-api-key", "authorization"],
+        allowedHeaders: ["content-type", "x-api-key", "authorization", "x-idempotency-key"],
         exposedHeaders: [
           "x-response-time",
           "x-ratelimit-limit",

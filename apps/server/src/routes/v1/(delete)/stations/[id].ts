@@ -77,7 +77,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
     return res.status(204).send();
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
-    throw new ErrorResponse("FAILED_TO_DELETE");
+    throw (new ErrorResponse("FAILED_TO_DELETE"), { cause: error });
   }
 }
 

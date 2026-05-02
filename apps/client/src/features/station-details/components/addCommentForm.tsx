@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, fetchJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 type ImagePreview = {
@@ -28,18 +28,10 @@ async function postComment(stationId: number, content: string, files: File[]) {
     formData.append("files", file);
   }
 
-  const response = await fetch(`${API_BASE}/stations/${stationId}/comments`, {
+  return fetchJson<{ data: { status: "pending" | "approved" } }>(`${API_BASE}/stations/${stationId}/comments`, {
     method: "POST",
     body: formData,
-    credentials: "include",
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || "Failed to post comment");
-  }
-
-  return response.json();
 }
 
 const MAX_PHOTOS = 5;

@@ -46,7 +46,8 @@ export type ErrorCode =
   | "TOO_MANY_REQUESTS"
   | "QUOTA_EXCEEDED"
   | "DUPLICATE_ENTRY"
-  | "TWO_FACTOR_REQUIRED";
+  | "TWO_FACTOR_REQUIRED"
+  | "DUPLICATE_REQUEST";
 
 interface ErrorDefinition {
   message: string;
@@ -121,5 +122,9 @@ const errors: Record<ErrorCode, ErrorDefinition> = {
   TWO_FACTOR_REQUIRED: {
     message: "Two-factor authentication must be enabled to access this resource.",
     statusCode: 403,
+  },
+  DUPLICATE_REQUEST: {
+    message: "A request with this idempotency key is already being processed.",
+    statusCode: 409,
   },
 };

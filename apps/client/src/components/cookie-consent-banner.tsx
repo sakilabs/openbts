@@ -11,9 +11,9 @@ const PRIVILEGED_ROLES = new Set(["admin", "editor"]);
 export function CookieConsentBanner() {
   const { t } = useTranslation("common");
   const { consent, accept, reject } = useCookieConsent();
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
-  if (PRIVILEGED_ROLES.has(session?.user?.role as string)) return null;
+  if (isPending || PRIVILEGED_ROLES.has(session?.user?.role as string)) return null;
   if (consent !== null) return null;
 
   return (

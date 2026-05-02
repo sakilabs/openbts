@@ -92,6 +92,7 @@ async function handler(_: FastifyRequest, res: ReplyPayload<JSONBody<Response>>)
     if (error instanceof ErrorResponse) throw error;
     throw new ErrorResponse("INTERNAL_SERVER_ERROR", {
       message: error instanceof Error ? error.message : "Unknown error",
+      cause: error,
     });
   }
 }

@@ -40,7 +40,7 @@ export function toLocationInfo(loc: {
 
 const TA_STEP = {
   GSM: 554, // ~554 m per step
-  UMTS: 78.125, // ~78.12 m per chip (one-way)
+  UMTS: 39.0625, // ~39.06 m per chip (one-way)
   LTE: 78.125, // ~78.12 m per step
   NR_30KHZ: 39.0625, // ~39.06 m per step (SCS 30 kHz)
 } as const;

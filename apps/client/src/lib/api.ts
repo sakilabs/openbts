@@ -43,6 +43,12 @@ export class TwoFactorRequiredError extends Error {
   }
 }
 
+export class DuplicateRequestError extends Error {
+  constructor() {
+    super("A request with this idempotency key is already being processed.");
+  }
+}
+
 type FetchOptions = RequestInit & {
   allowedErrors?: number[];
 };
@@ -50,10 +56,30 @@ type FetchOptions = RequestInit & {
 export async function fetchJson<T>(url: string, options?: FetchOptions): Promise<T> {
   const { allowedErrors, ...fetchOptions } = options ?? {};
 
-  const response = await fetch(url, { credentials: "include", ...fetchOptions });
+  if (fetchOptions.method === "POST") {
+    const headers = new Headers(fetchOptions.headers as HeadersInit | undefined);
+    if (!headers.has("x-idempotency-key")) headers.set("x-idempotency-key", crypto.randomUUID());
+    fetchOptions.headers = headers;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(url, { credentials: "include", ...fetchOptions });
+  } catch {
+    throw new BackendUnavailableError(0);
+  }
 
   if (!response.ok) {
     if (allowedErrors?.includes(response.status)) return null as unknown as T;
+
+    if (response.status === 409) {
+      try {
+        const errorData = await response.json();
+        if (errorData.errors?.[0]?.code === "DUPLICATE_REQUEST") throw new DuplicateRequestError();
+      } catch (e) {
+        if (e instanceof DuplicateRequestError) throw e;
+      }
+    }
 
     if (response.status === 429) {
       try {
@@ -99,17 +125,20 @@ export async function fetchApiData<T>(endpoint: string, options?: FetchOptions):
   return result?.data ?? (null as unknown as T);
 }
 
-export async function postApiData<T, B = unknown>(endpoint: string, body: B): Promise<T> {
+export async function postApiData<T, B = unknown>(endpoint: string, body: B, idempotencyKey?: string): Promise<T> {
   const result = await fetchJson<{ data: T }>(`${API_BASE}/${endpoint}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(idempotencyKey ? { "X-Idempotency-Key": idempotencyKey } : {}),
+    },
     body: JSON.stringify(body),
   });
   return result.data;
 }
 
 export function showApiError(error: unknown) {
-  if (error instanceof RateLimitError || error instanceof QuotaExceededError) return;
+  if (error instanceof RateLimitError || error instanceof QuotaExceededError || error instanceof DuplicateRequestError) return;
   if (error instanceof ApiResponseError) {
     for (const err of error.errors) {
       toast.error(err.message || err.code);
