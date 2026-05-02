@@ -88,7 +88,7 @@ export const CellEditRow = memo(function CellEditRow({
   };
 
   return (
-    <tr className={cn("border-b last:border-0 hover:bg-muted/20", rowClassName)}>
+    <tr className={cn("border-b last:border-0 transition-colors hover:bg-muted/50", rowClassName)}>
       <td className={cn("px-3 py-1", leftBorderClass)}>
         <Select
           value={bandValue?.toString() ?? ""}
