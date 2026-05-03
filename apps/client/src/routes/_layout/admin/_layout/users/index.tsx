@@ -122,7 +122,7 @@ function AdminUsersPage() {
   });
 
   return (
-    <div className="flex-1 flex flex-col pl-3 pt-3 gap-3 min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col pl-3 pt-3 pr-3 gap-3 min-h-0 overflow-hidden">
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex items-center gap-2">
           <div className="flex flex-col gap-1">

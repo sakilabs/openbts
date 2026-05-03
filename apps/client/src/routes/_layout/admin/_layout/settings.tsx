@@ -310,7 +310,7 @@ function AdminSettingsPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col pl-3 pt-3 gap-3 min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col pl-3 pt-3 pr-3 gap-3 min-h-0 overflow-hidden">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("settings.title")}</h1>
