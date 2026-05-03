@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -52,17 +52,18 @@ export function MySubmissions() {
 
   const submissions = useMemo<SubmissionRow[]>(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
-  const parentRef = useRef<HTMLDivElement>(null);
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
 
   const virtualizer = useVirtualizer({
     count: submissions.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => scrollEl,
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     overscan: 5,
     gap: 8,
   });
 
   const items = virtualizer.getVirtualItems();
+  const hasVirtualItems = items.length > 0;
 
   const handleScrollRef = useRef<() => void>(null!);
   handleScrollRef.current = () => {
@@ -75,16 +76,15 @@ export function MySubmissions() {
   };
 
   useEffect(() => {
-    const el = parentRef.current;
-    if (!el) return;
+    if (!scrollEl) return;
     const handler = () => handleScrollRef.current();
-    el.addEventListener("scroll", handler, { passive: true });
-    return () => el.removeEventListener("scroll", handler);
-  }, []);
+    scrollEl.addEventListener("scroll", handler, { passive: true });
+    return () => scrollEl.removeEventListener("scroll", handler);
+  }, [scrollEl]);
 
   useEffect(() => {
     handleScrollRef.current();
-  }, [submissions.length]);
+  }, [submissions.length, hasVirtualItems]);
 
   if (isLoading) {
     return (
@@ -127,7 +127,7 @@ export function MySubmissions() {
   }
 
   return (
-    <div ref={parentRef} className="flex-1 overflow-y-auto">
+    <div ref={setScrollEl} className="flex-1 overflow-y-auto">
       <div
         style={{
           height: virtualizer.getTotalSize(),
