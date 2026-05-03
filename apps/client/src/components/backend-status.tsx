@@ -13,7 +13,7 @@ export function BackendStatusProvider({ queryClient, children }: { queryClient: 
   useEffect(() => {
     const cache = queryClient.getQueryCache();
     const unsubscribe = cache.subscribe((event) => {
-      if (event.type === "updated" && event.action.type === "error" && event.action.error instanceof BackendUnavailableError) setIsUnavailable(true);
+      if (event.type === "updated" && event.action.type === "error" && event.action.error instanceof BackendUnavailableError && event.query.state.status === "error") setIsUnavailable(true);
     });
     return unsubscribe;
   }, [queryClient]);

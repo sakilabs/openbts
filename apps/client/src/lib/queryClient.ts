@@ -23,7 +23,7 @@ export const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 10,
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {
-        if (error instanceof BackendUnavailableError) return false;
+        if (error instanceof BackendUnavailableError) return failureCount < 2;
         if (error instanceof RateLimitError) return false;
         if (error instanceof QuotaExceededError) return false;
         if (error instanceof TwoFactorRequiredError) return false;
