@@ -16,7 +16,7 @@ function MySubmissionsPage() {
 
   return (
     <RequireAuth>
-      <main className="flex-1 flex flex-col min-h-0 p-6 gap-6">
+      <main className="flex-1 flex flex-col min-h-0 pl-3 pt-3 pr-3 gap-3">
         <div className="flex items-start justify-between gap-4 shrink-0">
           <div className="space-y-1">
             <h1 className="text-xl font-bold tracking-tight">{t("userPage.title")}</h1>

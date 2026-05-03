@@ -82,6 +82,10 @@ export function MySubmissions() {
     return () => el.removeEventListener("scroll", handler);
   }, []);
 
+  useEffect(() => {
+    handleScrollRef.current();
+  }, [submissions.length]);
+
   if (isLoading) {
     return (
       <div className="divide-y divide-border/50">
