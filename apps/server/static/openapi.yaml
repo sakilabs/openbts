@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-04-07
+    Last updated: 2026-05-03
   version: 1.0.1
 
 servers:
@@ -3051,9 +3051,9 @@ paths:
       tags: [PEM]
       summary: Get PEM measurement reports for a station
       description: |
-        Returns a deduplicated list of electromagnetic field (PEM) measurement reports
-        from SI2PEM for the given station. Queries the SI2PEM installations API first, falling back to WMS
-        GetFeatureInfo if no results are found. Results are cached for 24 hours with
+        Returns a list of electromagnetic field (PEM) measurement reports
+        from SI2PEM for the given station. Queries the SI2PEM installations API and WMS
+        GetFeatureInfo. Results are cached for 24 hours with
         automatic cache invalidation when a newer report is published.
         Reports are sorted by published date descending.
       parameters:
@@ -3077,6 +3077,10 @@ paths:
           required: true
           description: Operator MNC (e.g. 26002 for T-Mobile). Used to map to the SI2PEM legal entity name.
           schema: { type: integer }
+        - name: planned
+          in: query
+          required: false
+          schema: { type: number }
       responses:
         "200":
           description: OK
@@ -3249,15 +3253,31 @@ components:
   schemas:
     PemReport:
       type: object
-      required: [url, date, year, source, number, intensity, feature_id]
+      required: [station_id, source, date, type, details]
       properties:
-        url: { type: string, description: "URL to the PDF measurement report" }
-        date: { type: string, format: date, description: "Date of the measurement" }
-        year: { type: integer, description: "Year of the measurement" }
-        source: { type: string, description: "Source institution name" }
-        number: { type: string, description: "Report number" }
-        intensity: { type: number, description: "Measured field intensity" }
-        feature_id: { type: string, description: "GeoServer feature ID" }
+        station_id: { type: string }
+        source: { type: string, enum: [map, search] }
+        date: { type: string }
+        type: { type: string, enum: [planned_measurement, map_measurement, search_measurement] }
+        details:
+          oneOf:
+            - type: object
+              required: [from_date, to_date, lab_name]
+              properties:
+                from_date: { type: string }
+                to_date: { type: string }
+                lab_name: { type: string }
+            - type: object
+              required: [document_url, lab_name]
+              properties:
+                document_url: { type: string, format: uri }
+                lab_name: { type: string }
+            - type: object
+              required: [document_url, installation_document, lab_name]
+              properties:
+                document_url: { type: string, format: uri }
+                installation_document: { type: string, format: uri }
+                lab_name: { type: string }
 
     ApiError:
       type: object
