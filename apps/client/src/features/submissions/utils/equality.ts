@@ -1,4 +1,4 @@
-import type { CellPayload, ProposedCellForm, ProposedLocationForm, ProposedStationForm } from "../types";
+import type { CellPayload, ProposedCellForm, ProposedLocationForm, ProposedStationForm, StationAction } from "../types";
 
 function isMeaningfulValue(v: unknown): boolean {
   if (v === undefined || v === null) return false;
@@ -118,6 +118,7 @@ export interface FormState {
 }
 
 export interface OriginalState {
+  action?: StationAction;
   station?: ProposedStationForm | null;
   location?: ProposedLocationForm | null;
   cells?: ProposedCellForm[];
@@ -137,7 +138,8 @@ const EMPTY_LOCATION: ProposedLocationForm = {
 };
 
 export function hasFormChanges(current: FormState, original: OriginalState): boolean {
-  if (current.action === "delete") return true;
+  if (current.action !== (original.action ?? "update")) return true;
+  if (current.action === "delete") return current.submitterNote !== (original.submitterNote ?? "");
 
   if (current.mode === "new") {
     const refStation = original.station ?? EMPTY_STATION;

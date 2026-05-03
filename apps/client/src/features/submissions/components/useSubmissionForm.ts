@@ -54,6 +54,19 @@ const INITIAL_VALUES: FormValues = {
   mnoName: "",
 };
 
+function buildOriginalState(values: FormValues): OriginalState {
+  return {
+    action: values.action,
+    station: values.mode === "new" ? structuredClone(values.newStation) : undefined,
+    location: structuredClone(values.location),
+    cells: structuredClone(values.cells),
+    networksId: values.mode === "existing" ? values.networksId : null,
+    networksName: values.mode === "existing" && values.networksId !== null ? values.networksName : "",
+    mnoName: values.mode === "existing" ? values.mnoName : "",
+    submitterNote: values.submitterNote,
+  };
+}
+
 function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
   return station.cells.map((cell) => ({
     id: generateCellId(),
@@ -82,6 +95,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
   const [locationPhotoIds, setLocationPhotoIds] = useState<number[]>([]);
+  const submittedValuesRef = useRef<FormValues | null>(null);
 
   const isEditMode = !!editSubmissionId;
 
@@ -137,6 +151,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const form = useForm({
     defaultValues: INITIAL_VALUES,
     onSubmit: async ({ value }) => {
+      submittedValuesRef.current = structuredClone(value);
       const activeCells = value.cells.filter((c) => value.selectedRats.includes(c.rat));
 
       const errors = validateForm({
@@ -197,6 +212,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         }
       : createSubmission,
     onSuccess: (data) => {
+      const submittedValues = submittedValuesRef.current;
       if (photos.length > 0) {
         const submissionId = isEditMode && editSubmissionId ? editSubmissionId : data.id;
         const isPhotosOnly = !!data.pending_photos;
@@ -214,15 +230,18 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         setPhotoTakenAts([]);
       }
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
-      if (isEditMode) {
+      setLocationPhotoIds([]);
+      if (isEditMode && submittedValues) {
+        setOriginalState(buildOriginalState(submittedValues));
         void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
       } else {
         form.reset();
-        setLocationPhotoIds([]);
       }
       setShowErrors(false);
+      submittedValuesRef.current = null;
     },
     onError: (error) => {
+      submittedValuesRef.current = null;
       showApiError(error);
     },
   });
@@ -289,9 +308,9 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
             region_id: station.location.region?.id ?? null,
           };
           form.setFieldValue("location", location);
-          setOriginalState({ location, cells: structuredClone(cells), networksId, networksName, mnoName });
+          setOriginalState({ action: "update", location, cells: structuredClone(cells), networksId, networksName, mnoName });
         } else {
-          setOriginalState({ cells: structuredClone(cells), networksId, networksName, mnoName });
+          setOriginalState({ action: "update", cells: structuredClone(cells), networksId, networksName, mnoName });
         }
       } else {
         form.setFieldValue("cells", []);
@@ -528,6 +547,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
           }
 
           setOriginalState({
+            action: submission.type === "delete" ? "delete" : "update",
             location: effectiveLocation,
             cells: structuredClone(mergedCells),
             networksId: submission.proposedStation?.networks_id ?? null,
@@ -552,6 +572,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
           : INITIAL_VALUES.location;
 
         setOriginalState({
+          action: submission.type === "delete" ? "delete" : "update",
           station: submission.proposedStation
             ? {
                 station_id: submission.proposedStation.station_id ?? "",
