@@ -236,6 +236,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
       } else {
         form.reset();
+        setOriginalState({});
       }
       setShowErrors(false);
       submittedValuesRef.current = null;

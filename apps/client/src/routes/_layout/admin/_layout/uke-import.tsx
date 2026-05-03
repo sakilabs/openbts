@@ -85,7 +85,7 @@ function UkeImportPage() {
   const isRunning = status?.state === "running";
 
   return (
-    <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col pl-3 pt-3 gap-3 min-h-0 overflow-hidden">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("ukeImport.title")}</h1>
         <p className="text-muted-foreground text-sm">{t("ukeImport.subtitle")}</p>

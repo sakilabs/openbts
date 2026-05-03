@@ -172,7 +172,7 @@ function AdminCommentsPage() {
 
   return (
     <>
-      <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col pl-3 pt-3 gap-3 min-h-0 overflow-hidden">
         <div className="flex items-end gap-2">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">{t("comments.filters.labelStatus")}</label>

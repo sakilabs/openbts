@@ -250,7 +250,7 @@ function DeletedEntriesPage() {
   });
 
   return (
-    <div className="flex-1 flex flex-col p-3 gap-3 min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col m-3 gap-3 min-h-0 overflow-hidden">
       <div className="flex flex-col gap-3 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
