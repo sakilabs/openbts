@@ -107,7 +107,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         updateSavedSources();
         setLastSaved(measurement);
         onActiveMarkerClear?.();
-      } else if (e.key.toLowerCase() === "c") {
+      } else if (e.key?.toLowerCase() === "c") {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         if (!circleEnabledRef.current) return;
         (document.activeElement as HTMLElement | null)?.blur();

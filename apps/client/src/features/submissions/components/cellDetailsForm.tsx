@@ -180,7 +180,6 @@ const CellRow = memo(function CellRow({
     rat,
     cell.band_id ?? -1,
   );
-
   const handleBandValueChange = useCallback(
     (value: number | null) => {
       const opts = value ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
@@ -233,7 +232,7 @@ const CellRow = memo(function CellRow({
           </SelectTrigger>
           <SelectContent>
             {uniqueBandValues.map((value) => {
-              const name = getBandName(rat, value);
+              const name = getBandName(rat, value, duplex);
               return (
                 <SelectItem key={value} value={value.toString()}>
                   {value}

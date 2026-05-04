@@ -54,7 +54,6 @@ export const CellEditRow = memo(function CellEditRow({
     localCell.rat,
     localCell.band_id,
   );
-
   const handleBandValueChange = (value: number | null) => {
     const opts = value !== null ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
     const defaultDuplex = opts.length === 1 ? opts[0] : localCell.rat === "UMTS" && opts.includes("FDD") ? "FDD" : null;
@@ -104,7 +103,7 @@ export const CellEditRow = memo(function CellEditRow({
           </SelectTrigger>
           <SelectContent>
             {uniqueBandValues.map((v) => {
-              const name = v !== 0 ? getBandName(localCell.rat, v) : null;
+              const name = v !== 0 ? getBandName(localCell.rat, v, duplex) : null;
               return (
                 <SelectItem key={v} value={v.toString()}>
                   {v === 0 ? t("stations:cells.unknownBand") : v}
