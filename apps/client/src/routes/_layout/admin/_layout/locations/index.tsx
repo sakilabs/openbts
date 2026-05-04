@@ -84,7 +84,7 @@ function AdminLocationsPage() {
           totalLocations={totalLocations}
         />
 
-        <div className="flex-1 flex flex-col p-3 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col pl-3 pt-3 pr-3 min-h-0 overflow-hidden">
           <LocationsDataTable
             data={locations}
             isLoading={isLoading}

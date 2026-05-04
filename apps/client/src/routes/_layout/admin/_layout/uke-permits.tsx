@@ -78,7 +78,7 @@ function AdminUkePermitsPage() {
           totalStations={totalStations}
         />
 
-        <div className="flex-1 flex flex-col p-3 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col pl-3 pt-3 pr-3 min-h-0 overflow-hidden">
           <UnassignedPermitsDataTable
             data={stations}
             isLoading={isLoading || isFetching}
