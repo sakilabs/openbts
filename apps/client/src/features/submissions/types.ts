@@ -17,7 +17,7 @@ export type UMTSCellDetails = {
 };
 
 export type LTECellDetails = {
-  tac?: number;
+  tac: number;
   enbid: number;
   clid: number;
   pci?: number;

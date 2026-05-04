@@ -168,7 +168,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
     }
     case "LTE": {
       const d = details as Partial<LTECellDetails>;
-      optionalNonNegative("tac", d.tac);
+      requireNonNegative("tac", d.tac);
       requireNonNegative("enbid", d.enbid);
       requireNonNegative("clid", d.clid);
       if (d.clid !== undefined && d.clid > 255) errors.clid = "validation.clidRangeInvalid";
