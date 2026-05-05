@@ -2,9 +2,6 @@ packages:
   - "packages/*"
   - "apps/*"
 
-overrides:
-  zod: "4.4.3"
-
 allowBuilds:
   "@bufbuild/buf": true
   "@swc/core": true
