@@ -1,0 +1,1 @@
+ALTER TABLE "cells" ALTER COLUMN "is_confirmed" SET NOT NULL;

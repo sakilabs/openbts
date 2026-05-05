@@ -70,9 +70,17 @@ type AnalyzerStation = {
 };
 
 type MatchedCell =
-  | { rat: "GSM"; lac: number; cid: number }
-  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null }
-  | { rat: "LTE"; enbid: number; clid: number | null; tac: number | null; pci: number | null; earfcn: number | null }
+  | { rat: "GSM"; lac: number; cid: number; is_confirmed: boolean | undefined }
+  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  | {
+      rat: "LTE";
+      enbid: number;
+      clid: number | null;
+      tac: number | null;
+      pci: number | null;
+      earfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   | { rat: "NR" };
 
 type AnalyzerResult = {
@@ -207,7 +215,7 @@ function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): Analyzer
 }
 
 function AnalyzerPage() {
-  const { t } = useTranslation(["cellAnalyzer", "common"]);
+  const { t } = useTranslation(["cellAnalyzer", "common", "stations"]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
@@ -424,24 +432,41 @@ function AnalyzerPage() {
           );
         },
       }),
-      columnHelper.accessor((r) => r.parsedRow, {
+      columnHelper.accessor((r) => r, {
         id: "band",
         header: t("common:labels.band"),
         size: 90,
         cell: ({ getValue }) => {
-          const row = getValue();
+          const { parsedRow: row, result } = getValue();
           let band: number | null = null;
           if (row.rat === "LTE" && row.earfcn !== undefined) band = getBandFromEarfcn(row.earfcn);
           else if (row.rat === "UMTS" && row.uarfcn !== undefined) band = getBandFromUarfcn(row.uarfcn);
-          if (band === null) return <span className="text-muted-foreground text-xs">-</span>;
-          const mhz = getBandMhz(band);
+          const isNotConfirmed = !!(result?.cell && result.cell.rat !== "NR" && !result.cell.is_confirmed);
+          if (band === null && !isNotConfirmed) return <span className="text-muted-foreground text-xs">-</span>;
+          const mhz = band !== null ? getBandMhz(band) : null;
           return (
-            <span className="text-xs font-mono">
-              {mhz && <span className="font-semibold">{mhz}</span>}
-              <span className="opacity-75">
-                {mhz ? " " : ""}(B{band})
-              </span>
-            </span>
+            <div className="flex items-center gap-1">
+              {band !== null && (
+                <span className="text-xs font-mono">
+                  {mhz && <span className="font-semibold">{mhz}</span>}
+                  <span className="opacity-75">
+                    {mhz ? " " : ""}(B{band})
+                  </span>
+                </span>
+              )}
+              {isNotConfirmed && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <span className="inline-flex items-center justify-center size-5 rounded-md bg-destructive/10 text-destructive cursor-help">
+                      <HugeiconsIcon icon={AlertCircleIcon} className="size-3.5" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t("stations:cells.cellNotConfirmed")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
           );
         },
       }),

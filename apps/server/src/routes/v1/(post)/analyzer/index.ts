@@ -53,8 +53,15 @@ const cellInputSchema = z.union([
 ]);
 
 const matchedCellSchema = z.union([
-  z.object({ rat: z.literal("GSM"), lac: z.number(), cid: z.number() }),
-  z.object({ rat: z.literal("UMTS"), rnc: z.number(), cid: z.number(), lac: z.number().nullable(), arfcn: z.number().nullable() }),
+  z.object({ rat: z.literal("GSM"), lac: z.number(), cid: z.number(), is_confirmed: z.boolean().nullable() }),
+  z.object({
+    rat: z.literal("UMTS"),
+    rnc: z.number(),
+    cid: z.number(),
+    lac: z.number().nullable(),
+    arfcn: z.number().nullable(),
+    is_confirmed: z.boolean(),
+  }),
   z.object({
     rat: z.literal("LTE"),
     enbid: z.number(),
@@ -62,6 +69,7 @@ const matchedCellSchema = z.union([
     tac: z.number().nullable(),
     pci: z.number().nullable(),
     earfcn: z.number().nullable(),
+    is_confirmed: z.boolean(),
   }),
   z.object({ rat: z.literal("NR") }),
 ]);
@@ -93,14 +101,28 @@ const STATION_COLS = { operator_id: false, location_id: false } as const;
 const CELL_COLS = { band_id: false, station_id: false } as const;
 
 async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promise<LookupMaps<AnalyzerStation>> {
-  const gsmMap = new Map<string, { station: AnalyzerStation; lac: number; cid: number }>();
-  const umtsRncMap = new Map<string, { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>();
-  const umtsLacMap = new Map<string, { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>();
+  const gsmMap = new Map<string, { station: AnalyzerStation; lac: number; cid: number; is_confirmed: boolean | undefined }>();
+  const umtsRncMap = new Map<
+    string,
+    { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  >();
+  const umtsLacMap = new Map<
+    string,
+    { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  >();
   const lteMap = new Map<
     string,
-    { station: AnalyzerStation; enbid: number; clid: number; tac: number | null; pci: number | null; earfcn: number | null }
+    {
+      station: AnalyzerStation;
+      enbid: number;
+      clid: number;
+      tac: number | null;
+      pci: number | null;
+      earfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   >();
-  const lteEnbidMap = new Map<string, { station: AnalyzerStation; enbid: number }>();
+  const lteEnbidMap = new Map<string, { station: AnalyzerStation; enbid: number; is_confirmed: boolean | undefined }>();
 
   const promises: Promise<void>[] = [];
 
@@ -116,7 +138,12 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
           })
           .then((rows) => {
             for (const row of rows)
-              gsmMap.set(pairKey(mnc, row.lac, row.cid), { station: row.cell.station as unknown as AnalyzerStation, lac: row.lac, cid: row.cid });
+              gsmMap.set(pairKey(mnc, row.lac, row.cid), {
+                station: row.cell.station as unknown as AnalyzerStation,
+                lac: row.lac,
+                cid: row.cid,
+                is_confirmed: row.cell.is_confirmed,
+              });
           }),
       );
     }
@@ -140,6 +167,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
                 cid: row.cid,
                 lac: row.lac ?? null,
                 arfcn: row.arfcn ?? null,
+                is_confirmed: row.cell.is_confirmed ?? null,
               });
           }),
       );
@@ -165,6 +193,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
                   cid: row.cid,
                   lac: row.lac,
                   arfcn: row.arfcn ?? null,
+                  is_confirmed: row.cell.is_confirmed ?? null,
                 });
             }
           }),
@@ -191,6 +220,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
                 tac: row.tac ?? null,
                 pci: row.pci ?? null,
                 earfcn: row.earfcn ?? null,
+                is_confirmed: row.cell.is_confirmed ?? null,
               });
           }),
       );
@@ -210,7 +240,12 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
           .then((rows) => {
             for (const row of rows) {
               const key = `${mnc}:${row.enbid}`;
-              if (!lteEnbidMap.has(key)) lteEnbidMap.set(key, { station: row.cell.station as unknown as AnalyzerStation, enbid: row.enbid });
+              if (!lteEnbidMap.has(key))
+                lteEnbidMap.set(key, {
+                  station: row.cell.station as unknown as AnalyzerStation,
+                  enbid: row.enbid,
+                  is_confirmed: row.cell.is_confirmed,
+                });
             }
           }),
       );

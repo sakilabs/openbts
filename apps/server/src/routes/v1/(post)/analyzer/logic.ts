@@ -7,9 +7,17 @@ export type CellInput =
   | { rat: "NR"; mnc: number };
 
 export type MatchedCell =
-  | { rat: "GSM"; lac: number; cid: number }
-  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null }
-  | { rat: "LTE"; enbid: number; clid: number | null; tac: number | null; pci: number | null; earfcn: number | null }
+  | { rat: "GSM"; lac: number; cid: number; is_confirmed: boolean | undefined }
+  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  | {
+      rat: "LTE";
+      enbid: number;
+      clid: number | null;
+      tac: number | null;
+      pci: number | null;
+      earfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   | { rat: "NR" };
 
 export type AnalyzerResult<TStation = unknown> = {
@@ -23,11 +31,28 @@ type Pair = [a: number, b: number];
 type PairMap = Map<number, Map<string, Pair>>;
 
 export type LookupMaps<TStation> = {
-  gsmMap: Map<string, { station: TStation; lac: number; cid: number }>;
-  umtsRncMap: Map<string, { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>;
-  umtsLacMap: Map<string, { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null }>;
-  lteMap: Map<string, { station: TStation; enbid: number; clid: number; tac: number | null; pci: number | null; earfcn: number | null }>;
-  lteEnbidMap: Map<string, { station: TStation; enbid: number }>;
+  gsmMap: Map<string, { station: TStation; lac: number; cid: number; is_confirmed: boolean | undefined }>;
+  umtsRncMap: Map<
+    string,
+    { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  >;
+  umtsLacMap: Map<
+    string,
+    { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  >;
+  lteMap: Map<
+    string,
+    {
+      station: TStation;
+      enbid: number;
+      clid: number;
+      tac: number | null;
+      pci: number | null;
+      earfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
+  >;
+  lteEnbidMap: Map<string, { station: TStation; enbid: number; is_confirmed: boolean | undefined }>;
 };
 
 export type CellGroups = {
@@ -94,7 +119,12 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
     case "GSM": {
       const entry = maps.gsmMap.get(pairKey(cell.mnc, cell.lac, cell.cid));
       if (!entry) return NOT_FOUND;
-      return { status: "found", station: entry.station, cell: { rat: "GSM", lac: entry.lac, cid: entry.cid }, warnings: [] };
+      return {
+        status: "found",
+        station: entry.station,
+        cell: { rat: "GSM", lac: entry.lac, cid: entry.cid, is_confirmed: entry.is_confirmed },
+        warnings: [],
+      };
     }
 
     case "UMTS": {
@@ -106,7 +136,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
         return {
           status: "found",
           station: primary.station,
-          cell: { rat: "UMTS", rnc: primary.rnc, cid: primary.cid, lac: primary.lac, arfcn: primary.arfcn },
+          cell: { rat: "UMTS", rnc: primary.rnc, cid: primary.cid, lac: primary.lac, arfcn: primary.arfcn, is_confirmed: primary.is_confirmed },
           warnings,
         };
       }
@@ -115,7 +145,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "probable",
         station: fallback.station,
-        cell: { rat: "UMTS", rnc: fallback.rnc, cid: fallback.cid, lac: fallback.lac, arfcn: fallback.arfcn },
+        cell: { rat: "UMTS", rnc: fallback.rnc, cid: fallback.cid, lac: fallback.lac, arfcn: fallback.arfcn, is_confirmed: fallback.is_confirmed },
         warnings: ["rnc_mismatch"],
       };
     }
@@ -131,7 +161,15 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
         return {
           status: "found",
           station: primary.station,
-          cell: { rat: "LTE", enbid: primary.enbid, clid: primary.clid, tac: primary.tac, pci: primary.pci, earfcn: primary.earfcn },
+          cell: {
+            rat: "LTE",
+            enbid: primary.enbid,
+            clid: primary.clid,
+            tac: primary.tac,
+            pci: primary.pci,
+            earfcn: primary.earfcn,
+            is_confirmed: primary.is_confirmed,
+          },
           warnings,
         };
       }
@@ -140,7 +178,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "probable",
         station: fallback.station,
-        cell: { rat: "LTE", enbid: fallback.enbid, clid: null, tac: null, pci: null, earfcn: null },
+        cell: { rat: "LTE", enbid: fallback.enbid, clid: null, tac: null, pci: null, earfcn: null, is_confirmed: fallback.is_confirmed },
         warnings: ["enbid_only"],
       };
     }

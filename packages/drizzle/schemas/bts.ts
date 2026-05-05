@@ -278,7 +278,7 @@ export const cells = pgTable(
       .notNull(),
     rat: ratEnum("rat").notNull(),
     notes: text("notes"),
-    is_confirmed: boolean("is_confirmed").default(false),
+    is_confirmed: boolean("is_confirmed").default(false).notNull(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
