@@ -1,6 +1,10 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Root } from "protobufjs";
+import protobuf, { Root } from "protobufjs";
+
+import { registerStructWrappers } from "./structWrapper.js";
+
+registerStructWrappers(protobuf as unknown as Parameters<typeof registerStructWrappers>[0]);
 
 const protoDirectory = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "proto");
 const protoRoot = new Root();

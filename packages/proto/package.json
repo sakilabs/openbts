@@ -7,6 +7,10 @@
       "types": "./src/server.ts",
       "default": "./dist/src/server.js"
     },
+    "./structWrapper": {
+      "types": "./src/structWrapper.ts",
+      "default": "./dist/src/structWrapper.js"
+    },
     "./gen/*": "./src/gen/*.json"
   },
   "scripts": {

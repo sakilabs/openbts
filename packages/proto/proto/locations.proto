@@ -14,7 +14,7 @@ message LocationStation {
   bool is_confirmed = 7;
   StationStatus status = 8;
   Operator operator = 9;
-  repeated openbts.stations.CellWithoutBand cells = 10;
+  repeated openbts.stations.CellWithoutDetails cells = 10;
   openbts.stations.ExtraIdentificators extra_identificators = 11;
 }
 

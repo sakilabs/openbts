@@ -43,6 +43,9 @@ message Permit {
   Operator operator = 8;
   Band band = 9;
   repeated Sector sectors = 10;
+
+  string updatedAt = 11;
+  string createdAt = 12;
 }
 
 message UKELocation {

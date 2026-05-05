@@ -1,6 +1,7 @@
 syntax = "proto3";
 import "common.proto";
 import "locations.proto";
+import "google/protobuf/struct.proto";
 package openbts.stations;
 
 message StationCell {
@@ -9,61 +10,16 @@ message StationCell {
   string notes = 3;
   Band band = 4;
   bool is_confirmed = 5;
+  google.protobuf.Struct details = 8;
 
   string updatedAt = 6;
   string createdAt = 7;
-}
-
-message GSMRat {
-  int32 lac = 1;
-  int32 cid = 2;
-  bool e_gsm = 3;
-
-  string updatedAt = 4;
-  string createdAt = 5;
-}
-
-message UMTSRat {
-  int32 lac = 1;
-  int32 cid = 2;
-  int32 rnc = 3;
-  int32 cid_long = 4;
-  int32 arfcn = 5;
-
-  string updatedAt = 6;
-  string createdAt = 7;
-}
-
-message LTERat {
-  int32 tac = 1;
-  int32 enbid = 2;
-  int32 clid = 3;
-  int32 ecid = 4;
-  int32 pci = 5;
-  int32 earfcn = 6;
-  bool supports_iot = 7;
-
-  string updatedAt = 8;
-  string createdAt = 9;
 }
 
 enum NRType {
-  nsa = 0;
-  sa = 1;
-}
-
-message NRRat {
-  NRType type = 1;
-  int32 nrtac = 2;
-  int32 clid = 3;
-  int32 gnbid = 4;
-  int32 gnbid_length = 5;
-  int64 nci = 6;
-  int32 arfcn = 7;
-  bool supports_nr_redcap = 8;
-
-  string updatedAt = 9;
-  string createdAt = 10;
+  unknown = 0;
+  nsa = 1;
+  sa = 2;
 }
 
 message Cell {
@@ -73,18 +29,13 @@ message Cell {
   string notes = 4;
   Band band = 5;
   bool is_confirmed = 6;
-  oneof details {
-    GSMRat gsm = 7;
-    UMTSRat umts = 8;
-    LTERat lte = 9;
-    NRType nr = 10;
-  }
+  google.protobuf.Struct details = 7;
 
-  string updatedAt = 11;
-  string createdAt = 12;
+  string updatedAt = 8;
+  string createdAt = 9;
 }
 
-message CellWithoutBand {
+message CellWithoutDetails {
   int32 id = 1;
   int32 station_id = 2;
   Rat rat = 3;
@@ -92,8 +43,8 @@ message CellWithoutBand {
   Band band = 5;
   bool is_confirmed = 6;
 
-  string updatedAt = 7;
-  string createdAt = 8;
+  string updatedAt = 8;
+  string createdAt = 9;
 }
 
 message ExtraIdentificators {
