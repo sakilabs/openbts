@@ -1,0 +1,7 @@
+version: v2
+plugins:
+  - local: node_modules/.bin/protoc-gen-es.CMD
+    out: src/gen
+    opt:
+      - target=ts
+      - import_extension=js

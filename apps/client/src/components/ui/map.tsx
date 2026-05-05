@@ -17,7 +17,7 @@ import {
   type StyleSpecification,
   setWorkerUrl,
 } from "maplibre-gl";
-import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import {
   type ReactNode,
   createContext,

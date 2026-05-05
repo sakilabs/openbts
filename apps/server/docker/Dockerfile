@@ -60,7 +60,6 @@ COPY --from=builder /app/packages/uke-importer/dist ./packages/uke-importer/dist
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/proto/dist ./packages/proto/dist
 COPY --from=builder /app/packages/proto/src/gen ./packages/proto/src/gen
-COPY --from=builder /app/packages/proto/proto ./packages/proto/proto
 COPY --from=builder /app/packages/uke-importer/poland.voivodeships.max.json ./packages/uke-importer/
 COPY --from=builder /app/apps/server/dist ./apps/server/dist
 COPY apps/server/static ./static

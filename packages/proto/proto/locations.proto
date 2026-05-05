@@ -1,7 +1,6 @@
 syntax = "proto3";
-import "google/protobuf/timestamp.proto";
 import "common.proto";
-import "stations.proto";
+import "station_cells.proto";
 package openbts.locations;
 
 message LocationStation {

@@ -2,7 +2,8 @@ packages:
   - "packages/*"
   - "apps/*"
 allowBuilds:
-  '@swc/core': true
+  "@bufbuild/buf": true
+  "@swc/core": true
   bufferutil: true
   core-js: true
   esbuild: true

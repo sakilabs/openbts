@@ -482,14 +482,7 @@
             "Value": {
               "oneofs": {
                 "kind": {
-                  "oneof": [
-                    "nullValue",
-                    "numberValue",
-                    "stringValue",
-                    "boolValue",
-                    "structValue",
-                    "listValue"
-                  ]
+                  "oneof": ["nullValue", "numberValue", "stringValue", "boolValue", "structValue", "listValue"]
                 }
               },
               "fields": {

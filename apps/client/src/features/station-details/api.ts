@@ -1,18 +1,11 @@
-import { registerStructWrappers } from "@openbts/proto/structWrapper";
-import StationDescription from "@openbts/proto/gen/stations";
-import UKEDescriptor from "@openbts/proto/gen/uke";
-import protobuf, { Root } from "protobufjs/light";
-
-registerStructWrappers(protobuf as unknown as Parameters<typeof registerStructWrappers>[0]);
+import { StationResponseSchema } from "@openbts/proto/gen/stations_pb";
+import { PermitsResponseSchema as UKEPermitsResponseSchema } from "@openbts/proto/gen/uke_pb";
 
 import { API_BASE, fetchApiData, fetchJson } from "@/lib/api";
 import type { Station, UkePermit } from "@/types/station";
 
-const StationResponseProto = Root.fromJSON(StationDescription).lookupType("openbts.stations.StationResponse");
-const UKEPermitsResponseProto = Root.fromJSON(UKEDescriptor).lookupType("openbts.uke.PermitsResponse");
-
-export const fetchStation = (id: number) => fetchApiData<Station>(`stations/${id}`, { proto: StationResponseProto });
-export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`, { proto: UKEPermitsResponseProto });
+export const fetchStation = (id: number) => fetchApiData<Station>(`stations/${id}`, { proto: StationResponseSchema });
+export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`, { proto: UKEPermitsResponseSchema });
 
 type PemReportDetails =
   | {

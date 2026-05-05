@@ -1,4 +1,5 @@
 import type { ApiKey } from "@better-auth/api-key";
+import type { DescMessage } from "@bufbuild/protobuf";
 import type {
   FastifyBaseLogger,
   FastifyInstance,
@@ -9,12 +10,11 @@ import type {
   RouteGenericInterface,
 } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
-import type { Type as ProtoType } from "protobufjs";
 
 import type { auth } from "../plugins/betterauth.plugin.js";
 import type { TokenTier } from "./auth.interface.js";
 
-export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
+export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>> & { user: { role: string } };
 export type ApiToken = Omit<
   ApiKey,
   "key" | "refillInterval" | "refillAmount" | "lastRefillAt" | "rateLimitEnabled" | "requestCount" | "remaining"
@@ -46,7 +46,7 @@ declare module "fastify" {
     permissions?: string[];
     allowLoggedIn?: boolean;
     allowGuestAccess?: boolean;
-    proto?: ProtoType;
+    proto?: DescMessage;
   }
 }
 

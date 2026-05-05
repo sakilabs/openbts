@@ -12,7 +12,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
-const stationsSchema = createSelectSchema(stations).omit({ status: true, location_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const operatorSchema = createSelectSchema(operators);
 const stationResponseSchema = stationsSchema.extend({
   operator: operatorSchema.nullable(),

@@ -11,7 +11,7 @@ function SignOutPage() {
   const router = useRouter();
 
   useEffect(() => {
-    authClient.signOut({
+    void authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
           window.location.href = "/";

@@ -1,5 +1,6 @@
 syntax = "proto3";
 import "common.proto";
+import "station_cells.proto";
 import "locations.proto";
 import "google/protobuf/struct.proto";
 package openbts.stations;
@@ -33,28 +34,6 @@ message Cell {
 
   string updatedAt = 8;
   string createdAt = 9;
-}
-
-message CellWithoutDetails {
-  int32 id = 1;
-  int32 station_id = 2;
-  Rat rat = 3;
-  string notes = 4;
-  Band band = 5;
-  bool is_confirmed = 6;
-
-  string updatedAt = 8;
-  string createdAt = 9;
-}
-
-message ExtraIdentificators {
-  int32 id = 1;
-  int32 networks_id = 2;
-  string networks_name = 3;
-  string mno_name = 4;
-
-  string updatedAt = 5;
-  string createdAt = 6;
 }
 
 message Station {

@@ -7,22 +7,22 @@
       "types": "./src/server.ts",
       "default": "./dist/src/server.js"
     },
-    "./structWrapper": {
-      "types": "./src/structWrapper.ts",
-      "default": "./dist/src/structWrapper.js"
-    },
-    "./gen/*": "./src/gen/*.json"
+    "./gen/*": {
+      "types": "./src/gen/*.ts",
+      "default": "./src/gen/*.js"
+    }
   },
   "scripts": {
-    "build": "tsgo && pbjs --keep-case -t json proto/locations.proto -o src/gen/locations.json && pbjs --keep-case -t json proto/stations.proto -o src/gen/stations.json && pbjs --keep-case -t json proto/uke.proto -o src/gen/uke.json"
+    "build": "tsgo"
   },
   "dependencies": {
-    "protobufjs": "8.0.3"
+    "@bufbuild/protobuf": "2.12.0"
   },
   "devDependencies": {
+    "@bufbuild/buf": "1.69.0",
+    "@bufbuild/protoc-gen-es": "2.12.0",
     "@openbts/typescript-configs": "workspace:*",
-    "@types/node": "22.19.17",
-    "protobufjs-cli": "2.0.3"
+    "@types/node": "22.19.17"
   },
   "packageManager": "pnpm@11.0.3"
 }
