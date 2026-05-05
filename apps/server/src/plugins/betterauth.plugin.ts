@@ -3,7 +3,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { passkey } from "@better-auth/passkey";
 import { hash, verify } from "@node-rs/argon2";
 import * as schema from "@openbts/drizzle";
-import { type BetterAuthPlugin, type GenericEndpointContext, betterAuth } from "better-auth";
+import { type GenericEndpointContext, betterAuth } from "better-auth";
 import { fromNodeHeaders } from "better-auth/node";
 import { admin, multiSession, twoFactor, username } from "better-auth/plugins";
 import type { FastifyRequest } from "fastify";
@@ -188,13 +188,13 @@ export const auth = betterAuth({
             bands: ["read"],
             uke_permits: ["read"],
             uke_radiolines: ["read"],
-          };
+          } as const;
         },
       },
       rateLimit: {
         enabled: false,
       },
-    }) as unknown as BetterAuthPlugin,
+    }),
     multiSession(),
     username({
       minUsernameLength: 3,
@@ -251,11 +251,8 @@ export function getCurrentUser(req: FastifyRequest) {
   return auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
 }
 
-export function verifyApiKey(apiKey: string, requiredPermissions?: Record<string, string[]>) {
+export function verifyApiKey(key: string, requiredPermissions?: Record<string, string[]>) {
   return auth.api.verifyApiKey({
-    body: {
-      key: apiKey,
-      permissions: requiredPermissions,
-    },
+    body: { key, permissions: requiredPermissions },
   });
 }

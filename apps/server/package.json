@@ -26,7 +26,7 @@
     "@openbts/proto": "workspace:*",
     "@openbts/shared": "workspace:*",
     "@openbts/uke-importer": "workspace:*",
-    "@scalar/fastify-api-reference": "1.55.0",
+    "@scalar/fastify-api-reference": "1.55.1",
     "better-auth": "1.6.9",
     "debug": "4.4.3",
     "dotenv": "17.4.2",
@@ -38,14 +38,14 @@
     "figlet": "1.11.0",
     "file-type": "22.0.1",
     "libheif-js": "1.19.8",
-    "nanoid": "5.1.9",
+    "nanoid": "5.1.11",
     "postgres": "3.4.9",
     "protobufjs": "^8.0.3",
     "redis": "5.12.1",
     "resend": "6.12.2",
     "sharp": "0.34.5",
     "web-push": "3.6.7",
-    "zod": "4.4.1"
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@openbts/typescript-configs": "workspace:*",
