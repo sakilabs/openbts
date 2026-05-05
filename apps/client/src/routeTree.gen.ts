@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShareTargetRouteImport } from './routes/share-target'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as LayoutTosRouteImport } from './routes/_layout/tos'
 import { Route as LayoutSubmissionRouteImport } from './routes/_layout/submission'
 import { Route as LayoutStatisticsRouteImport } from './routes/_layout/statistics'
 import { Route as LayoutStationsRouteImport } from './routes/_layout/stations'
@@ -61,11 +60,6 @@ const LayoutRoute = LayoutRouteImport.update({
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutTosRoute = LayoutTosRouteImport.update({
-  id: '/tos',
-  path: '/tos',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSubmissionRoute = LayoutSubmissionRouteImport.update({
@@ -275,7 +269,6 @@ export interface FileRoutesByFullPath {
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
-  '/tos': typeof LayoutTosRoute
   '/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
   '/account/sign-out': typeof LayoutAccountSignOutRoute
@@ -313,7 +306,6 @@ export interface FileRoutesByTo {
   '/stations': typeof LayoutStationsRoute
   '/statistics': typeof LayoutStatisticsRoute
   '/submission': typeof LayoutSubmissionRoute
-  '/tos': typeof LayoutTosRoute
   '/': typeof LayoutIndexRoute
   '/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/account/settings': typeof LayoutAccountSettingsRoute
@@ -354,7 +346,6 @@ export interface FileRoutesById {
   '/_layout/stations': typeof LayoutStationsRoute
   '/_layout/statistics': typeof LayoutStatisticsRoute
   '/_layout/submission': typeof LayoutSubmissionRoute
-  '/_layout/tos': typeof LayoutTosRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/account/reset-password': typeof LayoutAccountResetPasswordRoute
   '/_layout/account/settings': typeof LayoutAccountSettingsRoute
@@ -397,7 +388,6 @@ export interface FileRouteTypes {
     | '/stations'
     | '/statistics'
     | '/submission'
-    | '/tos'
     | '/account/reset-password'
     | '/account/settings'
     | '/account/sign-out'
@@ -435,7 +425,6 @@ export interface FileRouteTypes {
     | '/stations'
     | '/statistics'
     | '/submission'
-    | '/tos'
     | '/'
     | '/account/reset-password'
     | '/account/settings'
@@ -475,7 +464,6 @@ export interface FileRouteTypes {
     | '/_layout/stations'
     | '/_layout/statistics'
     | '/_layout/submission'
-    | '/_layout/tos'
     | '/_layout/'
     | '/_layout/account/reset-password'
     | '/_layout/account/settings'
@@ -528,13 +516,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof LayoutIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/tos': {
-      id: '/_layout/tos'
-      path: '/tos'
-      fullPath: '/tos'
-      preLoaderRoute: typeof LayoutTosRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/submission': {
@@ -852,7 +833,6 @@ interface LayoutRouteChildren {
   LayoutStationsRoute: typeof LayoutStationsRoute
   LayoutStatisticsRoute: typeof LayoutStatisticsRoute
   LayoutSubmissionRoute: typeof LayoutSubmissionRoute
-  LayoutTosRoute: typeof LayoutTosRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutAccountResetPasswordRoute: typeof LayoutAccountResetPasswordRoute
   LayoutAccountSettingsRoute: typeof LayoutAccountSettingsRoute
@@ -875,7 +855,6 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutStationsRoute: LayoutStationsRoute,
   LayoutStatisticsRoute: LayoutStatisticsRoute,
   LayoutSubmissionRoute: LayoutSubmissionRoute,
-  LayoutTosRoute: LayoutTosRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutAccountResetPasswordRoute: LayoutAccountResetPasswordRoute,
   LayoutAccountSettingsRoute: LayoutAccountSettingsRoute,

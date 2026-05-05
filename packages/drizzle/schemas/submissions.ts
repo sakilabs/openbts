@@ -68,7 +68,7 @@ export const proposedCells = SubmissionsSchema.table(
     band_id: integer("band_id").references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" }),
     rat: ratEnum("rat"),
     notes: text("notes"),
-    is_confirmed: boolean("is_confirmed").default(false),
+    is_confirmed: boolean("is_confirmed").default(false).notNull(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
