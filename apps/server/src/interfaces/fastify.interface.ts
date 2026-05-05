@@ -14,7 +14,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import type { auth } from "../plugins/betterauth.plugin.js";
 import type { TokenTier } from "./auth.interface.js";
 
-export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>> & { user: { role: string } };
+export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 export type ApiToken = Omit<
   ApiKey,
   "key" | "refillInterval" | "refillAmount" | "lastRefillAt" | "rateLimitEnabled" | "requestCount" | "remaining"
