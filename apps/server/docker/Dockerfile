@@ -30,15 +30,13 @@ RUN pnpm --filter @openbts/drizzle build && \
     pnpm --filter @openbts/proto build && \
     pnpm --filter @openbts/sora build
 
-FROM oven/bun:alpine
+FROM node:22-alpine AS production-deps
 
 ENV NODE_ENV=production
 
-RUN wget -qO- https://get.pnpm.io/install.sh | env PNPM_VERSION=11.0.3 ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
-ENV PATH="/root/.local/share/pnpm:$PATH"
-RUN pnpm config set manage-package-manager-versions false
-
 WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@11.0.3 --activate
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/packages/drizzle/package.json ./packages/drizzle/
@@ -46,6 +44,16 @@ COPY --from=builder /app/packages/proto/package.json ./packages/proto/
 COPY --from=builder /app/packages/uke-importer/package.json ./packages/uke-importer/
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder /app/apps/server/package.json ./apps/server/
+
+RUN pnpm install --frozen-lockfile --prod
+
+FROM oven/bun:alpine
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY --from=production-deps /app ./
 COPY --from=builder /app/packages/drizzle/dist ./packages/drizzle/dist
 COPY --from=builder /app/packages/drizzle/migrations ./packages/drizzle/migrations
 COPY --from=builder /app/packages/uke-importer/dist ./packages/uke-importer/dist
@@ -58,8 +66,7 @@ COPY apps/server/static ./static
 COPY apps/server/docker/docker-entrypoint.sh ./
 COPY apps/server/docker/docker-migrate.sh ./
 
-RUN pnpm install --frozen-lockfile --prod && \
-    chmod +x docker-entrypoint.sh docker-migrate.sh
+RUN chmod +x docker-entrypoint.sh docker-migrate.sh
 
 EXPOSE 3030
 CMD ["./docker-entrypoint.sh"]
