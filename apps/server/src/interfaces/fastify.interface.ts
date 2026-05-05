@@ -8,6 +8,7 @@ import type {
   RouteGenericInterface,
 } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import type { Type as ProtoType } from "protobufjs";
 
 import type { auth } from "../plugins/betterauth.plugin.js";
 import type { TokenTier } from "./auth.interface.js";
@@ -44,6 +45,8 @@ declare module "fastify" {
   export interface FastifyContextConfig {
     permissions?: string[];
     allowLoggedIn?: boolean;
+    allowGuestAccess?: boolean;
+    proto?: ProtoType;
   }
 }
 

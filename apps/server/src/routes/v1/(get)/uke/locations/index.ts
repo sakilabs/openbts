@@ -1,4 +1,5 @@
 import { bands, operators, regions, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { ukeLocationsResponseType } from "@openbts/proto/server";
 import { type SQL, and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -344,7 +345,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 const getUkeLocations: Route<ReqQuery, ResponseBody> = {
   url: "/uke/locations",
   method: "GET",
-  config: { permissions: ["read:uke_permits"], allowGuestAccess: true },
+  config: { permissions: ["read:uke_permits"], allowGuestAccess: true, proto: ukeLocationsResponseType },
   schema: schemaRoute,
   handler,
 };

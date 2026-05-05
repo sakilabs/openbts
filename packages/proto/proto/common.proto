@@ -1,0 +1,51 @@
+syntax = "proto3";
+package openbts;
+
+
+enum StationStatus {
+  published = 0;
+  inactive = 1;
+  pending = 2;
+}
+
+message Operator {
+  int32 id = 1;
+  string name = 2;
+  string full_name = 3;
+  int32 parent_id = 4;
+  int32 mnc = 5;
+}
+
+message Region {
+  int32 id = 1;
+  string name = 2;
+  string code = 3;
+}
+
+enum Rat {
+  GSM = 0;
+  CDMA = 1;
+  UMTS = 2;
+  LTE = 3;
+  NR = 4;
+  IOT = 5;
+}
+
+enum Duplex {
+  FDD = 0;
+  TDD = 1;
+}
+
+enum BandVariant {
+  commercial = 0;
+  railway = 1;
+}
+
+message Band {
+  int32 id = 1;
+  int32 value = 2;
+  Rat rat = 3;
+  string name = 4;
+  Duplex duplex = 5;
+  BandVariant variant = 6;
+}

@@ -1,4 +1,5 @@
 import { bands, cells, extraIdentificators, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
+import { StationsResponseType } from "@openbts/proto/server";
 import { and, count, eq, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -253,7 +254,7 @@ const getStations: Route<ReqQuery, ResponseBody> = {
   url: "/stations",
   method: "GET",
   schema: schemaRoute,
-  config: { permissions: ["read:stations"], allowGuestAccess: true },
+  config: { permissions: ["read:stations"], allowGuestAccess: true, proto: StationsResponseType },
   handler,
 };
 

@@ -1,3 +1,4 @@
+import type { Type as ProtoType } from "protobufjs";
 import { toast } from "sonner";
 
 export const API_BASE = import.meta.env.VITE_API_URL || "https://openbts.sakilabs.com/api/v1";
@@ -51,6 +52,7 @@ export class DuplicateRequestError extends Error {
 
 type FetchOptions = RequestInit & {
   allowedErrors?: number[];
+  proto?: ProtoType;
 };
 
 export async function fetchJson<T>(url: string, options?: FetchOptions): Promise<T> {
@@ -59,6 +61,12 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
   if (fetchOptions.method === "POST") {
     const headers = new Headers(fetchOptions.headers as HeadersInit | undefined);
     if (!headers.has("x-idempotency-key")) headers.set("x-idempotency-key", crypto.randomUUID());
+    fetchOptions.headers = headers;
+  }
+
+  if (options?.proto) {
+    const headers = new Headers(fetchOptions.headers as HeadersInit | undefined);
+    headers.set("accept", "application/x-protobuf");
     fetchOptions.headers = headers;
   }
 
@@ -114,6 +122,11 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
     }
 
     throw new Error(`Request failed: ${response.status}`);
+  }
+
+  if (options?.proto && response.headers.get("content-type") === "application/x-protobuf") {
+    const buffer = await response.arrayBuffer();
+    return options.proto.decode(new Uint8Array(buffer)).toJSON() as T;
   }
 
   if (response.status === 204) return undefined as unknown as T;

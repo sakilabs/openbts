@@ -1,6 +1,16 @@
 packages:
   - "packages/*"
   - "apps/*"
+allowBuilds:
+  '@swc/core': true
+  bufferutil: true
+  core-js: true
+  esbuild: true
+  exifreader: true
+  msw: true
+  protobufjs: true
+  sharp: true
+  zlib-sync: true
 
 settings:
   minimumReleaseAge: 1440

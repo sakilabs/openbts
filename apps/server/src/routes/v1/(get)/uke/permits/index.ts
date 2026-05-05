@@ -1,4 +1,5 @@
 import { bands, operators, regions, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { ukePermitsResponseType } from "@openbts/proto/server";
 import { type SQL, and, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -203,7 +204,7 @@ const getUkePermits: Route<ReqQuery, Permit[]> = {
   url: "/uke/permits",
   method: "GET",
   schema: schemaRoute,
-  config: { permissions: ["read:uke_permits"], allowGuestAccess: true },
+  config: { permissions: ["read:uke_permits"], allowGuestAccess: true, proto: ukePermitsResponseType },
   handler,
 };
 

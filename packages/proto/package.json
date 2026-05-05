@@ -1,0 +1,24 @@
+{
+  "name": "@openbts/proto",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./server": {
+      "types": "./src/server.ts",
+      "default": "./dist/src/server.js"
+    },
+    "./gen/*": "./src/gen/*.json"
+  },
+  "scripts": {
+    "build": "tsgo && pbjs --keep-case -t json proto/locations.proto -o src/gen/locations.json && pbjs --keep-case -t json proto/stations.proto -o src/gen/stations.json && pbjs --keep-case -t json proto/uke.proto -o src/gen/uke.json"
+  },
+  "dependencies": {
+    "protobufjs": "8.0.3"
+  },
+  "devDependencies": {
+    "@openbts/typescript-configs": "workspace:*",
+    "@types/node": "22.19.17",
+    "protobufjs-cli": "2.0.3"
+  },
+  "packageManager": "pnpm@11.0.3"
+}

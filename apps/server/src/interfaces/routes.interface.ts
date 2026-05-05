@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifySchema } from "fastify";
 import type { FastifyRequest } from "fastify/types/request.js";
 import type { RouteGenericInterface } from "fastify/types/route.js";
+import type { Type as ProtoType } from "protobufjs";
 
 import type { ReplyPayload } from "./fastify.interface.js";
 
@@ -14,6 +15,7 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
         permissions?: string[];
         allowLoggedIn?: boolean;
         allowGuestAccess?: boolean;
+        proto?: ProtoType;
       };
       schema?: FastifySchema;
     }
@@ -26,6 +28,7 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
         permissions?: string[];
         allowLoggedIn?: boolean;
         allowGuestAccess?: boolean;
+        proto?: ProtoType;
       };
       schema?: FastifySchema;
     };

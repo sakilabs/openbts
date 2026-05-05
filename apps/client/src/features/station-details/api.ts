@@ -1,8 +1,13 @@
+import UKEDescriptor from "@openbts/proto/gen/uke";
+import { Root } from "protobufjs/light";
+
 import { API_BASE, fetchApiData, fetchJson } from "@/lib/api";
 import type { Station, UkePermit } from "@/types/station";
 
+const UKEPermitsResponse = Root.fromJSON(UKEDescriptor).lookupType("openbts.uke.PermitsResponse");
+
 export const fetchStation = (id: number) => fetchApiData<Station>(`stations/${id}`);
-export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`);
+export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`, { proto: UKEPermitsResponse });
 
 type PemReportDetails =
   | {

@@ -8,6 +8,7 @@ RUN corepack enable && corepack prepare pnpm@10 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/typescript-configs/package.json ./packages/typescript-configs/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/proto/package.json ./packages/proto/
 COPY apps/client/package.json ./apps/client/
 
 # Install dependencies
@@ -16,6 +17,7 @@ RUN pnpm install --frozen-lockfile
 # Copy sources
 COPY packages/typescript-configs ./packages/typescript-configs
 COPY packages/shared ./packages/shared
+COPY packages/proto ./packages/proto
 COPY apps/client ./apps/client
 
 # Build shared package first

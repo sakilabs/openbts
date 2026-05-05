@@ -1,4 +1,5 @@
 import { cells, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
+import { LocationsResponseType } from "@openbts/proto/server";
 import { and, count, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -406,7 +407,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 const getLocations: Route<ReqQuery, ResponseBody> = {
   url: "/locations",
   method: "GET",
-  config: { permissions: ["read:locations"], allowGuestAccess: true },
+  config: { permissions: ["read:locations"], allowGuestAccess: true, proto: LocationsResponseType },
   schema: schemaRoute,
   handler,
 };

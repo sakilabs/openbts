@@ -31,7 +31,7 @@ export function ExtraIdentificatorsDisplay({ data, operatorMnc }: ExtraIdentific
 
   return (
     <>
-      {data.networks_id !== null ? (
+      {data.networks_id ? (
         <div className="flex items-center gap-2">
           <NetworksIcon className="size-4 shrink-0" />
           <span className="text-sm text-muted-foreground whitespace-nowrap">{t("labels.networksId")}:</span>

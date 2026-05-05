@@ -1,0 +1,635 @@
+{
+  "nested": {
+    "openbts": {
+      "nested": {
+        "stations": {
+          "nested": {
+            "StationCell": {
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "rat": {
+                  "type": "Rat",
+                  "id": 2
+                },
+                "notes": {
+                  "type": "string",
+                  "id": 3
+                },
+                "band": {
+                  "type": "Band",
+                  "id": 4
+                },
+                "is_confirmed": {
+                  "type": "bool",
+                  "id": 5
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 6
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 7
+                }
+              }
+            },
+            "GSMRat": {
+              "fields": {
+                "lac": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "cid": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "e_gsm": {
+                  "type": "bool",
+                  "id": 3
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 4
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 5
+                }
+              }
+            },
+            "UMTSRat": {
+              "fields": {
+                "lac": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "cid": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "rnc": {
+                  "type": "int32",
+                  "id": 3
+                },
+                "cid_long": {
+                  "type": "int32",
+                  "id": 4
+                },
+                "arfcn": {
+                  "type": "int32",
+                  "id": 5
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 6
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 7
+                }
+              }
+            },
+            "LTERat": {
+              "fields": {
+                "tac": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "enbid": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "clid": {
+                  "type": "int32",
+                  "id": 3
+                },
+                "ecid": {
+                  "type": "int32",
+                  "id": 4
+                },
+                "pci": {
+                  "type": "int32",
+                  "id": 5
+                },
+                "earfcn": {
+                  "type": "int32",
+                  "id": 6
+                },
+                "supports_iot": {
+                  "type": "bool",
+                  "id": 7
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 8
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 9
+                }
+              }
+            },
+            "NRType": {
+              "values": {
+                "nsa": 0,
+                "sa": 1
+              }
+            },
+            "NRRat": {
+              "fields": {
+                "type": {
+                  "type": "NRType",
+                  "id": 1
+                },
+                "nrtac": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "clid": {
+                  "type": "int32",
+                  "id": 3
+                },
+                "gnbid": {
+                  "type": "int32",
+                  "id": 4
+                },
+                "gnbid_length": {
+                  "type": "int32",
+                  "id": 5
+                },
+                "nci": {
+                  "type": "int64",
+                  "id": 6
+                },
+                "arfcn": {
+                  "type": "int32",
+                  "id": 7
+                },
+                "supports_nr_redcap": {
+                  "type": "bool",
+                  "id": 8
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 9
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 10
+                }
+              }
+            },
+            "Cell": {
+              "oneofs": {
+                "details": {
+                  "oneof": [
+                    "gsm",
+                    "umts",
+                    "lte",
+                    "nr"
+                  ]
+                }
+              },
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "station_id": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "rat": {
+                  "type": "Rat",
+                  "id": 3
+                },
+                "notes": {
+                  "type": "string",
+                  "id": 4
+                },
+                "band": {
+                  "type": "Band",
+                  "id": 5
+                },
+                "is_confirmed": {
+                  "type": "bool",
+                  "id": 6
+                },
+                "gsm": {
+                  "type": "GSMRat",
+                  "id": 7
+                },
+                "umts": {
+                  "type": "UMTSRat",
+                  "id": 8
+                },
+                "lte": {
+                  "type": "LTERat",
+                  "id": 9
+                },
+                "nr": {
+                  "type": "NRType",
+                  "id": 10
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 11
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 12
+                }
+              }
+            },
+            "CellWithoutBand": {
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "station_id": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "rat": {
+                  "type": "Rat",
+                  "id": 3
+                },
+                "notes": {
+                  "type": "string",
+                  "id": 4
+                },
+                "band": {
+                  "type": "Band",
+                  "id": 5
+                },
+                "is_confirmed": {
+                  "type": "bool",
+                  "id": 6
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 7
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 8
+                }
+              }
+            },
+            "ExtraIdentificators": {
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "networks_id": {
+                  "type": "int32",
+                  "id": 2
+                },
+                "networks_name": {
+                  "type": "string",
+                  "id": 3
+                },
+                "mno_name": {
+                  "type": "string",
+                  "id": 4
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 5
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 6
+                }
+              }
+            },
+            "Station": {
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "station_id": {
+                  "type": "string",
+                  "id": 2
+                },
+                "notes": {
+                  "type": "string",
+                  "id": 3
+                },
+                "extra_address": {
+                  "type": "string",
+                  "id": 4
+                },
+                "cells": {
+                  "rule": "repeated",
+                  "type": "StationCell",
+                  "id": 5
+                },
+                "extra_identificators": {
+                  "type": "ExtraIdentificators",
+                  "id": 6
+                },
+                "location": {
+                  "type": "openbts.locations.Location",
+                  "id": 7
+                },
+                "operator": {
+                  "type": "Operator",
+                  "id": 8
+                },
+                "is_confirmed": {
+                  "type": "bool",
+                  "id": 9
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 10
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 11
+                }
+              }
+            },
+            "StationsResponse": {
+              "fields": {
+                "data": {
+                  "rule": "repeated",
+                  "type": "Station",
+                  "id": 1
+                },
+                "totalCount": {
+                  "type": "int32",
+                  "id": 2
+                }
+              }
+            },
+            "StationResponse": {
+              "fields": {
+                "data": {
+                  "type": "Station",
+                  "id": 1
+                }
+              }
+            },
+            "CellsResponse": {
+              "fields": {
+                "data": {
+                  "rule": "repeated",
+                  "type": "Cell",
+                  "id": 1
+                }
+              }
+            },
+            "CellResponse": {
+              "fields": {
+                "data": {
+                  "type": "Cell",
+                  "id": 1
+                }
+              }
+            }
+          }
+        },
+        "StationStatus": {
+          "values": {
+            "published": 0,
+            "inactive": 1,
+            "pending": 2
+          }
+        },
+        "Operator": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "name": {
+              "type": "string",
+              "id": 2
+            },
+            "full_name": {
+              "type": "string",
+              "id": 3
+            },
+            "parent_id": {
+              "type": "int32",
+              "id": 4
+            },
+            "mnc": {
+              "type": "int32",
+              "id": 5
+            }
+          }
+        },
+        "Region": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "name": {
+              "type": "string",
+              "id": 2
+            },
+            "code": {
+              "type": "string",
+              "id": 3
+            }
+          }
+        },
+        "Rat": {
+          "values": {
+            "GSM": 0,
+            "CDMA": 1,
+            "UMTS": 2,
+            "LTE": 3,
+            "NR": 4,
+            "IOT": 5
+          }
+        },
+        "Duplex": {
+          "values": {
+            "FDD": 0,
+            "TDD": 1
+          }
+        },
+        "BandVariant": {
+          "values": {
+            "commercial": 0,
+            "railway": 1
+          }
+        },
+        "Band": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "value": {
+              "type": "int32",
+              "id": 2
+            },
+            "rat": {
+              "type": "Rat",
+              "id": 3
+            },
+            "name": {
+              "type": "string",
+              "id": 4
+            },
+            "duplex": {
+              "type": "Duplex",
+              "id": 5
+            },
+            "variant": {
+              "type": "BandVariant",
+              "id": 6
+            }
+          }
+        },
+        "locations": {
+          "nested": {
+            "LocationStation": {
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "station_id": {
+                  "type": "string",
+                  "id": 2
+                },
+                "notes": {
+                  "type": "string",
+                  "id": 3
+                },
+                "extra_address": {
+                  "type": "string",
+                  "id": 4
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 5
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 6
+                },
+                "is_confirmed": {
+                  "type": "bool",
+                  "id": 7
+                },
+                "status": {
+                  "type": "StationStatus",
+                  "id": 8
+                },
+                "operator": {
+                  "type": "Operator",
+                  "id": 9
+                },
+                "cells": {
+                  "rule": "repeated",
+                  "type": "openbts.stations.CellWithoutBand",
+                  "id": 10
+                },
+                "extra_identificators": {
+                  "type": "openbts.stations.ExtraIdentificators",
+                  "id": 11
+                }
+              }
+            },
+            "Location": {
+              "fields": {
+                "id": {
+                  "type": "int32",
+                  "id": 1
+                },
+                "city": {
+                  "type": "string",
+                  "id": 2
+                },
+                "address": {
+                  "type": "string",
+                  "id": 3
+                },
+                "latitude": {
+                  "type": "double",
+                  "id": 4
+                },
+                "longitude": {
+                  "type": "double",
+                  "id": 5
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "id": 6
+                },
+                "createdAt": {
+                  "type": "string",
+                  "id": 7
+                },
+                "region": {
+                  "type": "Region",
+                  "id": 8
+                },
+                "stations": {
+                  "rule": "repeated",
+                  "type": "LocationStation",
+                  "id": 9
+                }
+              }
+            },
+            "LocationsResponse": {
+              "fields": {
+                "data": {
+                  "rule": "repeated",
+                  "type": "Location",
+                  "id": 1
+                },
+                "totalCount": {
+                  "type": "int32",
+                  "id": 2
+                }
+              }
+            },
+            "LocationResponse": {
+              "fields": {
+                "data": {
+                  "type": "Location",
+                  "id": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "google": {
+      "nested": {
+        "protobuf": {
+          "nested": {
+            "Timestamp": {
+              "fields": {
+                "seconds": {
+                  "type": "int64",
+                  "id": 1
+                },
+                "nanos": {
+                  "type": "int32",
+                  "id": 2
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

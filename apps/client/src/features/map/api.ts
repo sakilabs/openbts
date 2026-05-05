@@ -1,5 +1,15 @@
+import LocationsDescriptor from "@openbts/proto/gen/locations";
+import UKEDescriptor from "@openbts/proto/gen/uke";
+import { Root } from "protobufjs/light";
+
 import { API_BASE, fetchJson } from "@/lib/api";
 import type { LocationWithStations, RadioLine, StationFilters, UkeLocationWithPermits, UkePermit } from "@/types/station";
+
+const LocationsResponseProto = Root.fromJSON(LocationsDescriptor).lookupType("openbts.locations.LocationsResponse");
+const LocationResponseProto = Root.fromJSON(LocationsDescriptor).lookupType("openbts.locations.LocationResponse");
+const UKELocationsResponseProto = Root.fromJSON(UKEDescriptor).lookupType("openbts.uke.LocationsResponse");
+const UKEPermitsResponseProto = Root.fromJSON(UKEDescriptor).lookupType("openbts.uke.PermitsResponse");
+const UKERadiolinesResponseProto = Root.fromJSON(UKEDescriptor).lookupType("openbts.uke.RadiolinesResponse");
 
 export type LocationsResponse = {
   data: LocationWithStations[];
@@ -34,7 +44,9 @@ export async function fetchLocations(
     params.set("limit", String(limit));
     params.set("bounds", bounds);
     if (options?.azimuths) params.set("azimuths", "true");
-    const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`);
+    const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`, {
+      proto: UKELocationsResponseProto,
+    });
     return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
   }
 
@@ -42,14 +54,18 @@ export async function fetchLocations(
   params.set("limit", String(limit));
   params.set("bounds", bounds);
 
-  const result = await fetchJson<LocationsResponse>(`${API_BASE}/locations?${decodeURIComponent(params.toString())}`);
+  const result = await fetchJson<LocationsResponse>(`${API_BASE}/locations?${decodeURIComponent(params.toString())}`, {
+    proto: LocationsResponseProto,
+  });
   return { data: result.data ?? [], totalCount: result.totalCount ?? 0 };
 }
 
 export async function fetchLocationWithStations(locationId: number, filters: StationFilters): Promise<LocationWithStations> {
   const params = buildFilterParams(filters);
   const filter = params.toString() === "" ? "" : `?${decodeURIComponent(params.toString())}`;
-  const result = await fetchJson<{ data: LocationWithStations }>(`${API_BASE}/locations/${locationId}${filter}`);
+  const result = await fetchJson<{ data: LocationWithStations }>(`${API_BASE}/locations/${locationId}${filter}`, {
+    proto: LocationResponseProto,
+  });
   return result.data;
 }
 
@@ -57,7 +73,9 @@ export async function fetchUkePermitsByStationId(stationId: string, operator?: n
   const params = new URLSearchParams();
   params.set("station_id", stationId);
   if (operator !== null && operator !== undefined) params.set("operator", String(operator));
-  const result = await fetchJson<{ data: UkePermit[] }>(`${API_BASE}/uke/permits?${decodeURIComponent(params.toString())}`);
+  const result = await fetchJson<{ data: UkePermit[] }>(`${API_BASE}/uke/permits?${decodeURIComponent(params.toString())}`, {
+    proto: UKEPermitsResponseProto,
+  });
   return result.data;
 }
 
@@ -78,5 +96,6 @@ export async function fetchRadioLines(
 
   return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {
     signal: options?.signal,
+    proto: UKERadiolinesResponseProto,
   });
 }

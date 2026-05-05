@@ -1,4 +1,5 @@
 import { ukeOperators, ukeRadiolines } from "@openbts/drizzle";
+import { ukeRadiolinesResponseType } from "@openbts/proto/server";
 import { type SQL, and, count, eq, inArray, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -231,7 +232,7 @@ const getukeRadiolines: Route<ReqQuery, ResponseBody> = {
   url: "/uke/radiolines",
   method: "GET",
   schema: schemaRoute,
-  config: { permissions: ["read:uke_radiolines"], allowGuestAccess: true },
+  config: { permissions: ["read:uke_radiolines"], allowGuestAccess: true, proto: ukeRadiolinesResponseType },
   handler,
 };
 

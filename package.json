@@ -26,7 +26,7 @@
     "pnpm": ">=8",
     "yarn": "please-use-pnpm"
   },
-  "packageManager": "pnpm@10.27.0",
+  "packageManager": "pnpm@11.0.3",
   "pnpm": {
     "overrides": {
       "@better-auth/core": "1.6.8",
@@ -39,6 +39,7 @@
       "core-js",
       "esbuild",
       "msw",
+      "protobufjs",
       "sharp",
       "vue-demi"
     ]

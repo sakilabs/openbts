@@ -1,4 +1,5 @@
 import { bands, operators, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { ukePermitResponseType } from "@openbts/proto/server";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -73,7 +74,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 const getUkePermit: Route<IdParams, Permit> = {
   url: "/uke/permits/:id",
   method: "GET",
-  config: { permissions: ["read:uke_permits"], allowGuestAccess: true },
+  config: { permissions: ["read:uke_permits"], allowGuestAccess: true, proto: ukePermitResponseType },
   schema: schemaRoute,
   handler,
 };

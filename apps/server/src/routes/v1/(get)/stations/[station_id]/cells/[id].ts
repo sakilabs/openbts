@@ -1,4 +1,5 @@
 import { bands, cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
+import { CellResponseType } from "@openbts/proto/server";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -19,14 +20,13 @@ const stationsSchema = createSelectSchema(stations);
 type CellBase = z.infer<typeof cellsSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
 type CellWithRats = CellBase & {
-  station: z.infer<typeof stationsSchema>;
   band: z.infer<typeof bandsSchema>;
   gsm?: z.infer<typeof gsmCellsSchema>;
   umts?: z.infer<typeof umtsCellsSchema>;
   lte?: z.infer<typeof lteCellsSchema>;
   nr?: z.infer<typeof nrCellsSchema>;
 };
-type Cell = CellBase & { station: z.infer<typeof stationsSchema>; band: z.infer<typeof bandsSchema>; details: CellDetails };
+type Cell = CellBase & { band: z.infer<typeof bandsSchema>; details: CellDetails };
 const schemaRoute = {
   params: z.object({
     station_id: z.coerce.number<number>(),
@@ -55,7 +55,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     where: {
       id: cell_id,
     },
-    with: { station: true, band: true, gsm: true, umts: true, lte: true, nr: true },
+    with: { band: true, gsm: true, umts: true, lte: true, nr: true },
     columns: { band_id: false },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
@@ -69,7 +69,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
 const getCellFromStation: Route<ReqParams, Cell> = {
   url: "/stations/:station_id/cells/:cell_id",
   method: "GET",
-  config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true },
+  config: { permissions: ["read:stations", "read:cells"], allowGuestAccess: true, proto: CellResponseType },
   schema: schemaRoute,
   handler,
 };
