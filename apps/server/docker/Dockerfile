@@ -42,6 +42,7 @@ WORKDIR /app
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/packages/drizzle/package.json ./packages/drizzle/
+COPY --from=builder /app/packages/proto/package.json ./packages/proto/
 COPY --from=builder /app/packages/uke-importer/package.json ./packages/uke-importer/
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder /app/apps/server/package.json ./apps/server/

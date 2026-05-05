@@ -20,8 +20,9 @@ COPY packages/shared ./packages/shared
 COPY packages/proto ./packages/proto
 COPY apps/client ./apps/client
 
-# Build shared package first
-RUN pnpm --filter @openbts/shared build
+# Build workspace packages
+RUN pnpm --filter @openbts/shared build && \
+    pnpm --filter @openbts/proto build
 
 WORKDIR /app/apps/client
 
