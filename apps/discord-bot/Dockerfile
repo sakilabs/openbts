@@ -4,7 +4,7 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.0.3 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.0.3 --activate
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/packages/typescript-configs/package.json ./packages/typescript-configs/

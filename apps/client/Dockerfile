@@ -2,7 +2,7 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.0.3 --activate
 
 # Copy workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

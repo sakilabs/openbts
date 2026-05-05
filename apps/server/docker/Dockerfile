@@ -4,7 +4,7 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10 --activate
+RUN corepack enable && corepack prepare pnpm@11.0.3 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
@@ -34,7 +34,7 @@ FROM oven/bun:alpine
 
 ENV NODE_ENV=production
 
-RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
+RUN wget -qO- https://get.pnpm.io/install.sh | env PNPM_VERSION=11.0.3 ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
 ENV PATH="/root/.local/share/pnpm:$PATH"
 RUN pnpm config set manage-package-manager-versions false
 
