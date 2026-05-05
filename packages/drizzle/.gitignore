@@ -3,3 +3,5 @@
 
 # Dist files
 *.js
+
+routeTree.gen.ts
