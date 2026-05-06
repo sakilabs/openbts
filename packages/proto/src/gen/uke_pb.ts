@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file uke.proto.
  */
 export const file_uke: GenFile = /*@__PURE__*/
-  fileDesc("Cgl1a2UucHJvdG8SC29wZW5idHMudWtlIjoKC1VLRU9wZXJhdG9yEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJIoABCgZTZWN0b3ISCgoCaWQYASABKAUSDwoHYXppbXV0aBgCIAEoBRIRCgllbGV2YXRpb24YAyABKAUSFgoOYW50ZW5uYV9oZWlnaHQYBCABKAUSLgoMYW50ZW5uYV90eXBlGAUgASgOMhgub3BlbmJ0cy51a2UuQW50ZW5uYVR5cGUi8AIKBlBlcm1pdBIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgJEhcKD2RlY2lzaW9uX251bWJlchgDIAEoCRIwCg1kZWNpc2lvbl90eXBlGAQgASgOMhkub3BlbmJ0cy51a2UuRGVjaXNpb25UeXBlEhMKC2V4cGlyeV9kYXRlGAUgASgJEikKBnNvdXJjZRgGIAEoDjIZLm9wZW5idHMudWtlLlBlcm1pdFNvdXJjZRItCghsb2NhdGlvbhgHIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAggASgLMhEub3BlbmJ0cy5PcGVyYXRvchIbCgRiYW5kGAkgASgLMg0ub3BlbmJ0cy5CYW5kEiQKB3NlY3RvcnMYCiADKAsyEy5vcGVuYnRzLnVrZS5TZWN0b3ISEQoJdXBkYXRlZEF0GAsgASgJEhEKCWNyZWF0ZWRBdBgMIAEoCSLKAQoLVUtFTG9jYXRpb24SCgoCaWQYASABKAUSDAoEY2l0eRgCIAEoCRIPCgdhZGRyZXNzGAMgASgJEhAKCGxhdGl0dWRlGAQgASgBEhEKCWxvbmdpdHVkZRgFIAEoARIfCgZyZWdpb24YBiABKAsyDy5vcGVuYnRzLlJlZ2lvbhIkCgdwZXJtaXRzGAcgAygLMhMub3BlbmJ0cy51a2UuUGVybWl0EhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAkiMQoVUmFkaW9saW5lTWFudWZhY3R1cmVyEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkiYwoNRXF1aXBtZW50VHlwZRIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEjgKDG1hbnVmYWN0dXJlchgDIAEoCzIiLm9wZW5idHMudWtlLlJhZGlvbGluZU1hbnVmYWN0dXJlciJZCg9SYWRpb2xpbmVBdGVubmESKAoEdHlwZRgBIAEoCzIaLm9wZW5idHMudWtlLkVxdWlwbWVudFR5cGUSDAoEZ2FpbhgCIAEoBRIOCgZoZWlnaHQYAyABKAUiQgoWUmFkaW9saW5lVHhUcmFuc21pdHRlchIoCgR0eXBlGAEgASgLMhoub3BlbmJ0cy51a2UuRXF1aXBtZW50VHlwZSLWAQoLUmFkaW9saW5lVHgSEQoJbG9uZ2l0dWRlGAEgASgBEhAKCGxhdGl0dWRlGAIgASgBEg4KBmhlaWdodBgDIAEoBRIMCgRlaXJwGAQgASgFEhsKE2FudGVubmFfYXR0ZW51YXRpb24YBSABKAUSOAoLdHJhbnNtaXR0ZXIYBiABKAsyIy5vcGVuYnRzLnVrZS5SYWRpb2xpbmVUeFRyYW5zbWl0dGVyEi0KB2FudGVubmEYByABKAsyHC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVBdGVubmEiwgEKC1JhZGlvbGluZVJ4EhEKCWxvbmdpdHVkZRgBIAEoARIQCghsYXRpdHVkZRgCIAEoARIOCgZoZWlnaHQYAyABKAUSKAoEdHlwZRgEIAEoCzIaLm9wZW5idHMudWtlLkVxdWlwbWVudFR5cGUSDAoEZ2FpbhgFIAEoBRIWCg5oZWlnaHRfYW50ZW5uYRgGIAEoBRIUCgxub2lzZV9maWd1cmUYByABKAUSGAoQYXRwY19hdHRlbnVhdGlvbhgIIAEoBSKWAQoNUmFkaW9saW5lTGluaxIMCgRmcmVxGAEgASgFEg4KBmNoX251bRgCIAEoBRITCgtwbGFuX3N5bmJvbBgDIAEoCRIQCghjaF93aWR0aBgEIAEoBRIUCgxwb2xhcml6YXRpb24YBSABKAkSFwoPbW9kdWxhdGlvbl90eXBlGAYgASgJEhEKCWJhbmR3aWR0aBgHIAEoCSJNCg9SYWRpb2xpbmVQZXJtaXQSDgoGbnVtYmVyGAEgASgJEhUKDWRlY2lzaW9uX3R5cGUYAiABKAkSEwoLZXhwaXJ5X2RhdGUYAyABKAkijQIKCVJhZGlvbGluZRIKCgJpZBgBIAEoBRIkCgJ0eBgCIAEoCzIYLm9wZW5idHMudWtlLlJhZGlvbGluZVR4EiQKAnJ4GAMgASgLMhgub3BlbmJ0cy51a2UuUmFkaW9saW5lUngSKAoEbGluaxgEIAEoCzIaLm9wZW5idHMudWtlLlJhZGlvbGluZUxpbmsSKgoIb3BlcmF0b3IYBSABKAsyGC5vcGVuYnRzLnVrZS5VS0VPcGVyYXRvchIsCgZwZXJtaXQYBiABKAsyHC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVQZXJtaXQSEQoJdXBkYXRlZEF0GAcgASgJEhEKCWNyZWF0ZWRBdBgIIAEoCSI0Cg9QZXJtaXRzUmVzcG9uc2USIQoEZGF0YRgBIAMoCzITLm9wZW5idHMudWtlLlBlcm1pdCIzCg5QZXJtaXRSZXNwb25zZRIhCgRkYXRhGAEgASgLMhMub3BlbmJ0cy51a2UuUGVybWl0Ik8KEUxvY2F0aW9uc1Jlc3BvbnNlEiYKBGRhdGEYASADKAsyGC5vcGVuYnRzLnVrZS5VS0VMb2NhdGlvbhISCgp0b3RhbENvdW50GAIgASgFIk4KElJhZGlvbGluZXNSZXNwb25zZRIkCgRkYXRhGAEgAygLMhYub3BlbmJ0cy51a2UuUmFkaW9saW5lEhIKCnRvdGFsQ291bnQYAyABKAUiOQoRUmFkaW9saW5lUmVzcG9uc2USJAoEZGF0YRgBIAEoCzIWLm9wZW5idHMudWtlLlJhZGlvbGluZSo5CgxEZWNpc2lvblR5cGUSGQoVREVDSVNJT05fVFlQRV9VTktOT1dOEAASBQoBUBABEgcKA3ptUBACKksKDFBlcm1pdFNvdXJjZRIZChVQRVJNSVRfU09VUkNFX1VOS05PV04QABILCgdwZXJtaXRzEAESEwoPZGV2aWNlX3JlZ2lzdHJ5EAIqQAoLQW50ZW5uYVR5cGUSGAoUQU5URU5OQV9UWVBFX1VOS05PV04QABIKCgZpbmRvb3IQARILCgdvdXRkb29yEAJiBnByb3RvMw", [file_common, file_locations]);
+  fileDesc("Cgl1a2UucHJvdG8SC29wZW5idHMudWtlIjoKC1VLRU9wZXJhdG9yEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJIoABCgZTZWN0b3ISCgoCaWQYASABKAUSDwoHYXppbXV0aBgCIAEoBRIRCgllbGV2YXRpb24YAyABKAUSFgoOYW50ZW5uYV9oZWlnaHQYBCABKAUSLgoMYW50ZW5uYV90eXBlGAUgASgOMhgub3BlbmJ0cy51a2UuQW50ZW5uYVR5cGUi8AIKBlBlcm1pdBIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgJEhcKD2RlY2lzaW9uX251bWJlchgDIAEoCRIwCg1kZWNpc2lvbl90eXBlGAQgASgOMhkub3BlbmJ0cy51a2UuRGVjaXNpb25UeXBlEhMKC2V4cGlyeV9kYXRlGAUgASgJEikKBnNvdXJjZRgGIAEoDjIZLm9wZW5idHMudWtlLlBlcm1pdFNvdXJjZRItCghsb2NhdGlvbhgHIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAggASgLMhEub3BlbmJ0cy5PcGVyYXRvchIbCgRiYW5kGAkgASgLMg0ub3BlbmJ0cy5CYW5kEiQKB3NlY3RvcnMYCiADKAsyEy5vcGVuYnRzLnVrZS5TZWN0b3ISEQoJdXBkYXRlZEF0GAsgASgJEhEKCWNyZWF0ZWRBdBgMIAEoCSLKAQoLVUtFTG9jYXRpb24SCgoCaWQYASABKAUSDAoEY2l0eRgCIAEoCRIPCgdhZGRyZXNzGAMgASgJEhAKCGxhdGl0dWRlGAQgASgBEhEKCWxvbmdpdHVkZRgFIAEoARIfCgZyZWdpb24YBiABKAsyDy5vcGVuYnRzLlJlZ2lvbhIkCgdwZXJtaXRzGAcgAygLMhMub3BlbmJ0cy51a2UuUGVybWl0EhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAkiMQoVUmFkaW9saW5lTWFudWZhY3R1cmVyEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkiYwoNRXF1aXBtZW50VHlwZRIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEjgKDG1hbnVmYWN0dXJlchgDIAEoCzIiLm9wZW5idHMudWtlLlJhZGlvbGluZU1hbnVmYWN0dXJlciJZCg9SYWRpb2xpbmVBdGVubmESKAoEdHlwZRgBIAEoCzIaLm9wZW5idHMudWtlLkVxdWlwbWVudFR5cGUSDAoEZ2FpbhgCIAEoARIOCgZoZWlnaHQYAyABKAEiQgoWUmFkaW9saW5lVHhUcmFuc21pdHRlchIoCgR0eXBlGAEgASgLMhoub3BlbmJ0cy51a2UuRXF1aXBtZW50VHlwZSLWAQoLUmFkaW9saW5lVHgSEQoJbG9uZ2l0dWRlGAEgASgBEhAKCGxhdGl0dWRlGAIgASgBEg4KBmhlaWdodBgDIAEoARIMCgRlaXJwGAQgASgBEhsKE2FudGVubmFfYXR0ZW51YXRpb24YBSABKAESOAoLdHJhbnNtaXR0ZXIYBiABKAsyIy5vcGVuYnRzLnVrZS5SYWRpb2xpbmVUeFRyYW5zbWl0dGVyEi0KB2FudGVubmEYByABKAsyHC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVBdGVubmEiwgEKC1JhZGlvbGluZVJ4EhEKCWxvbmdpdHVkZRgBIAEoARIQCghsYXRpdHVkZRgCIAEoARIOCgZoZWlnaHQYAyABKAESKAoEdHlwZRgEIAEoCzIaLm9wZW5idHMudWtlLkVxdWlwbWVudFR5cGUSDAoEZ2FpbhgFIAEoARIWCg5oZWlnaHRfYW50ZW5uYRgGIAEoARIUCgxub2lzZV9maWd1cmUYByABKAESGAoQYXRwY19hdHRlbnVhdGlvbhgIIAEoASKrAQoNUmFkaW9saW5lTGluaxIMCgRmcmVxGAEgASgFEg4KBmNoX251bRgCIAEoBRITCgtwbGFuX3N5bmJvbBgDIAEoCRIQCghjaF93aWR0aBgEIAEoBRIUCgxwb2xhcml6YXRpb24YBSABKAkSEwoLcGxhbl9zeW1ib2wYBiABKAkSFwoPbW9kdWxhdGlvbl90eXBlGAcgASgJEhEKCWJhbmR3aWR0aBgIIAEoCSJNCg9SYWRpb2xpbmVQZXJtaXQSDgoGbnVtYmVyGAEgASgJEhUKDWRlY2lzaW9uX3R5cGUYAiABKAkSEwoLZXhwaXJ5X2RhdGUYAyABKAkijQIKCVJhZGlvbGluZRIKCgJpZBgBIAEoBRIkCgJ0eBgCIAEoCzIYLm9wZW5idHMudWtlLlJhZGlvbGluZVR4EiQKAnJ4GAMgASgLMhgub3BlbmJ0cy51a2UuUmFkaW9saW5lUngSKAoEbGluaxgEIAEoCzIaLm9wZW5idHMudWtlLlJhZGlvbGluZUxpbmsSKgoIb3BlcmF0b3IYBSABKAsyGC5vcGVuYnRzLnVrZS5VS0VPcGVyYXRvchIsCgZwZXJtaXQYBiABKAsyHC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVQZXJtaXQSEQoJdXBkYXRlZEF0GAcgASgJEhEKCWNyZWF0ZWRBdBgIIAEoCSI0Cg9QZXJtaXRzUmVzcG9uc2USIQoEZGF0YRgBIAMoCzITLm9wZW5idHMudWtlLlBlcm1pdCIzCg5QZXJtaXRSZXNwb25zZRIhCgRkYXRhGAEgASgLMhMub3BlbmJ0cy51a2UuUGVybWl0Ik8KEUxvY2F0aW9uc1Jlc3BvbnNlEiYKBGRhdGEYASADKAsyGC5vcGVuYnRzLnVrZS5VS0VMb2NhdGlvbhISCgp0b3RhbENvdW50GAIgASgFIk4KElJhZGlvbGluZXNSZXNwb25zZRIkCgRkYXRhGAEgAygLMhYub3BlbmJ0cy51a2UuUmFkaW9saW5lEhIKCnRvdGFsQ291bnQYAyABKAUiOQoRUmFkaW9saW5lUmVzcG9uc2USJAoEZGF0YRgBIAEoCzIWLm9wZW5idHMudWtlLlJhZGlvbGluZSo5CgxEZWNpc2lvblR5cGUSGQoVREVDSVNJT05fVFlQRV9VTktOT1dOEAASBQoBUBABEgcKA3ptUBACKksKDFBlcm1pdFNvdXJjZRIZChVQRVJNSVRfU09VUkNFX1VOS05PV04QABILCgdwZXJtaXRzEAESEwoPZGV2aWNlX3JlZ2lzdHJ5EAIqQAoLQW50ZW5uYVR5cGUSGAoUQU5URU5OQV9UWVBFX1VOS05PV04QABIKCgZpbmRvb3IQARILCgdvdXRkb29yEAJiBnByb3RvMw", [file_common, file_locations]);
 
 /**
  * @generated from message openbts.uke.UKEOperator
@@ -268,12 +268,12 @@ export type RadiolineAtenna = Message<"openbts.uke.RadiolineAtenna"> & {
   type?: EquipmentType | undefined;
 
   /**
-   * @generated from field: int32 gain = 2;
+   * @generated from field: double gain = 2;
    */
   gain: number;
 
   /**
-   * @generated from field: int32 height = 3;
+   * @generated from field: double height = 3;
    */
   height: number;
 };
@@ -317,17 +317,17 @@ export type RadiolineTx = Message<"openbts.uke.RadiolineTx"> & {
   latitude: number;
 
   /**
-   * @generated from field: int32 height = 3;
+   * @generated from field: double height = 3;
    */
   height: number;
 
   /**
-   * @generated from field: int32 eirp = 4;
+   * @generated from field: double eirp = 4;
    */
   eirp: number;
 
   /**
-   * @generated from field: int32 antenna_attenuation = 5;
+   * @generated from field: double antenna_attenuation = 5;
    */
   antennaAttenuation: number;
 
@@ -364,7 +364,7 @@ export type RadiolineRx = Message<"openbts.uke.RadiolineRx"> & {
   latitude: number;
 
   /**
-   * @generated from field: int32 height = 3;
+   * @generated from field: double height = 3;
    */
   height: number;
 
@@ -374,22 +374,22 @@ export type RadiolineRx = Message<"openbts.uke.RadiolineRx"> & {
   type?: EquipmentType | undefined;
 
   /**
-   * @generated from field: int32 gain = 5;
+   * @generated from field: double gain = 5;
    */
   gain: number;
 
   /**
-   * @generated from field: int32 height_antenna = 6;
+   * @generated from field: double height_antenna = 6;
    */
   heightAntenna: number;
 
   /**
-   * @generated from field: int32 noise_figure = 7;
+   * @generated from field: double noise_figure = 7;
    */
   noiseFigure: number;
 
   /**
-   * @generated from field: int32 atpc_attenuation = 8;
+   * @generated from field: double atpc_attenuation = 8;
    */
   atpcAttenuation: number;
 };
@@ -431,12 +431,17 @@ export type RadiolineLink = Message<"openbts.uke.RadiolineLink"> & {
   polarization: string;
 
   /**
-   * @generated from field: string modulation_type = 6;
+   * @generated from field: string plan_symbol = 6;
+   */
+  planSymbol: string;
+
+  /**
+   * @generated from field: string modulation_type = 7;
    */
   modulationType: string;
 
   /**
-   * @generated from field: string bandwidth = 7;
+   * @generated from field: string bandwidth = 8;
    */
   bandwidth: string;
 };
