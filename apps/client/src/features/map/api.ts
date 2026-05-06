@@ -43,7 +43,7 @@ export async function fetchLocations(
     params.set("bounds", bounds);
     if (options?.azimuths) params.set("azimuths", "true");
     const result = await fetchJson<UkeLocationsResponse>(`${API_BASE}/uke/locations?${decodeURIComponent(params.toString())}`, {
-      proto: UKELocationsResponseSchema,
+      // proto: UKELocationsResponseSchema,
     });
     return { data: result.data as unknown as LocationWithStations[], totalCount: result.totalCount };
   }
