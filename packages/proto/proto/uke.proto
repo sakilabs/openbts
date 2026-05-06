@@ -107,10 +107,10 @@ message RadiolineRx {
 }
 
 message RadiolineLink {
-  int32 freq = 1;
+  double freq = 1;
   int32 ch_num = 2;
   string plan_synbol = 3;
-  int32 ch_width = 4;
+  double ch_width = 4;
   string polarization = 5;
   string plan_symbol = 6;
   string modulation_type = 7;
