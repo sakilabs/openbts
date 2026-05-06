@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-05-03
+    Last updated: 2026-05-06
   version: 1.0.1
 
 servers:
@@ -1412,9 +1412,9 @@ paths:
         - name: regions
           in: query
           schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
-        - name: new
+        - name: since
           in: query
-          schema: { type: boolean, default: false }
+          schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
         - name: search
           in: query
           description: Search by city, address, or station ID (partial match)

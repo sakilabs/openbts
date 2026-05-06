@@ -75,7 +75,11 @@
     "radiolineOperators_other": "{{count, number}} operatorów radiolinii",
     "searchRadiolineOperators": "Szukaj operatorów radiolinii...",
     "toggleHint": "<kbd>F</kbd> panel · <kbd>Shift</kbd>+<kbd>F</kbd> wyczyść filtry",
-    "ratKeybindHint": "+litera"
+    "ratKeybindHint": "+litera",
+    "date": {
+      "createdAt": "Utworzone",
+      "updatedAt": "Zaktualizowane"
+    }
   },
   "unknownOperator": "Nieznany operator",
   "radiolines": {

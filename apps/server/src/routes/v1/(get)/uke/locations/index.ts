@@ -83,12 +83,11 @@ const schemaRoute = {
       .regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
       .optional()
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
-    new: z
+    since: z
       .string()
       .optional()
       .transform((val): number | null => {
         if (!val || val === "false" || val === "0") return null;
-        if (val === "true") return 30;
         const n = Number(val);
         return n >= 1 && n <= 30 ? n : null;
       }),
@@ -115,7 +114,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   if (cached) return res.send(JSON.parse(cached));
 
-  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, new: recentDays, azimuths } = req.query;
+  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, since: recentDays, azimuths } = req.query;
   const offset = (page - 1) * limit;
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 

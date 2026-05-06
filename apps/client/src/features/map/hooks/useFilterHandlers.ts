@@ -58,6 +58,13 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
     [filters, onFiltersChange],
   );
 
+  const handleRecentDateFieldChange = useCallback(
+    (fields: ("createdAt" | "updatedAt")[]) => {
+      onFiltersChange({ ...filters, recentDateFields: fields });
+    },
+    [filters, onFiltersChange],
+  );
+
   const handleClearFilters = useCallback(() => {
     onFiltersChange({
       operators: [],
@@ -65,6 +72,7 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
       rat: [],
       source: filters.source,
       recentDays: null,
+      recentDateFields: ["createdAt"],
       showStations: filters.showStations,
       showRadiolines: filters.showRadiolines,
       radiolineOperators: [],
@@ -91,6 +99,7 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
     handleSelectAllBands,
     handleClearAllBands,
     handleRecentDaysChange,
+    handleRecentDateFieldChange,
     handleClearFilters,
     activeFilterCount,
   };

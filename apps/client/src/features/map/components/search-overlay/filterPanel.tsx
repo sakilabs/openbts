@@ -234,9 +234,15 @@ function StatsSection({ stats, locale }: StatsSectionProps) {
 type RecentDaysFilterProps = {
   filters: StationFilters;
   onRecentDaysChange: (days: number | null) => void;
+  onRecentDateFieldChange: (fields: ("createdAt" | "updatedAt")[]) => void;
 };
 
-function RecentDaysFilter({ filters, onRecentDaysChange }: RecentDaysFilterProps) {
+const DateFieldOptions: { label: string; value: "createdAt" | "updatedAt"; key: string }[] = [
+  { label: "Updated", value: "updatedAt", key: "U" },
+  { label: "createdAt", value: "createdAt", key: "C" },
+];
+
+function RecentDaysFilter({ filters, onRecentDaysChange, onRecentDateFieldChange }: RecentDaysFilterProps) {
   const { t } = useTranslation("main");
   const [localDays, setLocalDays] = useState(filters.recentDays ?? 30);
 
@@ -247,34 +253,66 @@ function RecentDaysFilter({ filters, onRecentDaysChange }: RecentDaysFilterProps
 
   return (
     <div>
-      <Checkbox
-        checked={filters.recentDays !== null}
-        onChange={(checked) => {
-          if (checked) {
-            setLocalDays(30);
-            onRecentDaysChange(30);
-          } else {
-            onRecentDaysChange(null);
-          }
-        }}
-      >
-        <span className="flex-1 text-left">{t("filters.newOnly")}</span>
-        <KbdHint>N</KbdHint>
-      </Checkbox>
+      <div className="flex flex-row w-full gap-1">
+        <Checkbox
+          checked={filters.recentDays !== null}
+          onChange={(checked) => {
+            if (checked) {
+              setLocalDays(30);
+              onRecentDaysChange(30);
+            } else {
+              onRecentDaysChange(null);
+            }
+          }}
+        >
+          <span className="flex-1 text-left">{t("filters.newOnly")}</span>
+          <KbdHint>N</KbdHint>
+        </Checkbox>
+        {filters.recentDays !== null && filters.source === "internal" ? (
+          <div className="flex flex-wrap gap-1">
+            {DateFieldOptions.map((op) => {
+              const isActive = filters.recentDateFields.includes(op.value);
+              return (
+                <button
+                  type="button"
+                  key={op.label}
+                  onClick={() => {
+                    if (isActive && filters.recentDateFields.length === 1) return;
+                    onRecentDateFieldChange(
+                      isActive ? filters.recentDateFields.filter((field) => field !== op.value) : [...filters.recentDateFields, op.value],
+                    );
+                  }}
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-px rounded-full text-xs font-medium transition-all border",
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
+                  )}
+                >
+                  <span className={cn("text-xs", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>{op.key}</span>
+                  {t(`filters.date.${op.value}`)}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
       {filters.recentDays !== null && (
-        <div className="flex items-center gap-3 px-2 pt-1.5 pb-0.5">
-          <Slider
-            min={1}
-            max={30}
-            step={1}
-            value={[localDays]}
-            onValueChange={(value) => setLocalDays(Array.isArray(value) ? value[0] : value)}
-            onValueCommitted={handleCommit}
-          />
-          <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap w-12 text-right">
-            {t("filters.recentDaysValue", { count: localDays })}
-          </span>
-        </div>
+        <>
+          <div className="flex items-center gap-3 px-2 pt-1.5 pb-0.5">
+            <Slider
+              min={1}
+              max={30}
+              step={1}
+              value={[localDays]}
+              onValueChange={(value) => setLocalDays(Array.isArray(value) ? value[0] : value)}
+              onValueCommitted={handleCommit}
+            />
+            <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap w-12 text-right">
+              {t("filters.recentDaysValue", { count: localDays })}
+            </span>
+          </div>
+        </>
       )}
     </div>
   );
@@ -290,6 +328,7 @@ type FilterPanelProps = {
   onToggleBand: (value: number) => void;
   onToggleRat: (rat: string) => void;
   onRecentDaysChange: (days: number | null) => void;
+  onRecentDateFieldChange: (fields: ("createdAt" | "updatedAt")[]) => void;
   onSelectAllRats: () => void;
   onClearAllRats: () => void;
   onSelectAllBands: () => void;
@@ -312,6 +351,7 @@ export function FilterPanel({
   onToggleBand,
   onToggleRat,
   onRecentDaysChange,
+  onRecentDateFieldChange,
   onSelectAllRats,
   onClearAllRats,
   onSelectAllBands,
@@ -445,7 +485,9 @@ export function FilterPanel({
         </div>
       )}
 
-      {!hideAPIFilters && <RecentDaysFilter filters={filters} onRecentDaysChange={onRecentDaysChange} />}
+      {!hideAPIFilters && (
+        <RecentDaysFilter filters={filters} onRecentDaysChange={onRecentDaysChange} onRecentDateFieldChange={onRecentDateFieldChange} />
+      )}
 
       {!hideAPIFilters && (
         <OperatorsSection

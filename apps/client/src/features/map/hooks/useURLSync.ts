@@ -47,7 +47,18 @@ function parseLegacyFilters(params: URLSearchParams): Partial<StationFilters> | 
       .filter((n) => !Number.isNaN(n)) || [];
   const showHeatmap = params.get("heatmap") === "1";
 
-  return { operators, bands, rat, source, recentDays, showStations, showRadiolines, radiolineOperators, showHeatmap };
+  return {
+    operators,
+    bands,
+    rat,
+    source,
+    recentDays,
+    recentDateFields: ["createdAt"] as ("createdAt" | "updatedAt")[],
+    showStations,
+    showRadiolines,
+    radiolineOperators,
+    showHeatmap,
+  };
 }
 
 function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
@@ -57,6 +68,7 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
   let bands: number[] = [];
   let rat: string[] = [];
   let recentDays: number | null = null;
+  let recentDateFields: ("createdAt" | "updatedAt")[] = ["createdAt"];
   let showRadiolines = false;
   let showStations = true;
   let showHeatmap = false;
@@ -83,7 +95,15 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
         rat = value.split(",").filter(Boolean);
         break;
       case "n":
-        recentDays = Math.min(30, Math.max(1, Number(value))) || null;
+        const numPart = value.replace(/[^0-9]/g, "");
+        const fieldPart = value.replace(/[0-9]/g, "");
+        recentDays = Math.min(30, Math.max(1, Number(numPart))) || null;
+        if (fieldPart) {
+          const fields: ("createdAt" | "updatedAt")[] = [];
+          if (fieldPart.includes("c")) fields.push("createdAt");
+          if (fieldPart.includes("u")) fields.push("updatedAt");
+          if (fieldPart.length) recentDateFields = fields;
+        }
         break;
       case "p":
         radiolineOperators = value
@@ -100,7 +120,7 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
     }
   }
 
-  return { operators, bands, rat, source, recentDays, showStations, showRadiolines, radiolineOperators, showHeatmap };
+  return { operators, bands, rat, source, recentDays, recentDateFields, showStations, showRadiolines, radiolineOperators, showHeatmap };
 }
 
 function parseUrlHash(): {
@@ -167,7 +187,11 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
   if (filters.operators.length > 0) tokens.push(`o${filters.operators.join(",")}`);
   if (filters.bands.length > 0) tokens.push(`b${filters.bands.join(",")}`);
   if (filters.rat.length > 0) tokens.push(`r${filters.rat.join(",")}`);
-  if (filters.recentDays !== null) tokens.push(`n${filters.recentDays}`);
+  if (filters.recentDays !== null) {
+    const fields = filters.recentDateFields.map((field) => (field === "createdAt" ? "c" : "u")).join("");
+    const suffix = fields === "c" ? "" : fields;
+    tokens.push(`n${filters.recentDays}${suffix}`);
+  }
 
   const flags = [filters.showRadiolines && "r", filters.showHeatmap && "h", !filters.showStations && "s", filters.source === "uke" && "u"]
     .filter(Boolean)
@@ -212,6 +236,7 @@ export function useUrlSync({ map, isLoaded, filters, onInitialize }: UseUrlSyncA
             rat: urlFilters.rat || [],
             source: urlFilters.source || "internal",
             recentDays: urlFilters.recentDays ?? null,
+            recentDateFields: urlFilters.recentDateFields ?? ["createdAt"],
             showStations: urlFilters.showStations ?? true,
             showRadiolines: urlFilters.showRadiolines ?? false,
             radiolineOperators: urlFilters.radiolineOperators || [],

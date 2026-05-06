@@ -129,6 +129,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     handleSelectAllBands,
     handleClearAllBands,
     handleRecentDaysChange,
+    handleRecentDateFieldChange,
     handleClearFilters,
     activeFilterCount,
   } = useFilterHandlers({ filters, uniqueBandValues, onFiltersChange });
@@ -367,6 +368,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               onToggleBand={handleToggleBand}
               onToggleRat={handleToggleRat}
               onRecentDaysChange={handleRecentDaysChange}
+              onRecentDateFieldChange={handleRecentDateFieldChange}
               onSelectAllRats={handleSelectAllRats}
               onClearAllRats={handleClearAllRats}
               onSelectAllBands={handleSelectAllBands}
@@ -412,6 +414,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                 onToggleBand={handleToggleBand}
                 onToggleRat={handleToggleRat}
                 onRecentDaysChange={handleRecentDaysChange}
+                onRecentDateFieldChange={handleRecentDateFieldChange}
                 onSelectAllRats={handleSelectAllRats}
                 onClearAllRats={handleClearAllRats}
                 onSelectAllBands={handleSelectAllBands}

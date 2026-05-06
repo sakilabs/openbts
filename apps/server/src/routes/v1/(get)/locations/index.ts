@@ -61,14 +61,17 @@ const schemaRoute = {
       .regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
       .optional()
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
-    new: z
+    since: z
       .string()
+      .regex(/^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\d+$/)
       .optional()
-      .transform((val): number | null => {
-        if (!val || val === "false" || val === "0") return null;
-        if (val === "true") return 30;
-        const n = Number(val);
-        return n >= 1 && n <= 30 ? n : null;
+      .transform((val) => {
+        if (!val) return null;
+        const lastIndex = val.lastIndexOf(":");
+        const fields = val.slice(0, lastIndex).split(",") as ("createdAt" | "updatedAt")[];
+        const days = Number(val.slice(lastIndex + 1));
+        const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        return { fields, cutoff };
       }),
     search: z.string().max(100).optional(),
     orphaned: z.coerce.boolean().optional().default(false),
@@ -103,7 +106,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     operators: operatorMncs,
     bands: bandValues,
     regions: regionNames,
-    new: recentDays,
+    since,
     search,
     orphaned,
     sort,
@@ -168,8 +171,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const ratMap: Record<string, NonIotRat> = { gsm: "GSM", umts: "UMTS", lte: "LTE", nr: "NR" } as const;
   const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
   const iotRequested = requestedRats.includes("iot");
-
-  const cutoff = recentDays ? new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000) : null;
 
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
@@ -236,7 +237,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(cellWhere!);
     }
 
-    if (cutoff) conditions.push(sql`${stationFields.createdAt} >= ${cutoff.toISOString()}`);
+    if (since) {
+      const parts = since.fields.map((field) => sql`${stationFields[field]} >= ${since.cutoff.toISOString()}`);
+      const sinceConditions = parts.length > 1 ? sql`(${sql.join(parts, sql` OR `)})` : parts[0];
+      conditions.push(sinceConditions!);
+    }
 
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
@@ -266,12 +271,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         )}]::int4[])`,
       );
     }
-    if (cutoff) {
+    if (since) {
+      const parts = since.fields.map((field) => sql`${stations[field]} >= ${since.cutoff.toISOString()}`);
+      const sinceConditions = parts.length > 1 ? sql`(${sql.join(parts, sql` OR `)})` : parts[0];
       conditions.push(sql`EXISTS (
         SELECT 1 FROM ${stations}
         WHERE ${stations.location_id} = ${locFields.id}
         AND ${stations.status} = 'published'
-        AND ${stations.createdAt} >= ${cutoff.toISOString()}
+        AND (${sinceConditions})
       )`);
     }
     if (hasStationFilters) {

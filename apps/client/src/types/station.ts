@@ -154,6 +154,7 @@ export type StationFilters = {
   rat: string[];
   source: StationSource;
   recentDays: number | null;
+  recentDateFields: ("createdAt" | "updatedAt")[];
   showStations: boolean;
   showRadiolines: boolean;
   radiolineOperators: number[];

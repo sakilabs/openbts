@@ -71,7 +71,11 @@
     "radiolineOperators_others": "{{count, number}} radioline operators",
     "searchRadiolineOperators": "Search radioline operators...",
     "toggleHint": "<kbd>F</kbd> toggle panel · <kbd>Shift</kbd>+<kbd>F</kbd> clear all filters",
-    "ratKeybindHint": "+letter"
+    "ratKeybindHint": "+letter",
+    "date": {
+      "createdAt": "Created",
+      "updatedAt": "Updated"
+    }
   },
   "unknownOperator": "Unknown Operator",
   "radiolines": {
