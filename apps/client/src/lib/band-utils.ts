@@ -128,12 +128,12 @@ export function getBandMhz(band: number): string | null {
   return BAND_MHZ[band] ?? null;
 }
 
-export function getBandFromEarfcn(earfcn: number): number | null {
+export function getBandFromEARFCN(earfcn: number): number | null {
   for (const [band, min, max] of LTE_BANDS) if (earfcn >= min && earfcn <= max) return band;
   return null;
 }
 
-export function getBandFromUarfcn(uarfcn: number): number | null {
+export function getBandFromUARFCN(uarfcn: number): number | null {
   for (const [band, min, max] of UMTS_BANDS) if (uarfcn >= min && uarfcn <= max) return band;
   return null;
 }

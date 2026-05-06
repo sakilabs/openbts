@@ -35,6 +35,10 @@
     "anyWarning": "Any warning",
     "status": "Status",
     "warning": "Warnings",
+    "band": "Band",
+    "allBands": "All bands",
+    "bandsCount_one": "{{count, number}} band",
+    "bandsCount_other": "{{count, number}} bands",
     "mismatchGroup": "Mismatch",
     "otherGroup": "Other"
   },

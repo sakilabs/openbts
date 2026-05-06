@@ -1,5 +1,6 @@
 import {
   AlertCircleIcon,
+  ArrowDown01Icon,
   ArrowRight01Icon,
   Cancel01Icon,
   File02Icon,
@@ -26,8 +27,10 @@ import { toast } from "sonner";
 
 import { RequireAuth } from "@/components/auth/requireAuth";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -42,7 +45,7 @@ const StationDetailsDialog = lazy(() =>
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useTablePagination } from "@/hooks/useTablePageSize";
-import { getBandFromEarfcn, getBandFromUarfcn, getBandMhz } from "@/lib/band-utils";
+import { getBandFromEARFCN, getBandFromUARFCN, getBandMhz } from "@/lib/band-utils";
 import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -163,6 +166,7 @@ type AnalyzerState = {
   ratFilter: string;
   warningFilter: string;
   operatorFilter: string;
+  bandFilter: string[];
 };
 
 type AnalyzerAction =
@@ -174,6 +178,7 @@ type AnalyzerAction =
   | { type: "SET_RAT_FILTER"; payload: string | null }
   | { type: "SET_WARNING_FILTER"; payload: string | null }
   | { type: "SET_OPERATOR_FILTER"; payload: string | null }
+  | { type: "SET_BAND_FILTER"; payload: string[] }
   | { type: "CLEAR_FILTERS" };
 
 const initialState: AnalyzerState = {
@@ -187,6 +192,7 @@ const initialState: AnalyzerState = {
   ratFilter: "all",
   warningFilter: "all",
   operatorFilter: "all",
+  bandFilter: [],
 };
 
 function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): AnalyzerState {
@@ -209,9 +215,81 @@ function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): Analyzer
       return { ...state, warningFilter: action.payload ?? "all" };
     case "SET_OPERATOR_FILTER":
       return { ...state, operatorFilter: action.payload ?? "all" };
+    case "SET_BAND_FILTER":
+      return { ...state, bandFilter: action.payload };
     case "CLEAR_FILTERS":
-      return { ...state, statusFilter: "all", ratFilter: "all", warningFilter: "all", operatorFilter: "all" };
+      return { ...state, statusFilter: "all", ratFilter: "all", warningFilter: "all", operatorFilter: "all", bandFilter: [] };
   }
+}
+
+function BandFilterButton({
+  value,
+  onChange,
+  bands,
+  t,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  bands: { band: number; rat: "LTE" | "UMTS" }[];
+  t: ReturnType<typeof useTranslation<["cellAnalyzer", "common"]>>["t"];
+}) {
+  const [open, setOpen] = useState(false);
+
+  function toggle(key: string) {
+    onChange(value.includes(key) ? value.filter((b) => b !== key) : [...value, key]);
+  }
+
+  const label = value.length === 0 ? t("filter.allBands") : t("filter.bandsCount", { count: value.length });
+  const groups = (["LTE", "UMTS"] as const)
+    .map((rat) => ({ rat, items: bands.filter((b) => b.rat === rat) }))
+    .filter((g) => g.items.length > 0);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className={cn(
+          "h-8 rounded-lg border bg-transparent px-2.5 text-sm transition-colors flex items-center gap-2 min-w-42.5",
+          "border-input dark:bg-input/30 dark:hover:bg-input/50 hover:bg-muted",
+          value.length > 0 ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        <span className="truncate">{label}</span>
+        <HugeiconsIcon icon={ArrowDown01Icon} className={cn("size-3.5 shrink-0 ml-auto transition-transform", open && "rotate-180")} />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-0 max-h-80 overflow-y-auto">
+        {value.length > 0 && (
+          <div className="px-3 py-2 border-b flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t("filter.bandsCount", { count: value.length })}</span>
+            <button type="button" onClick={() => onChange([])} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              {t("common:actions.clear")}
+            </button>
+          </div>
+        )}
+        {groups.map(({ rat, items }, i) => (
+          <div key={rat}>
+            {i > 0 && <div className="h-px bg-border mx-1" />}
+            <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{rat}</div>
+            {items.map(({ band }) => {
+              const key = `${rat}-${band}`;
+              const mhz = getBandMhz(band);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggle(key)}
+                  className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-muted/50 transition-colors text-left"
+                >
+                  <Checkbox checked={value.includes(key)} className="pointer-events-none" />
+                  <span className="text-xs font-mono">B{band}</span>
+                  {mhz && <span className="text-xs text-muted-foreground">{mhz} MHz</span>}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function AnalyzerPage() {
@@ -223,7 +301,7 @@ function AnalyzerPage() {
   const analyzeStartRef = useRef<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
-  const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter } = state;
+  const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter, bandFilter } = state;
   const isMobile = useIsMobile();
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
@@ -351,7 +429,7 @@ function AnalyzerPage() {
     [t],
   );
 
-  const hasActiveFilters = statusFilter !== "all" || ratFilter !== "all" || warningFilter !== "all" || operatorFilter !== "all";
+  const hasActiveFilters = statusFilter !== "all" || ratFilter !== "all" || warningFilter !== "all" || operatorFilter !== "all" || bandFilter.length > 0;
 
   const statusLabels = useMemo(
     () => ({
@@ -386,11 +464,45 @@ function AnalyzerPage() {
     });
   }, [parsedRows]);
 
+  const availableBands = useMemo(() => {
+    if (!parsedRows) return [];
+    const seen = new Set<string>();
+    const result: { band: number; rat: "LTE" | "UMTS" }[] = [];
+    for (const row of parsedRows) {
+      if (row.rat === "LTE" && row.earfcn !== undefined) {
+        const band = getBandFromEARFCN(row.earfcn);
+        if (band !== null) {
+          const key = `LTE-${band}`;
+          if (!seen.has(key)) { seen.add(key); result.push({ band, rat: "LTE" }); }
+        }
+      } else if (row.rat === "UMTS" && row.uarfcn !== undefined) {
+        const band = getBandFromUARFCN(row.uarfcn);
+        if (band !== null) {
+          const key = `UMTS-${band}`;
+          if (!seen.has(key)) { seen.add(key); result.push({ band, rat: "UMTS" }); }
+        }
+      }
+    }
+    result.sort((a, b) => a.rat.localeCompare(b.rat) || a.band - b.band);
+    return result;
+  }, [parsedRows]);
+
   const tableData = useMemo<AnalyzerRow[]>(() => {
     if (!parsedRows) return [];
     return parsedRows.reduce<AnalyzerRow[]>((acc, row, index) => {
       if (ratFilter !== "all" && row.rat !== ratFilter) return acc;
       if (operatorFilter !== "all" && String(row.mnc) !== operatorFilter) return acc;
+      if (bandFilter.length > 0) {
+        let bandKey: string | null = null;
+        if (row.rat === "LTE" && row.earfcn !== undefined) {
+          const band = getBandFromEARFCN(row.earfcn);
+          if (band !== null) bandKey = `LTE-${band}`;
+        } else if (row.rat === "UMTS" && row.uarfcn !== undefined) {
+          const band = getBandFromUARFCN(row.uarfcn);
+          if (band !== null) bandKey = `UMTS-${band}`;
+        }
+        if (bandKey === null || !bandFilter.includes(bandKey)) return acc;
+      }
       const result = results?.[index];
       if (statusFilter !== "all" && results) {
         if (!result || result.status !== statusFilter) return acc;
@@ -408,7 +520,7 @@ function AnalyzerPage() {
       acc.push({ parsedRow: row, index, result });
       return acc;
     }, []);
-  }, [parsedRows, results, statusFilter, ratFilter, warningFilter, operatorFilter]);
+  }, [parsedRows, results, statusFilter, ratFilter, warningFilter, operatorFilter, bandFilter]);
 
   const columns = useMemo(
     () => [
@@ -439,8 +551,8 @@ function AnalyzerPage() {
         cell: ({ getValue }) => {
           const { parsedRow: row, result } = getValue();
           let band: number | null = null;
-          if (row.rat === "LTE" && row.earfcn !== undefined) band = getBandFromEarfcn(row.earfcn);
-          else if (row.rat === "UMTS" && row.uarfcn !== undefined) band = getBandFromUarfcn(row.uarfcn);
+          if (row.rat === "LTE" && row.earfcn !== undefined) band = getBandFromEARFCN(row.earfcn);
+          else if (row.rat === "UMTS" && row.uarfcn !== undefined) band = getBandFromUARFCN(row.uarfcn);
           const isNotConfirmed = !!(result?.cell && result.cell.rat !== "NR" && !result.cell.is_confirmed);
           if (band === null && !isNotConfirmed) return <span className="text-muted-foreground text-xs">-</span>;
           const mhz = band !== null ? getBandMhz(band) : null;
@@ -894,6 +1006,21 @@ function AnalyzerPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {availableBands.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground px-0.5">{t("filter.band")}</span>
+                <BandFilterButton
+                  value={bandFilter}
+                  onChange={(v) => {
+                    dispatch({ type: "SET_BAND_FILTER", payload: v });
+                    resetPage();
+                  }}
+                  bands={availableBands}
+                  t={t}
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground px-0.5">{t("filter.warning")}</span>

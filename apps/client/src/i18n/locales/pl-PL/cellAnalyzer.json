@@ -35,6 +35,11 @@
     "anyWarning": "Dowolne ostrzeżenie",
     "status": "Status",
     "warning": "Ostrzeżenia",
+    "band": "Pasmo",
+    "allBands": "Wszystkie pasma",
+    "bandsCount_one": "{{count, number}} pasmo",
+    "bandsCount_few": "{{count, number}} pasma",
+    "bandsCount_many": "{{count, number}} pasm",
     "mismatchGroup": "Niezgodności",
     "otherGroup": "Inne"
   },
