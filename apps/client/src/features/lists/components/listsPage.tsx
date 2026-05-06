@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -170,7 +171,9 @@ export function ListsPageContent() {
                     <CardContent className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{list.name}</p>
+                          <Link to={"/lists/$uuid"} params={{ uuid: list.uuid }} target="_blank" className="font-medium truncate hover:underline">
+                            {list.name}
+                          </Link>
                           {list.description && <p className="text-muted-foreground text-xs line-clamp-2">{list.description}</p>}
                         </div>
 
