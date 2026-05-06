@@ -55,7 +55,7 @@
   "filters": {
     "dataSource": "Źródło danych",
     "internalDb": "Wewnętrzna baza",
-    "newOnly": "Pokaż najnowsze",
+    "newOnly": "Ostatnie",
     "recentDaysValue_one": "{{count}} dzień",
     "recentDaysValue_few": "{{count}} dni",
     "recentDaysValue_many": "{{count}} dni",

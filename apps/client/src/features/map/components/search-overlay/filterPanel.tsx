@@ -239,7 +239,7 @@ type RecentDaysFilterProps = {
 
 const DateFieldOptions: { label: string; value: "createdAt" | "updatedAt"; key: string }[] = [
   { label: "Updated", value: "updatedAt", key: "U" },
-  { label: "createdAt", value: "createdAt", key: "C" },
+  { label: "Created", value: "createdAt", key: "C" },
 ];
 
 function RecentDaysFilter({ filters, onRecentDaysChange, onRecentDateFieldChange }: RecentDaysFilterProps) {
@@ -253,66 +253,62 @@ function RecentDaysFilter({ filters, onRecentDaysChange, onRecentDateFieldChange
 
   return (
     <div>
-      <div className="flex flex-row w-full gap-1">
+      <div className="flex items-center gap-1">
         <Checkbox
           checked={filters.recentDays !== null}
           onChange={(checked) => {
-            if (checked) {
-              setLocalDays(30);
-              onRecentDaysChange(30);
-            } else {
-              onRecentDaysChange(null);
-            }
+            if (checked) onRecentDaysChange(localDays);
+            else onRecentDaysChange(null);
           }}
         >
           <span className="flex-1 text-left">{t("filters.newOnly")}</span>
           <KbdHint>N</KbdHint>
         </Checkbox>
-        {filters.recentDays !== null && filters.source === "internal" ? (
-          <div className="flex flex-wrap gap-1">
-            {DateFieldOptions.map((op) => {
-              const isActive = filters.recentDateFields.includes(op.value);
-              return (
-                <button
-                  type="button"
-                  key={op.label}
-                  onClick={() => {
-                    if (isActive && filters.recentDateFields.length === 1) return;
-                    onRecentDateFieldChange(
-                      isActive ? filters.recentDateFields.filter((field) => field !== op.value) : [...filters.recentDateFields, op.value],
-                    );
-                  }}
-                  className={cn(
-                    "flex items-center gap-1 px-2.5 py-px rounded-full text-xs font-medium transition-all border",
-                    isActive
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "border-border bg-background hover:bg-muted text-foreground dark:bg-input/30 dark:border-input",
-                  )}
-                >
-                  <span className={cn("text-xs", isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>{op.key}</span>
-                  {t(`filters.date.${op.value}`)}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
+        {filters.recentDays !== null && filters.source === "internal" && (
+          <>
+            <div className="w-px h-3.5 bg-border shrink-0" />
+            <div className="flex gap-1 shrink-0">
+              {DateFieldOptions.map((op) => {
+                const isActive = filters.recentDateFields.includes(op.value);
+                return (
+                  <button
+                    type="button"
+                    key={op.value}
+                    onClick={() => {
+                      if (isActive && filters.recentDateFields.length === 1) return;
+                      onRecentDateFieldChange(
+                        isActive ? filters.recentDateFields.filter((field) => field !== op.value) : [...filters.recentDateFields, op.value],
+                      );
+                    }}
+                    className={cn(
+                      "relative px-1.5 py-px rounded-sm text-[11px] font-medium transition-all border after:absolute after:inset-x-0 after:-inset-y-2",
+                      isActive
+                        ? "bg-primary/5 border-primary/30 text-primary dark:bg-primary/10 dark:border-primary/20"
+                        : "border-transparent text-muted-foreground hover:bg-muted dark:hover:bg-muted/50",
+                    )}
+                  >
+                    {t(`filters.date.${op.value}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
       {filters.recentDays !== null && (
-        <>
-          <div className="flex items-center gap-3 px-2 pt-1.5 pb-0.5">
-            <Slider
-              min={1}
-              max={30}
-              step={1}
-              value={[localDays]}
-              onValueChange={(value) => setLocalDays(Array.isArray(value) ? value[0] : value)}
-              onValueCommitted={handleCommit}
-            />
-            <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap w-12 text-right">
-              {t("filters.recentDaysValue", { count: localDays })}
-            </span>
-          </div>
-        </>
+        <div className="flex items-center gap-3 px-2 pt-1.5 pb-0.5">
+          <Slider
+            min={1}
+            max={30}
+            step={1}
+            value={[localDays]}
+            onValueChange={(value) => setLocalDays(Array.isArray(value) ? value[0] : value)}
+            onValueCommitted={handleCommit}
+          />
+          <span className="text-xs tabular-nums text-muted-foreground whitespace-nowrap w-12 text-right">
+            {t("filters.recentDaysValue", { count: localDays })}
+          </span>
+        </div>
       )}
     </div>
   );
