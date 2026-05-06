@@ -127,7 +127,7 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 
   if (options?.proto && response.headers.get("content-type") === "application/x-protobuf") {
     const buffer = await response.arrayBuffer();
-    return toJson(options.proto, fromBinary(options.proto, new Uint8Array(buffer)), { useProtoFieldName: true }) as T;
+    return toJson(options.proto, fromBinary(options.proto, new Uint8Array(buffer)), { useProtoFieldName: true, emitDefaultValues: true }) as T;
   }
 
   if (response.status === 204) return undefined as unknown as T;
