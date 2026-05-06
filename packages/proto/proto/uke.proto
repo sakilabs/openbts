@@ -1,6 +1,7 @@
 syntax = "proto3";
 import "common.proto";
 import "locations.proto";
+import "google/protobuf/wrappers.proto";
 package openbts.uke;
 
 message UKEOperator {
@@ -29,9 +30,9 @@ enum AntennaType {
 
 message Sector {
   int32 id = 1;
-  int32 azimuth = 2;
-  int32 elevation = 3;
-  int32 antenna_height = 4;
+  google.protobuf.Int32Value azimuth = 2;
+  google.protobuf.Int32Value elevation = 3;
+  google.protobuf.Int32Value antenna_height = 4;
   AntennaType antenna_type = 5;
 }
 
@@ -108,7 +109,7 @@ message RadiolineRx {
 
 message RadiolineLink {
   double freq = 1;
-  int32 ch_num = 2;
+  google.protobuf.Int32Value ch_num = 2;
   string plan_synbol = 3;
   double ch_width = 4;
   string polarization = 5;

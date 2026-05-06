@@ -97,7 +97,7 @@ export function StationDetailsBody({
     onTabChange(tab);
   };
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
-  const cellGroups = station ? groupCellsByRat(station.cells) : {};
+  const cellGroups = station ? groupCellsByRat(station.cells ?? []) : {};
 
   const { data: photos } = useQuery({
     queryKey: ["station-photos", stationId],
