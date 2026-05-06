@@ -2,25 +2,22 @@
 // @generated from file stations.proto (package openbts.stations, syntax proto3)
 /* eslint-disable */
 
-import type { JsonObject, Message } from "@bufbuild/protobuf";
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import { file_google_protobuf_struct } from "@bufbuild/protobuf/wkt";
-
 import type { Band, Operator, Rat } from "./common_pb.js";
 import { file_common } from "./common_pb.js";
-import type { Location } from "./locations_pb.js";
-import { file_locations } from "./locations_pb.js";
 import type { ExtraIdentificators } from "./station_cells_pb.js";
 import { file_station_cells } from "./station_cells_pb.js";
+import type { Location } from "./locations_pb.js";
+import { file_locations } from "./locations_pb.js";
+import { file_google_protobuf_struct } from "@bufbuild/protobuf/wkt";
+import type { JsonObject, Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file stations.proto.
  */
-export const file_stations: GenFile /*@__PURE__*/ = fileDesc(
-  "Cg5zdGF0aW9ucy5wcm90bxIQb3BlbmJ0cy5zdGF0aW9ucyLGAQoLU3RhdGlvbkNlbGwSCgoCaWQYASABKAUSGQoDcmF0GAIgASgOMgwub3BlbmJ0cy5SYXQSDQoFbm90ZXMYAyABKAkSGwoEYmFuZBgEIAEoCzINLm9wZW5idHMuQmFuZBIUCgxpc19jb25maXJtZWQYBSABKAgSKAoHZGV0YWlscxgIIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSEQoJdXBkYXRlZEF0GAYgASgJEhEKCWNyZWF0ZWRBdBgHIAEoCSLTAQoEQ2VsbBIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgFEhkKA3JhdBgDIAEoDjIMLm9wZW5idHMuUmF0Eg0KBW5vdGVzGAQgASgJEhsKBGJhbmQYBSABKAsyDS5vcGVuYnRzLkJhbmQSFAoMaXNfY29uZmlybWVkGAYgASgIEigKB2RldGFpbHMYByABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0EhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAki0gIKB1N0YXRpb24SCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoCRINCgVub3RlcxgDIAEoCRIVCg1leHRyYV9hZGRyZXNzGAQgASgJEiwKBWNlbGxzGAUgAygLMh0ub3BlbmJ0cy5zdGF0aW9ucy5TdGF0aW9uQ2VsbBJDChRleHRyYV9pZGVudGlmaWNhdG9ycxgGIAEoCzIlLm9wZW5idHMuc3RhdGlvbnMuRXh0cmFJZGVudGlmaWNhdG9ycxItCghsb2NhdGlvbhgHIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAggASgLMhEub3BlbmJ0cy5PcGVyYXRvchIUCgxpc19jb25maXJtZWQYCSABKAgSEQoJdXBkYXRlZEF0GAogASgJEhEKCWNyZWF0ZWRBdBgLIAEoCSJPChBTdGF0aW9uc1Jlc3BvbnNlEicKBGRhdGEYASADKAsyGS5vcGVuYnRzLnN0YXRpb25zLlN0YXRpb24SEgoKdG90YWxDb3VudBgCIAEoBSI6Cg9TdGF0aW9uUmVzcG9uc2USJwoEZGF0YRgBIAEoCzIZLm9wZW5idHMuc3RhdGlvbnMuU3RhdGlvbiI1Cg1DZWxsc1Jlc3BvbnNlEiQKBGRhdGEYASADKAsyFi5vcGVuYnRzLnN0YXRpb25zLkNlbGwiNAoMQ2VsbFJlc3BvbnNlEiQKBGRhdGEYASABKAsyFi5vcGVuYnRzLnN0YXRpb25zLkNlbGwqJgoGTlJUeXBlEgsKB3Vua25vd24QABIHCgNuc2EQARIGCgJzYRACYgZwcm90bzM",
-  [file_common, file_station_cells, file_locations, file_google_protobuf_struct],
-);
+export const file_stations: GenFile = /*@__PURE__*/
+  fileDesc("Cg5zdGF0aW9ucy5wcm90bxIQb3BlbmJ0cy5zdGF0aW9ucyLGAQoLU3RhdGlvbkNlbGwSCgoCaWQYASABKAUSGQoDcmF0GAIgASgOMgwub3BlbmJ0cy5SYXQSDQoFbm90ZXMYAyABKAkSGwoEYmFuZBgEIAEoCzINLm9wZW5idHMuQmFuZBIUCgxpc19jb25maXJtZWQYBSABKAgSKAoHZGV0YWlscxgIIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSEQoJdXBkYXRlZEF0GAYgASgJEhEKCWNyZWF0ZWRBdBgHIAEoCSLTAQoEQ2VsbBIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgFEhkKA3JhdBgDIAEoDjIMLm9wZW5idHMuUmF0Eg0KBW5vdGVzGAQgASgJEhsKBGJhbmQYBSABKAsyDS5vcGVuYnRzLkJhbmQSFAoMaXNfY29uZmlybWVkGAYgASgIEigKB2RldGFpbHMYByABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0EhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAki0gIKB1N0YXRpb24SCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoCRINCgVub3RlcxgDIAEoCRIVCg1leHRyYV9hZGRyZXNzGAQgASgJEiwKBWNlbGxzGAUgAygLMh0ub3BlbmJ0cy5zdGF0aW9ucy5TdGF0aW9uQ2VsbBJDChRleHRyYV9pZGVudGlmaWNhdG9ycxgGIAEoCzIlLm9wZW5idHMuc3RhdGlvbnMuRXh0cmFJZGVudGlmaWNhdG9ycxItCghsb2NhdGlvbhgHIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAggASgLMhEub3BlbmJ0cy5PcGVyYXRvchIUCgxpc19jb25maXJtZWQYCSABKAgSEQoJdXBkYXRlZEF0GAogASgJEhEKCWNyZWF0ZWRBdBgLIAEoCSJPChBTdGF0aW9uc1Jlc3BvbnNlEicKBGRhdGEYASADKAsyGS5vcGVuYnRzLnN0YXRpb25zLlN0YXRpb24SEgoKdG90YWxDb3VudBgCIAEoBSI6Cg9TdGF0aW9uUmVzcG9uc2USJwoEZGF0YRgBIAEoCzIZLm9wZW5idHMuc3RhdGlvbnMuU3RhdGlvbiI1Cg1DZWxsc1Jlc3BvbnNlEiQKBGRhdGEYASADKAsyFi5vcGVuYnRzLnN0YXRpb25zLkNlbGwiNAoMQ2VsbFJlc3BvbnNlEiQKBGRhdGEYASABKAsyFi5vcGVuYnRzLnN0YXRpb25zLkNlbGwqLgoGTlJUeXBlEhMKD05SX1RZUEVfVU5LTk9XThAAEgcKA25zYRABEgYKAnNhEAJiBnByb3RvMw", [file_common, file_station_cells, file_locations, file_google_protobuf_struct]);
 
 /**
  * @generated from message openbts.stations.StationCell
@@ -71,7 +68,8 @@ export type StationCell = Message<"openbts.stations.StationCell"> & {
  * Describes the message openbts.stations.StationCell.
  * Use `create(StationCellSchema)` to create a new message.
  */
-export const StationCellSchema: GenMessage<StationCell> /*@__PURE__*/ = messageDesc(file_stations, 0);
+export const StationCellSchema: GenMessage<StationCell> = /*@__PURE__*/
+  messageDesc(file_stations, 0);
 
 /**
  * @generated from message openbts.stations.Cell
@@ -127,7 +125,8 @@ export type Cell = Message<"openbts.stations.Cell"> & {
  * Describes the message openbts.stations.Cell.
  * Use `create(CellSchema)` to create a new message.
  */
-export const CellSchema: GenMessage<Cell> /*@__PURE__*/ = messageDesc(file_stations, 1);
+export const CellSchema: GenMessage<Cell> = /*@__PURE__*/
+  messageDesc(file_stations, 1);
 
 /**
  * @generated from message openbts.stations.Station
@@ -193,7 +192,8 @@ export type Station = Message<"openbts.stations.Station"> & {
  * Describes the message openbts.stations.Station.
  * Use `create(StationSchema)` to create a new message.
  */
-export const StationSchema: GenMessage<Station> /*@__PURE__*/ = messageDesc(file_stations, 2);
+export const StationSchema: GenMessage<Station> = /*@__PURE__*/
+  messageDesc(file_stations, 2);
 
 /**
  * @generated from message openbts.stations.StationsResponse
@@ -214,7 +214,8 @@ export type StationsResponse = Message<"openbts.stations.StationsResponse"> & {
  * Describes the message openbts.stations.StationsResponse.
  * Use `create(StationsResponseSchema)` to create a new message.
  */
-export const StationsResponseSchema: GenMessage<StationsResponse> /*@__PURE__*/ = messageDesc(file_stations, 3);
+export const StationsResponseSchema: GenMessage<StationsResponse> = /*@__PURE__*/
+  messageDesc(file_stations, 3);
 
 /**
  * @generated from message openbts.stations.StationResponse
@@ -230,7 +231,8 @@ export type StationResponse = Message<"openbts.stations.StationResponse"> & {
  * Describes the message openbts.stations.StationResponse.
  * Use `create(StationResponseSchema)` to create a new message.
  */
-export const StationResponseSchema: GenMessage<StationResponse> /*@__PURE__*/ = messageDesc(file_stations, 4);
+export const StationResponseSchema: GenMessage<StationResponse> = /*@__PURE__*/
+  messageDesc(file_stations, 4);
 
 /**
  * @generated from message openbts.stations.CellsResponse
@@ -246,7 +248,8 @@ export type CellsResponse = Message<"openbts.stations.CellsResponse"> & {
  * Describes the message openbts.stations.CellsResponse.
  * Use `create(CellsResponseSchema)` to create a new message.
  */
-export const CellsResponseSchema: GenMessage<CellsResponse> /*@__PURE__*/ = messageDesc(file_stations, 5);
+export const CellsResponseSchema: GenMessage<CellsResponse> = /*@__PURE__*/
+  messageDesc(file_stations, 5);
 
 /**
  * @generated from message openbts.stations.CellResponse
@@ -262,16 +265,17 @@ export type CellResponse = Message<"openbts.stations.CellResponse"> & {
  * Describes the message openbts.stations.CellResponse.
  * Use `create(CellResponseSchema)` to create a new message.
  */
-export const CellResponseSchema: GenMessage<CellResponse> /*@__PURE__*/ = messageDesc(file_stations, 6);
+export const CellResponseSchema: GenMessage<CellResponse> = /*@__PURE__*/
+  messageDesc(file_stations, 6);
 
 /**
  * @generated from enum openbts.stations.NRType
  */
 export enum NRType {
   /**
-   * @generated from enum value: unknown = 0;
+   * @generated from enum value: NR_TYPE_UNKNOWN = 0;
    */
-  unknown = 0,
+  NR_TYPE_UNKNOWN = 0,
 
   /**
    * @generated from enum value: nsa = 1;
@@ -287,4 +291,6 @@ export enum NRType {
 /**
  * Describes the enum openbts.stations.NRType.
  */
-export const NRTypeSchema: GenEnum<NRType> /*@__PURE__*/ = enumDesc(file_stations, 0);
+export const NRTypeSchema: GenEnum<NRType> = /*@__PURE__*/
+  enumDesc(file_stations, 0);
+

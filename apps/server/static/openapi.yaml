@@ -3526,7 +3526,7 @@ components:
 
     CellWithBand:
       allOf:
-        - $ref: "#/components/schemas/CellBase"
+        - $ref: "#/components/schemas/CellBaseSlim"
         - type: object
           properties:
             band: { $ref: "#/components/schemas/Band" }
@@ -3645,6 +3645,15 @@ components:
         - type: object
           properties:
             region: { $ref: "#/components/schemas/Region" }
+    CellBaseSlim:
+      type: object
+      properties:
+        id: { type: integer }
+        rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
+        notes: { type: string, nullable: true }
+        is_confirmed: { type: boolean, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
     CellBase:
       type: object
       properties:
@@ -3763,7 +3772,7 @@ components:
               nullable: true
     CellWithBandAndDetails:
       allOf:
-        - $ref: "#/components/schemas/CellBase"
+        - $ref: "#/components/schemas/CellBaseSlim"
         - type: object
           properties:
             band: { $ref: "#/components/schemas/Band" }

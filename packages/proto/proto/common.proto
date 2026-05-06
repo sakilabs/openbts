@@ -3,9 +3,10 @@ package openbts;
 
 
 enum StationStatus {
-  published = 0;
-  inactive = 1;
-  pending = 2;
+  STATION_STATUS_UNKNOWN = 0;
+  published = 1;
+  inactive = 2;
+  pending = 3;
 }
 
 message Operator {
@@ -23,22 +24,25 @@ message Region {
 }
 
 enum Rat {
-  GSM = 0;
-  CDMA = 1;
-  UMTS = 2;
-  LTE = 3;
-  NR = 4;
-  IOT = 5;
+  RAT_UNKNOWN = 0;
+  GSM = 1;
+  CDMA = 2;
+  UMTS = 3;
+  LTE = 4;
+  NR = 5;
+  IOT = 6;
 }
 
 enum Duplex {
-  FDD = 0;
-  TDD = 1;
+  DUPLEX_UNKNOWN = 0;
+  FDD = 1;
+  TDD = 2;
 }
 
 enum BandVariant {
-  commercial = 0;
-  railway = 1;
+  BAND_VARIANT_UNKNOWN = 0;
+  commercial = 1;
+  railway = 2;
 }
 
 message Band {

@@ -209,7 +209,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         },
         with: {
           cells: {
-            columns: { band_id: false },
+            columns: { band_id: false, station_id: false },
             with: { band: true },
           },
           location: { columns: { point: false, region_id: false }, with: { region: true } },

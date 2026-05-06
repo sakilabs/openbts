@@ -1,5 +1,5 @@
-import { fromBinary } from "@bufbuild/protobuf";
-import type { DescMessage, MessageShape } from "@bufbuild/protobuf";
+import { fromBinary, toJson } from "@bufbuild/protobuf";
+import type { DescMessage } from "@bufbuild/protobuf";
 import { toast } from "sonner";
 
 export const API_BASE = import.meta.env.VITE_API_URL || "https://openbts.sakilabs.com/api/v1";
@@ -127,7 +127,7 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
 
   if (options?.proto && response.headers.get("content-type") === "application/x-protobuf") {
     const buffer = await response.arrayBuffer();
-    return fromBinary(options.proto, new Uint8Array(buffer)) as MessageShape<typeof options.proto> as T;
+    return toJson(options.proto, fromBinary(options.proto, new Uint8Array(buffer)), { useProtoFieldName: true }) as T;
   }
 
   if (response.status === 204) return undefined as unknown as T;

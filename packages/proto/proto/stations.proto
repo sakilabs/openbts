@@ -18,7 +18,7 @@ message StationCell {
 }
 
 enum NRType {
-  unknown = 0;
+  NR_TYPE_UNKNOWN = 0;
   nsa = 1;
   sa = 2;
 }

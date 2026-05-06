@@ -10,18 +10,21 @@ message UKEOperator {
 }
 
 enum DecisionType {
-  P = 0;
-  zmP = 1;
+  DECISION_TYPE_UNKNOWN = 0;
+  P = 1;
+  zmP = 2;
 }
 
 enum PermitSource {
-  permits = 0;
-  device_registry = 1;
+  PERMIT_SOURCE_UNKNOWN = 0;
+  permits = 1;
+  device_registry = 2;
 }
 
 enum AntennaType {
-  indoor = 0;
-  outdoor = 1;
+  ANTENNA_TYPE_UNKNOWN = 0;
+  indoor = 1;
+  outdoor = 2;
 }
 
 message Sector {

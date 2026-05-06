@@ -2,22 +2,19 @@
 // @generated from file locations.proto (package openbts.locations, syntax proto3)
 /* eslint-disable */
 
-import type { Message } from "@bufbuild/protobuf";
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-
 import type { Operator, Region, StationStatus } from "./common_pb.js";
 import { file_common } from "./common_pb.js";
 import type { CellWithoutDetails, ExtraIdentificators } from "./station_cells_pb.js";
 import { file_station_cells } from "./station_cells_pb.js";
+import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file locations.proto.
  */
-export const file_locations: GenFile /*@__PURE__*/ = fileDesc(
-  "Cg9sb2NhdGlvbnMucHJvdG8SEW9wZW5idHMubG9jYXRpb25zItoCCg9Mb2NhdGlvblN0YXRpb24SCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoCRINCgVub3RlcxgDIAEoCRIVCg1leHRyYV9hZGRyZXNzGAQgASgJEhEKCXVwZGF0ZWRBdBgFIAEoCRIRCgljcmVhdGVkQXQYBiABKAkSFAoMaXNfY29uZmlybWVkGAcgASgIEiYKBnN0YXR1cxgIIAEoDjIWLm9wZW5idHMuU3RhdGlvblN0YXR1cxIjCghvcGVyYXRvchgJIAEoCzIRLm9wZW5idHMuT3BlcmF0b3ISMwoFY2VsbHMYCiADKAsyJC5vcGVuYnRzLnN0YXRpb25zLkNlbGxXaXRob3V0RGV0YWlscxJDChRleHRyYV9pZGVudGlmaWNhdG9ycxgLIAEoCzIlLm9wZW5idHMuc3RhdGlvbnMuRXh0cmFJZGVudGlmaWNhdG9ycyLXAQoITG9jYXRpb24SCgoCaWQYASABKAUSDAoEY2l0eRgCIAEoCRIPCgdhZGRyZXNzGAMgASgJEhAKCGxhdGl0dWRlGAQgASgBEhEKCWxvbmdpdHVkZRgFIAEoARIRCgl1cGRhdGVkQXQYBiABKAkSEQoJY3JlYXRlZEF0GAcgASgJEh8KBnJlZ2lvbhgIIAEoCzIPLm9wZW5idHMuUmVnaW9uEjQKCHN0YXRpb25zGAkgAygLMiIub3BlbmJ0cy5sb2NhdGlvbnMuTG9jYXRpb25TdGF0aW9uIlIKEUxvY2F0aW9uc1Jlc3BvbnNlEikKBGRhdGEYASADKAsyGy5vcGVuYnRzLmxvY2F0aW9ucy5Mb2NhdGlvbhISCgp0b3RhbENvdW50GAIgASgFIj0KEExvY2F0aW9uUmVzcG9uc2USKQoEZGF0YRgBIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uYgZwcm90bzM",
-  [file_common, file_station_cells],
-);
+export const file_locations: GenFile = /*@__PURE__*/
+  fileDesc("Cg9sb2NhdGlvbnMucHJvdG8SEW9wZW5idHMubG9jYXRpb25zItoCCg9Mb2NhdGlvblN0YXRpb24SCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoCRINCgVub3RlcxgDIAEoCRIVCg1leHRyYV9hZGRyZXNzGAQgASgJEhEKCXVwZGF0ZWRBdBgFIAEoCRIRCgljcmVhdGVkQXQYBiABKAkSFAoMaXNfY29uZmlybWVkGAcgASgIEiYKBnN0YXR1cxgIIAEoDjIWLm9wZW5idHMuU3RhdGlvblN0YXR1cxIjCghvcGVyYXRvchgJIAEoCzIRLm9wZW5idHMuT3BlcmF0b3ISMwoFY2VsbHMYCiADKAsyJC5vcGVuYnRzLnN0YXRpb25zLkNlbGxXaXRob3V0RGV0YWlscxJDChRleHRyYV9pZGVudGlmaWNhdG9ycxgLIAEoCzIlLm9wZW5idHMuc3RhdGlvbnMuRXh0cmFJZGVudGlmaWNhdG9ycyLXAQoITG9jYXRpb24SCgoCaWQYASABKAUSDAoEY2l0eRgCIAEoCRIPCgdhZGRyZXNzGAMgASgJEhAKCGxhdGl0dWRlGAQgASgBEhEKCWxvbmdpdHVkZRgFIAEoARIRCgl1cGRhdGVkQXQYBiABKAkSEQoJY3JlYXRlZEF0GAcgASgJEh8KBnJlZ2lvbhgIIAEoCzIPLm9wZW5idHMuUmVnaW9uEjQKCHN0YXRpb25zGAkgAygLMiIub3BlbmJ0cy5sb2NhdGlvbnMuTG9jYXRpb25TdGF0aW9uIlIKEUxvY2F0aW9uc1Jlc3BvbnNlEikKBGRhdGEYASADKAsyGy5vcGVuYnRzLmxvY2F0aW9ucy5Mb2NhdGlvbhISCgp0b3RhbENvdW50GAIgASgFIj0KEExvY2F0aW9uUmVzcG9uc2USKQoEZGF0YRgBIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uYgZwcm90bzM", [file_common, file_station_cells]);
 
 /**
  * @generated from message openbts.locations.LocationStation
@@ -83,7 +80,8 @@ export type LocationStation = Message<"openbts.locations.LocationStation"> & {
  * Describes the message openbts.locations.LocationStation.
  * Use `create(LocationStationSchema)` to create a new message.
  */
-export const LocationStationSchema: GenMessage<LocationStation> /*@__PURE__*/ = messageDesc(file_locations, 0);
+export const LocationStationSchema: GenMessage<LocationStation> = /*@__PURE__*/
+  messageDesc(file_locations, 0);
 
 /**
  * @generated from message openbts.locations.Location
@@ -139,7 +137,8 @@ export type Location = Message<"openbts.locations.Location"> & {
  * Describes the message openbts.locations.Location.
  * Use `create(LocationSchema)` to create a new message.
  */
-export const LocationSchema: GenMessage<Location> /*@__PURE__*/ = messageDesc(file_locations, 1);
+export const LocationSchema: GenMessage<Location> = /*@__PURE__*/
+  messageDesc(file_locations, 1);
 
 /**
  * @generated from message openbts.locations.LocationsResponse
@@ -160,7 +159,8 @@ export type LocationsResponse = Message<"openbts.locations.LocationsResponse"> &
  * Describes the message openbts.locations.LocationsResponse.
  * Use `create(LocationsResponseSchema)` to create a new message.
  */
-export const LocationsResponseSchema: GenMessage<LocationsResponse> /*@__PURE__*/ = messageDesc(file_locations, 2);
+export const LocationsResponseSchema: GenMessage<LocationsResponse> = /*@__PURE__*/
+  messageDesc(file_locations, 2);
 
 /**
  * @generated from message openbts.locations.LocationResponse
@@ -176,4 +176,6 @@ export type LocationResponse = Message<"openbts.locations.LocationResponse"> & {
  * Describes the message openbts.locations.LocationResponse.
  * Use `create(LocationResponseSchema)` to create a new message.
  */
-export const LocationResponseSchema: GenMessage<LocationResponse> /*@__PURE__*/ = messageDesc(file_locations, 3);
+export const LocationResponseSchema: GenMessage<LocationResponse> = /*@__PURE__*/
+  messageDesc(file_locations, 3);
+

@@ -11,7 +11,7 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
 const stationSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
-const cellsSchema = createSelectSchema(cells).omit({ band_id: true });
+const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
@@ -58,7 +58,7 @@ const stationByIdQuery = db.query.stations
   .findFirst({
     where: { id: sql.placeholder("id"), status: "published" },
     with: {
-      cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false } },
+      cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false, station_id: false } },
       location: { columns: { point: false, region_id: false }, with: { region: true } },
       operator: true,
       extra_identificators: { columns: { station_id: false } },

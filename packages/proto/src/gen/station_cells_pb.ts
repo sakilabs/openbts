@@ -2,20 +2,17 @@
 // @generated from file station_cells.proto (package openbts.stations, syntax proto3)
 /* eslint-disable */
 
-import type { Message } from "@bufbuild/protobuf";
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-
 import type { Band, Rat } from "./common_pb.js";
 import { file_common } from "./common_pb.js";
+import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file station_cells.proto.
  */
-export const file_station_cells: GenFile /*@__PURE__*/ = fileDesc(
-  "ChNzdGF0aW9uX2NlbGxzLnByb3RvEhBvcGVuYnRzLnN0YXRpb25zIrcBChJDZWxsV2l0aG91dERldGFpbHMSCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoBRIZCgNyYXQYAyABKA4yDC5vcGVuYnRzLlJhdBINCgVub3RlcxgEIAEoCRIbCgRiYW5kGAUgASgLMg0ub3BlbmJ0cy5CYW5kEhQKDGlzX2NvbmZpcm1lZBgGIAEoCBIRCgl1cGRhdGVkQXQYCCABKAkSEQoJY3JlYXRlZEF0GAkgASgJIoUBChNFeHRyYUlkZW50aWZpY2F0b3JzEgoKAmlkGAEgASgFEhMKC25ldHdvcmtzX2lkGAIgASgFEhUKDW5ldHdvcmtzX25hbWUYAyABKAkSEAoIbW5vX25hbWUYBCABKAkSEQoJdXBkYXRlZEF0GAUgASgJEhEKCWNyZWF0ZWRBdBgGIAEoCWIGcHJvdG8z",
-  [file_common],
-);
+export const file_station_cells: GenFile = /*@__PURE__*/
+  fileDesc("ChNzdGF0aW9uX2NlbGxzLnByb3RvEhBvcGVuYnRzLnN0YXRpb25zIrcBChJDZWxsV2l0aG91dERldGFpbHMSCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoBRIZCgNyYXQYAyABKA4yDC5vcGVuYnRzLlJhdBINCgVub3RlcxgEIAEoCRIbCgRiYW5kGAUgASgLMg0ub3BlbmJ0cy5CYW5kEhQKDGlzX2NvbmZpcm1lZBgGIAEoCBIRCgl1cGRhdGVkQXQYCCABKAkSEQoJY3JlYXRlZEF0GAkgASgJIoUBChNFeHRyYUlkZW50aWZpY2F0b3JzEgoKAmlkGAEgASgFEhMKC25ldHdvcmtzX2lkGAIgASgFEhUKDW5ldHdvcmtzX25hbWUYAyABKAkSEAoIbW5vX25hbWUYBCABKAkSEQoJdXBkYXRlZEF0GAUgASgJEhEKCWNyZWF0ZWRBdBgGIAEoCWIGcHJvdG8z", [file_common]);
 
 /**
  * @generated from message openbts.stations.CellWithoutDetails
@@ -66,7 +63,8 @@ export type CellWithoutDetails = Message<"openbts.stations.CellWithoutDetails"> 
  * Describes the message openbts.stations.CellWithoutDetails.
  * Use `create(CellWithoutDetailsSchema)` to create a new message.
  */
-export const CellWithoutDetailsSchema: GenMessage<CellWithoutDetails> /*@__PURE__*/ = messageDesc(file_station_cells, 0);
+export const CellWithoutDetailsSchema: GenMessage<CellWithoutDetails> = /*@__PURE__*/
+  messageDesc(file_station_cells, 0);
 
 /**
  * @generated from message openbts.stations.ExtraIdentificators
@@ -107,4 +105,6 @@ export type ExtraIdentificators = Message<"openbts.stations.ExtraIdentificators"
  * Describes the message openbts.stations.ExtraIdentificators.
  * Use `create(ExtraIdentificatorsSchema)` to create a new message.
  */
-export const ExtraIdentificatorsSchema: GenMessage<ExtraIdentificators> /*@__PURE__*/ = messageDesc(file_station_cells, 1);
+export const ExtraIdentificatorsSchema: GenMessage<ExtraIdentificators> = /*@__PURE__*/
+  messageDesc(file_station_cells, 1);
+

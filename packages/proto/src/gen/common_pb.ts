@@ -2,16 +2,15 @@
 // @generated from file common.proto (package openbts, syntax proto3)
 /* eslint-disable */
 
-import type { Message } from "@bufbuild/protobuf";
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file common.proto.
  */
-export const file_common: GenFile /*@__PURE__*/ = fileDesc(
-  "Cgxjb21tb24ucHJvdG8SB29wZW5idHMiVwoIT3BlcmF0b3ISCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIRCglmdWxsX25hbWUYAyABKAkSEQoJcGFyZW50X2lkGAQgASgFEgsKA21uYxgFIAEoBSIwCgZSZWdpb24SCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIMCgRjb2RlGAMgASgJIpIBCgRCYW5kEgoKAmlkGAEgASgFEg0KBXZhbHVlGAIgASgFEhkKA3JhdBgDIAEoDjIMLm9wZW5idHMuUmF0EgwKBG5hbWUYBCABKAkSHwoGZHVwbGV4GAUgASgOMg8ub3BlbmJ0cy5EdXBsZXgSJQoHdmFyaWFudBgGIAEoDjIULm9wZW5idHMuQmFuZFZhcmlhbnQqOQoNU3RhdGlvblN0YXR1cxINCglwdWJsaXNoZWQQABIMCghpbmFjdGl2ZRABEgsKB3BlbmRpbmcQAio8CgNSYXQSBwoDR1NNEAASCAoEQ0RNQRABEggKBFVNVFMQAhIHCgNMVEUQAxIGCgJOUhAEEgcKA0lPVBAFKhoKBkR1cGxleBIHCgNGREQQABIHCgNUREQQASoqCgtCYW5kVmFyaWFudBIOCgpjb21tZXJjaWFsEAASCwoHcmFpbHdheRABYgZwcm90bzM",
-);
+export const file_common: GenFile = /*@__PURE__*/
+  fileDesc("Cgxjb21tb24ucHJvdG8SB29wZW5idHMiVwoIT3BlcmF0b3ISCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIRCglmdWxsX25hbWUYAyABKAkSEQoJcGFyZW50X2lkGAQgASgFEgsKA21uYxgFIAEoBSIwCgZSZWdpb24SCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIMCgRjb2RlGAMgASgJIpIBCgRCYW5kEgoKAmlkGAEgASgFEg0KBXZhbHVlGAIgASgFEhkKA3JhdBgDIAEoDjIMLm9wZW5idHMuUmF0EgwKBG5hbWUYBCABKAkSHwoGZHVwbGV4GAUgASgOMg8ub3BlbmJ0cy5EdXBsZXgSJQoHdmFyaWFudBgGIAEoDjIULm9wZW5idHMuQmFuZFZhcmlhbnQqVQoNU3RhdGlvblN0YXR1cxIaChZTVEFUSU9OX1NUQVRVU19VTktOT1dOEAASDQoJcHVibGlzaGVkEAESDAoIaW5hY3RpdmUQAhILCgdwZW5kaW5nEAMqTQoDUmF0Eg8KC1JBVF9VTktOT1dOEAASBwoDR1NNEAESCAoEQ0RNQRACEggKBFVNVFMQAxIHCgNMVEUQBBIGCgJOUhAFEgcKA0lPVBAGKi4KBkR1cGxleBISCg5EVVBMRVhfVU5LTk9XThAAEgcKA0ZERBABEgcKA1RERBACKkQKC0JhbmRWYXJpYW50EhgKFEJBTkRfVkFSSUFOVF9VTktOT1dOEAASDgoKY29tbWVyY2lhbBABEgsKB3JhaWx3YXkQAmIGcHJvdG8z");
 
 /**
  * @generated from message openbts.Operator
@@ -47,7 +46,8 @@ export type Operator = Message<"openbts.Operator"> & {
  * Describes the message openbts.Operator.
  * Use `create(OperatorSchema)` to create a new message.
  */
-export const OperatorSchema: GenMessage<Operator> /*@__PURE__*/ = messageDesc(file_common, 0);
+export const OperatorSchema: GenMessage<Operator> = /*@__PURE__*/
+  messageDesc(file_common, 0);
 
 /**
  * @generated from message openbts.Region
@@ -73,7 +73,8 @@ export type Region = Message<"openbts.Region"> & {
  * Describes the message openbts.Region.
  * Use `create(RegionSchema)` to create a new message.
  */
-export const RegionSchema: GenMessage<Region> /*@__PURE__*/ = messageDesc(file_common, 1);
+export const RegionSchema: GenMessage<Region> = /*@__PURE__*/
+  messageDesc(file_common, 1);
 
 /**
  * @generated from message openbts.Band
@@ -114,109 +115,135 @@ export type Band = Message<"openbts.Band"> & {
  * Describes the message openbts.Band.
  * Use `create(BandSchema)` to create a new message.
  */
-export const BandSchema: GenMessage<Band> /*@__PURE__*/ = messageDesc(file_common, 2);
+export const BandSchema: GenMessage<Band> = /*@__PURE__*/
+  messageDesc(file_common, 2);
 
 /**
  * @generated from enum openbts.StationStatus
  */
 export enum StationStatus {
   /**
-   * @generated from enum value: published = 0;
+   * @generated from enum value: STATION_STATUS_UNKNOWN = 0;
    */
-  published = 0,
+  STATION_STATUS_UNKNOWN = 0,
 
   /**
-   * @generated from enum value: inactive = 1;
+   * @generated from enum value: published = 1;
    */
-  inactive = 1,
+  published = 1,
 
   /**
-   * @generated from enum value: pending = 2;
+   * @generated from enum value: inactive = 2;
    */
-  pending = 2,
+  inactive = 2,
+
+  /**
+   * @generated from enum value: pending = 3;
+   */
+  pending = 3,
 }
 
 /**
  * Describes the enum openbts.StationStatus.
  */
-export const StationStatusSchema: GenEnum<StationStatus> /*@__PURE__*/ = enumDesc(file_common, 0);
+export const StationStatusSchema: GenEnum<StationStatus> = /*@__PURE__*/
+  enumDesc(file_common, 0);
 
 /**
  * @generated from enum openbts.Rat
  */
 export enum Rat {
   /**
-   * @generated from enum value: GSM = 0;
+   * @generated from enum value: RAT_UNKNOWN = 0;
    */
-  GSM = 0,
+  RAT_UNKNOWN = 0,
 
   /**
-   * @generated from enum value: CDMA = 1;
+   * @generated from enum value: GSM = 1;
    */
-  CDMA = 1,
+  GSM = 1,
 
   /**
-   * @generated from enum value: UMTS = 2;
+   * @generated from enum value: CDMA = 2;
    */
-  UMTS = 2,
+  CDMA = 2,
 
   /**
-   * @generated from enum value: LTE = 3;
+   * @generated from enum value: UMTS = 3;
    */
-  LTE = 3,
+  UMTS = 3,
 
   /**
-   * @generated from enum value: NR = 4;
+   * @generated from enum value: LTE = 4;
    */
-  NR = 4,
+  LTE = 4,
 
   /**
-   * @generated from enum value: IOT = 5;
+   * @generated from enum value: NR = 5;
    */
-  IOT = 5,
+  NR = 5,
+
+  /**
+   * @generated from enum value: IOT = 6;
+   */
+  IOT = 6,
 }
 
 /**
  * Describes the enum openbts.Rat.
  */
-export const RatSchema: GenEnum<Rat> /*@__PURE__*/ = enumDesc(file_common, 1);
+export const RatSchema: GenEnum<Rat> = /*@__PURE__*/
+  enumDesc(file_common, 1);
 
 /**
  * @generated from enum openbts.Duplex
  */
 export enum Duplex {
   /**
-   * @generated from enum value: FDD = 0;
+   * @generated from enum value: DUPLEX_UNKNOWN = 0;
    */
-  FDD = 0,
+  DUPLEX_UNKNOWN = 0,
 
   /**
-   * @generated from enum value: TDD = 1;
+   * @generated from enum value: FDD = 1;
    */
-  TDD = 1,
+  FDD = 1,
+
+  /**
+   * @generated from enum value: TDD = 2;
+   */
+  TDD = 2,
 }
 
 /**
  * Describes the enum openbts.Duplex.
  */
-export const DuplexSchema: GenEnum<Duplex> /*@__PURE__*/ = enumDesc(file_common, 2);
+export const DuplexSchema: GenEnum<Duplex> = /*@__PURE__*/
+  enumDesc(file_common, 2);
 
 /**
  * @generated from enum openbts.BandVariant
  */
 export enum BandVariant {
   /**
-   * @generated from enum value: commercial = 0;
+   * @generated from enum value: BAND_VARIANT_UNKNOWN = 0;
    */
-  commercial = 0,
+  BAND_VARIANT_UNKNOWN = 0,
 
   /**
-   * @generated from enum value: railway = 1;
+   * @generated from enum value: commercial = 1;
    */
-  railway = 1,
+  commercial = 1,
+
+  /**
+   * @generated from enum value: railway = 2;
+   */
+  railway = 2,
 }
 
 /**
  * Describes the enum openbts.BandVariant.
  */
-export const BandVariantSchema: GenEnum<BandVariant> /*@__PURE__*/ = enumDesc(file_common, 3);
+export const BandVariantSchema: GenEnum<BandVariant> = /*@__PURE__*/
+  enumDesc(file_common, 3);
+
