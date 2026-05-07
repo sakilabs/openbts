@@ -58,14 +58,17 @@ const schemaRoute = {
               .filter((n) => !Number.isNaN(n))
           : undefined,
       ),
-    new: z
+    since: z
       .string()
+      .regex(/^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\d+$/)
       .optional()
-      .transform((val): number | null => {
-        if (!val || val === "false" || val === "0") return null;
-        if (val === "true") return 30;
-        const n = Number(val);
-        return n >= 1 && n <= 30 ? n : null;
+      .transform((val) => {
+        if (!val) return null;
+        const lastIndex = val.lastIndexOf(":");
+        const fields = val.slice(0, lastIndex).split(",") as ("createdAt" | "updatedAt")[];
+        const days = Number(val.slice(lastIndex + 1));
+        const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        return { fields, cutoff };
       }),
   }),
   response: {
@@ -84,7 +87,7 @@ type ResponseData = z.infer<typeof locationsSchema> & { region: z.infer<typeof r
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { id } = req.params;
-  const { rat, operators: operatorMncs, bands: bandValues, new: recentDays } = req.query;
+  const { rat, operators: operatorMncs, bands: bandValues, since } = req.query;
 
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
@@ -116,12 +119,10 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
   const iotRequested = requestedRats.includes("iot");
 
-  const cutoff = recentDays ? new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000) : null;
-
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
   const buildStationFilter = (stationFields: typeof stations) => {
-    if (!hasStationFilters && !cutoff) return undefined;
+    if (!hasStationFilters && !since) return undefined;
 
     const conditions: ReturnType<typeof sql>[] = [];
     if (operatorIds.length) {
@@ -174,8 +175,11 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       conditions.push(cellWhere!);
     }
 
-    if (cutoff)
-      conditions.push(sql`(${stationFields.updatedAt} >= ${cutoff.toISOString()} OR ${stationFields.createdAt} >= ${cutoff.toISOString()})`);
+    if (since) {
+      const parts = since.fields.map((field) => sql`${stationFields[field]} >= ${since.cutoff.toISOString()}`);
+      const sinceConditions = parts.length > 1 ? sql`(${sql.join(parts, sql` OR `)})` : parts[0];
+      conditions.push(sinceConditions!);
+    }
 
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
@@ -192,7 +196,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       region: true,
       stations: {
         columns: { status: false, location_id: false, operator_id: false },
-        where: hasStationFilters || cutoff ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
+        where: hasStationFilters || since ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
         with: {
           cells: {
             columns: { band_id: false, station_id: false },

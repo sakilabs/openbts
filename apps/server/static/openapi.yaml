@@ -1484,6 +1484,9 @@ paths:
         - name: bands
           in: query
           schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: since
+          in: query
+          schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
       responses:
         "200":
           description: OK
