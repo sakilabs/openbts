@@ -174,5 +174,23 @@
     "confirmDelete": "Czy na pewno chcesz usunąć to zgłoszenie?",
     "confirmDeleteDesc": "Ta akcja jest nieodwracalna. Zgłoszenie zostanie trwale usunięte."
   },
+  "batch": {
+    "stationCount": "{{count}} stacji",
+    "fromAnalyzerTitle": "Zgłoszenie z analizatora",
+    "submitterNote": "Notatka zgłaszającego",
+    "submitterNotePlaceholder": "Dodaj notatkę dla sprawdzającego...",
+    "stationCellSummary": "{{stations}} stacji · {{cells}} komórek",
+    "submit": "Wyślij zgłoszenie(-a)",
+    "submitSuccess": "Pomyślnie wysłano zgłoszenie(-a)",
+    "conflictBadge": "Konflikt",
+    "noStations": "Brak stacji po usunięciu",
+    "backToAnalyzer": "Wróć do analizatora",
+    "conflictsWarning": "Usuń pozycje z konfliktami przed wysłaniem",
+    "unresolvedBandsWarning": "Niektóre pasma nie mogły zostać dopasowane",
+    "tooFewCellsWarning_one": "{{count, number}} stacja ma mniej niż 2 zmiany komórek",
+    "tooFewCellsWarning_few": "{{count, number}} stacje mają mniej niż 2 zmiany komórek",
+    "tooFewCellsWarning_many": "{{count, number}} stacji ma mniej niż 2 zmiany komórek",
+    "batchRateLimit": "Limit: 5 paczek zgłoszeń na 24 godziny"
+  },
   "unsavedChangesConfirm": "Masz niezapisane zmiany. Czy na pewno chcesz opuścić stronę?"
 }

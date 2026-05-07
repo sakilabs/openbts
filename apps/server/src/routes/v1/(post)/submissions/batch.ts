@@ -1,6 +1,6 @@
 import { stations } from "@openbts/drizzle";
 import { inArray } from "drizzle-orm";
-import type { FastifyRequest } from "fastify/types/request.js";
+import type { FastifyRequest } from "fastify";
 import { z } from "zod/v4";
 
 import db from "../../../../database/psql.js";
@@ -23,7 +23,12 @@ import {
   validateSubmission,
 } from "../../../../utils/submissions/create.ts";
 
-const requestSchema = z.union([singleSubmissionSchema, z.array(singleSubmissionSchema).min(1).max(10)]);
+const ITEMS_CAP = 25;
+
+const requestSchema = z.object({
+  submitter_note: z.string().max(2000).optional(),
+  items: z.array(singleSubmissionSchema).min(1).max(ITEMS_CAP),
+});
 
 type ReqBody = { Body: z.infer<typeof requestSchema> };
 const schemaRoute = {
@@ -48,9 +53,18 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const userSession = req.userSession;
   if (!userSession?.user?.id) throw new ErrorResponse("UNAUTHORIZED");
   const userId = userSession.user.id;
-  if (Number.isNaN(userId)) throw new ErrorResponse("UNAUTHORIZED");
 
-  const submissionInputs: SingleSubmission[] = Array.isArray(req.body) ? req.body : [req.body];
+  const { submitter_note, items } = req.body;
+
+  const stationsWithTooFewCells = items.filter((item) => (item.cells?.length ?? 0) < 2);
+  if (stationsWithTooFewCells.length > 0) {
+    throw new ErrorResponse("BAD_REQUEST", { message: "Each station must have at least 2 cell changes in a batch submission" });
+  }
+
+  const submissionInputs: SingleSubmission[] = items.map((item) => ({
+    ...item,
+    submitter_note: item.submitter_note ?? submitter_note,
+  }));
 
   await Promise.all(submissionInputs.map(validateSubmission));
 
@@ -81,15 +95,12 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     );
 
     const submitterName = userSession.user.name || userSession.user.username || "Unknown";
-
     const stationIdsToResolve = results.filter((s) => !s.proposedStation?.station_id && s.station_id).map((s) => s.station_id!);
-
     const uniqueStationIds = Array.from(new Set(stationIdsToResolve));
     const resolvedStations =
       uniqueStationIds.length > 0
         ? await db.select({ id: stations.id, station_id: stations.station_id }).from(stations).where(inArray(stations.id, uniqueStationIds))
         : [];
-
     const stationIdMap = new Map(resolvedStations.map((s) => [s.id, s.station_id]));
 
     for (const submission of results) {
@@ -119,12 +130,12 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   }
 }
 
-const createSubmission: Route<ReqBody, ResponseData> = {
-  url: "/submissions",
+const createSubmissionBatch: Route<ReqBody, ResponseData> = {
+  url: "/submissions/batch",
   method: "POST",
   config: { permissions: ["write:submissions"] },
   schema: schemaRoute,
   handler,
 };
 
-export default createSubmission;
+export default createSubmissionBatch;

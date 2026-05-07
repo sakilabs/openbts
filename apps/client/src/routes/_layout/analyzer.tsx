@@ -4,6 +4,7 @@ import {
   ArrowRight01Icon,
   Cancel01Icon,
   File02Icon,
+  LinkSquare01Icon,
   Location01Icon,
   Sorting05Icon,
   Tag01Icon,
@@ -11,8 +12,10 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
+  type Row,
+  type RowSelectionState,
   type SortingState,
   createColumnHelper,
   flexRender,
@@ -22,10 +25,12 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { RequireAuth } from "@/components/auth/requireAuth";
+import { RatBadge } from "@/components/rat-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
@@ -34,7 +39,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { RAT_ICONS } from "@/features/shared/rat";
 import { type FileFormat, type ParsedRow, detectFormat, parseFile } from "@/lib/analyzer-parsers";
 import { postApiData, showApiError } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
@@ -42,6 +46,8 @@ import type { Operator, Region } from "@/types/station";
 const StationDetailsDialog = lazy(() =>
   import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
 );
+import { Separator } from "@/components/ui/separator";
+import { saveDraft } from "@/features/submissions/utils/analyzerDraftStore";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useTablePagination } from "@/hooks/useTablePageSize";
@@ -73,10 +79,21 @@ type AnalyzerStation = {
 };
 
 type MatchedCell =
-  | { rat: "GSM"; lac: number; cid: number; is_confirmed: boolean | undefined }
-  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  | { rat: "GSM"; cell_id: number; band_id: number; lac: number; cid: number; is_confirmed: boolean | undefined }
+  | {
+      rat: "UMTS";
+      cell_id: number;
+      band_id: number;
+      rnc: number;
+      cid: number;
+      lac: number | null;
+      arfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   | {
       rat: "LTE";
+      cell_id: number;
+      band_id: number;
       enbid: number;
       clid: number | null;
       tac: number | null;
@@ -84,9 +101,9 @@ type MatchedCell =
       earfcn: number | null;
       is_confirmed: boolean | undefined;
     }
-  | { rat: "NR" };
+  | { rat: "NR"; cell_id: number; band_id: number };
 
-type AnalyzerResult = {
+export type AnalyzerResult = {
   status: "found" | "probable" | "not_found" | "unsupported";
   station?: AnalyzerStation;
   cell?: MatchedCell;
@@ -116,6 +133,8 @@ const MNC_NAMES: Record<number, string> = {
   26034: "NetWorks",
 };
 
+const ACTIONABLE_WARNINGS = new Set(["lac_mismatch", "tac_mismatch", "pci_mismatch", "pci_missing", "uarfcn_mismatch", "earfcn_mismatch"]);
+
 const MISMATCH_WARNINGS = new Set([
   "lac_mismatch",
   "tac_mismatch",
@@ -136,13 +155,6 @@ const WARNING_I18N_KEY: Record<string, string> = {
 
 const SORT_ASC_STYLE = { transform: "scaleY(-1)" };
 
-const RAT_BADGE_CLASS: Record<string, string> = {
-  GSM: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  UMTS: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  LTE: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-  NR: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-};
-
 const TABLE_PAGINATION_CONFIG = { rowHeight: 60, headerHeight: 40, paginationHeight: 45 };
 
 const columnHelper = createColumnHelper<AnalyzerRow>();
@@ -153,6 +165,17 @@ function rowBg(result?: AnalyzerResult): string {
   if (result.status === "probable") return "bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20";
   if (result.status === "found" && result.warnings.length > 0) return "bg-amber-50/40 dark:bg-amber-900/5";
   return "hover:bg-muted/50";
+}
+
+function isRowSelectable(row: Row<AnalyzerRow>): boolean {
+  const rawRow = row.original;
+  if (!rawRow.result) return false;
+  const { status, warnings, cell } = rawRow.result as AnalyzerResult;
+  if (cell?.rat === "NR" || status === "not_found" || status === "unsupported") return false;
+  if (!warnings) return false;
+  if (status === "found") return warnings.some((warning) => ACTIONABLE_WARNINGS.has(warning));
+  if (status === "probable") return warnings.includes("enbid_only") || warnings.includes("rnc_mismatch");
+  return false;
 }
 
 type AnalyzerState = {
@@ -167,6 +190,7 @@ type AnalyzerState = {
   warningFilter: string;
   operatorFilter: string;
   bandFilter: string[];
+  rowSelection: RowSelectionState;
 };
 
 type AnalyzerAction =
@@ -179,6 +203,8 @@ type AnalyzerAction =
   | { type: "SET_WARNING_FILTER"; payload: string | null }
   | { type: "SET_OPERATOR_FILTER"; payload: string | null }
   | { type: "SET_BAND_FILTER"; payload: string[] }
+  | { type: "SET_ROW_SELECTION"; payload: RowSelectionState }
+  | { type: "CLEAR_SELECTION" }
   | { type: "CLEAR_FILTERS" };
 
 const initialState: AnalyzerState = {
@@ -193,6 +219,7 @@ const initialState: AnalyzerState = {
   warningFilter: "all",
   operatorFilter: "all",
   bandFilter: [],
+  rowSelection: {},
 };
 
 function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): AnalyzerState {
@@ -217,6 +244,10 @@ function analyzerReducer(state: AnalyzerState, action: AnalyzerAction): Analyzer
       return { ...state, operatorFilter: action.payload ?? "all" };
     case "SET_BAND_FILTER":
       return { ...state, bandFilter: action.payload };
+    case "SET_ROW_SELECTION":
+      return { ...state, rowSelection: action.payload };
+    case "CLEAR_SELECTION":
+      return { ...state, rowSelection: {} };
     case "CLEAR_FILTERS":
       return { ...state, statusFilter: "all", ratFilter: "all", warningFilter: "all", operatorFilter: "all", bandFilter: [] };
   }
@@ -240,9 +271,7 @@ function BandFilterButton({
   }
 
   const label = value.length === 0 ? t("filter.allBands") : t("filter.bandsCount", { count: value.length });
-  const groups = (["LTE", "UMTS"] as const)
-    .map((rat) => ({ rat, items: bands.filter((b) => b.rat === rat) }))
-    .filter((g) => g.items.length > 0);
+  const groups = (["LTE", "UMTS"] as const).map((rat) => ({ rat, items: bands.filter((b) => b.rat === rat) })).filter((g) => g.items.length > 0);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -295,13 +324,15 @@ function BandFilterButton({
 function AnalyzerPage() {
   const { t } = useTranslation(["cellAnalyzer", "common", "stations"]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const analyzeStartRef = useRef<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
-  const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter, bandFilter } = state;
+  const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter, bandFilter } =
+    state;
   const isMobile = useIsMobile();
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
@@ -429,7 +460,8 @@ function AnalyzerPage() {
     [t],
   );
 
-  const hasActiveFilters = statusFilter !== "all" || ratFilter !== "all" || warningFilter !== "all" || operatorFilter !== "all" || bandFilter.length > 0;
+  const hasActiveFilters =
+    statusFilter !== "all" || ratFilter !== "all" || warningFilter !== "all" || operatorFilter !== "all" || bandFilter.length > 0;
 
   const statusLabels = useMemo(
     () => ({
@@ -473,13 +505,19 @@ function AnalyzerPage() {
         const band = getBandFromEARFCN(row.earfcn);
         if (band !== null) {
           const key = `LTE-${band}`;
-          if (!seen.has(key)) { seen.add(key); result.push({ band, rat: "LTE" }); }
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push({ band, rat: "LTE" });
+          }
         }
       } else if (row.rat === "UMTS" && row.uarfcn !== undefined) {
         const band = getBandFromUARFCN(row.uarfcn);
         if (band !== null) {
           const key = `UMTS-${band}`;
-          if (!seen.has(key)) { seen.add(key); result.push({ band, rat: "UMTS" }); }
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push({ band, rat: "UMTS" });
+          }
         }
       }
     }
@@ -525,6 +563,18 @@ function AnalyzerPage() {
   const columns = useMemo(
     () => [
       columnHelper.display({
+        id: "select",
+        header: ({ table }) => {
+          const allSelected = table.getIsAllPageRowsSelected();
+          const checked = allSelected || table.getIsSomePageRowsSelected();
+          return <Checkbox checked={checked} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} />;
+        },
+        size: 40,
+        cell: ({ row }) => (
+          <Checkbox checked={row.getIsSelected()} disabled={!row.getCanSelect()} onCheckedChange={(value) => row.toggleSelected(!!value)} />
+        ),
+      }),
+      columnHelper.display({
         id: "num",
         header: "#",
         size: 40,
@@ -534,15 +584,7 @@ function AnalyzerPage() {
         id: "rat",
         header: "Standard",
         size: 80,
-        cell: ({ getValue }) => {
-          const rat = getValue();
-          return (
-            <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold", RAT_BADGE_CLASS[rat])}>
-              <HugeiconsIcon icon={RAT_ICONS[rat]} className="size-3" />
-              {rat}
-            </span>
-          );
-        },
+        cell: ({ getValue }) => <RatBadge rat={getValue()} showTechName />,
       }),
       columnHelper.accessor((r) => r, {
         id: "band",
@@ -822,10 +864,47 @@ function AnalyzerPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: effectivePagination, sorting },
+    state: { pagination: effectivePagination, sorting, rowSelection: state.rowSelection },
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
+    enableRowSelection: isRowSelectable,
+    onRowSelectionChange: (updater) =>
+      dispatch({ type: "SET_ROW_SELECTION", payload: typeof updater === "function" ? updater(state.rowSelection) : updater }),
   });
+
+  const selectedCount = Object.keys(state.rowSelection).length;
+  const uniqueStationCount = useMemo(() => {
+    if (selectedCount === 0) return 0;
+    return new Set(
+      table
+        .getSelectedRowModel()
+        .rows.map((row) => row.original.result?.station?.id)
+        .filter(Boolean),
+    ).size;
+  }, [table, selectedCount]);
+
+  function handleNavigationToReview() {
+    const draftId = saveDraft({
+      results: state.results,
+      selectedIndexes: table.getSelectedRowModel().rows.map((result) => result.original.index),
+      parsedRows: state.parsedRows,
+      metadata: {
+        fileName: state.fileName,
+        fileFormat: state.fileFormat,
+      },
+      parsedCount: state.parsedRows?.length ?? 0,
+    });
+    void navigate({ to: "/submission/from-analyzer", search: { draft: draftId } });
+  }
+
+  useEffect(() => {
+    if (selectedCount === 0) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") table.resetRowSelection();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedCount, table]);
 
   return (
     <RequireAuth>
@@ -930,6 +1009,68 @@ function AnalyzerPage() {
             </div>
           )}
         </div>
+
+        {selectedCount > 0
+          ? createPortal(
+              <div className="fixed inset-x-0 bottom-0 z-50 animate-in slide-in-from-bottom-5 duration-200">
+                <div
+                  className="flex items-center justify-between border-t-2 border-primary bg-background px-4 py-3 shadow-sm sm:py-2"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => table.resetRowSelection()}
+                      className="flex shrink-0 items-center justify-center rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      aria-label={t("cellAnalyzer:selection.clearSelection")}
+                    >
+                      <HugeiconsIcon icon={Cancel01Icon} className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="flex h-4 min-w-6 shrink-0 items-center justify-center rounded-sm bg-primary px-1.5 text-xs font-bold text-primary-foreground tabular-nums">
+                      {selectedCount}
+                    </span>
+                    <span className="shrink-0 text-sm font-medium text-foreground">
+                      {t("cellAnalyzer:selection.rowsSelected", { count: selectedCount })}
+                    </span>
+                    <Separator orientation="vertical" className="h-4 shrink-0" />
+                    <span className="shrink-0 text-sm font-normal text-muted-foreground">
+                      {uniqueStationCount === 0
+                        ? t("cellAnalyzer:selection.noStationsResolved")
+                        : t("cellAnalyzer:selection.uniqueStationCount", { count: uniqueStationCount })}
+                    </span>
+                    {uniqueStationCount > 25 ? (
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-destructive">
+                        <HugeiconsIcon icon={AlertCircleIcon} className="h-3.5 w-3.5" />
+                        {t("cellAnalyzer:selection.stationCapWarning")}
+                      </span>
+                    ) : null}
+                  </div>
+                  {uniqueStationCount === 0 || uniqueStationCount > 25 ? (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span className="ml-auto shrink-0 pl-4">
+                          <Button size="sm" disabled onClick={handleNavigationToReview}>
+                            {t("cellAnalyzer:selection.reviewBatch")} <HugeiconsIcon icon={LinkSquare01Icon} className="ml-1.5 h-3.5 w-3.5" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {uniqueStationCount === 0
+                          ? t("cellAnalyzer:selection.reviewBatchDisabledNoStations")
+                          : t("cellAnalyzer:selection.reviewBatchDisabledOverLimit")}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <Button size="sm" onClick={handleNavigationToReview} className="ml-auto shrink-0">
+                      {t("cellAnalyzer:selection.reviewBatch")} <HugeiconsIcon icon={LinkSquare01Icon} className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
 
         {parsedRows && (
           <div className="flex flex-wrap items-end gap-2 shrink-0">

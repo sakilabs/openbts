@@ -49,7 +49,7 @@ export type { GeocodingResult };
 
 export async function reverseGeocode(lat: number, lon: number): Promise<GeocodingResult | null> {
   try {
-    return reverseGeocodeWithMapbox(lat, lon);
+    return await reverseGeocodeWithMapbox(lat, lon);
   } catch {
     return null;
   }
@@ -165,6 +165,13 @@ function buildSubmissionPayload(data: SubmissionFormData): Record<string, unknow
 export async function createSubmission(data: SubmissionFormData): Promise<SubmissionResponse> {
   const results = await postApiData<SubmissionResponse[]>("submissions", buildSubmissionPayload(data));
   return results[0];
+}
+
+export async function createAnalyzerBatch(payloads: SubmissionFormData[], submitterNote?: string): Promise<SubmissionResponse[]> {
+  return postApiData<SubmissionResponse[]>("submissions/batch", {
+    submitter_note: submitterNote?.trim() || undefined,
+    items: payloads.map(buildSubmissionPayload),
+  });
 }
 
 export async function updateSubmission(id: string, data: SubmissionFormData): Promise<SubmissionResponse> {

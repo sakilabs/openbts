@@ -54,5 +54,19 @@
     "invalidFileType": "Nieobsługiwany typ pliku",
     "noValidRows": "Brak poprawnych wierszy w pliku",
     "truncated": "Plik jest duży, wczytano tylko pierwsze {{count}} wierszy"
+  },
+  "selection": {
+    "rowsSelected_one": "wybrany wiersz",
+    "rowsSelected_few": "wybrane wiersze",
+    "rowsSelected_many": "wybranych wierszy",
+    "uniqueStationCount_one": "{{count, number}} wybrana stacja",
+    "uniqueStationCount_few": "{{count, number}} wybrane stacje",
+    "uniqueStationCount_many": "{{count, number}} wybranych stacji",
+    "stationCapWarning": "Przekroczono limit 25 stacji",
+    "reviewBatch": "Przejrzyj wybraną partię",
+    "clearSelection": "Wyczyść zaznaczenie",
+    "noStationsResolved": "Brak rozwiązanych stacji",
+    "reviewBatchDisabledNoStations": "Żaden z wybranych wierszy nie dał stacji w bazie",
+    "reviewBatchDisabledOverLimit": "Zmniejsz zaznaczenie do 25 lub mniej stacji, aby kontynuować"
   }
 }

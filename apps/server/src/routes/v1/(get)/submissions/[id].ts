@@ -27,8 +27,7 @@ import { getRuntimeSettings } from "../../../../services/settings.service.js";
 
 const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
-const submittersSchema = createSelectSchema(users);
-const reviewersSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, username: true });
+const userSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, username: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
@@ -53,8 +52,8 @@ const schemaRoute = {
     200: z.object({
       data: submissionsSchema.extend({
         station: stationsSchema.nullable(),
-        submitter: submittersSchema,
-        reviewer: reviewersSchema.nullable(),
+        submitter: userSchema,
+        reviewer: userSchema.nullable(),
         proposedLocation: createSelectSchema(proposedLocations).nullable(),
         proposedStation: createSelectSchema(proposedStations).nullable(),
         cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
@@ -67,8 +66,8 @@ type ReqParams = { Params: { id: string } };
 type LocationPhotoSelection = z.infer<typeof locationPhotoSelectionSchema>;
 type Submission = z.infer<typeof submissionsSchema> & {
   station: z.infer<typeof stationsSchema> | null;
-  submitter: z.infer<typeof submittersSchema>;
-  reviewer: z.infer<typeof reviewersSchema> | null;
+  submitter: z.infer<typeof userSchema>;
+  reviewer: z.infer<typeof userSchema> | null;
   cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
   locationPhotoSelections: LocationPhotoSelection[];
 };
@@ -86,7 +85,14 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     },
     with: {
       station: true,
-      submitter: true,
+      submitter: {
+        columns: {
+          id: true,
+          name: true,
+          image: true,
+          username: true,
+        },
+      },
       reviewer: {
         columns: {
           id: true,

@@ -48,12 +48,12 @@ export const submissions = SubmissionsSchema.table(
     reviewed_at: timestamp({ withTimezone: true }),
     pending_photos: integer("pending_photos"),
   },
-  (table) => [
-    index("submission_station_id_idx").on(table.station_id),
-    index("submission_submitter_id_idx").on(table.submitter_id),
-    index("submission_reviewer_id_idx").on(table.reviewer_id),
-    index("submission_status_idx").on(table.status),
-    index("submission_created_at_idx").on(table.createdAt),
+  (t) => [
+    index("submission_station_id_idx").on(t.station_id),
+    index("submission_submitter_id_idx").on(t.submitter_id),
+    index("submission_reviewer_id_idx").on(t.reviewer_id),
+    index("submission_status_idx").on(t.status),
+    index("submission_created_at_idx").on(t.createdAt),
   ],
 );
 

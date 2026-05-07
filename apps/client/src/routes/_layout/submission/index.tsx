@@ -29,7 +29,7 @@ function SubmissionsPage() {
   );
 }
 
-export const Route = createFileRoute("/_layout/submission")({
+export const Route = createFileRoute("/_layout/submission/")({
   component: SubmissionsPage,
   validateSearch: (search: Record<string, unknown>): SubmissionSearch => ({
     station: search.station as string | undefined,

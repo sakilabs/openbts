@@ -192,9 +192,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     networks_name: string;
     mno_name: string;
   }>(() => ({
-    networks_id: submission.proposedStation?.networks_id ?? null,
-    networks_name: submission.proposedStation?.networks_name ?? "",
-    mno_name: submission.proposedStation?.mno_name ?? "",
+    networks_id: submission.proposedStation?.networks_id ?? currentStation?.extra_identificators?.networks_id ?? null,
+    networks_name: submission.proposedStation?.networks_name ?? currentStation?.extra_identificators?.networks_name ?? "",
+    mno_name: submission.proposedStation?.mno_name ?? currentStation?.extra_identificators?.mno_name ?? "",
   }));
 
   const isReadOnly = submission.status !== "pending";
@@ -202,7 +202,17 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
   const isFormDisabled = isReadOnly || isDeleteSubmission;
 
   const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => {
-    if (isReadOnly && currentStation?.location) {
+    if (submission.proposedLocation) {
+      return {
+        region_id: submission.proposedLocation.region_id ?? null,
+        city: submission.proposedLocation.city ?? "",
+        address: submission.proposedLocation.address ?? "",
+        longitude: submission.proposedLocation.longitude ?? null,
+        latitude: submission.proposedLocation.latitude ?? null,
+      };
+    }
+
+    if (currentStation?.location) {
       return {
         region_id: currentStation.location.region.id,
         city: currentStation.location.city ?? "",
@@ -213,11 +223,11 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     }
 
     return {
-      region_id: submission.proposedLocation?.region_id ?? null,
-      city: submission.proposedLocation?.city ?? "",
-      address: submission.proposedLocation?.address ?? "",
-      longitude: submission.proposedLocation?.longitude ?? null,
-      latitude: submission.proposedLocation?.latitude ?? null,
+      region_id: null,
+      city: "",
+      address: "",
+      longitude: null,
+      latitude: null,
     };
   });
 

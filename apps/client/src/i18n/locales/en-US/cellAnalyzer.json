@@ -53,5 +53,17 @@
     "invalidFileType": "Unsupported file type",
     "noValidRows": "No valid rows found in file",
     "truncated": "File is large, only the first {{count}} rows were loaded"
+  },
+  "selection": {
+    "rowsSelected_one": "row selected",
+    "rowsSelected_other": "rows selected",
+    "uniqueStationCount_one": "{{count, number}} station selected",
+    "uniqueStationCount_other": "{{count, number}} stations selected",
+    "stationCapWarning": "You have exceeded the 25 station limit",
+    "reviewBatch": "Review the selected batch",
+    "clearSelection": "Clear selection",
+    "noStationsResolved": "No stations resolved",
+    "reviewBatchDisabledNoStations": "No stations were resolved from the selected rows",
+    "reviewBatchDisabledOverLimit": "Reduce to 25 or fewer stations to continue"
   }
 }

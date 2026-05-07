@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-05-06
+    Last updated: 2026-05-08
   version: 1.0.1
 
 servers:
@@ -2121,6 +2121,49 @@ paths:
           schema: { type: integer }
       responses:
         "204": { description: No Content }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /submissions/batch:
+    post:
+      tags: [Submissions]
+      summary: Create a batch of submissions
+      description: |
+        Creates up to 25 submissions in a single atomic transaction. If any item fails validation the entire batch is rejected and no submissions are created.
+        Each item must include at least 2 cell changes. A shared `submitter_note` can be provided at the top level and will be used for any item that does not supply its own note.
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                submitter_note:
+                  type: string
+                  maxLength: 2000
+                  nullable: true
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items: { $ref: "#/components/schemas/SubmissionCreateSingle" }
+      responses:
+        "200":
+          description: All submissions created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/SubmissionCreateResponse" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }

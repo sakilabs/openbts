@@ -53,9 +53,18 @@ const cellInputSchema = z.union([
 ]);
 
 const matchedCellSchema = z.union([
-  z.object({ rat: z.literal("GSM"), lac: z.number(), cid: z.number(), is_confirmed: z.boolean().nullable() }),
+  z.object({
+    rat: z.literal("GSM"),
+    cell_id: z.number(),
+    band_id: z.number().nullable(),
+    lac: z.number(),
+    cid: z.number(),
+    is_confirmed: z.boolean().nullable(),
+  }),
   z.object({
     rat: z.literal("UMTS"),
+    cell_id: z.number(),
+    band_id: z.number().nullable(),
     rnc: z.number(),
     cid: z.number(),
     lac: z.number().nullable(),
@@ -64,6 +73,8 @@ const matchedCellSchema = z.union([
   }),
   z.object({
     rat: z.literal("LTE"),
+    cell_id: z.number(),
+    band_id: z.number().nullable(),
     enbid: z.number(),
     clid: z.number().nullable(),
     tac: z.number().nullable(),
@@ -98,22 +109,45 @@ const STATION_WITH = {
 } as const;
 
 const STATION_COLS = { operator_id: false, location_id: false } as const;
-const CELL_COLS = { band_id: false, station_id: false } as const;
+const CELL_COLS = { station_id: false } as const;
 
 async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promise<LookupMaps<AnalyzerStation>> {
-  const gsmMap = new Map<string, { station: AnalyzerStation; lac: number; cid: number; is_confirmed: boolean | undefined }>();
+  const gsmMap = new Map<
+    string,
+    { station: AnalyzerStation; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }
+  >();
   const umtsRncMap = new Map<
     string,
-    { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+    {
+      station: AnalyzerStation;
+      cell_id: number;
+      band_id: number | null;
+      rnc: number;
+      cid: number;
+      lac: number | null;
+      arfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   >();
   const umtsLacMap = new Map<
     string,
-    { station: AnalyzerStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+    {
+      station: AnalyzerStation;
+      cell_id: number;
+      band_id: number | null;
+      rnc: number;
+      cid: number;
+      lac: number | null;
+      arfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   >();
   const lteMap = new Map<
     string,
     {
       station: AnalyzerStation;
+      cell_id: number;
+      band_id: number | null;
       enbid: number;
       clid: number;
       tac: number | null;
@@ -122,7 +156,10 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       is_confirmed: boolean | undefined;
     }
   >();
-  const lteEnbidMap = new Map<string, { station: AnalyzerStation; enbid: number; is_confirmed: boolean | undefined }>();
+  const lteEnbidMap = new Map<
+    string,
+    { station: AnalyzerStation; cell_id: number; band_id: number | null; enbid: number; is_confirmed: boolean | undefined }
+  >();
 
   const promises: Promise<void>[] = [];
 
@@ -132,7 +169,6 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.gsmCells
           .findMany({
-            columns: { cell_id: false },
             where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
@@ -140,6 +176,8 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
             for (const row of rows)
               gsmMap.set(pairKey(mnc, row.lac, row.cid), {
                 station: row.cell.station as unknown as AnalyzerStation,
+                cell_id: row.cell_id,
+                band_id: row.cell.band_id,
                 lac: row.lac,
                 cid: row.cid,
                 is_confirmed: row.cell.is_confirmed,
@@ -155,7 +193,6 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.umtsCells
           .findMany({
-            columns: { cell_id: false },
             where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([rnc, cid]) => ({ rnc, cid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
@@ -163,6 +200,8 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
             for (const row of rows)
               umtsRncMap.set(pairKey(mnc, row.rnc, row.cid), {
                 station: row.cell.station as unknown as AnalyzerStation,
+                cell_id: row.cell_id,
+                band_id: row.cell.band_id,
                 rnc: row.rnc,
                 cid: row.cid,
                 lac: row.lac ?? null,
@@ -180,7 +219,6 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.umtsCells
           .findMany({
-            columns: { cell_id: false },
             where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
@@ -189,6 +227,8 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
               if (row.lac !== null)
                 umtsLacMap.set(pairKey(mnc, row.lac, row.cid), {
                   station: row.cell.station as unknown as AnalyzerStation,
+                  cell_id: row.cell_id,
+                  band_id: row.cell.band_id,
                   rnc: row.rnc,
                   cid: row.cid,
                   lac: row.lac,
@@ -207,7 +247,6 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.lteCells
           .findMany({
-            columns: { cell_id: false },
             where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([enbid, clid]) => ({ enbid, clid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
@@ -215,6 +254,8 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
             for (const row of rows)
               lteMap.set(pairKey(mnc, row.enbid, row.clid), {
                 station: row.cell.station as unknown as AnalyzerStation,
+                cell_id: row.cell_id,
+                band_id: row.cell.band_id,
                 enbid: row.enbid,
                 clid: row.clid,
                 tac: row.tac ?? null,
@@ -233,7 +274,6 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.lteCells
           .findMany({
-            columns: { cell_id: false },
             where: { cell: { station: { operator: { mnc } } }, OR: chunk.map((enbid) => ({ enbid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
@@ -243,6 +283,8 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
               if (!lteEnbidMap.has(key))
                 lteEnbidMap.set(key, {
                   station: row.cell.station as unknown as AnalyzerStation,
+                  cell_id: row.cell_id,
+                  band_id: row.cell.band_id,
                   enbid: row.enbid,
                   is_confirmed: row.cell.is_confirmed,
                 });

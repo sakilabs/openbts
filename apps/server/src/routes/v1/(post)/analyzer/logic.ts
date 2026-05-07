@@ -7,10 +7,21 @@ export type CellInput =
   | { rat: "NR"; mnc: number };
 
 export type MatchedCell =
-  | { rat: "GSM"; lac: number; cid: number; is_confirmed: boolean | undefined }
-  | { rat: "UMTS"; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+  | { rat: "GSM"; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }
+  | {
+      rat: "UMTS";
+      cell_id: number;
+      band_id: number | null;
+      rnc: number;
+      cid: number;
+      lac: number | null;
+      arfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   | {
       rat: "LTE";
+      cell_id: number;
+      band_id: number | null;
       enbid: number;
       clid: number | null;
       tac: number | null;
@@ -31,19 +42,39 @@ type Pair = [a: number, b: number];
 type PairMap = Map<number, Map<string, Pair>>;
 
 export type LookupMaps<TStation> = {
-  gsmMap: Map<string, { station: TStation; lac: number; cid: number; is_confirmed: boolean | undefined }>;
+  gsmMap: Map<string, { station: TStation; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }>;
   umtsRncMap: Map<
     string,
-    { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+    {
+      station: TStation;
+      cell_id: number;
+      band_id: number | null;
+      rnc: number;
+      cid: number;
+      lac: number | null;
+      arfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   >;
   umtsLacMap: Map<
     string,
-    { station: TStation; rnc: number; cid: number; lac: number | null; arfcn: number | null; is_confirmed: boolean | undefined }
+    {
+      station: TStation;
+      cell_id: number;
+      band_id: number | null;
+      rnc: number;
+      cid: number;
+      lac: number | null;
+      arfcn: number | null;
+      is_confirmed: boolean | undefined;
+    }
   >;
   lteMap: Map<
     string,
     {
       station: TStation;
+      cell_id: number;
+      band_id: number | null;
       enbid: number;
       clid: number;
       tac: number | null;
@@ -52,7 +83,7 @@ export type LookupMaps<TStation> = {
       is_confirmed: boolean | undefined;
     }
   >;
-  lteEnbidMap: Map<string, { station: TStation; enbid: number; is_confirmed: boolean | undefined }>;
+  lteEnbidMap: Map<string, { station: TStation; cell_id: number; band_id: number | null; enbid: number; is_confirmed: boolean | undefined }>;
 };
 
 export type CellGroups = {
@@ -122,7 +153,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "found",
         station: entry.station,
-        cell: { rat: "GSM", lac: entry.lac, cid: entry.cid, is_confirmed: entry.is_confirmed },
+        cell: { rat: "GSM", cell_id: entry.cell_id, band_id: entry.band_id, lac: entry.lac, cid: entry.cid, is_confirmed: entry.is_confirmed },
         warnings: [],
       };
     }
@@ -136,7 +167,16 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
         return {
           status: "found",
           station: primary.station,
-          cell: { rat: "UMTS", rnc: primary.rnc, cid: primary.cid, lac: primary.lac, arfcn: primary.arfcn, is_confirmed: primary.is_confirmed },
+          cell: {
+            rat: "UMTS",
+            cell_id: primary.cell_id,
+            band_id: primary.band_id,
+            rnc: primary.rnc,
+            cid: primary.cid,
+            lac: primary.lac,
+            arfcn: primary.arfcn,
+            is_confirmed: primary.is_confirmed,
+          },
           warnings,
         };
       }
@@ -145,7 +185,16 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "probable",
         station: fallback.station,
-        cell: { rat: "UMTS", rnc: fallback.rnc, cid: fallback.cid, lac: fallback.lac, arfcn: fallback.arfcn, is_confirmed: fallback.is_confirmed },
+        cell: {
+          rat: "UMTS",
+          cell_id: fallback.cell_id,
+          band_id: fallback.band_id,
+          rnc: fallback.rnc,
+          cid: fallback.cid,
+          lac: fallback.lac,
+          arfcn: fallback.arfcn,
+          is_confirmed: fallback.is_confirmed,
+        },
         warnings: ["rnc_mismatch"],
       };
     }
@@ -163,6 +212,8 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
           station: primary.station,
           cell: {
             rat: "LTE",
+            cell_id: primary.cell_id,
+            band_id: primary.band_id,
             enbid: primary.enbid,
             clid: primary.clid,
             tac: primary.tac,
@@ -178,7 +229,17 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "probable",
         station: fallback.station,
-        cell: { rat: "LTE", enbid: fallback.enbid, clid: null, tac: null, pci: null, earfcn: null, is_confirmed: fallback.is_confirmed },
+        cell: {
+          rat: "LTE",
+          cell_id: fallback.cell_id,
+          band_id: fallback.band_id,
+          enbid: fallback.enbid,
+          clid: null,
+          tac: null,
+          pci: null,
+          earfcn: null,
+          is_confirmed: fallback.is_confirmed,
+        },
         warnings: ["enbid_only"],
       };
     }

@@ -1,9 +1,11 @@
-import { FlashIcon, MapPinIcon, SignalFull02Icon, SmartPhone01Icon, Sorting05Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
+import { MapPinIcon, Sorting05Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { TFunction } from "i18next";
 import { memo } from "react";
 
+import { RatBadge } from "@/components/rat-badge";
+import type { Rat } from "@/components/rat-badge";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RAT_ORDER } from "@/features/map/constants";
@@ -11,23 +13,6 @@ import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
 import type { Station, StationSortBy, StationSortDirection } from "@/types/station";
-
-const RAT_CONFIG = {
-  GSM: { icon: SignalFull02Icon, color: "bg-amber-500/10 text-amber-600 dark:text-amber-400", label: "2G" },
-  UMTS: { icon: Wifi01Icon, color: "bg-blue-500/10 text-blue-600 dark:text-blue-400", label: "3G" },
-  LTE: { icon: SmartPhone01Icon, color: "bg-purple-500/10 text-purple-600 dark:text-purple-400", label: "4G" },
-  NR: { icon: FlashIcon, color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", label: "5G" },
-} as const;
-
-const TechBadge = memo(({ rat }: { rat: keyof typeof RAT_CONFIG }) => {
-  const config = RAT_CONFIG[rat];
-  return (
-    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium", config.color)}>
-      <HugeiconsIcon icon={config.icon} className="size-3" />
-      {config.label}
-    </span>
-  );
-});
 
 const BandBadge = memo(({ band }: { band: string }) => (
   <Badge variant="secondary" className="text-xs font-mono px-1.5 py-0">
@@ -102,14 +87,14 @@ export function createStationsColumns({ t, locale, isSearchActive = false, sort,
       header: t("labels.standard"),
       size: 140,
       accessorFn: (station) => {
-        if (!station.cells || !Array.isArray(station.cells)) return [];
+        if (!station.cells) return [];
         const rats = new Set(station.cells.filter((c) => c.rat).map((c) => c.rat.toUpperCase()));
         return RAT_ORDER.filter((rat) => rats.has(rat));
       },
       cell: ({ getValue }) => (
         <div className="flex items-center gap-1 flex-wrap">
-          {getValue<(keyof typeof RAT_CONFIG)[]>().map((rat) => (
-            <TechBadge key={rat} rat={rat} />
+          {getValue<Rat[]>().map((rat) => (
+            <RatBadge key={rat} rat={rat} />
           ))}
         </div>
       ),
@@ -122,7 +107,7 @@ export function createStationsColumns({ t, locale, isSearchActive = false, sort,
             header: t("labels.band"),
             size: 160,
             accessorFn: (station: Station) => {
-              if (!station.cells || !Array.isArray(station.cells)) return [];
+              if (!station.cells) return [];
               const bands = new Set(station.cells.filter((c) => c.band?.value).map((c) => `${c.band.value}`));
               return Array.from(bands).sort((a, b) => Number(a) - Number(b));
             },

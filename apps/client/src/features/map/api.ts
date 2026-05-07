@@ -94,6 +94,6 @@ export async function fetchRadioLines(
 
   return fetchJson<RadioLinesResponse>(`${API_BASE}/uke/radiolines?${decodeURIComponent(params.toString())}`, {
     signal: options?.signal,
-    proto: UKERadiolinesResponseSchema,
+    // proto: UKERadiolinesResponseSchema,
   });
 }
