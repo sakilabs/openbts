@@ -102,7 +102,7 @@ function FormAnalyzerPage() {
   const totalCells = stations.reduce((num, station) => num + station.cells.length, 0);
   const hasConflicts = stations.some((station) => station.hasConflicts);
   const hasUnresolvedBands = stations.some((s) => s.cells.some((c) => c.operation === "add" && c.band_id === null));
-  const stationsWithTooFewCells = stations.filter((s) => s.cells.length < 2);
+  const stationsWithTooFewCells = stations.filter((s) => s.cells.length < 1);
   const isBlocked = hasConflicts || hasUnresolvedBands || stationsWithTooFewCells.length > 0;
 
   if (stations.length === 0) {

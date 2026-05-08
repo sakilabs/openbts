@@ -56,9 +56,9 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const { submitter_note, items } = req.body;
 
-  const stationsWithTooFewCells = items.filter((item) => (item.cells?.length ?? 0) < 2);
+  const stationsWithTooFewCells = items.filter((item) => (item.cells?.length ?? 0) < 1);
   if (stationsWithTooFewCells.length > 0) {
-    throw new ErrorResponse("BAD_REQUEST", { message: "Each station must have at least 2 cell changes in a batch submission" });
+    throw new ErrorResponse("BAD_REQUEST", { message: "Each station must have at least 1 cell changes in a batch submission" });
   }
 
   const submissionInputs: SingleSubmission[] = items.map((item) => ({
