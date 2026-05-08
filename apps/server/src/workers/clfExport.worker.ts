@@ -131,6 +131,7 @@ parentPort.on("message", async (params: WorkerParams) => {
       ? db
           .select({
             ...commonSelect,
+            station_pk: stations.id,
             nr_nrtac: nrCells.nrtac,
             nr_gnbid: nrCells.gnbid,
             nr_clid: nrCells.clid,
@@ -172,6 +173,17 @@ parentPort.on("message", async (params: WorkerParams) => {
       const list = stationNrBandsMap.get(row.station_id) ?? [];
       list.push({ value: row.band_value, duplex: row.band_duplex ?? null });
       stationNrBandsMap.set(row.station_id, list);
+    }
+
+    const stationNrBandPciMap = new Map<number, Map<string, { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>>();
+    for (const row of nrRows) {
+      if (!row.station_pk || !row.band_value) continue;
+      const key = `${row.band_value}:${row.band_duplex ?? "null"}`;
+      const bandMap = stationNrBandPciMap.get(row.station_pk) ?? new Map();
+      const entry = bandMap.get(key) ?? { value: row.band_value, duplex: row.band_duplex ?? null, pcis: [] };
+      if (row.nr_pci !== null && !entry.pcis.includes(row.nr_pci)) entry.pcis.push(row.nr_pci);
+      bandMap.set(key, entry);
+      stationNrBandPciMap.set(row.station_pk, bandMap);
     }
 
     const clfLines: string[] = [];
@@ -255,6 +267,7 @@ parentPort.on("message", async (params: WorkerParams) => {
     }
 
     for (const row of nrRows) {
+      const nr_band_pcis = stationNrBandPciMap.get(row.station_pk) ? [...stationNrBandPciMap.get(row.station_pk)!.values()] : undefined;
       const line = convertToCLF(
         {
           cid: row.nr_gnbid ?? 0,
@@ -276,6 +289,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           city: row.city ?? null,
           address: row.extra_address ?? row.address ?? null,
           region_code: row.region_code ?? null,
+          nr_band_pcis,
         },
         format,
       );

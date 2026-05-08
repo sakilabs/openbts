@@ -30,6 +30,7 @@ export interface CellExportData {
   arfcn?: number | null; // UMTS UARFCN
   region_code?: string | null;
   nr_bands?: Array<{ value: number; duplex: "FDD" | "TDD" | null }>; // associated NR bands at same station (for LTE cells)
+  nr_band_pcis?: Array<{ value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>;
 }
 
 const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: number }>>> = {
@@ -245,6 +246,16 @@ function getDescription(cell: CellExportData): string {
   return (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
 }
 
+function formatNrBandPcisTag(nr_band_pcis: Array<{ value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>): string | null {
+  const entries = nr_band_pcis
+    .map((b) => ({ desig: getNrDesignation(b.value, b.duplex), pcis: [...new Set(b.pcis)].sort((a, c) => a - c) }))
+    .filter((b): b is { desig: string; pcis: number[] } => b.desig !== null)
+    .sort((a, b) => Number.parseInt(a.desig.slice(1), 10) - Number.parseInt(b.desig.slice(1), 10));
+  if (entries.length === 0) return null;
+  const parts = entries.map((b) => (b.pcis.length > 0 ? `${b.desig}:${b.pcis.join(",")}` : b.desig));
+  return `NR ${parts.join("|")}`;
+}
+
 function getTags(cell: CellExportData): string {
   let tags = "";
   const rc = cell.region_code ?? "UNKWN";
@@ -269,13 +280,18 @@ function getTags(cell: CellExportData): string {
       if (cell.nr_bands && cell.nr_bands.length > 0) {
         const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
         const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
-        if (unique.length > 0) tags += ` [5G: ${unique.join("|")}]`;
+        if (unique.length > 0) tags += ` [NR ${unique.join("|")}]`;
       }
       break;
     }
     case "NR": {
-      const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
-      if (nrDesig) tags += ` [${nrDesig}]`;
+      if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
+        const formatted = formatNrBandPcisTag(cell.nr_band_pcis);
+        if (formatted) tags += ` [${formatted}]`;
+      } else {
+        const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
+        if (nrDesig) tags += ` [NR ${nrDesig}]`;
+      }
       break;
     }
   }
@@ -344,7 +360,7 @@ export function toNTM(cell: CellExportData): string | null {
       if (cell.nr_bands && cell.nr_bands.length > 0) {
         const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
         const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
-        if (unique.length > 0) location += ` [5G: ${unique.join("|")}]`;
+        if (unique.length > 0) location += ` [NR ${unique.join("|")}]`;
       }
 
       return `4G;${mcc};${mnc};${ci};${tac};${enbid};${pci};${lat};${lon};${location};${earfcn}`;
@@ -353,10 +369,15 @@ export function toNTM(cell: CellExportData): string | null {
       const nci = cell.nci ?? NTM_UNKNOWN;
       const tac = cell.nrtac ?? NTM_UNKNOWN;
       const pci = cell.pci ?? NTM_UNKNOWN;
-      const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
 
       let location = getNTMLocation(cell);
-      if (nrDesig) location += ` [${nrDesig}]`;
+      if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
+        const formatted = formatNrBandPcisTag(cell.nr_band_pcis);
+        if (formatted) location += ` [${formatted}]`;
+      } else {
+        const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
+        if (nrDesig) location += ` [NR ${nrDesig}]`;
+      }
 
       return `5G;${mcc};${mnc};${nci};${tac};;${pci};${lat};${lon};${location};${NTM_UNKNOWN}`;
     }
