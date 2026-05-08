@@ -19,17 +19,17 @@ export interface AnalyzerDraft {
 }
 
 const storageKey = (id: string) => `${DEFAULT_PREFIX}${id}`;
-export const clearDraft = (id: string) => sessionStorage.removeItem(storageKey(id));
+export const clearDraft = (id: string) => localStorage.removeItem(storageKey(id));
 
 export function saveDraft(draft: Omit<AnalyzerDraft, "id" | "createdAt">): string {
   clearStaleDrafts();
   const id = crypto.randomUUID();
   const savedDraft: AnalyzerDraft = { ...draft, id, createdAt: new Date().toISOString() };
   try {
-    sessionStorage.setItem(storageKey(id), JSON.stringify(savedDraft));
+    localStorage.setItem(storageKey(id), JSON.stringify(savedDraft));
   } catch {
     clearStaleDrafts(true);
-    sessionStorage.setItem(storageKey(id), JSON.stringify(savedDraft));
+    localStorage.setItem(storageKey(id), JSON.stringify(savedDraft));
   }
 
   return id;
@@ -37,7 +37,7 @@ export function saveDraft(draft: Omit<AnalyzerDraft, "id" | "createdAt">): strin
 
 export function loadDraft(id: string): AnalyzerDraft | null {
   try {
-    const savedDraft = sessionStorage.getItem(storageKey(id));
+    const savedDraft = localStorage.getItem(storageKey(id));
     if (!savedDraft) return null;
     const draft = JSON.parse(savedDraft) as AnalyzerDraft;
     if (Date.now() - new Date(draft.createdAt).getTime() > DRAFT_TTL_MS) {
@@ -53,15 +53,15 @@ export function loadDraft(id: string): AnalyzerDraft | null {
 
 export function clearStaleDrafts(force = false) {
   const toRemove: string[] = [];
-  for (let i = 0; i < sessionStorage.length; i++) {
-    const key = sessionStorage.key(i);
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
     if (!key?.startsWith(DEFAULT_PREFIX)) continue;
     if (force) {
       toRemove.push(key);
       continue;
     }
     try {
-      const { createdAt } = JSON.parse(sessionStorage.getItem(key)!) as { createdAt: string };
+      const { createdAt } = JSON.parse(localStorage.getItem(key)!) as { createdAt: string };
       if (Date.now() - new Date(createdAt).getTime() > DRAFT_TTL_MS) toRemove.push(key);
     } catch {
       toRemove.push(key);
@@ -69,6 +69,6 @@ export function clearStaleDrafts(force = false) {
   }
 
   for (const key of toRemove) {
-    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
   }
 }

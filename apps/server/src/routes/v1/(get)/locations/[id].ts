@@ -119,12 +119,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const nonIotRats: NonIotRat[] = requestedRats.map((r) => ratMap[r]).filter((r): r is NonIotRat => r !== undefined);
   const iotRequested = requestedRats.includes("iot");
 
-  const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
-
   const buildStationFilter = (stationFields: typeof stations) => {
-    if (!hasStationFilters && !since) return undefined;
-
-    const conditions: ReturnType<typeof sql>[] = [];
+    const conditions: ReturnType<typeof sql>[] = [sql`${stationFields.status} = 'published'`];
     if (operatorIds.length) {
       conditions.push(
         sql`${stationFields.operator_id} = ANY(ARRAY[${sql.join(
@@ -196,7 +192,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       region: true,
       stations: {
         columns: { status: false, location_id: false, operator_id: false },
-        where: hasStationFilters || since ? { RAW: (fields) => buildStationFilter(fields) ?? sql`true` } : undefined,
+        where: { RAW: (fields) => buildStationFilter(fields) ?? sql`true` },
         with: {
           cells: {
             columns: { band_id: false, station_id: false },
