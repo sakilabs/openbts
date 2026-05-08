@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 
 import { RatBadge } from "@/components/rat-badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getBandFromEARFCN, getBandFromUARFCN, getBandMhz } from "@/lib/band-utils";
 import { cn } from "@/lib/utils";
 
 import type { DraftCell, MismatchDetails } from "../../utils/fromAnalyzer";
@@ -15,12 +17,21 @@ const FIELD_LABELS: Record<string, string> = {
 
 interface Props {
   change: DraftCell;
+  selectedDuplex: string | null | undefined;
+  onDuplexChange: (duplex: string | null) => void;
   onRemove: () => void;
 }
 
-export function AnalyzerCellChangeRow({ change, onRemove }: Props) {
+export function AnalyzerCellChangeRow({ change, selectedDuplex, onDuplexChange, onRemove }: Props) {
   const { t } = useTranslation(["submissions"]);
   const isAddOperation = change.operation === "add";
+
+  const earfcn = change.rat === "LTE" ? (change.details.earfcn ?? change.baseDetails?.earfcn) : undefined;
+  const uarfcn = change.rat === "UMTS" ? (change.details.arfcn ?? change.baseDetails?.arfcn) : undefined;
+  const ambiguousDuplex = isAddOperation && change.duplexChoices.length > 0;
+  const band = earfcn !== undefined ? getBandFromEARFCN(earfcn) : uarfcn !== undefined ? getBandFromUARFCN(uarfcn) : null;
+  const mhz = band !== null ? getBandMhz(band) : null;
+  const showBandNumber = !ambiguousDuplex || !!selectedDuplex;
 
   const fields: { key: string; currentVal: number | boolean | undefined; newVal: number | boolean | undefined; isChanged: boolean }[] = [];
 
@@ -58,6 +69,26 @@ export function AnalyzerCellChangeRow({ change, onRemove }: Props) {
         {isAddOperation ? "ADD" : "UPD"}
       </span>
       <RatBadge rat={change.rat} showTechName />
+      {(mhz !== null || band !== null) && (
+        <span className="shrink-0 font-mono text-xs text-muted-foreground">
+          {mhz && <span className="font-semibold text-foreground">{mhz}</span>}
+          {showBandNumber && band !== null && <span className="opacity-75">{mhz ? " " : ""}(b{band})</span>}
+        </span>
+      )}
+      {change.operation === "add" && change.duplexChoices.length > 0 ? (
+        <Select value={selectedDuplex ?? ""} onValueChange={(v) => onDuplexChange(v || null)}>
+          <SelectTrigger className={cn("h-6 w-20 shrink-0 text-xs", !selectedDuplex && "border-amber-500/60 text-amber-600 dark:text-amber-400")}>
+            <SelectValue>{selectedDuplex ?? "-"}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {change.duplexChoices.map(({ duplex }) => (
+              <SelectItem key={duplex ?? "_none"} value={duplex ?? ""}>
+                {duplex ?? "-"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
       <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
         {fields.map(({ key, currentVal, newVal, isChanged }) => (
           <span key={key} className="flex items-center gap-1">

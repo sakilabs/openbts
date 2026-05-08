@@ -1,4 +1,4 @@
-import { getBandFromEARFCN } from "@/lib/band-utils";
+import { getBandFromEARFCN, getBandMhz } from "@/lib/band-utils";
 import type { Band } from "@/types/station";
 
 import type { CellFormDetails, GSMCellDetails, LTECellDetails, SubmissionFormData, UMTSCellDetails } from "../types";
@@ -12,6 +12,7 @@ export interface DraftCell {
   rat: "GSM" | "UMTS" | "LTE" | "NR";
   target_cell_id: number | undefined;
   band_id: number | null;
+  duplexChoices: { duplex: string | null; band_id: number }[];
   details: MismatchDetails;
   baseDetails?: MismatchDetails;
   warningKeys: string[];
@@ -63,6 +64,7 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []
     let operation: "add" | "update" = "update";
     let target_cell_id: number | undefined;
     let band_id: number | null = null;
+    let duplexChoices: { duplex: string | null; band_id: number }[] = [];
 
     if (result.status === "found" && result.cell) {
       const cell = result.cell;
@@ -102,9 +104,14 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []
       details.earfcn = row.earfcn;
       if (row.earfcn !== undefined) {
         const bandNumber = getBandFromEARFCN(row.earfcn);
-        if (bandNumber !== null) band_id = bands.find((b) => b.rat === "LTE" && b.value === bandNumber)?.id ?? null;
+        if (bandNumber !== null) {
+          const mhz = Number(getBandMhz(bandNumber));
+          const matching = bands.filter((b) => b.rat === "LTE" && b.value === mhz);
+          if (matching.length === 1) band_id = matching[0].id;
+          else if (matching.length > 1) duplexChoices = matching.map((b) => ({ duplex: b.duplex, band_id: b.id }));
+        }
       }
-      if (!band_id) unresolvedBandRows.push(idx);
+      if (!band_id && duplexChoices.length === 0) unresolvedBandRows.push(idx);
     } else if (result.status === "probable" && warnings.includes("rnc_mismatch") && result.cell?.rat === "UMTS" && row.rat === "UMTS") {
       const cell = result.cell;
       target_cell_id = cell?.cell_id;
@@ -128,6 +135,7 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []
       rat: row.rat,
       target_cell_id,
       band_id,
+      duplexChoices,
       details,
       baseDetails,
       warningKeys: warnings,

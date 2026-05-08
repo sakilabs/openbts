@@ -11,11 +11,13 @@ import { AnalyzerCellChangeRow } from "./AnalyzerCellChangeRow";
 
 interface Props {
   station: DraftStation;
+  getDuplex: (rowIndex: number) => string | null | undefined;
+  onDuplexChange: (rowIndex: number, duplex: string | null) => void;
   onRemoveCell: (rowIndex: number) => void;
   onRemoveStation: () => void;
 }
 
-export function AnalyzerStationGroupCard({ station, onRemoveCell, onRemoveStation }: Props) {
+export function AnalyzerStationGroupCard({ station, getDuplex, onDuplexChange, onRemoveCell, onRemoveStation }: Props) {
   const { t } = useTranslation(["submissions", "common"]);
   return (
     <div className={cn("rounded-lg border border-border/50 overflow-hidden", station.hasConflicts && "border-destructive/50")}>
@@ -41,7 +43,13 @@ export function AnalyzerStationGroupCard({ station, onRemoveCell, onRemoveStatio
       </div>
       <div className="divide-y divide-border/30 px-3 py-1.5 space-y-1">
         {station.cells.map((cell) => (
-          <AnalyzerCellChangeRow key={cell._rowIndex} change={cell} onRemove={() => onRemoveCell(cell._rowIndex)} />
+          <AnalyzerCellChangeRow
+            key={cell._rowIndex}
+            change={cell}
+            selectedDuplex={getDuplex(cell._rowIndex)}
+            onDuplexChange={(duplex) => onDuplexChange(cell._rowIndex, duplex)}
+            onRemove={() => onRemoveCell(cell._rowIndex)}
+          />
         ))}
       </div>
     </div>

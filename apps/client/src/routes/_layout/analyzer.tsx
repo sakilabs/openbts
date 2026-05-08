@@ -604,7 +604,7 @@ function AnalyzerPage() {
                 <span className="text-xs font-mono">
                   {mhz && <span className="font-semibold">{mhz}</span>}
                   <span className="opacity-75">
-                    {mhz ? " " : ""}(B{band})
+                    {mhz ? " " : ""}(b{band})
                   </span>
                 </span>
               )}

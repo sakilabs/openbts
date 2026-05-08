@@ -45,24 +45,42 @@ function FormAnalyzerPage() {
   const { draft: draftId } = Route.useSearch();
 
   const initialBatchDraft = useMemo(() => buildAnalyzerBatchDraft(draft, bands ?? []), [draft, bands]);
-  const [stations, setStations] = useState(initialBatchDraft.stations);
+  const [removedCells, setRemovedCells] = useState<Set<number>>(() => new Set());
+  const [removedStations, setRemovedStations] = useState<Set<number>>(() => new Set());
+  const [duplexSelections, setDuplexSelections] = useState<Map<number, string | null>>(() => new Map());
   const [submitterNote, setSubmitterNote] = useState("");
+
+  const stations = useMemo(
+    () =>
+      initialBatchDraft.stations
+        .filter((s) => !removedStations.has(s.stationInternalId))
+        .map((s) => ({
+          ...s,
+          cells: s.cells
+            .filter((c) => !removedCells.has(c._rowIndex))
+            .map((c) => {
+              if (c.duplexChoices.length === 0) return c;
+              const sel = duplexSelections.get(c._rowIndex);
+              if (sel === undefined) return c;
+              return { ...c, band_id: c.duplexChoices.find((d) => d.duplex === sel)?.band_id ?? null };
+            }),
+        }))
+        .filter((s) => s.cells.length > 0),
+    [initialBatchDraft, removedCells, removedStations, duplexSelections],
+  );
+
   const batchDraft = useMemo(() => ({ ...initialBatchDraft, stations }), [initialBatchDraft, stations]);
 
-  const removeCellFromSubmission = useCallback((stationInternalId: number, rowIndex: number) => {
-    setStations((prev) =>
-      prev
-        .map((station) =>
-          station.stationInternalId === stationInternalId
-            ? { ...station, cells: station.cells.filter((cell) => cell._rowIndex !== rowIndex) }
-            : station,
-        )
-        .filter((station) => station.cells.length > 0),
-    );
+  const onDuplexChange = useCallback((rowIndex: number, duplex: string | null) => {
+    setDuplexSelections((prev) => new Map(prev).set(rowIndex, duplex));
+  }, []);
+
+  const removeCellFromSubmission = useCallback((_stationInternalId: number, rowIndex: number) => {
+    setRemovedCells((prev) => new Set(prev).add(rowIndex));
   }, []);
 
   const removeStation = useCallback((stationInternalId: number) => {
-    setStations((prev) => prev.filter((station) => station.stationInternalId !== stationInternalId));
+    setRemovedStations((prev) => new Set(prev).add(stationInternalId));
   }, []);
 
   const { mutate: submit, isPending } = useMutation({
@@ -83,7 +101,7 @@ function FormAnalyzerPage() {
 
   const totalCells = stations.reduce((num, station) => num + station.cells.length, 0);
   const hasConflicts = stations.some((station) => station.hasConflicts);
-  const hasUnresolvedBands = batchDraft.unresolvedBandRows.length > 0;
+  const hasUnresolvedBands = stations.some((s) => s.cells.some((c) => c.operation === "add" && c.band_id === null));
   const stationsWithTooFewCells = stations.filter((s) => s.cells.length < 2);
   const isBlocked = hasConflicts || hasUnresolvedBands || stationsWithTooFewCells.length > 0;
 
@@ -178,6 +196,8 @@ function FormAnalyzerPage() {
             <AnalyzerStationGroupCard
               key={station.stationInternalId}
               station={station}
+              getDuplex={(rowIndex) => duplexSelections.get(rowIndex)}
+              onDuplexChange={onDuplexChange}
               onRemoveCell={(rowIndex) => removeCellFromSubmission(station.stationInternalId, rowIndex)}
               onRemoveStation={() => removeStation(station.stationInternalId)}
             />
