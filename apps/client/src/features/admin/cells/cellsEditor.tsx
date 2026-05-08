@@ -267,8 +267,14 @@ export function CellsEditor<T extends CellDraftBase>({
                   </CollapsibleTrigger>
                   <div className="flex items-center gap-1">
                     {showConfirmCellsButton && onConfirmAllCellsInRat && cellsForRat.length > 0 && (
-                      <Button type="button" variant="ghost" size="sm" onClick={() => onConfirmAllCellsInRat(rat)} className="h-7 text-xs">
-                        <HugeiconsIcon icon={Tick02Icon} className="size-3.5 sm:hidden" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onConfirmAllCellsInRat(rat)}
+                        className="h-7 text-xs text-green-700/80 hover:text-green-700 hover:bg-green-600/10 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-400/10"
+                      >
+                        <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
                         <span className="hidden sm:inline">{t("stations:cells.confirmCells")}</span>
                       </Button>
                     )}
