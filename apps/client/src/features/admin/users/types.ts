@@ -12,6 +12,7 @@ export interface AdminUser {
   twoFactorEnabled?: boolean;
   forceTotp?: boolean;
   emailVerified?: boolean;
+  bio?: string | null;
 }
 
 export interface Session {

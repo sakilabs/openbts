@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import type { AdminUser } from "@/features/admin/users/types";
 import { showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
@@ -28,6 +29,7 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
+  const [editBio, setEditBio] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
   const invalidateAll = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
@@ -68,6 +70,22 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
     onSuccess: () => {
       toast.success("Username updated successfully");
       setEditUsername("");
+      return invalidateAll();
+    },
+    onError: (error) => showApiError(error),
+  });
+
+  const updateBioMutation = useMutation({
+    mutationFn: async (value: string | null) => {
+      const result = await authClient.admin.updateUser({
+        userId: user.id,
+        data: { bio: value } as Record<string, unknown>,
+      });
+      if (result.error) throw result.error;
+    },
+    onSuccess: (_data, value) => {
+      toast.success(value === null ? "Bio cleared" : "Bio updated successfully");
+      setEditBio("");
       return invalidateAll();
     },
     onError: (error) => showApiError(error),
@@ -151,6 +169,29 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
               <Button onClick={() => updateUsernameMutation.mutate()} disabled={updateUsernameMutation.isPending || !editUsername.trim()}>
                 {updateUsernameMutation.isPending ? <Spinner /> : "Update"}
               </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Bio</Label>
+            <Textarea
+              placeholder={user.bio ?? "No bio set"}
+              value={editBio}
+              onChange={(e) => setEditBio(e.target.value)}
+              maxLength={500}
+              rows={3}
+              className="max-w-sm resize-none"
+            />
+            <p className="text-xs text-muted-foreground">{editBio.length}/500</p>
+            <div className="flex gap-2">
+              <Button onClick={() => updateBioMutation.mutate(editBio.trim())} disabled={updateBioMutation.isPending || !editBio.trim()}>
+                {updateBioMutation.isPending ? <Spinner /> : "Update Bio"}
+              </Button>
+              {user.bio && (
+                <Button variant="outline" onClick={() => updateBioMutation.mutate(null)} disabled={updateBioMutation.isPending}>
+                  {updateBioMutation.isPending ? <Spinner /> : "Clear Bio"}
+                </Button>
+              )}
             </div>
           </div>
 

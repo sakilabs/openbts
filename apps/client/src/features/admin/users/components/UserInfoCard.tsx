@@ -29,6 +29,9 @@ export function UserInfoCard({ user }: { user: AdminUser }) {
             )}
           </InfoRow>
           {user.username && <InfoRow label="Username">@{user.username}</InfoRow>}
+          <InfoRow label="Bio">
+            {user.bio ? <span className="whitespace-pre-wrap">{user.bio}</span> : <span className="text-muted-foreground italic">No bio set</span>}
+          </InfoRow>
           <InfoRow label="Role">{user.role ?? "user"}</InfoRow>
           <InfoRow label="Created">{new Date(user.createdAt).toLocaleString()}</InfoRow>
           {user.banned && (
