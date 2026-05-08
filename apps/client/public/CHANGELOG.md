@@ -1,6 +1,45 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-05-08
+
+### 🚀 Enhancements
+
+- Analyzer can now create submissions using selected cells from the analyzed log
+- Cells export for NetMonster/NetMonitor now includes NR PCIs
+
+# 2026-05-07
+
+### 🚀 Enhancements
+
+- Added the ability to select what is currently visible on the map. Available options are 'created' and 'updated'
+
+# 2026-05-06
+
+### 🚀 Enhancements
+
+- Added the ability to open your list by clicking its name
+- Band can now be filtered on the analyzer page
+
+# 2026-05-05
+
+### 🚀 Enhancements
+
+- Analyzer now shows unconfirmed cells
+
+# 2026-05-04
+
+### 🩹 Fixes
+
+- TAC in LTE is now required to send submissions
+- Band name for LTE2600 is now properly shown in cellEditor
+
+# 2026-05-03
+
+### 🩹 Fixes
+
+- Fixed the page inset so the bottom of the page is not overflowed when page is scrollable
+
 # 2026-05-02
 
 ### 🚀 Enhancements
