@@ -107,6 +107,19 @@
     "receiverType": "Typ odbiornika",
     "manufacturer": "Producent"
   },
+  "userProfile": {
+    "breadcrumb": "Profil użytkownika",
+    "joinedDate": "Dołączył(a) {{date}}",
+    "privateTitle": "Ten profil jest prywatny",
+    "privateSubtitle": "Tylko użytkownik może zobaczyć swój pełny profil.",
+    "notFoundTitle": "Nie znaleziono użytkownika",
+    "notFoundSubtitle": "Profil @{{username}} nie istnieje.",
+    "comments": "Komentarze",
+    "noComments": "Brak komentarzy",
+    "photos": "Zdjęcia",
+    "photosSoon": "Wkrótce",
+    "privateOwnerNotice": "Twój profil jest ustawiony jako prywatny. Tylko Ty możesz zobaczyć tę stronę."
+  },
   "deletedEntries": {
     "title": "Usunięte wpisy",
     "subtitle": "Przeglądaj wpisy usunięte podczas importów UKE",

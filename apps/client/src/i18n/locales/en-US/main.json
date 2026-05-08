@@ -103,6 +103,19 @@
     "receiverType": "Receiver Type",
     "manufacturer": "Manufacturer"
   },
+  "userProfile": {
+    "breadcrumb": "User Profile",
+    "joinedDate": "Joined {{date}}",
+    "privateTitle": "This profile is private",
+    "privateSubtitle": "Only the user can see their full profile.",
+    "notFoundTitle": "User not found",
+    "notFoundSubtitle": "The profile @{{username}} does not exist.",
+    "comments": "Comments",
+    "noComments": "No comments yet",
+    "photos": "Photos",
+    "photosSoon": "Coming soon",
+    "privateOwnerNotice": "Your profile is set to private. Only you can see this page."
+  },
   "deletedEntries": {
     "title": "Deleted Entries",
     "subtitle": "View entries removed during UKE imports",

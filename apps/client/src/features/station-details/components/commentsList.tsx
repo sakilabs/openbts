@@ -1,6 +1,7 @@
 import { AlertCircleIcon, Calendar03Icon, Delete02Icon, Image01Icon, Message01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -144,7 +145,17 @@ export function CommentsList({ stationId, isAdmin = false }: CommentsListProps) 
               <div className="flex-1 space-y-1.5">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-sm font-bold truncate">{comment.author?.name}</span>
+                    {comment.author?.username ? (
+                      <Link
+                        to="/users/$username"
+                        params={{ username: comment.author.username }}
+                        className="text-sm font-bold truncate hover:underline"
+                      >
+                        {comment.author.name}
+                      </Link>
+                    ) : (
+                      <span className="text-sm font-bold truncate">{comment.author?.name}</span>
+                    )}
                     {comment.author?.username && <span className="text-xs text-muted-foreground truncate">@{comment.author.username}</span>}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">

@@ -366,7 +366,7 @@ function SuccessStep() {
           <p className="text-lg font-semibold">{t("twoFactor.success.heading")}</p>
           <p className="text-sm text-muted-foreground leading-relaxed">{t("twoFactor.success.description")}</p>
         </div>
-        <Link to="/account/settings" className="w-full">
+        <Link to="/settings" className="w-full">
           <Button className="w-full" size="lg">
             {t("twoFactor.backToSettings")}
           </Button>
@@ -404,7 +404,7 @@ function TwoFactorPage() {
 
   if (isPending) return null;
   if (!session?.user || session.user.twoFactorEnabled) {
-    return <Navigate to="/account/settings" replace />;
+    return <Navigate to="/settings" replace />;
   }
 
   function handleInitSuccess(uri: string) {
@@ -438,7 +438,7 @@ function TwoFactorPage() {
 
         {step !== "success" ? <StepIndicator current={step} /> : null}
 
-        <Link to="/account/settings" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <Link to="/settings" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <HugeiconsIcon icon={ArrowLeftIcon} className="size-4" />
           {t("twoFactor.backToSettings")}
         </Link>
@@ -459,6 +459,6 @@ export const Route = createFileRoute("/_layout/account/two-factor")({
   }),
   staticData: {
     title: "Two-Factor Authentication",
-    breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" }],
+    breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/settings" }],
   },
 });

@@ -38,6 +38,6 @@ export const Route = createFileRoute("/_layout/account/submissions")({
   staticData: {
     titleKey: "userPage.title",
     i18nNamespace: "submissions",
-    breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/account/settings" }],
+    breadcrumbs: [{ titleKey: "account.title", i18nNamespace: "settings", path: "/settings" }],
   },
 });

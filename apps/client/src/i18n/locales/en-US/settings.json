@@ -82,9 +82,7 @@
     "adConsentResetAction": "Reset my choice"
   },
   "page": {
-    "title": "Account Settings",
-    "shortTitle": "Settings",
-    "description": "Manage your account and security"
+    "shortTitle": "Settings"
   },
   "account": {
     "title": "Account",
@@ -229,6 +227,43 @@
   "dangerZone": {
     "title": "Danger Zone",
     "description": "Permanently delete your account and all associated data"
+  },
+  "tabs": {
+    "account": "Account",
+    "profile": "Profile",
+    "security": "Security",
+    "preferences": "Preferences"
+  },
+  "profile": {
+    "title": "Public Profile",
+    "description": "Control what others see when they visit your profile",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "saveSuccess": "Profile saved",
+    "saveError": "Failed to save profile",
+    "viewProfile": "View profile",
+    "visibility": {
+      "title": "Profile visibility",
+      "hint": "When set to private, only your name, username, and join date are visible",
+      "public": "Anyone can see your full profile",
+      "private": "Only basic info is visible to others"
+    },
+    "bio": {
+      "label": "About me",
+      "hint": "A short description shown on your public profile",
+      "placeholder": "Tell others a bit about yourself...",
+      "remaining": "{{count}} characters remaining"
+    },
+    "contact": {
+      "title": "Contact info",
+      "hint": "These are shown on your public profile when visibility is set to public",
+      "instagram": "Instagram handle",
+      "instagramPlaceholder": "e.g. username",
+      "facebook": "Facebook profile URL",
+      "facebookPlaceholder": "e.g. https://facebook.com/username",
+      "email": "Contact email",
+      "emailPlaceholder": "e.g. contact@example.com"
+    }
   },
   "twoFactor": {
     "steps": {

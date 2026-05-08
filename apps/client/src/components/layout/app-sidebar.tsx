@@ -198,7 +198,10 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link to="/preferences" />} isActive={location.pathname === "/preferences"}>
+            <SidebarMenuButton
+              render={<Link to="/settings" search={{ tab: "preferences" }} />}
+              isActive={location.pathname === "/settings" && location.searchStr.includes("tab=preferences")}
+            >
               <HugeiconsIcon icon={Settings02Icon} />
               <span>{t("items.preferences")}</span>
             </SidebarMenuButton>

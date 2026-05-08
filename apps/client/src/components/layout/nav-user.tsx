@@ -1,4 +1,4 @@
-import { Logout02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { Logout02Icon, Settings02Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -36,7 +36,13 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-(--anchor-width) min-w-48 rounded-lg" side={isMobile ? "bottom" : "right"} align="end" sideOffset={4}>
           <DropdownMenuGroup>
-            <DropdownMenuItem render={<Link to="/account/settings" />}>
+            {user.username && (
+              <DropdownMenuItem render={<Link to="/users/$username" params={{ username: user.username }} />}>
+                <HugeiconsIcon icon={UserIcon} className="size-4" />
+                {t("items.myProfile")}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem render={<Link to="/settings" />}>
               <HugeiconsIcon icon={Settings02Icon} className="size-4" />
               {t("items.accountSettings")}
             </DropdownMenuItem>

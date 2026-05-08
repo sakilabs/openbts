@@ -82,9 +82,7 @@
     "adConsentResetAction": "Zresetuj mój wybór"
   },
   "page": {
-    "title": "Ustawienia konta",
-    "shortTitle": "Ustawienia",
-    "description": "Zarządzaj kontem i bezpieczeństwem"
+    "shortTitle": "Ustawienia"
   },
   "account": {
     "title": "Konto",
@@ -229,6 +227,43 @@
   "dangerZone": {
     "title": "Strefa zagrożenia",
     "description": "Trwałe usunięcie konta i wszystkich powiązanych danych"
+  },
+  "tabs": {
+    "account": "Konto",
+    "profile": "Profil",
+    "security": "Bezpieczeństwo",
+    "preferences": "Preferencje"
+  },
+  "profile": {
+    "title": "Profil publiczny",
+    "description": "Kontroluj, co widzą inni odwiedzając Twój profil",
+    "save": "Zapisz zmiany",
+    "saving": "Zapisywanie...",
+    "saveSuccess": "Profil zapisany",
+    "saveError": "Nie udało się zapisać profilu",
+    "viewProfile": "Zobacz profil",
+    "visibility": {
+      "title": "Widoczność profilu",
+      "hint": "Gdy ustawione na prywatny, widoczne są tylko imię, nazwa użytkownika i data dołączenia",
+      "public": "Wszyscy mogą zobaczyć Twój pełny profil",
+      "private": "Tylko podstawowe informacje są widoczne dla innych"
+    },
+    "bio": {
+      "label": "O mnie",
+      "hint": "Krótki opis widoczny na Twoim publicznym profilu",
+      "placeholder": "Powiedz innym coś o sobie...",
+      "remaining": "Pozostało {{count}} znaków"
+    },
+    "contact": {
+      "title": "Dane kontaktowe",
+      "hint": "Widoczne na Twoim publicznym profilu, gdy widoczność jest ustawiona na publiczną",
+      "instagram": "Nazwa użytkownika Instagram",
+      "instagramPlaceholder": "np. nazwa_uzytkownika",
+      "facebook": "URL profilu Facebook",
+      "facebookPlaceholder": "np. https://facebook.com/nazwa",
+      "email": "E-mail kontaktowy",
+      "emailPlaceholder": "np. kontakt@przyklad.pl"
+    }
   },
   "twoFactor": {
     "steps": {

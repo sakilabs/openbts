@@ -77,6 +77,9 @@ export const users = AuthSchema.table(
     twoFactorEnabled: boolean("two_factor_enabled").default(false),
     forceTotp: boolean("force_totp").default(false),
     locale: varchar("locale", { length: 10 }).default("pl-PL"),
+    bio: varchar("bio", { length: 500 }),
+    contactInfo: jsonb("contact_info").$type<{ instagram?: string; facebook?: string; email?: string }>(),
+    profileVisibility: text("profile_visibility").notNull().default("private"),
   },
   (table) => [index("users_email_idx").on(table.email)],
 );
