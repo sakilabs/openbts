@@ -7,6 +7,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Analyzer can now create submissions using selected cells from the analyzed log
 - Cells export for NetMonster/NetMonitor now includes NR PCIs
+- Cell editor now has `Fill EARFCN` button
 
 # 2026-05-07
 

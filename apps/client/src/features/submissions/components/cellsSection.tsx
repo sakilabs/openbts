@@ -12,9 +12,10 @@ export interface CellsSectionProps {
   isNewStation: boolean;
   cellErrors?: Record<string, CellError>;
   onCellsChange: (rat: RatType, cells: ProposedCellForm[]) => void;
+  operatorMnc?: number | null;
 }
 
-export function CellsSection({ selectedRats, cells, originalCells, isNewStation, cellErrors, onCellsChange }: CellsSectionProps) {
+export function CellsSection({ selectedRats, cells, originalCells, isNewStation, cellErrors, onCellsChange, operatorMnc }: CellsSectionProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
   const cellsByRat = useMemo(() => {
@@ -46,6 +47,7 @@ export function CellsSection({ selectedRats, cells, originalCells, isNewStation,
           isNewStation={isNewStation}
           cellErrors={cellErrors}
           onCellsChange={onCellsChange}
+          operatorMnc={operatorMnc}
         />
       ))}
     </div>

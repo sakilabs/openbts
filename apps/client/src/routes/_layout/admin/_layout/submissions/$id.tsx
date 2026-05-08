@@ -497,6 +497,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               getCellProps={getSubmissionCellProps}
               renderAfterRow={renderSubmissionAfterRow}
               readOnly={isFormDisabled}
+              operatorMnc={selectedOperator?.mnc ?? null}
             />
           </div>
         </div>

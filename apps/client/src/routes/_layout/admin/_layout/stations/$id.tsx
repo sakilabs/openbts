@@ -631,6 +631,7 @@ function StationDetailForm({
               onDeleteCell={handleDeleteCell}
               getDiffBadges={getStationDiffBadges}
               getCellProps={getStationCellProps}
+              operatorMnc={selectedOperator?.mnc ?? null}
             />
           </div>
         </div>

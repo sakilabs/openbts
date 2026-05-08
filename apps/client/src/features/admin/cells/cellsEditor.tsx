@@ -1,4 +1,4 @@
-import { Add01Icon, ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowDown01Icon, FlashIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Fragment, type ReactNode, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
+import { getKnownEARFCN } from "@/lib/earfcn-fill";
 import { cn } from "@/lib/utils";
 import type { Band } from "@/types/station";
 
@@ -42,6 +43,9 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   // Whether to show "Confirm cells" button per RAT (calls onConfirmAllCellsInRat for that RAT)
   showConfirmCellsButton?: boolean;
   onConfirmAllCellsInRat?: (rat: string) => void;
+
+  // MNC of the selected operator — enables the "Fill EARFCN" button on LTE sections
+  operatorMnc?: number | null;
 
   // Compute diff badge counts for a RAT section header
   getDiffBadges?: (rat: string, cells: T[]) => DiffBadges;
@@ -181,6 +185,7 @@ export function CellsEditor<T extends CellDraftBase>({
   renderAfterRow,
   sectionClassName,
   readOnly,
+  operatorMnc,
 }: CellsEditorProps<T>) {
   const { t } = useTranslation(["stations"]);
 
@@ -265,6 +270,28 @@ export function CellsEditor<T extends CellDraftBase>({
                       <Button type="button" variant="ghost" size="sm" onClick={() => onConfirmAllCellsInRat(rat)} className="h-7 text-xs">
                         <HugeiconsIcon icon={Tick02Icon} className="size-3.5 sm:hidden" />
                         <span className="hidden sm:inline">{t("stations:cells.confirmCells")}</span>
+                      </Button>
+                    )}
+                    {rat === "LTE" && operatorMnc && !readOnly && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const bandById = new Map(bands.map((b) => [b.id, b]));
+                          for (const cell of cellsForRat) {
+                            const earfcn = cell.details.earfcn;
+                            if (earfcn !== undefined && earfcn !== null && earfcn !== "" && earfcn !== 0) continue;
+                            const band = bandById.get(cell.band_id);
+                            if (!band) continue;
+                            const known = getKnownEARFCN(operatorMnc, band.value, band.duplex);
+                            if (known !== null) onCellChange(cell._localId, { details: { ...cell.details, earfcn: known } });
+                          }
+                        }}
+                        className="h-7 text-xs text-sky-600/80 hover:text-sky-600 hover:bg-sky-500/10"
+                      >
+                        <HugeiconsIcon icon={FlashIcon} className="size-3.5" />
+                        <span className="hidden sm:inline">{t("stations:cells.fillEarfcn")}</span>
                       </Button>
                     )}
                     {showAddButton && (

@@ -13,6 +13,7 @@ import { useBandSelection } from "@/features/admin/cells/hooks/useBandSelection"
 import { navigateRowHorizontal } from "@/features/admin/cells/rowNav";
 import { getBandName } from "@/features/station-details/frequencyCalc";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
+import { getKnownEARFCN } from "@/lib/earfcn-fill";
 import { cn } from "@/lib/utils";
 import type { Band } from "@/types/station";
 
@@ -30,9 +31,10 @@ type CellDetailsFormProps = {
   isNewStation: boolean;
   cellErrors?: Record<string, CellError>;
   onCellsChange: (rat: RatType, cells: ProposedCellForm[]) => void;
+  operatorMnc?: number | null;
 };
 
-export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellErrors, onCellsChange }: CellDetailsFormProps) {
+export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellErrors, onCellsChange, operatorMnc }: CellDetailsFormProps) {
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const {
     t,
@@ -51,10 +53,33 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
     handleNotesChange,
   } = useCellDetailsForm({ rat, cells, originalCells, isNewStation, onCellsChange });
 
+  const handleFillEARFCN =
+    rat === "LTE" && operatorMnc
+      ? () => {
+          const updated = cells.map((cell) => {
+            const earfcn = (cell.details as Record<string, unknown>)?.earfcn;
+            if (earfcn !== undefined && earfcn !== null && earfcn !== "" && earfcn !== 0) return cell;
+            const band = bandsForRat.find((b) => b.id === (cell.band_id ?? -1));
+            if (!band) return cell;
+            const known = getKnownEARFCN(operatorMnc, band.value, band.duplex);
+            if (known === null) return cell;
+            return { ...cell, details: { ...(cell.details as Record<string, unknown>), earfcn: known } } as typeof cell;
+          });
+          onCellsChange(rat, updated);
+        }
+      : undefined;
+
   return (
     <Collapsible defaultOpen>
       <div className="border rounded-xl overflow-hidden">
-        <CollapsibleHeader rat={rat} cellsCount={cells.length} diffCounts={diffCounts} onAddCell={handleAddCell} t={t} />
+        <CollapsibleHeader
+          rat={rat}
+          cellsCount={cells.length}
+          diffCounts={diffCounts}
+          onAddCell={handleAddCell}
+          onFillEarfcn={handleFillEARFCN}
+          t={t}
+        />
         <CollapsibleContent>
           {cells.length === 0 ? (
             <div className="px-4 py-6 text-center text-sm text-muted-foreground">{t("stations:cells.noCells")}</div>

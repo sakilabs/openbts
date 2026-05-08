@@ -18,6 +18,7 @@
     "cellsCount_other": "{{count, number}} cells",
     "notesPlaceholder": "e.g. picocell",
     "addCell": "Add Cell",
+    "fillEarfcn": "Fill EARFCN",
     "confirmCells": "Confirm cells",
     "noRats": "No cells yet. Select a radio technology above to add cells.",
     "noStationCells": "No cells found for this station",

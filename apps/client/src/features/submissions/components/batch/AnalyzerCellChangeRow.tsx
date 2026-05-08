@@ -72,7 +72,11 @@ export function AnalyzerCellChangeRow({ change, selectedDuplex, onDuplexChange, 
       {(mhz !== null || band !== null) && (
         <span className="shrink-0 font-mono text-xs text-muted-foreground">
           {mhz && <span className="font-semibold text-foreground">{mhz}</span>}
-          {showBandNumber && band !== null && <span className="opacity-75">{mhz ? " " : ""}(b{band})</span>}
+          {showBandNumber && band !== null && (
+            <span className="opacity-75">
+              {mhz ? " " : ""}(b{band})
+            </span>
+          )}
         </span>
       )}
       {change.operation === "add" && change.duplexChoices.length > 0 ? (

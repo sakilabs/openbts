@@ -1,4 +1,4 @@
-import { Add01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowDown01Icon, FlashIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ type CollapsibleHeaderProps = {
   cellsCount: number;
   diffCounts: DiffCounts;
   onAddCell: () => void;
+  onFillEarfcn?: () => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 };
 
@@ -34,7 +35,7 @@ function DiffBadge({ count, color, label }: { count: number; color: string; labe
   );
 }
 
-export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, t }: CollapsibleHeaderProps) {
+export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onFillEarfcn, t }: CollapsibleHeaderProps) {
   return (
     <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
       <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
@@ -47,10 +48,24 @@ export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, t }:
         <DiffBadge count={diffCounts.modified} color="amber" label={t("stations:cells.diffModified", { count: diffCounts.modified })} />
         <DiffBadge count={diffCounts.deleted} color="red" label={t("stations:cells.diffDeleted", { count: diffCounts.deleted })} />
       </CollapsibleTrigger>
-      <Button type="button" variant="ghost" size="sm" onClick={onAddCell} className="h-7 text-xs">
-        <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
-        <span className="hidden sm:inline">{t("stations:cells.addCell")}</span>
-      </Button>
+      <div className="flex items-center gap-1">
+        {onFillEarfcn && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onFillEarfcn}
+            className="h-7 text-xs text-sky-600/80 hover:text-sky-600 hover:bg-sky-500/10"
+          >
+            <HugeiconsIcon icon={FlashIcon} className="size-3.5" />
+            <span className="hidden sm:inline">{t("stations:cells.fillEarfcn")}</span>
+          </Button>
+        )}
+        <Button type="button" variant="ghost" size="sm" onClick={onAddCell} className="h-7 text-xs">
+          <HugeiconsIcon icon={Add01Icon} className="size-3.5" />
+          <span className="hidden sm:inline">{t("stations:cells.addCell")}</span>
+        </Button>
+      </div>
     </div>
   );
 }

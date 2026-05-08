@@ -1,7 +1,10 @@
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { operatorsQueryOptions } from "@/features/shared/queries";
 import { useSettings } from "@/hooks/useSettings";
 
 import { ActionSelector } from "./actionSelector";
@@ -25,6 +28,8 @@ export interface SubmissionFormProps {
 export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeStationId }: SubmissionFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
   const { data: settings } = useSettings();
+  const { data: operators = [] } = useQuery(operatorsQueryOptions());
+  const mncById = useMemo(() => new Map(operators.map((o) => [o.id, o.mnc])), [operators]);
   const {
     form,
     mutation,
@@ -293,9 +298,10 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             originalCells: s.values.originalCells,
             mode: s.values.mode,
             action: s.values.action,
+            operatorId: s.values.newStation.operator_id,
           })}
         >
-          {({ selectedRats, cells, originalCells, mode, action }) => {
+          {({ selectedRats, cells, originalCells, mode, action, operatorId }) => {
             if (mode === "existing" && action === "delete") {
               return (
                 <div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
@@ -303,6 +309,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
                 </div>
               );
             }
+
+            const operatorMnc = mncById.get(operatorId ?? -1) ?? null;
 
             return (
               <CellsSection
@@ -312,6 +320,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
                 isNewStation={mode === "new"}
                 cellErrors={cellErrors}
                 onCellsChange={handleCellsChange}
+                operatorMnc={operatorMnc}
               />
             );
           }}
