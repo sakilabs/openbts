@@ -1,3 +1,6 @@
+import { getBandFromEARFCN } from "@/lib/band-utils";
+import type { Band } from "@/types/station";
+
 import type { CellFormDetails, GSMCellDetails, LTECellDetails, SubmissionFormData, UMTSCellDetails } from "../types";
 import type { AnalyzerDraft } from "./analyzerDraftStore";
 
@@ -44,7 +47,7 @@ function pickMismatchDetails(rat: "GSM" | "UMTS" | "LTE" | "NR", details: Mismat
   return Object.fromEntries(keys.filter((key) => key in details).map((key) => [key, details[key as keyof MismatchDetails]]));
 }
 
-export function buildAnalyzerBatchDraft(draft: AnalyzerDraft): AnalyzerBatchDraft {
+export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []): AnalyzerBatchDraft {
   const stationMap = new Map<number, DraftStation>();
   const cellConflictTracker = new Map<string, MismatchDetails>();
   const unresolvedBandRows: number[] = [];
@@ -90,13 +93,17 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft): AnalyzerBatchDraf
         if (warnings.includes("pci_mismatch") || warnings.includes("pci_missing")) details.pci = row.pci;
         if (warnings.includes("earfcn_mismatch")) details.earfcn = row.earfcn;
       }
-    } else if (result.status === "probable" && warnings.includes("enbid_only") && row.rat === "LTE") {
+    } else if (result.status === "probable" && warnings.includes("enbid_only") && row.rat === "LTE" && result.cell) {
       operation = "add";
       details.enbid = row.enbid;
       details.clid = row.clid;
       details.tac = row.tac;
       details.pci = row.pci;
       details.earfcn = row.earfcn;
+      if (row.earfcn !== undefined) {
+        const bandNumber = getBandFromEARFCN(row.earfcn);
+        if (bandNumber !== null) band_id = bands.find((b) => b.rat === "LTE" && b.value === bandNumber)?.id ?? null;
+      }
       if (!band_id) unresolvedBandRows.push(idx);
     } else if (result.status === "probable" && warnings.includes("rnc_mismatch") && result.cell?.rat === "UMTS" && row.rat === "UMTS") {
       const cell = result.cell;

@@ -1,6 +1,6 @@
 import { AirportTowerIcon, AlertCircleIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { bandsQueryOptions } from "@/features/shared/queries";
 import { createAnalyzerBatch } from "@/features/submissions/api";
 import { AnalyzerStationGroupCard } from "@/features/submissions/components/batch/AnalyzerStationGroupCard";
 import { clearDraft, loadDraft } from "@/features/submissions/utils/analyzerDraftStore";
@@ -39,10 +40,11 @@ function FormAnalyzerPage() {
   const { t } = useTranslation(["submissions", "common"]);
   const navigate = useNavigate();
   const { data: settings } = useSettings();
+  const { data: bands } = useQuery(bandsQueryOptions());
   const { loadedDraft: draft } = Route.useLoaderData();
   const { draft: draftId } = Route.useSearch();
 
-  const initialBatchDraft = useMemo(() => buildAnalyzerBatchDraft(draft), [draft]);
+  const initialBatchDraft = useMemo(() => buildAnalyzerBatchDraft(draft, bands ?? []), [draft, bands]);
   const [stations, setStations] = useState(initialBatchDraft.stations);
   const [submitterNote, setSubmitterNote] = useState("");
   const batchDraft = useMemo(() => ({ ...initialBatchDraft, stations }), [initialBatchDraft, stations]);
