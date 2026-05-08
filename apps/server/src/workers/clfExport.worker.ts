@@ -150,7 +150,7 @@ parentPort.on("message", async (params: WorkerParams) => {
       : null;
 
     const nrBandsQuery = db
-      .select({ station_id: cells.station_id, band_value: bands.value, band_duplex: bands.duplex })
+      .select({ station_id: cells.station_id, band_value: bands.value, band_duplex: bands.duplex, nr_pci: nrCells.pci })
       .from(cells)
       .innerJoin(nrCells, and(eq(nrCells.cell_id, cells.id), eq(nrCells.type, "nsa")))
       .innerJoin(bands, and(eq(cells.band_id, bands.id), eq(bands.variant, "commercial")))
@@ -167,12 +167,15 @@ parentPort.on("message", async (params: WorkerParams) => {
       nrBandsQuery,
     ]);
 
-    const stationNrBandsMap = new Map<number, Array<{ value: number; duplex: "FDD" | "TDD" | null }>>();
+    const stationNsaNrBandPciMap = new Map<number, Map<string, { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>>();
     for (const row of nrBandRows) {
       if (!row.band_value) continue;
-      const list = stationNrBandsMap.get(row.station_id) ?? [];
-      list.push({ value: row.band_value, duplex: row.band_duplex ?? null });
-      stationNrBandsMap.set(row.station_id, list);
+      const key = `${row.band_value}:${row.band_duplex ?? "null"}`;
+      const bandMap = stationNsaNrBandPciMap.get(row.station_id) ?? new Map();
+      const entry = bandMap.get(key) ?? { value: row.band_value, duplex: row.band_duplex ?? null, pcis: [] };
+      if (row.nr_pci !== null && row.nr_pci !== undefined && !entry.pcis.includes(row.nr_pci)) entry.pcis.push(row.nr_pci);
+      bandMap.set(key, entry);
+      stationNsaNrBandPciMap.set(row.station_id, bandMap);
     }
 
     const stationNrBandPciMap = new Map<number, Map<string, { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>>();
@@ -259,7 +262,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           city: row.city ?? null,
           address: row.extra_address ?? row.address ?? null,
           region_code: row.region_code ?? null,
-          nr_bands: stationNrBandsMap.get(row.station_pk),
+          nr_band_pcis: row.station_pk ? [...(stationNsaNrBandPciMap.get(row.station_pk)?.values() ?? [])] : undefined,
         },
         format,
       );

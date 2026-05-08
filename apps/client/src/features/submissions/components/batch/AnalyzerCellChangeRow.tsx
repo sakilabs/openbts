@@ -6,7 +6,12 @@ import { RatBadge } from "@/components/rat-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import type { DraftCell } from "../../utils/fromAnalyzer";
+import type { DraftCell, MismatchDetails } from "../../utils/fromAnalyzer";
+
+const FIELD_LABELS: Record<string, string> = {
+  enbid: "eNBID",
+  e_gsm: "E-GSM",
+};
 
 interface Props {
   change: DraftCell;
@@ -16,7 +21,25 @@ interface Props {
 export function AnalyzerCellChangeRow({ change, onRemove }: Props) {
   const { t } = useTranslation(["submissions"]);
   const isAddOperation = change.operation === "add";
-  const entries = Object.entries(change.details).filter(([, value]) => value !== null && value !== undefined);
+
+  const fields: { key: string; currentVal: number | boolean | undefined; newVal: number | boolean | undefined; isChanged: boolean }[] = [];
+
+  if (isAddOperation) {
+    for (const [key, val] of Object.entries(change.details)) {
+      if (val !== null && val !== undefined) fields.push({ key: key, currentVal: undefined, newVal: val, isChanged: true });
+    }
+  } else {
+    const base = change.baseDetails ?? {};
+    const changed = change.details;
+    const allKeys = [...new Set([...Object.keys(base), ...Object.keys(changed)])];
+    for (const key of allKeys) {
+      const currentVal = base[key as keyof MismatchDetails];
+      const newVal = changed[key as keyof MismatchDetails];
+      const isChanged = key in changed && newVal !== null && newVal !== undefined;
+      if ((currentVal !== null && currentVal !== undefined) || isChanged)
+        fields.push({ key, currentVal, newVal: isChanged ? newVal : undefined, isChanged });
+    }
+  }
 
   return (
     <div
@@ -36,11 +59,33 @@ export function AnalyzerCellChangeRow({ change, onRemove }: Props) {
       </span>
       <RatBadge rat={change.rat} showTechName />
       <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
-        {entries.map(([field, value]) => (
-          <span key={field} className="flex items-center gap-1">
-            <span className="font-mono text-[11px] text-muted-foreground">{field.toUpperCase()}</span>
-            <span className="font-mono text-[10px] text-muted-foreground/50">{">"}</span>
-            <span className="font-mono text-[11px] font-semibold tabular-nums text-foreground">{String(value)}</span>
+        {fields.map(({ key, currentVal, newVal, isChanged }) => (
+          <span key={key} className="flex items-center gap-1">
+            <span className="font-mono text-[11px] text-muted-foreground">{FIELD_LABELS[key] ?? key.toUpperCase()}</span>
+            {isChanged && currentVal !== null && currentVal !== undefined ? (
+              <>
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground line-through">{String(currentVal)}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{">"}</span>
+                <span className={cn("font-mono text-[11px] font-semibold tabular-nums", "text-amber-600 dark:text-amber-400")}>{String(newVal)}</span>
+              </>
+            ) : isChanged ? (
+              <>
+                <span className="font-mono text-[10px] text-muted-foreground">{">"}</span>
+                <span
+                  className={cn(
+                    "font-mono text-[11px] font-semibold tabular-nums",
+                    isAddOperation ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400",
+                  )}
+                >
+                  {String(newVal)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="font-mono text-[10px] text-muted-foreground">{">"}</span>
+                <span className="font-mono text-[11px] tabular-nums text-foreground">{String(currentVal)}</span>
+              </>
+            )}
           </span>
         ))}
       </div>

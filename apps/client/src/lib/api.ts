@@ -85,8 +85,9 @@ export async function fetchJson<T>(url: string, options?: FetchOptions): Promise
       try {
         const errorData = await response.json();
         if (errorData.errors?.[0]?.code === "DUPLICATE_REQUEST") throw new DuplicateRequestError();
+        if (errorData.errors?.length) throw new ApiResponseError(response.status, errorData.errors);
       } catch (e) {
-        if (e instanceof DuplicateRequestError) throw e;
+        if (e instanceof DuplicateRequestError || e instanceof ApiResponseError) throw e;
       }
     }
 

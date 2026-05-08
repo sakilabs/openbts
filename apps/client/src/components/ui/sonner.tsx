@@ -17,7 +17,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         success: <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-4" />,
         info: <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} className="size-4" />,
         warning: <HugeiconsIcon icon={Alert02Icon} strokeWidth={2} className="size-4" />,
-        error: <HugeiconsIcon icon={MultiplicationSignCircleIcon} strokeWidth={2} className="size-4" />,
+        error: <HugeiconsIcon icon={MultiplicationSignCircleIcon} strokeWidth={2} className="size-4 text-destructive" />,
         loading: <Spinner className="size-4" />,
       }}
       style={
@@ -31,6 +31,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          error: "!bg-red-50 dark:!bg-red-950 !border-red-200 dark:!border-red-800",
         },
       }}
       {...props}

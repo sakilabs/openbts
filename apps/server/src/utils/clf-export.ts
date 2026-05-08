@@ -246,7 +246,7 @@ function getDescription(cell: CellExportData): string {
   return (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
 }
 
-function formatNrBandPcisTag(nr_band_pcis: Array<{ value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>): string | null {
+function formatNRBandPCIsTag(nr_band_pcis: { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }[]): string | null {
   const entries = nr_band_pcis
     .map((b) => ({ desig: getNrDesignation(b.value, b.duplex), pcis: [...new Set(b.pcis)].sort((a, c) => a - c) }))
     .filter((b): b is { desig: string; pcis: number[] } => b.desig !== null)
@@ -276,17 +276,16 @@ function getTags(cell: CellExportData): string {
       const bandCode = getBandCode("LTE", cell.band_value, cell.band_duplex);
       if (bandCode) tags += ` [${rc}:${cell.station_id}:${bandCode}]`;
       if (cell.enbid !== null && cell.enbid !== undefined && cell.clid !== null && cell.clid !== undefined)
-        tags += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
-      if (cell.nr_bands && cell.nr_bands.length > 0) {
-        const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
-        const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
-        if (unique.length > 0) tags += ` [NR ${unique.join("|")}]`;
+        tags += ` [eNBI:${cell.enbid}:${cell.clid}]`;
+      if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
+        const formatted = formatNRBandPCIsTag(cell.nr_band_pcis);
+        if (formatted) tags += ` [${formatted}]`;
       }
       break;
     }
     case "NR": {
       if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
-        const formatted = formatNrBandPcisTag(cell.nr_band_pcis);
+        const formatted = formatNRBandPCIsTag(cell.nr_band_pcis);
         if (formatted) tags += ` [${formatted}]`;
       } else {
         const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
@@ -356,11 +355,10 @@ export function toNTM(cell: CellExportData): string | null {
       const bandCode = getBandCode("LTE", cell.band_value, cell.band_duplex);
       if (bandCode) location += ` [${rc}:${cell.station_id}:${bandCode}]`;
       if (cell.enbid !== null && cell.enbid !== undefined && cell.clid !== null && cell.clid !== undefined)
-        location += ` [eNBI:${cell.enbid} CLID:${cell.clid}]`;
-      if (cell.nr_bands && cell.nr_bands.length > 0) {
-        const nrDesignations = cell.nr_bands.map((b) => getNrDesignation(b.value, b.duplex)).filter((n): n is string => n !== null);
-        const unique = [...new Set(nrDesignations)].sort((a, b) => Number.parseInt(a.slice(1), 10) - Number.parseInt(b.slice(1), 10));
-        if (unique.length > 0) location += ` [NR ${unique.join("|")}]`;
+        location += ` [eNBI:${cell.enbid}:${cell.clid}]`;
+      if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
+        const formatted = formatNRBandPCIsTag(cell.nr_band_pcis);
+        if (formatted) location += ` [${formatted}]`;
       }
 
       return `4G;${mcc};${mnc};${ci};${tac};${enbid};${pci};${lat};${lon};${location};${earfcn}`;
@@ -372,7 +370,7 @@ export function toNTM(cell: CellExportData): string | null {
 
       let location = getNTMLocation(cell);
       if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
-        const formatted = formatNrBandPcisTag(cell.nr_band_pcis);
+        const formatted = formatNRBandPCIsTag(cell.nr_band_pcis);
         if (formatted) location += ` [${formatted}]`;
       } else {
         const nrDesig = getNrDesignation(cell.band_value, cell.band_duplex);
