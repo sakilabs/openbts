@@ -72,6 +72,11 @@ export const auth = betterAuth({
         defaultValue: null,
         input: true,
       },
+      bio: {
+        type: "string" as const,
+        defaultValue: null,
+        input: true,
+      },
     },
     changeEmail: {
       enabled: true,
