@@ -14,6 +14,7 @@ export type RouteRateLimit = {
   url: string;
   max: number;
   window: number;
+  roles?: Partial<Record<UserRole, RateLimitTier>>;
 };
 
 export interface RateLimitOptions {
@@ -147,32 +148,25 @@ export class RateLimitService {
    * @param req FastifyRequest object
    * @returns Rate limit configuration for the route or null if not found
    */
-  private getRouteRateLimit(req: FastifyRequest): RateLimitTier | null {
+  private getRouteRateLimit(req: FastifyRequest): RouteRateLimit | null {
     const url = (req.url ?? req.routeOptions?.url ?? "").split("?")[0];
     if (!url || !this.options.routes.length) return null;
 
-    const routeConfig = this.options.routes.find((route) => {
-      if (route.url === url) return true;
+    return (
+      this.options.routes.find((route) => {
+        if (route.url === url) return true;
 
-      const routeParts = route.url.split("/");
-      const urlParts = url.split("/");
+        const routeParts = route.url.split("/");
+        const urlParts = url.split("/");
 
-      if (routeParts.length !== urlParts.length) return false;
+        if (routeParts.length !== urlParts.length) return false;
 
-      return routeParts.every((part, i) => {
-        if (part.startsWith(":") || part.startsWith("*")) return true;
-        return part === urlParts[i];
-      });
-    });
-
-    if (routeConfig) {
-      return {
-        max: routeConfig.max,
-        window: routeConfig.window,
-      };
-    }
-
-    return null;
+        return routeParts.every((part, i) => {
+          if (part.startsWith(":") || part.startsWith("*")) return true;
+          return part === urlParts[i];
+        });
+      }) ?? null
+    );
   }
 
   /**
@@ -181,8 +175,15 @@ export class RateLimitService {
    * @returns Rate limit configuration for the request
    */
   async getRateLimitTier(req: FastifyRequest): Promise<RateLimitTier> {
-    const routeLimit = this.getRouteRateLimit(req);
-    if (routeLimit) return routeLimit;
+    const routeConfig = this.getRouteRateLimit(req);
+    if (routeConfig) {
+      if (routeConfig.roles && req.userSession?.user?.role) {
+        const role = req.userSession.user.role as UserRole;
+        const roleLimit = routeConfig.roles[role];
+        if (roleLimit) return roleLimit;
+      }
+      return { max: routeConfig.max, window: routeConfig.window };
+    }
 
     if (req.apiToken) {
       const apiKeyRateLimit = await this.getApiKeyRateLimit(req);
