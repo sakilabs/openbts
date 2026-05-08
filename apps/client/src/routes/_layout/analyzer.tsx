@@ -12,7 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import {
   type Row,
   type RowSelectionState,
@@ -324,7 +324,7 @@ function BandFilterButton({
 function AnalyzerPage() {
   const { t } = useTranslation(["cellAnalyzer", "common", "stations"]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
   const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -898,7 +898,8 @@ function AnalyzerPage() {
       },
       parsedCount: state.parsedRows?.length ?? 0,
     });
-    void navigate({ to: "/submission/from-analyzer", search: { draft: draftId } });
+    const href = router.buildLocation({ to: "/submission/from-analyzer", search: { draft: draftId } }).href;
+    window.open(href, "_blank", "noopener,noreferrer");
   }
 
   useEffect(() => {
