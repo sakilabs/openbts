@@ -228,6 +228,7 @@ function ProfileTab({ username }: { username: string | undefined }) {
   });
 
   const remaining = 500 - bio.length;
+  const bioHasLink = /https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,}/i.test(bio);
 
   if (isLoading || isPublic === undefined)
     return (
@@ -266,8 +267,9 @@ function ProfileTab({ username }: { username: string | undefined }) {
           maxLength={500}
           rows={4}
           placeholder={t("profile.bio.placeholder")}
-          className="resize-none"
+          className={cn("resize-none", bioHasLink && "border-destructive focus-visible:ring-destructive")}
         />
+        {bioHasLink && <p className="text-xs text-destructive">{t("profile.bio.noLinks")}</p>}
         <p className={cn("text-xs text-right", remaining < 50 ? "text-amber-500" : "text-muted-foreground")}>
           {t("profile.bio.remaining", { count: remaining })}
         </p>
@@ -320,7 +322,7 @@ function ProfileTab({ username }: { username: string | undefined }) {
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || bioHasLink}>
           {saveMutation.isPending ? <Spinner /> : null}
           {t(saveMutation.isPending ? "profile.saving" : "profile.save")}
         </Button>

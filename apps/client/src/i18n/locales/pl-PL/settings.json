@@ -252,7 +252,8 @@
       "label": "O mnie",
       "hint": "Krótki opis widoczny na Twoim publicznym profilu",
       "placeholder": "Powiedz innym coś o sobie...",
-      "remaining": "Pozostało {{count}} znaków"
+      "remaining": "Pozostało {{count}} znaków",
+      "noLinks": "Bio nie może zawierać linków"
     },
     "contact": {
       "title": "Dane kontaktowe",

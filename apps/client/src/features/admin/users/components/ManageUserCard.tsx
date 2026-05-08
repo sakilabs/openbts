@@ -14,10 +14,12 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AdminUser } from "@/features/admin/users/types";
 import { showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
+import { cn } from "@/lib/utils";
 
 import { SectionHeader } from "./common";
 
 const ROLES = ["user", "editor", "admin"] as const;
+const NO_LINKS_RE = /https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,}/i;
 
 function ForceTotpDescription({ hasPassword, twoFactorEnabled }: { hasPassword?: boolean; twoFactorEnabled?: boolean }) {
   if (!hasPassword) return "Cannot force 2FA - user has no password set. Set a password first.";
@@ -33,6 +35,7 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
   const [newPassword, setNewPassword] = useState("");
 
   const invalidateAll = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
+  const bioHasLink = NO_LINKS_RE.test(editBio);
 
   const setRoleMutation = useMutation({
     mutationFn: async (newRole: string) => {
@@ -180,11 +183,15 @@ export function ManageUserCard({ user, hasPassword }: { user: AdminUser; hasPass
               onChange={(e) => setEditBio(e.target.value)}
               maxLength={500}
               rows={3}
-              className="max-w-sm resize-none"
+              className={cn("max-w-sm resize-none", bioHasLink && "border-destructive focus-visible:ring-destructive")}
             />
+            {bioHasLink && <p className="text-xs text-destructive">Bio cannot contain links</p>}
             <p className="text-xs text-muted-foreground">{editBio.length}/500</p>
             <div className="flex gap-2">
-              <Button onClick={() => updateBioMutation.mutate(editBio.trim())} disabled={updateBioMutation.isPending || !editBio.trim()}>
+              <Button
+                onClick={() => updateBioMutation.mutate(editBio.trim())}
+                disabled={updateBioMutation.isPending || !editBio.trim() || bioHasLink}
+              >
                 {updateBioMutation.isPending ? <Spinner /> : "Update Bio"}
               </Button>
               {user.bio && (

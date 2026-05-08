@@ -8,9 +8,16 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
+const NO_LINKS_RE = /https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,}/i;
+
 const schemaRoute = {
   body: z.object({
-    bio: z.string().max(500).nullable().optional(),
+    bio: z
+      .string()
+      .max(500)
+      .refine((v) => !NO_LINKS_RE.test(v), { error: "Bio cannot contain links" })
+      .nullable()
+      .optional(),
     contactInfo: z
       .object({
         instagram: z.string().max(60).optional(),

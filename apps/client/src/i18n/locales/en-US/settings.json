@@ -252,7 +252,8 @@
       "label": "About me",
       "hint": "A short description shown on your public profile",
       "placeholder": "Tell others a bit about yourself...",
-      "remaining": "{{count}} characters remaining"
+      "remaining": "{{count}} characters remaining",
+      "noLinks": "Bio cannot contain links"
     },
     "contact": {
       "title": "Contact info",
