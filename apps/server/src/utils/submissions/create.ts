@@ -203,12 +203,7 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
   }
 }
 
-export async function processSubmission(
-  tx: DbTx,
-  input: SingleSubmission,
-  userId: string,
-  options?: { batchId?: string },
-): Promise<SubmissionWithExtras> {
+export async function processSubmission(tx: DbTx, input: SingleSubmission, userId: string): Promise<SubmissionWithExtras> {
   const { station_id, type, submitter_note, station: stationData, location: locationData, cells: proposedCellsInput } = input;
 
   if (!hasMeaningfulChanges(input))
@@ -222,7 +217,6 @@ export async function processSubmission(
       type,
       submitter_note: submitter_note ?? null,
       pending_photos: input.pending_photos ?? null,
-      batch_id: options?.batchId ?? null,
     })
     .returning();
   if (!submission) throw new ErrorResponse("FAILED_TO_CREATE");
