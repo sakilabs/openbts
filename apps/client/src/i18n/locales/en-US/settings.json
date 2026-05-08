@@ -262,8 +262,11 @@
       "instagramPlaceholder": "e.g. username",
       "facebook": "Facebook profile URL",
       "facebookPlaceholder": "e.g. https://facebook.com/username",
+      "facebookError": "Must be a valid facebook.com URL (e.g. https://facebook.com/username)",
       "email": "Contact email",
-      "emailPlaceholder": "e.g. contact@example.com"
+      "emailPlaceholder": "e.g. contact@example.com",
+      "emailError": "Must be a valid email address",
+      "instagramError": "Handle can only contain letters, numbers, dots and underscores (max 30 chars)"
     }
   },
   "twoFactor": {

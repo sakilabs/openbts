@@ -20,8 +20,18 @@ const schemaRoute = {
       .optional(),
     contactInfo: z
       .object({
-        instagram: z.string().max(60).optional(),
-        facebook: z.string().max(120).optional(),
+        instagram: z
+          .string()
+          .max(30)
+          .refine((v) => !v || /^[a-zA-Z0-9._]{1,30}$/.test(v), { error: "Invalid Instagram handle" })
+          .optional(),
+        facebook: z
+          .string()
+          .max(120)
+          .refine((v) => !v || /^https:\/\/(www\.)?facebook\.com\/[a-zA-Z0-9._%+-]{1,60}\/?$/.test(v), {
+            error: "Must be a valid facebook.com URL",
+          })
+          .optional(),
         email: z.email().max(100).optional(),
       })
       .nullable()
@@ -36,7 +46,7 @@ const schemaRoute = {
           .object({
             instagram: z.string().optional(),
             facebook: z.string().optional(),
-            email: z.string().optional(),
+            email: z.email().optional(),
           })
           .nullable(),
         profileVisibility: z.string(),

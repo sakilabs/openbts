@@ -229,6 +229,10 @@ function ProfileTab({ username }: { username: string | undefined }) {
 
   const remaining = 500 - bio.length;
   const bioHasLink = /https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,}/i.test(bio);
+  const instagramInvalid = !!instagram && !/^[a-zA-Z0-9._]{1,30}$/.test(instagram);
+  const facebookInvalid = !!facebook && !/^https:\/\/(www\.)?facebook\.com\/[a-zA-Z0-9._%+-]{1,60}\/?$/.test(facebook);
+  const emailInvalid = !!contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail);
+  const hasErrors = bioHasLink || instagramInvalid || facebookInvalid || emailInvalid;
 
   if (isLoading || isPublic === undefined)
     return (
@@ -290,8 +294,10 @@ function ProfileTab({ username }: { username: string | undefined }) {
               value={instagram}
               onChange={(e) => setInstagram(e.target.value)}
               placeholder={t("profile.contact.instagramPlaceholder")}
-              maxLength={60}
+              maxLength={30}
+              className={instagramInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {instagramInvalid && <p className="text-xs text-destructive">{t("profile.contact.instagramError")}</p>}
           </div>
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -303,7 +309,9 @@ function ProfileTab({ username }: { username: string | undefined }) {
               onChange={(e) => setFacebook(e.target.value)}
               placeholder={t("profile.contact.facebookPlaceholder")}
               maxLength={120}
+              className={facebookInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {facebookInvalid && <p className="text-xs text-destructive">{t("profile.contact.facebookError")}</p>}
           </div>
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -316,13 +324,15 @@ function ProfileTab({ username }: { username: string | undefined }) {
               onChange={(e) => setContactEmail(e.target.value)}
               placeholder={t("profile.contact.emailPlaceholder")}
               maxLength={100}
+              className={emailInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {emailInvalid && <p className="text-xs text-destructive">{t("profile.contact.emailError")}</p>}
           </div>
         </div>
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || bioHasLink}>
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || hasErrors}>
           {saveMutation.isPending ? <Spinner /> : null}
           {t(saveMutation.isPending ? "profile.saving" : "profile.save")}
         </Button>

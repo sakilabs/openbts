@@ -262,8 +262,11 @@
       "instagramPlaceholder": "np. nazwa_uzytkownika",
       "facebook": "URL profilu Facebook",
       "facebookPlaceholder": "np. https://facebook.com/nazwa",
+      "facebookError": "Musi być poprawnym adresem URL facebook.com (np. https://facebook.com/nazwa)",
       "email": "E-mail kontaktowy",
-      "emailPlaceholder": "np. kontakt@przyklad.pl"
+      "emailPlaceholder": "np. kontakt@przyklad.pl",
+      "emailError": "Musi być poprawnym adresem e-mail",
+      "instagramError": "Nazwa użytkownika może zawierać tylko litery, cyfry, kropki i podkreślenia (maks. 30 znaków)"
     }
   },
   "twoFactor": {
