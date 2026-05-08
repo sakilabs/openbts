@@ -77,7 +77,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
           cellsCount={cells.length}
           diffCounts={diffCounts}
           onAddCell={handleAddCell}
-          onFillEarfcn={handleFillEARFCN}
+          onFillEARFCN={handleFillEARFCN}
           t={t}
         />
         <CollapsibleContent>

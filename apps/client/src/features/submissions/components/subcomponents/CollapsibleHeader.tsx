@@ -19,7 +19,7 @@ type CollapsibleHeaderProps = {
   cellsCount: number;
   diffCounts: DiffCounts;
   onAddCell: () => void;
-  onFillEarfcn?: () => void;
+  onFillEARFCN?: () => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 };
 
@@ -35,7 +35,7 @@ function DiffBadge({ count, color, label }: { count: number; color: string; labe
   );
 }
 
-export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onFillEarfcn, t }: CollapsibleHeaderProps) {
+export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onFillEARFCN, t }: CollapsibleHeaderProps) {
   return (
     <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
       <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
@@ -49,13 +49,13 @@ export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onFi
         <DiffBadge count={diffCounts.deleted} color="red" label={t("stations:cells.diffDeleted", { count: diffCounts.deleted })} />
       </CollapsibleTrigger>
       <div className="flex items-center gap-1">
-        {onFillEarfcn && (
+        {onFillEARFCN && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={onFillEarfcn}
-            className="h-7 text-xs text-sky-600/80 hover:text-sky-600 hover:bg-sky-500/10"
+            onClick={onFillEARFCN}
+            className="h-7 text-xs text-sky-600/80 hover:text-sky-600 hover:bg-sky-500/10 dark:text-sky-400 dark:hover:text-sky-300 dark:hover:bg-sky-400/10"
           >
             <HugeiconsIcon icon={FlashIcon} className="size-3.5" />
             <span className="hidden sm:inline">{t("stations:cells.fillEarfcn")}</span>

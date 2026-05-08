@@ -288,7 +288,7 @@ export function CellsEditor<T extends CellDraftBase>({
                             if (known !== null) onCellChange(cell._localId, { details: { ...cell.details, earfcn: known } });
                           }
                         }}
-                        className="h-7 text-xs text-sky-600/80 hover:text-sky-600 hover:bg-sky-500/10"
+                        className="h-7 text-xs text-sky-600/80 hover:text-sky-600 hover:bg-sky-500/10 dark:text-sky-400 dark:hover:text-sky-300 dark:hover:bg-sky-400/10"
                       >
                         <HugeiconsIcon icon={FlashIcon} className="size-3.5" />
                         <span className="hidden sm:inline">{t("stations:cells.fillEarfcn")}</span>
