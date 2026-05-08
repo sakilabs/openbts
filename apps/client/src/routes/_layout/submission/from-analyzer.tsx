@@ -94,10 +94,10 @@ function FormAnalyzerPage() {
   });
 
   useEffect(() => {
-    if (!settings?.submissionsEnabled) void navigate({ to: "/" });
+    if (settings !== undefined && !settings.submissionsEnabled) void navigate({ to: "/" });
   }, [settings, navigate]);
 
-  if (!settings?.submissionsEnabled || !draftId) return null;
+  if (settings === undefined || !settings.submissionsEnabled || !draftId) return null;
 
   const totalCells = stations.reduce((num, station) => num + station.cells.length, 0);
   const hasConflicts = stations.some((station) => station.hasConflicts);
