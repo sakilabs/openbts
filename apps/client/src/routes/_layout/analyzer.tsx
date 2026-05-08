@@ -885,9 +885,13 @@ function AnalyzerPage() {
 
   function handleNavigationToReview() {
     const draftId = saveDraft({
-      results: state.results,
-      selectedIndexes: table.getSelectedRowModel().rows.map((result) => result.original.index),
-      parsedRows: state.parsedRows,
+      selectedRows: table
+        .getSelectedRowModel()
+        .rows.filter((row) => row.original.result !== undefined)
+        .map(({ original: { index, parsedRow, result } }) => {
+          const { description: _d, rawLine: _r, ...storedRow } = parsedRow;
+          return { index, parsedRow: storedRow, result: result! };
+        }),
       metadata: {
         fileName: state.fileName,
         fileFormat: state.fileFormat,

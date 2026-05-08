@@ -49,11 +49,9 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft): AnalyzerBatchDraf
   const cellConflictTracker = new Map<string, MismatchDetails>();
   const unresolvedBandRows: number[] = [];
 
-  for (const idx of draft.selectedIndexes) {
-    if (!draft.parsedRows || !draft.results) break;
-    const row = draft.parsedRows[idx];
-    const result = draft.results[idx];
-    if (!result.station || (result.status !== "found" && result.status !== "probable")) continue;
+  for (const { index: idx, parsedRow: row, result } of draft.selectedRows) {
+    if (result.status !== "found" && result.status !== "probable") continue;
+    if (!result.station) continue;
 
     const stationInternalId = result.station.id;
     const warnings: string[] = result.warnings ?? [];

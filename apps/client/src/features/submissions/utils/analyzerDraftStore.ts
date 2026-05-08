@@ -4,11 +4,12 @@ import type { AnalyzerResult } from "@/routes/_layout/analyzer";
 const DEFAULT_PREFIX = "analyzer:draft:";
 const DRAFT_TTL_MS = 60 * 60 * 1000;
 
+type DistributiveOmit<T, K extends keyof any> = T extends unknown ? Omit<T, K> : never;
+export type StoredParsedRow = DistributiveOmit<ParsedRow, "description" | "rawLine">;
+
 export interface AnalyzerDraft {
   id: string;
-  parsedRows: ParsedRow[] | null;
-  results: AnalyzerResult[] | null;
-  selectedIndexes: number[];
+  selectedRows: Array<{ index: number; parsedRow: StoredParsedRow; result: AnalyzerResult }>;
   metadata: {
     fileName: string | null;
     fileFormat: string | null;
