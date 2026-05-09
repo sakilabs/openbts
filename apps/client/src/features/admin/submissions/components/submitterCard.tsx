@@ -35,7 +35,7 @@ export function SubmitterCard({ submission }: { submission: SubmissionDetail }) 
         {submission.submitter_note ? (
           <div className="border-l-4 border-primary/40 bg-primary/5 rounded-r-lg p-3 space-y-1">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{t("detail.submitterNotes")}</p>
-            <p className="text-sm leading-relaxed wrap-break-word">{submission.submitter_note}</p>
+            <p className="text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">{submission.submitter_note}</p>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">{t("detail.noSubmitterNote")}</p>

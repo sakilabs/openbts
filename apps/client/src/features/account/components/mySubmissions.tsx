@@ -236,7 +236,9 @@ export function MySubmissions() {
                           {submission.reviewer.username && <span> (@{submission.reviewer.username})</span>}
                         </p>
                       )}
-                      {hasNotes && <p className="text-sm leading-relaxed text-foreground wrap-break-word">{submission.review_notes}</p>}
+                      {hasNotes && (
+                        <p className="text-sm leading-relaxed text-foreground wrap-break-word whitespace-pre-wrap">{submission.review_notes}</p>
+                      )}
                     </div>
                   </div>
                 )}

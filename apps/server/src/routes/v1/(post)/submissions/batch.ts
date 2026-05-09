@@ -24,6 +24,7 @@ import {
 } from "../../../../utils/submissions/create.ts";
 
 const ITEMS_CAP = 25;
+const ANALYZER_SYSTEM_NOTE = "System: Zgłoszono przez analizator. Mogą być błędy";
 
 const requestSchema = z.object({
   submitter_note: z.string().max(2000).optional(),
@@ -55,6 +56,10 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const userId = userSession.user.id;
 
   const { submitter_note, items } = req.body;
+  const effective_note = submitter_note
+    ? `${submitter_note}
+${ANALYZER_SYSTEM_NOTE}`
+    : ANALYZER_SYSTEM_NOTE;
 
   const stationsWithTooFewCells = items.filter((item) => (item.cells?.length ?? 0) < 1);
   if (stationsWithTooFewCells.length > 0) {
@@ -63,7 +68,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const submissionInputs: SingleSubmission[] = items.map((item) => ({
     ...item,
-    submitter_note: item.submitter_note ?? submitter_note,
+    submitter_note: item.submitter_note ?? effective_note,
   }));
 
   await Promise.all(submissionInputs.map(validateSubmission));
