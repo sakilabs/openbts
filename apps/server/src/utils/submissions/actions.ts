@@ -109,6 +109,12 @@ export async function approveSubmissionAction({
   if (!submission) throw new ErrorResponse("NOT_FOUND");
   if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
 
+  if (submission.station_id !== null) {
+    const station = await db.query.stations.findFirst({ where: { id: submission.station_id }, columns: { status: true } });
+    if (!station || station.status !== "published")
+      throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+  }
+
   const transactionResult = await db.transaction(async (tx) => {
     const [proposedStation, proposedLocation, proposedCellRows] = await Promise.all([
       tx.query.proposedStations.findFirst({ where: { submission_id: submissionId } }),

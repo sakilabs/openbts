@@ -108,7 +108,7 @@ const STATION_WITH = {
   location: { columns: { point: false, region_id: false }, with: { region: true } },
 } as const;
 
-const STATION_COLS = { operator_id: false, location_id: false } as const;
+const STATION_COLS = { operator_id: false, location_id: false, status: false } as const;
 const CELL_COLS = { station_id: false } as const;
 
 async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promise<LookupMaps<AnalyzerStation>> {
@@ -169,7 +169,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.gsmCells
           .findMany({
-            where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
+            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
           .then((rows) => {
@@ -193,7 +193,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.umtsCells
           .findMany({
-            where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([rnc, cid]) => ({ rnc, cid })) },
+            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([rnc, cid]) => ({ rnc, cid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
           .then((rows) => {
@@ -219,7 +219,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.umtsCells
           .findMany({
-            where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
+            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
           .then((rows) => {
@@ -247,7 +247,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.lteCells
           .findMany({
-            where: { cell: { station: { operator: { mnc } } }, OR: chunk.map(([enbid, clid]) => ({ enbid, clid })) },
+            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([enbid, clid]) => ({ enbid, clid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
           .then((rows) => {
@@ -274,7 +274,7 @@ async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promi
       promises.push(
         db.query.lteCells
           .findMany({
-            where: { cell: { station: { operator: { mnc } } }, OR: chunk.map((enbid) => ({ enbid })) },
+            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map((enbid) => ({ enbid })) },
             with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
           })
           .then((rows) => {

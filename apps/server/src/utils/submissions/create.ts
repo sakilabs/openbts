@@ -113,6 +113,8 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
   ]);
 
   if (stationId !== null && !targetStation) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+  if (stationId !== null && targetStation && targetStation.status !== "published")
+    throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
 
   if (duplicateStation) {
     throw new ErrorResponse("BAD_REQUEST", {
