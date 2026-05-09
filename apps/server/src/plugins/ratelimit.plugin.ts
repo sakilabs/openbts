@@ -17,7 +17,12 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
   const rateLimitService = new RateLimitService(redis, {
     routes: [
       { url: "/api/v1/account/publishable-keys", max: 2, window: 604800 },
-      { url: "/api/v1/submissions/batch", max: 5, window: 86400, roles: { admin: { max: Number.POSITIVE_INFINITY, window: 86400 } } },
+      {
+        url: "/api/v1/submissions/batch",
+        max: 5,
+        window: 86400,
+        roles: { admin: { max: Number.POSITIVE_INFINITY, window: 86400 }, editor: { max: 500, window: 60 } },
+      },
       { url: "/api/v1/auth/sign-in", max: 10, window: 300 },
       { url: "/api/v1/auth/sign-in/email", max: 10, window: 300 },
       { url: "/api/v1/auth/sign-in/passkey", max: 10, window: 300 },
