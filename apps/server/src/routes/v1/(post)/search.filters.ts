@@ -307,7 +307,7 @@ export type GroupedFilters = {
 };
 
 const filterRegex =
-  /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|(\d{4}-\d{2}-\d{2})|([a-zA-Z0-9][a-zA-Z0-9]*(?:,\s*[a-zA-Z0-9][a-zA-Z0-9]*)*)|([+-]?\d+\.\d+,\s*[+-]?\d+\.\d+)|(\d+(?:,\s*\d+)*))/gi;
+  /(\w+):\s*(?:'([^']*)'|"([^"]*)"|(true|false)|(\d{4}-\d{2}-\d{2})|([\p{L}\p{N}]+(?:,\s*[\p{L}\p{N}]+)*)|([+-]?\d+\.\d+,\s*[+-]?\d+\.\d+)|(\d+(?:,\s*\d+)*))/giu;
 
 type FilterMatch = {
   key: string;

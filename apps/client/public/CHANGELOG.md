@@ -11,6 +11,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🩹 Fixes
 
 - Fixed trailing space(s) in the search input on map
+- Search filters now correctly parse unquoted values containing non-ASCII characters (e.g. Polish letters)
 
 # 2026-05-08
 
