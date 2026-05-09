@@ -3,14 +3,6 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 
-async function navigateExistingClient(client: WindowClient, url: string): Promise<void> {
-  try {
-    await client.navigate(url);
-  } catch {
-    // ignore stale clients
-  }
-}
-
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
@@ -18,13 +10,7 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { deny
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
-    event.waitUntil(
-      self
-        .skipWaiting()
-        .then(() => self.clients.claim())
-        .then(() => self.clients.matchAll({ type: "window" }))
-        .then((clients) => Promise.all(clients.map((client) => navigateExistingClient(client, client.url)))),
-    );
+    event.waitUntil(self.skipWaiting().then(() => self.clients.claim()));
   }
 });
 

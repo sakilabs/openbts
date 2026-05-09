@@ -49,7 +49,14 @@ export function ReloadPrompt() {
           <p className="text-xs text-muted-foreground mt-0.5">{t("pwa.updateDescription")}</p>
         </div>
       </div>
-      <Button size="sm" className="mt-3 w-full" onClick={() => updateServiceWorker(false)}>
+      <Button
+        size="sm"
+        className="mt-3 w-full"
+        onClick={() => {
+          navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload(), { once: true });
+          void updateServiceWorker(false);
+        }}
+      >
         {t("actions.update")}
       </Button>
     </div>
