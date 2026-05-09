@@ -67,7 +67,7 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
   const stateRef = useRef({ inputValue, parsedFilters, focusedChipIndex });
   stateRef.current = { inputValue, parsedFilters, focusedChipIndex };
 
-  const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue].filter(Boolean).join(" "), [parsedFilters, inputValue]);
+  const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue.trim()].filter(Boolean).join(" "), [parsedFilters, inputValue]);
 
   const debouncedQuery = useDebouncedValue(query, 500);
 

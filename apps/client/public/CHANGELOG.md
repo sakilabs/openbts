@@ -1,6 +1,17 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-05-09
+
+### 🚀 Enhancements
+
+- Added system note to submissions made from analyzer
+- Updated and newly created cells now have slightly visible background in their respective colors on /admin/stations/$id
+
+### 🩹 Fixes
+
+- Fixed trailing space(s) in the search input on map
+
 # 2026-05-08
 
 ### 🚀 Enhancements
