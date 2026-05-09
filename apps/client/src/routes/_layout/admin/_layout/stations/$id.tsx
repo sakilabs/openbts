@@ -24,6 +24,7 @@ import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissio
 import { useSettings } from "@/hooks/useSettings";
 import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
+import { isRecent } from "@/lib/dateUtils";
 import { shallowEqual } from "@/lib/shallowEqual";
 import type { Band, Cell, Station, UkeStation } from "@/types/station";
 
@@ -551,8 +552,18 @@ function StationDetailForm({
   const getStationCellProps = useCallback(
     (cell: LocalCell) => {
       const diffStatus = getLocalCellDiffStatus(cell, originalCells);
+      let rowClassName: string | undefined;
+      if (diffStatus === "unchanged" && cell._serverId) {
+        const original = originalCells.find((c) => c.id === cell._serverId);
+        if (original) {
+          const isNew = isRecent(original.createdAt);
+          if (isNew) rowClassName = "bg-green-500/5";
+          else if (isRecent(original.updatedAt)) rowClassName = "bg-amber-500/5";
+        }
+      }
       return {
         leftBorderClass: getDiffBorderClass(diffStatus),
+        rowClassName,
       };
     },
     [originalCells],
