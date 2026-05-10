@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-05-10
+
+### 🩹 Fixes
+
+- Approving a submission that moves a station to new coordinates now creates a new location for that station only, instead of repositioning all stations that shared the old location
+- Editing a station's coordinates on `/admin/stations/$id` now creates a new location for that station only, instead of patching the shared location record
+
 # 2026-05-09
 
 ### 🚀 Enhancements

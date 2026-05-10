@@ -13,7 +13,7 @@ import {
 } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
 import { logger } from "better-auth";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import type { FastifyRequest } from "fastify";
 
 import { ErrorResponse } from "../../errors.ts";
@@ -238,52 +238,47 @@ export async function approveSubmissionAction({
         });
 
         if (currentLocation && !locationAtNewCoords) {
-          await tx
-            .update(locations)
-            .set({
+          const [newLoc] = await tx
+            .insert(locations)
+            .values({
               longitude: proposedLocation.longitude,
               latitude: proposedLocation.latitude,
               region_id: proposedLocation.region_id,
               city: proposedLocation.city,
               address: proposedLocation.address,
-              updatedAt: new Date(),
             })
-            .where(eq(locations.id, currentLocation.id));
-          resolvedLocationId = currentLocation.id;
+            .returning();
+          if (!newLoc) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
+          resolvedLocationId = newLoc.id;
           await createAuditLog(
             {
-              action: "locations.update",
+              action: "locations.create",
               table_name: "locations",
-              record_id: currentLocation.id,
-              old_values: {
-                longitude: currentLocation.longitude,
-                latitude: currentLocation.latitude,
-                region_id: currentLocation.region_id,
-                city: currentLocation.city,
-                address: currentLocation.address,
-              },
-              new_values: {
-                longitude: proposedLocation.longitude,
-                latitude: proposedLocation.latitude,
-                region_id: proposedLocation.region_id,
-                city: proposedLocation.city,
-                address: proposedLocation.address,
-              },
+              record_id: newLoc.id,
+              new_values: newLoc,
               metadata: { submission_id: submissionId },
             },
             req,
             tx,
           );
-        } else {
-          const locationId = await upsertLocation(tx, proposedLocation, req, submissionId);
-          resolvedLocationId = locationId;
-          if (currentLocation) {
-            await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.location_id, currentLocation.id));
-
+          await tx.update(stations).set({ location_id: newLoc.id, updatedAt: new Date() }).where(eq(stations.id, stationId));
+          await createAuditLog(
+            {
+              action: "stations.update",
+              table_name: "stations",
+              record_id: stationId,
+              new_values: { location_id: newLoc.id },
+              metadata: { submission_id: submissionId },
+            },
+            req,
+            tx,
+          );
+          const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
+          if (Number(orphanedResult?.orphaned ?? 0) === 0) {
             const existingAtNew = await tx
               .select({ attachment_id: locationPhotos.attachment_id })
               .from(locationPhotos)
-              .where(eq(locationPhotos.location_id, locationId));
+              .where(eq(locationPhotos.location_id, newLoc.id));
             if (existingAtNew.length > 0) {
               await tx.delete(locationPhotos).where(
                 and(
@@ -295,8 +290,7 @@ export async function approveSubmissionAction({
                 ),
               );
             }
-            await tx.update(locationPhotos).set({ location_id: locationId }).where(eq(locationPhotos.location_id, currentLocation.id));
-
+            await tx.update(locationPhotos).set({ location_id: newLoc.id }).where(eq(locationPhotos.location_id, currentLocation.id));
             await tx.delete(locations).where(eq(locations.id, currentLocation.id));
             await createAuditLog(
               {
@@ -309,7 +303,11 @@ export async function approveSubmissionAction({
               req,
               tx,
             );
-          } else await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
+          }
+        } else {
+          const locationId = await upsertLocation(tx, proposedLocation, req, submissionId);
+          resolvedLocationId = locationId;
+          await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
           await createAuditLog(
             {
               action: "stations.update",
@@ -321,6 +319,39 @@ export async function approveSubmissionAction({
             req,
             tx,
           );
+          if (currentLocation) {
+            const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
+            if (Number(orphanedResult?.orphaned ?? 0) === 0) {
+              const existingAtNew = await tx
+                .select({ attachment_id: locationPhotos.attachment_id })
+                .from(locationPhotos)
+                .where(eq(locationPhotos.location_id, locationId));
+              if (existingAtNew.length > 0) {
+                await tx.delete(locationPhotos).where(
+                  and(
+                    eq(locationPhotos.location_id, currentLocation.id),
+                    inArray(
+                      locationPhotos.attachment_id,
+                      existingAtNew.map((r) => r.attachment_id),
+                    ),
+                  ),
+                );
+              }
+              await tx.update(locationPhotos).set({ location_id: locationId }).where(eq(locationPhotos.location_id, currentLocation.id));
+              await tx.delete(locations).where(eq(locations.id, currentLocation.id));
+              await createAuditLog(
+                {
+                  action: "locations.delete",
+                  table_name: "locations",
+                  record_id: currentLocation.id,
+                  old_values: { longitude: currentLocation.longitude, latitude: currentLocation.latitude },
+                  metadata: { submission_id: submissionId },
+                },
+                req,
+                tx,
+              );
+            }
+          }
         }
       }
     }

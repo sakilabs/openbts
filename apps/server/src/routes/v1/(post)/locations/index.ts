@@ -24,6 +24,11 @@ const schemaRoute = {
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   try {
+    const existing = await db.query.locations.findFirst({
+      where: { AND: [{ longitude: req.body.longitude }, { latitude: req.body.latitude }] },
+    });
+    if (existing) return res.send({ data: existing });
+
     const [location] = await db.insert(locations).values(req.body).returning();
 
     if (!location) throw new ErrorResponse("FAILED_TO_CREATE");

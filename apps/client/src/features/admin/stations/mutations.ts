@@ -176,13 +176,24 @@ export function useSaveStationMutation() {
       if (payload.existingLocationId && payload.existingLocationId !== (station.location?.id ?? null)) {
         stationPatch.location_id = payload.existingLocationId;
       } else if (station.location) {
-        const locationPatch: Record<string, unknown> = {};
-        if (payload.location.latitude !== (station.location.latitude ?? null)) locationPatch.latitude = payload.location.latitude;
-        if (payload.location.longitude !== (station.location.longitude ?? null)) locationPatch.longitude = payload.location.longitude;
-        if (payload.location.city !== (station.location.city ?? "")) locationPatch.city = payload.location.city || null;
-        if (payload.location.address !== (station.location.address ?? "")) locationPatch.address = payload.location.address || null;
-        if (payload.location.region_id !== (station.location.region?.id ?? null)) locationPatch.region_id = payload.location.region_id;
-        if (Object.keys(locationPatch).length > 0) await patchLocation(station.location.id, locationPatch);
+        const coordsChanged =
+          payload.location.latitude !== (station.location.latitude ?? null) || payload.location.longitude !== (station.location.longitude ?? null);
+        if (coordsChanged && payload.location.latitude !== null && payload.location.longitude !== null && payload.location.region_id) {
+          const locationRes = await createLocationMutation.mutateAsync({
+            region_id: payload.location.region_id,
+            city: payload.location.city || undefined,
+            address: payload.location.address || undefined,
+            longitude: payload.location.longitude,
+            latitude: payload.location.latitude,
+          });
+          stationPatch.location_id = locationRes.data.id;
+        } else if (!coordsChanged) {
+          const locationPatch: Record<string, unknown> = {};
+          if (payload.location.city !== (station.location.city ?? "")) locationPatch.city = payload.location.city || null;
+          if (payload.location.address !== (station.location.address ?? "")) locationPatch.address = payload.location.address || null;
+          if (payload.location.region_id !== (station.location.region?.id ?? null)) locationPatch.region_id = payload.location.region_id;
+          if (Object.keys(locationPatch).length > 0) await patchLocation(station.location.id, locationPatch);
+        }
       } else if (payload.location.latitude !== null && payload.location.longitude !== null && payload.location.region_id) {
         const locationRes = await createLocationMutation.mutateAsync({
           region_id: payload.location.region_id,
