@@ -5,6 +5,7 @@ import {
   DashboardSquare01Icon,
   DatabaseIcon,
   Delete02Icon,
+  DiscordIcon,
   Download04Icon,
   FileAttachmentIcon,
   FileBracesIcon,
@@ -88,6 +89,7 @@ const infoNavConfig = [
       { titleKey: "items.contact", url: "/contact", icon: Mail01Icon },
       { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },
       { titleKey: "items.apiDocs", url: "#", href: "/api/v1/docs", icon: FileBracesIcon },
+      { titleKey: "items.discord", url: "#", href: "https://discord.gg/SZETJPeayg", icon: DiscordIcon },
     ],
   },
 ];

@@ -38,7 +38,8 @@
     "viewAllLists": "View all",
     "analyzer": "Log Analyzer",
     "apiDocs": "API Docs",
-    "releasenotes": "v3 - What's new?"
+    "releasenotes": "v3 - What's new?",
+    "discord": "Discord"
   },
   "secondary": {
     "settings": "Settings",
