@@ -2484,6 +2484,131 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /analyzer/apply:
+    post:
+      tags: [Analyzer]
+      summary: Apply cell additions and updates from analyzer results
+      description: |
+        Applies a batch of cell add/update operations to stations. Each item in the batch targets one station and contains one or more cell operations.
+        The batch is capped at 25 station items.
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 25
+                  items:
+                    type: object
+                    required: [station_id, cells]
+                    properties:
+                      station_id:
+                        type: integer
+                      cells:
+                        type: array
+                        minItems: 1
+                        items:
+                          oneOf:
+                            - description: Add a new GSM cell
+                              type: object
+                              required: [operation, band_id, rat, details]
+                              properties:
+                                operation: { type: string, enum: [add] }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [GSM] }
+                                details: { $ref: "#/components/schemas/GsmCellDetails" }
+                            - description: Add a new UMTS cell
+                              type: object
+                              required: [operation, band_id, rat, details]
+                              properties:
+                                operation: { type: string, enum: [add] }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [UMTS] }
+                                details: { $ref: "#/components/schemas/UmtsCellDetailsInsert" }
+                            - description: Add a new LTE cell
+                              type: object
+                              required: [operation, band_id, rat, details]
+                              properties:
+                                operation: { type: string, enum: [add] }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [LTE] }
+                                details: { $ref: "#/components/schemas/LteCellDetailsInsert" }
+                            - description: Add a new NR cell
+                              type: object
+                              required: [operation, band_id, rat, details]
+                              properties:
+                                operation: { type: string, enum: [add] }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [NR] }
+                                details: { $ref: "#/components/schemas/NrCellDetailsInsert" }
+                            - description: Update an existing GSM cell
+                              type: object
+                              required: [operation, band_id, rat, target_cell_id]
+                              properties:
+                                operation: { type: string, enum: [update] }
+                                target_cell_id: { type: integer }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [GSM] }
+                                details: { $ref: "#/components/schemas/GsmCellDetails" }
+                            - description: Update an existing UMTS cell
+                              type: object
+                              required: [operation, band_id, rat, target_cell_id]
+                              properties:
+                                operation: { type: string, enum: [update] }
+                                target_cell_id: { type: integer }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [UMTS] }
+                                details: { $ref: "#/components/schemas/UmtsCellDetailsInsert" }
+                            - description: Update an existing LTE cell
+                              type: object
+                              required: [operation, band_id, rat, target_cell_id]
+                              properties:
+                                operation: { type: string, enum: [update] }
+                                target_cell_id: { type: integer }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [LTE] }
+                                details: { $ref: "#/components/schemas/LteCellDetailsInsert" }
+                            - description: Update an existing NR cell
+                              type: object
+                              required: [operation, band_id, rat, target_cell_id]
+                              properties:
+                                operation: { type: string, enum: [update] }
+                                target_cell_id: { type: integer }
+                                band_id: { type: integer }
+                                rat: { type: string, enum: [NR] }
+                                details: { $ref: "#/components/schemas/NrCellDetailsInsert" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [station_id, applied]
+                      properties:
+                        station_id: { type: integer }
+                        applied:
+                          type: integer
+                          description: Number of cell operations successfully applied for this station
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /search:
     post:
       tags: [Search]

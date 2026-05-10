@@ -1,5 +1,6 @@
 import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
+import { isARFCNValidForBand } from "@openbts/shared/frequency";
 import { eq } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify";
@@ -20,7 +21,7 @@ import {
   umtsInsertSchema,
   umtsUpdateSchema,
 } from "../../../../utils/ratCellSchemas.ts";
-import { computeGnbidLength, makeDetailsRatRefine } from "../../../../utils/submission.helpers.ts";
+import { computeGnbidLength, makeDetailsRatRefine, validateCellDuplicates } from "../../../../utils/submission.helpers.ts";
 
 const lteCellsSchema = createSelectSchema(lteCells);
 const nrCellsSchema = createSelectSchema(nrCells);
@@ -102,60 +103,81 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const { items } = req.body;
 
   const stationIds = items.map((item) => item.station_id);
-  const stationResults = await db.query.stations.findMany({
-    where: { AND: [{ id: { in: stationIds } }, { status: "published" }] },
-  });
-  if (!stationResults) throw new ErrorResponse("NOT_FOUND", { message: "None of the stations in this batch were found in the database" });
-
-  const stationMap = new Map(stationResults.map((station) => [station.id, station]));
-
-  const stationItems = items.map((item) => ({ item, station: stationMap.get(item.station_id)! }));
-
   const updateCellIds = items.flatMap((item) =>
     item.cells.filter((cell) => cell.operation === "update" && cell.target_cell_id !== undefined).map((cell) => cell.target_cell_id!),
   );
+  const allBandIds = [...new Set(items.flatMap((item) => item.cells.map((cell) => cell.band_id)))];
 
-  const existingCells =
+  const stationResults = await db.query.stations.findMany({
+    where: { AND: [{ id: { in: stationIds } }, { status: "published" }] },
+  });
+
+  const [existingCells, bandRows] = await Promise.all([
     updateCellIds.length > 0
-      ? await db.query.cells.findMany({
-          where: { id: { in: updateCellIds } },
-          with: { gsm: true, umts: true, lte: true, nr: true },
-        })
-      : [];
+      ? db.query.cells.findMany({ where: { id: { in: updateCellIds } }, with: { gsm: true, umts: true, lte: true, nr: true } })
+      : Promise.resolve([]),
+    allBandIds.length > 0
+      ? db.query.bands.findMany({ where: { id: { in: allBandIds } }, columns: { id: true, rat: true, value: true, duplex: true } })
+      : Promise.resolve([]),
+  ]);
 
-  for (const { item, station } of stationItems) {
-    for (const cell of item.cells) {
-      if (cell.operation !== "update" || cell.target_cell_id === undefined) continue;
-      const existingCell = existingCells.find((existingCell) => existingCell.id === cell.target_cell_id);
-      if (!existingCell || existingCell.station_id !== station.id)
-        throw new ErrorResponse("NOT_FOUND", { message: `Cell ${cell.target_cell_id} does not exist on station ${station.id}` });
-    }
+  if (!stationResults) throw new ErrorResponse("NOT_FOUND", { message: "None of the stations in this batch were found in the database" });
 
-    if (station.operator_id) {
-      const cellEntries = item.cells.map((cell) => ({
-        rat: cell.rat,
-        details: cell.details! as RATInsertDetails,
-        excludeCellId: cell.operation === "update" ? cell.target_cell_id : undefined,
-      }));
-      // oxlint-disable-next-line no-await-in-loop
-      await checkCellDuplicatesBatch(cellEntries, station.operator_id);
-    }
+  const stationMap = new Map(stationResults.map((station) => [station.id, station]));
+  const existingCellsMap = new Map(existingCells.map((c) => [c.id, c]));
+  const bandMap = new Map(bandRows.map((b) => [b.id, b]));
 
-    for (const cell of item.cells) {
-      const excludeId = cell.operation === "update" ? cell.target_cell_id : undefined;
-      if (cell.rat === "LTE") {
-        const details = cell.details as z.infer<typeof lteCellsSchema>;
-        if (details.pci !== null && details.pci !== undefined)
-          // oxlint-disable-next-line no-await-in-loop
-          await checkLTEPCIDuplicate(station.id, cell.band_id, details.pci, details.earfcn, excludeId);
-      } else if (cell.rat === "NR") {
-        const details = cell.details as z.infer<typeof nrCellsSchema>;
-        if (details.pci !== null && details.pci !== undefined)
-          // oxlint-disable-next-line no-await-in-loop
-          await checkNRPCIDuplicate(station.id, cell.band_id, details.pci, details.arfcn, excludeId);
+  const stationItems = items.map((item) => ({ item, station: stationMap.get(item.station_id)! }));
+
+  await Promise.all(
+    stationItems.map(async ({ item, station }) => {
+      for (const cell of item.cells) {
+        if (cell.operation !== "update" || cell.target_cell_id === undefined) continue;
+        const existingCell = existingCellsMap.get(cell.target_cell_id);
+        if (!existingCell || existingCell.station_id !== station.id)
+          throw new ErrorResponse("NOT_FOUND", { message: `Cell ${cell.target_cell_id} does not exist on station ${station.id}` });
       }
-    }
-  }
+
+      validateCellDuplicates(item.cells);
+
+      for (const cell of item.cells) {
+        if (!cell.band_id || !cell.details) continue;
+        const band = bandMap.get(cell.band_id);
+        if (!band?.value) continue;
+        const details = cell.details as Record<string, unknown>;
+        const arfcn = (details["earfcn"] ?? details["arfcn"]) as number | null | undefined;
+        if (arfcn === null || arfcn === undefined) continue;
+        if (!isARFCNValidForBand(cell.rat, band.value, arfcn, band.duplex))
+          throw new ErrorResponse("BAD_REQUEST", { message: `ARFCN ${arfcn} is not valid for band ${band.value} (${cell.rat})` });
+      }
+
+      const checks: Promise<void>[] = [];
+
+      if (station.operator_id) {
+        const cellEntries = item.cells.map((cell) => ({
+          rat: cell.rat,
+          details: cell.details! as RATInsertDetails,
+          excludeCellId: cell.operation === "update" ? cell.target_cell_id : undefined,
+        }));
+        checks.push(checkCellDuplicatesBatch(cellEntries, station.operator_id));
+      }
+
+      for (const cell of item.cells) {
+        const excludeId = cell.operation === "update" ? cell.target_cell_id : undefined;
+        if (cell.rat === "LTE") {
+          const details = cell.details as z.infer<typeof lteCellsSchema>;
+          if (details.pci !== null && details.pci !== undefined)
+            checks.push(checkLTEPCIDuplicate(station.id, cell.band_id, details.pci, details.earfcn, excludeId));
+        } else if (cell.rat === "NR") {
+          const details = cell.details as z.infer<typeof nrCellsSchema>;
+          if (details.pci !== null && details.pci !== undefined)
+            checks.push(checkNRPCIDuplicate(station.id, cell.band_id, details.pci, details.arfcn, excludeId));
+        }
+      }
+
+      if (checks.length > 0) await Promise.all(checks);
+    }),
+  );
 
   const updateRecords = await db.transaction(async (tx) => {
     async function updateRATDetails(rat: "GSM" | "UMTS" | "LTE" | "NR", cellId: number, cellDetails: RATUpdateDetails) {
@@ -289,6 +311,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
           with: { gsm: true, umts: true, lte: true, nr: true },
         })
       : [];
+
+  const newCellStatesMap = new Map(newCellStates.map((c) => [c.id, c]));
   function flattenCellDetails(cell: (typeof newCellStates)[0]) {
     const { gsm, umts, lte, nr, ...base } = cell;
     return { ...base, details: gsm ?? umts ?? lte ?? nr ?? null };
@@ -297,8 +321,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   await Promise.all(
     updateRecords.map(async (record) => {
       const cellsUpdated = record.updatedCellIds.map((id) => ({
-        old: flattenCellDetails(existingCells.find((cell) => cell.id === id)!),
-        new: flattenCellDetails(newCellStates.find((cell) => cell.id === id)!),
+        old: flattenCellDetails(existingCellsMap.get(id)!),
+        new: flattenCellDetails(newCellStatesMap.get(id)!),
       }));
       await createAuditLog(
         {
@@ -313,7 +337,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       );
 
       if (record.addedCellIds.length > 0) {
-        const cellsCreated = record.addedCellIds.map((id) => flattenCellDetails(newCellStates.find((cell) => cell.id === id)!));
+        const cellsCreated = record.addedCellIds.map((id) => flattenCellDetails(newCellStatesMap.get(id)!));
         await createAuditLog(
           {
             action: "cells.create",
@@ -347,7 +371,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 const applyAnalyzerCells: Route<ReqBody, ResponseData> = {
   url: "/analyzer/apply",
   method: "POST",
-  config: { permissions: ["create:cells", "update:cells", "read:cells"] },
+  config: { permissions: ["create:cells", "update:cells", "write:stations"] },
   schema: schemaRoute,
   handler,
 };
