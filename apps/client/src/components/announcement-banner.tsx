@@ -5,6 +5,26 @@ import { useCallback, useRef, useState } from "react";
 import { useSettings } from "@/hooks/useSettings";
 import { cn } from "@/lib/utils";
 
+const URL_REGEX = /https?:\/\/[^\s]+/;
+const URL_SPLIT_REGEX = /(https?:\/\/[^\s]+)/;
+
+function MessageWithLinks({ text, linkClassName }: { text: string; linkClassName: string }) {
+  const parts = text.split(URL_SPLIT_REGEX);
+  return (
+    <>
+      {parts.map((part, i) =>
+        URL_REGEX.test(part) ? (
+          <a key={i} href={part} target="_blank" rel="noreferrer" className={cn("underline-offset-2 hover:underline", linkClassName)}>
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 const DISMISSED_KEY = "openbts:dismissed-announcement";
 
 const typeConfig = {
@@ -55,7 +75,7 @@ export function AnnouncementBanner() {
     try {
       localStorage.setItem(DISMISSED_KEY, announcement.message);
     } catch {}
-  }, [announcement]);
+  }, [announcement?.message]);
 
   if (!announcement?.enabled || !announcement.message) return null;
   if (dismissed === announcement.message) return null;
@@ -66,7 +86,7 @@ export function AnnouncementBanner() {
     <div className={cn("flex items-center gap-2 px-4 py-2 border-b text-sm shrink-0", config.className)}>
       <HugeiconsIcon icon={config.icon} className="size-4 shrink-0" />
       <p ref={textRef} className={cn("flex-1 min-w-0", expanded ? "wrap-break-word" : "truncate")}>
-        {announcement.message}
+        <MessageWithLinks text={announcement.message} linkClassName="font-medium" />
       </p>
       <div className="flex items-center gap-1 shrink-0">
         {(isTruncated || expanded) && (
