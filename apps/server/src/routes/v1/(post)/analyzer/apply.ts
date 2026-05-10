@@ -1,7 +1,7 @@
 import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
 import { eq } from "drizzle-orm";
-import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
+import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify";
 import z from "zod";
 
@@ -10,80 +10,20 @@ import type { ReplyPayload } from "../../../../interfaces/fastify.interface.ts";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.ts";
 import { createAuditLog } from "../../../../services/auditLog.service.ts";
 import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../../../services/cellDuplicateCheck.service.ts";
+import {
+  gsmInsertSchema,
+  gsmUpdateSchema,
+  lteInsertSchema,
+  lteUpdateSchema,
+  nrInsertSchema,
+  nrUpdateSchema,
+  umtsInsertSchema,
+  umtsUpdateSchema,
+} from "../../../../utils/ratCellSchemas.ts";
 import { computeGnbidLength, makeDetailsRatRefine } from "../../../../utils/submission.helpers.ts";
 
 const lteCellsSchema = createSelectSchema(lteCells);
 const nrCellsSchema = createSelectSchema(nrCells);
-const gsmInsertSchema = createInsertSchema(gsmCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({ lac: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
-  .strict();
-const umtsInsertSchema = createInsertSchema(umtsCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({
-    lac: z.number().int().min(0).max(65535).nullable().optional(),
-    rnc: z.number().int().min(0).max(65535),
-    cid: z.number().int().min(0).max(65535),
-    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
-  })
-  .strict();
-const lteInsertSchema = createInsertSchema(lteCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({
-    tac: z.number().int().min(0).max(65535),
-    enbid: z.number().int().min(0).max(1048575),
-    clid: z.number().int().min(0).max(255),
-    pci: z.number().int().min(0).max(503).nullable().optional(),
-    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
-  })
-  .strict();
-const nrInsertSchema = createInsertSchema(nrCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({
-    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
-    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
-    clid: z.number().int().min(0).max(16383).nullable().optional(),
-    pci: z.number().int().min(0).max(1007).nullable().optional(),
-    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
-  })
-  .strict();
-
-const gsmUpdateSchema = createUpdateSchema(gsmCells)
-  .omit({ createdAt: true, updatedAt: true })
-  .extend({ lac: z.number().int().min(0).max(65535).optional(), cid: z.number().int().min(0).max(65535).optional() })
-  .strict();
-const umtsUpdateSchema = createUpdateSchema(umtsCells)
-  .omit({ createdAt: true, updatedAt: true })
-  .extend({
-    lac: z.number().int().min(0).max(65535).nullable().optional(),
-    rnc: z.number().int().min(0).max(65535).optional(),
-    cid: z.number().int().min(0).max(65535).optional(),
-    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
-  })
-  .strict();
-const lteUpdateSchema = createUpdateSchema(lteCells)
-  .omit({ createdAt: true, updatedAt: true })
-  .extend({
-    tac: z.number().int().min(0).max(65535).nullable().optional(),
-    enbid: z.number().int().min(0).max(1048575).optional(),
-    clid: z.number().int().min(0).max(255).optional(),
-    pci: z.number().int().min(0).max(503).nullable().optional(),
-    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
-  })
-  .strict();
-const nrUpdateSchema = createUpdateSchema(nrCells)
-  .omit({
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
-    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
-    clid: z.number().int().min(0).max(16383).nullable().optional(),
-    pci: z.number().int().min(0).max(1007).nullable().optional(),
-    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
-  })
-  .strict();
 
 const ITEMS_CAP = 25;
 const cellSchema = z.discriminatedUnion("operation", [
@@ -220,95 +160,81 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const updateRecords = await db.transaction(async (tx) => {
     async function updateRATDetails(rat: "GSM" | "UMTS" | "LTE" | "NR", cellId: number, cellDetails: RATUpdateDetails) {
       switch (rat) {
-        case "GSM":
-          {
-            const details = cellDetails as GSMUpdateDetails;
-            await tx
-              .update(gsmCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(gsmCells.cell_id, cellId));
-          }
+        case "GSM": {
+          const details = cellDetails as GSMUpdateDetails;
+          await tx
+            .update(gsmCells)
+            .set({ ...details, updatedAt: new Date() })
+            .where(eq(gsmCells.cell_id, cellId));
           break;
-        case "UMTS":
-          {
-            const details = cellDetails as UMTSUpdateDetails;
-            await tx
-              .update(umtsCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(umtsCells.cell_id, cellId));
-          }
+        }
+        case "UMTS": {
+          const details = cellDetails as UMTSUpdateDetails;
+          await tx
+            .update(umtsCells)
+            .set({ ...details, updatedAt: new Date() })
+            .where(eq(umtsCells.cell_id, cellId));
           break;
-        case "LTE":
-          {
-            const details = cellDetails as LTEUpdateDetails;
-            await tx
-              .update(lteCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(lteCells.cell_id, cellId));
-          }
+        }
+        case "LTE": {
+          const details = cellDetails as LTEUpdateDetails;
+          await tx
+            .update(lteCells)
+            .set({ ...details, updatedAt: new Date() })
+            .where(eq(lteCells.cell_id, cellId));
           break;
-        case "NR":
-          {
-            const details = cellDetails as NRUpdateDetails;
-            await tx
-              .update(nrCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(nrCells.cell_id, cellId));
-          }
+        }
+        case "NR": {
+          const details = cellDetails as NRUpdateDetails;
+          await tx
+            .update(nrCells)
+            .set({ ...details, updatedAt: new Date() })
+            .where(eq(nrCells.cell_id, cellId));
           break;
+        }
       }
     }
 
     async function insertRATDetails(rat: "GSM" | "UMTS" | "LTE" | "NR", cellId: number, cellDetails: RATInsertDetails) {
       switch (rat) {
-        case "GSM":
-          {
-            const details = cellDetails as GSMInsertDetails;
-            await tx.insert(gsmCells).values({ cell_id: cellId, lac: details.lac, cid: details.cid, e_gsm: details.e_gsm });
-          }
+        case "GSM": {
+          const details = cellDetails as GSMInsertDetails;
+          await tx.insert(gsmCells).values({ cell_id: cellId, lac: details.lac, cid: details.cid, e_gsm: details.e_gsm });
           break;
-        case "UMTS":
-          {
-            const details = cellDetails as UMTSInsertDetails;
-            await tx.insert(umtsCells).values({
-              cell_id: cellId,
-              lac: details.lac,
-              rnc: details.rnc,
-              cid: details.cid,
-              arfcn: details.arfcn,
-            });
-          }
+        }
+        case "UMTS": {
+          const details = cellDetails as UMTSInsertDetails;
+          await tx.insert(umtsCells).values({ cell_id: cellId, lac: details.lac, rnc: details.rnc, cid: details.cid, arfcn: details.arfcn });
           break;
-        case "LTE":
-          {
-            const details = cellDetails as LTEInsertDetails;
-            await tx.insert(lteCells).values({
-              cell_id: cellId,
-              tac: details.tac,
-              enbid: details.enbid,
-              clid: details.clid,
-              pci: details.pci,
-              earfcn: details.earfcn,
-              supports_iot: details.supports_iot,
-            });
-          }
+        }
+        case "LTE": {
+          const details = cellDetails as LTEInsertDetails;
+          await tx.insert(lteCells).values({
+            cell_id: cellId,
+            tac: details.tac,
+            enbid: details.enbid,
+            clid: details.clid,
+            pci: details.pci,
+            earfcn: details.earfcn,
+            supports_iot: details.supports_iot,
+          });
           break;
-        case "NR":
-          {
-            const details = cellDetails as NRInsertDetails;
-            await tx.insert(nrCells).values({
-              cell_id: cellId,
-              type: details.type,
-              nrtac: details.nrtac,
-              gnbid: details.gnbid,
-              gnbid_length: computeGnbidLength(details.gnbid),
-              clid: details.clid,
-              pci: details.pci,
-              arfcn: details.arfcn,
-              supports_nr_redcap: details.supports_nr_redcap,
-            });
-          }
+        }
+        case "NR": {
+          const details = cellDetails as NRInsertDetails;
+          await tx.insert(nrCells).values({
+            cell_id: cellId,
+            type: details.type,
+            nrtac: details.nrtac,
+            gnbid: details.gnbid,
+            gnbid_length: computeGnbidLength(details.gnbid),
+            clid: details.clid,
+            pci: details.pci,
+            arfcn: details.arfcn,
+            supports_nr_redcap: details.supports_nr_redcap,
+          });
           break;
+        }
       }
     }
 

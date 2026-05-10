@@ -10,6 +10,7 @@ import type { ReplyPayload } from "../../../../../../interfaces/fastify.interfac
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../../../services/cellDuplicateCheck.service.js";
+import { lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../../../utils/ratCellSchemas.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -29,31 +30,17 @@ const gsmCellsUpdateSchema = createUpdateSchema(gsmCells)
   .extend({ lac: z.number().int().min(0).max(65535).optional(), cid: z.number().int().min(0).max(65535).optional() })
   .strict();
 const umtsCellsUpdateSchema = createUpdateSchema(umtsCells)
-  .extend({
-    lac: z.number().int().min(0).max(65535).nullable().optional(),
-    rnc: z.number().int().min(0).max(65535).optional(),
-    cid: z.number().int().min(0).max(65535).optional(),
-    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
-  })
+  .extend({ ...umtsNullableFields, rnc: z.number().int().min(0).max(65535).optional(), cid: z.number().int().min(0).max(65535).optional() })
   .strict();
 const lteCellsUpdateSchema = createUpdateSchema(lteCells)
   .extend({
     tac: z.number().int().min(0).max(65535).nullable().optional(),
     enbid: z.number().int().min(0).max(1048575).optional(),
     clid: z.number().int().min(0).max(255).optional(),
-    pci: z.number().int().min(0).max(503).nullable().optional(),
-    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
+    ...lteNullableFields,
   })
   .strict();
-const nrCellsUpdateSchema = createUpdateSchema(nrCells)
-  .extend({
-    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
-    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
-    clid: z.number().int().min(0).max(16383).nullable().optional(),
-    pci: z.number().int().min(0).max(1007).nullable().optional(),
-    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
-  })
-  .strict();
+const nrCellsUpdateSchema = createUpdateSchema(nrCells).extend(nrExtendFields).strict();
 
 const cellPatchSchema = cellsUpdateSchema
   .extend({ cell_id: z.number(), details: z.unknown().optional() })

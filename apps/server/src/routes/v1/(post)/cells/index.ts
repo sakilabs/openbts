@@ -17,6 +17,7 @@ import {
   checkUMTSDuplicate,
   getOperatorIdForStation,
 } from "../../../../services/cellDuplicateCheck.service.js";
+import { gsmInsertSchema, lteInsertSchema, nrInsertSchema, umtsInsertSchema } from "../../../../utils/ratCellSchemas.js";
 import { computeGnbidLength, makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 const cellsSelectSchema = createSelectSchema(cells);
@@ -31,39 +32,6 @@ const cellsInsertSchema = createInsertSchema(cells)
     updatedAt: true,
   })
   .extend({ rat: z.enum(["GSM", "CDMA", "UMTS", "LTE", "NR"]) })
-  .strict();
-const gsmInsertSchema = createInsertSchema(gsmCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({ lac: z.number().int().min(0).max(65535), cid: z.number().int().min(0).max(65535) })
-  .strict();
-const umtsInsertSchema = createInsertSchema(umtsCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({
-    lac: z.number().int().min(0).max(65535).nullable().optional(),
-    rnc: z.number().int().min(0).max(65535),
-    cid: z.number().int().min(0).max(65535),
-    arfcn: z.number().int().min(0).max(16383).nullable().optional(),
-  })
-  .strict();
-const lteInsertSchema = createInsertSchema(lteCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({
-    tac: z.number().int().min(0).max(65535),
-    enbid: z.number().int().min(0).max(1048575),
-    clid: z.number().int().min(0).max(255),
-    pci: z.number().int().min(0).max(503).nullable().optional(),
-    earfcn: z.number().int().min(0).max(262143).nullable().optional(),
-  })
-  .strict();
-const nrInsertSchema = createInsertSchema(nrCells)
-  .omit({ cell_id: true, createdAt: true, updatedAt: true })
-  .extend({
-    nrtac: z.number().int().min(0).max(16777215).nullable().optional(),
-    gnbid: z.number().int().min(0).max(4294967295).nullable().optional(),
-    clid: z.number().int().min(0).max(16383).nullable().optional(),
-    pci: z.number().int().min(0).max(1007).nullable().optional(),
-    arfcn: z.number().int().min(0).max(3279165).nullable().optional(),
-  })
   .strict();
 
 const requestSchema = cellsInsertSchema
