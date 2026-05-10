@@ -17,7 +17,7 @@ import {
   checkUMTSDuplicate,
   getOperatorIdForStation,
 } from "../../../../services/cellDuplicateCheck.service.js";
-import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
+import { computeGnbidLength, makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 const cellsSelectSchema = createSelectSchema(cells);
 const gsmCellsSchema = createSelectSchema(gsmCells);
@@ -153,7 +153,7 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
         case "NR":
           {
             const d = req.body.details as z.infer<typeof nrInsertSchema>;
-            await db.insert(nrCells).values({ ...d, cell_id: inserted.id, gnbid_length: d.gnbid ? Number(d.gnbid).toString(2).length : undefined });
+            await db.insert(nrCells).values({ ...d, cell_id: inserted.id, gnbid_length: computeGnbidLength(d.gnbid_length) });
             details = {
               nrtac: d.nrtac ?? null,
               gnbid: d.gnbid ?? null,

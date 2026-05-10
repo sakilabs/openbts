@@ -190,7 +190,11 @@
     "tooFewCellsWarning_one": "{{count, number}} stacja ma mniej niż 2 zmiany komórek",
     "tooFewCellsWarning_few": "{{count, number}} stacje mają mniej niż 2 zmiany komórek",
     "tooFewCellsWarning_many": "{{count, number}} stacji ma mniej niż 2 zmiany komórek",
-    "batchRateLimit": "Limit: 5 paczek zgłoszeń na 24 godziny"
+    "batchRateLimit": "Limit: 5 paczek zgłoszeń na 24 godziny",
+    "applyDirectly": "Wyślij bezpośrednio",
+    "applySuccess": "Zmiany zostały wprowadzone",
+    "applyDirectlyConfirmTitle": "Wysłać bezpośrednio do bazy?",
+    "applyDirectlyConfirmDesc": "Tej operacji nie można cofnąć. Spowoduje to zaktualizowanie bazy bez przejścia przez zgłoszenia."
   },
   "unsavedChangesConfirm": "Masz niezapisane zmiany. Czy na pewno chcesz opuścić stronę?"
 }

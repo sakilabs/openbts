@@ -236,3 +236,18 @@ export async function uploadSubmissionPhotos(submissionId: string, files: File[]
     body: formData,
   });
 }
+
+export async function applyAnalyzerBatch(payload: SubmissionFormData[]): Promise<{ station_id: number; applied: number }[]> {
+  return postApiData<{ station_id: number; applied: number }[]>("analyzer/apply", {
+    items: payload.map((data) => ({
+      station_id: data.station_id,
+      cells: data.cells.map((cell) => ({
+        operation: cell.operation,
+        target_cell_id: cell.target_cell_id,
+        band_id: cell.band_id,
+        rat: cell.rat,
+        details: pickCellDetails(cell.rat, cell.details),
+      })),
+    })),
+  });
+}

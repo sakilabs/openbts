@@ -6,16 +6,28 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { bandsQueryOptions } from "@/features/shared/queries";
-import { createAnalyzerBatch } from "@/features/submissions/api";
+import { applyAnalyzerBatch, createAnalyzerBatch } from "@/features/submissions/api";
 import { AnalyzerStationGroupCard } from "@/features/submissions/components/batch/AnalyzerStationGroupCard";
 import { clearDraft, loadDraft } from "@/features/submissions/utils/analyzerDraftStore";
 import { buildAnalyzerBatchDraft, buildSubmissionPayloads } from "@/features/submissions/utils/fromAnalyzer";
 import { useSettings } from "@/hooks/useSettings";
 import { showApiError } from "@/lib/api";
+import { authClient } from "@/lib/authClient";
 
 export const Route = createFileRoute("/_layout/submission/from-analyzer")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -43,6 +55,8 @@ function FormAnalyzerPage() {
   const { data: bands } = useQuery(bandsQueryOptions());
   const { loadedDraft: draft } = Route.useLoaderData();
   const { draft: draftId } = Route.useSearch();
+  const { data: session } = authClient.useSession();
+  const canApplyDirectly = ["editor", "admin"].includes(session?.user?.role ?? "");
 
   const initialBatchDraft = useMemo(() => buildAnalyzerBatchDraft(draft, bands ?? []), [draft, bands]);
   const [removedCells, setRemovedCells] = useState<Set<number>>(() => new Set());
@@ -83,7 +97,7 @@ function FormAnalyzerPage() {
     setRemovedStations((prev) => new Set(prev).add(stationInternalId));
   }, []);
 
-  const { mutate: submit, isPending } = useMutation({
+  const { mutate: submit, isPending: isSubmitting } = useMutation({
     mutationFn: () => createAnalyzerBatch(buildSubmissionPayloads(batchDraft), submitterNote),
     onSuccess: () => {
       if (draftId) clearDraft(draftId);
@@ -92,6 +106,18 @@ function FormAnalyzerPage() {
     },
     onError: showApiError,
   });
+
+  const { mutate: apply, isPending: isApplying } = useMutation({
+    mutationFn: () => applyAnalyzerBatch(buildSubmissionPayloads(batchDraft)),
+    onSuccess: () => {
+      if (draftId) clearDraft(draftId);
+      toast.success(t("batch.applySuccess"));
+      void navigate({ to: "/analyzer" });
+    },
+    onError: showApiError,
+  });
+
+  const isPending = isSubmitting || isApplying;
 
   useEffect(() => {
     if (settings !== undefined && !settings.submissionsEnabled) void navigate({ to: "/" });
@@ -181,6 +207,24 @@ function FormAnalyzerPage() {
 
           <div className="flex flex-col gap-2 border-t border-border pt-3">
             <p className="text-[11px] text-muted-foreground text-center">{t("batch.batchRateLimit")}</p>
+            {canApplyDirectly ? (
+              <AlertDialog>
+                <AlertDialogTrigger render={<Button size="sm" variant="secondary" disabled={isBlocked || isPending} className="w-full" />}>
+                  {isApplying ? <Spinner className="size-3.5" /> : null}
+                  {t("batch.applyDirectly")}
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t("batch.applyDirectlyConfirmTitle")}</AlertDialogTitle>
+                    <AlertDialogDescription>{t("batch.applyDirectlyConfirmDesc")}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => apply()}>{t("common:actions.submit")}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : null}
             <Button size="sm" disabled={isBlocked || isPending} onClick={() => submit()} className="w-full">
               {isPending ? <Spinner className="size-3.5" /> : null}
               {t("batch.submit")}

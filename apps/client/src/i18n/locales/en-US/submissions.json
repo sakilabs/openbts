@@ -189,7 +189,11 @@
     "unresolvedBandsWarning": "Some band entries could not be matched",
     "tooFewCellsWarning_one": "{{count, number}} station has fewer than 2 cell changes",
     "tooFewCellsWarning_other": "{{count, number}} stations have fewer than 2 cell changes",
-    "batchRateLimit": "Limited to 5 batch submissions per 24 hours"
+    "batchRateLimit": "Limited to 5 batch submissions per 24 hours",
+    "applyDirectly": "Apply directly",
+    "applySuccess": "Changes applied successfully",
+    "applyDirectlyConfirmTitle": "Apply changes directly?",
+    "applyDirectlyConfirmDesc": "This will immediately update the database without going through the submission review process. This action cannot be reverted."
   },
   "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to leave?"
 }
