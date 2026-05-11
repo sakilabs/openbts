@@ -34,8 +34,11 @@ function buildSearchQuery({ query, filters, regionNames }: SearchWithFiltersPara
 }
 
 const searchStations = async (query: string, sort: StationSortDirection, sortBy: StationSortBy | undefined) => {
-  const params = new URLSearchParams({ sort });
-  if (sortBy) params.set("sortBy", sortBy);
+  const params = new URLSearchParams();
+  if (sortBy) {
+    params.set("sort", sort);
+    params.set("sortBy", sortBy);
+  }
   return fetchApiData<Station[]>(`search?${params}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -154,6 +157,7 @@ export function useStationsData() {
       showStations: true,
       showRadiolines: false,
       showHeatmap: false,
+      recentDateFields: ["createdAt"],
       radiolineOperators: [],
     }),
     [state.operators, state.bands, state.rat, state.recentDays],
@@ -176,6 +180,7 @@ export function useStationsData() {
         showStations: true,
         showRadiolines: false,
         showHeatmap: false,
+        recentDateFields: ["createdAt"],
         radiolineOperators: [],
       };
       const resolved = typeof newFilters === "function" ? newFilters(current) : newFilters;
