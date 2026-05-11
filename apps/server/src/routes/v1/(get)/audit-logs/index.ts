@@ -64,11 +64,21 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     }
     if (search) {
       const term = `%${search}%`;
-      const subquery = db
+      const userSubquery = db
         .select({ id: users.id })
         .from(users)
         .where(or(ilike(users.name, term), ilike(users.username, term), ilike(users.email, term)));
-      conditions.push(inArray(fields.invoked_by, subquery));
+      conditions.push(
+        or(
+          ilike(fields.ip_address, term),
+          ilike(sql`${fields.record_id}::text`, term),
+          ilike(sql`${fields.action}::text`, term),
+          ilike(sql`${fields.old_values}::text`, term),
+          ilike(sql`${fields.new_values}::text`, term),
+          ilike(sql`${fields.metadata}::text`, term),
+          inArray(fields.invoked_by, userSubquery),
+        ),
+      );
     }
     if (from) conditions.push(gte(fields.createdAt, new Date(from)));
     if (to) conditions.push(lte(fields.createdAt, new Date(to)));
