@@ -162,7 +162,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       requireNonNegative("cid", d.cid);
       requireNonNegative("rnc", d.rnc);
       optionalNonNegative("arfcn", d.arfcn);
-      if (d.arfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("UMTS", band.value, d.arfcn))
+      if (d.arfcn !== undefined && d.arfcn !== null && band?.value !== undefined && !isARFCNValidForBand("UMTS", band.value, d.arfcn))
         errors.arfcn = "validation.arfcnBandMismatch";
       break;
     }
@@ -175,7 +175,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("pci", d.pci);
       if (d.pci !== undefined && d.pci > 503) errors.pci = "validation.pciRangeInvalid";
       optionalNonNegative("earfcn", d.earfcn);
-      if (d.earfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("LTE", band.value, d.earfcn, band.duplex))
+      if (d.earfcn !== undefined && d.earfcn !== null && band?.value !== undefined && !isARFCNValidForBand("LTE", band.value, d.earfcn, band.duplex))
         errors.earfcn = "validation.arfcnBandMismatch";
       break;
     }
@@ -189,7 +189,7 @@ function validateCellDetails(rat: RatType, details: Partial<ProposedCellForm["de
       optionalNonNegative("clid", d.clid);
       optionalNonNegative("pci", d.pci);
       optionalNonNegative("arfcn", d.arfcn);
-      if (d.arfcn !== undefined && band?.value !== undefined && !isARFCNValidForBand("NR", band.value, d.arfcn, band?.duplex))
+      if (d.arfcn !== undefined && d.arfcn !== null && band?.value !== undefined && !isARFCNValidForBand("NR", band.value, d.arfcn, band?.duplex))
         errors.arfcn = "validation.arfcnBandMismatch";
       break;
     }
