@@ -94,6 +94,51 @@ async function upsertLocation(
   return newLocation.id;
 }
 
+async function migrateStationPhotos(tx: DbTx, stationId: number, newLocationId: number): Promise<void> {
+  const selections = await tx.query.stationPhotoSelections.findMany({
+    where: { station_id: stationId },
+    with: { locationPhoto: { columns: { id: true, attachment_id: true } } },
+  });
+
+  const stationPhotoIds = selections.map((s) => s.location_photo_id);
+  if (stationPhotoIds.length === 0) return;
+
+  const attachmentIds = selections.map((s) => s.locationPhoto.attachment_id);
+
+  const conflicting = await tx
+    .select({ id: locationPhotos.id, attachment_id: locationPhotos.attachment_id })
+    .from(locationPhotos)
+    .where(and(eq(locationPhotos.location_id, newLocationId), inArray(locationPhotos.attachment_id, attachmentIds)));
+
+  if (conflicting.length > 0) {
+    const attachmentToNewPhotoId = new Map(conflicting.map((r) => [r.attachment_id, r.id]));
+    const conflictingAttachmentIds = conflicting.map((r) => r.attachment_id);
+
+    await Promise.all(
+      selections
+        .filter((sel) => attachmentToNewPhotoId.has(sel.locationPhoto.attachment_id))
+        .map((sel) => {
+          const newPhotoId = attachmentToNewPhotoId.get(sel.locationPhoto.attachment_id)!;
+          return Promise.all([
+            tx
+              .insert(stationPhotoSelections)
+              .values({ station_id: stationId, location_photo_id: newPhotoId, is_main: sel.is_main })
+              .onConflictDoNothing(),
+            tx
+              .delete(stationPhotoSelections)
+              .where(and(eq(stationPhotoSelections.station_id, stationId), eq(stationPhotoSelections.location_photo_id, sel.location_photo_id))),
+          ]);
+        }),
+    );
+
+    await tx
+      .delete(locationPhotos)
+      .where(and(inArray(locationPhotos.id, stationPhotoIds), inArray(locationPhotos.attachment_id, conflictingAttachmentIds)));
+  }
+
+  await tx.update(locationPhotos).set({ location_id: newLocationId }).where(inArray(locationPhotos.id, stationPhotoIds));
+}
+
 export async function approveSubmissionAction({
   submissionId,
   reviewerId,
@@ -275,22 +320,7 @@ export async function approveSubmissionAction({
           );
           const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
           if (Number(orphanedResult?.orphaned ?? 0) === 0) {
-            const existingAtNew = await tx
-              .select({ attachment_id: locationPhotos.attachment_id })
-              .from(locationPhotos)
-              .where(eq(locationPhotos.location_id, newLoc.id));
-            if (existingAtNew.length > 0) {
-              await tx.delete(locationPhotos).where(
-                and(
-                  eq(locationPhotos.location_id, currentLocation.id),
-                  inArray(
-                    locationPhotos.attachment_id,
-                    existingAtNew.map((r) => r.attachment_id),
-                  ),
-                ),
-              );
-            }
-            await tx.update(locationPhotos).set({ location_id: newLoc.id }).where(eq(locationPhotos.location_id, currentLocation.id));
+            await migrateStationPhotos(tx, stationId, newLoc.id);
             await tx.delete(locations).where(eq(locations.id, currentLocation.id));
             await createAuditLog(
               {
@@ -322,22 +352,7 @@ export async function approveSubmissionAction({
           if (currentLocation) {
             const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
             if (Number(orphanedResult?.orphaned ?? 0) === 0) {
-              const existingAtNew = await tx
-                .select({ attachment_id: locationPhotos.attachment_id })
-                .from(locationPhotos)
-                .where(eq(locationPhotos.location_id, locationId));
-              if (existingAtNew.length > 0) {
-                await tx.delete(locationPhotos).where(
-                  and(
-                    eq(locationPhotos.location_id, currentLocation.id),
-                    inArray(
-                      locationPhotos.attachment_id,
-                      existingAtNew.map((r) => r.attachment_id),
-                    ),
-                  ),
-                );
-              }
-              await tx.update(locationPhotos).set({ location_id: locationId }).where(eq(locationPhotos.location_id, currentLocation.id));
+              await migrateStationPhotos(tx, stationId, locationId);
               await tx.delete(locations).where(eq(locations.id, currentLocation.id));
               await createAuditLog(
                 {

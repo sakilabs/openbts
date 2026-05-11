@@ -7,6 +7,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Added ability to set main photo at the station via submissions
 
+### 🩹 Fixes
+
+- Fixed station photos not being migrated to the new location when editing a station's location or approving a submission that moves a station.
+
 # 2026-05-10
 
 ### 🚀 Enhancements

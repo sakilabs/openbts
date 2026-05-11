@@ -1,5 +1,5 @@
-import { locations, stations } from "@openbts/drizzle";
-import { eq } from "drizzle-orm";
+import { locationPhotos, locations, stationPhotoSelections, stations } from "@openbts/drizzle";
+import { and, eq, inArray } from "drizzle-orm";
 import { createSelectSchema, createUpdateSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -66,8 +66,57 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     );
 
     const oldLocationId = station.location_id;
-    if (oldLocationId !== null && oldLocationId !== updated.location_id) {
+    const newLocationId = updated.location_id;
+    if (oldLocationId !== null && oldLocationId !== newLocationId) {
       try {
+        if (newLocationId !== null) {
+          const selections = await db.query.stationPhotoSelections.findMany({
+            where: { station_id: station_id },
+            with: { locationPhoto: { columns: { id: true, attachment_id: true } } },
+          });
+
+          const stationPhotoIds = selections.map((s) => s.location_photo_id);
+
+          if (stationPhotoIds.length > 0) {
+            const attachmentIds = selections.map((s) => s.locationPhoto.attachment_id);
+
+            const conflicting = await db
+              .select({ id: locationPhotos.id, attachment_id: locationPhotos.attachment_id })
+              .from(locationPhotos)
+              .where(and(eq(locationPhotos.location_id, newLocationId), inArray(locationPhotos.attachment_id, attachmentIds)));
+
+            if (conflicting.length > 0) {
+              const attachmentToNewPhotoId = new Map(conflicting.map((r) => [r.attachment_id, r.id]));
+              const conflictingAttachmentIds = conflicting.map((r) => r.attachment_id);
+
+              await Promise.all(
+                selections
+                  .filter((sel) => attachmentToNewPhotoId.has(sel.locationPhoto.attachment_id))
+                  .map((sel) => {
+                    const newPhotoId = attachmentToNewPhotoId.get(sel.locationPhoto.attachment_id)!;
+                    return Promise.all([
+                      db
+                        .insert(stationPhotoSelections)
+                        .values({ station_id: station_id, location_photo_id: newPhotoId, is_main: sel.is_main })
+                        .onConflictDoNothing(),
+                      db
+                        .delete(stationPhotoSelections)
+                        .where(
+                          and(eq(stationPhotoSelections.station_id, station_id), eq(stationPhotoSelections.location_photo_id, sel.location_photo_id)),
+                        ),
+                    ]);
+                  }),
+              );
+
+              await db
+                .delete(locationPhotos)
+                .where(and(inArray(locationPhotos.id, stationPhotoIds), inArray(locationPhotos.attachment_id, conflictingAttachmentIds)));
+            }
+
+            await db.update(locationPhotos).set({ location_id: newLocationId }).where(inArray(locationPhotos.id, stationPhotoIds));
+          }
+        }
+
         const count = await db.$count(stations, eq(stations.location_id, oldLocationId));
         if (count === 0) {
           const oldLocation = await db.query.locations.findFirst({
@@ -82,10 +131,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
               record_id: oldLocationId,
               old_values: oldLocation ?? { id: oldLocationId },
               new_values: null,
-              metadata: {
-                station_id: station_id,
-                reason: "stations.update",
-              },
+              metadata: { station_id: station_id, reason: "stations.update" },
             },
             req,
           );
