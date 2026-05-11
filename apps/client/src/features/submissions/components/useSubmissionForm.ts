@@ -95,6 +95,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
   const [locationPhotoIds, setLocationPhotoIds] = useState<number[]>([]);
+  const [mainLocationPhotoId, setMainLocationPhotoId] = useState<number | null>(null);
   const submittedValuesRef = useRef<FormValues | null>(null);
 
   const isEditMode = !!editSubmissionId;
@@ -200,6 +201,10 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         cells: isDeleteMode ? [] : cells,
         pending_photos: photos.length > 0 ? photos.length : undefined,
         location_photo_ids: !isNewStation && !isDeleteMode && locationPhotoIds.length > 0 ? locationPhotoIds : undefined,
+        main_location_photo_id:
+          !isNewStation && !isDeleteMode && mainLocationPhotoId !== null && locationPhotoIds.includes(mainLocationPhotoId)
+            ? mainLocationPhotoId
+            : undefined,
       });
     },
   });
@@ -231,6 +236,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       }
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
       setLocationPhotoIds([]);
+      setMainLocationPhotoId(null);
       if (isEditMode && submittedValues) {
         setOriginalState(buildOriginalState(submittedValues));
         void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
@@ -643,6 +649,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     setPhotoTakenAts,
     locationPhotoIds,
     setLocationPhotoIds,
+    mainLocationPhotoId,
+    setMainLocationPhotoId,
     handlers: {
       handleModeChange,
       handleActionChange,

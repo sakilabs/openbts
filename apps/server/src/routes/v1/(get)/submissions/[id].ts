@@ -42,6 +42,7 @@ const locationPhotoSelectionSchema = createSelectSchema(locationPhotos)
     taken_at: z.iso.datetime().nullable(),
     createdAt: z.iso.datetime(),
     author: z.object({ uuid: z.string(), username: z.string(), name: z.string() }).nullable(),
+    is_main: z.boolean(),
   });
 
 const schemaRoute = {
@@ -136,6 +137,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       author_uuid: users.id,
       author_username: users.username,
       author_name: users.name,
+      is_main: submissionLocationPhotoSelections.is_main,
     })
     .from(submissionLocationPhotoSelections)
     .innerJoin(locationPhotos, eq(submissionLocationPhotoSelections.location_photo_id, locationPhotos.id))
@@ -152,6 +154,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     taken_at: r.taken_at?.toISOString() ?? null,
     createdAt: r.createdAt.toISOString(),
     author: r.author_uuid && r.author_username && r.author_name ? { uuid: r.author_uuid, username: r.author_username, name: r.author_name } : null,
+    is_main: r.is_main,
   }));
 
   return res.send({ data: { ...submission, cells, locationPhotoSelections } });

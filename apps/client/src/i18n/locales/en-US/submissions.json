@@ -143,6 +143,7 @@
     "uploadFirst": "Upload first photo",
     "remove": "Remove",
     "setAsMain": "Set as main",
+    "currentMain": "Current main photo",
     "hint": "Up to {{max}} photos, max {{size}} each",
     "uploaded": "Photos uploaded",
     "deleted": "Photo deleted",

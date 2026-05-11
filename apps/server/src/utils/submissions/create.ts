@@ -53,8 +53,15 @@ export const singleSubmissionSchema = z
     cells: z.array(proposedCellInsert).optional(),
     pending_photos: z.number().int().min(1).optional(),
     location_photo_ids: z.array(z.number().int()).max(50).optional(),
+    main_location_photo_id: z.number().int().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.main_location_photo_id !== undefined) {
+      if (!data.location_photo_ids || !data.location_photo_ids.includes(data.main_location_photo_id))
+        ctx.addIssue({ code: "custom", message: "main_location_photo_id must be one of the location_photo_ids" });
+    }
+  });
 
 export type SingleSubmission = z.infer<typeof singleSubmissionSchema>;
 export type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
@@ -234,9 +241,13 @@ export async function processSubmission(tx: DbTx, input: SingleSubmission, userI
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
   if (input.location_photo_ids && input.location_photo_ids.length > 0) {
-    await tx
-      .insert(submissionLocationPhotoSelections)
-      .values(input.location_photo_ids.map((photoId) => ({ submission_id: submission.id, location_photo_id: photoId })));
+    await tx.insert(submissionLocationPhotoSelections).values(
+      input.location_photo_ids.map((photoId) => ({
+        submission_id: submission.id,
+        location_photo_id: photoId,
+        is_main: photoId === input.main_location_photo_id,
+      })),
+    );
   }
 
   if (proposedCellsInput && proposedCellsInput.length > 0) {

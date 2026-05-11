@@ -143,6 +143,7 @@
     "uploadFirst": "Dodaj pierwsze zdjęcie",
     "remove": "Usuń",
     "setAsMain": "Ustaw jako główne",
+    "currentMain": "Aktualne główne zdjęcie",
     "hint": "Do {{max}} zdjęć, maks. {{size}} każde",
     "uploaded": "Zdjęcia przesłane",
     "deleted": "Zdjęcie usunięte",

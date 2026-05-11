@@ -1,4 +1,4 @@
-import { Camera01Icon, Image01Icon, Tick02Icon, Upload04Icon, ZoomInAreaIcon } from "@hugeicons/core-free-icons";
+import { Camera01Icon, Image01Icon, StarIcon, Tick02Icon, Upload04Icon, ZoomInAreaIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
@@ -20,9 +20,11 @@ type Props = {
   locationId: number;
   selectedIds: number[];
   onSelectionChange: (ids: number[]) => void;
+  mainPhotoId: number | null;
+  onMainPhotoChange: (id: number | null) => void;
 };
 
-export function SubmissionLocationPhotoSelector({ stationId, locationId, selectedIds, onSelectionChange }: Props) {
+export function SubmissionLocationPhotoSelector({ stationId, locationId, selectedIds, onSelectionChange, mainPhotoId, onMainPhotoChange }: Props) {
   const { t, i18n } = useTranslation("submissions");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -38,13 +40,22 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
     staleTime: 1000 * 60 * 5,
   });
 
-  const assignedIds = new Set(stationPhotos.map((p) => p.id));
+  let currentMainId: number | null = null;
+  const assignedIds = new Set<number>();
+  for (const p of stationPhotos) {
+    assignedIds.add(p.id);
+    if (p.is_main) currentMainId = p.id;
+  }
   const selectedSet = new Set(selectedIds);
 
   function toggleSelect(photo: LocationPhoto) {
     const next = new Set(selectedSet);
-    if (next.has(photo.id)) next.delete(photo.id);
-    else next.add(photo.id);
+    if (next.has(photo.id)) {
+      next.delete(photo.id);
+      if (mainPhotoId === photo.id) onMainPhotoChange(null);
+    } else {
+      next.add(photo.id);
+    }
     onSelectionChange(Array.from(next));
   }
 
@@ -101,6 +112,10 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
           {locationPhotos.map((photo, idx) => {
             const isSelected = selectedSet.has(photo.id);
             const isAssigned = assignedIds.has(photo.id);
+            const isMain = mainPhotoId === photo.id;
+            const isCurrentMain = currentMainId === photo.id;
+            const showStarBadge = isMain || isCurrentMain;
+            const showSetAsMain = isSelected && !isMain && !(isCurrentMain && mainPhotoId === null);
 
             return (
               <div
@@ -123,8 +138,24 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                     className={cn("w-full h-full object-cover transition-opacity", selectedSet.size > 0 && !isSelected && "opacity-40")}
                     loading="lazy"
                   />
+                  {showStarBadge && (
+                    <span
+                      className={cn(
+                        "absolute top-1 left-1 rounded-full p-0.5",
+                        isMain ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground ring-1 ring-border",
+                      )}
+                      title={isMain ? t("photos.setAsMain") : t("photos.currentMain")}
+                    >
+                      <HugeiconsIcon icon={StarIcon} className="size-3" />
+                    </span>
+                  )}
                   {isAssigned && (
-                    <span className="absolute top-1 left-1 bg-amber-500 text-white rounded-sm px-1 text-[9px] font-semibold leading-4">
+                    <span
+                      className={cn(
+                        "absolute rounded-sm px-1 text-[9px] font-semibold leading-4 bg-amber-500 text-white",
+                        showStarBadge ? "top-1 left-7" : "top-1 left-1",
+                      )}
+                    >
                       {t("photos.alreadyAssigned")}
                     </span>
                   )}
@@ -153,6 +184,21 @@ export function SubmissionLocationPhotoSelector({ stationId, locationId, selecte
                     {isSelected && <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />}
                   </span>
                 </div>
+                {showSetAsMain && (
+                  <div className="border-t">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center py-2 text-xs text-muted-foreground hover:text-amber-500 hover:bg-accent transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMainPhotoChange(photo.id);
+                      }}
+                      title={t("photos.setAsMain")}
+                    >
+                      <HugeiconsIcon icon={StarIcon} className="size-3.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="px-2 pt-1 pb-1 text-[11px] space-y-0.5">
                   <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
                   <div className="flex items-center gap-1 text-muted-foreground">

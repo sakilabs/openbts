@@ -221,6 +221,7 @@ export const submissionLocationPhotoSelections = SubmissionsSchema.table(
     location_photo_id: integer("location_photo_id")
       .notNull()
       .references(() => locationPhotos.id, { onDelete: "cascade" }),
+    is_main: boolean("is_main").notNull().default(false),
   },
   (t) => [primaryKey({ columns: [t.submission_id, t.location_photo_id] })],
 );

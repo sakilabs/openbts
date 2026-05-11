@@ -87,6 +87,7 @@ export type SubmissionFormData = {
   cells: CellPayload[];
   pending_photos?: number;
   location_photo_ids?: number[];
+  main_location_photo_id?: number;
 };
 
 export type SubmissionMode = "existing" | "new";

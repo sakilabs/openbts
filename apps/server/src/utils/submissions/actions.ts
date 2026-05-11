@@ -762,10 +762,29 @@ export async function approveSubmissionAction({
           .where(and(eq(stationPhotoSelections.station_id, sid), inArray(stationPhotoSelections.location_photo_id, requestedIds)));
         const existingIds = new Set(existingRows.map((r) => r.location_photo_id));
         const toInsert = locationPhotoSels.filter((s) => !existingIds.has(s.location_photo_id));
+
+        const mainSel = locationPhotoSels.find((s) => s.is_main);
+        const mainIsAlreadyAssigned = mainSel != null && existingIds.has(mainSel.location_photo_id);
+
         if (toInsert.length > 0) {
+          const existingMain = await tx.query.stationPhotoSelections.findFirst({
+            where: { station_id: sid, is_main: true },
+          });
+          await tx.insert(stationPhotoSelections).values(
+            toInsert.map((s) => ({
+              station_id: sid,
+              location_photo_id: s.location_photo_id,
+              is_main: !existingMain && !mainIsAlreadyAssigned && s.is_main,
+            })),
+          );
+        }
+
+        if (mainIsAlreadyAssigned) {
+          await tx.update(stationPhotoSelections).set({ is_main: false }).where(eq(stationPhotoSelections.station_id, sid));
           await tx
-            .insert(stationPhotoSelections)
-            .values(toInsert.map((s) => ({ station_id: sid, location_photo_id: s.location_photo_id, is_main: false })));
+            .update(stationPhotoSelections)
+            .set({ is_main: true })
+            .where(and(eq(stationPhotoSelections.station_id, sid), eq(stationPhotoSelections.location_photo_id, mainSel.location_photo_id)));
         }
       }
     }

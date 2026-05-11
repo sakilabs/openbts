@@ -1,7 +1,17 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-05-11
+
+### 🚀 Enhancements
+
+- Added ability to set main photo at the station via submissions
+
 # 2026-05-10
+
+### 🚀 Enhancements
+
+- Added support for direct data insert and update for editors and admins from analyzer
 
 ### 🩹 Fixes
 

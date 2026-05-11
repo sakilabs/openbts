@@ -2,6 +2,8 @@ import type { LocationPhoto } from "@/features/station-details/api";
 
 import type { RAT_ORDER } from "../cells/rat";
 
+export type SubmissionLocationPhoto = LocationPhoto & { is_main: boolean };
+
 export type SubmissionUser = {
   id: string;
   name: string;
@@ -75,7 +77,7 @@ export type SubmissionDetail = SubmissionBase & {
   proposedStation: ProposedStation | null;
   proposedLocation: ProposedLocation | null;
   cells: ProposedCell[];
-  locationPhotoSelections: LocationPhoto[];
+  locationPhotoSelections: SubmissionLocationPhoto[];
 };
 
 export type SubmissionListItem = SubmissionBase & {

@@ -1,18 +1,18 @@
-import { Camera01Icon, Image01Icon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { Camera01Icon, Image01Icon, StarIcon, Upload04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Lightbox } from "@/components/lightbox";
-import type { LocationPhoto } from "@/features/station-details/api";
+import type { SubmissionLocationPhoto } from "@/features/admin/submissions/types";
 
-type Props = { photos: LocationPhoto[] };
+type Props = { photos: SubmissionLocationPhoto[] };
 
 export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
   const { t, i18n } = useTranslation("submissions");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const closeLightbox = () => setLightboxIndex(null);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
   const prev = useCallback(() => setLightboxIndex((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null)), [photos.length]);
   const next = useCallback(() => setLightboxIndex((i) => (i !== null ? (i + 1) % photos.length : null)), [photos.length]);
 
@@ -39,6 +39,11 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
                 }}
               >
                 <img src={`/uploads/${photo.attachment_uuid}.webp`} alt={photo.note ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                {photo.is_main && (
+                  <span className="absolute top-1 left-1 bg-amber-500 text-white rounded-full p-0.5" title={t("photos.setAsMain")}>
+                    <HugeiconsIcon icon={StarIcon} className="size-3" />
+                  </span>
+                )}
               </div>
               <div className="px-2 pt-1 pb-1 text-[10px] space-y-0.5">
                 <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>

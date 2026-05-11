@@ -45,6 +45,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
     setPhotoTakenAts,
     locationPhotoIds,
     setLocationPhotoIds,
+    mainLocationPhotoId,
+    setMainLocationPhotoId,
     handlers: {
       handleModeChange,
       handleActionChange,
@@ -181,6 +183,8 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
                         locationId={locationId}
                         selectedIds={locationPhotoIds}
                         onSelectionChange={setLocationPhotoIds}
+                        mainPhotoId={mainLocationPhotoId}
+                        onMainPhotoChange={setMainLocationPhotoId}
                       />
                     ) : null}
                     <PhotoUploadSection
