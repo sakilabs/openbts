@@ -213,14 +213,6 @@ export async function approveSubmissionAction({
               networks_name: proposedStation.networks_name ?? null,
               mno_name: proposedStation.mno_name ?? null,
             })
-            .onConflictDoUpdate({
-              target: [extraIdentificators.station_id, extraIdentificators.networks_id],
-              set: {
-                networks_name: proposedStation.networks_name ?? null,
-                mno_name: proposedStation.mno_name ?? null,
-                updatedAt: new Date(),
-              },
-            })
             .returning();
           if (newIdentifier) {
             await createAuditLog(
@@ -383,23 +375,26 @@ export async function approveSubmissionAction({
         existingIdentifier.mno_name !== proposedMnoName;
 
       if (hasIdentifierChanges) {
-        const [updatedIdentifier] = await tx
-          .insert(extraIdentificators)
-          .values({
-            station_id: stationId,
-            networks_id: proposedNetworksId,
-            networks_name: proposedNetworksName,
-            mno_name: proposedMnoName,
-          })
-          .onConflictDoUpdate({
-            target: [extraIdentificators.station_id, extraIdentificators.networks_id],
-            set: {
-              networks_name: proposedNetworksName,
-              mno_name: proposedMnoName,
-              updatedAt: new Date(),
-            },
-          })
-          .returning();
+        const [updatedIdentifier] = existingIdentifier
+          ? await tx
+              .update(extraIdentificators)
+              .set({
+                networks_id: proposedNetworksId,
+                networks_name: proposedNetworksName,
+                mno_name: proposedMnoName,
+                updatedAt: new Date(),
+              })
+              .where(eq(extraIdentificators.id, existingIdentifier.id))
+              .returning()
+          : await tx
+              .insert(extraIdentificators)
+              .values({
+                station_id: stationId,
+                networks_id: proposedNetworksId,
+                networks_name: proposedNetworksName,
+                mno_name: proposedMnoName,
+              })
+              .returning();
         if (updatedIdentifier) {
           await createAuditLog(
             {
