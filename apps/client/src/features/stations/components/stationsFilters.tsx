@@ -133,6 +133,7 @@ export function StationsFilters({
       showRadiolines: false,
       radiolineOperators: [],
       showStations: true,
+      recentDateFields: ["createdAt"],
       showHeatmap: false,
     });
     onRegionsChange([]);
@@ -325,13 +326,7 @@ export function StationsFilters({
 
         <div>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("common:labels.band")} (MHz)</span>
-          <Combobox
-            multiple
-            value={filters.bands}
-            onValueChange={handleBandsChange}
-            items={uniqueBandValues}
-            disabled={parentSearchQuery.trim().length > 0}
-          >
+          <Combobox multiple value={filters.bands} onValueChange={handleBandsChange} items={uniqueBandValues}>
             <ComboboxChips ref={bandChipsRef} className="min-h-8 max-h-16 overflow-y-auto text-sm">
               {filters.bands.map((band) => (
                 <ComboboxChip key={band}>{band === 0 ? t("stations:cells.unknownBand") : band}</ComboboxChip>

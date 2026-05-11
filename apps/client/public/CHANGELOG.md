@@ -11,6 +11,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 - Fixed station photos not being migrated to the new location when editing a station's location or approving a submission that moves a station.
 - Fixed `/stations` search mode sending `sort=desc` to the API even when no sort column was selected, overriding relevancy ranking
+- Fixed band filter being disabled when search mode is active on `/stations`
 
 # 2026-05-10
 
