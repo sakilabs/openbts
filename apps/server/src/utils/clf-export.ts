@@ -349,7 +349,7 @@ export function toNTM(cell: CellExportData): string | null {
       const tac = cell.tac ?? NTM_UNKNOWN;
       const enbid = cell.enbid ?? NTM_UNKNOWN;
       const pci = cell.pci ?? NTM_UNKNOWN;
-      const earfcn = getEarfcn(cell.operator_mnc, cell.band_value, cell.band_duplex);
+      const earfcn = cell.arfcn ?? NTM_UNKNOWN;
 
       let location = getNTMLocation(cell);
       const bandCode = getBandCode("LTE", cell.band_value, cell.band_duplex);
@@ -367,6 +367,7 @@ export function toNTM(cell: CellExportData): string | null {
       const nci = cell.nci ?? NTM_UNKNOWN;
       const tac = cell.nrtac ?? NTM_UNKNOWN;
       const pci = cell.pci ?? NTM_UNKNOWN;
+      const arfcn = cell.arfcn ?? NTM_UNKNOWN;
 
       let location = getNTMLocation(cell);
       if (cell.nr_band_pcis && cell.nr_band_pcis.length > 0) {
@@ -377,7 +378,7 @@ export function toNTM(cell: CellExportData): string | null {
         if (nrDesig) location += ` [NR ${nrDesig}]`;
       }
 
-      return `5G;${mcc};${mnc};${nci};${tac};;${pci};${lat};${lon};${location};${NTM_UNKNOWN}`;
+      return `5G;${mcc};${mnc};${nci};${tac};${arfcn};${pci};${lat};${lon};${location};${NTM_UNKNOWN}`;
     }
     case "CDMA": {
       const bid = cell.cid ?? NTM_UNKNOWN;

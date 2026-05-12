@@ -116,6 +116,7 @@ parentPort.on("message", async (params: WorkerParams) => {
             lte_clid: lteCells.clid,
             lte_ecid: lteCells.ecid,
             lte_pci: lteCells.pci,
+            lte_earfcn: lteCells.earfcn,
           })
           .from(cells)
           .innerJoin(lteCells, eq(lteCells.cell_id, cells.id))
@@ -250,6 +251,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           clid: row.lte_clid,
           ecid: row.lte_ecid,
           pci: row.lte_pci,
+          arfcn: row.lte_earfcn,
           rat: "LTE",
           band_value: row.band_value,
           band_name: row.band_name as string,
