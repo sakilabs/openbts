@@ -205,10 +205,11 @@ async function fetchWmsReports(identityName: string, lat: number, lng: number): 
   return data.length ? data : null;
 }
 
-function pickLatest(a: PemReport[] | null, b: PemReport[] | null): PemReport[] | null {
-  if (!a) return b;
-  if (!b) return a;
-  return parsePublishedAt(a[0]!.date) >= parsePublishedAt(b[0]!.date) ? a : b;
+function mergeAndSort(a: PemReport[] | null, b: PemReport[] | null): PemReport[] | null {
+  const combined = [...(a ?? []), ...(b ?? [])];
+  if (combined.length === 0) return null;
+
+  return combined.sort((x, y) => parsePublishedAt(y.date) - parsePublishedAt(x.date));
 }
 
 async function handler(req: FastifyRequest<Params>, res: ReplyPayload<JSONBody<PemReport[]>>) {
@@ -226,7 +227,7 @@ async function handler(req: FastifyRequest<Params>, res: ReplyPayload<JSONBody<P
     fetchWmsReports(station_id, lat, lng),
   ]);
 
-  const data = pickLatest(installationsResult, wmsResult);
+  const data = mergeAndSort(installationsResult, wmsResult);
   if (!data) throw new ErrorResponse("NOT_FOUND");
 
   const response = { data };
