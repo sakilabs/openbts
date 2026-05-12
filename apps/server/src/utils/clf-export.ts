@@ -211,7 +211,7 @@ function getCellIdForExport(cell: CellExportData): bigint | number | null {
     case "CDMA":
       return cell.clid ?? cell.cid;
     case "UMTS":
-      return cell.cid_long ?? cell.cid;
+      return cell.cid ?? cell.cid_long;
     case "LTE":
       return cell.ecid ?? cell.cid;
     case "NR":
