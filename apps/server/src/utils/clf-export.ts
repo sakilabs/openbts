@@ -378,7 +378,7 @@ export function toNTM(cell: CellExportData): string | null {
         if (nrDesig) location += ` [NR ${nrDesig}]`;
       }
 
-      return `5G;${mcc};${mnc};${nci};${tac};${arfcn};${pci};${lat};${lon};${location};${NTM_UNKNOWN}`;
+      return `5G;${mcc};${mnc};${nci};${tac};;${pci};${lat};${lon};${location};${arfcn}`;
     }
     case "CDMA": {
       const bid = cell.cid ?? NTM_UNKNOWN;
