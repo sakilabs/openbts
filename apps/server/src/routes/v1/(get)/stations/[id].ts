@@ -56,7 +56,7 @@ const schemaRoute = {
 
 const stationByIdQuery = db.query.stations
   .findFirst({
-    where: { id: sql.placeholder("id"), status: "published" },
+    where: { id: sql.placeholder("id") },
     with: {
       cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false, station_id: false } },
       location: { columns: { point: false, region_id: false }, with: { region: true } },
