@@ -20,7 +20,7 @@ Nie jestem w posiadaniu żadnego telefonu z androidem, niestety - na codzień ko
 
 Google Pixel będzie do głównego developmentu aplikacji, wraz z implementacją tzw. komunikacji z "service portem" (Exynos, z powodu tego że Tensor na nim jest bazowany). Nothing Phone, będzie użyty do testowania i implementacji service portu na Snapdragonie.
 Zależy mi na nowych telefonach, w razie w, jakbym coś zepsuła to żeby można dało dać na gwarancję ;) oraz chciałabym czysty system który nie będzie mi przeszkadzać w żadnym stopniu i nie zablokuje mi funkcji (np. tak jak Samsung blokuje Knoxem 🙄).
-Obydwa telefony kosztują w okolicach 4 tysięcy złotych, więc zbiórka też jest na tą kwotę. Całość zbiórki idzie na telefony, chyba że będzie nadwyżka to również na licencję do Google Play Store
+Łącznie obydwa telefony kosztują w okolicach 4 tysięcy złotych, więc zbiórka też jest na tą kwotę. Całość zbiórki idzie na telefony, chyba że będzie nadwyżka to również na licencję do Google Play Store
 
 ### Timeline
 
