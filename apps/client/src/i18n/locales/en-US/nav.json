@@ -39,7 +39,8 @@
     "analyzer": "Log Analyzer",
     "apiDocs": "API Docs",
     "releasenotes": "v3 - What's new?",
-    "discord": "Discord"
+    "discord": "Discord",
+    "fundraiser": "Fundraiser"
   },
   "secondary": {
     "settings": "Settings",

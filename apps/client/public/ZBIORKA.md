@@ -1,5 +1,3 @@
-## Zbiórka
-
 Hej! Trafiłeś tutaj pewnie aby zrobić wpłatę na zbiórke i/lub się dowiedzieć po co jest ta zbiórka i co ona wniesie
 
 ### Aplikacja

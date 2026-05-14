@@ -26,7 +26,7 @@ function ZbiorkaPage() {
     <main className="flex-1 overflow-y-auto p-4">
       <div className="max-w-4xl space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{t("changelog.title", "Changelog")}</h1>
+          <h1 className="text-2xl font-bold">Zbiórka</h1>
         </div>
 
         {error && <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error.message}</div>}
@@ -46,7 +46,7 @@ function ZbiorkaPage() {
 export const Route = createFileRoute("/_layout/zbiorka")({
   component: ZbiorkaPage,
   staticData: {
-    titleKey: "items.changelog",
+    titleKey: "items.fundraiser",
     i18nNamespace: "nav",
   },
 });
