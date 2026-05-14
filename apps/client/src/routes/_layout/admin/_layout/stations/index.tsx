@@ -17,11 +17,13 @@ function AdminStationsListPage() {
     (station: Station) => navigate({ to: "/admin/stations/$id", params: { id: String(station.id) }, search: { uke: undefined } }),
     [navigate],
   );
+  const getRowHref = useCallback((station: Station) => `/admin/stations/${station.id}`, []);
 
   return (
     <StationsListLayout
       data={data}
       onRowClick={handleRowClick}
+      getRowHref={getRowHref}
       headerActions={
         <Button size="sm" onClick={() => navigate({ to: "/admin/stations/$id", params: { id: "new" }, search: { uke: undefined } })}>
           <HugeiconsIcon icon={Add01Icon} className="size-4 sm:mr-2" />

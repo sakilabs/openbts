@@ -58,14 +58,21 @@ function Header({ className }: { className?: string }) {
 interface TableRowProps<T> {
   row: Row<T>;
   onClick?: (row: T) => void;
+  getRowHref?: (row: T) => string;
   className?: string;
 }
 
-const TableRowInner = <T,>({ row, onClick, className }: TableRowProps<T>) => (
+const TableRowInner = <T,>({ row, onClick, getRowHref, className }: TableRowProps<T>) => (
   <tr
     data-state={row.getIsSelected() && "selected"}
     className={cn("h-16 border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted", onClick && "cursor-pointer", className)}
     onClick={() => onClick?.(row.original)}
+    onMouseDown={(e) => {
+      if (e.button === 1) e.preventDefault();
+    }}
+    onAuxClick={(e) => {
+      if (e.button === 1 && getRowHref) window.open(getRowHref(row.original), "_blank");
+    }}
   >
     {row.getVisibleCells().map((cell) => (
       <td key={cell.id} className="p-2 align-middle overflow-hidden" style={{ width: cell.column.getSize() }}>
@@ -80,19 +87,20 @@ const TableRow = memo(TableRowInner) as typeof TableRowInner;
 // Body with rows
 interface BodyProps<T> {
   onRowClick?: (row: T) => void;
+  getRowHref?: (row: T) => string;
   rowClassName?: string;
   skeletonRows?: number;
   skeletonColumns?: number;
 }
 
-function Body<T>({ onRowClick, rowClassName, skeletonRows, skeletonColumns }: BodyProps<T>) {
+function Body<T>({ onRowClick, getRowHref, rowClassName, skeletonRows, skeletonColumns }: BodyProps<T>) {
   const table = useDataTable<T>();
   const rows = table.getRowModel().rows;
 
   return (
     <tbody className="[&_tr:last-child]:border-0">
       {rows.map((row: Row<T>) => (
-        <TableRow key={row.id} row={row} onClick={onRowClick} className={rowClassName} />
+        <TableRow key={row.id} row={row} onClick={onRowClick} getRowHref={getRowHref} className={rowClassName} />
       ))}
       {skeletonRows !== null && skeletonRows !== undefined && skeletonRows > 0 && skeletonColumns !== null && skeletonColumns !== undefined && (
         <SkeletonRows rows={skeletonRows} columns={skeletonColumns} />

@@ -17,6 +17,7 @@ interface StationsDataTableProps {
   isLoading?: boolean;
   isFetchingMore?: boolean;
   onRowClick?: (station: Station) => void;
+  getRowHref?: (station: Station) => string;
   onLoadMore?: () => void;
   hasMore?: boolean;
   totalItems?: number;
@@ -31,6 +32,7 @@ export function StationsDataTable({
   isLoading,
   isFetchingMore,
   onRowClick,
+  getRowHref,
   onLoadMore,
   hasMore,
   totalItems,
@@ -92,7 +94,7 @@ export function StationsDataTable({
               </DataTable.Empty>
             </tbody>
           ) : (
-            <DataTable.Body onRowClick={onRowClick} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
+            <DataTable.Body onRowClick={onRowClick} getRowHref={getRowHref} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
           )}
           <DataTable.Footer columns={columnCount}>
             <DataTablePagination table={table} totalItems={totalItems ?? data.length} pageSizeOptions={pageSizeOptions} />

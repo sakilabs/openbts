@@ -17,6 +17,7 @@ interface LocationsDataTableProps {
   isLoading?: boolean;
   isFetchingMore?: boolean;
   onRowClick?: (location: LocationWithStations) => void;
+  getRowHref?: (location: LocationWithStations) => string;
   onLoadMore?: () => void;
   hasMore?: boolean;
   totalItems?: number;
@@ -30,6 +31,7 @@ export function LocationsDataTable({
   isLoading,
   isFetchingMore,
   onRowClick,
+  getRowHref,
   onLoadMore,
   hasMore,
   totalItems,
@@ -90,7 +92,7 @@ export function LocationsDataTable({
               </DataTable.Empty>
             </tbody>
           ) : (
-            <DataTable.Body onRowClick={onRowClick} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
+            <DataTable.Body onRowClick={onRowClick} getRowHref={getRowHref} skeletonRows={skeletonRowsToShow} skeletonColumns={columnCount} />
           )}
           <DataTable.Footer columns={columnCount}>
             <DataTablePagination table={table} totalItems={totalItems ?? data.length} pageSizeOptions={pageSizeOptions} />

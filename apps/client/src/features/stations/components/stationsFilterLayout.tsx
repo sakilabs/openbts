@@ -13,6 +13,7 @@ import type { Station, StationSortBy } from "@/types/station";
 interface StationsListLayoutProps {
   data: ReturnType<typeof useStationsData>;
   onRowClick: (station: Station) => void;
+  getRowHref?: (station: Station) => string;
   headerActions?: ReactNode;
   children?: ReactNode;
 }
@@ -22,7 +23,7 @@ function subscribeToHeaderActions(callback: () => void) {
   return () => cancelAnimationFrame(id);
 }
 
-export function StationsListLayout({ data, onRowClick, headerActions, children }: StationsListLayoutProps) {
+export function StationsListLayout({ data, onRowClick, getRowHref, headerActions, children }: StationsListLayoutProps) {
   const { t } = useTranslation("stations");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const headerActionsEl = useSyncExternalStore(
@@ -95,6 +96,7 @@ export function StationsListLayout({ data, onRowClick, headerActions, children }
             isLoading={isLoading}
             isFetchingMore={isFetching && !isLoading}
             onRowClick={onRowClick}
+            getRowHref={getRowHref}
             onLoadMore={loadMore}
             hasMore={hasMore}
             totalItems={totalStations ?? stations.length}

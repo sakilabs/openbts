@@ -22,20 +22,22 @@ function PhotoMeta({ photo, locale }: { photo: StationPhoto; locale: string }) {
   const username = photo.author?.username ?? t("photos.unknownUser");
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex flex-col gap-0.5">
       <span className="font-medium">@{username}</span>
-      <div className="flex items-center gap-1.5">
-        <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
-        <span className="tabular-nums">
-          {new Date(photo.createdAt).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" })}
-        </span>
-      </div>
-      {photo.taken_at ? (
+      <div className="flex items-center gap-2.5">
         <div className="flex items-center gap-1.5">
-          <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
-          <span className="tabular-nums">{new Date(photo.taken_at).toLocaleDateString(locale, { year: "numeric", month: "short" })}</span>
+          <HugeiconsIcon icon={Upload04Icon} className="size-3 opacity-60" />
+          <span className="tabular-nums">
+            {new Date(photo.createdAt).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" })}
+          </span>
         </div>
-      ) : null}
+        {photo.taken_at ? (
+          <div className="flex items-center gap-1.5">
+            <HugeiconsIcon icon={Camera01Icon} className="size-3 opacity-60" />
+            <span className="tabular-nums">{new Date(photo.taken_at).toLocaleDateString(locale, { year: "numeric", month: "short" })}</span>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

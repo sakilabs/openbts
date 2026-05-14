@@ -64,6 +64,7 @@ function AdminLocationsPage() {
   );
 
   const handleRowClick = useCallback((location: LocationWithStations) => navigate({ to: `/admin/locations/${location.id}` }), [navigate]);
+  const getRowHref = useCallback((location: LocationWithStations) => `/admin/locations/${location.id}`, []);
 
   return (
     <>
@@ -90,6 +91,7 @@ function AdminLocationsPage() {
             isLoading={isLoading}
             isFetchingMore={isFetching && !isLoading}
             onRowClick={handleRowClick}
+            getRowHref={getRowHref}
             onLoadMore={loadMore}
             hasMore={hasMore}
             totalItems={totalLocations ?? locations.length}

@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionListItem } from "@/features/admin/submissions/types";
 import { UserPickerPopover } from "@/features/admin/users/components/UserPickerPopover";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import type { PaginationState } from "@/hooks/useTablePageSize";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { API_BASE, fetchJson } from "@/lib/api";
@@ -60,16 +60,31 @@ function AdminSubmissionsListPage() {
     return saved === "desc" ? "desc" : "asc";
   });
   const [searchInput, setSearchInput] = useState(q ?? "");
-  const debouncedSearch = useDebouncedValue(searchInput.trim(), 300) || undefined;
-  const [selectedSubmitterIds, setSelectedSubmitterIds] = useState<string[]>([]);
+  const [selectedSubmitterIds, setSelectedSubmitterIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("admin:submissions:submitters");
+      const parsed = JSON.parse(saved ?? "[]");
+      return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+    } catch {
+      return [];
+    }
+  });
 
-  useEffect(() => {
+  const debouncedNavigateSearch = useDebouncedCallback((value: string) => {
     void navigate({
       from: Route.fullPath,
-      search: (s) => ({ ...s, q: debouncedSearch, page: 0 }),
+      search: (s) => ({ ...s, q: value || undefined, page: 0 }),
       replace: true,
     });
-  }, [debouncedSearch, navigate]);
+  }, 300);
+
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchInput(value);
+      debouncedNavigateSearch(value.trim());
+    },
+    [debouncedNavigateSearch],
+  );
 
   const handleStatusFilter = useCallback(
     (v: typeof statusFilter) => {
@@ -88,6 +103,11 @@ function AdminSubmissionsListPage() {
     },
     [navigate],
   );
+
+  const handleSubmitterChange = useCallback((ids: string[]) => {
+    setSelectedSubmitterIds(ids);
+    localStorage.setItem("admin:submissions:submitters", JSON.stringify(ids));
+  }, []);
 
   const handleSortToggle = useCallback(() => {
     setSortOrder((prev) => {
@@ -119,24 +139,14 @@ function AdminSubmissionsListPage() {
   );
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: [
-      "admin",
-      "submissions",
-      pagination.pageIndex,
-      pagination.pageSize,
-      statusFilter,
-      typeFilter,
-      debouncedSearch,
-      sortOrder,
-      selectedSubmitterIds,
-    ],
+    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, q, sortOrder, selectedSubmitterIds],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
       params.set("offset", (pagination.pageIndex * pagination.pageSize).toString());
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (typeFilter !== "all") params.set("type", typeFilter);
-      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (q) params.set("search", q);
       if (selectedSubmitterIds.length > 0) params.set("submitter_ids", selectedSubmitterIds.join(","));
       params.set("sort", sortOrder);
       return fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions/admin?${params.toString()}`);
@@ -236,6 +246,7 @@ function AdminSubmissionsListPage() {
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);
+  const getRowHref = useCallback((submission: SubmissionListItem) => `/admin/submissions/${submission.id}`, []);
 
   const table = useReactTable({
     data: submissions,
@@ -296,7 +307,7 @@ function AdminSubmissionsListPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <UserPickerPopover selectedUserIds={selectedSubmitterIds} onSelectionChange={setSelectedSubmitterIds} />
+          <UserPickerPopover selectedUserIds={selectedSubmitterIds} onSelectionChange={handleSubmitterChange} />
           <div className="relative">
             <HugeiconsIcon
               icon={Search01Icon}
@@ -306,12 +317,12 @@ function AdminSubmissionsListPage() {
               className="h-8 pl-8 pr-8 w-full sm:w-72"
               placeholder={t("table.searchPlaceholder")}
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
             {searchInput ? (
               <button
                 type="button"
-                onClick={() => setSearchInput("")}
+                onClick={() => handleSearchChange("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
@@ -359,7 +370,7 @@ function AdminSubmissionsListPage() {
                 </tr>
               </tbody>
             ) : (
-              <DataTable.Body onRowClick={handleRowClick} />
+              <DataTable.Body onRowClick={handleRowClick} getRowHref={getRowHref} />
             )}
             <DataTable.Footer columns={columns.length}>
               <DataTablePagination table={table} totalItems={total} pageSizeOptions={pageSizeOptions} />
