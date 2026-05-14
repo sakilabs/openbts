@@ -19,7 +19,7 @@ export const registerRateLimit = (fastify: FastifyZodInstance) => {
       { url: "/api/v1/account/publishable-keys", max: 2, window: 604800 },
       {
         url: "/api/v1/submissions/batch",
-        max: 5,
+        max: 7,
         window: 86400,
         roles: { admin: { max: Number.POSITIVE_INFINITY, window: 86400 }, editor: { max: 500, window: 60 } },
       },
