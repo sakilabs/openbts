@@ -21,8 +21,8 @@
       "nrNote": "Orange, T-Mobile, Play: active NR DSS NSA. Plus: LTE anchor only",
       "auctionInfo": "Auction: 2000, refarmed to LTE"
     },
-    "n38": {
-      "nrNote": "Used as LTE B38 and NR n38 NSA",
+    "n41": {
+      "nrNote": "Used as LTE B38 and NR n41 NSA",
       "auctionInfo": "Auction: 2015",
       "validUntil": "Valid until: 25.01.2031"
     },

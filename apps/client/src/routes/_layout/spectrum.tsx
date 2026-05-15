@@ -161,10 +161,10 @@ const BANDS: Band[] = [
     summary: { orange: "2x15 MHz", "t-mobile": "2x15 MHz", plus: "2x15 MHz", play: "2x15 MHz" },
   },
   {
-    id: "n38",
+    id: "n41",
     freqMhz: "TD-2600",
     bandName: "TD-2600",
-    standard: "n38 / B38",
+    standard: "n41 / B38",
     technology: "LTE TDD / NR 5G NSA · TDD",
     nrStatus: "active",
     maxBw: "50 MHz",
