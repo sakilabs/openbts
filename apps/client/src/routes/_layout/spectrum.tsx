@@ -106,7 +106,7 @@ const BANDS: Band[] = [
         rangeStart: 1710,
         rangeEnd: 1785,
         blocks: [
-          { operator: "plus", startMhz: 1710.2, endMhz: 1740 },
+          { operator: "plus", startMhz: 1710, endMhz: 1740 },
           { operator: "t-mobile", startMhz: 1740, endMhz: 1760 },
           { operator: "orange", startMhz: 1760, endMhz: 1770 },
           { operator: "play", startMhz: 1770, endMhz: 1785 },
@@ -117,14 +117,14 @@ const BANDS: Band[] = [
         rangeStart: 1805,
         rangeEnd: 1880,
         blocks: [
-          { operator: "plus", startMhz: 1805.2, endMhz: 1835 },
+          { operator: "plus", startMhz: 1805, endMhz: 1835 },
           { operator: "t-mobile", startMhz: 1835, endMhz: 1855 },
           { operator: "orange", startMhz: 1855, endMhz: 1865 },
           { operator: "play", startMhz: 1865, endMhz: 1880 },
         ],
       },
     ],
-    summary: { plus: "2x29.8 MHz", "t-mobile": "2x20 MHz", play: "2x15 MHz", orange: "2x10 MHz" },
+    summary: { plus: "2x30 MHz", "t-mobile": "2x20 MHz", play: "2x15 MHz", orange: "2x10 MHz" },
   },
   {
     id: "b1",
@@ -140,10 +140,10 @@ const BANDS: Band[] = [
         rangeStart: 1920,
         rangeEnd: 1980,
         blocks: [
-          { operator: "orange", startMhz: 1920.1, endMhz: 1934.9 },
-          { operator: "t-mobile", startMhz: 1935.1, endMhz: 1949.9 },
-          { operator: "plus", startMhz: 1950.1, endMhz: 1964.9 },
-          { operator: "play", startMhz: 1965.1, endMhz: 1979.9 },
+          { operator: "orange", startMhz: 1920, endMhz: 1935 },
+          { operator: "t-mobile", startMhz: 1935, endMhz: 1950 },
+          { operator: "plus", startMhz: 1950, endMhz: 1965 },
+          { operator: "play", startMhz: 1965, endMhz: 1980 },
         ],
       },
       {
@@ -151,14 +151,14 @@ const BANDS: Band[] = [
         rangeStart: 2110,
         rangeEnd: 2170,
         blocks: [
-          { operator: "orange", startMhz: 2110.1, endMhz: 2124.9 },
-          { operator: "t-mobile", startMhz: 2125.1, endMhz: 2139.9 },
-          { operator: "plus", startMhz: 2140.1, endMhz: 2154.9 },
-          { operator: "play", startMhz: 2155.1, endMhz: 2169.9 },
+          { operator: "orange", startMhz: 2110, endMhz: 2125 },
+          { operator: "t-mobile", startMhz: 2125, endMhz: 2140 },
+          { operator: "plus", startMhz: 2140, endMhz: 2155 },
+          { operator: "play", startMhz: 2155, endMhz: 2170 },
         ],
       },
     ],
-    summary: { orange: "2x14.8 MHz", "t-mobile": "2x14.8 MHz", plus: "2x14.8 MHz", play: "2x14.8 MHz" },
+    summary: { orange: "2x15 MHz", "t-mobile": "2x15 MHz", plus: "2x15 MHz", play: "2x15 MHz" },
   },
   {
     id: "n38",
@@ -193,11 +193,9 @@ const BANDS: Band[] = [
         rangeEnd: 748,
         blocks: [
           { operator: "t-mobile", startMhz: 703, endMhz: 708 },
-          { operator: "orange", startMhz: 708, endMhz: 713 },
-          { operator: "orange", startMhz: 713, endMhz: 718 },
+          { operator: "orange", startMhz: 708, endMhz: 718 },
           { operator: "plus", startMhz: 718, endMhz: 723 },
-          { operator: "play", startMhz: 723, endMhz: 728 },
-          { operator: "play", startMhz: 728, endMhz: 733 },
+          { operator: "play", startMhz: 723, endMhz: 733 },
         ],
       },
       {
@@ -206,11 +204,9 @@ const BANDS: Band[] = [
         rangeEnd: 803,
         blocks: [
           { operator: "t-mobile", startMhz: 758, endMhz: 763 },
-          { operator: "orange", startMhz: 763, endMhz: 768 },
-          { operator: "orange", startMhz: 768, endMhz: 773 },
+          { operator: "orange", startMhz: 763, endMhz: 773 },
           { operator: "plus", startMhz: 773, endMhz: 778 },
-          { operator: "play", startMhz: 778, endMhz: 783 },
-          { operator: "play", startMhz: 783, endMhz: 788 },
+          { operator: "play", startMhz: 778, endMhz: 788 },
         ],
       },
     ],
@@ -230,12 +226,9 @@ const BANDS: Band[] = [
         rangeStart: 791,
         rangeEnd: 821,
         blocks: [
-          { operator: "orange", startMhz: 791, endMhz: 796 },
-          { operator: "orange", startMhz: 796, endMhz: 801 },
-          { operator: "t-mobile", startMhz: 801, endMhz: 806 },
-          { operator: "play", startMhz: 806, endMhz: 811 },
-          { operator: "plus", startMhz: 811, endMhz: 816, note: "blocks.viaSferia" },
-          { operator: "t-mobile", startMhz: 816, endMhz: 821, note: "blocks.aukcja2025" },
+          { operator: "orange", startMhz: 791, endMhz: 801 },
+          { operator: "play", startMhz: 801, endMhz: 806 },
+          { operator: "t-mobile", startMhz: 806, endMhz: 821 },
         ],
       },
       {
@@ -243,16 +236,13 @@ const BANDS: Band[] = [
         rangeStart: 832,
         rangeEnd: 862,
         blocks: [
-          { operator: "orange", startMhz: 832, endMhz: 837 },
-          { operator: "orange", startMhz: 837, endMhz: 842 },
-          { operator: "t-mobile", startMhz: 842, endMhz: 847 },
-          { operator: "play", startMhz: 847, endMhz: 852 },
-          { operator: "plus", startMhz: 852, endMhz: 857, note: "blocks.viaSferia" },
-          { operator: "t-mobile", startMhz: 857, endMhz: 862, note: "blocks.aukcja2025" },
+          { operator: "orange", startMhz: 832, endMhz: 842 },
+          { operator: "play", startMhz: 842, endMhz: 847 },
+          { operator: "t-mobile", startMhz: 847, endMhz: 862 },
         ],
       },
     ],
-    summary: { orange: "2x10 MHz", "t-mobile": "2x10 MHz", play: "2x5 MHz", plus: "2x5 MHz" },
+    summary: { "t-mobile": "2x15 MHz", orange: "2x10 MHz", play: "2x5 MHz" },
   },
   {
     id: "b8",
@@ -268,10 +258,10 @@ const BANDS: Band[] = [
         rangeStart: 880,
         rangeEnd: 915,
         blocks: [
-          { operator: "plus", startMhz: 890.1, endMhz: 899.1 },
+          { operator: "plus", startMhz: 885.1, endMhz: 899.1 },
           { operator: "t-mobile", startMhz: 899.1, endMhz: 908.1 },
-          { operator: "orange", startMhz: 908.1, endMhz: 911.6 },
-          { operator: "play", startMhz: 911.6, endMhz: 915 },
+          { operator: "orange", startMhz: 908.1, endMhz: 914.9 },
+          { operator: "play", startMhz: 880.1, endMhz: 885.1 },
         ],
       },
       {
@@ -279,14 +269,14 @@ const BANDS: Band[] = [
         rangeStart: 925,
         rangeEnd: 960,
         blocks: [
-          { operator: "plus", startMhz: 935.1, endMhz: 944.1 },
+          { operator: "plus", startMhz: 930.1, endMhz: 944.1 },
           { operator: "t-mobile", startMhz: 944.1, endMhz: 953.1 },
-          { operator: "orange", startMhz: 953.1, endMhz: 956.6 },
-          { operator: "play", startMhz: 956.6, endMhz: 960 },
+          { operator: "orange", startMhz: 953.1, endMhz: 959.9 },
+          { operator: "play", startMhz: 925.1, endMhz: 930.1 },
         ],
       },
     ],
-    summary: { plus: "2x9 MHz", "t-mobile": "2x9 MHz", orange: "2x3.5 MHz", play: "2x3.4 MHz" },
+    summary: { plus: "2x14 MHz", "t-mobile": "2x9 MHz", orange: "2x6.8 MHz", play: "2x5 MHz" },
   },
   {
     id: "b7",
@@ -302,9 +292,9 @@ const BANDS: Band[] = [
         rangeStart: 2500,
         rangeEnd: 2570,
         blocks: [
-          { operator: "orange", startMhz: 2500, endMhz: 2515 },
-          { operator: "t-mobile", startMhz: 2515, endMhz: 2530 },
-          { operator: "plus", startMhz: 2530, endMhz: 2550 },
+          { operator: "plus", startMhz: 2500, endMhz: 2520 },
+          { operator: "orange", startMhz: 2520, endMhz: 2535 },
+          { operator: "t-mobile", startMhz: 2535, endMhz: 2550 },
           { operator: "play", startMhz: 2550, endMhz: 2570 },
         ],
       },
@@ -313,14 +303,14 @@ const BANDS: Band[] = [
         rangeStart: 2620,
         rangeEnd: 2690,
         blocks: [
-          { operator: "orange", startMhz: 2620, endMhz: 2635 },
-          { operator: "t-mobile", startMhz: 2635, endMhz: 2650 },
-          { operator: "plus", startMhz: 2650, endMhz: 2670 },
+          { operator: "plus", startMhz: 2620, endMhz: 2640 },
+          { operator: "orange", startMhz: 2640, endMhz: 2655 },
+          { operator: "t-mobile", startMhz: 2655, endMhz: 2670 },
           { operator: "play", startMhz: 2670, endMhz: 2690 },
         ],
       },
     ],
-    summary: { orange: "2x15 MHz", "t-mobile": "2x15 MHz", plus: "2x20 MHz", play: "2x20 MHz" },
+    summary: { plus: "2x20 MHz", play: "2x20 MHz", orange: "2x15 MHz", "t-mobile": "2x15 MHz" },
   },
 ];
 
@@ -404,7 +394,7 @@ function SpectrumBar({ row }: { row: SpectrumRow }) {
                 <div key={i} style={{ width: `${pct}%`, flexShrink: 0 }} className="overflow-hidden text-center">
                   {pct > 4 ? (
                     <span className="text-[10px] text-muted-foreground leading-none whitespace-nowrap">
-                      {block.startMhz}-{block.endMhz} MHz
+                      {block.startMhz}-{block.endMhz}
                     </span>
                   ) : null}
                   {noteDisplay && pct > 4 ? (

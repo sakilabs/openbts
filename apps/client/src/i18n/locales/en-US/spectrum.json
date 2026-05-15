@@ -8,10 +8,6 @@
     "lteOnly": "LTE Only",
     "gsmLte": "GSM + LTE"
   },
-  "blocks": {
-    "viaSferia": "via Sferia",
-    "aukcja2025": "auction 2025"
-  },
   "bands": {
     "n78": {
       "nrNote": "NSA with LTE anchor (B3/B1)",
