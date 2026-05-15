@@ -10,6 +10,7 @@ import {
   FileAttachmentIcon,
   FileBracesIcon,
   FileSearchIcon,
+  FullSignalIcon,
   GitBranchIcon,
   InformationCircleIcon,
   LegalDocument01Icon,
@@ -60,6 +61,7 @@ const navMainConfig = [
       { titleKey: "items.deletedEntries", url: "/deleted-entries", icon: Delete02Icon },
       { titleKey: "items.clfExport", url: "/clf-export", icon: Download04Icon },
       { titleKey: "items.analyzer", url: "/analyzer", icon: FileSearchIcon },
+      { titleKey: "items.spectrum", url: "/spectrum", icon: FullSignalIcon },
     ],
   },
 ];

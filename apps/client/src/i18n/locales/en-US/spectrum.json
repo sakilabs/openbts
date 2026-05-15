@@ -1,0 +1,48 @@
+{
+  "title": "Spectrum",
+  "description": "Radio spectrum allocation for mobile operators in Poland.",
+  "maxBwPrefix": "max.",
+  "badges": {
+    "active": "NR Active",
+    "deployment": "NR Assigned",
+    "lteOnly": "LTE Only",
+    "gsmLte": "GSM + LTE"
+  },
+  "blocks": {
+    "viaSferia": "via Sferia",
+    "aukcja2025": "auction 2025"
+  },
+  "bands": {
+    "n78": {
+      "nrNote": "NSA with LTE anchor (B3/B1)",
+      "auctionInfo": "Auction: October 2023",
+      "validUntil": "Valid until: 30.11.2038"
+    },
+    "b3": {
+      "nrNote": "LTE anchor for 5G NSA. Orange, T-Mobile, Play use DSS",
+      "auctionInfo": "Reshuffling completed: 15.02.2026"
+    },
+    "b1": {
+      "nrNote": "Orange, T-Mobile, Play: active NR DSS NSA. Plus: LTE anchor only",
+      "auctionInfo": "Auction: 2000, refarmed to LTE"
+    },
+    "n38": {
+      "nrNote": "Used as LTE B38 and NR n38 NSA",
+      "auctionInfo": "Auction: 2015",
+      "validUntil": "Valid until: 25.01.2031"
+    },
+    "n28": {
+      "auctionInfo": "Auction: March 2025",
+      "validUntil": "Valid until: 31.05.2040"
+    },
+    "b20": {
+      "auctionInfo": "Auction: 2015 + 2025"
+    },
+    "b8": {
+      "auctionInfo": "Reshuffling completed: 2023"
+    },
+    "b7": {
+      "auctionInfo": "Auction: 2015"
+    }
+  }
+}

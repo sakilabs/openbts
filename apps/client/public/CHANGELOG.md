@@ -1,6 +1,12 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-05-15
+
+### 🚀 Enhancements
+
+- Added page with information about spectrum
+
 # 2026-05-11
 
 ### 🚀 Enhancements

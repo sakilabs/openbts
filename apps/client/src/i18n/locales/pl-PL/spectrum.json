@@ -1,0 +1,48 @@
+{
+  "title": "Pasma częstotliwości",
+  "description": "Przydział widma radiowego dla operatorów mobilnych w Polsce.",
+  "maxBwPrefix": "maks.",
+  "badges": {
+    "active": "NR aktywne",
+    "deployment": "NR przyznane",
+    "lteOnly": "Tylko LTE",
+    "gsmLte": "GSM + LTE"
+  },
+  "blocks": {
+    "viaSferia": "przez Sferię",
+    "aukcja2025": "aukcja 2025"
+  },
+  "bands": {
+    "n78": {
+      "nrNote": "NSA z LTE anchor (B3/B1)",
+      "auctionInfo": "Aukcja: październik 2023",
+      "validUntil": "Rezerwacja do: 30.11.2038"
+    },
+    "b3": {
+      "nrNote": "LTE anchor dla 5G NSA. Orange, T-Mobile, Play stosują DSS",
+      "auctionInfo": "Reshuffling zakończony: 15.02.2026"
+    },
+    "b1": {
+      "nrNote": "Orange, T-Mobile, Play: aktywne NR DSS NSA. Plus: tylko LTE anchor",
+      "auctionInfo": "Aukcja: 2000, refarmed do LTE"
+    },
+    "n38": {
+      "nrNote": "Używane jako LTE B38 oraz NR n38 NSA",
+      "auctionInfo": "Aukcja: 2015",
+      "validUntil": "Rezerwacja do: 25.01.2031"
+    },
+    "n28": {
+      "auctionInfo": "Aukcja: marzec 2025",
+      "validUntil": "Ważność: do 31.05.2040"
+    },
+    "b20": {
+      "auctionInfo": "Aukcja: 2015 + 2025"
+    },
+    "b8": {
+      "auctionInfo": "Reshuffling zakończony: 2023"
+    },
+    "b7": {
+      "auctionInfo": "Aukcja: 2015"
+    }
+  }
+}
