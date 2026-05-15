@@ -12,7 +12,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ReloadPrompt } from "@/components/reload-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { loadAdsenseScript, useCookieConsent } from "@/hooks/useCookieConsent";
+import { loadAdsenseScript } from "@/hooks/useCookieConsent";
 import { plPLAuthLocalization } from "@/i18n/authLocalization";
 import i18n from "@/i18n/config";
 import { authClient } from "@/lib/authClient";
@@ -38,13 +38,12 @@ const ADS_PRIVILEGED_ROLES = new Set(["admin", "editor"]);
 
 function AdsLoader() {
   const { data: session, isPending } = authClient.useSession();
-  const { consent } = useCookieConsent();
   const isPrivileged = ADS_PRIVILEGED_ROLES.has(session?.user?.role as string);
 
   useEffect(() => {
-    if (isPending || consent === null || isPrivileged) return;
+    if (isPending || isPrivileged) return;
     loadAdsenseScript();
-  }, [consent, isPrivileged, isPending]);
+  }, [isPrivileged, isPending]);
 
   return null;
 }

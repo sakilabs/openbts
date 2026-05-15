@@ -345,10 +345,10 @@ function SpectrumBar({ row }: { row: SpectrumRow }) {
   const segments = buildSegments(row);
 
   return (
-    <div className="flex items-start gap-3">
-      <div className="w-32 shrink-0 text-[11px] leading-snug text-muted-foreground pt-2 whitespace-pre-line">{row.label}</div>
-      <div className="flex-1 min-w-0 overflow-x-auto">
-        <div className="min-w-64">
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+      <div className="sm:w-32 sm:shrink-0 text-[11px] leading-snug text-muted-foreground sm:pt-2 whitespace-pre-line">{row.label}</div>
+      <div className="flex-1 min-w-0">
+        <div>
           <div className="flex h-9 rounded-md overflow-hidden ring-1 ring-border/50">
             {segments.map((seg, i) => {
               if (seg.kind === "gap") {
