@@ -15,11 +15,13 @@
       "validUntil": "Rezerwacja do: 30.11.2038"
     },
     "b3": {
-      "auctionInfo": "Reshuffling zakończony: 15.02.2026"
+      "auctionInfo": "Reshuffling zakończony: 15.02.2026",
+      "validUntil": "Ważność: do 31.12.2037"
     },
     "b1": {
-      "nrNote": "Orange, T-Mobile, Play: aktywne NR DSS NSA. Plus: tylko LTE anchor",
-      "auctionInfo": "Aukcja: 2000, refarmed do LTE"
+      "nrNote": "Orange, T-Mobile, Play: aktywne NR DSS NSA",
+      "auctionInfo": "Aukcja: 2000, refarmed do LTE",
+      "validUntil": "Ważność: do 31.12.2037"
     },
     "n41": {
       "nrNote": "Używane jako LTE B38 oraz NR n41 NSA",
@@ -31,13 +33,16 @@
       "validUntil": "Ważność: do 31.05.2040"
     },
     "b20": {
-      "auctionInfo": "Aukcja: 2015 + 2025"
+      "auctionInfo": "Aukcja: 2015 + 2025",
+      "validUntil": "Ważność: do 31.05.2040"
     },
     "b8": {
-      "auctionInfo": "Reshuffling zakończony: 2023"
+      "auctionInfo": "Reshuffling zakończony: 2023",
+      "validUntil": "Ważność: do 31.12.2038"
     },
     "b7": {
-      "auctionInfo": "Aukcja: 2015"
+      "auctionInfo": "Aukcja: 2015",
+      "validUntil": "Ważność: do 31.12.2039"
     }
   }
 }
