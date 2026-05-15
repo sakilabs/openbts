@@ -96,8 +96,8 @@ const BANDS: Band[] = [
     id: "b3",
     freqMhz: "1800 MHz",
     bandName: "1800 DCS",
-    standard: "n3 / B3",
-    technology: "LTE / NR 5G DSS · FDD",
+    standard: "B3",
+    technology: "LTE · FDD",
     nrStatus: "lte-only",
     maxBw: "2x75 MHz",
     rows: [
