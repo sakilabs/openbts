@@ -71,7 +71,7 @@ interface Band {
 const BANDS: Band[] = [
   {
     id: "n78",
-    freqMhz: "3600 MHz",
+    freqMhz: "3500 MHz",
     bandName: "IMT-2020",
     standard: "n78",
     technology: "NR 5G NSA · TDD",
