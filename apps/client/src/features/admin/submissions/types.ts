@@ -63,6 +63,7 @@ type SubmissionBase = {
   createdAt: string;
   updatedAt: string;
   reviewed_at: string | null;
+  pending_photos: number | null;
 };
 
 export type SubmissionRow = SubmissionBase & {

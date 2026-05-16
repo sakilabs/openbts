@@ -1,6 +1,5 @@
 import { bands, cells, extraIdentificators, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
 import { StationResponseType } from "@openbts/proto/server";
-import { sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -10,7 +9,9 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { IdParams, JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
-const stationSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
+const stationSchema = createSelectSchema(stations)
+  .omit({ status: true, operator_id: true, location_id: true })
+  .extend({ status: z.enum(["published", "inactive", "pending"]).optional() });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
@@ -54,23 +55,23 @@ const schemaRoute = {
   },
 };
 
-const stationByIdQuery = db.query.stations
-  .findFirst({
-    where: { id: sql.placeholder("id") },
+async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
+  const { id } = req.params;
+
+  const role = req.userSession?.user?.role as string | undefined;
+  const isStaff = ["admin", "editor"].includes(role ?? "");
+
+  const station = await db.query.stations.findFirst({
+    where: { id },
     with: {
       cells: { with: { band: true, gsm: true, umts: true, lte: true, nr: true }, columns: { band_id: false, station_id: false } },
       location: { columns: { point: false, region_id: false }, with: { region: true } },
       operator: true,
       extra_identificators: { columns: { station_id: false } },
     },
-    columns: { status: false, operator_id: false, location_id: false },
-  })
-  .prepare("station_by_id");
+    columns: { operator_id: false, location_id: false, ...(!isStaff && { status: false }) },
+  });
 
-async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
-  const { id } = req.params;
-
-  const station = await stationByIdQuery.execute({ id });
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
   const cells: CellResponse[] = (station.cells as CellWithRats[]).map((cell) => {
@@ -81,6 +82,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
 
   const data = { ...station, cells } as StationResponse & { extra_identificators?: z.infer<typeof extraIdentificatorsSchema> | null };
   if (!data.extra_identificators) delete (data as { extra_identificators?: unknown }).extra_identificators;
+
   return res.send({ data });
 }
 

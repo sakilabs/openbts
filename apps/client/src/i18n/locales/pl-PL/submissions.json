@@ -166,7 +166,12 @@
     "emptyLocation": "Brak zdjęć w tej lokalizacji.",
     "uploadBelow": "Prześlij nowe zdjęcia poniżej.",
     "alreadyAssigned": "Przypisane",
-    "selectedLocationPhotos": "Wybrane zdjęcia przez zgłaszającego"
+    "selectedLocationPhotos": "Wybrane zdjęcia przez zgłaszającego",
+    "pendingCount_one": "{{count}} zdjęcie może być jeszcze przesyłane",
+    "pendingCount_few": "{{count}} zdjęcia mogą być jeszcze przesyłane",
+    "pendingCount_many": "{{count}} zdjęć może być jeszcze przesyłanych",
+    "pendingCount_other": "{{count}} zdjęć może być jeszcze przesyłanych",
+    "pendingHint": "Pojawią się tu za kilka sekund lub minut."
   },
   "mySubmissions": {
     "reviewedBy": "Sprawdzone przez",

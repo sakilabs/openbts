@@ -79,6 +79,8 @@ export type ExtraIdentificator = {
   createdAt: string;
 };
 
+export type StationStatus = "published" | "inactive" | "pending";
+
 export type Station = {
   id: number;
   station_id: string;
@@ -88,6 +90,7 @@ export type Station = {
   updatedAt: string;
   createdAt: string;
   is_confirmed: boolean;
+  status?: StationStatus;
   cells: Cell[];
   location: Location;
   operator: Operator;

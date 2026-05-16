@@ -41,6 +41,10 @@
   "stationsCount_one": "{{count, number}} stacja",
   "stationsCount_few": "{{count, number}} stacje",
   "stationsCount_many": "{{count, number}} stacji",
+  "inactiveBanner": {
+    "title": "Stacja nieaktywna",
+    "description": "Niewidoczna na mapie. Oczekuje na usunięcie z bazy danych"
+  },
   "toast": {
     "locationSaved": "Lokalizacja została zapisana",
     "locationDeleted": "Lokalizacja została usunięta",

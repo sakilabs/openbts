@@ -166,7 +166,10 @@
     "emptyLocation": "No photos at this location yet.",
     "uploadBelow": "Upload new photos below.",
     "alreadyAssigned": "Assigned",
-    "selectedLocationPhotos": "Photos selected by submitter"
+    "selectedLocationPhotos": "Photos selected by submitter",
+    "pendingCount_one": "{{count}} photo may still be uploading",
+    "pendingCount_other": "{{count}} photos may still be uploading",
+    "pendingHint": "They should appear here in a few seconds or minutes."
   },
   "mySubmissions": {
     "reviewedBy": "Reviewed by",

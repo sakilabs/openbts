@@ -59,9 +59,21 @@ type Props = {
   uploadFn?: (files: File[]) => Promise<unknown>;
   hideWhenEmpty?: boolean;
   readOnly?: boolean;
+  pendingPhotos?: number;
 };
 
-export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updateTakenAtFn, setMainFn, uploadFn, hideWhenEmpty, readOnly }: Props) {
+export function PhotosSection({
+  queryKey,
+  fetchFn,
+  deleteFn,
+  updateNoteFn,
+  updateTakenAtFn,
+  setMainFn,
+  uploadFn,
+  hideWhenEmpty,
+  readOnly,
+  pendingPhotos,
+}: Props) {
   const { t } = useTranslation("submissions");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -187,7 +199,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
     if (files.length > 0) uploadMutation.mutate(files);
   }
 
-  if (!isLoading && photos.length === 0 && hideWhenEmpty) return null;
+  if (!isLoading && photos.length === 0 && hideWhenEmpty && !pendingPhotos) return null;
 
   return (
     <>
@@ -208,6 +220,7 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
               <HugeiconsIcon icon={Image01Icon} className="size-4 text-muted-foreground" />
               <span className="font-semibold text-sm">{t("photos.label")}</span>
               {!isLoading ? <span className="text-xs text-muted-foreground">({photos.length})</span> : null}
+              {!isLoading && !!pendingPhotos && photos.length === 0 ? <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" /> : null}
             </CollapsibleTrigger>
           </div>
 
@@ -216,6 +229,23 @@ export function PhotosSection({ queryKey, fetchFn, deleteFn, updateNoteFn, updat
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Spinner />
+              </div>
+            ) : photos.length === 0 && pendingPhotos ? (
+              <div className="p-3 space-y-2">
+                <div className="flex items-start gap-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/30 px-3 py-2.5">
+                  <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-amber-500 animate-pulse" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                      {t("photos.pendingCount", { count: pendingPhotos })}
+                    </span>
+                    <span className="text-xs text-amber-600/70 dark:text-amber-500/60">{t("photos.pendingHint")}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
+                  {Array.from({ length: Math.min(pendingPhotos, 6) }).map((_, i) => (
+                    <div key={i} className="h-36 rounded-lg bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                  ))}
+                </div>
               </div>
             ) : photos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-sm text-muted-foreground gap-2">

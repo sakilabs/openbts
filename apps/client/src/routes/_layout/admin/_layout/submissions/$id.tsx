@@ -131,18 +131,34 @@ function SubmissionDetailPage() {
   if (isLoading || (submission && !isReady)) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="shrink-0 border-b bg-background px-4 py-2 flex items-center justify-between gap-4">
-          <Skeleton className="h-7 w-24 rounded-md" />
-          <Skeleton className="h-5 w-48 rounded-md" />
-          <Skeleton className="h-7 w-40 rounded-md" />
+        <div className="shrink-0 border-b px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+          <Skeleton className="h-8 w-16 rounded-md" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-12 rounded-sm" />
+            <Skeleton className="h-6 w-20 rounded-md" />
+            <Skeleton className="h-5 w-36 rounded-md" />
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Skeleton className="h-8 flex-1 sm:flex-none sm:w-28 rounded-md" />
+            <Skeleton className="h-8 flex-1 sm:flex-none sm:w-28 rounded-md" />
+            <Skeleton className="h-8 flex-1 sm:flex-none sm:w-20 rounded-md" />
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
           <div className="flex flex-wrap gap-3">
-            <div className="flex-[1.5_0_300px]">
-              <Skeleton className="h-52 w-full rounded-xl" />
-            </div>
-            <div className="flex-[2.5_0_500px] max-md:flex-[1_1_auto] max-md:min-w-0 space-y-2">
+            <div className="flex-[2_0_420px] min-w-0 max-md:flex-[1_1_auto] space-y-2">
               <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-36 w-full rounded-xl" />
+              <Skeleton className="h-72 w-full rounded-xl" />
+            </div>
+            <div className="flex-[5_0_500px] min-w-0 max-md:flex-[1_1_auto] space-y-2">
+              <div className="flex flex-wrap gap-1">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <Skeleton key={i} className="h-7 w-14 rounded-full" />
+                ))}
+              </div>
+              <Skeleton className="h-52 w-full rounded-xl" />
+              <Skeleton className="h-52 w-full rounded-xl" />
             </div>
           </div>
         </div>
@@ -474,7 +490,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               isDeleteSubmission={isDeleteSubmission}
             />
             <SubmissionLocationPhotoSelectionsSection photos={submission.locationPhotoSelections} />
-            <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} />
+            <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} pendingPhotos={submission.pending_photos ?? undefined} />
           </div>
 
           <div className="flex-[5_0_500px] min-w-0 max-md:flex-[1_1_auto] space-y-2">

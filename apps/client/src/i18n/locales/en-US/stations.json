@@ -34,6 +34,10 @@
   "stationsCount_few": "{{count, number}} stations",
   "stationsCount_many": "{{count, number}} stations",
   "stationsCount_other": "{{count, number}} stations",
+  "inactiveBanner": {
+    "title": "Inactive station",
+    "description": "Not visible on the map. Pending deletion from the database"
+  },
   "toast": {
     "locationSaved": "Location has been saved",
     "locationDeleted": "Location has been deleted",

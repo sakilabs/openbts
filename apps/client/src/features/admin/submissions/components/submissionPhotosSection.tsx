@@ -1,9 +1,9 @@
 import { PhotosSection } from "@/components/photosSection";
 import { deleteSubmissionPhoto, fetchSubmissionPhotos, updateSubmissionPhotoNote, updateSubmissionPhotoTakenAt } from "@/features/submissions/api";
 
-type Props = { submissionId: string; readOnly?: boolean };
+type Props = { submissionId: string; readOnly?: boolean; pendingPhotos?: number };
 
-export function SubmissionPhotosSection({ submissionId, readOnly }: Props) {
+export function SubmissionPhotosSection({ submissionId, readOnly, pendingPhotos }: Props) {
   return (
     <PhotosSection
       queryKey={["submission-photos", submissionId]}
@@ -13,6 +13,7 @@ export function SubmissionPhotosSection({ submissionId, readOnly }: Props) {
       updateTakenAtFn={(id, takenAt) => updateSubmissionPhotoTakenAt(submissionId, id, takenAt)}
       hideWhenEmpty
       readOnly={readOnly}
+      pendingPhotos={pendingPhotos}
     />
   );
 }

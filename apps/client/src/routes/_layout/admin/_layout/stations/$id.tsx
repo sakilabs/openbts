@@ -1,3 +1,5 @@
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
@@ -581,6 +583,17 @@ function StationDetailForm({
         onSave={handleSaveStation}
         onRevert={handleRevert}
       />
+
+      {station?.status === "inactive" && (
+        <div className="shrink-0 flex items-center gap-2.5 border-b border-amber-500/25 bg-amber-500/8 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
+          <HugeiconsIcon icon={Alert02Icon} className="size-4 shrink-0" />
+          <span className="font-medium">{t("inactiveBanner.title")}</span>
+          <span className="text-amber-700/50 dark:text-amber-400/50 select-none" aria-hidden>
+            ·
+          </span>
+          <span className="text-amber-700/80 dark:text-amber-400/75">{t("inactiveBanner.description")}</span>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-wrap gap-3 p-3">
