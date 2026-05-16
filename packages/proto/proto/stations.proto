@@ -49,6 +49,7 @@ message Station {
 
   string updatedAt = 10;
   string createdAt = 11;
+  optional string status = 12;
 }
 
 message StationsResponse {
