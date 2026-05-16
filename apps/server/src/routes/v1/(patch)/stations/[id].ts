@@ -42,7 +42,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     },
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
-  if (station.extra_address === null && req.body.extra_address !== undefined && req.body.extra_address !== null) throw new ErrorResponse("FORBIDDEN");
+  if (req.body.extra_address !== undefined && req.body.extra_address !== null && req.body.extra_address !== station.extra_address)
+    throw new ErrorResponse("FORBIDDEN");
 
   try {
     const [updated] = await db
