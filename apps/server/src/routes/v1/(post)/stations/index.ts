@@ -14,7 +14,7 @@ import { logger } from "../../../../utils/logger.js";
 import { INSERT_OMIT, lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../utils/ratCellSchemas.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
-const stationsInsertSchema = createInsertSchema(stations);
+const stationsInsertSchema = createInsertSchema(stations).omit({ extra_address: true });
 const stationSchema = createSelectSchema(stations).omit({ status: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true });
 const bandsSchema = createSelectSchema(bands);

@@ -15,6 +15,9 @@ const stationsUpdateSchema = createUpdateSchema(stations)
     createdAt: true,
     updatedAt: true,
   })
+  .extend({
+    extra_address: z.null().optional(),
+  })
   .strict();
 const stationsSelectSchema = createSelectSchema(stations);
 const schemaRoute = {

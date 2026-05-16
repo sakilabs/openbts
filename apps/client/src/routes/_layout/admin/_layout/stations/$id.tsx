@@ -606,8 +606,7 @@ function StationDetailForm({
               onOperatorIdChange={(v) => dispatch({ type: "SET_OPERATOR_ID", payload: v })}
               notes={notes}
               onNotesChange={(v) => dispatch({ type: "SET_NOTES", payload: v })}
-              extraAddress={extraAddress}
-              onExtraAddressChange={(v) => dispatch({ type: "SET_EXTRA_ADDRESS", payload: v })}
+              {...(!isCreateMode && { extraAddress, onExtraAddressChange: (v: string) => dispatch({ type: "SET_EXTRA_ADDRESS", payload: v }) })}
               isConfirmed={isConfirmed}
               onIsConfirmedChange={(v) => dispatch({ type: "SET_CONFIRMED", payload: v })}
               location={location}
