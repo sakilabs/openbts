@@ -15,9 +15,6 @@ const stationsUpdateSchema = createUpdateSchema(stations)
     createdAt: true,
     updatedAt: true,
   })
-  .extend({
-    extra_address: z.null().optional(),
-  })
   .strict();
 const stationsSelectSchema = createSelectSchema(stations);
 const schemaRoute = {
@@ -45,6 +42,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     },
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
+  if (station.extra_address === null && req.body.extra_address !== undefined && req.body.extra_address !== null) throw new ErrorResponse("FORBIDDEN");
 
   try {
     const [updated] = await db
