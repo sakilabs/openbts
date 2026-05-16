@@ -399,6 +399,7 @@ export function toNetMonitor(cell: CellExportData): string | null {
   const lat = cell.latitude ?? "";
   const lon = cell.longitude ?? "";
   const accuracy = 100;
+  const rc = cell.region_code ?? "UNKWN";
   const description = (getDescription(cell) + getTags(cell)).replace(/;/g, ",");
 
   switch (cell.rat) {
@@ -414,7 +415,12 @@ export function toNetMonitor(cell: CellExportData): string | null {
       const cid = cell.cid_long ?? cell.cid ?? 0;
       const psc = "";
       const uarfcn = cell.arfcn ?? "";
-      return `W;${mcc};${mnc};${lac};${cid};${psc};${uarfcn};${lat};${lon};${accuracy};${description}`;
+      const rnc = cell.rnc ?? NTM_UNKNOWN;
+      const uarfcnForDesc = cell.arfcn ?? NTM_UNKNOWN;
+      let umtsDescription = getNTMLocation(cell);
+      const bandCode = getBandCode("UMTS", cell.band_value, cell.band_duplex);
+      if (bandCode) umtsDescription += ` [${rc}:${cell.station_id}:${rnc}:${bandCode}-${uarfcnForDesc}]`;
+      return `W;${mcc};${mnc};${lac};${cid};${psc};${uarfcn};${lat};${lon};${accuracy};${umtsDescription.replace(/;/g, ",")}`;
     }
     case "LTE": {
       const tac = cell.tac ?? 0;
