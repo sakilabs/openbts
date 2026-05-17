@@ -26,7 +26,7 @@ import { computeGnbidLength, makeDetailsRatRefine, validateCellDuplicates } from
 const lteCellsSchema = createSelectSchema(lteCells);
 const nrCellsSchema = createSelectSchema(nrCells);
 
-const ITEMS_CAP = 25;
+const ITEMS_CAP = 50;
 const cellSchema = z.discriminatedUnion("operation", [
   z
     .object({

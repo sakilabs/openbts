@@ -59,11 +59,11 @@
     "rowsSelected_other": "rows selected",
     "uniqueStationCount_one": "{{count, number}} station selected",
     "uniqueStationCount_other": "{{count, number}} stations selected",
-    "stationCapWarning": "You have exceeded the 25 station limit",
+    "stationCapWarning": "You have exceeded the {{count, number}} station limit",
     "reviewBatch": "Review the selected batch",
     "clearSelection": "Clear selection",
     "noStationsResolved": "No stations resolved",
     "reviewBatchDisabledNoStations": "No stations were resolved from the selected rows",
-    "reviewBatchDisabledOverLimit": "Reduce to 25 or fewer stations to continue"
+    "reviewBatchDisabledOverLimit": "Reduce to {{count, number}} or fewer stations to continue"
   }
 }

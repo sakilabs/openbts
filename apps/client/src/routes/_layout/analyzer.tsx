@@ -51,6 +51,7 @@ import { saveDraft } from "@/features/submissions/utils/analyzerDraftStore";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useTablePagination } from "@/hooks/useTablePageSize";
+import { authClient } from "@/lib/authClient";
 import { getBandFromEARFCN, getBandFromUARFCN, getBandMhz } from "@/lib/band-utils";
 import { formatDuration } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -333,6 +334,9 @@ function AnalyzerPage() {
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
   const { isDragging, parsedRows, results, fileName, fileSize, fileFormat, statusFilter, ratFilter, warningFilter, operatorFilter, bandFilter } =
     state;
+  const { data: session } = authClient.useSession();
+  const stationCap = ["editor", "admin"].includes(session?.user?.role ?? "") ? 50 : 25;
+
   const isMobile = useIsMobile();
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
@@ -1044,14 +1048,14 @@ function AnalyzerPage() {
                         ? t("cellAnalyzer:selection.noStationsResolved")
                         : t("cellAnalyzer:selection.uniqueStationCount", { count: uniqueStationCount })}
                     </span>
-                    {uniqueStationCount > 25 ? (
+                    {uniqueStationCount > stationCap ? (
                       <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-destructive">
                         <HugeiconsIcon icon={AlertCircleIcon} className="h-3.5 w-3.5" />
-                        {t("cellAnalyzer:selection.stationCapWarning")}
+                        {t("cellAnalyzer:selection.stationCapWarning", { count: stationCap })}
                       </span>
                     ) : null}
                   </div>
-                  {uniqueStationCount === 0 || uniqueStationCount > 25 ? (
+                  {uniqueStationCount === 0 || uniqueStationCount > stationCap ? (
                     <Tooltip>
                       <TooltipTrigger>
                         <span className="ml-auto shrink-0 pl-4">
@@ -1063,7 +1067,7 @@ function AnalyzerPage() {
                       <TooltipContent>
                         {uniqueStationCount === 0
                           ? t("cellAnalyzer:selection.reviewBatchDisabledNoStations")
-                          : t("cellAnalyzer:selection.reviewBatchDisabledOverLimit")}
+                          : t("cellAnalyzer:selection.reviewBatchDisabledOverLimit", { count: stationCap })}
                       </TooltipContent>
                     </Tooltip>
                   ) : (

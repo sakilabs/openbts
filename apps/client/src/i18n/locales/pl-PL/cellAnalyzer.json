@@ -62,11 +62,11 @@
     "uniqueStationCount_one": "{{count, number}} wybrana stacja",
     "uniqueStationCount_few": "{{count, number}} wybrane stacje",
     "uniqueStationCount_many": "{{count, number}} wybranych stacji",
-    "stationCapWarning": "Przekroczono limit 25 stacji",
+    "stationCapWarning": "Przekroczono limit {{count, number}} stacji",
     "reviewBatch": "Przejrzyj wybraną partię",
     "clearSelection": "Wyczyść zaznaczenie",
     "noStationsResolved": "Brak rozwiązanych stacji",
     "reviewBatchDisabledNoStations": "Żaden z wybranych wierszy nie dał stacji w bazie",
-    "reviewBatchDisabledOverLimit": "Zmniejsz zaznaczenie do 25 lub mniej stacji, aby kontynuować"
+    "reviewBatchDisabledOverLimit": "Zmniejsz zaznaczenie do {{count, number}} lub mniej stacji, aby kontynuować"
   }
 }
