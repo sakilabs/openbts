@@ -6,6 +6,7 @@ import {
   locations,
   lteCells,
   nrCells,
+  operators,
   stationPhotoSelections,
   stations,
   submissions,
@@ -760,6 +761,41 @@ export async function approveSubmissionAction({
                 })),
               )
               .onConflictDoNothing();
+
+            const TMOBILE_MNC = 26002;
+            const ORANGE_MNC = 26003;
+            const stationOperator = await tx
+              .select({ mnc: operators.mnc })
+              .from(stations)
+              .innerJoin(operators, eq(stations.operator_id, operators.id))
+              .where(eq(stations.id, sid))
+              .limit(1)
+              .then((rows) => rows[0] ?? null);
+            const siblingMnc = stationOperator?.mnc === TMOBILE_MNC ? ORANGE_MNC : stationOperator?.mnc === ORANGE_MNC ? TMOBILE_MNC : null;
+
+            if (siblingMnc !== null) {
+              const [siblingStation] = await tx
+                .select({ id: stations.id })
+                .from(stations)
+                .innerJoin(operators, eq(stations.operator_id, operators.id))
+                .where(and(eq(stations.location_id, photoLocationId), eq(operators.mnc, siblingMnc)));
+
+              if (siblingStation) {
+                const siblingExistingMain = await tx.query.stationPhotoSelections.findFirst({
+                  where: { station_id: siblingStation.id, is_main: true },
+                });
+                await tx
+                  .insert(stationPhotoSelections)
+                  .values(
+                    locationPhotoRows.map((lp, i) => ({
+                      station_id: siblingStation.id,
+                      location_photo_id: lp.id,
+                      is_main: !siblingExistingMain && i === 0,
+                    })),
+                  )
+                  .onConflictDoNothing();
+              }
+            }
           }
         }
       }

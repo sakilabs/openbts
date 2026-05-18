@@ -51,7 +51,6 @@ export async function takeStatsSnapshot(): Promise<void> {
       },
     });
 
-  // One summary row per operator (band_id = NULL) with the true deduplicated station count
   await db
     .insert(statsSnapshots)
     .values(

@@ -86,3 +86,13 @@ export function getOperatorSortIndex(mnc: number | null | undefined): number {
   const idx = TOP4_MNCS.indexOf(mnc);
   return idx === -1 ? TOP4_MNCS.length : idx;
 }
+
+export function normalizeCityForMNOName(city: string): string {
+  return (city.split(" - ")[0] ?? city)
+    .trim()
+    .replace(/Ł/g, "L")
+    .replace(/ł/g, "l")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, "");
+}

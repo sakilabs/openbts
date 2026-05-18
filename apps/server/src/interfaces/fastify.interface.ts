@@ -44,7 +44,6 @@ declare module "fastify" {
 
   export interface FastifyContextConfig {
     permissions?: string[];
-    allowLoggedIn?: boolean;
     allowGuestAccess?: boolean;
     proto?: DescMessage;
   }

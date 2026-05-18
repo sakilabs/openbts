@@ -61,6 +61,12 @@ export async function createStation(body: Record<string, unknown>) {
   });
 }
 
+export async function fetchSiblingExtraIds(stationId: number) {
+  return fetchJson<{ data: { networks_id: number | null; networks_name: string | null; mno_name: string | null } }>(
+    `${API_BASE}/stations/${stationId}/extra-identifiers/sibling`,
+  );
+}
+
 export async function updateExtraIds(
   stationId: number,
   body: { networks_id?: number | null; networks_name?: string | null; mno_name?: string | null },

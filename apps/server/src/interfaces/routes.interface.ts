@@ -13,7 +13,6 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
       onRequest?: ((req: FastifyRequest, res: FastifyReply, done: (err?: Error) => void) => void)[];
       config?: {
         permissions?: string[];
-        allowLoggedIn?: boolean;
         allowGuestAccess?: boolean;
         proto?: DescMessage;
       };
@@ -26,7 +25,6 @@ export type Route<T extends RouteGenericInterface = RouteGenericInterface, U = u
       onRequest?: ((req: FastifyRequest, res: FastifyReply, done: (err?: Error) => void) => void)[];
       config?: {
         permissions?: string[];
-        allowLoggedIn?: boolean;
         allowGuestAccess?: boolean;
         proto?: DescMessage;
       };

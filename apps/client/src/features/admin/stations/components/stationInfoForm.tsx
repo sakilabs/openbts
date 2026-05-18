@@ -1,16 +1,22 @@
 import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { OperatorSelect } from "@/components/operator-select";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { fetchSiblingExtraIds } from "@/features/admin/stations/api";
+import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
+import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
-import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
 import type { Location, LocationWithStations, Operator, UkeStation } from "@/types/station";
 
 type StationInfoFormProps = {
@@ -69,10 +75,40 @@ export function StationInfoForm({
   showEditLocationLink,
 }: StationInfoFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
+  const [isFetchingSibling, setIsFetchingSibling] = useState(false);
 
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!networksId;
   const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !networksId && !!mnoName;
   const showSection = showExtraIdsFields || showMnoNameOnly;
+
+  const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
+  const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
+
+  const handleFetchSibling = async () => {
+    if (!stationDbId) return;
+    setIsFetchingSibling(true);
+    try {
+      const { data } = await fetchSiblingExtraIds(stationDbId);
+      if (data.networks_id === null && data.networks_name === null && data.mno_name === null) {
+        toast.info(t("sibling.notFound"));
+        return;
+      }
+      const { networks_id, networks_name, mno_name } = data;
+      if (networks_id !== null) onNetworksIdChange?.(networks_id);
+      if (networks_name) onNetworksNameChange?.(networks_name);
+      const isCurrentTMPL = selectedOperator?.mnc === 26002;
+      if (isCurrentTMPL) {
+        if (!stationId.startsWith("N") && location.city) onMnoNameChange?.(`${normalizeCityForMNOName(location.city)}_${stationId}`);
+      } else {
+        if (mno_name) onMnoNameChange?.(mno_name);
+      }
+      toast.success(t("sibling.fetched"));
+    } catch {
+      toast.error(t("sibling.fetchFailed"));
+    } finally {
+      setIsFetchingSibling(false);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -126,9 +162,17 @@ export function StationInfoForm({
 
       {showSection && (
         <div className="border rounded-xl px-4 py-3 space-y-3">
-          <div className="flex items-center gap-2">
-            <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground" />
-            <span className="font-semibold text-sm">Extra Identificators</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground" />
+              <span className="font-semibold text-sm">Extra Identificators</span>
+            </div>
+            {stationDbId && showExtraIdsFields && (
+              <Button type="button" variant="outline" size="sm" onClick={handleFetchSibling} disabled={isFetchingSibling} className="gap-1.5">
+                <SiblingLogo className="h-3.5 w-auto shrink-0" />
+                {isFetchingSibling ? t("sibling.fetching") : t("sibling.fetchFrom", { brand: siblingBrand })}
+              </Button>
+            )}
           </div>
           {showExtraIdsFields && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -54,7 +54,6 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
 const getAccountProfile: Route<object, ResponseBody> = {
   url: "/account/profile",
   method: "GET",
-  config: { allowLoggedIn: true },
   schema: schemaRoute,
   handler,
 };

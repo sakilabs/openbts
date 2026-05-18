@@ -202,5 +202,12 @@
     "applyDirectlyConfirmTitle": "Wysłać bezpośrednio do bazy?",
     "applyDirectlyConfirmDesc": "Tej operacji nie można cofnąć. Spowoduje to zaktualizowanie bazy bez przejścia przez zgłoszenia."
   },
-  "unsavedChangesConfirm": "Masz niezapisane zmiany. Czy na pewno chcesz opuścić stronę?"
+  "unsavedChangesConfirm": "Masz niezapisane zmiany. Czy na pewno chcesz opuścić stronę?",
+  "sibling": {
+    "fetchFrom": "Pobierz z {{brand}}",
+    "fetching": "Pobieranie...",
+    "notFound": "Nie znaleziono stacji siostrzanej",
+    "fetched": "Identyfikatory pobrane ze stacji siostrzanej",
+    "fetchFailed": "Nie udało się pobrać identyfikatorów"
+  }
 }

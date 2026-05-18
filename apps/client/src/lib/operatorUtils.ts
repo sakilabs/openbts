@@ -4,6 +4,7 @@ export {
   normalizeOperatorName,
   getMnoBrand,
   getOperatorSortIndex,
+  normalizeCityForMNOName,
   TOP4_MNCS,
   EXTRA_IDENTIFICATORS_MNCS,
   MNO_NAME_ONLY_MNCS,

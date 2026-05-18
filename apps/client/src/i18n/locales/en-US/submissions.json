@@ -199,5 +199,12 @@
     "applyDirectlyConfirmTitle": "Apply changes directly?",
     "applyDirectlyConfirmDesc": "This will immediately update the database without going through the submission review process. This action cannot be reverted."
   },
-  "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to leave?"
+  "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to leave?",
+  "sibling": {
+    "fetchFrom": "Fetch from {{brand}}",
+    "fetching": "Fetching...",
+    "notFound": "No sibling station found",
+    "fetched": "Identifiers fetched from sibling station",
+    "fetchFailed": "Failed to fetch identifiers"
+  }
 }

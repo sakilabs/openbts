@@ -87,7 +87,6 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 const patchAccountProfile: Route<ReqBody, ResponseBody> = {
   url: "/account/profile",
   method: "PATCH",
-  config: { allowLoggedIn: true },
   schema: schemaRoute,
   handler,
 };

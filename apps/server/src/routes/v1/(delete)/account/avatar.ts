@@ -45,7 +45,6 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<null>>) {
 const deleteAvatar: Route<Record<string, never>, null> = {
   url: "/account/avatar",
   method: "DELETE",
-  config: { allowLoggedIn: true },
   schema: schemaRoute,
   handler,
 };

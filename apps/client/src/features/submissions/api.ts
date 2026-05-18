@@ -187,6 +187,12 @@ export async function deleteSubmission(id: string): Promise<void> {
   await fetchJson(`${API_BASE}/submissions/${id}`, { method: "DELETE" });
 }
 
+export async function fetchSiblingExtraIds(stationId: number) {
+  return fetchJson<{ data: { networks_id: number | null; networks_name: string | null; mno_name: string | null } }>(
+    `${API_BASE}/stations/${stationId}/extra-identifiers/sibling`,
+  );
+}
+
 export async function fetchSubmissionForEdit(id: string) {
   return fetchApiData<SubmissionDetail>(`submissions/${id}`);
 }

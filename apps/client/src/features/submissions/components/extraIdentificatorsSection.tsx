@@ -1,12 +1,18 @@
 import { Globe02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
+import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
+import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
 
 import type { SearchStation } from "../api";
+import { fetchSiblingExtraIds } from "../api";
 
 export interface ExtraIdentificatorsSectionProps {
   selectedStation: SearchStation | null;
@@ -28,6 +34,7 @@ export function ExtraIdentificatorsSection({
   onMnoNameChange,
 }: ExtraIdentificatorsSectionProps) {
   const { t } = useTranslation(["submissions", "common"]);
+  const [isFetchingSibling, setIsFetchingSibling] = useState(false);
 
   if (!selectedStation) return null;
 
@@ -37,11 +44,47 @@ export function ExtraIdentificatorsSection({
 
   if (!showExtraIdFields && !showMnoNameOnly) return null;
 
+  const siblingBrand = operatorMnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
+  const SiblingLogo = operatorMnc === 26002 ? OrangeIcon : TMobileIcon;
+
+  const handleFetchSibling = async () => {
+    setIsFetchingSibling(true);
+    try {
+      const { data } = await fetchSiblingExtraIds(selectedStation.id);
+      if (data.networks_id === null && data.networks_name === null && data.mno_name === null) {
+        toast.info(t("sibling.notFound"));
+        return;
+      }
+      if (data.networks_id !== null) onNetworksIdChange(data.networks_id);
+      if (data.networks_name) onNetworksNameChange(data.networks_name);
+      const isCurrentTMPL = operatorMnc === 26002;
+      if (isCurrentTMPL) {
+        if (!selectedStation.station_id.startsWith("N") && selectedStation.location?.city)
+          onMnoNameChange(`${normalizeCityForMNOName(selectedStation.location.city)}_${selectedStation.station_id}`);
+      } else {
+        if (data.mno_name) onMnoNameChange(data.mno_name);
+      }
+      toast.success(t("sibling.fetched"));
+    } catch {
+      toast.error(t("sibling.fetchFailed"));
+    } finally {
+      setIsFetchingSibling(false);
+    }
+  };
+
   return (
     <div className="border rounded-xl px-4 py-3 space-y-3">
-      <div className="flex items-center gap-2">
-        <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground" />
-        <span className="font-semibold text-sm">Extra Identificators</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground" />
+          <span className="font-semibold text-sm">Extra Identificators</span>
+        </div>
+        {showExtraIdFields && (
+          <Button type="button" variant="outline" size="sm" onClick={handleFetchSibling} disabled={isFetchingSibling} className="gap-1.5">
+            <SiblingLogo className="h-3.5 w-auto shrink-0" />
+            {isFetchingSibling ? t("sibling.fetching") : t("sibling.fetchFrom", { brand: siblingBrand })}
+          </Button>
+        )}
       </div>
       {showExtraIdFields && (
         <div className="grid grid-cols-2 gap-3">

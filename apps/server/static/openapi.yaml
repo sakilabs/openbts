@@ -1050,6 +1050,36 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /stations/{station_id}/extra-identifiers/sibling:
+    get:
+      tags: [Stations]
+      summary: Get extra identifiers from sibling station
+      description: Finds the sibling station (OPL<->TMPL) at the same location using eNBID matching and returns its extra identifiers
+      security:
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [networks_id, networks_name, mno_name]
+                    properties:
+                      networks_id: { type: integer, nullable: true }
+                      networks_name: { type: string, nullable: true }
+                      mno_name: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /stations/{station_id}/extra-identifiers:
     patch:
       tags: [Stations]

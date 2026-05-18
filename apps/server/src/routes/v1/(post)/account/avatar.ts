@@ -110,7 +110,6 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
 const uploadAvatar: Route<Record<string, never>, ResponseBody> = {
   url: "/account/avatar",
   method: "POST",
-  config: { allowLoggedIn: true },
   schema: schemaRoute,
   handler,
 };
