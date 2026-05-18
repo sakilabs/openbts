@@ -380,6 +380,18 @@ function mapInstanceReducer(state: MapInstanceState, action: MapInstanceAction):
   }
 }
 
+function checkWebGL2Support(): boolean {
+  if (typeof document === "undefined") return true;
+  try {
+    const canvas = document.createElement("canvas");
+    return !!canvas.getContext("webgl2");
+  } catch {
+    return false;
+  }
+}
+
+const webgl2Supported = checkWebGL2Support();
+
 const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
   { children, theme: themeProp, className, styles, initialMapStyle = "carto", projection, viewport, onViewportChange, ...props },
   ref,
@@ -396,6 +408,7 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     const saved = localStorage.getItem("map-style");
     return (saved as MapStyle) || initialMapStyle;
   });
+  const { t } = useTranslation("main");
   const currentStyleRef = useRef<MapStyleOption | null>(null);
   const styleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const internalUpdateRef = useRef(false);
@@ -602,6 +615,15 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
     }),
     [mapInstance, isLoaded, isStyleLoaded, mapStyle, handleSetMapStyle],
   );
+
+  if (!webgl2Supported) {
+    return (
+      <div className={cn("relative w-full h-full flex flex-col items-center justify-center gap-2 bg-muted/20", className)}>
+        <p className="font-medium">{t("webgl.title")}</p>
+        <p className="text-sm text-muted-foreground text-center max-w-xs">{t("webgl.description")}</p>
+      </div>
+    );
+  }
 
   return (
     <MapContext.Provider value={contextValue}>

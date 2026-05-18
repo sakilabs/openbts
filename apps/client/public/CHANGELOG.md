@@ -8,6 +8,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Photos uploaded in a NetWorks' station submission are now automatically added to the sibling station at the same location on approval
 - Added "Fetch from sibling" button in the Extra Identificators section. It pre-fills networks ID, networks name, and MNO name from the paired T-Mobile/Orange station at the same location
 
+### 🩹 Fixes
+
+- Map no longer crashes on devices without WebGL2 support or with it disabled (e.g. iOS Lockdown Mode). It shows a "Map unavailable" message instead
+
 # 2026-05-15
 
 ### 🚀 Enhancements

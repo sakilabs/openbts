@@ -116,6 +116,10 @@
     "photosSoon": "Coming soon",
     "privateOwnerNotice": "Your profile is set to private. Only you can see this page."
   },
+  "webgl": {
+    "title": "Map unavailable",
+    "description": "Your device does not support WebGL2 or has it disabled. Enable it in your browser settings to use the map."
+  },
   "deletedEntries": {
     "title": "Deleted Entries",
     "subtitle": "View entries removed during UKE imports",
