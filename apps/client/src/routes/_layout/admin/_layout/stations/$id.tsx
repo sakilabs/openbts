@@ -22,6 +22,7 @@ import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { setStationPhotoSelection, uploadLocationPhotos } from "@/features/station-details/api";
 import { PhotoUploadSection } from "@/features/submissions/components/photoUploadSection";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { ukePermitsToCells } from "@/features/submissions/utils/cells";
 import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
 import { useSettings } from "@/hooks/useSettings";
 import { fetchApiData, showApiError } from "@/lib/api";
@@ -352,23 +353,14 @@ function StationDetailForm({
         });
       }
 
-      const seen = new Set<string>();
-      const newCells: LocalCell[] = [];
-      for (const permit of ukeStation.permits) {
-        if (!permit.band || permit.band.rat === "IOT") continue;
-        const key = `${permit.band.rat}-${permit.band.id}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        newCells.push({
-          _localId: crypto.randomUUID(),
-          rat: permit.band.rat as (typeof RAT_ORDER)[number],
-          band_id: permit.band.id,
-          is_confirmed: false,
-          notes: "",
-          details: {},
-        });
-      }
-      newCells.sort((a, b) => RAT_ORDER.indexOf(a.rat) - RAT_ORDER.indexOf(b.rat));
+      const newCells: LocalCell[] = ukePermitsToCells(ukeStation.permits).map((cell) => ({
+        _localId: cell.id,
+        rat: cell.rat,
+        band_id: cell.band_id!,
+        is_confirmed: false,
+        notes: "",
+        details: {},
+      }));
       setLocalCells(newCells);
       setEnabledRats([...new Set(newCells.map((c) => c.rat))]);
       dispatch({ type: "CLEAR_DELETED" });

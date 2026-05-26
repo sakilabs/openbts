@@ -84,7 +84,46 @@ export function getCellDiffStatus(cell: ProposedCellForm, originalsMap: Map<numb
   return isCellModified(cell, original) ? "modified" : "unchanged";
 }
 
-export function ukePermitsToCells(permits: { band_id: number; band?: { rat: string; id: number } | null }[]): ProposedCellForm[] {
+type UkePermitForCells = {
+  band_id: number;
+  band?: { rat: string; id: number } | null;
+  source?: "permits" | "device_registry";
+  sectors?: unknown[];
+};
+
+export function computeUkeBandCounts(permits: UkePermitForCells[]): Map<string, number> {
+  const drCountsByBand = new Map<string, number>();
+  let minDrCount = Infinity;
+  for (const permit of permits) {
+    if (!permit.band || permit.band.rat === "IOT") continue;
+    if (permit.source !== "device_registry") continue;
+    const key = `${permit.band.rat}-${permit.band.id}`;
+    if (!drCountsByBand.has(key)) {
+      const count = permit.sectors?.length ?? 0;
+      drCountsByBand.set(key, count);
+      if (count > 0 && count < minDrCount) minDrCount = count;
+    }
+  }
+
+  const fallbackCount = minDrCount === Infinity ? 1 : Math.max(minDrCount, 1);
+
+  const result = new Map<string, number>();
+  const seen = new Set<string>();
+  for (const permit of permits) {
+    if (!permit.band || permit.band.rat === "IOT") continue;
+    const key = `${permit.band.rat}-${permit.band.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    if (drCountsByBand.has(key)) result.set(key, Math.max(drCountsByBand.get(key)!, 1));
+    else result.set(key, fallbackCount);
+  }
+
+  return result;
+}
+
+export function ukePermitsToCells(permits: UkePermitForCells[]): ProposedCellForm[] {
+  const bandCounts = computeUkeBandCounts(permits);
   const seen = new Set<string>();
   const cells: ProposedCellForm[] = [];
 
@@ -94,12 +133,15 @@ export function ukePermitsToCells(permits: { band_id: number; band?: { rat: stri
     if (seen.has(key)) continue;
     seen.add(key);
 
-    cells.push({
-      id: generateCellId(),
-      rat: permit.band.rat as ProposedCellForm["rat"],
-      band_id: permit.band.id,
-      details: {},
-    });
+    const count = bandCounts.get(key) ?? 1;
+    for (let i = 0; i < count; i++) {
+      cells.push({
+        id: generateCellId(),
+        rat: permit.band.rat as ProposedCellForm["rat"],
+        band_id: permit.band.id,
+        details: {},
+      });
+    }
   }
 
   cells.sort((a, b) => RAT_ORDER.indexOf(a.rat) - RAT_ORDER.indexOf(b.rat));
