@@ -82,8 +82,7 @@ function getIpSubnet(ip: string | undefined): string {
     // IPv6: Use first 64 bits (4 groups)
     if (ip.includes(":")) {
       const groups = ip.split(":");
-      if (groups.length >= 4 && groups[0] && groups[1] && groups[2] && groups[3])
-        return `${groups[0]}:${groups[1]}:${groups[2]}:${groups[3]}::`;
+      if (groups.length >= 4 && groups[0] && groups[1] && groups[2] && groups[3]) return `${groups[0]}:${groups[1]}:${groups[2]}:${groups[3]}::`;
     }
 
     return "unknown";

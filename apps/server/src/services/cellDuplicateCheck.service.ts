@@ -1,5 +1,5 @@
 import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, isNull, ne, notInArray, or } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { ErrorResponse } from "../errors.js";
@@ -76,7 +76,7 @@ export async function checkLTEDuplicate(enbid: number, clid: number, operatorId:
 interface CellDuplicateEntry {
   rat: string;
   details: Record<string, unknown>;
-  excludeCellId?: number;
+  excludeCellIds?: number[];
 }
 
 export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[], operatorId: number): Promise<void> {
@@ -91,7 +91,8 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
       (async () => {
         const conditions = gsmEntries.map((e) => {
           const d = e.details as { lac: number; cid: number };
-          return and(eq(gsmCells.lac, d.lac), eq(gsmCells.cid, d.cid), e.excludeCellId ? ne(gsmCells.cell_id, e.excludeCellId) : undefined);
+          const ids = e.excludeCellIds ?? [];
+          return and(eq(gsmCells.lac, d.lac), eq(gsmCells.cid, d.cid), ids.length > 0 ? notInArray(gsmCells.cell_id, ids) : undefined);
         });
 
         const existing = await db
@@ -116,7 +117,8 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
       (async () => {
         const conditions = umtsEntries.map((e) => {
           const d = e.details as { rnc: number; cid: number };
-          return and(eq(umtsCells.rnc, d.rnc), eq(umtsCells.cid, d.cid), e.excludeCellId ? ne(umtsCells.cell_id, e.excludeCellId) : undefined);
+          const ids = e.excludeCellIds ?? [];
+          return and(eq(umtsCells.rnc, d.rnc), eq(umtsCells.cid, d.cid), ids.length > 0 ? notInArray(umtsCells.cell_id, ids) : undefined);
         });
 
         const existing = await db
@@ -141,7 +143,8 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
       (async () => {
         const conditions = lteEntries.map((e) => {
           const d = e.details as { enbid: number; clid: number };
-          return and(eq(lteCells.enbid, d.enbid), eq(lteCells.clid, d.clid), e.excludeCellId ? ne(lteCells.cell_id, e.excludeCellId) : undefined);
+          const ids = e.excludeCellIds ?? [];
+          return and(eq(lteCells.enbid, d.enbid), eq(lteCells.clid, d.clid), ids.length > 0 ? notInArray(lteCells.cell_id, ids) : undefined);
         });
 
         const existing = await db

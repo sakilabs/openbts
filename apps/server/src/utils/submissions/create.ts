@@ -164,9 +164,10 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
 
   const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
   if (operatorId && input.cells && input.cells.length > 0) {
+    const allModifiedCellIds = input.cells.map((c) => c.target_cell_id).filter((id): id is number => id != null);
     const dupEntries = input.cells
       .filter((cell) => cell.details && cell.operation !== "delete")
-      .map((cell) => ({ rat: cell.rat!, details: cell.details as Record<string, unknown>, excludeCellId: cell.target_cell_id ?? undefined }));
+      .map((cell) => ({ rat: cell.rat!, details: cell.details as Record<string, unknown>, excludeCellIds: allModifiedCellIds }));
     if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, operatorId);
   }
 

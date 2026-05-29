@@ -25,7 +25,10 @@ Zależy mi na nowych telefonach, w razie w, jakbym coś zepsuła to żeby można
 ### Timeline
 
 Pracę nad aplikacją chcę zacząć w okolicach czerwca/lipca oraz wypuscić przynajmniej jakąś większą część jeszcze w tym roku. Niestety, taka aplikacja pochłonie wiele czasu więc trzeba liczyć się z tym, że development takiej aplikacji długo potrwa.
-Jednakże jestem optymistyczna i mam nadzieje że w tym roku będzie skończona w znacznej większości.
+
+## Update 1
+
+Dzięki za wpłacenie 2000 zł. Za te pieniądze został już zakupiony Pixel 10 (w ostatecznej cenie 2180 zł) - do pełnego opłacenie Pixela brakuje 180zł. Teraz zebrane pieniądze będą szły na Nothinga. Dziękuje za wszystkie wpłaty przez ostatnie 3 tygodnie!
 
 ### Jak zrobić wpłatę?
 
