@@ -76,10 +76,14 @@ export async function checkLTEDuplicate(enbid: number, clid: number, operatorId:
 interface CellDuplicateEntry {
   rat: string;
   details: Record<string, unknown>;
-  excludeCellIds?: number[];
+  excludeCellId?: number;
 }
 
-export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[], operatorId: number): Promise<void> {
+export async function checkCellDuplicatesBatch(
+  cellEntries: CellDuplicateEntry[],
+  operatorId: number,
+  siblingExcludeIds: number[] = [],
+): Promise<void> {
   const gsmEntries = cellEntries.filter((c) => c.rat === "GSM");
   const umtsEntries = cellEntries.filter((c) => c.rat === "UMTS");
   const lteEntries = cellEntries.filter((c) => c.rat === "LTE");
@@ -91,8 +95,7 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
       (async () => {
         const conditions = gsmEntries.map((e) => {
           const d = e.details as { lac: number; cid: number };
-          const ids = e.excludeCellIds ?? [];
-          return and(eq(gsmCells.lac, d.lac), eq(gsmCells.cid, d.cid), ids.length > 0 ? notInArray(gsmCells.cell_id, ids) : undefined);
+          return and(eq(gsmCells.lac, d.lac), eq(gsmCells.cid, d.cid), e.excludeCellId ? ne(gsmCells.cell_id, e.excludeCellId) : undefined);
         });
 
         const existing = await db
@@ -100,7 +103,13 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
           .from(gsmCells)
           .innerJoin(cells, eq(cells.id, gsmCells.cell_id))
           .innerJoin(stations, eq(stations.id, cells.station_id))
-          .where(and(eq(stations.operator_id, operatorId), or(...conditions)));
+          .where(
+            and(
+              eq(stations.operator_id, operatorId),
+              siblingExcludeIds.length > 0 ? notInArray(gsmCells.cell_id, siblingExcludeIds) : undefined,
+              or(...conditions),
+            ),
+          );
 
         if (existing.length > 0) {
           const dup = existing[0]!;
@@ -117,8 +126,7 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
       (async () => {
         const conditions = umtsEntries.map((e) => {
           const d = e.details as { rnc: number; cid: number };
-          const ids = e.excludeCellIds ?? [];
-          return and(eq(umtsCells.rnc, d.rnc), eq(umtsCells.cid, d.cid), ids.length > 0 ? notInArray(umtsCells.cell_id, ids) : undefined);
+          return and(eq(umtsCells.rnc, d.rnc), eq(umtsCells.cid, d.cid), e.excludeCellId ? ne(umtsCells.cell_id, e.excludeCellId) : undefined);
         });
 
         const existing = await db
@@ -126,7 +134,13 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
           .from(umtsCells)
           .innerJoin(cells, eq(cells.id, umtsCells.cell_id))
           .innerJoin(stations, eq(stations.id, cells.station_id))
-          .where(and(eq(stations.operator_id, operatorId), or(...conditions)));
+          .where(
+            and(
+              eq(stations.operator_id, operatorId),
+              siblingExcludeIds.length > 0 ? notInArray(umtsCells.cell_id, siblingExcludeIds) : undefined,
+              or(...conditions),
+            ),
+          );
 
         if (existing.length > 0) {
           const dup = existing[0]!;
@@ -143,8 +157,7 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
       (async () => {
         const conditions = lteEntries.map((e) => {
           const d = e.details as { enbid: number; clid: number };
-          const ids = e.excludeCellIds ?? [];
-          return and(eq(lteCells.enbid, d.enbid), eq(lteCells.clid, d.clid), ids.length > 0 ? notInArray(lteCells.cell_id, ids) : undefined);
+          return and(eq(lteCells.enbid, d.enbid), eq(lteCells.clid, d.clid), e.excludeCellId ? ne(lteCells.cell_id, e.excludeCellId) : undefined);
         });
 
         const existing = await db
@@ -152,7 +165,13 @@ export async function checkCellDuplicatesBatch(cellEntries: CellDuplicateEntry[]
           .from(lteCells)
           .innerJoin(cells, eq(cells.id, lteCells.cell_id))
           .innerJoin(stations, eq(stations.id, cells.station_id))
-          .where(and(eq(stations.operator_id, operatorId), or(...conditions)));
+          .where(
+            and(
+              eq(stations.operator_id, operatorId),
+              siblingExcludeIds.length > 0 ? notInArray(lteCells.cell_id, siblingExcludeIds) : undefined,
+              or(...conditions),
+            ),
+          );
 
         if (existing.length > 0) {
           const dup = existing[0]!;
