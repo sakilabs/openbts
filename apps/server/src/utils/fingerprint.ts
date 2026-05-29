@@ -11,24 +11,7 @@ interface BrowserProperties {
   dnt: string;
 }
 
-export function generateFingerprint(req: FastifyRequest): string | null {
-  const headers = req.headers;
-
-  const getHeaderValue = (value: string | string[] | undefined): string => {
-    if (Array.isArray(value)) return value.join(",");
-    return value || "unknown";
-  };
-
-  const properties: BrowserProperties = {
-    userAgent: getHeaderValue(headers["user-agent"]),
-    language: getHeaderValue(headers["accept-language"]),
-    platform: getHeaderValue(headers["sec-ch-ua-platform"]),
-    acceptHeaders: getHeaderValue(headers.accept),
-    acceptEncoding: getHeaderValue(headers["accept-encoding"]),
-    secChUa: getHeaderValue(headers["sec-ch-ua"]),
-    dnt: getHeaderValue(headers.dnt),
-  };
-
+function computeFingerprint(properties: BrowserProperties, ip: string | undefined): string | null {
   if (properties.userAgent === "unknown" || properties.acceptHeaders === "unknown") return null;
 
   const hasBrowserSignal = properties.language !== "unknown" || properties.secChUa !== "unknown";
@@ -38,10 +21,52 @@ export function generateFingerprint(req: FastifyRequest): string | null {
   if (knownCount < 3) return null;
 
   const browserFingerprint = Object.values(properties).join("|");
-  const ipSubnet = getIpSubnet(req.ip);
+  const ipSubnet = getIpSubnet(ip);
   const combined = `${browserFingerprint}:${ipSubnet}`;
 
   return createHash("sha256").update(combined).digest("hex").substring(0, 12);
+}
+
+export function generateFingerprint(req: FastifyRequest): string | null {
+  const headers = req.headers;
+
+  const get = (value: string | string[] | undefined): string => {
+    if (Array.isArray(value)) return value.join(",");
+    return value || "unknown";
+  };
+
+  return computeFingerprint(
+    {
+      userAgent: get(headers["user-agent"]),
+      language: get(headers["accept-language"]),
+      platform: get(headers["sec-ch-ua-platform"]),
+      acceptHeaders: get(headers.accept),
+      acceptEncoding: get(headers["accept-encoding"]),
+      secChUa: get(headers["sec-ch-ua"]),
+      dnt: get(headers.dnt),
+    },
+    req.ip,
+  );
+}
+
+export function generateFingerprintFromWebRequest(req: Request): string | null {
+  const get = (key: string): string => req.headers.get(key) || "unknown";
+
+  const forwarded = req.headers.get("x-forwarded-for");
+  const ip = (forwarded ? forwarded.split(",")[0]?.trim() : null) ?? req.headers.get("x-real-ip") ?? undefined;
+
+  return computeFingerprint(
+    {
+      userAgent: get("user-agent"),
+      language: get("accept-language"),
+      platform: get("sec-ch-ua-platform"),
+      acceptHeaders: get("accept"),
+      acceptEncoding: get("accept-encoding"),
+      secChUa: get("sec-ch-ua"),
+      dnt: get("dnt"),
+    },
+    ip,
+  );
 }
 
 function getIpSubnet(ip: string | undefined): string {
@@ -57,7 +82,8 @@ function getIpSubnet(ip: string | undefined): string {
     // IPv6: Use first 64 bits (4 groups)
     if (ip.includes(":")) {
       const groups = ip.split(":");
-      if (groups.length >= 4) return `${groups[0]}:${groups[1]}:${groups[2]}:${groups[3]}::`;
+      if (groups.length >= 4 && groups[0] && groups[1] && groups[2] && groups[3])
+        return `${groups[0]}:${groups[1]}:${groups[2]}:${groups[3]}::`;
     }
 
     return "unknown";
