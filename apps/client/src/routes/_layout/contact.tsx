@@ -45,14 +45,14 @@ const teamMembers: TeamMember[] = [
 ];
 
 const editors: TeamMember[] = [
-  {
-    name: "Adam Kukulski",
-    role: "Edytor bazy danych",
-    description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
-    initials: "A",
-    avatarUrl: "/uploads/62297db8-6093-4477-861c-637973a16ff3.webp",
-    links: [{ icon: Mail01Icon, label: "a.kukulski@btsearch.pl", href: "mailto:a.kukulski@btsearch.pl" }],
-  },
+  // {
+  //   name: "Adam Kukulski",
+  //   role: "Edytor bazy danych",
+  //   description: "Logi lub zdjęcia potwierdzające zgłoszenie, pytania związane z danymi w bazie.",
+  //   initials: "A",
+  //   avatarUrl: "/uploads/62297db8-6093-4477-861c-637973a16ff3.webp",
+  //   links: [{ icon: Mail01Icon, label: "a.kukulski@btsearch.pl", href: "mailto:a.kukulski@btsearch.pl" }],
+  // },
   {
     name: "Michał Deneka",
     role: "Edytor bazy danych",
@@ -81,8 +81,8 @@ const editors: TeamMember[] = [
     links: [
       {
         icon: Mail01Icon,
-        label: "g.bilnik@btsearch.pl",
-        href: "mailto:g.bilnik@btsearch.pl",
+        label: "gabrielo@btsearch.pl",
+        href: "mailto:gabrielo@btsearch.pl",
       },
     ],
   },
