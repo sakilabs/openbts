@@ -46,7 +46,7 @@ function groupPermitsByRat(permits: UkePermit[]): Map<string, UkePermit[]> {
     });
   }
 
-  const ratOrder = ["GSM", "UMTS", "LTE", "NR", "CDMA", "IOT", "OTHER"];
+  const ratOrder = ["NR", "LTE", "UMTS", "CDMA", "GSM", "IOT", "OTHER"];
   const sorted = new Map<string, UkePermit[]>();
   for (const rat of ratOrder) {
     if (groups.has(rat)) {

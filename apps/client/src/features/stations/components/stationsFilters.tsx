@@ -24,10 +24,10 @@ import { cn, toggleValue } from "@/lib/utils";
 import type { Operator, Region, StationFilters } from "@/types/station";
 
 const RAT_OPTIONS = [
-  { value: "GSM", label: "GSM", gen: "2G" },
-  { value: "UMTS", label: "UMTS", gen: "3G" },
-  { value: "LTE", label: "LTE", gen: "4G" },
   { value: "NR", label: "NR", gen: "5G" },
+  { value: "LTE", label: "LTE", gen: "4G" },
+  { value: "UMTS", label: "UMTS", gen: "3G" },
+  { value: "GSM", label: "GSM", gen: "2G" },
   { value: "iot", label: "IoT", gen: "NB" },
 ] as const;
 

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import type { StatsSummary } from "../api";
 
-const RAT_ORDER = ["LTE", "NR", "UMTS", "GSM", "CDMA", "IOT"];
+const RAT_ORDER = ["NR", "LTE", "UMTS", "CDMA", "GSM", "IOT"];
 
 function magnitudeFloor(n: number): number {
   if (n <= 0) return 0;

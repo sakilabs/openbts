@@ -1,7 +1,7 @@
 import { AirdropIcon, FlashIcon, RadioIcon, SignalFull02Icon, SmartPhone01Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 
-export const RAT_ORDER = ["GSM", "UMTS", "LTE", "NR"] as const;
+export const RAT_ORDER = ["NR", "LTE", "UMTS", "GSM"] as const;
 
 export type RatType = (typeof RAT_ORDER)[number];
 
@@ -16,10 +16,10 @@ export const RAT_ICONS: Record<string, IconSvgElement> = {
 };
 
 export const RAT_OPTIONS: { value: RatType; label: string; gen: string }[] = [
-  { value: "GSM", label: "GSM", gen: "2G" },
-  { value: "UMTS", label: "UMTS", gen: "3G" },
-  { value: "LTE", label: "LTE", gen: "4G" },
   { value: "NR", label: "NR", gen: "5G" },
+  { value: "LTE", label: "LTE", gen: "4G" },
+  { value: "UMTS", label: "UMTS", gen: "3G" },
+  { value: "GSM", label: "GSM", gen: "2G" },
 ];
 
 export const EXTENDED_RAT_OPTIONS: { value: string; label: string; gen: string }[] = [...RAT_OPTIONS, { value: "IOT", label: "IoT", gen: "NB" }];
