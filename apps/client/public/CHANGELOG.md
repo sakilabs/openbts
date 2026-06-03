@@ -1,6 +1,14 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-04
+
+### 🚀 Enhancements
+
+- Station IDs are now clickable and will open its dialog on `/account/submissions`
+- Added button for filling remaining cells for LTE for Play (26006)
+- Bumped dependencies
+
 # 2026-06-03
 
 ### 🚀 Enhancements

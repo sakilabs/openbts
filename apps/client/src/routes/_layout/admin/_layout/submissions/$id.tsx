@@ -274,6 +274,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     toggleRat: handleToggleRat,
     changeCell: handleCellChange,
     addCell: handleAddCell,
+    addRemainingLteCells: handleAddRemainingLteCells,
     cloneCell: handleCloneCell,
     clonedIds,
     deleteCell: handleDeleteCell,
@@ -508,6 +509,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}
+              onAddRemainingLteCells={handleAddRemainingLteCells}
               onCloneCell={!isFormDisabled ? handleCloneCell : undefined}
               clonedIds={clonedIds}
               onDeleteCell={handleDeleteCell}

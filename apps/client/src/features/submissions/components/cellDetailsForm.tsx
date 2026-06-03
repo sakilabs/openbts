@@ -44,6 +44,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
     originalsMap,
     diffCounts,
     handleAddCell,
+    handleAddRemainingLteCells,
     handleCloneCell,
     clonedIds,
     handleRemoveCell,
@@ -77,6 +78,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
           cellsCount={cells.length}
           diffCounts={diffCounts}
           onAddCell={handleAddCell}
+          onAddRemainingCells={rat === "LTE" && operatorMnc === 26006 ? handleAddRemainingLteCells : undefined}
           onFillEARFCN={handleFillEARFCN}
           t={t}
         />

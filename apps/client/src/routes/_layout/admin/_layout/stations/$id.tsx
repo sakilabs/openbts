@@ -302,6 +302,7 @@ function StationDetailForm({
     toggleRat: handleToggleRat,
     changeCell: handleCellChange,
     addCell: handleAddCell,
+    addRemainingLteCells: handleAddRemainingLteCells,
     cloneCell: handleCloneCell,
     clonedIds,
     deleteCell: handleDeleteCell,
@@ -647,6 +648,7 @@ function StationDetailForm({
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}
+              onAddRemainingLteCells={handleAddRemainingLteCells}
               onCloneCell={handleCloneCell}
               clonedIds={clonedIds}
               onDeleteCell={handleDeleteCell}

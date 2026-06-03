@@ -2,6 +2,7 @@ import { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, us
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaining-lte-cells";
 import type { Band } from "@/types/station";
 
 import type { CellDraftBase } from "../cellEditRow";
@@ -27,6 +28,7 @@ type UseCellDraftsReturn<T extends CellDraftBase> = {
   toggleRat: (rat: string) => void;
   changeCell: (localId: string, patch: Partial<CellDraftBase>) => void;
   addCell: (rat: string) => void;
+  addRemainingLteCells: () => void;
   cloneCell: (localId: string) => void;
   clonedIds: ReadonlySet<string>;
   deleteCell: (localId: string) => void;
@@ -142,6 +144,31 @@ export function useCellDrafts<T extends CellDraftBase>({
     [disabled, allBands, createNewCell, t],
   );
 
+  const addRemainingLteCells = useCallback(() => {
+    if (disabled) return;
+    setCells((prev) => {
+      const additions = buildRemainingLteCells(
+        prev.filter((cell) => cell.rat === "LTE"),
+        (cell) => cell.band_id,
+        (cell) => cell.details.clid,
+        (source, clid) => {
+          const band = allBands.find((b) => b.id === source.band_id);
+          if (!band) return null;
+          const template = createNewCell("LTE", band);
+          return {
+            ...template,
+            band_id: source.band_id,
+            is_confirmed: source.is_confirmed,
+            notes: source.notes,
+            details: createRemainingLteDetails(source.details, clid),
+          };
+        },
+      );
+      if (additions.length === 0) return prev;
+      return [...prev, ...additions];
+    });
+  }, [disabled, allBands, createNewCell]);
+
   useEffect(
     () => () => {
       for (const t of cloneTimers.current.values()) clearTimeout(t);
@@ -200,6 +227,7 @@ export function useCellDrafts<T extends CellDraftBase>({
     toggleRat,
     changeCell,
     addCell,
+    addRemainingLteCells,
     cloneCell,
     clonedIds,
     deleteCell: deleteCellFn,

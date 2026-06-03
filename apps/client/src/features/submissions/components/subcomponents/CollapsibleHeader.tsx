@@ -1,4 +1,4 @@
-import { Add01Icon, ArrowDown01Icon, FlashIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowDown01Icon, Copy01Icon, FlashIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ type CollapsibleHeaderProps = {
   cellsCount: number;
   diffCounts: DiffCounts;
   onAddCell: () => void;
+  onAddRemainingCells?: () => void;
   onFillEARFCN?: () => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 };
@@ -35,7 +36,7 @@ function DiffBadge({ count, color, label }: { count: number; color: string; labe
   );
 }
 
-export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onFillEARFCN, t }: CollapsibleHeaderProps) {
+export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onAddRemainingCells, onFillEARFCN, t }: CollapsibleHeaderProps) {
   return (
     <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
       <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
@@ -59,6 +60,18 @@ export function CollapsibleHeader({ rat, cellsCount, diffCounts, onAddCell, onFi
           >
             <HugeiconsIcon icon={FlashIcon} className="size-3.5" />
             <span className="hidden sm:inline">{t("stations:cells.fillEarfcn")}</span>
+          </Button>
+        )}
+        {onAddRemainingCells && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onAddRemainingCells}
+            className="h-7 text-xs text-purple-600/80 hover:text-purple-600 hover:bg-purple-500/10 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-400/10"
+          >
+            <HugeiconsIcon icon={Copy01Icon} className="size-3.5" />
+            <span className="hidden sm:inline">{t("stations:cells.addRemainingCells")}</span>
           </Button>
         )}
         <Button type="button" variant="ghost" size="sm" onClick={onAddCell} className="h-7 text-xs">

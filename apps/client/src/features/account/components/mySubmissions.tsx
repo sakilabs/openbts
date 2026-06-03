@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -32,6 +32,9 @@ import { formatShortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ESTIMATED_ROW_HEIGHT = 56;
+const StationDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
 
 export function MySubmissions() {
   const { t, i18n } = useTranslation(["submissions", "common"]);
@@ -53,6 +56,8 @@ export function MySubmissions() {
   const submissions = useMemo<SubmissionRow[]>(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
+  const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
+  const handleStationClick = useCallback((stationId: number) => setSelectedStationId(stationId), []);
 
   const virtualizer = useVirtualizer({
     count: submissions.length,
@@ -127,132 +132,148 @@ export function MySubmissions() {
   }
 
   return (
-    <div ref={setScrollEl} className="flex-1 overflow-y-auto">
-      <div
-        style={{
-          height: virtualizer.getTotalSize(),
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {items.map((virtualItem) => {
-          const submission = submissions[virtualItem.index];
-          const statusCfg = SUBMISSION_STATUS[submission.status];
-          const typeCfg = SUBMISSION_TYPE[submission.type];
-          const hasNotes = !!submission.review_notes;
-          const hasReview = hasNotes || !!submission.reviewer;
+    <>
+      <div ref={setScrollEl} className="flex-1 overflow-y-auto">
+        <div
+          style={{
+            height: virtualizer.getTotalSize(),
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {items.map((virtualItem) => {
+            const submission = submissions[virtualItem.index];
+            const statusCfg = SUBMISSION_STATUS[submission.status];
+            const typeCfg = SUBMISSION_TYPE[submission.type];
+            const hasNotes = !!submission.review_notes;
+            const hasReview = hasNotes || !!submission.reviewer;
+            const stationId = submission.station_id;
 
-          return (
-            <div
-              key={virtualItem.key}
-              data-index={virtualItem.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              <div className="group border-b border-border/50 hover:bg-muted/40 transition-colors">
-                <div className="flex items-center gap-3 px-3 py-2.5 min-w-0">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border shrink-0",
-                      typeCfg.badgeClass,
-                    )}
-                  >
-                    <span className={cn("size-1.5 rounded-[1px]", typeCfg.dotClass)} />
-                    {t(`common:submissionType.${submission.type}`)}
-                  </span>
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <div className="group border-b border-border/50 hover:bg-muted/40 transition-colors">
+                  <div className="flex items-center gap-3 px-3 py-2.5 min-w-0">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border shrink-0",
+                        typeCfg.badgeClass,
+                      )}
+                    >
+                      <span className={cn("size-1.5 rounded-[1px]", typeCfg.dotClass)} />
+                      {t(`common:submissionType.${submission.type}`)}
+                    </span>
 
-                  {submission.station?.station_id ? (
-                    <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.station.station_id}</span>
-                  ) : submission.proposedStation?.station_id ? (
-                    <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.proposedStation.station_id}</span>
-                  ) : null}
+                    {submission.station?.station_id ? (
+                      stationId !== null ? (
+                        <button
+                          type="button"
+                          onClick={() => handleStationClick(stationId)}
+                          className="text-sm font-mono font-medium text-foreground truncate max-w-56 hover:underline cursor-pointer"
+                        >
+                          {submission.station.station_id}
+                        </button>
+                      ) : (
+                        <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.station.station_id}</span>
+                      )
+                    ) : submission.proposedStation?.station_id ? (
+                      <span className="text-sm font-mono font-medium text-foreground truncate max-w-56">{submission.proposedStation.station_id}</span>
+                    ) : null}
 
-                  <div className="ml-auto flex items-center gap-3">
-                    {submission.status === "pending" && (
-                      <div className="flex items-center gap-1">
-                        <Tooltip>
-                          <TooltipTrigger render={<span />}>
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              nativeButton={false}
-                              render={<Link to="/submission" search={{ edit: submission.id }} />}
-                            >
-                              <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{t("mySubmissions.editTooltip")}</TooltipContent>
-                        </Tooltip>
-                        <AlertDialog>
+                    <div className="ml-auto flex items-center gap-3">
+                      {submission.status === "pending" && (
+                        <div className="flex items-center gap-1">
                           <Tooltip>
                             <TooltipTrigger render={<span />}>
-                              <AlertDialogTrigger render={<Button size="icon-sm" variant="ghost" />}>
-                                <HugeiconsIcon icon={Delete02Icon} className="size-3.5 text-destructive" />
-                              </AlertDialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>{t("mySubmissions.deleteTooltip")}</TooltipContent>
-                          </Tooltip>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{t("mySubmissions.confirmDelete")}</AlertDialogTitle>
-                              <AlertDialogDescription>{t("mySubmissions.confirmDeleteDesc")}</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
-                              <AlertDialogAction
-                                variant="destructive"
-                                onClick={() => deleteMutation.mutate(submission.id)}
-                                disabled={deleteMutation.isPending}
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                nativeButton={false}
+                                render={<Link to="/submission" search={{ edit: submission.id }} />}
                               >
-                                {t("common:actions.delete")}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t("mySubmissions.editTooltip")}</TooltipContent>
+                          </Tooltip>
+                          <AlertDialog>
+                            <Tooltip>
+                              <TooltipTrigger render={<span />}>
+                                <AlertDialogTrigger render={<Button size="icon-sm" variant="ghost" />}>
+                                  <HugeiconsIcon icon={Delete02Icon} className="size-3.5 text-destructive" />
+                                </AlertDialogTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent>{t("mySubmissions.deleteTooltip")}</TooltipContent>
+                            </Tooltip>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t("mySubmissions.confirmDelete")}</AlertDialogTitle>
+                                <AlertDialogDescription>{t("mySubmissions.confirmDeleteDesc")}</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  variant="destructive"
+                                  onClick={() => deleteMutation.mutate(submission.id)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  {t("common:actions.delete")}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
+                      <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", statusCfg.bgClass)}>
+                        <HugeiconsIcon icon={statusCfg.icon} className={cn("size-3.5", statusCfg.iconClass)} />
+                        <span className="text-xs font-medium capitalize">{t(`common:status.${submission.status}`)}</span>
                       </div>
-                    )}
-                    <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", statusCfg.bgClass)}>
-                      <HugeiconsIcon icon={statusCfg.icon} className={cn("size-3.5", statusCfg.iconClass)} />
-                      <span className="text-xs font-medium capitalize">{t(`common:status.${submission.status}`)}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">
+                        {formatShortDate(submission.createdAt, i18n.language)}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">
-                      {formatShortDate(submission.createdAt, i18n.language)}
-                    </span>
                   </div>
+
+                  {hasReview && (
+                    <div className="px-3 pb-2.5 pt-0">
+                      <div className="bg-muted/60 rounded-lg px-3 py-2.5 space-y-1">
+                        {submission.reviewer && (
+                          <p className="text-[11px] text-muted-foreground">
+                            {t("mySubmissions.reviewedBy")} <span className="font-medium text-foreground">{submission.reviewer.name}</span>
+                            {submission.reviewer.username && <span> (@{submission.reviewer.username})</span>}
+                          </p>
+                        )}
+                        {hasNotes && (
+                          <p className="text-sm leading-relaxed text-foreground wrap-break-word whitespace-pre-wrap">{submission.review_notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {hasReview && (
-                  <div className="px-3 pb-2.5 pt-0">
-                    <div className="bg-muted/60 rounded-lg px-3 py-2.5 space-y-1">
-                      {submission.reviewer && (
-                        <p className="text-[11px] text-muted-foreground">
-                          {t("mySubmissions.reviewedBy")} <span className="font-medium text-foreground">{submission.reviewer.name}</span>
-                          {submission.reviewer.username && <span> (@{submission.reviewer.username})</span>}
-                        </p>
-                      )}
-                      {hasNotes && (
-                        <p className="text-sm leading-relaxed text-foreground wrap-break-word whitespace-pre-wrap">{submission.review_notes}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-4">
-          <Spinner className="size-4" />
+            );
+          })}
         </div>
-      )}
-    </div>
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Spinner className="size-4" />
+          </div>
+        )}
+      </div>
+      <Suspense fallback={null}>
+        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
+      </Suspense>
+    </>
   );
 }

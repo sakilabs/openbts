@@ -18,6 +18,7 @@
     "notesPlaceholder": "np. pikokomórka",
     "addCell": "Dodaj komórkę",
     "fillEarfcn": "Wstaw EARFCN",
+    "addRemainingCells": "Dodaj brakujące komórki",
     "confirmCells": "Potwierdź komórki",
     "noRats": "Brak komórek. Wybierz technologię radiową powyżej, aby dodać komórki.",
     "noStationCells": "Nie znaleziono komórek dla tej stacji",

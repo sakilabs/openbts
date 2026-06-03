@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { getSharedDetailFields } from "@/features/shared/rat";
+import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaining-lte-cells";
 
 import type { GSMCellDetails, LTECellDetails, NRCellDetails, ProposedCellForm, RatType, UMTSCellDetails } from "../../types";
 import { buildOriginalCellsMap, generateCellId, getCellDiffStatus } from "../../utils/cells";
@@ -128,6 +129,25 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
     onCellsChange(rat, [...cells, newCell]);
   }, [cells, originalCells, rat, onCellsChange]);
 
+  const handleAddRemainingLteCells = useCallback(() => {
+    if (rat !== "LTE") return;
+    const additions = buildRemainingLteCells(
+      cells,
+      (cell) => cell.band_id,
+      (cell) => (cell.details as Partial<Record<string, unknown>>).clid,
+      (source, clid) => ({
+        id: generateCellId(),
+        rat,
+        band_id: source.band_id,
+        notes: source.notes,
+        is_confirmed: source.is_confirmed,
+        details: createRemainingLteDetails(source.details as Record<string, unknown>, clid),
+      }),
+    );
+    if (additions.length === 0) return;
+    onCellsChange(rat, [...cells, ...additions]);
+  }, [cells, onCellsChange, rat]);
+
   const [clonedIds, setClonedIds] = useState<ReadonlySet<string>>(new Set());
   const cloneTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -225,6 +245,7 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
     diffCounts,
     isNewStation,
     handleAddCell,
+    handleAddRemainingLteCells,
     handleCloneCell,
     clonedIds,
     handleRemoveCell,

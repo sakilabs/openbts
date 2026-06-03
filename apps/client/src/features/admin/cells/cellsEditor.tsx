@@ -1,4 +1,4 @@
-import { Add01Icon, ArrowDown01Icon, FlashIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowDown01Icon, Copy01Icon, FlashIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Fragment, type ReactNode, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,6 +30,7 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   onToggleRat: (rat: string) => void;
   onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
   onAddCell: (rat: string) => void;
+  onAddRemainingLteCells?: () => void;
   onCloneCell?: (localId: string) => void;
   clonedIds?: ReadonlySet<string>;
   onDeleteCell: (localId: string) => void;
@@ -173,6 +174,7 @@ export function CellsEditor<T extends CellDraftBase>({
   onToggleRat,
   onCellChange,
   onAddCell,
+  onAddRemainingLteCells,
   onCloneCell,
   clonedIds,
   onDeleteCell,
@@ -298,6 +300,18 @@ export function CellsEditor<T extends CellDraftBase>({
                       >
                         <HugeiconsIcon icon={FlashIcon} className="size-3.5" />
                         <span className="hidden sm:inline">{t("stations:cells.fillEarfcn")}</span>
+                      </Button>
+                    )}
+                    {rat === "LTE" && operatorMnc === 26006 && onAddRemainingLteCells && !readOnly && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={onAddRemainingLteCells}
+                        className="h-7 text-xs text-purple-600/80 hover:text-purple-600 hover:bg-purple-500/10 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-400/10"
+                      >
+                        <HugeiconsIcon icon={Copy01Icon} className="size-3.5" />
+                        <span className="hidden sm:inline">{t("stations:cells.addRemainingCells")}</span>
                       </Button>
                     )}
                     {showAddButton && (
