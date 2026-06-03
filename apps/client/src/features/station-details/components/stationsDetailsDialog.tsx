@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AddToListPopover } from "@/features/lists/components/addToListPopover";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
@@ -125,6 +126,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                 <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
                   {station && (
                     <>
+                      <AddToListPopover stationId={station.id} size="md" />
                       <ShareButton
                         title={`${station.operator.name} - ${station.station_id}`}
                         text={`${station.operator.name} ${station.station_id} - ${station.location.city}`}

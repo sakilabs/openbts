@@ -64,9 +64,10 @@ type AddToListPopoverProps = {
   stationId?: number;
   radiolineIds?: number[];
   ukeLocationId?: number;
+  size?: "sm" | "md";
 };
 
-export function AddToListPopover({ stationId, radiolineIds, ukeLocationId }: AddToListPopoverProps) {
+export function AddToListPopover({ stationId, radiolineIds, ukeLocationId, size = "sm" }: AddToListPopoverProps) {
   const { t } = useTranslation(["lists", "common"]);
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
@@ -114,15 +115,17 @@ export function AddToListPopover({ stationId, radiolineIds, ukeLocationId }: Add
     [data, session?.user?.id],
   );
   const icon = stationId || ukeLocationId ? AirportTowerIcon : SignalFull02Icon;
+  const iconSize = size === "sm" ? "size-3" : "size-4";
+  const buttonPadding = size === "sm" ? "p-0.5" : "p-1.5";
 
   return (
     <>
       <Popover>
         <PopoverTrigger
-          render={<button type="button" className="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0" />}
+          render={<button type="button" className={cn(buttonPadding, "hover:bg-muted rounded transition-colors cursor-pointer shrink-0")} />}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
-          <HugeiconsIcon icon={TaskDaily01Icon} className="size-3 text-muted-foreground" />
+          <HugeiconsIcon icon={TaskDaily01Icon} className={cn(iconSize, "text-muted-foreground")} />
         </PopoverTrigger>
 
         <PopoverContent align="end" className="w-60 p-0 gap-0 overflow-hidden">

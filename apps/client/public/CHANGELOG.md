@@ -1,6 +1,27 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-03
+
+### 🚀 Enhancements
+
+- Added `ctrl+s` shortcut to save submission and/or station
+- Changed RAT order from `GSM` -> `UMTS` -> `LTE` -> `NR` to `NR` -> `LTE` -> `UMTS` -> `GSM`
+- Automatic UKE import now runs every 6 hours starting from midnight
+- Station & radioline dialog now includes `add to list` button
+
+# 2026-05-29
+
+### 🩹 Fixes
+
+- Fixed checking duplicated cells when switching e.g. PCI between two cells in submission
+
+# 2026-05-26
+
+### 🚀 Enhancements
+
+- Creating a station from UKE dialog now adds respective amount of cells based on the device registry permits
+
 # 2026-05-18
 
 ### 🚀 Enhancements

@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AddToListPopover } from "@/features/lists/components/addToListPopover";
 import { DirectionalSpeedBadge } from "@/features/map/components/directionalSpeedBadge";
 import type { DuplexRadioLink } from "@/features/map/utils";
 import {
@@ -171,6 +172,7 @@ export function RadioLineDetailsDialog({ link, onClose }: RadioLineDetailsDialog
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
+              <AddToListPopover radiolineIds={link.directions.map((direction) => direction.id)} size="md" />
               <ShareButton
                 title={`${operatorName} - ${formatFrequency(radioLine.link.freq)}`}
                 text={`${operatorName} ${formatDistance(distance)} - ${formatFrequency(radioLine.link.freq)}`}
