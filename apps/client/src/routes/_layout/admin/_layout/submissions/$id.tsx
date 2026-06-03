@@ -23,6 +23,7 @@ import { SubmitterCard } from "@/features/admin/submissions/components/submitter
 import { useApproveSubmissionMutation, useRejectSubmissionMutation, useSaveSubmissionMutation } from "@/features/admin/submissions/mutations";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { fetchApiData, showApiError } from "@/lib/api";
 import type { Band, Cell, Station } from "@/types/station";
 
@@ -321,6 +322,11 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       },
     );
   };
+
+  useSaveShortcut({
+    canSave: !isReadOnly && !isProcessing,
+    onSave: handleSave,
+  });
 
   const handleApprove = async () => {
     if (await checkStaleness()) return;

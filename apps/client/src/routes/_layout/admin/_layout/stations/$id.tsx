@@ -24,6 +24,7 @@ import { PhotoUploadSection } from "@/features/submissions/components/photoUploa
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
 import { ukePermitsToCells } from "@/features/submissions/utils/cells";
+import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { useSettings } from "@/hooks/useSettings";
 import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
@@ -527,6 +528,11 @@ function StationDetailForm({
     networksName,
     mnoName,
   ]);
+
+  useSaveShortcut({
+    canSave: hasChanges && !saveMutation.isPending,
+    onSave: handleSaveStation,
+  });
 
   const getStationDiffBadges = useCallback(
     (rat: string, cellsForRat: LocalCell[]): DiffBadges => {

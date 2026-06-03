@@ -27,6 +27,7 @@ import { LocationPhotosSection } from "@/features/admin/locations/components/Loc
 import { useDeleteLocationMutation, usePatchLocationMutation } from "@/features/admin/locations/mutations";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { useScrolled } from "@/hooks/useScrolled";
 import { showApiError } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
@@ -151,6 +152,11 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
     if (locationForm.latitude !== (location.latitude ?? null)) return true;
     return false;
   }, [locationForm, location]);
+
+  useSaveShortcut({
+    canSave: hasChanges && !patchMutation.isPending,
+    onSave: handleSave,
+  });
 
   const stations = useMemo(() => location.stations ?? [], [location]);
 
