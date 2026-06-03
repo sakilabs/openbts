@@ -50,7 +50,7 @@ class AnalyzerWorkerPool {
     worker.on("error", (err) => {
       const task = entry.pending;
       entry.pending = null;
-      task?.reject(err);
+      task?.reject(err instanceof Error ? err : new Error(String(err)));
       const idx = this.entries.indexOf(entry);
       if (idx !== -1) this.entries.splice(idx, 1);
       this.spawn();

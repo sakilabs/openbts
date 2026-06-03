@@ -11,14 +11,14 @@
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {
-    "tsx": "4.21.0"
+    "tsx": "4.22.4"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260327.2",
-    "oxfmt": "0.42.0",
-    "oxlint": "1.57.0",
-    "oxlint-tsgolint": "0.18.0",
-    "typescript": "6.0.2"
+    "@typescript/native-preview": "7.0.0-dev.20260602.1",
+    "oxfmt": "0.53.0",
+    "oxlint": "1.68.0",
+    "oxlint-tsgolint": "0.23.0",
+    "typescript": "6.0.3"
   },
   "engines": {
     "node": ">=18",
