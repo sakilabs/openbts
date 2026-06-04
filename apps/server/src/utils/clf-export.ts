@@ -412,7 +412,7 @@ export function toNetMonitor(cell: CellExportData): string | null {
     }
     case "UMTS": {
       const lac = cell.lac ?? 0;
-      const cid = cell.cid_long ?? cell.cid ?? 0;
+      const cid = cell.cid ?? 0;
       const psc = "";
       const uarfcn = cell.arfcn ?? "";
       const rnc = cell.rnc ?? NTM_UNKNOWN;
