@@ -1,6 +1,10 @@
 {
   "title": "Statistics",
   "description": "Permit statistics and historical trends across operators and bands. Data is updated every 24 hours",
+  "rebuildNotice": {
+    "title": "Planned rebuild",
+    "description": "We plan to rebuild this page from the ground up this month, with new features and views. You will also be able to export statistics as images, and the new design will work much better on phones."
+  },
   "kpi": {
     "totalPermits": "Total Permits",
     "totalStations": "Unique Stations",

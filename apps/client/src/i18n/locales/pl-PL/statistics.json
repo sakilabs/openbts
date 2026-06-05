@@ -1,6 +1,10 @@
 {
   "title": "Statystyki",
   "description": "Statystyki pozwoleń i trendy historyczne w podziale na operatorów i pasma. Dane są aktualizowane co 24 godziny",
+  "rebuildNotice": {
+    "title": "Planowana przebudowa",
+    "description": "Planujemy przebudować tę stronę od zera jeszcze w tym miesiącu, wraz z nowymi funkcjonalnościami i widokami. Dodatkowo pojawi się możliwość eksportu statystyk jako zdjęcie oraz lepszy design, który będzie też lepiej wyglądać na telefonach."
+  },
   "kpi": {
     "totalPermits": "Pozwolenia",
     "totalStations": "Unikalne stacje",

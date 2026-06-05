@@ -1,8 +1,11 @@
+import { InformationCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type ReactNode, Suspense, lazy, startTransition, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRegisterPageSections } from "@/contexts/pageSections";
@@ -119,6 +122,12 @@ function StatisticsPage() {
           <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
+
+        <Alert className="border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400">
+          <HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
+          <AlertTitle>{t("rebuildNotice.title")}</AlertTitle>
+          <AlertDescription className="text-blue-700/80 dark:text-blue-400/80">{t("rebuildNotice.description")}</AlertDescription>
+        </Alert>
 
         <section id="uke-permits" className="space-y-6">
           <div className="space-y-4">
