@@ -103,6 +103,7 @@ type StationsLayerProps = {
   popupActions: PopupActions;
   onRadiolineIdFromUrl?: (id: number) => void;
   activePopupLocationId?: number | null;
+  useZabkaMarkers?: boolean;
 };
 
 export function StationsLayer({
@@ -115,6 +116,7 @@ export function StationsLayer({
   popupActions,
   onRadiolineIdFromUrl,
   activePopupLocationId,
+  useZabkaMarkers = false,
 }: StationsLayerProps) {
   const { map, isLoaded } = useMap();
   const { preferences } = usePreferences();
@@ -387,6 +389,7 @@ export function StationsLayer({
     onFeatureMouseDown: handleFeatureMouseDown,
     renderHoverTooltip: preferences.showMapHoverTooltip ? renderHoverTooltip : undefined,
     pointStyle: preferences.mapPointStyle,
+    useZabkaMarkers,
   });
 
   useHeatmapLayer({ map, isLoaded, enabled: filters.showHeatmap, showStations: filters.showStations });

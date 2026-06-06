@@ -1,4 +1,4 @@
-import { Cancel01Icon, PencilEdit02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Alert02Icon, Cancel01Icon, PencilEdit02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -164,6 +164,17 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                   </button>
                 </div>
               </div>
+              {station?.status === "inactive" ? (
+                <div className="border-t border-amber-500/25 bg-amber-500/8 px-6 py-3 text-amber-700 dark:text-amber-400">
+                  <div className="flex items-start gap-2.5">
+                    <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 size-4 shrink-0" />
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold">{t("dialog.inactiveStationTitle")}</p>
+                      <p className="text-xs text-amber-700/80 dark:text-amber-400/80">{t("dialog.inactiveStationDescription")}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <StationDetailsBody

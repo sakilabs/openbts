@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import { Map as LibreMap, MapControls, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
+import ZabkaIcon from "@/features/station-details/components/logos/zabka.svg?react";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { showApiError } from "@/lib/api";
@@ -16,8 +17,7 @@ import { useWakeLock } from "../hooks/useWakeLock";
 import type { UkeSearchPermitStation, UkeSearchRadioline } from "../searchApi";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { MapSearchOverlay } from "./search-overlay";
-import { DEFAULT_FILTERS, StationsLayer, loadMapFilters, saveMapFilters } from "./stationsLayer";
-import { locationQueryKey } from "./stationsLayer";
+import { DEFAULT_FILTERS, StationsLayer, loadMapFilters, locationQueryKey, saveMapFilters } from "./stationsLayer";
 
 const RadioLinesLayer = lazy(() => import("./radioLinesLayer"));
 
@@ -29,7 +29,8 @@ const UkePermitDetailsDialog = lazy(() =>
 );
 
 const MAP_POSITION_KEY = "map:position";
-
+const ZABKA_EASTER_EGG_SEQUENCE = "ZABKA";
+const ZABKA_EASTER_EGG_TIMEOUT_MS = 3000;
 type SavedMapPosition = { center: [number, number]; zoom: number };
 
 function loadMapPosition(): SavedMapPosition | null {
@@ -97,6 +98,7 @@ function MapViewInner() {
   const [filters, setFiltersState] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
+  const [useZabkaMarkers, setUseZabkaMarkers] = useState(false);
 
   const setFilters = useCallback((update: StationFilters | ((prev: StationFilters) => StationFilters)) => {
     setFiltersState((prev) => {
@@ -121,6 +123,33 @@ function MapViewInner() {
       map.off("moveend", handleMoveEnd);
     };
   }, [map, isLoaded]);
+
+  useEffect(() => {
+    let sequence = "";
+    let lastKeyAt = 0;
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
+      if (!event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || !event.code.startsWith("Key")) {
+        sequence = "";
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastKeyAt > ZABKA_EASTER_EGG_TIMEOUT_MS) sequence = "";
+      lastKeyAt = now;
+
+      sequence = `${sequence}${event.code.slice(3)}`.slice(-ZABKA_EASTER_EGG_SEQUENCE.length);
+      if (sequence !== ZABKA_EASTER_EGG_SEQUENCE) return;
+
+      event.preventDefault();
+      sequence = "";
+      setUseZabkaMarkers((prev) => !prev);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const [detailState, dispatchDetail] = useReducer(detailReducer, initialDetailState);
   const { selectedStation, selectedUkeStation, pendingRadiolineId } = detailState;
@@ -338,10 +367,14 @@ function MapViewInner() {
       {showSelectedDot && selectedLocation && (
         <MapMarker longitude={selectedLocation.lng} latitude={selectedLocation.lat}>
           <MarkerContent>
-            <div className="relative flex items-center justify-center">
-              <div className="absolute h-5 w-5 animate-ping rounded-full bg-blue-500/40" />
-              <div className="relative h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-md" />
-            </div>
+            {useZabkaMarkers ? (
+              <ZabkaIcon className="h-5 w-auto drop-shadow-md" />
+            ) : (
+              <div className="relative flex items-center justify-center">
+                <div className="absolute h-5 w-5 animate-ping rounded-full bg-blue-500/40" />
+                <div className="relative h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-md" />
+              </div>
+            )}
           </MarkerContent>
         </MapMarker>
       )}
@@ -355,6 +388,7 @@ function MapViewInner() {
         popupActions={popupActions}
         onRadiolineIdFromUrl={handlePendingRadiolineId}
         activePopupLocationId={activePopupLocation?.locationId}
+        useZabkaMarkers={useZabkaMarkers}
       />
       {filters.showRadiolines || !!pendingRadiolineId ? (
         <Suspense fallback={null}>

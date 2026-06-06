@@ -50,7 +50,9 @@
     "hardwareLease": "Hardware lease from {{operator}} (virtual station)",
     "btsStation": "Base station",
     "showOnMap": "Show on map",
-    "createStation": "Create station"
+    "createStation": "Create station",
+    "inactiveStationTitle": "Station marked for deletion",
+    "inactiveStationDescription": "This station is no longer active and is pending removal from the database."
   },
   "comments": {
     "title": "Community Comments",

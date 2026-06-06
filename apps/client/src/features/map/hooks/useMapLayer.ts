@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
 import { onBeforeStyleChange } from "@/components/ui/map";
+import zabkaLogoUrl from "@/features/station-details/components/logos/zabka.svg?url";
 import type { MapPointStyle } from "@/hooks/usePreferences";
 
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
@@ -27,6 +28,7 @@ type UseMapLayerArgs = {
   onFeatureMouseDown?: (locationId: number) => void;
   renderHoverTooltip?: (data: FeatureClickData) => ReactNode | null;
   pointStyle?: MapPointStyle;
+  useZabkaMarkers?: boolean;
 };
 
 type ActiveTooltip = {
@@ -62,6 +64,7 @@ function buildTooltip(state: ActiveTooltip | null, locationId: number): ActiveTo
 
 const SYMBOL_LAYER_ID = `${POINT_LAYER_ID}-symbol`;
 const LAYER_IDS = [POINT_LAYER_ID, SYMBOL_LAYER_ID] as const;
+const ZABKA_IMAGE_ID = "zabka-marker";
 
 const CIRCLE_LAYER_CONFIG: maplibregl.LayerSpecification = {
   id: POINT_LAYER_ID,
@@ -114,6 +117,55 @@ const MARKER_MULTI_LAYER_CONFIG: maplibregl.LayerSpecification = {
   },
 };
 
+const ZABKA_LAYER_CONFIG: maplibregl.LayerSpecification = {
+  id: POINT_LAYER_ID,
+  type: "symbol",
+  source: SOURCE_ID,
+  layout: {
+    "icon-image": ZABKA_IMAGE_ID,
+    "icon-size": 0.42,
+    "icon-allow-overlap": true,
+  },
+};
+
+const ZABKA_EMPTY_LAYER_CONFIG: maplibregl.LayerSpecification = {
+  id: SYMBOL_LAYER_ID,
+  type: "symbol",
+  source: SOURCE_ID,
+  filter: ["==", ["get", "locationId"], null],
+  layout: {
+    "icon-image": ZABKA_IMAGE_ID,
+  },
+};
+
+function syncZabkaImage(map: maplibregl.Map, addedImages: Set<string>) {
+  if (addedImages.has(ZABKA_IMAGE_ID)) return;
+  if (map.hasImage(ZABKA_IMAGE_ID)) {
+    addedImages.add(ZABKA_IMAGE_ID);
+    return;
+  }
+
+  const image = new Image(77, 31);
+  image.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 77;
+    canvas.height = 31;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    try {
+      if (!map.hasImage(ZABKA_IMAGE_ID)) map.addImage(ZABKA_IMAGE_ID, imageData);
+      addedImages.add(ZABKA_IMAGE_ID);
+      map.triggerRepaint();
+    } catch {}
+  };
+  image.src = zabkaLogoUrl;
+}
+
 function extractFeatureClickData(feature: GeoJSON.Feature): FeatureClickData | null {
   if (feature.geometry.type !== "Point") return null;
 
@@ -138,6 +190,7 @@ export function useMapLayer({
   onFeatureMouseDown,
   renderHoverTooltip,
   pointStyle = "dots",
+  useZabkaMarkers = false,
 }: UseMapLayerArgs) {
   const callbackRefs = useRef({ onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip });
   callbackRefs.current = { onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip };
@@ -158,7 +211,11 @@ export function useMapLayer({
           addedImagesRef.current.clear();
         }
 
-        if (pointStyle === "markers") {
+        if (useZabkaMarkers) {
+          syncZabkaImage(map, addedImagesRef.current);
+          if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(ZABKA_LAYER_CONFIG);
+          if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(ZABKA_EMPTY_LAYER_CONFIG);
+        } else if (pointStyle === "markers") {
           if (!map.getLayer(POINT_LAYER_ID)) map.addLayer(MARKER_SINGLE_LAYER_CONFIG);
           if (!map.getLayer(SYMBOL_LAYER_ID)) map.addLayer(MARKER_MULTI_LAYER_CONFIG);
           syncMarkerImages(map, geoJSONRef.current.features, addedImagesRef.current);
@@ -297,7 +354,7 @@ export function useMapLayer({
       addedImages.clear();
       tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
-  }, [map, isLoaded, pointStyle]);
+  }, [map, isLoaded, pointStyle, useZabkaMarkers]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -305,9 +362,10 @@ export function useMapLayer({
     const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
     if (!source) return;
 
-    if (pointStyle === "markers") syncMarkerImages(map, geoJSON.features, addedImagesRef.current);
+    if (useZabkaMarkers) syncZabkaImage(map, addedImagesRef.current);
+    else if (pointStyle === "markers") syncMarkerImages(map, geoJSON.features, addedImagesRef.current);
     else syncPieImages(map, geoJSON.features, addedImagesRef.current);
 
     void source.setData(geoJSON);
-  }, [map, isLoaded, geoJSON, pointStyle]);
+  }, [map, isLoaded, geoJSON, pointStyle, useZabkaMarkers]);
 }

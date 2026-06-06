@@ -50,7 +50,9 @@
     "hardwareLease": "Dzierżawa sprzętu od {{operator}} (wirtualna stacja)",
     "btsStation": "Stacja bazowa",
     "showOnMap": "Pokaż na mapie",
-    "createStation": "Utwórz stację"
+    "createStation": "Utwórz stację",
+    "inactiveStationTitle": "Stacja oznaczona do usunięcia",
+    "inactiveStationDescription": "Ta stacja nie jest już aktywna i oczekuje na usunięcie z bazy danych."
   },
   "comments": {
     "title": "Komentarze społeczności",
