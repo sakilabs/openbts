@@ -16,6 +16,10 @@
     "./radiolinesUtils": {
       "types": "./src/radiolinesUtils.ts",
       "default": "./dist/src/radiolinesUtils.js"
+    },
+    "./addressValidation": {
+      "types": "./src/addressValidation.ts",
+      "default": "./dist/src/addressValidation.js"
     }
   },
   "scripts": {

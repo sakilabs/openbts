@@ -82,6 +82,7 @@
     "longitudeRequired": "Długość geograficzna jest wymagana",
     "longitudeInvalid": "Długość musi być między -180 a 180",
     "regionRequired": "Wybierz województwo",
+    "addressOwnWordForbidden": "Wpisz rzeczywisty adres zamiast wariantów słowa \"własna\", np. \"wieża T-Mobile\"",
     "bandRequired": "Pasmo jest wymagane",
     "lacRequired": "LAC jest wymagany",
     "rncRequired": "RNC jest wymagany",

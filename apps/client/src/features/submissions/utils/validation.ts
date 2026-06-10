@@ -1,3 +1,5 @@
+import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
+
 import { isARFCNValidForBand } from "@/features/station-details/frequencyCalc";
 import type { Band } from "@/types/station";
 
@@ -15,7 +17,6 @@ import type {
 } from "../types";
 import { type CellLike, findDuplicateCids, findDuplicateEnbidClids } from "./cellDuplicates";
 import { buildOriginalCellsMap, getCellDiffStatus } from "./cells";
-
 export type StationErrors = {
   station_id?: string;
   operator_id?: string;
@@ -25,6 +26,7 @@ export type LocationErrors = {
   latitude?: string;
   longitude?: string;
   region_id?: string;
+  address?: string;
 };
 
 export type CellError = {
@@ -89,6 +91,7 @@ function validateLocation(location: ProposedLocationForm): LocationErrors {
   else if (location.longitude < -180 || location.longitude > 180) errors.longitude = "validation.longitudeInvalid";
 
   if (location.region_id === null) errors.region_id = "validation.regionRequired";
+  if (hasGenericAddressMarker(location.address)) errors.address = "validation.addressOwnWordForbidden";
 
   return errors;
 }

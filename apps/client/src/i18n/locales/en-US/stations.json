@@ -47,6 +47,7 @@
     "stationIdRquired": "Station ID is required",
     "operatorRequired": "Operator is required",
     "locationRequired": "Location is required",
+    "addressOwnWordForbidden": "Use the real address instead of variants of \"własna\", e.g. \"wieża T-Mobile\"",
     "cellsSaved": "Cells have been saved",
     "saved": "Station has been saved",
     "noBands": "No available bands for {{rat}}",

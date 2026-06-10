@@ -1,5 +1,6 @@
 import { locationPhotos, proposedCells, proposedLocations, proposedStations, submissionLocationPhotoSelections, submissions } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
+import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { isARFCNValidForBand } from "@openbts/shared/frequency";
 import { and, count, eq, inArray } from "drizzle-orm/sql";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
@@ -22,7 +23,13 @@ import {
 export const submissionsSelectSchema = createSelectSchema(submissions);
 export const submissionsInsertBase = createInsertSchema(submissions).omit({ createdAt: true, updatedAt: true, submitter_id: true });
 export const proposedStationInsert = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
-export const proposedLocationInsert = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
+export const proposedLocationInsert = createInsertSchema(proposedLocations)
+  .omit({ createdAt: true, updatedAt: true, submission_id: true })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (hasGenericAddressMarker(data.address))
+      ctx.addIssue({ code: "custom", message: "Address must not contain variants of własny", path: ["address"] });
+  });
 export const nrInsertSchema = nrInsertSchemaBase.superRefine((data, ctx) => {
   if (data.type === "nsa") {
     for (const field of ["nrtac", "clid", "gnbid"] as const) {

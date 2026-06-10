@@ -1,4 +1,5 @@
 import { proposedCells, proposedLocations, proposedStations, submissions } from "@openbts/drizzle";
+import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { eq } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -37,7 +38,13 @@ const cellInputSchema = createInsertSchema(proposedCells)
 
 const stationInputSchema = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
 
-const locationInputSchema = createInsertSchema(proposedLocations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
+const locationInputSchema = createInsertSchema(proposedLocations)
+  .omit({ createdAt: true, updatedAt: true, submission_id: true })
+  .partial()
+  .superRefine((data, ctx) => {
+    if (hasGenericAddressMarker(data.address))
+      ctx.addIssue({ code: "custom", message: "Address must not contain variants of własny", path: ["address"] });
+  });
 
 const requestSchema = z.object({
   review_notes: z.string().nullable().optional(),

@@ -1,5 +1,6 @@
 import { AirportTowerIcon, ArrowLeft01Icon, ArrowRight01Icon, Location01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
@@ -107,6 +108,11 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
   }, []);
 
   const handleSave = () => {
+    if (hasGenericAddressMarker(locationForm.address)) {
+      toast.error(t("toast.addressOwnWordForbidden"));
+      return;
+    }
+
     patchMutation.mutate(
       {
         region_id: locationForm.region_id,

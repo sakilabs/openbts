@@ -82,6 +82,7 @@
     "longitudeRequired": "Longitude is required",
     "longitudeInvalid": "Longitude must be between -180 and 180",
     "regionRequired": "Select a region",
+    "addressOwnWordForbidden": "Use the real address instead of variants of \"własna\", e.g. \"wieża T-Mobile\"",
     "bandRequired": "Band is required",
     "lacRequired": "LAC is required",
     "rncRequired": "RNC is required",

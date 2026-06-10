@@ -1,5 +1,6 @@
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
@@ -405,6 +406,11 @@ function StationDetailForm({
         toast.error(t("toast.locationRequired"));
         return;
       }
+    }
+
+    if (hasGenericAddressMarker(location.address)) {
+      toast.error(t("toast.addressOwnWordForbidden"));
+      return;
     }
 
     const cellLikes = localCells.map((c) => ({ id: c._localId, rat: c.rat, details: c.details }));

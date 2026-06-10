@@ -320,8 +320,9 @@ export function LocationPicker({
               placeholder={t("locationPicker.addressPlaceholder")}
               value={location.address ?? ""}
               onChange={(e) => onLocationChange({ address: e.target.value })}
-              className="h-8 text-sm"
+              className={cn("h-8 text-sm", errors?.address && "border-destructive")}
             />
+            {errors?.address && <p className="text-xs text-destructive">{t(errors.address)}</p>}
             {locationDiffs?.address && currentLocation && <ChangeBadge label={t("diff.was")} current={currentLocation.address || "-"} />}
           </div>
         </div>

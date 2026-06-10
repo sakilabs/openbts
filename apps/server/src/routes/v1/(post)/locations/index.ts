@@ -1,4 +1,5 @@
 import { locations } from "@openbts/drizzle";
+import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -10,7 +11,12 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 
 const locationsSelectSchema = createSelectSchema(locations);
-const locationsInsertSchema = createInsertSchema(locations).strict();
+const locationsInsertSchema = createInsertSchema(locations)
+  .strict()
+  .superRefine((data, ctx) => {
+    if (hasGenericAddressMarker(data.address))
+      ctx.addIssue({ code: "custom", message: "Address must not contain variants of własny", path: ["address"] });
+  });
 type ReqBody = { Body: z.infer<typeof locationsInsertSchema> };
 type ResponseData = z.infer<typeof locationsSelectSchema>;
 const schemaRoute = {
