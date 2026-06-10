@@ -1,5 +1,5 @@
-import { stations } from "@openbts/drizzle";
-import { inArray } from "drizzle-orm";
+import { cells, lteCells, stations } from "@openbts/drizzle";
+import { eq, inArray } from "drizzle-orm";
 import type { FastifyRequest } from "fastify";
 import { z } from "zod/v4";
 
@@ -49,6 +49,85 @@ const schemaRoute = {
 
 type ResponseData = z.infer<typeof submissionsSelectSchema>[];
 
+function addStationTac(stationTacs: Map<number, number>, stationId: number, tac: number): void {
+  const existingTac = stationTacs.get(stationId);
+  if (existingTac !== undefined && existingTac !== tac)
+    throw new ErrorResponse("BAD_REQUEST", { message: `Multiple TAC values submitted for station ${stationId}` });
+  stationTacs.set(stationId, tac);
+}
+
+async function expandLteTacUpdates(inputs: SingleSubmission[]): Promise<SingleSubmission[]> {
+  const tacByStationId = new Map<number, number>();
+
+  for (const input of inputs) {
+    if (!input.station_id) continue;
+    for (const cell of input.cells ?? []) {
+      if (cell.operation === "delete" || cell.rat !== "LTE") continue;
+      const details = cell.details as { tac?: number | null } | undefined;
+      if (details?.tac !== null && details?.tac !== undefined) addStationTac(tacByStationId, input.station_id, details.tac);
+    }
+  }
+
+  if (tacByStationId.size === 0) return inputs;
+
+  const stationCells = await db
+    .select({
+      stationId: cells.station_id,
+      cellId: cells.id,
+      bandId: cells.band_id,
+      enbid: lteCells.enbid,
+      clid: lteCells.clid,
+      tac: lteCells.tac,
+      pci: lteCells.pci,
+      earfcn: lteCells.earfcn,
+      supports_iot: lteCells.supports_iot,
+    })
+    .from(cells)
+    .innerJoin(lteCells, eq(lteCells.cell_id, cells.id))
+    .where(inArray(cells.station_id, [...tacByStationId.keys()]));
+
+  const lteCellsByStationId = new Map<number, typeof stationCells>();
+  for (const cell of stationCells) {
+    const stationCells = lteCellsByStationId.get(cell.stationId) ?? [];
+    stationCells.push(cell);
+    lteCellsByStationId.set(cell.stationId, stationCells);
+  }
+
+  return inputs.map((input) => {
+    if (!input.station_id) return input;
+    const tac = tacByStationId.get(input.station_id);
+    if (tac === undefined) return input;
+
+    const inputCells = (input.cells ?? []).map((cell) => {
+      if (cell.operation === "delete" || cell.rat !== "LTE") return cell;
+      return { ...cell, details: { ...(cell.details as Record<string, unknown> | undefined), tac } };
+    });
+    const existingCellIds = new Set(inputCells.map((cell) => cell.target_cell_id).filter((id): id is number => id !== null && id !== undefined));
+    const expandedCells = [...inputCells];
+
+    for (const cell of lteCellsByStationId.get(input.station_id) ?? []) {
+      if (cell.tac === tac || existingCellIds.has(cell.cellId)) continue;
+      expandedCells.push({
+        operation: "update",
+        target_cell_id: cell.cellId,
+        station_id: input.station_id,
+        band_id: cell.bandId,
+        rat: "LTE",
+        details: {
+          enbid: cell.enbid,
+          clid: cell.clid,
+          tac,
+          pci: cell.pci,
+          earfcn: cell.earfcn,
+          supports_iot: cell.supports_iot,
+        },
+      });
+    }
+
+    return { ...input, cells: expandedCells };
+  });
+}
+
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   if (!getRuntimeSettings().submissionsEnabled) throw new ErrorResponse("FORBIDDEN");
   const userSession = req.userSession;
@@ -72,11 +151,12 @@ ${ANALYZER_SYSTEM_NOTE}`
   }));
 
   await Promise.all(submissionInputs.map(validateSubmission));
+  const expandedSubmissionInputs = await expandLteTacUpdates(submissionInputs);
 
   try {
     const results = await db.transaction(async (tx) => {
       const created: SubmissionWithExtras[] = [];
-      for (const input of submissionInputs) {
+      for (const input of expandedSubmissionInputs) {
         // eslint-disable-next-line no-await-in-loop
         created.push(await processSubmission(tx, input, userId));
       }

@@ -1,7 +1,7 @@
 import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
 import { isARFCNValidForBand } from "@openbts/shared/frequency";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify";
 import z from "zod";
@@ -97,6 +97,13 @@ type StationChangeRecord = {
   applied: number;
 };
 
+function addStationTac(stationTacs: Map<number, number>, stationId: number, tac: number): void {
+  const existingTac = stationTacs.get(stationId);
+  if (existingTac !== undefined && existingTac !== tac)
+    throw new ErrorResponse("BAD_REQUEST", { message: `Multiple TAC values submitted for station ${stationId}` });
+  stationTacs.set(stationId, tac);
+}
+
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const userId = req.userSession?.user.id;
   if (!userId) throw new ErrorResponse("UNAUTHORIZED");
@@ -128,6 +135,23 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const bandMap = new Map(bandRows.map((b) => [b.id, b]));
 
   const stationItems = items.map((item) => ({ item, station: stationMap.get(item.station_id)! }));
+  const submittedTacByStationId = new Map<number, number>();
+
+  for (const item of items) {
+    for (const cell of item.cells) {
+      if (cell.rat !== "LTE") continue;
+      const details = cell.details as Partial<LTEInsertDetails & LTEUpdateDetails> | undefined;
+      if (details?.tac !== null && details?.tac !== undefined) addStationTac(submittedTacByStationId, item.station_id, details.tac);
+    }
+  }
+
+  if (submittedTacByStationId.size > 0) {
+    const stationLteCells = await db.query.cells.findMany({
+      where: { AND: [{ station_id: { in: [...submittedTacByStationId.keys()] } }, { rat: "LTE" }] },
+      with: { gsm: true, umts: true, lte: true, nr: true },
+    });
+    for (const cell of stationLteCells) existingCellsMap.set(cell.id, cell);
+  }
 
   await Promise.all(
     stationItems.map(async ({ item, station }) => {
@@ -284,6 +308,25 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
             await insertRATDetails(cell.rat, newCell.id, cell.details as RATInsertDetails);
             addedCellIds.push(newCell.id);
           }
+        }
+      }
+
+      const stationTac = submittedTacByStationId.get(station.id);
+      if (stationTac !== undefined) {
+        // oxlint-disable-next-line no-await-in-loop
+        const propagatedRows = await tx
+          .select({ cellId: lteCells.cell_id })
+          .from(lteCells)
+          .innerJoin(cells, eq(cells.id, lteCells.cell_id))
+          .where(and(eq(cells.station_id, station.id), eq(cells.rat, "LTE"), sql`${lteCells.tac} IS DISTINCT FROM ${stationTac}`));
+
+        if (propagatedRows.length > 0) {
+          const propagatedCellIds = propagatedRows.map((row) => row.cellId);
+          // oxlint-disable-next-line no-await-in-loop
+          await tx.update(lteCells).set({ tac: stationTac, updatedAt: new Date() }).where(inArray(lteCells.cell_id, propagatedCellIds));
+          // oxlint-disable-next-line no-await-in-loop
+          await tx.update(cells).set({ updatedAt: new Date() }).where(inArray(cells.id, propagatedCellIds));
+          updatedCellIds.push(...propagatedCellIds.filter((cellId) => !addedCellIds.includes(cellId) && !updatedCellIds.includes(cellId)));
         }
       }
 
