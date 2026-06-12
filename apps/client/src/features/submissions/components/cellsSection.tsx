@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { SectorDraft } from "@/types/station";
+
 import type { ProposedCellForm, RatType } from "../types";
 import type { CellError } from "../utils/validation";
 import { CellDetailsForm } from "./cellDetailsForm";
@@ -9,13 +11,23 @@ export interface CellsSectionProps {
   selectedRats: RatType[];
   cells: ProposedCellForm[];
   originalCells: ProposedCellForm[];
+  sectors: SectorDraft[];
   isNewStation: boolean;
   cellErrors?: Record<string, CellError>;
   onCellsChange: (rat: RatType, cells: ProposedCellForm[]) => void;
   operatorMnc?: number | null;
 }
 
-export function CellsSection({ selectedRats, cells, originalCells, isNewStation, cellErrors, onCellsChange, operatorMnc }: CellsSectionProps) {
+export function CellsSection({
+  selectedRats,
+  cells,
+  originalCells,
+  sectors,
+  isNewStation,
+  cellErrors,
+  onCellsChange,
+  operatorMnc,
+}: CellsSectionProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
   const cellsByRat = useMemo(() => {
@@ -44,6 +56,7 @@ export function CellsSection({ selectedRats, cells, originalCells, isNewStation,
           rat={rat}
           cells={cellsByRat.get(rat) ?? []}
           originalCells={originalCells}
+          sectors={sectors}
           isNewStation={isNewStation}
           cellErrors={cellErrors}
           onCellsChange={onCellsChange}

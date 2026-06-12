@@ -1,6 +1,6 @@
 import { AirportTowerIcon, Globe02Icon, SquareArrowExpand01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchSiblingExtraIds } from "@/features/admin/stations/api";
+import { SectorsPanel } from "@/features/admin/stations/components/sectorsEditor";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
@@ -21,7 +22,7 @@ import { LocationPicker } from "@/features/submissions/components/locationPicker
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
-import type { Operator, Station } from "@/types/station";
+import type { Operator, SectorDraft, Station } from "@/types/station";
 
 import { ChangeBadge } from "./common";
 
@@ -43,6 +44,9 @@ type SubmissionStationFormProps = {
   onExtraIdsChange: (patch: Partial<ExtraIdentificatorsType>) => void;
   locationForm: ProposedLocationForm;
   onLocationFormChange: (patch: Partial<ProposedLocationForm>) => void;
+  sectors: SectorDraft[];
+  onSectorsChange: (sectors: SectorDraft[]) => void;
+  cells: Array<{ band_id: number; _sectorLocalId?: string | null }>;
   operators: Operator[];
   selectedOperator?: Operator;
   currentOperator?: Operator | null;
@@ -61,6 +65,9 @@ export function SubmissionStationForm({
   onExtraIdsChange,
   locationForm,
   onLocationFormChange,
+  sectors,
+  onSectorsChange,
+  cells,
   operators,
   selectedOperator,
   currentOperator,
@@ -70,12 +77,28 @@ export function SubmissionStationForm({
   isFormDisabled,
   isDeleteSubmission,
 }: SubmissionStationFormProps) {
-  const { t } = useTranslation(["submissions", "common"]);
+  const { t } = useTranslation(["submissions", "common", "stationDetails"]);
   const [stationDialogOpen, setStationDialogOpen] = useState(false);
   const [isFetchingSibling, setIsFetchingSibling] = useState(false);
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!extraIdsForm.networks_id;
   const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !extraIdsForm.networks_id && !!extraIdsForm.mno_name;
   const showSection = showExtraIdsFields || showMnoNameOnly;
+  const derivedSectorCount = (() => {
+    const byBand = new Map<number, number>();
+    for (const cell of cells) byBand.set(cell.band_id, (byBand.get(cell.band_id) ?? 0) + 1);
+    return byBand.size > 0 ? Math.max(...byBand.values()) : 0;
+  })();
+  const assignedSectorLocalIds = new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : [])));
+  const previousAzimuthByLocalId = useMemo(() => {
+    const currentById = new Map((currentStation?.sectors ?? []).map((sector) => [sector.id, sector.azimuth]));
+    const previous = new Map<string, number>();
+    for (const sector of sectors) {
+      if (sector.id === undefined) continue;
+      const currentAzimuth = currentById.get(sector.id);
+      if (currentAzimuth !== undefined && currentAzimuth !== sector.azimuth) previous.set(sector._localId, currentAzimuth);
+    }
+    return previous;
+  }, [currentStation?.sectors, sectors]);
 
   const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
@@ -250,6 +273,20 @@ export function SubmissionStationForm({
           />
         </div>
       )}
+
+      {!isDeleteSubmission ? (
+        <SectorsPanel
+          className="bg-card"
+          defaultOpen={previousAzimuthByLocalId.size > 0}
+          sectors={sectors}
+          onChange={onSectorsChange}
+          derivedSectorCount={derivedSectorCount}
+          assignedSectorLocalIds={assignedSectorLocalIds}
+          previousAzimuthByLocalId={previousAzimuthByLocalId}
+          renderPreviousAzimuth={(azimuth) => <ChangeBadge label={t("diff.was")} current={`${azimuth}°`} />}
+          readOnly={isFormDisabled}
+        />
+      ) : null}
 
       {currentStation && stationDialogOpen && (
         <Suspense>

@@ -25,7 +25,8 @@ import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { fetchApiData, showApiError } from "@/lib/api";
-import type { Band, Cell, Station } from "@/types/station";
+import { cn } from "@/lib/utils";
+import type { Band, Cell, SectorDraft, Station } from "@/types/station";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -48,6 +49,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
       _serverId: cell.id,
       operation: cell.operation,
       target_cell_id: cell.target_cell_id,
+      _sectorLocalId: cell.sector_local_id ?? (cell.target_sector_id ? `sector-${cell.target_sector_id}` : cell.sector_unassigned ? null : undefined),
       rat: cell.rat ?? "",
       band_id: cell.band_id ?? 0,
       is_confirmed: cell.is_confirmed,
@@ -68,6 +70,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
       _localId: crypto.randomUUID(),
       operation: "unchanged" as const,
       target_cell_id: c.id,
+      _sectorLocalId: c.sector_id ? `sector-${c.sector_id}` : null,
       rat: c.rat as (typeof RAT_ORDER)[number],
       band_id: c.band.id,
       is_confirmed: c.is_confirmed,
@@ -84,6 +87,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
           _serverId: cell.id,
           operation: cell.operation,
           target_cell_id: cell.target_cell_id,
+          _sectorLocalId: target.sector_id ? `sector-${target.sector_id}` : null,
           rat: target.rat as (typeof RAT_ORDER)[number],
           band_id: target.band.id,
           is_confirmed: target.is_confirmed,
@@ -97,6 +101,7 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
       _serverId: cell.id,
       operation: cell.operation,
       target_cell_id: cell.target_cell_id,
+      _sectorLocalId: cell.sector_local_id ?? (cell.target_sector_id ? `sector-${cell.target_sector_id}` : cell.sector_unassigned ? null : undefined),
       rat: cell.rat ?? "",
       band_id: cell.band_id ?? 0,
       is_confirmed: cell.is_confirmed,
@@ -250,6 +255,11 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
   const { data: allBands = [] } = useQuery(bandsQueryOptions());
+  const [sectors, setSectors] = useState<SectorDraft[]>(() =>
+    submission.sectors.length > 0
+      ? submission.sectors.map((sector) => ({ _localId: sector.local_id, id: sector.target_sector_id ?? undefined, azimuth: sector.azimuth }))
+      : (currentStation?.sectors ?? []).map((sector) => ({ ...sector, _localId: `sector-${sector.id}` })),
+  );
 
   const initialCells = useMemo(() => computeInitialCells(submission, currentStation), [submission, currentStation]);
 
@@ -311,6 +321,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         stationForm,
         extraForm,
         locationForm,
+        sectors,
         localCells,
       },
       {
@@ -392,6 +403,12 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     return new Map(currentStation.cells.map((c) => [c.id, c]));
   }, [currentStation]);
 
+  const currentSectorLabelById = useMemo(() => {
+    const map = new Map<number, string>();
+    (currentStation?.sectors ?? []).forEach((sector, index) => map.set(sector.id, `S${index + 1} (${sector.azimuth}°)`));
+    return map;
+  }, [currentStation]);
+
   const getSubmissionDiffBadges = useCallback(
     (_rat: string, cellsForRat: LocalCell[]) => ({
       added: cellsForRat.filter((c) => c.operation === "add").length,
@@ -429,6 +446,10 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
       const details = (targetCell.details ?? {}) as Record<string, unknown>;
       const changedKeys = new Set(Object.keys({ ...details, ...cell.details }).filter((k) => details[k] !== cell.details[k]));
+      const proposedTargetSectorId = cell._sectorLocalId?.startsWith("sector-")
+        ? Number.parseInt(cell._sectorLocalId.slice("sector-".length), 10)
+        : null;
+      const sectorChanged = (Number.isNaN(proposedTargetSectorId) ? null : proposedTargetSectorId) !== (targetCell.sector_id ?? null);
 
       return (
         <tr className="bg-amber-50/40 dark:bg-amber-950/15 border-b last:border-0">
@@ -439,6 +460,11 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value}</span>
           </td>
           {targetCell.rat !== "GSM" && <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>}
+          {sectors.length > 0 && (
+            <td className={cn("px-3 py-1 font-mono text-xs text-muted-foreground", sectorChanged && "text-amber-700 dark:text-amber-300")}>
+              {targetCell.sector_id ? (currentSectorLabelById.get(targetCell.sector_id) ?? "-") : "-"}
+            </td>
+          )}
           <SubmissionDiffDetailCells details={details} rat={targetCell.rat} changedKeys={changedKeys} />
           <td className="px-3 py-1 font-mono text-xs text-muted-foreground truncate max-w-28">{targetCell.notes || "-"}</td>
           <td className="px-3 py-1" />
@@ -487,6 +513,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               onExtraIdsChange={(patch) => setExtraForm((prev) => ({ ...prev, ...patch }))}
               locationForm={locationForm}
               onLocationFormChange={(patch) => setLocationForm((prev) => ({ ...prev, ...patch }))}
+              sectors={sectors}
+              onSectorsChange={setSectors}
+              cells={localCells}
               operators={operators}
               selectedOperator={selectedOperator}
               currentOperator={currentOperator}
@@ -506,6 +535,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               enabledRats={enabledRats}
               visibleRats={visibleRats}
               bands={allBands}
+              sectors={sectors}
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}

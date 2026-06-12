@@ -55,6 +55,8 @@
     "azimuthsMinZoomHint": "Set the minimum zoom level at which azimuths become visible on the map",
     "azimuthLineLength": "Azimuth Line Length",
     "azimuthLineLengthHint": "Set the length of azimuth direction lines drawn on the map",
+    "azimuthSpread": "Azimuth Spread",
+    "azimuthSpreadHint": "Set the angular width of each azimuth triangle on the map",
     "groupNavigation": "Navigation",
     "groupMap": "Map",
     "groupAzimuths": "Azimuths",

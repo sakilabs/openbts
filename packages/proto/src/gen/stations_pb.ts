@@ -8,7 +8,7 @@ import type { Band, Operator, Rat } from "./common_pb.js";
 import { file_common } from "./common_pb.js";
 import type { ExtraIdentificators } from "./station_cells_pb.js";
 import { file_station_cells } from "./station_cells_pb.js";
-import type { Location } from "./locations_pb.js";
+import type { Location, Sector } from "./locations_pb.js";
 import { file_locations } from "./locations_pb.js";
 import { file_google_protobuf_struct } from "@bufbuild/protobuf/wkt";
 import type { JsonObject, Message } from "@bufbuild/protobuf";
@@ -17,7 +17,7 @@ import type { JsonObject, Message } from "@bufbuild/protobuf";
  * Describes the file stations.proto.
  */
 export const file_stations: GenFile = /*@__PURE__*/
-  fileDesc("Cg5zdGF0aW9ucy5wcm90bxIQb3BlbmJ0cy5zdGF0aW9ucyLGAQoLU3RhdGlvbkNlbGwSCgoCaWQYASABKAUSGQoDcmF0GAIgASgOMgwub3BlbmJ0cy5SYXQSDQoFbm90ZXMYAyABKAkSGwoEYmFuZBgEIAEoCzINLm9wZW5idHMuQmFuZBIUCgxpc19jb25maXJtZWQYBSABKAgSKAoHZGV0YWlscxgIIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSEQoJdXBkYXRlZEF0GAYgASgJEhEKCWNyZWF0ZWRBdBgHIAEoCSLTAQoEQ2VsbBIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgFEhkKA3JhdBgDIAEoDjIMLm9wZW5idHMuUmF0Eg0KBW5vdGVzGAQgASgJEhsKBGJhbmQYBSABKAsyDS5vcGVuYnRzLkJhbmQSFAoMaXNfY29uZmlybWVkGAYgASgIEigKB2RldGFpbHMYByABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0EhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAki8gIKB1N0YXRpb24SCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoCRINCgVub3RlcxgDIAEoCRIVCg1leHRyYV9hZGRyZXNzGAQgASgJEiwKBWNlbGxzGAUgAygLMh0ub3BlbmJ0cy5zdGF0aW9ucy5TdGF0aW9uQ2VsbBJDChRleHRyYV9pZGVudGlmaWNhdG9ycxgGIAEoCzIlLm9wZW5idHMuc3RhdGlvbnMuRXh0cmFJZGVudGlmaWNhdG9ycxItCghsb2NhdGlvbhgHIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAggASgLMhEub3BlbmJ0cy5PcGVyYXRvchIUCgxpc19jb25maXJtZWQYCSABKAgSEQoJdXBkYXRlZEF0GAogASgJEhEKCWNyZWF0ZWRBdBgLIAEoCRITCgZzdGF0dXMYDCABKAlIAIgBAUIJCgdfc3RhdHVzIk8KEFN0YXRpb25zUmVzcG9uc2USJwoEZGF0YRgBIAMoCzIZLm9wZW5idHMuc3RhdGlvbnMuU3RhdGlvbhISCgp0b3RhbENvdW50GAIgASgFIjoKD1N0YXRpb25SZXNwb25zZRInCgRkYXRhGAEgASgLMhkub3BlbmJ0cy5zdGF0aW9ucy5TdGF0aW9uIjUKDUNlbGxzUmVzcG9uc2USJAoEZGF0YRgBIAMoCzIWLm9wZW5idHMuc3RhdGlvbnMuQ2VsbCI0CgxDZWxsUmVzcG9uc2USJAoEZGF0YRgBIAEoCzIWLm9wZW5idHMuc3RhdGlvbnMuQ2VsbCouCgZOUlR5cGUSEwoPTlJfVFlQRV9VTktOT1dOEAASBwoDbnNhEAESBgoCc2EQAmIGcHJvdG8z", [file_common, file_station_cells, file_locations, file_google_protobuf_struct]);
+  fileDesc("Cg5zdGF0aW9ucy5wcm90bxIQb3BlbmJ0cy5zdGF0aW9ucyLZAQoLU3RhdGlvbkNlbGwSCgoCaWQYASABKAUSGQoDcmF0GAIgASgOMgwub3BlbmJ0cy5SYXQSDQoFbm90ZXMYAyABKAkSGwoEYmFuZBgEIAEoCzINLm9wZW5idHMuQmFuZBIUCgxpc19jb25maXJtZWQYBSABKAgSKAoHZGV0YWlscxgGIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSEQoJc2VjdG9yX2lkGAcgASgFEhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAki5gEKBENlbGwSCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoBRIZCgNyYXQYAyABKA4yDC5vcGVuYnRzLlJhdBINCgVub3RlcxgEIAEoCRIbCgRiYW5kGAUgASgLMg0ub3BlbmJ0cy5CYW5kEhQKDGlzX2NvbmZpcm1lZBgGIAEoCBIoCgdkZXRhaWxzGAcgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdBIRCglzZWN0b3JfaWQYCCABKAUSEQoJdXBkYXRlZEF0GAkgASgJEhEKCWNyZWF0ZWRBdBgKIAEoCSKeAwoHU3RhdGlvbhIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgJEg0KBW5vdGVzGAMgASgJEhUKDWV4dHJhX2FkZHJlc3MYBCABKAkSLAoFY2VsbHMYBSADKAsyHS5vcGVuYnRzLnN0YXRpb25zLlN0YXRpb25DZWxsEkMKFGV4dHJhX2lkZW50aWZpY2F0b3JzGAYgASgLMiUub3BlbmJ0cy5zdGF0aW9ucy5FeHRyYUlkZW50aWZpY2F0b3JzEi0KCGxvY2F0aW9uGAcgASgLMhsub3BlbmJ0cy5sb2NhdGlvbnMuTG9jYXRpb24SIwoIb3BlcmF0b3IYCCABKAsyES5vcGVuYnRzLk9wZXJhdG9yEhQKDGlzX2NvbmZpcm1lZBgJIAEoCBIqCgdzZWN0b3JzGAogAygLMhkub3BlbmJ0cy5sb2NhdGlvbnMuU2VjdG9yEhEKCXVwZGF0ZWRBdBgLIAEoCRIRCgljcmVhdGVkQXQYDCABKAkSEwoGc3RhdHVzGA0gASgJSACIAQFCCQoHX3N0YXR1cyJPChBTdGF0aW9uc1Jlc3BvbnNlEicKBGRhdGEYASADKAsyGS5vcGVuYnRzLnN0YXRpb25zLlN0YXRpb24SEgoKdG90YWxDb3VudBgCIAEoBSI6Cg9TdGF0aW9uUmVzcG9uc2USJwoEZGF0YRgBIAEoCzIZLm9wZW5idHMuc3RhdGlvbnMuU3RhdGlvbiI1Cg1DZWxsc1Jlc3BvbnNlEiQKBGRhdGEYASADKAsyFi5vcGVuYnRzLnN0YXRpb25zLkNlbGwiNAoMQ2VsbFJlc3BvbnNlEiQKBGRhdGEYASABKAsyFi5vcGVuYnRzLnN0YXRpb25zLkNlbGwqLgoGTlJUeXBlEhMKD05SX1RZUEVfVU5LTk9XThAAEgcKA25zYRABEgYKAnNhEAJiBnByb3RvMw", [file_common, file_station_cells, file_locations, file_google_protobuf_struct]);
 
 /**
  * @generated from message openbts.stations.StationCell
@@ -49,17 +49,22 @@ export type StationCell = Message<"openbts.stations.StationCell"> & {
   isConfirmed: boolean;
 
   /**
-   * @generated from field: google.protobuf.Struct details = 8;
+   * @generated from field: google.protobuf.Struct details = 6;
    */
   details?: JsonObject | undefined;
 
   /**
-   * @generated from field: string updatedAt = 6;
+   * @generated from field: int32 sector_id = 7;
+   */
+  sectorId: number;
+
+  /**
+   * @generated from field: string updatedAt = 8;
    */
   updatedAt: string;
 
   /**
-   * @generated from field: string createdAt = 7;
+   * @generated from field: string createdAt = 9;
    */
   createdAt: string;
 };
@@ -111,12 +116,17 @@ export type Cell = Message<"openbts.stations.Cell"> & {
   details?: JsonObject | undefined;
 
   /**
-   * @generated from field: string updatedAt = 8;
+   * @generated from field: int32 sector_id = 8;
+   */
+  sectorId: number;
+
+  /**
+   * @generated from field: string updatedAt = 9;
    */
   updatedAt: string;
 
   /**
-   * @generated from field: string createdAt = 9;
+   * @generated from field: string createdAt = 10;
    */
   createdAt: string;
 };
@@ -178,17 +188,22 @@ export type Station = Message<"openbts.stations.Station"> & {
   isConfirmed: boolean;
 
   /**
-   * @generated from field: string updatedAt = 10;
+   * @generated from field: repeated openbts.locations.Sector sectors = 10;
+   */
+  sectors: Sector[];
+
+  /**
+   * @generated from field: string updatedAt = 11;
    */
   updatedAt: string;
 
   /**
-   * @generated from field: string createdAt = 11;
+   * @generated from field: string createdAt = 12;
    */
   createdAt: string;
 
   /**
-   * @generated from field: optional string status = 12;
+   * @generated from field: optional string status = 13;
    */
   status?: string | undefined;
 };

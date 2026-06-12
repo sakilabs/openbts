@@ -1,5 +1,5 @@
 import type { RatType } from "@/features/shared/rat";
-import type { Band, Operator, Region } from "@/types/station";
+import type { Band, Operator, Region, SectorDraft } from "@/types/station";
 
 export type { RatType };
 
@@ -43,6 +43,7 @@ export type CellFormDetails = GSMCellDetails | UMTSCellDetails | LTECellDetails 
 export type ProposedCellForm = {
   id: string;
   existingCellId?: number;
+  _sectorLocalId?: string | null;
   rat: RatType;
   band_id: number | null;
   notes?: string;
@@ -72,10 +73,19 @@ export type CellOperation = "add" | "update" | "delete";
 export type CellPayload = {
   operation: CellOperation;
   target_cell_id?: number;
+  target_sector_id?: number | null;
+  sector_local_id?: string | null;
+  sector_unassigned?: boolean;
   band_id?: number | null;
   rat?: RatType;
   notes?: string | null;
   details?: Partial<CellFormDetails>;
+};
+
+export type SectorPayload = {
+  local_id: string;
+  target_sector_id?: number | null;
+  azimuth: number;
 };
 
 export type SubmissionFormData = {
@@ -84,6 +94,7 @@ export type SubmissionFormData = {
   submitter_note?: string;
   station?: ProposedStationForm;
   location?: ProposedLocationForm;
+  sectors?: SectorPayload[];
   cells: CellPayload[];
   pending_photos?: number;
   location_photo_ids?: number[];
@@ -95,3 +106,4 @@ export type SubmissionMode = "existing" | "new";
 export type StationAction = "update" | "delete";
 
 export type { Band, Operator, Region };
+export type { SectorDraft };

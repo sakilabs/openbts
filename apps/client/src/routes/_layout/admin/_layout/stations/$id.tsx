@@ -31,12 +31,13 @@ import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { isRecent } from "@/lib/dateUtils";
 import { shallowEqual } from "@/lib/shallowEqual";
-import type { Band, Cell, Station, UkeStation } from "@/types/station";
+import { type Band, type Cell, type SectorDraft, type Station, type UkeStation } from "@/types/station";
 
 function cellToLocal(cell: Cell): LocalCell {
   return {
     _localId: crypto.randomUUID(),
     _serverId: cell.id,
+    _sectorLocalId: cell.sector_id ? `sector-${cell.sector_id}` : null,
     rat: cell.rat as (typeof RAT_ORDER)[number],
     band_id: cell.band.id,
     is_confirmed: cell.is_confirmed,
@@ -77,6 +78,12 @@ function getDiffBorderClass(status: CellDiffStatus): string | undefined {
   if (status === "added") return "border-l-2 border-l-green-500";
   if (status === "modified") return "border-l-2 border-l-amber-500";
   return undefined;
+}
+
+function sectorsMatchDrafts(drafts: SectorDraft[], station: Station | undefined): boolean {
+  const original = station?.sectors ?? [];
+  if (drafts.length !== original.length) return false;
+  return drafts.every((draft, index) => draft.azimuth === original[index]?.azimuth);
 }
 
 function AdminStationDetailPage() {
@@ -275,6 +282,9 @@ function StationDetailForm({
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
+  const [sectors, setSectors] = useState<SectorDraft[]>(() =>
+    (station?.sectors ?? []).map((sector) => ({ ...sector, _localId: `sector-${sector.id}` })),
+  );
 
   const saveMutation = useSaveStationMutation();
   const handleServerCellDelete = useCallback((cell: LocalCell) => {
@@ -284,6 +294,7 @@ function StationDetailForm({
   const createNewStationCell = useCallback(
     (rat: string, defaultBand: Band): LocalCell => ({
       _localId: crypto.randomUUID(),
+      _sectorLocalId: null,
       rat: rat as (typeof RAT_ORDER)[number],
       band_id: defaultBand.id,
       is_confirmed: isAdmin ?? false,
@@ -314,6 +325,17 @@ function StationDetailForm({
     onDelete: handleServerCellDelete,
     sortCellsByRat: false,
   });
+
+  const handleSectorsChange = useCallback(
+    (nextSectors: SectorDraft[]) => {
+      const nextSectorIds = new Set(nextSectors.map((sector) => sector._localId));
+      setSectors(nextSectors);
+      setLocalCells((prev) =>
+        prev.map((cell) => (cell._sectorLocalId && !nextSectorIds.has(cell._sectorLocalId) ? { ...cell, _sectorLocalId: null } : cell)),
+      );
+    },
+    [setLocalCells],
+  );
 
   const handleLocationChange = useCallback((patch: Partial<ProposedLocationForm>) => {
     dispatch({ type: "PATCH_LOCATION", payload: patch });
@@ -358,6 +380,7 @@ function StationDetailForm({
 
       const newCells: LocalCell[] = ukePermitsToCells(ukeStation.permits).map((cell) => ({
         _localId: cell.id,
+        _sectorLocalId: null,
         rat: cell.rat,
         band_id: cell.band_id!,
         is_confirmed: false,
@@ -426,6 +449,11 @@ function StationDetailForm({
       return;
     }
 
+    if (sectors.some((sector) => sector.azimuth === "")) {
+      toast.error("Uzupełnij azymuty sektorów (0-359).");
+      return;
+    }
+
     saveMutation.mutate(
       {
         isCreateMode,
@@ -437,6 +465,7 @@ function StationDetailForm({
         location,
         existingLocationId,
         localCells,
+        sectors,
         deletedServerCellIds,
         originalStation: station,
         networksId: networksId ?? undefined,
@@ -472,6 +501,7 @@ function StationDetailForm({
             setLocalCells(sortAndMapCells(fresh.cells));
             const freshRats = new Set(fresh.cells.map((c) => c.rat));
             setEnabledRats(RAT_ORDER.filter((r) => freshRats.has(r)));
+            setSectors((fresh.sectors ?? []).map((sector) => ({ ...sector, _localId: `sector-${sector.id}` })));
           }
         },
         onError: (error) => {
@@ -486,6 +516,7 @@ function StationDetailForm({
       dispatch({ type: "RESET_CREATE" });
       setEnabledRats([]);
       setLocalCells([]);
+      setSectors([]);
       return;
     }
     if (!station) return;
@@ -493,6 +524,7 @@ function StationDetailForm({
     const existingRats = new Set(station.cells.map((c) => c.rat));
     setEnabledRats(RAT_ORDER.filter((r) => existingRats.has(r)));
     setLocalCells(sortAndMapCells(station.cells));
+    setSectors((station.sectors ?? []).map((sector) => ({ ...sector, _localId: `sector-${sector.id}` })));
   };
 
   const selectedOperator = useMemo(() => operators.find((o) => o.id === operatorId), [operators, operatorId]);
@@ -515,6 +547,7 @@ function StationDetailForm({
     if (networksId !== initial.networksId) return true;
     if (networksName !== initial.networksName) return true;
     if (mnoName !== initial.mnoName) return true;
+    if (!sectorsMatchDrafts(sectors, station)) return true;
     for (const lc of localCells) {
       if (getLocalCellDiffStatus(lc, originalCells) !== "unchanged") return true;
     }
@@ -534,6 +567,7 @@ function StationDetailForm({
     networksId,
     networksName,
     mnoName,
+    sectors,
   ]);
 
   useSaveShortcut({
@@ -628,6 +662,9 @@ function StationDetailForm({
               onMnoNameChange={(v) => dispatch({ type: "SET_MNO_NAME", payload: v })}
               currentLocation={station?.location ?? null}
               showEditLocationLink={!isCreateMode}
+              sectors={sectors}
+              onSectorsChange={handleSectorsChange}
+              cells={localCells}
             />
 
             {isCreateMode ? (
@@ -651,6 +688,7 @@ function StationDetailForm({
               enabledRats={enabledRats}
               visibleRats={visibleRats}
               bands={allBands}
+              sectors={sectors}
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
               onAddCell={handleAddCell}

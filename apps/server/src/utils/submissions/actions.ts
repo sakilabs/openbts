@@ -8,6 +8,7 @@ import {
   nrCells,
   operators,
   stationPhotoSelections,
+  stationSectors,
   stations,
   submissions,
   umtsCells,
@@ -140,6 +141,25 @@ async function migrateStationPhotos(tx: DbTx, stationId: number, newLocationId: 
   await tx.update(locationPhotos).set({ location_id: newLocationId }).where(inArray(locationPhotos.id, stationPhotoIds));
 }
 
+type ProposedSectorRow = {
+  target_sector_id: number | null;
+  local_id: string;
+  azimuth: number;
+};
+
+type ProposedCellSectorRef = {
+  target_sector_id: number | null;
+  sector_local_id: string | null;
+  sector_unassigned?: boolean;
+};
+
+function resolveProposedCellSectorId(proposed: ProposedCellSectorRef, sectorIdByLocalId: ReadonlyMap<string, number>): number | null | undefined {
+  if (proposed.target_sector_id !== null && proposed.target_sector_id !== undefined) return proposed.target_sector_id;
+  if (proposed.sector_local_id) return sectorIdByLocalId.get(proposed.sector_local_id) ?? null;
+  if (proposed.sector_unassigned) return null;
+  return undefined;
+}
+
 export async function approveSubmissionAction({
   submissionId,
   reviewerId,
@@ -162,9 +182,10 @@ export async function approveSubmissionAction({
   }
 
   const transactionResult = await db.transaction(async (tx) => {
-    const [proposedStation, proposedLocation, proposedCellRows] = await Promise.all([
+    const [proposedStation, proposedLocation, proposedSectorRows, proposedCellRows] = await Promise.all([
       tx.query.proposedStations.findFirst({ where: { submission_id: submissionId } }),
       tx.query.proposedLocations.findFirst({ where: { submission_id: submissionId } }),
+      tx.query.proposedSectors.findMany({ where: { submission_id: submissionId }, orderBy: { id: "asc" } }),
       tx.query.proposedCells.findMany({ where: { submission_id: submissionId }, with: { gsm: true, umts: true, lte: true, nr: true } }),
     ]);
 
@@ -445,6 +466,9 @@ export async function approveSubmissionAction({
     const cellsAdded: Array<Record<string, unknown>> = [];
     const cellsUpdated: Array<{ old: Record<string, unknown>; new: Record<string, unknown> }> = [];
     const cellsDeleted: Array<Record<string, unknown>> = [];
+    const sectorIdByLocalId = new Map<string, number>();
+    let sectorIdsToDeleteAfterCells: number[] = [];
+    let previousSectors: Array<{ id: number; azimuth: number }> = [];
 
     const approveOperatorId =
       submission.type === "new"
@@ -462,6 +486,39 @@ export async function approveSubmissionAction({
         })
         .filter((e): e is typeof e & { details: Record<string, unknown> } => e.details !== null);
       if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, approveOperatorId);
+    }
+
+    if (stationId && proposedSectorRows.length > 0) {
+      previousSectors = await tx.query.stationSectors.findMany({
+        where: { station_id: stationId },
+        columns: { id: true, azimuth: true },
+        orderBy: { id: "asc" },
+      });
+      const previousSectorIds = new Set(previousSectors.map((sector) => sector.id));
+      const retainedSectorIds = new Set<number>();
+
+      for (const proposed of proposedSectorRows as ProposedSectorRow[]) {
+        if (proposed.target_sector_id !== null && previousSectorIds.has(proposed.target_sector_id)) {
+          retainedSectorIds.add(proposed.target_sector_id);
+          sectorIdByLocalId.set(proposed.local_id, proposed.target_sector_id);
+          const current = previousSectors.find((sector) => sector.id === proposed.target_sector_id);
+          if (current && current.azimuth !== proposed.azimuth)
+            await tx
+              .update(stationSectors)
+              .set({ azimuth: proposed.azimuth })
+              .where(and(eq(stationSectors.id, proposed.target_sector_id), eq(stationSectors.station_id, stationId)));
+          continue;
+        }
+
+        const [insertedSector] = await tx
+          .insert(stationSectors)
+          .values({ station_id: stationId, azimuth: proposed.azimuth })
+          .returning({ id: stationSectors.id });
+        if (!insertedSector) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station sector" });
+        sectorIdByLocalId.set(proposed.local_id, insertedSector.id);
+      }
+
+      sectorIdsToDeleteAfterCells = previousSectors.filter((sector) => !retainedSectorIds.has(sector.id)).map((sector) => sector.id);
     }
 
     /* eslint-disable no-await-in-loop */
@@ -482,12 +539,14 @@ export async function approveSubmissionAction({
           if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without a station" });
           if (!proposed.rat) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without RAT" });
           if (!proposed.band_id) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without band" });
+          const sectorId = resolveProposedCellSectorId(proposed, sectorIdByLocalId);
 
           const [newCell] = await tx
             .insert(cells)
             .values({
               station_id: stationId,
               band_id: proposed.band_id,
+              sector_id: sectorId ?? null,
               rat: proposed.rat,
               notes: proposed.notes,
               is_confirmed: proposed.is_confirmed,
@@ -572,6 +631,8 @@ export async function approveSubmissionAction({
           if (proposed.band_id) cellUpdate.band_id = proposed.band_id;
           if (proposed.rat) cellUpdate.rat = proposed.rat;
           if (proposed.notes !== null) cellUpdate.notes = proposed.notes;
+          const sectorId = resolveProposedCellSectorId(proposed, sectorIdByLocalId);
+          if (sectorId !== undefined) cellUpdate.sector_id = sectorId;
 
           await tx.update(cells).set(cellUpdate).where(eq(cells.id, targetCellId));
 
@@ -668,6 +729,33 @@ export async function approveSubmissionAction({
       }
     }
     /* eslint-enable no-await-in-loop */
+
+    if (stationId && sectorIdsToDeleteAfterCells.length > 0) {
+      const [assignedResult] = await tx.select({ value: count() }).from(cells).where(inArray(cells.sector_id, sectorIdsToDeleteAfterCells));
+      if (Number(assignedResult?.value ?? 0) > 0)
+        throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete sectors that are still assigned to cells" });
+      await tx.delete(stationSectors).where(inArray(stationSectors.id, sectorIdsToDeleteAfterCells));
+    }
+
+    if (stationId && proposedSectorRows.length > 0) {
+      const newSectors = await tx.query.stationSectors.findMany({
+        where: { station_id: stationId },
+        columns: { id: true, azimuth: true },
+        orderBy: { id: "asc" },
+      });
+      await createAuditLog(
+        {
+          action: "stations.update",
+          table_name: "station_sectors",
+          record_id: stationId,
+          old_values: previousSectors,
+          new_values: newSectors,
+          metadata: { submission_id: submissionId, station_id: stationId },
+        },
+        req,
+        tx,
+      );
+    }
 
     if (cellsAdded.length > 0)
       await createAuditLog(
@@ -810,7 +898,7 @@ export async function approveSubmissionAction({
         const toInsert = locationPhotoSels.filter((s) => !existingIds.has(s.location_photo_id));
 
         const mainSel = locationPhotoSels.find((s) => s.is_main);
-        const mainIsAlreadyAssigned = mainSel != null && existingIds.has(mainSel.location_photo_id);
+        const mainIsAlreadyAssigned = mainSel !== undefined && existingIds.has(mainSel.location_photo_id);
 
         if (toInsert.length > 0) {
           const existingMain = await tx.query.stationPhotoSelections.findFirst({

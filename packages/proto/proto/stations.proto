@@ -11,10 +11,11 @@ message StationCell {
   string notes = 3;
   Band band = 4;
   bool is_confirmed = 5;
-  google.protobuf.Struct details = 8;
+  google.protobuf.Struct details = 6;
+  int32 sector_id = 7;
 
-  string updatedAt = 6;
-  string createdAt = 7;
+  string updatedAt = 8;
+  string createdAt = 9;
 }
 
 enum NRType {
@@ -31,9 +32,10 @@ message Cell {
   Band band = 5;
   bool is_confirmed = 6;
   google.protobuf.Struct details = 7;
+  int32 sector_id = 8;
 
-  string updatedAt = 8;
-  string createdAt = 9;
+  string updatedAt = 9;
+  string createdAt = 10;
 }
 
 message Station {
@@ -46,10 +48,11 @@ message Station {
   openbts.locations.Location location = 7;
   Operator operator = 8;
   bool is_confirmed = 9;
+  repeated openbts.locations.Sector sectors = 10;
 
-  string updatedAt = 10;
-  string createdAt = 11;
-  optional string status = 12;
+  string updatedAt = 11;
+  string createdAt = 12;
+  optional string status = 13;
 }
 
 message StationsResponse {

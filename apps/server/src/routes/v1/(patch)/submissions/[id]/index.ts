@@ -1,4 +1,4 @@
-import { proposedCells, proposedLocations, proposedStations, submissions } from "@openbts/drizzle";
+import { proposedCells, proposedLocations, proposedSectors, proposedStations, submissions } from "@openbts/drizzle";
 import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { eq } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
@@ -37,6 +37,7 @@ const cellInputSchema = createInsertSchema(proposedCells)
   .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchemaBase }));
 
 const stationInputSchema = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).partial();
+const sectorInputSchema = createInsertSchema(proposedSectors).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 
 const locationInputSchema = createInsertSchema(proposedLocations)
   .omit({ createdAt: true, updatedAt: true, submission_id: true })
@@ -51,10 +52,12 @@ const requestSchema = z.object({
   submitter_note: z.string().optional(),
   station: stationInputSchema.optional(),
   location: locationInputSchema.optional(),
+  sectors: z.array(sectorInputSchema).optional(),
   cells: z.array(cellInputSchema).optional(),
 });
 
 const responseSchema = submissionsSelectSchema.extend({
+  sectors: z.array(createSelectSchema(proposedSectors)),
   cells: z.array(proposedCellsSelectSchema.extend({ details: detailsSelectSchema })),
 });
 
@@ -82,6 +85,7 @@ function hasActualChanges(body: z.infer<typeof requestSchema>, existing: Existin
 
   if (isNonEmpty(body.station)) return true;
   if (isNonEmpty(body.location)) return true;
+  if (body.sectors?.length) return true;
   if (body.cells?.length && body.cells.some(isNonEmpty)) return true;
 
   return false;
@@ -148,6 +152,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         } as typeof proposedLocations.$inferInsert);
       }
 
+      if (req.body.sectors) {
+        await tx.delete(proposedSectors).where(eq(proposedSectors.submission_id, id));
+        if (req.body.sectors.length > 0)
+          await tx.insert(proposedSectors).values(req.body.sectors.map((sector) => ({ ...sector, submission_id: id })));
+      }
+
       if (req.body.cells) {
         await tx.delete(proposedCells).where(eq(proposedCells.submission_id, id));
 
@@ -179,12 +189,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       ]);
       if (!updated) throw new ErrorResponse("NOT_FOUND");
 
+      const sectors = await tx.query.proposedSectors.findMany({ where: { submission_id: id }, orderBy: { id: "asc" } });
+
       const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
         ...base,
         details: gsm ?? umts ?? lte ?? nr ?? null,
       }));
 
-      return { ...updated, cells };
+      return { ...updated, sectors, cells };
     });
 
     await createAuditLog(

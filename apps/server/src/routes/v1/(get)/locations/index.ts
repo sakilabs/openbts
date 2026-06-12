@@ -1,4 +1,4 @@
-import { cells, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
+import { cells, locations, lteCells, nrCells, operators, regions, stationSectors, stations } from "@openbts/drizzle";
 import { LocationsResponseType } from "@openbts/proto/server";
 import { and, count, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
@@ -14,8 +14,10 @@ const locationsSchema = createSelectSchema(locations).omit({ point: true, region
 const regionsSchema = createSelectSchema(regions);
 const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
 const operatorSchema = createSelectSchema(operators);
+const sectorSchema = createSelectSchema(stationSectors).omit({ station_id: true });
 const stationResponseSchema = stationsSchema.extend({
   operator: operatorSchema.nullable(),
+  sectors: z.array(sectorSchema).optional(),
 });
 
 const schemaRoute = {
@@ -73,6 +75,10 @@ const schemaRoute = {
         const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
         return { fields, cutoff };
       }),
+    azimuths: z
+      .string()
+      .optional()
+      .transform((val) => val === "true" || val === "1"),
     search: z.string().max(100).optional(),
     orphaned: z.coerce.boolean().optional().default(false),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
@@ -109,6 +115,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     since,
     search,
     orphaned,
+    azimuths,
     sort,
     sortBy,
   } = req.query;
@@ -383,6 +390,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             where: { RAW: (fields) => buildStationFilter(fields) ?? sql`true` },
             with: {
               operator: true,
+              ...(azimuths ? { sectors: { columns: { station_id: false }, orderBy: { id: "asc" } } } : {}),
             },
           },
         },

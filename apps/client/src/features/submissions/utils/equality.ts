@@ -1,4 +1,4 @@
-import type { CellPayload, ProposedCellForm, ProposedLocationForm, ProposedStationForm, StationAction } from "../types";
+import type { CellPayload, ProposedCellForm, ProposedLocationForm, ProposedStationForm, SectorDraft, SectorPayload, StationAction } from "../types";
 
 function isMeaningfulValue(v: unknown): boolean {
   if (v === undefined || v === null) return false;
@@ -52,7 +52,13 @@ function compareCellDetails(a: Partial<Record<string, unknown>>, b: Partial<Reco
 }
 
 export function isEqualCell(a: ProposedCellForm, b: ProposedCellForm): boolean {
-  return a.band_id === b.band_id && a.rat === b.rat && (a.notes ?? "") === (b.notes ?? "") && compareCellDetails(a.details ?? {}, b.details ?? {});
+  return (
+    a.band_id === b.band_id &&
+    a._sectorLocalId === b._sectorLocalId &&
+    a.rat === b.rat &&
+    (a.notes ?? "") === (b.notes ?? "") &&
+    compareCellDetails(a.details ?? {}, b.details ?? {})
+  );
 }
 
 export function isEqualCells(a: ProposedCellForm[], b: ProposedCellForm[]): boolean {
@@ -87,6 +93,9 @@ export function isEqualCellPayload(a: CellPayload, b: CellPayload): boolean {
   return (
     a.operation === b.operation &&
     a.target_cell_id === b.target_cell_id &&
+    a.target_sector_id === b.target_sector_id &&
+    a.sector_local_id === b.sector_local_id &&
+    a.sector_unassigned === b.sector_unassigned &&
     a.band_id === b.band_id &&
     a.rat === b.rat &&
     (a.notes ?? "") === (b.notes ?? "") &&
@@ -108,11 +117,22 @@ export function isEqualCellPayloads(a: CellPayload[], b: CellPayload[]): boolean
   return true;
 }
 
+export function isEqualSectors(a: SectorDraft[], b: SectorDraft[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].id !== b[i].id) return false;
+    if (a[i]._localId !== b[i]._localId) return false;
+    if (a[i].azimuth !== b[i].azimuth) return false;
+  }
+  return true;
+}
+
 export interface FormState {
   mode: "new" | "existing";
   action: "update" | "delete";
   newStation: ProposedStationForm;
   location: ProposedLocationForm;
+  sectors: SectorDraft[];
   cells: ProposedCellForm[];
   submitterNote: string;
 }
@@ -122,6 +142,7 @@ export interface OriginalState {
   station?: ProposedStationForm | null;
   location?: ProposedLocationForm | null;
   cells?: ProposedCellForm[];
+  sectors?: SectorDraft[];
   networksId?: number | null;
   networksName?: string;
   mnoName?: string;
@@ -152,6 +173,7 @@ export function hasFormChanges(current: FormState, original: OriginalState): boo
     } else if (current.cells.some((cell) => cell.band_id !== null || Object.values(cell.details).some(isMeaningfulValue))) {
       return true;
     }
+    if (!isEqualSectors(current.sectors, original.sectors ?? [])) return true;
     return false;
   }
 
@@ -160,6 +182,7 @@ export function hasFormChanges(current: FormState, original: OriginalState): boo
 
   const refCells = original.cells ?? [];
   if (!isEqualCells(current.cells, refCells)) return true;
+  if (!isEqualSectors(current.sectors, original.sectors ?? [])) return true;
 
   if (current.submitterNote !== (original.submitterNote ?? "")) return true;
 
@@ -172,6 +195,7 @@ export interface SubmissionPayload {
   submitter_note?: string | null;
   station?: ProposedStationForm;
   location?: ProposedLocationForm;
+  sectors?: SectorPayload[];
   cells?: CellPayload[];
 }
 
@@ -198,6 +222,8 @@ export function hasSubmissionChanges(payload: SubmissionPayload): boolean {
     )
   )
     return true;
+
+  if (payload.sectors?.some((sector) => sector.azimuth >= 0)) return true;
 
   return false;
 }

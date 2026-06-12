@@ -65,7 +65,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
         aria-label={t("common:actions.close")}
       />
       <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto sm:items-center pointer-events-none">
-        <div className="relative pointer-events-auto animate-in fade-in zoom-in-95 duration-200 w-full max-w-3xl">
+        <div className="relative pointer-events-auto animate-in fade-in zoom-in-95 duration-200 w-full max-w-4xl">
           <div className="relative bg-background rounded-2xl shadow-2xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
             <div className="shrink-0 bg-background/95 backdrop-blur-sm border-b">
               <div className="h-1" style={{ backgroundColor: operatorColor }} />

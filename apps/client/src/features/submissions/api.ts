@@ -1,7 +1,7 @@
 import type { SubmissionDetail, SubmissionRow } from "@/features/admin/submissions/types";
 import { API_BASE, fetchApiData, fetchJson, postApiData } from "@/lib/api";
 import { type GeocodingResult, reverseGeocode as reverseGeocodeWithMapbox } from "@/lib/mapboxGeocoding";
-import type { CellDetails, Location, LocationWithStations, Operator, Region, Station, UkeLocationWithPermits } from "@/types/station";
+import type { CellDetails, Location, LocationWithStations, Operator, Region, Sector, Station, UkeLocationWithPermits } from "@/types/station";
 
 import type { CellFormDetails, RatType, SubmissionFormData } from "./types";
 
@@ -19,6 +19,7 @@ export type SearchCell = {
   rat: string;
   station_id: number;
   band_id: number;
+  sector_id: number | null;
   notes: string | null;
   is_confirmed: boolean;
   updatedAt: string;
@@ -35,6 +36,7 @@ export type SearchStation = {
   createdAt: string;
   is_confirmed: boolean;
   cells: SearchCell[];
+  sectors?: Sector[];
   location: (Location & { region: Region }) | null;
   operator: Operator | null;
   extra_identificators?: { networks_id: number | null; networks_name: string | null; mno_name: string | null } | null;
@@ -95,7 +97,9 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
       updatedAt: cell.updatedAt,
       createdAt: cell.createdAt,
       details: cell.details,
+      sector_id: cell.sector_id,
     })),
+    sectors: station.sectors,
     location: station.location,
     operator: station.operator,
     extra_identificators: station.extra_identificators
@@ -146,10 +150,14 @@ function buildSubmissionPayload(data: SubmissionFormData): Record<string, unknow
     };
   }
   if (data.location) payload.location = data.location;
+  if (data.sectors && data.sectors.length > 0) payload.sectors = data.sectors;
   if (data.cells.length > 0) {
     payload.cells = data.cells.map((cell) => ({
       operation: cell.operation,
       target_cell_id: cell.target_cell_id,
+      target_sector_id: cell.target_sector_id,
+      sector_local_id: cell.sector_local_id,
+      sector_unassigned: cell.sector_unassigned,
       band_id: cell.band_id,
       rat: cell.rat,
       notes: cell.notes,

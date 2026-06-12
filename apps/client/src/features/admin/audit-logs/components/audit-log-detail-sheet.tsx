@@ -16,11 +16,13 @@ interface AuditLogDetailSheetProps {
 }
 
 export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetailSheetProps) {
-  const { t, i18n } = useTranslation(["admin", "common"]);
+  const { t, i18n } = useTranslation(["admin", "common", "stationDetails"]);
 
   if (!entry) return null;
 
   const style = getActionStyle(entry.action);
+  const tableLabel =
+    entry.table_name === "station_sectors" ? t("tabs.sectors", { ns: "stationDetails" }) : (TABLE_LABELS[entry.table_name] ?? entry.table_name);
 
   const stationId =
     entry.table_name === "stations" && entry.record_id !== null
@@ -59,7 +61,7 @@ export function AuditLogDetailSheet({ entry, open, onOpenChange }: AuditLogDetai
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.columns.entity")}</span>
-                <span className="text-sm font-medium">{TABLE_LABELS[entry.table_name] ?? entry.table_name}</span>
+                <span className="text-sm font-medium">{tableLabel}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("auditLogs.columns.actor")}</span>

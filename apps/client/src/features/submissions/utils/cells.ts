@@ -1,6 +1,7 @@
 import { RAT_ORDER } from "@/features/shared/rat";
+import type { SectorDraft } from "@/types/station";
 
-import type { CellFormDetails, CellPayload, ProposedCellForm } from "../types";
+import type { CellFormDetails, CellPayload, ProposedCellForm, SectorPayload } from "../types";
 
 export function generateCellId(): string {
   return crypto.randomUUID();
@@ -20,14 +21,50 @@ function areDetailsEqual(a: Partial<CellFormDetails>, b: Partial<CellFormDetails
   return true;
 }
 
+export function sectorLocalIdToTargetId(localId: string | null | undefined): number | null {
+  if (!localId?.startsWith("sector-")) return null;
+  const id = Number.parseInt(localId.slice("sector-".length), 10);
+  return Number.isNaN(id) ? null : id;
+}
+
+export function sectorAssignmentPayload(
+  localId: string | null | undefined,
+): Pick<CellPayload, "target_sector_id" | "sector_local_id" | "sector_unassigned"> {
+  if (localId === undefined) return {};
+  if (localId === null) return { target_sector_id: null, sector_local_id: null, sector_unassigned: true };
+  const targetSectorId = sectorLocalIdToTargetId(localId);
+  if (targetSectorId !== null) return { target_sector_id: targetSectorId, sector_local_id: null, sector_unassigned: false };
+  return { target_sector_id: null, sector_local_id: localId, sector_unassigned: false };
+}
+
+export function sectorsToPayloads(sectors: SectorDraft[]): SectorPayload[] {
+  return sectors.flatMap((sector) => {
+    if (typeof sector.azimuth !== "number") return [];
+
+    return [
+      {
+        local_id: sector._localId,
+        target_sector_id: sector.id ?? sectorLocalIdToTargetId(sector._localId),
+        azimuth: sector.azimuth,
+      },
+    ];
+  });
+}
+
 function isCellModified(current: ProposedCellForm, original: ProposedCellForm): boolean {
-  return current.band_id !== original.band_id || current.notes !== original.notes || !areDetailsEqual(current.details, original.details);
+  return (
+    current.band_id !== original.band_id ||
+    current._sectorLocalId !== original._sectorLocalId ||
+    current.notes !== original.notes ||
+    !areDetailsEqual(current.details, original.details)
+  );
 }
 
 function toCellPayload(cell: ProposedCellForm, operation: CellPayload["operation"]): CellPayload {
   return {
     operation,
     target_cell_id: cell.existingCellId,
+    ...sectorAssignmentPayload(cell._sectorLocalId),
     band_id: cell.band_id,
     rat: cell.rat,
     notes: cell.notes ?? null,

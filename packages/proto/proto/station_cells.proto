@@ -9,6 +9,7 @@ message CellWithoutDetails {
   string notes = 4;
   Band band = 5;
   bool is_confirmed = 6;
+  int32 sector_id = 7;
 
   string updatedAt = 8;
   string createdAt = 9;

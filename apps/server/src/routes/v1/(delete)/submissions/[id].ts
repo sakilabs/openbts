@@ -6,6 +6,7 @@ import {
   proposedLTECells,
   proposedLocations,
   proposedNRCells,
+  proposedSectors,
   proposedStations,
   proposedUMTSCells,
   submissionPhotos,
@@ -82,6 +83,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<EmptyRe
 
       await tx.delete(proposedCells).where(eq(proposedCells.submission_id, id));
       await Promise.all([
+        tx.delete(proposedSectors).where(eq(proposedSectors.submission_id, id)),
         tx.delete(proposedStations).where(eq(proposedStations.submission_id, id)),
         tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, id)),
         tx.delete(notifications).where(eq(notifications.submissionId, id)),

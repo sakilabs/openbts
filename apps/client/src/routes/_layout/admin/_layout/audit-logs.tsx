@@ -100,7 +100,7 @@ function ActionsFilterButton({
 }: {
   value: string[];
   onChange: (v: string[]) => void;
-  t: ReturnType<typeof useTranslation<["admin", "common"]>>["t"];
+  t: ReturnType<typeof useTranslation<["admin", "common", "stationDetails"]>>["t"];
 }) {
   const [open, setOpen] = useState(false);
 
@@ -159,7 +159,7 @@ function ActionsFilterButton({
 
 function AdminAuditLogsPage() {
   "use no memo";
-  const { t, i18n } = useTranslation(["admin", "common"]);
+  const { t, i18n } = useTranslation(["admin", "common", "stationDetails"]);
 
   const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
   const { tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort, selectedEntry } = filterState;
@@ -219,6 +219,10 @@ function AdminAuditLogsPage() {
 
   const logs = data?.data ?? [];
   const total = data?.totalCount ?? 0;
+  const getTableLabel = useCallback(
+    (table: string) => (table === "station_sectors" ? t("tabs.sectors", { ns: "stationDetails" }) : (TABLE_LABELS[table] ?? table)),
+    [t],
+  );
 
   const columns = useMemo(
     () => [
@@ -289,7 +293,7 @@ function AdminAuditLogsPage() {
       columnHelper.accessor("table_name", {
         header: t("auditLogs.columns.entity"),
         size: 120,
-        cell: ({ getValue }) => <span className="text-xs font-medium">{TABLE_LABELS[getValue()] ?? getValue()}</span>,
+        cell: ({ getValue }) => <span className="text-xs font-medium">{getTableLabel(getValue())}</span>,
       }),
       columnHelper.accessor("record_id", {
         header: t("auditLogs.columns.record"),
@@ -322,7 +326,7 @@ function AdminAuditLogsPage() {
         cell: ({ getValue }) => <span className="text-xs text-muted-foreground uppercase">{getValue() ?? "-"}</span>,
       }),
     ],
-    [t, sort, i18n.language, resetPage],
+    [t, sort, i18n.language, resetPage, getTableLabel],
   );
 
   const table = useReactTable({
@@ -360,7 +364,7 @@ function AdminAuditLogsPage() {
               <SelectItem value="__all__">{t("auditLogs.filters.allEntities")}</SelectItem>
               {TABLE_OPTIONS.map((table) => (
                 <SelectItem key={table} value={table}>
-                  {TABLE_LABELS[table]}
+                  {getTableLabel(table)}
                 </SelectItem>
               ))}
             </SelectContent>

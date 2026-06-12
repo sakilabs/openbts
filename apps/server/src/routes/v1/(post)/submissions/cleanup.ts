@@ -4,6 +4,7 @@ import {
   proposedLTECells,
   proposedLocations,
   proposedNRCells,
+  proposedSectors,
   proposedStations,
   proposedUMTSCells,
 } from "@openbts/drizzle";
@@ -70,6 +71,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseD
       await tx.delete(proposedCells).where(inArray(proposedCells.submission_id, submissionIds));
     }
 
+    await tx.delete(proposedSectors).where(inArray(proposedSectors.submission_id, submissionIds));
     await tx.delete(proposedStations).where(inArray(proposedStations.submission_id, submissionIds));
     await tx.delete(proposedLocations).where(inArray(proposedLocations.submission_id, submissionIds));
   });

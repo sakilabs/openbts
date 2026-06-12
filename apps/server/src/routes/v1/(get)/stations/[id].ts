@@ -1,4 +1,17 @@
-import { bands, cells, extraIdentificators, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
+import {
+  bands,
+  cells,
+  extraIdentificators,
+  gsmCells,
+  locations,
+  lteCells,
+  nrCells,
+  operators,
+  regions,
+  stationSectors,
+  stations,
+  umtsCells,
+} from "@openbts/drizzle";
 import { StationResponseType } from "@openbts/proto/server";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -23,6 +36,7 @@ const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSche
 const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const operatorSchema = createSelectSchema(operators);
 const extraIdentificatorsSchema = createSelectSchema(extraIdentificators).omit({ station_id: true });
+const sectorsSchema = createSelectSchema(stationSectors).omit({ station_id: true });
 type StationBase = z.infer<typeof stationSchema>;
 type CellDetails = z.infer<typeof cellDetailsSchema>;
 type CellWithRats = z.infer<typeof cellsSchema> & {
@@ -50,6 +64,7 @@ const schemaRoute = {
         location: locationSchema.extend({ region: regionSchema }),
         operator: operatorSchema,
         extra_identificators: extraIdentificatorsSchema.optional(),
+        sectors: z.array(sectorsSchema).optional(),
       }),
     }),
   },
@@ -68,6 +83,10 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
       location: { columns: { point: false, region_id: false }, with: { region: true } },
       operator: true,
       extra_identificators: { columns: { station_id: false } },
+      sectors: {
+        columns: { station_id: false },
+        orderBy: { id: "asc" },
+      },
     },
     columns: { operator_id: false, location_id: false, ...(!isStaff && { status: false }) },
   });

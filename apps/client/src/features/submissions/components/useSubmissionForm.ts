@@ -4,11 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { useBeforeUnloadGuard } from "@/hooks/useBeforeUnloadGuard";
 import { showApiError } from "@/lib/api";
-import type { UkeStation } from "@/types/station";
+import type { SectorDraft, UkeStation } from "@/types/station";
 
 import {
   type SearchStation,
@@ -20,7 +21,7 @@ import {
   uploadSubmissionPhotos,
 } from "../api";
 import type { ProposedCellForm, ProposedLocationForm, ProposedStationForm, RatType, StationAction, SubmissionMode } from "../types";
-import { cellsToPayloads, computeCellPayloads, generateCellId, ukePermitsToCells } from "../utils/cells";
+import { cellsToPayloads, computeCellPayloads, generateCellId, sectorsToPayloads, ukePermitsToCells } from "../utils/cells";
 import { type OriginalState, hasFormChanges } from "../utils/equality";
 import { type FormErrors, hasErrors, validateCells, validateForm } from "../utils/validation";
 
@@ -33,6 +34,8 @@ export type FormValues = {
   selectedRats: RatType[];
   cells: ProposedCellForm[];
   originalCells: ProposedCellForm[];
+  sectors: SectorDraft[];
+  originalSectors: SectorDraft[];
   submitterNote: string;
   networksId: number | null;
   networksName: string;
@@ -48,6 +51,8 @@ const INITIAL_VALUES: FormValues = {
   selectedRats: [],
   cells: [],
   originalCells: [],
+  sectors: [],
+  originalSectors: [],
   submitterNote: "",
   networksId: null,
   networksName: "",
@@ -59,6 +64,7 @@ function buildOriginalState(values: FormValues): OriginalState {
     action: values.action,
     station: values.mode === "new" ? structuredClone(values.newStation) : undefined,
     location: structuredClone(values.location),
+    sectors: structuredClone(values.sectors),
     cells: structuredClone(values.cells),
     networksId: values.mode === "existing" ? values.networksId : null,
     networksName: values.mode === "existing" && values.networksId !== null ? values.networksName : "",
@@ -71,12 +77,24 @@ function stationCellsToForm(station: SearchStation): ProposedCellForm[] {
   return station.cells.map((cell) => ({
     id: generateCellId(),
     existingCellId: cell.id,
+    _sectorLocalId: cell.sector_id ? `sector-${cell.sector_id}` : null,
     rat: cell.rat as RatType,
     band_id: cell.band_id,
     notes: cell.notes ?? undefined,
     is_confirmed: cell.is_confirmed,
     details: cell.details ?? {},
   }));
+}
+
+function stationSectorsToDrafts(station: SearchStation): SectorDraft[] {
+  return (station.sectors ?? []).map((sector) => ({ ...sector, _localId: `sector-${sector.id}` }));
+}
+
+function proposedCellSectorLocalId(cell: SubmissionDetail["cells"][number]): string | null | undefined {
+  if (cell.sector_local_id) return cell.sector_local_id;
+  if (cell.target_sector_id) return `sector-${cell.target_sector_id}`;
+  if (cell.sector_unassigned) return null;
+  return undefined;
 }
 
 type UseSubmissionFormProps = {
@@ -131,6 +149,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       newStation: ProposedStationForm,
       location: ProposedLocationForm,
       cells: ProposedCellForm[],
+      sectors: SectorDraft[],
       submitterNote: string,
       networksId: number | null,
       networksName: string | null,
@@ -138,7 +157,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     ): boolean => {
       if (photos.length > 0) return true;
       if (locationPhotoIds.length > 0) return true;
-      if (hasFormChanges({ mode, action, newStation, location, cells, submitterNote }, originalState)) return true;
+      if (hasFormChanges({ mode, action, newStation, location, sectors, cells, submitterNote }, originalState)) return true;
       if (mode === "existing") {
         if (networksId !== (originalState.networksId ?? null)) return true;
         if (networksId !== null && networksName !== (originalState.networksName ?? "")) return true;
@@ -175,6 +194,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       const isNewStation = value.mode === "new";
       const isDeleteMode = value.action === "delete";
       const cells = isNewStation ? cellsToPayloads(activeCells) : computeCellPayloads(value.originalCells, activeCells);
+      const sectors = sectorsToPayloads(value.sectors);
 
       const hasLocation = value.location.latitude !== null && value.location.longitude !== null;
 
@@ -198,6 +218,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         submitter_note: value.submitterNote || undefined,
         station: isNewStation ? value.newStation : existingStation,
         location: hasLocation && !isDeleteMode ? value.location : undefined,
+        sectors: !isDeleteMode ? sectors : undefined,
         cells: isDeleteMode ? [] : cells,
         pending_photos: photos.length > 0 ? photos.length : undefined,
         location_photo_ids: !isNewStation && !isDeleteMode && locationPhotoIds.length > 0 ? locationPhotoIds : undefined,
@@ -262,18 +283,13 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       form.setFieldValue("networksId", null);
       form.setFieldValue("networksName", "");
       form.setFieldValue("mnoName", "");
-      if (newMode === "existing") {
-        form.setFieldValue("newStation", INITIAL_VALUES.newStation);
-        form.setFieldValue("selectedStation", null);
-        form.setFieldValue("cells", []);
-        form.setFieldValue("originalCells", []);
-        form.setFieldValue("selectedRats", []);
-      } else {
-        form.setFieldValue("selectedStation", null);
-        form.setFieldValue("cells", []);
-        form.setFieldValue("originalCells", []);
-        form.setFieldValue("selectedRats", []);
-      }
+      if (newMode === "existing") form.setFieldValue("newStation", INITIAL_VALUES.newStation);
+      form.setFieldValue("selectedStation", null);
+      form.setFieldValue("cells", []);
+      form.setFieldValue("originalCells", []);
+      form.setFieldValue("sectors", []);
+      form.setFieldValue("originalSectors", []);
+      form.setFieldValue("selectedRats", []);
     },
     [form],
   );
@@ -295,8 +311,11 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
 
       if (station) {
         const cells = stationCellsToForm(station);
+        const sectors = stationSectorsToDrafts(station);
         form.setFieldValue("cells", cells);
         form.setFieldValue("originalCells", structuredClone(cells));
+        form.setFieldValue("sectors", sectors);
+        form.setFieldValue("originalSectors", structuredClone(sectors));
         form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
 
         const networksId = station.extra_identificators?.networks_id ?? null;
@@ -315,13 +334,23 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
             region_id: station.location.region?.id ?? null,
           };
           form.setFieldValue("location", location);
-          setOriginalState({ action: "update", location, cells: structuredClone(cells), networksId, networksName, mnoName });
+          setOriginalState({
+            action: "update",
+            location,
+            sectors: structuredClone(sectors),
+            cells: structuredClone(cells),
+            networksId,
+            networksName,
+            mnoName,
+          });
         } else {
-          setOriginalState({ action: "update", cells: structuredClone(cells), networksId, networksName, mnoName });
+          setOriginalState({ action: "update", sectors: structuredClone(sectors), cells: structuredClone(cells), networksId, networksName, mnoName });
         }
       } else {
         form.setFieldValue("cells", []);
         form.setFieldValue("originalCells", []);
+        form.setFieldValue("sectors", []);
+        form.setFieldValue("originalSectors", []);
         form.setFieldValue("selectedRats", []);
         form.setFieldValue("location", INITIAL_VALUES.location);
         form.setFieldValue("networksId", null);
@@ -356,6 +385,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       const cells = ukePermitsToCells(station.permits);
       form.setFieldValue("cells", cells);
       form.setFieldValue("originalCells", []);
+      form.setFieldValue("sectors", []);
+      form.setFieldValue("originalSectors", []);
       form.setFieldValue("selectedRats", [...new Set(cells.map((c) => c.rat))]);
     },
     [form],
@@ -372,6 +403,13 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     (rat: RatType, updatedCells: ProposedCellForm[]) => {
       const otherCells = form.getFieldValue("cells").filter((c) => c.rat !== rat);
       form.setFieldValue("cells", [...otherCells, ...updatedCells]);
+    },
+    [form],
+  );
+
+  const handleSectorsChange = useCallback(
+    (sectors: SectorDraft[]) => {
+      form.setFieldValue("sectors", sectors);
     },
     [form],
   );
@@ -467,6 +505,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       id: generateCellId(),
       existingCellId: cell.target_cell_id ?? undefined,
       rat: cell.rat as RatType,
+      _sectorLocalId: proposedCellSectorLocalId(cell),
       band_id: cell.band_id,
       notes: cell.notes ?? undefined,
       is_confirmed: cell.is_confirmed,
@@ -484,6 +523,13 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       form.setFieldValue("mode", isNew ? "new" : "existing");
       form.setFieldValue("action", submission.type === "delete" ? "delete" : "update");
       form.setFieldValue("submitterNote", submission.submitter_note ?? "");
+      const proposedSectors = (submission.sectors ?? []).map((sector) => ({
+        _localId: sector.local_id,
+        id: sector.target_sector_id ?? undefined,
+        azimuth: sector.azimuth,
+      }));
+      form.setFieldValue("sectors", proposedSectors);
+      form.setFieldValue("originalSectors", structuredClone(proposedSectors));
 
       if (isNew && submission.proposedStation) {
         form.setFieldValue("newStation", {
@@ -520,7 +566,9 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
           if (ignore) return;
           form.setFieldValue("selectedStation", station);
           const originals = stationCellsToForm(station);
+          const originalSectors = stationSectorsToDrafts(station);
           form.setFieldValue("originalCells", originals);
+          form.setFieldValue("originalSectors", originalSectors);
 
           const unchangedCells = originals.filter(
             (c) => c.existingCellId !== undefined && !updatedTargetIds.has(c.existingCellId) && !deletedTargetIds.has(c.existingCellId),
@@ -556,6 +604,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
           setOriginalState({
             action: submission.type === "delete" ? "delete" : "update",
             location: effectiveLocation,
+            sectors: structuredClone(proposedSectors.length > 0 ? proposedSectors : originalSectors),
             cells: structuredClone(mergedCells),
             networksId: submission.proposedStation?.networks_id ?? null,
             networksName: submission.proposedStation?.networks_name ?? "",
@@ -588,6 +637,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
               }
             : null,
           location: newLocation,
+          sectors: structuredClone(proposedSectors),
           cells: structuredClone(proposedCells),
           submitterNote: submission.submitter_note ?? "",
         });
@@ -625,6 +675,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     formValues.newStation,
     formValues.location,
     formValues.cells,
+    formValues.sectors,
     formValues.submitterNote,
     formValues.networksId,
     formValues.networksName,
@@ -658,6 +709,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       handleUkeStationSelect,
       handleRatsChange,
       handleCellsChange,
+      handleSectorsChange,
       handleLocationChange,
       handleNewStationChange,
       handleSubmitterNoteChange,

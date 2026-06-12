@@ -16,7 +16,7 @@ import {
 import { sql } from "drizzle-orm/sql";
 
 import { locationPhotos, users } from "./auth.ts";
-import { NRType, bands, cells, operators, ratEnum, regions, stations } from "./bts.ts";
+import { NRType, bands, cells, operators, ratEnum, regions, stationSectors, stations } from "./bts.ts";
 
 export const SubmissionStatus = pgEnum("submission_status", ["pending", "approved", "rejected"]);
 export const SubmissionTypeEnum = pgEnum("submission_type", ["new", "update", "delete"]);
@@ -66,6 +66,9 @@ export const proposedCells = SubmissionsSchema.table(
     target_cell_id: integer("target_cell_id").references(() => cells.id, { onDelete: "cascade", onUpdate: "cascade" }),
     station_id: integer("station_id").references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" }),
     band_id: integer("band_id").references(() => bands.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    target_sector_id: integer("target_sector_id").references(() => stationSectors.id, { onDelete: "set null", onUpdate: "cascade" }),
+    sector_local_id: text("sector_local_id"),
+    sector_unassigned: boolean("sector_unassigned").default(false).notNull(),
     rat: ratEnum("rat"),
     notes: text("notes"),
     is_confirmed: boolean("is_confirmed").default(false).notNull(),
@@ -73,6 +76,24 @@ export const proposedCells = SubmissionsSchema.table(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("proposed_cells_submission_id_idx").on(t.submission_id), unique("proposed_cells_unique").on(t.submission_id, t.target_cell_id)],
+);
+
+export const proposedSectors = SubmissionsSchema.table(
+  "proposed_sectors",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    submission_id: uuid("submission_id").references(() => submissions.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    target_sector_id: integer("target_sector_id").references(() => stationSectors.id, { onDelete: "set null", onUpdate: "cascade" }),
+    local_id: text("local_id").notNull(),
+    azimuth: integer("azimuth").notNull(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("proposed_sectors_submission_id_idx").on(t.submission_id),
+    unique("proposed_sectors_submission_local_unique").on(t.submission_id, t.local_id),
+    check("proposed_sectors_azimuth_range", sql`${t.azimuth} BETWEEN 0 AND 359`),
+  ],
 );
 
 export const proposedGSMCells = SubmissionsSchema.table(

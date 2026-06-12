@@ -16,12 +16,25 @@ export type ProposedCell = {
   submission_id: string;
   operation: "add" | "update" | "delete";
   target_cell_id: number | null;
+  target_sector_id: number | null;
+  sector_local_id: string | null;
+  sector_unassigned: boolean;
   station_id: number | null;
   band_id: number | null;
   rat: (typeof RAT_ORDER)[number];
   notes: string | null;
   is_confirmed: boolean;
   details: Record<string, unknown> | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ProposedSector = {
+  id: number;
+  submission_id: string;
+  target_sector_id: number | null;
+  local_id: string;
+  azimuth: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -77,6 +90,7 @@ export type SubmissionDetail = SubmissionBase & {
   submitter: SubmissionUser;
   proposedStation: ProposedStation | null;
   proposedLocation: ProposedLocation | null;
+  sectors: ProposedSector[];
   cells: ProposedCell[];
   locationPhotoSelections: SubmissionLocationPhoto[];
 };
@@ -94,6 +108,9 @@ export type ProposedCellWithDetails = {
   submission_id: string;
   operation: "add" | "update" | "delete";
   target_cell_id: number | null;
+  target_sector_id: number | null;
+  sector_local_id: string | null;
+  sector_unassigned: boolean;
   station_id: number | null;
   band_id: number | null;
   rat: string | null;

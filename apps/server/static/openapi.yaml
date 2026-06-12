@@ -754,6 +754,60 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /stations/{station_id}/sectors:
+    get:
+      tags: [Stations]
+      summary: List sectors for a station
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationSector" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+    put:
+      tags: [Stations]
+      summary: Replace sectors for a station
+      description: Replaces the station sector list. Existing sectors can be retained or updated by `id`; sectors omitted from the request are deleted only if no cells are assigned to them. The maximum number of sectors is the largest number of cells in any single band on the station.
+      security:
+        - ApiKeyAuth: []
+        - CookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StationIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sectors]
+              properties:
+                sectors:
+                  type: array
+                  items: { $ref: "#/components/schemas/StationSectorInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/StationSector" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /comments:
     get:
       tags: [Comments]
@@ -1458,6 +1512,10 @@ paths:
         - name: sortBy
           in: query
           schema: { type: string, enum: [id, updatedAt, createdAt] }
+        - name: azimuths
+          in: query
+          description: Include station sector azimuths under each station when true.
+          schema: { type: boolean, default: false }
       responses:
         "200":
           description: OK
@@ -1517,6 +1575,10 @@ paths:
         - name: since
           in: query
           schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
+        - name: azimuths
+          in: query
+          description: Include station sector azimuths under each station when true.
+          schema: { type: boolean, default: false }
       responses:
         "200":
           description: OK
@@ -2204,7 +2266,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Clean up old submissions
-      description: Deletes proposed data (cells, stations, locations) for submissions older than 1 month
+      description: Deletes proposed data (cells, sectors, stations, locations) for submissions older than 1 month
       security:
         - CookieAuth: []
       responses:
@@ -3676,6 +3738,12 @@ components:
         taken_at: { type: string, format: date-time, nullable: true, description: "Date the photo was taken" }
         createdAt: { type: string, format: date-time }
         author: { $ref: "#/components/schemas/PhotoAuthor" }
+    LocationPhotoSelection:
+      allOf:
+        - $ref: "#/components/schemas/LocationPhoto"
+        - type: object
+          properties:
+            is_main: { type: boolean }
     Notification:
       type: object
       required: [id, userId, type, title, submissionId, metadata, actionUrl, readAt, createdAt]
@@ -3817,6 +3885,10 @@ components:
         - type: object
           properties:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithBand" } }
+            sectors:
+              type: array
+              description: Included only when the location endpoint is called with `?azimuths=true`.
+              items: { $ref: "#/components/schemas/StationSector" }
             operator:
               allOf:
                 - $ref: "#/components/schemas/Operator"
@@ -3853,6 +3925,19 @@ components:
         createdAt: { type: string, format: date-time }
         is_confirmed: { type: boolean, nullable: true }
         status: { type: string, enum: [published, inactive, pending] }
+    StationSector:
+      type: object
+      properties:
+        id: { type: integer }
+        azimuth: { type: integer, minimum: 0, maximum: 359 }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    StationSectorInput:
+      type: object
+      required: [azimuth]
+      properties:
+        id: { type: integer, description: "Existing station sector ID. Omit to create a new sector" }
+        azimuth: { type: integer, minimum: 0, maximum: 359 }
     Station:
       type: object
       properties:
@@ -3893,6 +3978,10 @@ components:
         - type: object
           properties:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithBandAndDetails" } }
+            sectors:
+              type: array
+              description: Included on station detail responses.
+              items: { $ref: "#/components/schemas/StationSector" }
             location: { $ref: "#/components/schemas/LocationWithRegion" }
             operator:
               allOf:
@@ -3930,6 +4019,7 @@ components:
       type: object
       properties:
         id: { type: integer }
+        sector_id: { type: integer, nullable: true }
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
@@ -3941,6 +4031,7 @@ components:
         id: { type: integer }
         station_id: { type: integer }
         band_id: { type: integer }
+        sector_id: { type: integer, nullable: true }
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR, IOT] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
@@ -4078,6 +4169,7 @@ components:
       properties:
         station_id: { type: integer }
         band_id: { type: integer }
+        sector_id: { type: integer, nullable: true }
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
@@ -4086,6 +4178,7 @@ components:
       type: object
       properties:
         band_id: { type: integer }
+        sector_id: { type: integer, nullable: true }
         rat: { type: string, enum: [GSM, CDMA, UMTS, LTE, NR] }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
@@ -4144,6 +4237,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ProposedLocationInsert"
           nullable: true
+        sectors: { type: array, items: { $ref: "#/components/schemas/ProposedSectorInsert" }, nullable: true }
         cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellInsert" }, nullable: true }
         pending_photos: { type: integer, nullable: true, description: "Number of photos expected to be uploaded after submission creation" }
         location_photo_ids:
@@ -4154,6 +4248,8 @@ components:
             nullable: true,
             description: "IDs of location photos the submitter wants assigned to the station",
           }
+        main_location_photo_id:
+          { type: integer, nullable: true, description: "ID from `location_photo_ids` to mark as the main station photo when approved" }
     ProposedStationInsert:
       type: object
       properties:
@@ -4174,12 +4270,24 @@ components:
         address: { type: string, nullable: true }
         longitude: { type: number }
         latitude: { type: number }
+    ProposedSectorInsert:
+      type: object
+      required: [local_id, azimuth]
+      properties:
+        target_sector_id:
+          { type: integer, nullable: true, description: "Existing station sector ID being retained or edited. Omit/null for a newly proposed sector" }
+        local_id:
+          { type: string, description: "Client-generated identifier used by proposed cells to reference this proposed sector before approval" }
+        azimuth: { type: integer, minimum: 0, maximum: 359 }
     ProposedCellInsert:
       type: object
       properties:
         target_cell_id: { type: integer, nullable: true }
         station_id: { type: integer, nullable: true }
         band_id: { type: integer, nullable: true }
+        target_sector_id: { type: integer, nullable: true, description: "Existing station sector ID to assign to the proposed cell" }
+        sector_local_id: { type: string, nullable: true, description: "Local ID of a proposed sector to assign to the proposed cell" }
+        sector_unassigned: { type: boolean, nullable: true, description: "When true, approval clears the cell sector assignment" }
         rat: { type: string, enum: [GSM, UMTS, LTE, NR], nullable: true }
         notes: { type: string, nullable: true }
         is_confirmed:
@@ -4230,12 +4338,15 @@ components:
               allOf:
                 - $ref: "#/components/schemas/ProposedStation"
               nullable: true
+            sectors: { type: array, items: { $ref: "#/components/schemas/ProposedSector" } }
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
+            locationPhotoSelections: { type: array, items: { $ref: "#/components/schemas/LocationPhotoSelection" } }
     SubmissionWithCells:
       allOf:
         - $ref: "#/components/schemas/Submission"
         - type: object
           properties:
+            sectors: { type: array, items: { $ref: "#/components/schemas/ProposedSector" } }
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
     SubmissionCreateResponse:
       allOf:
@@ -4250,6 +4361,7 @@ components:
               allOf:
                 - $ref: "#/components/schemas/ProposedLocation"
               nullable: true
+            sectors: { type: array, items: { $ref: "#/components/schemas/ProposedSector" }, nullable: true }
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" }, nullable: true }
             pending_photos: { type: integer, nullable: true, description: "Number of photos expected to be uploaded after submission creation" }
     SubmissionUpdate:
@@ -4265,7 +4377,18 @@ components:
           allOf:
             - $ref: "#/components/schemas/ProposedLocationInsert"
           nullable: true
+        sectors: { type: array, items: { $ref: "#/components/schemas/ProposedSectorInsert" }, nullable: true }
         cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellUpdate" }, nullable: true }
+    ProposedSector:
+      type: object
+      properties:
+        id: { type: integer }
+        submission_id: { type: string, format: uuid, nullable: true }
+        target_sector_id: { type: integer, nullable: true }
+        local_id: { type: string }
+        azimuth: { type: integer, minimum: 0, maximum: 359 }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
     ProposedCellWithDetails:
       type: object
       properties:
@@ -4275,6 +4398,9 @@ components:
         target_cell_id: { type: integer, nullable: true }
         station_id: { type: integer, nullable: true }
         band_id: { type: integer, nullable: true }
+        target_sector_id: { type: integer, nullable: true }
+        sector_local_id: { type: string, nullable: true }
+        sector_unassigned: { type: boolean, nullable: true }
         rat: { type: string, nullable: true }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }

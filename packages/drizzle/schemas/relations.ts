@@ -29,6 +29,7 @@ import {
   radiolinesAntennaTypes,
   radiolinesTransmitterTypes,
   regions,
+  stationSectors,
   stations,
   stationsPermits,
   statsSnapshots,
@@ -46,6 +47,7 @@ import {
   proposedLTECells,
   proposedLocations,
   proposedNRCells,
+  proposedSectors,
   proposedStations,
   proposedUMTSCells,
   submissionLocationPhotoSelections,
@@ -61,6 +63,7 @@ export const relations = defineRelations(
     operators,
     regions,
     stations,
+    stationSectors,
     ukePermits,
     ukePermitSectors,
     radioLinesManufacturers,
@@ -94,6 +97,7 @@ export const relations = defineRelations(
     proposedLTECells,
     proposedLocations,
     proposedNRCells,
+    proposedSectors,
     proposedStations,
     proposedUMTSCells,
     submissionPhotos,
@@ -138,6 +142,14 @@ export const relations = defineRelations(
       extra_identificators: helpers.one.extraIdentificators({
         from: helpers.stations.id,
         to: helpers.extraIdentificators.station_id,
+      }),
+      sectors: helpers.many.stationSectors(),
+    },
+    stationSectors: {
+      station: helpers.one.stations({
+        from: helpers.stationSectors.station_id,
+        to: helpers.stations.id,
+        optional: false,
       }),
     },
     cells: {
@@ -398,6 +410,7 @@ export const relations = defineRelations(
         from: helpers.submissions.id,
         to: helpers.proposedLocations.submission_id,
       }),
+      proposedSectors: helpers.many.proposedSectors(),
       proposedCells: helpers.many.proposedCells(),
       photos: helpers.many.submissionPhotos(),
       locationPhotoSelections: helpers.many.submissionLocationPhotoSelections(),
@@ -463,6 +476,17 @@ export const relations = defineRelations(
         to: helpers.submissions.id,
       }),
     },
+    proposedSectors: {
+      submission: helpers.one.submissions({
+        from: helpers.proposedSectors.submission_id,
+        to: helpers.submissions.id,
+        optional: false,
+      }),
+      targetSector: helpers.one.stationSectors({
+        from: helpers.proposedSectors.target_sector_id,
+        to: helpers.stationSectors.id,
+      }),
+    },
     proposedCells: {
       submission: helpers.one.submissions({
         from: helpers.proposedCells.submission_id,
@@ -477,6 +501,10 @@ export const relations = defineRelations(
         from: helpers.proposedCells.band_id,
         to: helpers.bands.id,
         optional: false,
+      }),
+      targetSector: helpers.one.stationSectors({
+        from: helpers.proposedCells.target_sector_id,
+        to: helpers.stationSectors.id,
       }),
       gsm: helpers.one.proposedGSMCells({
         from: helpers.proposedCells.id,

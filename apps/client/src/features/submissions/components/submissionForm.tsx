@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { SectorsPanel } from "@/features/admin/stations/components/sectorsEditor";
 import { operatorsQueryOptions } from "@/features/shared/queries";
 import { useSettings } from "@/hooks/useSettings";
 
+import type { ProposedCellForm, ProposedLocationForm, RatType } from "../types";
 import { ActionSelector } from "./actionSelector";
 import { CellsSection } from "./cellsSection";
 import { ExtraIdentificatorsSection } from "./extraIdentificatorsSection";
@@ -25,8 +27,25 @@ export interface SubmissionFormProps {
   preloadUkeStationId?: string;
 }
 
+function hasCompleteLocation(location: ProposedLocationForm): boolean {
+  return location.latitude !== null && location.longitude !== null && location.region_id !== null;
+}
+
+function deriveSectorPanelState(cells: ProposedCellForm[], selectedRats: RatType[]) {
+  const bandCounts = new Map<number, number>();
+  for (const cell of cells) {
+    if (!selectedRats.includes(cell.rat) || cell.band_id === null) continue;
+    bandCounts.set(cell.band_id, (bandCounts.get(cell.band_id) ?? 0) + 1);
+  }
+
+  const derivedSectorCount = bandCounts.size > 0 ? Math.max(...bandCounts.values()) : 0;
+  const assignedSectorLocalIds = new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : [])));
+
+  return { derivedSectorCount, assignedSectorLocalIds };
+}
+
 export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeStationId }: SubmissionFormProps) {
-  const { t } = useTranslation(["submissions", "common"]);
+  const { t } = useTranslation(["submissions", "common", "stationDetails"]);
   const { data: settings } = useSettings();
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
   const mncById = useMemo(() => new Map(operators.map((o) => [o.id, o.mnc])), [operators]);
@@ -54,6 +73,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
       handleUkeStationSelect,
       handleRatsChange,
       handleCellsChange,
+      handleSectorsChange,
       handleLocationChange,
       handleNewStationChange,
       handleSubmitterNoteChange,
@@ -128,8 +148,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         <form.Subscribe selector={(s) => ({ mode: s.values.mode, newStation: s.values.newStation, location: s.values.location })}>
           {({ mode, newStation, location }) => {
             if (mode !== "new") return null;
-            const isLocationSet = location.latitude !== null && location.longitude !== null && location.region_id !== null;
-            if (!isLocationSet) return null;
+            if (!hasCompleteLocation(location)) return null;
 
             return <NewStationForm station={newStation} errors={formErrors.station} onStationChange={handleNewStationChange} />;
           }}
@@ -156,6 +175,36 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
                 onNetworksIdChange={handleNetworksIdChange}
                 onNetworksNameChange={handleNetworksNameChange}
                 onMnoNameChange={handleMnoNameChange}
+              />
+            );
+          }}
+        </form.Subscribe>
+
+        <form.Subscribe
+          selector={(s) => ({
+            mode: s.values.mode,
+            action: s.values.action,
+            selectedStation: s.values.selectedStation,
+            selectedRats: s.values.selectedRats,
+            location: s.values.location,
+            cells: s.values.cells,
+            sectors: s.values.sectors,
+          })}
+        >
+          {({ mode, action, selectedStation, selectedRats, location, cells, sectors }) => {
+            if (mode === "existing" && action === "delete") return null;
+            if (mode === "new") {
+              if (!hasCompleteLocation(location)) return null;
+            } else if (!selectedStation) return null;
+
+            const { derivedSectorCount, assignedSectorLocalIds } = deriveSectorPanelState(cells, selectedRats);
+
+            return (
+              <SectorsPanel
+                sectors={sectors}
+                onChange={handleSectorsChange}
+                derivedSectorCount={derivedSectorCount}
+                assignedSectorLocalIds={assignedSectorLocalIds}
               />
             );
           }}
@@ -229,8 +278,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
           {({ mode, action, selectedStation, selectedRats, location }) => {
             if (mode === "existing" && action === "delete") return null;
             if (mode === "new") {
-              const isLocationSet = location.latitude !== null && location.longitude !== null && location.region_id !== null;
-              if (!isLocationSet) return null;
+              if (!hasCompleteLocation(location)) return null;
             } else if (!selectedStation) {
               return null;
             }
@@ -247,6 +295,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             newStation: s.values.newStation,
             location: s.values.location,
             cells: s.values.cells,
+            sectors: s.values.sectors,
             submitterNote: s.values.submitterNote,
             networksId: s.values.networksId,
             networksName: s.values.networksName,
@@ -263,6 +312,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             newStation,
             location,
             cells,
+            sectors,
             submitterNote,
             networksId,
             networksName,
@@ -271,7 +321,18 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             canSubmit,
             isSubmitting,
           }) => {
-            const hasChanges = computeHasChanges(mode, action, newStation, location, cells, submitterNote, networksId, networksName, mnoName);
+            const hasChanges = computeHasChanges(
+              mode,
+              action,
+              newStation,
+              location,
+              cells,
+              sectors,
+              submitterNote,
+              networksId,
+              networksName,
+              mnoName,
+            );
             const cellsCount = cells.filter((c) => selectedRats.includes(c.rat)).length;
             return (
               <SubmitSection
@@ -300,12 +361,13 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             selectedRats: s.values.selectedRats,
             cells: s.values.cells,
             originalCells: s.values.originalCells,
+            sectors: s.values.sectors,
             mode: s.values.mode,
             action: s.values.action,
             operatorId: s.values.newStation.operator_id,
           })}
         >
-          {({ selectedRats, cells, originalCells, mode, action, operatorId }) => {
+          {({ selectedRats, cells, originalCells, sectors, mode, action, operatorId }) => {
             if (mode === "existing" && action === "delete") {
               return (
                 <div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
@@ -321,6 +383,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
                 selectedRats={selectedRats}
                 cells={cells}
                 originalCells={originalCells}
+                sectors={sectors}
                 isNewStation={mode === "new"}
                 cellErrors={cellErrors}
                 onCellsChange={handleCellsChange}

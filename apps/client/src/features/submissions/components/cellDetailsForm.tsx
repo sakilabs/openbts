@@ -15,7 +15,7 @@ import { getBandName } from "@/features/station-details/frequencyCalc";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { getKnownEARFCN } from "@/lib/earfcn-fill";
 import { cn } from "@/lib/utils";
-import type { Band } from "@/types/station";
+import type { Band, SectorDraft } from "@/types/station";
 
 import type { ProposedCellForm, RatType } from "../types";
 import { type CellDiffStatus, getCellDiffStatus } from "../utils/cells";
@@ -28,13 +28,14 @@ type CellDetailsFormProps = {
   rat: RatType;
   cells: ProposedCellForm[];
   originalCells: ProposedCellForm[];
+  sectors: SectorDraft[];
   isNewStation: boolean;
   cellErrors?: Record<string, CellError>;
   onCellsChange: (rat: RatType, cells: ProposedCellForm[]) => void;
   operatorMnc?: number | null;
 };
 
-export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellErrors, onCellsChange, operatorMnc }: CellDetailsFormProps) {
+export function CellDetailsForm({ rat, cells, originalCells, sectors, isNewStation, cellErrors, onCellsChange, operatorMnc }: CellDetailsFormProps) {
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const {
     t,
@@ -88,7 +89,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
           ) : (
             <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-sm">
-                <CellsTableHeaders rat={rat} tStation={tStation} />
+                <CellsTableHeaders rat={rat} tStation={tStation} showSectors={sectors.length > 0} />
                 <tbody>
                   {sortedCells.map((cell) => {
                     const isDeleted =
@@ -103,6 +104,7 @@ export function CellDetailsForm({ rat, cells, originalCells, isNewStation, cellE
                         diffStatus={diffStatus}
                         error={cellErrors?.[cell.id]}
                         bands={bandsForRat}
+                        sectors={sectors}
                         onUpdate={handleCellUpdate}
                         onDetailsChange={handleDetailsChange}
                         onNotesChange={handleNotesChange}
@@ -129,6 +131,7 @@ type CellRowProps = {
   diffStatus: CellDiffStatus;
   error?: CellError;
   bands: Band[];
+  sectors: SectorDraft[];
   onUpdate: (id: string, patch: Partial<ProposedCellForm>) => void;
   onDetailsChange: (id: string, field: string, value: number | boolean | string | undefined) => void;
   onNotesChange: (id: string, notes: string) => void;
@@ -192,6 +195,7 @@ const CellRow = memo(function CellRow({
   diffStatus,
   error,
   bands,
+  sectors,
   onUpdate,
   onDetailsChange,
   onNotesChange,
@@ -241,6 +245,9 @@ const CellRow = memo(function CellRow({
 
   const isDeleted = diffStatus === "deleted";
   const deletedCellClass = isDeleted ? "opacity-50" : "";
+  const selectedSectorIndex = sectors.findIndex((sector) => sector._localId === cell._sectorLocalId);
+  const selectedSector = selectedSectorIndex >= 0 ? sectors[selectedSectorIndex] : undefined;
+  const selectedSectorLabel = selectedSector ? `S${selectedSectorIndex + 1}` : "-";
 
   return (
     <tr className={cn("border-b last:border-0 hover:bg-muted/20", isDeleted && "bg-muted/10", isCloned && "bg-sky-500/5")}>
@@ -299,6 +306,32 @@ const CellRow = memo(function CellRow({
           ) : (
             <span className="text-muted-foreground text-xs">-</span>
           )}
+        </td>
+      ) : null}
+      {sectors.length > 0 ? (
+        <td className={cn("px-1 py-1", deletedCellClass)}>
+          <Select
+            disabled={diffStatus === "deleted"}
+            value={cell._sectorLocalId ?? "_none"}
+            onValueChange={(value) => onUpdate(cell.id, { _sectorLocalId: value === "_none" ? null : value })}
+          >
+            <SelectTrigger
+              className="h-7 w-17 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
+            >
+              <SelectValue>{selectedSectorLabel}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">-</SelectItem>
+              {sectors.map((sector, index) => (
+                <SelectItem key={sector._localId} value={sector._localId}>
+                  S{index + 1}
+                  {typeof sector.azimuth === "number" ? ` (${sector.azimuth}°)` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </td>
       ) : null}
       <CellDetailsFields

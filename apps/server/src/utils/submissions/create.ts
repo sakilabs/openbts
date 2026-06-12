@@ -1,4 +1,12 @@
-import { locationPhotos, proposedCells, proposedLocations, proposedStations, submissionLocationPhotoSelections, submissions } from "@openbts/drizzle";
+import {
+  locationPhotos,
+  proposedCells,
+  proposedLocations,
+  proposedSectors,
+  proposedStations,
+  submissionLocationPhotoSelections,
+  submissions,
+} from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
 import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { isARFCNValidForBand } from "@openbts/shared/frequency";
@@ -41,6 +49,7 @@ export const nrInsertSchema = nrInsertSchemaBase.superRefine((data, ctx) => {
     }
   }
 });
+export const proposedSectorInsert = createInsertSchema(proposedSectors).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 export const proposedCellInsert = createInsertSchema(proposedCells)
   .omit({ createdAt: true, updatedAt: true, submission_id: true, is_confirmed: true, operation: true })
   .extend({
@@ -57,6 +66,7 @@ export const singleSubmissionSchema = z
     submitter_note: z.string().optional(),
     station: proposedStationInsert.optional(),
     location: proposedLocationInsert.optional(),
+    sectors: z.array(proposedSectorInsert).optional(),
     cells: z.array(proposedCellInsert).optional(),
     pending_photos: z.number().int().min(1).optional(),
     location_photo_ids: z.array(z.number().int()).max(50).optional(),
@@ -74,6 +84,7 @@ export type SingleSubmission = z.infer<typeof singleSubmissionSchema>;
 export type SubmissionWithExtras = z.infer<typeof submissionsSelectSchema> & {
   proposedStation?: z.infer<typeof proposedStationInsert>;
   proposedLocation?: z.infer<typeof proposedLocationInsert>;
+  sectors?: z.infer<typeof proposedSectorInsert>[];
   cells?: z.infer<typeof proposedCellInsert>[];
 };
 
@@ -81,6 +92,73 @@ export function hasMeaningfulChanges(input: SingleSubmission): boolean {
   if (input.type === "delete") return true;
   const { station_id: _, type: __, ...payload } = input;
   return isNonEmpty(payload);
+}
+
+function incrementBandCount(counts: Map<number, number>, bandId: number): void {
+  counts.set(bandId, (counts.get(bandId) ?? 0) + 1);
+}
+
+function decrementBandCount(counts: Map<number, number>, bandId: number): void {
+  counts.set(bandId, Math.max((counts.get(bandId) ?? 1) - 1, 0));
+}
+
+function getMaxSectorCount(cellsInput: SingleSubmission["cells"], targetCells?: Array<{ id: number; band_id: number }>): number {
+  const counts = new Map<number, number>();
+  const targetCellById = new Map(targetCells?.map((cell) => [cell.id, cell]) ?? []);
+
+  for (const cell of targetCells ?? []) incrementBandCount(counts, cell.band_id);
+
+  if (cellsInput) {
+    for (const cell of cellsInput) {
+      const target = cell.target_cell_id !== null && cell.target_cell_id !== undefined ? targetCellById.get(cell.target_cell_id) : undefined;
+
+      if (cell.operation === "delete") {
+        if (target) decrementBandCount(counts, target.band_id);
+        continue;
+      }
+
+      if (cell.operation === "update" && cell.band_id) {
+        if (target && target.band_id !== cell.band_id) {
+          decrementBandCount(counts, target.band_id);
+          incrementBandCount(counts, cell.band_id);
+        }
+        continue;
+      }
+
+      if (cell.band_id) incrementBandCount(counts, cell.band_id);
+    }
+  }
+
+  return counts.size > 0 ? Math.max(...counts.values()) : 0;
+}
+
+function validateSectorRefs(
+  input: SingleSubmission,
+  targetStation?: { cells: Array<{ id: number; band_id: number }>; sectors: Array<{ id: number }> } | null,
+) {
+  const sectorsInput = input.sectors ?? [];
+  const sectorLocalIds = new Set<string>();
+  for (const sector of sectorsInput) {
+    if (sectorLocalIds.has(sector.local_id)) throw new ErrorResponse("BAD_REQUEST", { message: "Sector local_id values must be unique" });
+    sectorLocalIds.add(sector.local_id);
+  }
+
+  const targetSectorIds = new Set(targetStation?.sectors.map((sector) => sector.id) ?? []);
+  for (const sector of sectorsInput) {
+    if (sector.target_sector_id !== null && sector.target_sector_id !== undefined && !targetSectorIds.has(sector.target_sector_id))
+      throw new ErrorResponse("BAD_REQUEST", { message: "One or more target sectors do not belong to the target station" });
+  }
+
+  const maxSectorCount = getMaxSectorCount(input.cells, targetStation?.cells);
+  if (sectorsInput.length > maxSectorCount)
+    throw new ErrorResponse("BAD_REQUEST", { message: `Too many sectors for the submitted cells. Maximum allowed is ${maxSectorCount}` });
+
+  for (const cell of input.cells ?? []) {
+    if (cell.target_sector_id !== null && cell.target_sector_id !== undefined && !targetSectorIds.has(cell.target_sector_id))
+      throw new ErrorResponse("BAD_REQUEST", { message: "One or more cell sector assignments do not belong to the target station" });
+    if (cell.sector_local_id && !sectorLocalIds.has(cell.sector_local_id))
+      throw new ErrorResponse("BAD_REQUEST", { message: "One or more cell sector assignments reference a missing proposed sector" });
+  }
 }
 
 export async function validateSubmission(input: SingleSubmission): Promise<void> {
@@ -96,7 +174,11 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
     stationId !== null
       ? db.query.stations.findFirst({
           where: { id: stationId },
-          with: { location: true },
+          with: {
+            location: true,
+            cells: { columns: { id: true, band_id: true } },
+            sectors: { columns: { id: true } },
+          },
         })
       : null,
 
@@ -129,6 +211,7 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
   if (stationId !== null && !targetStation) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
   if (stationId !== null && targetStation && targetStation.status !== "published")
     throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+  validateSectorRefs(input, targetStation);
 
   if (duplicateStation) {
     throw new ErrorResponse("BAD_REQUEST", {
@@ -141,7 +224,7 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
 
   if (input.cells && input.cells.length > 0) {
     validateCellDuplicates(input.cells);
-    const bandIds = [...new Set(input.cells.filter((c) => c.band_id !== null && c.band_id !== undefined).map((c) => c.band_id!))];
+    const bandIds = [...new Set(input.cells.map((c) => c.band_id).filter((id): id is number => id !== null && id !== undefined))];
     if (bandIds.length > 0) {
       const bandRows = await db.query.bands.findMany({ where: { id: { in: bandIds } }, columns: { id: true, rat: true, value: true, duplex: true } });
       const bandMap = new Map(bandRows.map((b) => [b.id, b]));
@@ -212,16 +295,17 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
         (locationData.address ?? null) !== (currentLocation.address ?? null));
 
     const hasCellChanges = input.cells && input.cells.length > 0;
+    const hasSectorChanges = input.sectors && input.sectors.length > 0;
 
     const hasPendingPhotos = !!input.pending_photos;
     const hasLocationPhotoSelections = (input.location_photo_ids?.length ?? 0) > 0;
-    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasPendingPhotos && !hasLocationPhotoSelections)
+    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasSectorChanges && !hasPendingPhotos && !hasLocationPhotoSelections)
       throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
   }
 }
 
 export async function processSubmission(tx: DbTx, input: SingleSubmission, userId: string): Promise<SubmissionWithExtras> {
-  const { station_id, type, submitter_note, station: stationData, location: locationData, cells: proposedCellsInput } = input;
+  const { station_id, type, submitter_note, station: stationData, location: locationData, sectors, cells: proposedCellsInput } = input;
 
   if (!hasMeaningfulChanges(input))
     throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
@@ -248,6 +332,8 @@ export async function processSubmission(tx: DbTx, input: SingleSubmission, userI
 
   if (locationData) await tx.insert(proposedLocations).values({ ...locationData, submission_id: submission.id });
 
+  if (sectors && sectors.length > 0) await tx.insert(proposedSectors).values(sectors.map((sector) => ({ ...sector, submission_id: submission.id })));
+
   if (input.location_photo_ids && input.location_photo_ids.length > 0) {
     await tx.insert(submissionLocationPhotoSelections).values(
       input.location_photo_ids.map((photoId) => ({
@@ -269,6 +355,9 @@ export async function processSubmission(tx: DbTx, input: SingleSubmission, userI
             target_cell_id: cell.target_cell_id ?? null,
             station_id: cell.station_id ?? station_id ?? null,
             band_id: cell.band_id ?? null,
+            target_sector_id: cell.target_sector_id ?? null,
+            sector_local_id: cell.sector_local_id ?? null,
+            sector_unassigned: cell.sector_unassigned ?? false,
             rat: cell.rat ?? null,
             notes: cell.notes ?? null,
             is_confirmed: false,
@@ -291,5 +380,5 @@ export async function processSubmission(tx: DbTx, input: SingleSubmission, userI
     /* eslint-enable no-await-in-loop */
   }
 
-  return { ...submission, proposedStation: stationData, proposedLocation: locationData, cells: proposedCellsInput };
+  return { ...submission, proposedStation: stationData, proposedLocation: locationData, sectors, cells: proposedCellsInput };
 }

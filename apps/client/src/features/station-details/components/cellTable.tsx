@@ -17,9 +17,10 @@ import { RAT_ICONS } from "../utils";
 type CellTableProps = {
   rat: string;
   cells: Cell[];
+  sectorInfoById?: ReadonlyMap<number, { label: string; azimuth: number }>;
 };
 
-export function CellTable({ rat, cells }: CellTableProps) {
+export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
   const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const [open, setOpen] = useState(true);
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
@@ -221,6 +222,7 @@ export function CellTable({ rat, cells }: CellTableProps) {
                 const bandName = freqInfo?.bandName ?? getBandName(rat, Number(cell.band.value), cell.band.duplex);
                 const hasTooltip = freqInfo || bandName;
                 const bandLabel = Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : cell.band.value;
+                const sectorInfo = cell.sector_id !== null ? sectorInfoById?.get(cell.sector_id) : undefined;
                 return (
                   <tr
                     key={cell.id}
@@ -247,6 +249,19 @@ export function CellTable({ rat, cells }: CellTableProps) {
                         ) : (
                           <span>{bandLabel}</span>
                         )}
+                        {sectorInfo ? (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="h-5 min-w-6 justify-center px-1 py-0 text-[10px] font-semibold tabular-nums cursor-help"
+                              >
+                                {sectorInfo.label}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">{sectorInfo.azimuth}°</TooltipContent>
+                          </Tooltip>
+                        ) : null}
                         {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
                             {cell.details.type.toUpperCase()}

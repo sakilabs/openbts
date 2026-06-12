@@ -158,6 +158,7 @@ export function useCellDrafts<T extends CellDraftBase>({
           return {
             ...template,
             band_id: source.band_id,
+            _sectorLocalId: source._sectorLocalId,
             is_confirmed: source.is_confirmed,
             notes: source.notes,
             details: createRemainingLteDetails(source.details, clid),
@@ -185,7 +186,14 @@ export function useCellDrafts<T extends CellDraftBase>({
       const band = allBands.find((b) => b.id === cell.band_id) ?? allBands.find((b) => b.rat === cell.rat);
       if (!band) return;
       const template = createNewCell(cell.rat, band);
-      const cloned = { ...template, band_id: cell.band_id, is_confirmed: cell.is_confirmed, notes: cell.notes, details: { ...cell.details } };
+      const cloned = {
+        ...template,
+        band_id: cell.band_id,
+        _sectorLocalId: cell._sectorLocalId,
+        is_confirmed: cell.is_confirmed,
+        notes: cell.notes,
+        details: { ...cell.details },
+      };
       const idx = prev.findIndex((c) => c._localId === localId);
       const next = [...prev];
       next.splice(idx + 1, 0, cloned);

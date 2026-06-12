@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { getKnownEARFCN } from "@/lib/earfcn-fill";
 import { cn } from "@/lib/utils";
-import type { Band } from "@/types/station";
+import type { Band, SectorDraft } from "@/types/station";
 
 import type { CellDraftBase } from "./cellEditRow";
 import { CellEditRow } from "./cellEditRow";
@@ -26,6 +26,7 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   enabledRats: string[];
   visibleRats: string[];
   bands: Band[];
+  sectors?: SectorDraft[];
 
   onToggleRat: (rat: string) => void;
   onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
@@ -79,6 +80,7 @@ type RatTableProps<T extends CellDraftBase> = {
   cells: T[];
   headers: string[];
   bands: Band[];
+  sectors?: SectorDraft[];
   getCellProps?: CellsEditorProps<T>["getCellProps"];
   renderAfterRow?: CellsEditorProps<T>["renderAfterRow"];
   onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
@@ -91,6 +93,7 @@ function RatTable<T extends CellDraftBase>({
   cells,
   headers,
   bands,
+  sectors,
   getCellProps,
   renderAfterRow,
   onCellChange,
@@ -152,6 +155,7 @@ function RatTable<T extends CellDraftBase>({
                   leftBorderClass={isCloned ? "border-l-2 border-l-sky-500" : cellProps.leftBorderClass}
                   showDelete={cellProps.showDelete}
                   rowClassName={isCloned ? "bg-sky-500/5" : cellProps.rowClassName}
+                  sectors={sectors}
                   onChange={handleCellChange}
                   onClone={onCloneCell}
                   onDelete={onDeleteCell}
@@ -171,6 +175,7 @@ export function CellsEditor<T extends CellDraftBase>({
   enabledRats,
   visibleRats,
   bands,
+  sectors,
   onToggleRat,
   onCellChange,
   onAddCell,
@@ -224,7 +229,10 @@ export function CellsEditor<T extends CellDraftBase>({
       ) : (
         visibleRats.map((rat) => {
           const cellsForRat = cellsByRat[rat] ?? [];
-          const headers = getTableHeaders(rat, t);
+          const baseHeaders = getTableHeaders(rat, t);
+          const sectorHeaderIndex = rat === "GSM" ? 1 : 2;
+          const headers =
+            sectors && sectors.length > 0 ? [...baseHeaders.slice(0, sectorHeaderIndex), "S", ...baseHeaders.slice(sectorHeaderIndex)] : baseHeaders;
           const badges = getDiffBadges?.(rat, cellsForRat);
           const hasChanges = badges && ((badges.added ?? 0) > 0 || (badges.modified ?? 0) > 0 || (badges.deleted ?? 0) > 0);
 
@@ -330,6 +338,7 @@ export function CellsEditor<T extends CellDraftBase>({
                       cells={cellsForRat}
                       headers={headers}
                       bands={bands}
+                      sectors={sectors}
                       getCellProps={getCellProps}
                       renderAfterRow={renderAfterRow}
                       onCellChange={onCellChange}

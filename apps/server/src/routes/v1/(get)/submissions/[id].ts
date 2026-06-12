@@ -6,6 +6,7 @@ import {
   proposedLTECells,
   proposedLocations,
   proposedNRCells,
+  proposedSectors,
   proposedStations,
   proposedUMTSCells,
   stations,
@@ -29,6 +30,7 @@ const submissionsSchema = createSelectSchema(submissions);
 const stationsSchema = createSelectSchema(stations);
 const userSchema = createSelectSchema(users).pick({ id: true, name: true, image: true, username: true });
 const proposedCellsSchema = createSelectSchema(proposedCells);
+const proposedSectorsSchema = createSelectSchema(proposedSectors);
 const gsmSchema = createSelectSchema(proposedGSMCells).omit({ proposed_cell_id: true });
 const umtsSchema = createSelectSchema(proposedUMTSCells).omit({ proposed_cell_id: true });
 const lteSchema = createSelectSchema(proposedLTECells).omit({ proposed_cell_id: true });
@@ -57,6 +59,7 @@ const schemaRoute = {
         reviewer: userSchema.nullable(),
         proposedLocation: createSelectSchema(proposedLocations).nullable(),
         proposedStation: createSelectSchema(proposedStations).nullable(),
+        sectors: z.array(proposedSectorsSchema),
         cells: z.array(proposedCellsSchema.extend({ details: proposedDetailsSchema })),
         locationPhotoSelections: z.array(locationPhotoSelectionSchema),
       }),
@@ -69,6 +72,7 @@ type Submission = z.infer<typeof submissionsSchema> & {
   station: z.infer<typeof stationsSchema> | null;
   submitter: z.infer<typeof userSchema>;
   reviewer: z.infer<typeof userSchema> | null;
+  sectors: z.infer<typeof proposedSectorsSchema>[];
   cells: Array<z.infer<typeof proposedCellsSchema> & { details: z.infer<typeof proposedDetailsSchema> }>;
   locationPhotoSelections: LocationPhotoSelection[];
 };
@@ -109,17 +113,20 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   if (!submission) throw new ErrorResponse("NOT_FOUND");
   if (!hasAdminPermission && submission.submitter_id !== session.user.id) throw new ErrorResponse("FORBIDDEN");
 
-  const rawCells = await db.query.proposedCells.findMany({
-    where: {
-      submission_id: id,
-    },
-    with: {
-      gsm: true,
-      umts: true,
-      lte: true,
-      nr: true,
-    },
-  });
+  const [rawSectors, rawCells] = await Promise.all([
+    db.query.proposedSectors.findMany({ where: { submission_id: id }, orderBy: { id: "asc" } }),
+    db.query.proposedCells.findMany({
+      where: {
+        submission_id: id,
+      },
+      with: {
+        gsm: true,
+        umts: true,
+        lte: true,
+        nr: true,
+      },
+    }),
+  ]);
 
   const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
     ...base,
@@ -157,7 +164,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     is_main: r.is_main,
   }));
 
-  return res.send({ data: { ...submission, cells, locationPhotoSelections } });
+  return res.send({ data: { ...submission, sectors: rawSectors, cells, locationPhotoSelections } });
 }
 
 const getSubmission: Route<ReqParams, Submission> = {

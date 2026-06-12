@@ -2,7 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { sectorAssignmentPayload, sectorsToPayloads } from "@/features/submissions/utils/cells";
 import { API_BASE, fetchJson } from "@/lib/api";
+import type { SectorDraft } from "@/types/station";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -24,6 +26,7 @@ export interface SaveSubmissionPayload {
     mno_name: string;
   };
   locationForm: ProposedLocationForm;
+  sectors: SectorDraft[];
   localCells: LocalCell[];
 }
 
@@ -51,11 +54,13 @@ export function useSaveSubmissionMutation() {
             longitude: payload.locationForm.longitude,
             latitude: payload.locationForm.latitude,
           },
+          sectors: sectorsToPayloads(payload.sectors),
           cells: payload.localCells
             .filter((lc) => lc.operation !== "unchanged")
             .map((lc) => ({
               operation: lc.operation,
               target_cell_id: lc.target_cell_id,
+              ...sectorAssignmentPayload(lc._sectorLocalId),
               band_id: lc.band_id,
               rat: lc.rat,
               is_confirmed: lc.is_confirmed,

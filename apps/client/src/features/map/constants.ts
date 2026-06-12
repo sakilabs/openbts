@@ -25,8 +25,18 @@ export const PICKER_UKE_CIRCLE_LAYER_ID = "picker-uke-locations-circle";
 export const PICKER_UKE_SYMBOL_LAYER_ID = "picker-uke-locations-symbol";
 export const PICKER_UKE_LAYER_IDS = [PICKER_UKE_CIRCLE_LAYER_ID, PICKER_UKE_SYMBOL_LAYER_ID] as const;
 
-export const AZIMUTHS_SOURCE_ID = "azimuths-source";
-export const AZIMUTHS_LINE_LAYER_ID = "azimuths-layer";
+export const INTERNAL_AZIMUTHS_SOURCE_ID = "internal-azimuths-source";
+export const INTERNAL_AZIMUTHS_FILL_LAYER_ID = "internal-azimuths-fill-layer";
+export const INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID = "internal-azimuths-outline-source";
+export const INTERNAL_AZIMUTHS_OUTLINE_LAYER_ID = "internal-azimuths-outline-layer";
+export const INTERNAL_AZIMUTHS_LABEL_SOURCE_ID = "internal-azimuths-label-source";
+export const INTERNAL_AZIMUTHS_LABEL_LAYER_ID = "internal-azimuths-label-layer";
+export const UKE_AZIMUTHS_SOURCE_ID = "uke-azimuths-source";
+export const UKE_AZIMUTHS_FILL_LAYER_ID = "uke-azimuths-fill-layer";
+export const UKE_AZIMUTHS_OUTLINE_SOURCE_ID = "uke-azimuths-outline-source";
+export const UKE_AZIMUTHS_OUTLINE_LAYER_ID = "uke-azimuths-outline-layer";
+export const UKE_AZIMUTHS_LABEL_SOURCE_ID = "uke-azimuths-label-source";
+export const UKE_AZIMUTHS_LABEL_LAYER_ID = "uke-azimuths-label-layer";
 
 export const RADIOLINES_SOURCE_ID = "radiolines-source";
 export const RADIOLINES_ENDPOINTS_SOURCE_ID = "radiolines-endpoints-source";

@@ -1,7 +1,7 @@
 import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -17,7 +17,10 @@ import TMobileIcon from "@/features/station-details/components/logos/t-mobile.sv
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
-import type { Location, LocationWithStations, Operator, UkeStation } from "@/types/station";
+import { type Location, type LocationWithStations, type Operator, type SectorDraft, type UkeStation } from "@/types/station";
+
+import type { CellDraftBase } from "../../cells/cellEditRow";
+import { SectorsPanel } from "./sectorsEditor";
 
 type StationInfoFormProps = {
   stationDbId?: number;
@@ -45,6 +48,9 @@ type StationInfoFormProps = {
   onMnoNameChange?: (value: string) => void;
   currentLocation?: Location | null;
   showEditLocationLink?: boolean;
+  sectors: SectorDraft[];
+  onSectorsChange: (sectors: SectorDraft[]) => void;
+  cells: CellDraftBase[];
 };
 
 export function StationInfoForm({
@@ -73,8 +79,11 @@ export function StationInfoForm({
   onMnoNameChange,
   currentLocation,
   showEditLocationLink,
+  sectors,
+  onSectorsChange,
+  cells,
 }: StationInfoFormProps) {
-  const { t } = useTranslation(["submissions", "common"]);
+  const { t } = useTranslation(["submissions", "common", "stationDetails"]);
   const [isFetchingSibling, setIsFetchingSibling] = useState(false);
 
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!networksId;
@@ -83,6 +92,17 @@ export function StationInfoForm({
 
   const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
+
+  const derivedSectorCount = useMemo(() => {
+    const byBand = new Map<number, number>();
+    for (const cell of cells) {
+      byBand.set(cell.band_id, (byBand.get(cell.band_id) ?? 0) + 1);
+    }
+
+    return byBand.size > 0 ? Math.max(...byBand.values()) : 0;
+  }, [cells]);
+
+  const assignedSectorLocalIds = useMemo(() => new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : []))), [cells]);
 
   const handleFetchSibling = async () => {
     if (!stationDbId) return;
@@ -216,6 +236,13 @@ export function StationInfoForm({
         onUkeStationSelect={onUkeStationSelect}
         currentLocation={currentLocation}
         showEditLocationLink={showEditLocationLink}
+      />
+
+      <SectorsPanel
+        sectors={sectors}
+        onChange={onSectorsChange}
+        derivedSectorCount={derivedSectorCount}
+        assignedSectorLocalIds={assignedSectorLocalIds}
       />
     </div>
   );

@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "dotenv": "17.4.2",
-    "drizzle-orm": "1.0.0-rc.1",
+    "drizzle-orm": "1.0.0-rc.3",
     "nanoid": "5.1.11",
     "postgres": "3.4.9",
     "redis": "6.0.0",
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@openbts/typescript-configs": "workspace:*",
-    "@types/node": "25.9.1",
-    "drizzle-kit": "1.0.0-rc.1"
+    "@types/node": "25.9.3",
+    "drizzle-kit": "1.0.0-rc.3"
   }
 }

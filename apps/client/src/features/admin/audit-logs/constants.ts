@@ -52,7 +52,7 @@ export const TABLE_LABELS: Record<string, string> = {
   uke_import: "UKE Import",
 };
 
-export const TABLE_OPTIONS = Object.keys(TABLE_LABELS);
+export const TABLE_OPTIONS = [...Object.keys(TABLE_LABELS), "station_sectors"];
 
 export const ACTION_GROUPS: { label: string; actions: string[] }[] = [
   { label: "Stations", actions: ["stations.create", "stations.update", "stations.delete"] },
