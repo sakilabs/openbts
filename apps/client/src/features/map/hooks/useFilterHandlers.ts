@@ -77,6 +77,7 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
       showRadiolines: filters.showRadiolines,
       radiolineOperators: [],
       showHeatmap: filters.showHeatmap,
+      showPlannedMeasurements: false,
     });
   }, [filters.source, filters.showStations, filters.showRadiolines, filters.showHeatmap, onFiltersChange]);
 

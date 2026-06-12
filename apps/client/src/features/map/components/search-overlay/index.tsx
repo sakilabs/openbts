@@ -55,6 +55,8 @@ type MapSearchOverlayProps = {
   hideAPIFilters?: boolean;
   showHeatmap?: boolean;
   onToggleHeatmap?: () => void;
+  showPlannedMeasurements?: boolean;
+  onTogglePlannedMeasurements?: () => void;
 };
 
 export const MapSearchOverlay = memo(function MapSearchOverlay({
@@ -78,6 +80,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   hideAPIFilters = false,
   showHeatmap = false,
   onToggleHeatmap,
+  showPlannedMeasurements = false,
+  onTogglePlannedMeasurements,
 }: MapSearchOverlayProps) {
   const { t } = useTranslation("main");
   const [showFilters, setShowFilters] = useState(false);
@@ -272,6 +276,10 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           e.preventDefault();
           onToggleHeatmap?.();
           break;
+        case "p":
+          e.preventDefault();
+          onTogglePlannedMeasurements?.();
+          break;
         case "z":
           e.preventDefault();
           onFiltersChange({ ...filters, source: filters.source === "uke" ? "internal" : "uke" });
@@ -294,6 +302,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     filters,
     onFiltersChange,
     onToggleHeatmap,
+    onTogglePlannedMeasurements,
     handleToggleOperator,
     handleToggleRat,
     preferences.showAzimuths,
@@ -378,6 +387,8 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               hideAPIFilters={hideAPIFilters}
               showHeatmap={showHeatmap}
               onToggleHeatmap={onToggleHeatmap}
+              showPlannedMeasurements={showPlannedMeasurements}
+              onTogglePlannedMeasurements={onTogglePlannedMeasurements}
             />
           </fieldset>
         )}

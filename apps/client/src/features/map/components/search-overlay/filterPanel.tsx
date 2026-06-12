@@ -7,6 +7,7 @@ import {
   Fire02Icon,
   InformationCircleIcon,
   Navigation03Icon,
+  Radar01Icon,
   Route02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -332,6 +333,8 @@ type FilterPanelProps = {
   onClearFilters: () => void;
   showHeatmap?: boolean;
   onToggleHeatmap?: () => void;
+  showPlannedMeasurements?: boolean;
+  onTogglePlannedMeasurements?: () => void;
   isSheet?: boolean;
   hideSource?: boolean;
   hideAPIFilters?: boolean;
@@ -355,6 +358,8 @@ export function FilterPanel({
   onClearFilters,
   showHeatmap = false,
   onToggleHeatmap,
+  showPlannedMeasurements = false,
+  onTogglePlannedMeasurements,
   isSheet = false,
   hideSource = false,
   hideAPIFilters = false,
@@ -415,6 +420,10 @@ export function FilterPanel({
     onToggleHeatmap?.();
   }, [onToggleHeatmap]);
 
+  const handleTogglePlannedMeasurements = useCallback(() => {
+    onTogglePlannedMeasurements?.();
+  }, [onTogglePlannedMeasurements]);
+
   const filterSections = (
     <div className={cn("space-y-2", isSheet ? "p-4" : "p-4 overflow-y-auto overscroll-contain")}>
       <div>
@@ -435,6 +444,13 @@ export function FilterPanel({
               <HugeiconsIcon icon={Fire02Icon} className="size-3.5 shrink-0" />
               <span className="flex-1 text-left">Heatmap</span>
               <KbdHint>H</KbdHint>
+            </Checkbox>
+          )}
+          {onTogglePlannedMeasurements && (
+            <Checkbox checked={showPlannedMeasurements} onChange={handleTogglePlannedMeasurements}>
+              <HugeiconsIcon icon={Radar01Icon} className="size-3.5 shrink-0" />
+              <span className="flex-1 text-left">{t("main:filters.showPlannedPem")}</span>
+              <KbdHint>P</KbdHint>
             </Checkbox>
           )}
           {filters.source === "uke" && (

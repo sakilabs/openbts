@@ -162,6 +162,7 @@ export type StationFilters = {
   showRadiolines: boolean;
   radiolineOperators: number[];
   showHeatmap: boolean;
+  showPlannedMeasurements: boolean;
 };
 
 export type StationWithoutCells = Omit<Station, "location" | "cells"> & {

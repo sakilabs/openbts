@@ -11,6 +11,7 @@ import enUSLists from "./locales/en-US/lists.json";
 import enUSMain from "./locales/en-US/main.json";
 import enUSNav from "./locales/en-US/nav.json";
 import enUSNotifications from "./locales/en-US/notifications.json";
+import enUSPem from "./locales/en-US/pem.json";
 import enUSSettings from "./locales/en-US/settings.json";
 import enUSSpectrum from "./locales/en-US/spectrum.json";
 import enUSStationDetails from "./locales/en-US/stationDetails.json";
@@ -27,6 +28,7 @@ import plPLLists from "./locales/pl-PL/lists.json";
 import plPLMain from "./locales/pl-PL/main.json";
 import plPLNav from "./locales/pl-PL/nav.json";
 import plPLNotifications from "./locales/pl-PL/notifications.json";
+import plPLPem from "./locales/pl-PL/pem.json";
 import plPLSettings from "./locales/pl-PL/settings.json";
 import plPLSpectrum from "./locales/pl-PL/spectrum.json";
 import plPLStationDetails from "./locales/pl-PL/stationDetails.json";
@@ -53,6 +55,7 @@ export const resources = {
     lists: enUSLists,
     cellAnalyzer: enUSCellAnalyzer,
     spectrum: enUSSpectrum,
+    pem: enUSPem,
   },
   "pl-PL": {
     common: plPLCommon,
@@ -71,6 +74,7 @@ export const resources = {
     lists: plPLLists,
     cellAnalyzer: plPLCellAnalyzer,
     spectrum: plPLSpectrum,
+    pem: plPLPem,
   },
 } as const;
 

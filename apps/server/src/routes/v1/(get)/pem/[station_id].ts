@@ -17,13 +17,7 @@ const MNC_TO_ENTITY: Record<number, string> = {
   26006: "P4 Sp. z o.o.",
 };
 
-type Params = { Params: { station_id: string }; Querystring: { lat: number; lng: number; operator: number; planned: number } };
-
-const plannedMeasurement = z.object({
-  from_date: z.string(),
-  to_date: z.string(),
-  lab_name: z.string(),
-});
+type Params = { Params: { station_id: string }; Querystring: { lat: number; lng: number; operator: number } };
 
 const mapMeasurement = z.object({
   document_url: z.url(),
@@ -40,8 +34,8 @@ const PemReportResponse = z.object({
   station_id: z.string(),
   source: z.enum(["map", "search"]),
   date: z.string(),
-  type: z.enum(["planned_measurement", "map_measurement", "search_measurement"]),
-  details: z.union([plannedMeasurement, mapMeasurement, searchMeasurement]),
+  type: z.enum(["map_measurement", "search_measurement"]),
+  details: z.union([mapMeasurement, searchMeasurement]),
 });
 type PemReport = z.infer<typeof PemReportResponse>;
 
@@ -53,7 +47,6 @@ const schemaRoute = {
     lat: z.coerce.number(),
     lng: z.coerce.number(),
     operator: z.coerce.number(),
-    planned: z.number().optional(),
   }),
   response: {
     200: z.object({
@@ -149,9 +142,9 @@ type WmsFeature = {
 
 type WmsResponse = { features: WmsFeature[] };
 
-function buildWmsParams(identityName: string, lat: number, lng: number, featureCount: number, needPlannedMeasurement = false): URLSearchParams {
+function buildWmsParams(identityName: string, lat: number, lng: number, featureCount: number): URLSearchParams {
   const bbox = `${lng - 0.02},${lat - 0.02},${lng + 0.02},${lat + 0.02}`;
-  const layers = `measures${needPlannedMeasurement ? ",planned_measures" : ""}`;
+  const layers = "measures";
   return new URLSearchParams({
     SERVICE: "WMS",
     VERSION: "1.1.1",

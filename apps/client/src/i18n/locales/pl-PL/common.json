@@ -38,7 +38,8 @@
     "updating": "Aktualizowanie...",
     "restore": "Przywróć",
     "noChanges": "Brak zmian do zapisania",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "showOnMap": "Pokaż na mapie"
   },
   "labels": {
     "generated": "Wygenerowany",

@@ -293,6 +293,10 @@ function MapViewInner() {
 
   const handleActiveMarkerClear = useCallback(() => setActiveMarker(null), []);
   const handleToggleHeatmap = useCallback(() => setFilters((prev) => ({ ...prev, showHeatmap: !prev.showHeatmap })), [setFilters]);
+  const handleTogglePlannedMeasurements = useCallback(
+    () => setFilters((prev) => ({ ...prev, showPlannedMeasurements: !prev.showPlannedMeasurements })),
+    [setFilters],
+  );
   const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "CLOSE_STATION" }), []);
   const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
   const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
@@ -363,6 +367,8 @@ function MapViewInner() {
         onRadiolineSelect={handleRadiolineSelectFromSearch}
         showHeatmap={filters.showHeatmap}
         onToggleHeatmap={handleToggleHeatmap}
+        showPlannedMeasurements={filters.showPlannedMeasurements}
+        onTogglePlannedMeasurements={handleTogglePlannedMeasurements}
       />
       {showSelectedDot && selectedLocation && (
         <MapMarker longitude={selectedLocation.lng} latitude={selectedLocation.lat}>

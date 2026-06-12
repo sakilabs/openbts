@@ -1,0 +1,190 @@
+import { Popup } from "maplibre-gl";
+import { useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
+
+import type { PlannedPEMStation } from "@/features/si2pem/api";
+import { API_BASE } from "@/lib/api";
+import { getOperatorColor } from "@/lib/operatorUtils";
+
+import { PemPopupContent } from "../components/pemPopupContent";
+import { PLANNED_PEM_LAYER_ID, PLANNED_PEM_SOURCE_ID } from "../constants";
+
+const PEM_BOX_IMAGE_ID = "pem-box";
+
+type PopupState = { popup: Popup; root: ReturnType<typeof createRoot> };
+
+function destroyPopup(state: PopupState | null): null {
+  state?.root.unmount();
+  state?.popup.remove();
+  return null;
+}
+
+function createBoxSDF(size: number, padding: number, borderWidth: number): ImageData {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = "white";
+  ctx.fillRect(padding, padding, size - padding * 2, borderWidth);
+  ctx.fillRect(padding, size - padding - borderWidth, size - padding * 2, borderWidth);
+  ctx.fillRect(padding, padding, borderWidth, size - padding * 2);
+  ctx.fillRect(size - padding - borderWidth, padding, borderWidth, size - padding * 2);
+  return ctx.getImageData(0, 0, size, size);
+}
+
+async function fetchMeasurements(bounds: string, operators: number[]): Promise<GeoJSON.FeatureCollection | null> {
+  const params = new URLSearchParams({ bounds });
+  if (operators.length) params.set("operators", operators.join(","));
+  const res = await fetch(`${API_BASE}/pem/planned?${params.toString()}`);
+  if (!res.ok) return null;
+  const { data }: { totalCount: number; data: PlannedPEMStation[] } = await res.json();
+  return {
+    type: "FeatureCollection",
+    features: data.map((f) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [f.location.longitude, f.location.latitude] },
+      properties: {
+        station_id: f.station_id,
+        color: getOperatorColor(f.operator?.mnc ?? 0),
+        operator_name: f.operator?.name ?? null,
+        date_from: f.date.from,
+        date_to: f.date.to,
+        lab_name: f.lab.name,
+        lab_pca: f.lab.PCA,
+        city: f.location.city,
+        address: f.location.address,
+        status: f.status,
+      },
+    })),
+  };
+}
+
+function getBoundsString(map: maplibregl.Map): string {
+  const b = map.getBounds();
+  return `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
+}
+
+export function usePlannedMeasurementsLayer({
+  map,
+  isLoaded,
+  enabled,
+  operators = [],
+}: {
+  map: maplibregl.Map | null;
+  isLoaded: boolean;
+  enabled: boolean;
+  operators?: number[];
+}) {
+  const popupRef = useRef<PopupState | null>(null);
+
+  useEffect(() => {
+    if (!map || !isLoaded || !enabled) return;
+    let cancelled = false;
+    const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
+    const initLayer = () => {
+      try {
+        if (!map.hasImage(PEM_BOX_IMAGE_ID)) {
+          map.addImage(PEM_BOX_IMAGE_ID, createBoxSDF(18, 2, 2), { sdf: true });
+        }
+        if (!map.getSource(PLANNED_PEM_SOURCE_ID)) {
+          map.addSource(PLANNED_PEM_SOURCE_ID, { type: "geojson", data: EMPTY });
+        }
+        if (!map.getLayer(PLANNED_PEM_LAYER_ID)) {
+          map.addLayer({
+            id: PLANNED_PEM_LAYER_ID,
+            type: "symbol",
+            source: PLANNED_PEM_SOURCE_ID,
+            layout: {
+              "icon-image": PEM_BOX_IMAGE_ID,
+              "icon-size": 1,
+              "icon-allow-overlap": true,
+              "icon-ignore-placement": true,
+            },
+            paint: {
+              "icon-color": ["get", "color"],
+              "icon-opacity": 0.9,
+            },
+          });
+        }
+      } catch {}
+    };
+
+    const loadData = () => {
+      void fetchMeasurements(getBoundsString(map), operators).then((data) => {
+        if (cancelled || !data) return;
+        try {
+          void (map.getSource(PLANNED_PEM_SOURCE_ID) as maplibregl.GeoJSONSource)?.setData(data);
+        } catch {}
+      });
+    };
+
+    const handleClick = (e: maplibregl.MapLayerMouseEvent) => {
+      const p = e.features?.[0]?.properties;
+      if (!p) return;
+
+      popupRef.current = destroyPopup(popupRef.current);
+
+      const container = document.createElement("div");
+      const root = createRoot(container);
+      const popup = new Popup({ closeButton: true, closeOnClick: true, maxWidth: "20rem", offset: 8 })
+        .setLngLat(e.lngLat)
+        .setDOMContent(container)
+        .addTo(map);
+
+      root.render(
+        <PemPopupContent
+          stationId={p.station_id}
+          operatorName={p.operator_name}
+          color={p.color}
+          dateFrom={p.date_from}
+          dateTo={p.date_to}
+          labName={p.lab_name}
+          labPca={p.lab_pca}
+          city={p.city}
+          address={p.address}
+        />,
+      );
+
+      popupRef.current = { popup, root };
+    };
+
+    const handleMouseEnter = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+
+    const handleMouseLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+
+    const refresh = () => {
+      initLayer();
+      loadData();
+    };
+
+    refresh();
+    map.on("styledata", refresh);
+    map.on("moveend", loadData);
+    map.on("click", PLANNED_PEM_LAYER_ID, handleClick);
+    map.on("mouseenter", PLANNED_PEM_LAYER_ID, handleMouseEnter);
+    map.on("mouseleave", PLANNED_PEM_LAYER_ID, handleMouseLeave);
+
+    return () => {
+      cancelled = true;
+      popupRef.current = destroyPopup(popupRef.current);
+      map.off("styledata", refresh);
+      map.off("moveend", loadData);
+      map.off("click", PLANNED_PEM_LAYER_ID, handleClick);
+      map.off("mouseenter", PLANNED_PEM_LAYER_ID, handleMouseEnter);
+      map.off("mouseleave", PLANNED_PEM_LAYER_ID, handleMouseLeave);
+      try {
+        if (map.getStyle() !== undefined) {
+          if (map.getLayer(PLANNED_PEM_LAYER_ID)) map.removeLayer(PLANNED_PEM_LAYER_ID);
+          if (map.getSource(PLANNED_PEM_SOURCE_ID)) map.removeSource(PLANNED_PEM_SOURCE_ID);
+        }
+      } catch {}
+    };
+  }, [map, isLoaded, enabled, operators]);
+}

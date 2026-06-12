@@ -38,7 +38,8 @@
     "updating": "Updating...",
     "restore": "Restore",
     "noChanges": "No changes to save",
-    "retry": "Try again"
+    "retry": "Try again",
+    "showOnMap": "Show on map"
   },
   "labels": {
     "generated": "Generated",

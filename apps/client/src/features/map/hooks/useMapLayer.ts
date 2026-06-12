@@ -29,6 +29,7 @@ type UseMapLayerArgs = {
   renderHoverTooltip?: (data: FeatureClickData) => ReactNode | null;
   pointStyle?: MapPointStyle;
   useZabkaMarkers?: boolean;
+  blockedByLayers?: string[];
 };
 
 type ActiveTooltip = {
@@ -191,6 +192,7 @@ export function useMapLayer({
   renderHoverTooltip,
   pointStyle = "dots",
   useZabkaMarkers = false,
+  blockedByLayers = [],
 }: UseMapLayerArgs) {
   const callbackRefs = useRef({ onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip });
   callbackRefs.current = { onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip };
@@ -239,6 +241,7 @@ export function useMapLayer({
     };
 
     const handleClick = (e: maplibregl.MapMouseEvent) => {
+      if (blockedByLayers.length > 0 && map.queryRenderedFeatures(e.point, { layers: blockedByLayers }).length > 0) return;
       const features = map.queryRenderedFeatures(e.point, { layers: [...LAYER_IDS] });
       const data = features[0] && extractFeatureClickData(features[0]);
       if (data) callbackRefs.current.onFeatureClick(data);

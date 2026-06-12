@@ -65,6 +65,7 @@
     "showStations": "Stations",
     "operator": "BTS Operator",
     "showRadiolines": "Radiolines",
+    "showPlannedPem": "Planned PEMs",
     "showAzimuths": "Azimuths",
     "radiolineOperator": "Radioline Operator",
     "radiolineOperators_one": "{{count, number}} radioline operator",

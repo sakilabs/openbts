@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-12
+
+### 🚀 Enhancements
+
+- SI2PEM now has its own dedicated page where you can see planned, completed and canceled measurements
+- There is a new layer on the map that allows you to see planned measurements. This layer can be filtered by operators
+
 # 2026-06-04
 
 ### 🚀 Enhancements

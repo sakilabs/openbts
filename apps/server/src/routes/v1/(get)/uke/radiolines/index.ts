@@ -112,7 +112,7 @@ type ReqQuery = {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit = undefined, page = 1, bounds, operators, permit_number, decision_type, new: recentDays } = req.query;
+  const { limit, page, bounds, operators, permit_number, decision_type, new: recentDays } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   try {

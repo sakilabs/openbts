@@ -72,6 +72,7 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
   let showRadiolines = false;
   let showStations = true;
   let showHeatmap = false;
+  let showPlannedMeasurements = false;
   let source: StationSource = "internal";
   let radiolineOperators: number[] = [];
 
@@ -116,11 +117,24 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
         showHeatmap = value.includes("h");
         showStations = !value.includes("s");
         source = value.includes("u") ? "uke" : "internal";
+        showPlannedMeasurements = value.includes("p");
         break;
     }
   }
 
-  return { operators, bands, rat, source, recentDays, recentDateFields, showStations, showRadiolines, radiolineOperators, showHeatmap };
+  return {
+    operators,
+    bands,
+    rat,
+    source,
+    recentDays,
+    recentDateFields,
+    showStations,
+    showRadiolines,
+    radiolineOperators,
+    showHeatmap,
+    showPlannedMeasurements,
+  };
 }
 
 function parseUrlHash(): {
@@ -193,7 +207,13 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
     tokens.push(`n${filters.recentDays}${suffix}`);
   }
 
-  const flags = [filters.showRadiolines && "r", filters.showHeatmap && "h", !filters.showStations && "s", filters.source === "uke" && "u"]
+  const flags = [
+    filters.showRadiolines && "r",
+    filters.showHeatmap && "h",
+    filters.showPlannedMeasurements && "p",
+    !filters.showStations && "s",
+    filters.source === "uke" && "u",
+  ]
     .filter(Boolean)
     .join("");
   if (flags) tokens.push(`f${flags}`);
@@ -241,6 +261,7 @@ export function useUrlSync({ map, isLoaded, filters, onInitialize }: UseUrlSyncA
             showRadiolines: urlFilters.showRadiolines ?? false,
             radiolineOperators: urlFilters.radiolineOperators || [],
             showHeatmap: urlFilters.showHeatmap ?? false,
+            showPlannedMeasurements: urlFilters.showPlannedMeasurements ?? false,
           }
         : undefined,
       center,

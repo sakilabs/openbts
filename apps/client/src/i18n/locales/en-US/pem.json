@@ -1,0 +1,20 @@
+{
+  "page": {
+    "title": "SI2PEM Measurements",
+    "description": "Planned, completed and canceled electromagnetic field measurements from SI2PEM system"
+  },
+  "tabs": {
+    "planned": "Planned",
+    "completed": "Completed",
+    "canceled": "Canceled"
+  },
+  "table": {
+    "dateFrom": "Data from",
+    "dateTo": "Data to",
+    "lab": "Lab"
+  },
+  "filters": {
+    "stationIdPlaceholder": "Station ID...",
+    "allOperators": "All operators"
+  }
+}

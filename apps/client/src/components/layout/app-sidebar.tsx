@@ -21,6 +21,7 @@ import {
   Message01Icon,
   NewsIcon,
   Note01Icon,
+  Radar01Icon,
   SecurityLockIcon,
   SentIcon,
   Settings02Icon,
@@ -62,6 +63,7 @@ const navMainConfig = [
       { titleKey: "items.clfExport", url: "/clf-export", icon: Download04Icon },
       { titleKey: "items.analyzer", url: "/analyzer", icon: FileSearchIcon },
       { titleKey: "items.spectrum", url: "/spectrum", icon: FullSignalIcon },
+      { titleKey: "items.pem", url: "/pem-measurements", icon: Radar01Icon },
     ],
   },
 ];
