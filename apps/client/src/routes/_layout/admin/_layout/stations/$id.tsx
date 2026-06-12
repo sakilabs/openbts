@@ -31,7 +31,7 @@ import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { isRecent } from "@/lib/dateUtils";
 import { shallowEqual } from "@/lib/shallowEqual";
-import type { Band, Cell, Station, UkeStation } from "@/types/station";
+import { type Band, type Cell, type SectorDraft, type Station, type UkeStation } from "@/types/station";
 
 function cellToLocal(cell: Cell): LocalCell {
   return {
@@ -275,6 +275,9 @@ function StationDetailForm({
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
+  const [sectors, setSectors] = useState<SectorDraft[]>(() =>
+    (station?.sectors ?? []).map((sector) => ({ ...sector, _localId: `sector-${sector.id}` })),
+  );
 
   const saveMutation = useSaveStationMutation();
   const handleServerCellDelete = useCallback((cell: LocalCell) => {
@@ -576,6 +579,10 @@ function StationDetailForm({
     [originalCells],
   );
 
+  const handleCellSectorChange = useCallback((cellLocalId: string, sectorLocalId: string | null) => {
+    setCells;
+  });
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <StationDetailHeader
@@ -628,6 +635,9 @@ function StationDetailForm({
               onMnoNameChange={(v) => dispatch({ type: "SET_MNO_NAME", payload: v })}
               currentLocation={station?.location ?? null}
               showEditLocationLink={!isCreateMode}
+              sectors={sectors}
+              onSectorsChange={setSectors}
+              cells={localCells}
             />
 
             {isCreateMode ? (

@@ -156,6 +156,22 @@ export const stations = pgTable(
   ],
 );
 
+export const stationSectors = pgTable(
+  "station_sectors",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    station_id: integer("station_id")
+      .references(() => stations.id, { onDelete: "cascade", onUpdate: "cascade" })
+      .notNull(),
+    azimuth: integer("azimuth").notNull(),
+  },
+  (t) => [
+    index("station_sectors_station_id_idx").on(t.station_id),
+    unique("station_sectors_station_azimuth_unique").on(t.station_id, t.azimuth),
+    check("station_sectors_azimuth_range", sql`${t.azimuth} BETWEEN 0 AND 359`),
+  ],
+);
+
 /**
  * Stations permits table
  * @example
@@ -278,6 +294,7 @@ export const cells = pgTable(
       .notNull(),
     rat: ratEnum("rat").notNull(),
     notes: text("notes"),
+    sector_id: integer("sector_id").references(() => stationSectors.id, { onDelete: "set null", onUpdate: "cascade" }),
     is_confirmed: boolean("is_confirmed").default(false).notNull(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

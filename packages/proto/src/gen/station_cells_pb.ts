@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file station_cells.proto.
  */
 export const file_station_cells: GenFile = /*@__PURE__*/
-  fileDesc("ChNzdGF0aW9uX2NlbGxzLnByb3RvEhBvcGVuYnRzLnN0YXRpb25zIrcBChJDZWxsV2l0aG91dERldGFpbHMSCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoBRIZCgNyYXQYAyABKA4yDC5vcGVuYnRzLlJhdBINCgVub3RlcxgEIAEoCRIbCgRiYW5kGAUgASgLMg0ub3BlbmJ0cy5CYW5kEhQKDGlzX2NvbmZpcm1lZBgGIAEoCBIRCgl1cGRhdGVkQXQYCCABKAkSEQoJY3JlYXRlZEF0GAkgASgJIoUBChNFeHRyYUlkZW50aWZpY2F0b3JzEgoKAmlkGAEgASgFEhMKC25ldHdvcmtzX2lkGAIgASgFEhUKDW5ldHdvcmtzX25hbWUYAyABKAkSEAoIbW5vX25hbWUYBCABKAkSEQoJdXBkYXRlZEF0GAUgASgJEhEKCWNyZWF0ZWRBdBgGIAEoCWIGcHJvdG8z", [file_common]);
+  fileDesc("ChNzdGF0aW9uX2NlbGxzLnByb3RvEhBvcGVuYnRzLnN0YXRpb25zIsoBChJDZWxsV2l0aG91dERldGFpbHMSCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoBRIZCgNyYXQYAyABKA4yDC5vcGVuYnRzLlJhdBINCgVub3RlcxgEIAEoCRIbCgRiYW5kGAUgASgLMg0ub3BlbmJ0cy5CYW5kEhQKDGlzX2NvbmZpcm1lZBgGIAEoCBIRCglzZWN0b3JfaWQYByABKAUSEQoJdXBkYXRlZEF0GAggASgJEhEKCWNyZWF0ZWRBdBgJIAEoCSKFAQoTRXh0cmFJZGVudGlmaWNhdG9ycxIKCgJpZBgBIAEoBRITCgtuZXR3b3Jrc19pZBgCIAEoBRIVCg1uZXR3b3Jrc19uYW1lGAMgASgJEhAKCG1ub19uYW1lGAQgASgJEhEKCXVwZGF0ZWRBdBgFIAEoCRIRCgljcmVhdGVkQXQYBiABKAliBnByb3RvMw", [file_common]);
 
 /**
  * @generated from message openbts.stations.CellWithoutDetails
@@ -47,6 +47,11 @@ export type CellWithoutDetails = Message<"openbts.stations.CellWithoutDetails"> 
    * @generated from field: bool is_confirmed = 6;
    */
   isConfirmed: boolean;
+
+  /**
+   * @generated from field: int32 sector_id = 7;
+   */
+  sectorId: number;
 
   /**
    * @generated from field: string updatedAt = 8;

@@ -6,7 +6,15 @@ import { fetchStation, fetchUkePermit } from "@/features/station-details/api";
 import { usePreferences } from "@/hooks/usePreferences";
 import { showApiError } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
-import type { LocationInfo, StationFilters, StationSource, StationWithoutCells, UkeLocationWithPermits, UkeStation } from "@/types/station";
+import type {
+  LocationInfo,
+  LocationWithStations,
+  StationFilters,
+  StationSource,
+  StationWithoutCells,
+  UkeLocationWithPermits,
+  UkeStation,
+} from "@/types/station";
 
 import type { LocationsResponse } from "../api";
 import { fetchLocationWithStations } from "../api";
@@ -22,6 +30,7 @@ import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const EMPTY_UKE_LOCATIONS: UkeLocationWithPermits[] = [];
+const EMPTY_INTERNAL_LOCATIONS: LocationWithStations[] = [];
 
 export function locationQueryKey(locationId: number, filters: StationFilters) {
   return ["location", locationId, filters] as const;
@@ -399,11 +408,12 @@ export function StationsLayer({
   useHeatmapLayer({ map, isLoaded, enabled: filters.showHeatmap, showStations: filters.showStations });
   usePlannedMeasurementsLayer({ map, isLoaded, enabled: filters.showPlannedMeasurements, operators: filters.operators });
 
-  const azimuthEnabled = preferences.showAzimuths && filters.source === "uke" && zoom >= preferences.azimuthsMinZoom;
+  const azimuthEnabled = preferences.showAzimuths && zoom >= preferences.azimuthsMinZoom;
   useAzimuthLayer({
     map,
     isLoaded,
-    locations: azimuthEnabled ? (locations as unknown as UkeLocationWithPermits[]) : EMPTY_UKE_LOCATIONS,
+    locations: azimuthEnabled && filters.source === "internal" ? (locations as unknown as LocationWithStations[]) : EMPTY_INTERNAL_LOCATIONS,
+    ukeLocations: azimuthEnabled && filters.source === "uke" ? (locations as unknown as UkeLocationWithPermits[]) : EMPTY_UKE_LOCATIONS,
     enabled: azimuthEnabled,
     minZoom: preferences.azimuthsMinZoom,
     lineLength: preferences.azimuthLineLength,

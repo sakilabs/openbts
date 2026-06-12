@@ -29,6 +29,7 @@ import {
   radiolinesAntennaTypes,
   radiolinesTransmitterTypes,
   regions,
+  stationSectors,
   stations,
   stationsPermits,
   statsSnapshots,
@@ -61,6 +62,7 @@ export const relations = defineRelations(
     operators,
     regions,
     stations,
+    stationSectors,
     ukePermits,
     ukePermitSectors,
     radioLinesManufacturers,
@@ -138,6 +140,14 @@ export const relations = defineRelations(
       extra_identificators: helpers.one.extraIdentificators({
         from: helpers.stations.id,
         to: helpers.extraIdentificators.station_id,
+      }),
+      sectors: helpers.many.stationSectors(),
+    },
+    stationSectors: {
+      station: helpers.one.stations({
+        from: helpers.stationSectors.station_id,
+        to: helpers.stations.id,
+        optional: false,
       }),
     },
     cells: {

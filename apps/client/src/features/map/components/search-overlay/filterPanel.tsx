@@ -439,27 +439,25 @@ export function FilterPanel({
             <span className="flex-1 text-left">{t("filters.showRadiolines")}</span>
             <KbdHint>R</KbdHint>
           </Checkbox>
-          {onToggleHeatmap && (
+          {onToggleHeatmap ? (
             <Checkbox checked={showHeatmap} onChange={handleToggleHeatmap}>
               <HugeiconsIcon icon={Fire02Icon} className="size-3.5 shrink-0" />
               <span className="flex-1 text-left">Heatmap</span>
               <KbdHint>H</KbdHint>
             </Checkbox>
-          )}
-          {onTogglePlannedMeasurements && (
+          ) : null}
+          {onTogglePlannedMeasurements ? (
             <Checkbox checked={showPlannedMeasurements} onChange={handleTogglePlannedMeasurements}>
               <HugeiconsIcon icon={Radar01Icon} className="size-3.5 shrink-0" />
               <span className="flex-1 text-left">{t("main:filters.showPlannedPem")}</span>
               <KbdHint>P</KbdHint>
             </Checkbox>
-          )}
-          {filters.source === "uke" && (
-            <Checkbox checked={preferences.showAzimuths} onChange={() => updatePreferences({ showAzimuths: !preferences.showAzimuths })}>
-              <HugeiconsIcon icon={Navigation03Icon} className="size-3.5 shrink-0" />
-              <span className="flex-1 text-left">{t("filters.showAzimuths")}</span>
-              <KbdHint>A</KbdHint>
-            </Checkbox>
-          )}
+          ) : null}
+          <Checkbox checked={preferences.showAzimuths} onChange={() => updatePreferences({ showAzimuths: !preferences.showAzimuths })}>
+            <HugeiconsIcon icon={Navigation03Icon} className="size-3.5 shrink-0" />
+            <span className="flex-1 text-left">{t("filters.showAzimuths")}</span>
+            <KbdHint>A</KbdHint>
+          </Checkbox>
         </div>
       </div>
 

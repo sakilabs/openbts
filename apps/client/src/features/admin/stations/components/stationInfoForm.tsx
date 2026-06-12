@@ -1,13 +1,14 @@
-import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
+import { AirportTowerIcon, ArrowDown01Icon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { OperatorSelect } from "@/components/operator-select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +18,10 @@ import TMobileIcon from "@/features/station-details/components/logos/t-mobile.sv
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
-import type { Location, LocationWithStations, Operator, UkeStation } from "@/types/station";
+import { type Location, type LocationWithStations, type Operator, type SectorDraft, type UkeStation } from "@/types/station";
+
+import type { CellDraftBase } from "../../cells/cellEditRow";
+import { SectorsEditor } from "./sectorsEditor";
 
 type StationInfoFormProps = {
   stationDbId?: number;
@@ -45,6 +49,9 @@ type StationInfoFormProps = {
   onMnoNameChange?: (value: string) => void;
   currentLocation?: Location | null;
   showEditLocationLink?: boolean;
+  sectors: SectorDraft[];
+  onSectorsChange: (sectors: SectorDraft[]) => void;
+  cells: CellDraftBase[];
 };
 
 export function StationInfoForm({
@@ -73,6 +80,9 @@ export function StationInfoForm({
   onMnoNameChange,
   currentLocation,
   showEditLocationLink,
+  sectors,
+  onSectorsChange,
+  cells,
 }: StationInfoFormProps) {
   const { t } = useTranslation(["submissions", "common"]);
   const [isFetchingSibling, setIsFetchingSibling] = useState(false);
@@ -83,6 +93,15 @@ export function StationInfoForm({
 
   const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
+
+  const derivedSectorCount = useMemo(() => {
+    const byBand = new Map<number, number>();
+    for (const cell of cells) {
+      byBand.set(cell.band_id, (byBand.get(cell.band_id) ?? 0) + 1);
+    }
+
+    return byBand.size > 0 ? Math.max(...byBand.values()) : 0;
+  }, [cells]);
 
   const handleFetchSibling = async () => {
     if (!stationDbId) return;
@@ -217,6 +236,24 @@ export function StationInfoForm({
         currentLocation={currentLocation}
         showEditLocationLink={showEditLocationLink}
       />
+
+      <Collapsible>
+        <div className="border rounded-xl overflow-hidden">
+          <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
+            <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-0 -rotate-90"
+              />
+              <span className="font-semibold text-sm">Sektory</span>
+              <span className="text-xs text-muted-foreground">({sectors.length}/15)</span>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="pt-2">
+            <SectorsEditor sectors={sectors} onChange={onSectorsChange} derivedSectorCount={derivedSectorCount} />
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
     </div>
   );
 }

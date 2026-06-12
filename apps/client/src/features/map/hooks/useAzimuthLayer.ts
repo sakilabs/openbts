@@ -1,34 +1,34 @@
+import { getOperatorColor } from "@openbts/shared/operatorUtils";
 import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 
-import { getOperatorColor } from "@/lib/operatorUtils";
-import type { UkeLocationWithPermits } from "@/types/station";
+import type { LocationWithStations, UkeLocationWithPermits } from "@/types/station";
 
-import { AZIMUTHS_LINE_LAYER_ID, AZIMUTHS_SOURCE_ID, POINT_LAYER_ID } from "../constants";
+import {
+  INTERNAL_AZIMUTHS_LINE_LAYER_ID,
+  INTERNAL_AZIMUTHS_SOURCE_ID,
+  POINT_LAYER_ID,
+  UKE_AZIMUTHS_LINE_LAYER_ID,
+  UKE_AZIMUTHS_SOURCE_ID,
+} from "../constants";
 import { DEFAULT_COLOR } from "../geojson";
 import { destinationPoint } from "../utils";
 
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
-function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: number): GeoJSON.FeatureCollection {
+type AzimuthPoint = { latitude: number; longitude: number; entries: { azimuth: number; color: string }[] };
+
+function buildAzimuthFeatures(points: AzimuthPoint[], lineLength: number): GeoJSON.Feature[] {
   const features: GeoJSON.Feature[] = [];
 
-  for (const location of locations) {
-    if (location.latitude === null || location.longitude === null || !location.permits?.length) continue;
-
-    const { latitude: lat, longitude: lng } = location;
+  for (const { latitude: lat, longitude: lng, entries } of points) {
+    if (lat === null || lng === null || entries.length === 0) continue;
 
     const azimuthColors = new Map<number, string[]>();
-
-    for (const permit of location.permits) {
-      if (!permit.sectors?.length) continue;
-      const color = permit.operator?.mnc ? getOperatorColor(permit.operator.mnc) : DEFAULT_COLOR;
-      for (const sector of permit.sectors) {
-        if (sector.azimuth == null) continue;
-        const existing = azimuthColors.get(sector.azimuth);
-        if (existing) existing.push(color);
-        else azimuthColors.set(sector.azimuth, [color]);
-      }
+    for (const { azimuth, color } of entries) {
+      const existing = azimuthColors.get(azimuth);
+      if (existing) existing.push(color);
+      else azimuthColors.set(azimuth, [color]);
     }
 
     for (const [azimuth, colorList] of azimuthColors) {
@@ -70,14 +70,42 @@ function azimuthsToGeoJSON(locations: UkeLocationWithPermits[], lineLength: numb
     }
   }
 
-  return { type: "FeatureCollection", features };
+  return features;
 }
 
-function createAzimuthLayerConfig(minzoom: number): maplibregl.LayerSpecification {
+function ukeLocationsToAzimuthPoints(locations: UkeLocationWithPermits[]): AzimuthPoint[] {
+  return locations.map((loc) => ({
+    latitude: loc.latitude,
+    longitude: loc.longitude,
+    entries: (loc.permits ?? []).flatMap((permit) => {
+      const color = permit?.operator?.mnc ? getOperatorColor(permit.operator.mnc) : DEFAULT_COLOR;
+      return (permit.sectors ?? [])
+        .filter((sector) => sector.azimuth !== null && sector.azimuth !== undefined)
+        .map((sector) => ({ azimuth: sector.azimuth!, color }));
+    }),
+  }));
+}
+
+function internalLocationsToAzimuthPoints(locations: LocationWithStations[]): AzimuthPoint[] {
+  return locations.map((loc) => ({
+    latitude: loc.latitude,
+    longitude: loc.longitude,
+    entries: (loc.stations ?? []).flatMap((station) => {
+      const color = station.operator?.mnc ? getOperatorColor(station.operator.mnc) : DEFAULT_COLOR;
+      return (station.sectors ?? []).map((sector) => ({ azimuth: sector.azimuth, color }));
+    }),
+  }));
+}
+
+function makeGeoJSON(points: AzimuthPoint[], lineLength: number): GeoJSON.FeatureCollection {
+  return { type: "FeatureCollection", features: buildAzimuthFeatures(points, lineLength) };
+}
+
+function createAzimuthLayerConfig(id: string, sourceId: string, minzoom: number): maplibregl.LayerSpecification {
   return {
-    id: AZIMUTHS_LINE_LAYER_ID,
+    id,
     type: "line",
-    source: AZIMUTHS_SOURCE_ID,
+    source: sourceId,
     minzoom,
     paint: {
       "line-color": ["get", "color"],
@@ -90,16 +118,26 @@ function createAzimuthLayerConfig(minzoom: number): maplibregl.LayerSpecificatio
 type UseAzimuthLayerArgs = {
   map: maplibregl.Map | null;
   isLoaded: boolean;
-  locations: UkeLocationWithPermits[];
+  locations: LocationWithStations[];
+  ukeLocations: UkeLocationWithPermits[];
   enabled: boolean;
   minZoom: number;
   lineLength: number;
 };
 
-export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom, lineLength }: UseAzimuthLayerArgs) {
-  const geoJSON = useMemo(() => (enabled ? azimuthsToGeoJSON(locations, lineLength) : EMPTY_GEOJSON), [locations, enabled, lineLength]);
-  const geoJSONRef = useRef(geoJSON);
-  geoJSONRef.current = geoJSON;
+export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enabled, minZoom, lineLength }: UseAzimuthLayerArgs) {
+  const ukeGeoJSON = useMemo(
+    () => (enabled ? makeGeoJSON(ukeLocationsToAzimuthPoints(ukeLocations), lineLength) : EMPTY_GEOJSON),
+    [enabled, lineLength, ukeLocations],
+  );
+  const internalGeoJSON = useMemo(
+    () => (enabled ? makeGeoJSON(internalLocationsToAzimuthPoints(locations), lineLength) : EMPTY_GEOJSON),
+    [locations, enabled, lineLength],
+  );
+  const ukeGeoJSONRef = useRef(ukeGeoJSON);
+  ukeGeoJSONRef.current = ukeGeoJSON;
+  const internalGeoJSONRef = useRef(internalGeoJSON);
+  internalGeoJSONRef.current = internalGeoJSON;
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
@@ -108,8 +146,14 @@ export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom, li
       try {
         const beforeLayer = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
 
-        if (!map.getSource(AZIMUTHS_SOURCE_ID)) map.addSource(AZIMUTHS_SOURCE_ID, { type: "geojson", data: geoJSONRef.current });
-        if (!map.getLayer(AZIMUTHS_LINE_LAYER_ID)) map.addLayer(createAzimuthLayerConfig(minZoom), beforeLayer);
+        if (!map.getSource(INTERNAL_AZIMUTHS_SOURCE_ID))
+          map.addSource(INTERNAL_AZIMUTHS_SOURCE_ID, { type: "geojson", data: internalGeoJSONRef.current });
+        if (!map.getSource(INTERNAL_AZIMUTHS_LINE_LAYER_ID))
+          map.addLayer(createAzimuthLayerConfig(INTERNAL_AZIMUTHS_LINE_LAYER_ID, INTERNAL_AZIMUTHS_SOURCE_ID, minZoom), beforeLayer);
+
+        if (!map.getSource(UKE_AZIMUTHS_SOURCE_ID)) map.addSource(UKE_AZIMUTHS_SOURCE_ID, { type: "geojson", data: ukeGeoJSONRef.current });
+        if (!map.getLayer(UKE_AZIMUTHS_LINE_LAYER_ID))
+          map.addLayer(createAzimuthLayerConfig(UKE_AZIMUTHS_LINE_LAYER_ID, UKE_AZIMUTHS_SOURCE_ID, minZoom), beforeLayer);
       } catch {
         // Layer may not exist
       }
@@ -120,17 +164,26 @@ export function useAzimuthLayer({ map, isLoaded, locations, enabled, minZoom, li
 
     return () => {
       map.off("styledata", ensureLayersExist);
-      try {
-        if (map.getLayer(AZIMUTHS_LINE_LAYER_ID)) map.removeLayer(AZIMUTHS_LINE_LAYER_ID);
-      } catch {}
-      try {
-        if (map.getSource(AZIMUTHS_SOURCE_ID)) map.removeSource(AZIMUTHS_SOURCE_ID);
-      } catch {}
+      for (const layerId of [UKE_AZIMUTHS_LINE_LAYER_ID, INTERNAL_AZIMUTHS_LINE_LAYER_ID]) {
+        try {
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        } catch {}
+      }
+      for (const layerId of [UKE_AZIMUTHS_SOURCE_ID, INTERNAL_AZIMUTHS_SOURCE_ID]) {
+        try {
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        } catch {}
+      }
     };
   }, [map, isLoaded, enabled, minZoom]);
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
-    void (map.getSource(AZIMUTHS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(geoJSON);
-  }, [map, isLoaded, enabled, geoJSON]);
+    void (map.getSource(UKE_AZIMUTHS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(ukeGeoJSON);
+  }, [map, isLoaded, enabled, ukeGeoJSON]);
+
+  useEffect(() => {
+    if (!map || !isLoaded || !enabled) return;
+    void (map.getSource(INTERNAL_AZIMUTHS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(internalGeoJSON);
+  }, [map, isLoaded, enabled, internalGeoJSON]);
 }

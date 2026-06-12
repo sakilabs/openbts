@@ -3,6 +3,11 @@ import "common.proto";
 import "station_cells.proto";
 package openbts.locations;
 
+message Sector {
+  int32 id = 1;
+  int32 azimuth = 2;
+}
+
 message LocationStation {
   int32 id = 1;
   string station_id = 2;
@@ -15,6 +20,7 @@ message LocationStation {
   Operator operator = 9;
   repeated openbts.stations.CellWithoutDetails cells = 10;
   openbts.stations.ExtraIdentificators extra_identificators = 11;
+  repeated Sector sectors = 12;
 }
 
 message Location {

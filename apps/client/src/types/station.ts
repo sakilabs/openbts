@@ -62,6 +62,7 @@ export type Cell = {
   rat: string;
   station_id: number;
   notes: string | null;
+  sector_id: number | null;
   is_confirmed: boolean;
   updatedAt: string;
   createdAt: string;
@@ -95,6 +96,7 @@ export type Station = {
   location: Location;
   operator: Operator;
   extra_identificators?: ExtraIdentificator;
+  sectors?: Sector[];
 };
 
 export type RadioLineEquipmentType = {
@@ -275,4 +277,15 @@ export type StationComment = {
     name: string;
     image: string | null;
   };
+};
+
+export type Sector = {
+  id: number;
+  azimuth: number;
+};
+
+export type SectorDraft = {
+  _localId: string;
+  id?: number;
+  azimuth: number | "";
 };

@@ -169,7 +169,7 @@ function MapViewInner() {
     onClose: handlePopupClose,
   });
 
-  const wantAzimuths = preferences.showAzimuths && filters.source === "uke" && zoom >= preferences.azimuthsMinZoom;
+  const wantAzimuths = preferences.showAzimuths && zoom >= preferences.azimuthsMinZoom;
 
   const {
     data: locationsResponse,

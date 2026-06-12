@@ -1,9 +1,5 @@
 import { LocationResponseSchema, LocationsResponseSchema } from "@openbts/proto/gen/locations_pb";
-import {
-  LocationsResponseSchema as UKELocationsResponseSchema,
-  PermitsResponseSchema as UKEPermitsResponseSchema,
-  RadiolinesResponseSchema as UKERadiolinesResponseSchema,
-} from "@openbts/proto/gen/uke_pb";
+import { PermitsResponseSchema as UKEPermitsResponseSchema } from "@openbts/proto/gen/uke_pb";
 
 import { API_BASE, fetchJson } from "@/lib/api";
 import type { LocationWithStations, RadioLine, StationFilters, UkeLocationWithPermits, UkePermit } from "@/types/station";
@@ -51,6 +47,7 @@ export async function fetchLocations(
   const params = buildFilterParams(filters);
   params.set("limit", String(limit));
   params.set("bounds", bounds);
+  if (options?.azimuths) params.set("azimuths", "true");
 
   const result = await fetchJson<LocationsResponse>(`${API_BASE}/locations?${decodeURIComponent(params.toString())}`, {
     proto: LocationsResponseSchema,
