@@ -67,7 +67,7 @@
     "showStations": "Stacje",
     "operator": "Operator BTS",
     "showRadiolines": "Radiolinie",
-    "showPlannedPem": "Planowane PEM",
+    "showPlannedPem": "Pomiary PEM",
     "showAzimuths": "Azymuty",
     "radiolineOperator": "Operator radiolinii",
     "radiolineOperators_one": "{{count, number}} operator radiolinii",
