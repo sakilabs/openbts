@@ -1,0 +1,16 @@
+{
+  "page": {
+    "title": "Pomiary SI2PEM",
+    "description": "Planowane, zakończone i odwołane pomiary pól elektromagnetycznych pochodzące z systemu SI2PEM"
+  },
+  "tabs": {
+    "planned": "Planowane",
+    "completed": "Zakończone",
+    "canceled": "Odwołane"
+  },
+  "table": {
+    "dateFrom": "Data od",
+    "dateTo": "Data do",
+    "lab": "Laboratorium"
+  }
+}

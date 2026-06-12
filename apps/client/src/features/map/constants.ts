@@ -34,6 +34,9 @@ export const RADIOLINES_LINE_LAYER_ID = "radiolines-layer";
 export const RADIOLINES_HITBOX_LAYER_ID = "radiolines-hitbox";
 export const RADIOLINES_ENDPOINT_LAYER_ID = "radiolines-endpoints";
 
+export const PLANNED_PEM_SOURCE_ID = "planned-pem-source";
+export const PLANNED_PEM_LAYER_ID = "planned-pem-layer";
+
 export const RAT_OPTIONS = [
   { value: "NR", label: "NR", gen: "5G" },
   { value: "LTE", label: "LTE", gen: "4G" },

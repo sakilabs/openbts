@@ -15,6 +15,7 @@ import { locationsToGeoJSON, ukeLocationsToGeoJSON } from "../geojson";
 import { useAzimuthLayer } from "../hooks/useAzimuthLayer";
 import { useHeatmapLayer } from "../hooks/useHeatmapLayer";
 import { useMapLayer } from "../hooks/useMapLayer";
+import { usePlannedMeasurementsLayer } from "../hooks/usePlannedMeasurementsLayer";
 import { useUrlSync } from "../hooks/useURLSync";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
@@ -37,6 +38,7 @@ export const DEFAULT_FILTERS: StationFilters = {
   showRadiolines: false,
   radiolineOperators: [],
   showHeatmap: false,
+  showPlannedMeasurements: false,
 };
 
 const MAP_FILTERS_STORAGE_KEY = "map:filters";
@@ -65,6 +67,7 @@ export function loadMapFilters(): StationFilters | null {
       showRadiolines: parsed.showRadiolines ?? false,
       radiolineOperators: parsed.radiolineOperators ?? [],
       showHeatmap: parsed.showHeatmap ?? false,
+      showPlannedMeasurements: parsed.showPlannedMeasurements ?? false,
     };
   } catch {
     return null;
@@ -393,6 +396,7 @@ export function StationsLayer({
   });
 
   useHeatmapLayer({ map, isLoaded, enabled: filters.showHeatmap, showStations: filters.showStations });
+  usePlannedMeasurementsLayer({ map, isLoaded, enabled: filters.showPlannedMeasurements });
 
   const azimuthEnabled = preferences.showAzimuths && filters.source === "uke" && zoom >= preferences.azimuthsMinZoom;
   useAzimuthLayer({
