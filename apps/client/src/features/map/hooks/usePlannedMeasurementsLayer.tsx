@@ -14,7 +14,6 @@ const PEM_BOX_IMAGE_ID = "pem-box";
 type PopupState = { popup: Popup; root: ReturnType<typeof createRoot> };
 
 function destroyPopup(state: PopupState | null): null {
-  state?.root.unmount();
   state?.popup.remove();
   return null;
 }
@@ -78,11 +77,14 @@ export function usePlannedMeasurementsLayer({
   operators?: number[];
 }) {
   const popupRef = useRef<PopupState | null>(null);
+  const operatorsKey = operators.join(",");
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
     let cancelled = false;
+    let requestId = 0;
     const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    const selectedOperators = operatorsKey ? operatorsKey.split(",").map(Number) : [];
 
     const initLayer = () => {
       try {
@@ -113,8 +115,9 @@ export function usePlannedMeasurementsLayer({
     };
 
     const loadData = () => {
-      void fetchMeasurements(getBoundsString(map), operators).then((data) => {
-        if (cancelled || !data) return;
+      const currentRequestId = ++requestId;
+      void fetchMeasurements(getBoundsString(map), selectedOperators).then((data) => {
+        if (cancelled || currentRequestId !== requestId || !data) return;
         try {
           void (map.getSource(PLANNED_PEM_SOURCE_ID) as maplibregl.GeoJSONSource)?.setData(data);
         } catch {}
@@ -134,6 +137,12 @@ export function usePlannedMeasurementsLayer({
         .setDOMContent(container)
         .addTo(map);
 
+      const popupState = { popup, root };
+      popup.on("close", () => {
+        root.unmount();
+        if (popupRef.current === popupState) popupRef.current = null;
+      });
+
       root.render(
         <PemPopupContent
           stationId={p.station_id}
@@ -148,7 +157,7 @@ export function usePlannedMeasurementsLayer({
         />,
       );
 
-      popupRef.current = { popup, root };
+      popupRef.current = popupState;
     };
 
     const handleMouseEnter = () => {
@@ -186,5 +195,5 @@ export function usePlannedMeasurementsLayer({
         }
       } catch {}
     };
-  }, [map, isLoaded, enabled, operators]);
+  }, [map, isLoaded, enabled, operatorsKey]);
 }

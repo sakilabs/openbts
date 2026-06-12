@@ -197,6 +197,8 @@ export function useMapLayer({
   const callbackRefs = useRef({ onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip });
   callbackRefs.current = { onFeatureClick, onFeatureContextMenu, onFeatureMouseDown, renderHoverTooltip };
   const tooltipRef = useRef<ActiveTooltip | null>(null);
+  const blockedByLayersRef = useRef(blockedByLayers);
+  blockedByLayersRef.current = blockedByLayers;
 
   const geoJSONRef = useRef(geoJSON);
   geoJSONRef.current = geoJSON;
@@ -241,7 +243,8 @@ export function useMapLayer({
     };
 
     const handleClick = (e: maplibregl.MapMouseEvent) => {
-      if (blockedByLayers.length > 0 && map.queryRenderedFeatures(e.point, { layers: blockedByLayers }).length > 0) return;
+      const blockedLayers = blockedByLayersRef.current;
+      if (blockedLayers.length > 0 && map.queryRenderedFeatures(e.point, { layers: blockedLayers }).length > 0) return;
       const features = map.queryRenderedFeatures(e.point, { layers: [...LAYER_IDS] });
       const data = features[0] && extractFeatureClickData(features[0]);
       if (data) callbackRefs.current.onFeatureClick(data);
