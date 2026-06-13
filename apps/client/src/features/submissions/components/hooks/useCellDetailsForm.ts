@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { applySectorPatchWithPCISync } from "@/features/admin/cells/sectorAssignmentSync";
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { getSharedDetailFields } from "@/features/shared/rat";
 import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaining-lte-cells";
@@ -203,7 +204,7 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
     (cellId: string, patch: Partial<ProposedCellForm>) => {
       onCellsChange(
         rat,
-        cells.map((cell) => (cell.id === cellId ? { ...cell, ...patch } : cell)),
+        applySectorPatchWithPCISync(cells, cellId, patch, (cell) => cell.id),
       );
     },
     [cells, onCellsChange, rat],

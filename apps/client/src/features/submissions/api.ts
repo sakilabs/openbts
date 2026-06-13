@@ -201,6 +201,10 @@ export async function fetchSiblingExtraIds(stationId: number) {
   );
 }
 
+export async function fetchSiblingSectors(stationId: number) {
+  return fetchJson<{ data: Sector[] }>(`${API_BASE}/stations/${stationId}/sectors/sibling`);
+}
+
 export async function fetchSubmissionForEdit(id: string) {
   return fetchApiData<SubmissionDetail>(`submissions/${id}`);
 }

@@ -1,6 +1,6 @@
 import { AirportTowerIcon, Globe02Icon, SquareArrowExpand01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -13,9 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchSiblingExtraIds } from "@/features/admin/stations/api";
-import { SectorsPanel } from "@/features/admin/stations/components/sectorsEditor";
+import { fetchSiblingExtraIds, fetchSiblingSectors } from "@/features/admin/stations/api";
+import { SectorsPanel, ukePermitsToAzimuthSectors } from "@/features/admin/stations/components/sectorsEditor";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
@@ -83,12 +84,12 @@ export function SubmissionStationForm({
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!extraIdsForm.networks_id;
   const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !extraIdsForm.networks_id && !!extraIdsForm.mno_name;
   const showSection = showExtraIdsFields || showMnoNameOnly;
-  const derivedSectorCount = (() => {
+  const derivedSectorCount = useMemo(() => {
     const byBand = new Map<number, number>();
     for (const cell of cells) byBand.set(cell.band_id, (byBand.get(cell.band_id) ?? 0) + 1);
     return byBand.size > 0 ? Math.max(...byBand.values()) : 0;
-  })();
-  const assignedSectorLocalIds = new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : [])));
+  }, [cells]);
+  const assignedSectorLocalIds = useMemo(() => new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : []))), [cells]);
   const previousAzimuthByLocalId = useMemo(() => {
     const currentById = new Map((currentStation?.sectors ?? []).map((sector) => [sector.id, sector.azimuth]));
     const previous = new Map<string, number>();
@@ -102,12 +103,50 @@ export function SubmissionStationForm({
 
   const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
+  const currentStationId = currentStation?.id;
 
-  const handleFetchSibling = async () => {
-    if (!currentStation) return;
+  const siblingSectorsIcon = useMemo(() => <SiblingLogo className="h-3.5 w-auto shrink-0" />, [SiblingLogo]);
+
+  const fetchSiblingAzimuthSectors = useCallback(async () => {
+    if (!currentStationId) return [];
+    const { data } = await fetchSiblingSectors(currentStationId);
+    return data;
+  }, [currentStationId]);
+
+  const fetchUkeAzimuthSectors = useCallback(async () => {
+    const trimmedStationId = stationForm.station_id.trim();
+    const mnc = selectedOperator?.mnc;
+    if (!trimmedStationId || !mnc) return [];
+    return ukePermitsToAzimuthSectors(await fetchUkePermitsByStationId(trimmedStationId, mnc));
+  }, [selectedOperator?.mnc, stationForm.station_id]);
+
+  const siblingSectors = useMemo(
+    () =>
+      currentStationId && showExtraIdsFields
+        ? {
+            brand: siblingBrand,
+            icon: siblingSectorsIcon,
+            onFetch: fetchSiblingAzimuthSectors,
+          }
+        : undefined,
+    [currentStationId, fetchSiblingAzimuthSectors, showExtraIdsFields, siblingBrand, siblingSectorsIcon],
+  );
+
+  const ukeSectors = useMemo(
+    () =>
+      stationForm.station_id.trim() && selectedOperator?.mnc
+        ? {
+            onFetch: fetchUkeAzimuthSectors,
+          }
+        : undefined,
+    [fetchUkeAzimuthSectors, selectedOperator?.mnc, stationForm.station_id],
+  );
+
+  const handleFetchSibling = useCallback(async () => {
+    if (!currentStationId) return;
     setIsFetchingSibling(true);
     try {
-      const { data } = await fetchSiblingExtraIds(currentStation.id);
+      const { data } = await fetchSiblingExtraIds(currentStationId);
       if (data.networks_id === null && data.networks_name === null && data.mno_name === null) {
         toast.info(t("sibling.notFound"));
         return;
@@ -127,7 +166,9 @@ export function SubmissionStationForm({
     } finally {
       setIsFetchingSibling(false);
     }
-  };
+  }, [currentStationId, locationForm.city, onExtraIdsChange, selectedOperator?.mnc, stationForm.station_id, t]);
+
+  const renderPreviousAzimuth = useCallback((azimuth: number) => <ChangeBadge label={t("diff.was")} current={`${azimuth}°`} />, [t]);
 
   return (
     <>
@@ -283,8 +324,10 @@ export function SubmissionStationForm({
           derivedSectorCount={derivedSectorCount}
           assignedSectorLocalIds={assignedSectorLocalIds}
           previousAzimuthByLocalId={previousAzimuthByLocalId}
-          renderPreviousAzimuth={(azimuth) => <ChangeBadge label={t("diff.was")} current={`${azimuth}°`} />}
+          renderPreviousAzimuth={renderPreviousAzimuth}
           readOnly={isFormDisabled}
+          siblingSectors={siblingSectors}
+          ukeSectors={ukeSectors}
         />
       ) : null}
 

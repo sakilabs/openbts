@@ -43,7 +43,7 @@ type CellWithRat = z.infer<typeof cellsSchema> & {
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseData>>) {
-  const { limit = undefined, page = 1 } = req.query;
+  const { limit, page } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   const rows = await db.query.cells.findMany({

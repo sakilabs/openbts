@@ -1,7 +1,7 @@
 import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -11,7 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchSiblingExtraIds } from "@/features/admin/stations/api";
+import { fetchSiblingExtraIds, fetchSiblingSectors } from "@/features/admin/stations/api";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
@@ -20,7 +21,7 @@ import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCi
 import { type Location, type LocationWithStations, type Operator, type SectorDraft, type UkeStation } from "@/types/station";
 
 import type { CellDraftBase } from "../../cells/cellEditRow";
-import { SectorsPanel } from "./sectorsEditor";
+import { SectorsPanel, ukePermitsToAzimuthSectors } from "./sectorsEditor";
 
 type StationInfoFormProps = {
   stationDbId?: number;
@@ -104,7 +105,44 @@ export function StationInfoForm({
 
   const assignedSectorLocalIds = useMemo(() => new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : []))), [cells]);
 
-  const handleFetchSibling = async () => {
+  const siblingSectorsIcon = useMemo(() => <SiblingLogo className="h-3.5 w-auto shrink-0" />, [SiblingLogo]);
+
+  const fetchSiblingAzimuthSectors = useCallback(async () => {
+    if (!stationDbId) return [];
+    const { data } = await fetchSiblingSectors(stationDbId);
+    return data;
+  }, [stationDbId]);
+
+  const fetchUkeAzimuthSectors = useCallback(async () => {
+    const trimmedStationId = stationId.trim();
+    const mnc = selectedOperator?.mnc;
+    if (!trimmedStationId || !mnc) return [];
+    return ukePermitsToAzimuthSectors(await fetchUkePermitsByStationId(trimmedStationId, mnc));
+  }, [selectedOperator?.mnc, stationId]);
+
+  const siblingSectors = useMemo(
+    () =>
+      stationDbId && showExtraIdsFields
+        ? {
+            brand: siblingBrand,
+            icon: siblingSectorsIcon,
+            onFetch: fetchSiblingAzimuthSectors,
+          }
+        : undefined,
+    [fetchSiblingAzimuthSectors, showExtraIdsFields, siblingBrand, siblingSectorsIcon, stationDbId],
+  );
+
+  const ukeSectors = useMemo(
+    () =>
+      stationId.trim() && selectedOperator?.mnc
+        ? {
+            onFetch: fetchUkeAzimuthSectors,
+          }
+        : undefined,
+    [fetchUkeAzimuthSectors, selectedOperator?.mnc, stationId],
+  );
+
+  const handleFetchSibling = useCallback(async () => {
     if (!stationDbId) return;
     setIsFetchingSibling(true);
     try {
@@ -128,7 +166,7 @@ export function StationInfoForm({
     } finally {
       setIsFetchingSibling(false);
     }
-  };
+  }, [location.city, onMnoNameChange, onNetworksIdChange, onNetworksNameChange, selectedOperator?.mnc, stationDbId, stationId, t]);
 
   return (
     <div className="space-y-3">
@@ -243,6 +281,8 @@ export function StationInfoForm({
         onChange={onSectorsChange}
         derivedSectorCount={derivedSectorCount}
         assignedSectorLocalIds={assignedSectorLocalIds}
+        siblingSectors={siblingSectors}
+        ukeSectors={ukeSectors}
       />
     </div>
   );

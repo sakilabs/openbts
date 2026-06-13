@@ -85,7 +85,7 @@ type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 type ResponseBody = { data: Station[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit = undefined, page = 1, bounds, rat, operators: operatorMncs, bands: bandValues, regions, sort, sortBy } = req.query;
+  const { limit, page, bounds, rat, operators: operatorMncs, bands: bandValues, regions, sort, sortBy } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;

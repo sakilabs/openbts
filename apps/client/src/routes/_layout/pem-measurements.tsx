@@ -14,9 +14,8 @@ import { fetchPlannedMeasurements } from "@/features/si2pem/api";
 import { MeasurementsDataTable } from "@/features/si2pem/components/measurementsDataTable";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { getOperatorColor } from "@/lib/operatorUtils";
-import { cn } from "@/lib/utils";
 
-const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
+const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45, minRows: 1 };
 type Tab = "PLANNED" | "COMPLETED" | "CANCELED";
 
 const PEM_MNC_TO_ENTITY: Record<number, string> = {
@@ -40,7 +39,7 @@ function PEMMeasurementsPage() {
   const pemOperators = allOperators.filter((op) => PEM_MNCS.has(op.mnc));
   const selectedOperatorObj = pemOperators.find((op) => PEM_MNC_TO_ENTITY[op.mnc] === operatorFilter) ?? null;
 
-  const { containerRef, pagination, setPagination, autoPageSize, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
+  const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
@@ -77,7 +76,7 @@ function PEMMeasurementsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       <div className="px-6 pt-4 pb-0 shrink-0">
         <h1 className="text-lg font-semibold">{t("page.title")}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">{t("page.description")}</p>
@@ -149,7 +148,7 @@ function PEMMeasurementsPage() {
       </div>
 
       <div className="flex-1 flex flex-col pl-3 pt-3 pr-3 min-h-0 overflow-hidden">
-        <div ref={containerRef} className={cn("h-full overflow-x-auto", pagination.pageSize > autoPageSize ? "overflow-y-auto" : "overflow-y-clip")}>
+        <div ref={containerRef} className="flex-1 min-h-0 overflow-auto">
           <MeasurementsDataTable
             data={measurements}
             isLoading={isLoading}
@@ -169,4 +168,7 @@ function PEMMeasurementsPage() {
 
 export const Route = createFileRoute("/_layout/pem-measurements")({
   component: PEMMeasurementsPage,
+  staticData: {
+    mainClassName: "overflow-hidden",
+  },
 });

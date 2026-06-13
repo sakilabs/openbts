@@ -1,7 +1,8 @@
 import { Add01Icon, ArrowDown01Icon, Cancel01Icon, DragDropVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type ChangeEvent, type ReactNode, memo, useCallback } from "react";
+import { type ChangeEvent, type ReactNode, memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -256,10 +257,94 @@ export function SectorsEditor({
 type SectorsPanelProps = SectorsEditorProps & {
   className?: string;
   defaultOpen?: boolean;
+  siblingSectors?: {
+    brand: string;
+    icon: ReactNode;
+    onFetch: () => Promise<Array<{ azimuth: number }>>;
+  };
+  ukeSectors?: {
+    onFetch: () => Promise<Array<{ azimuth: number }>>;
+  };
 };
 
-export function SectorsPanel({ className, defaultOpen, sectors, derivedSectorCount, ...editorProps }: SectorsPanelProps) {
-  const { t } = useTranslation("stationDetails");
+function applyFetchedAzimuths(sectors: SectorDraft[], fetchedSectors: Array<{ azimuth: number }>, maxSectors: number): SectorDraft[] {
+  const copyCount = maxSectors > 0 ? Math.min(fetchedSectors.length, maxSectors) : 0;
+  const next = [...sectors];
+
+  for (let i = 0; i < copyCount; i++) {
+    const sector = next[i];
+    const azimuth = fetchedSectors[i].azimuth;
+    next[i] = sector ? { ...sector, azimuth } : { _localId: newSectorLocalId(), azimuth };
+  }
+
+  return next;
+}
+
+export function ukePermitsToAzimuthSectors(permits: Array<{ sectors?: Array<{ azimuth: number | null }> }>): Array<{ azimuth: number }> {
+  const seen = new Set<number>();
+  const sectors: Array<{ azimuth: number }> = [];
+
+  for (const permit of permits) {
+    for (const sector of permit.sectors ?? []) {
+      if (sector.azimuth === null || seen.has(sector.azimuth)) continue;
+      seen.add(sector.azimuth);
+      sectors.push({ azimuth: sector.azimuth });
+    }
+  }
+
+  return sectors;
+}
+
+export function SectorsPanel({
+  className,
+  defaultOpen,
+  sectors,
+  derivedSectorCount,
+  siblingSectors,
+  ukeSectors,
+  onChange,
+  readOnly,
+  ...editorProps
+}: SectorsPanelProps) {
+  const { t } = useTranslation(["stationDetails", "submissions"]);
+  const [isFetchingSiblingSectors, setIsFetchingSiblingSectors] = useState(false);
+  const [isFetchingUkeSectors, setIsFetchingUkeSectors] = useState(false);
+
+  const handleFetchSiblingSectors = useCallback(async () => {
+    if (!siblingSectors || readOnly) return;
+    setIsFetchingSiblingSectors(true);
+    try {
+      const fetchedSectors = await siblingSectors.onFetch();
+      if (fetchedSectors.length === 0 || derivedSectorCount === 0) {
+        toast.info(t("siblingSectors.notFound", { ns: "submissions" }));
+        return;
+      }
+      onChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
+      toast.success(t("siblingSectors.fetched", { ns: "submissions" }));
+    } catch {
+      toast.error(t("siblingSectors.fetchFailed", { ns: "submissions" }));
+    } finally {
+      setIsFetchingSiblingSectors(false);
+    }
+  }, [derivedSectorCount, onChange, readOnly, sectors, siblingSectors, t]);
+
+  const handleFetchUkeSectors = useCallback(async () => {
+    if (!ukeSectors || readOnly) return;
+    setIsFetchingUkeSectors(true);
+    try {
+      const fetchedSectors = await ukeSectors.onFetch();
+      if (fetchedSectors.length === 0 || derivedSectorCount === 0) {
+        toast.info(t("ukeSectors.notFound", { ns: "submissions" }));
+        return;
+      }
+      onChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
+      toast.success(t("ukeSectors.fetched", { ns: "submissions" }));
+    } catch {
+      toast.error(t("ukeSectors.fetchFailed", { ns: "submissions" }));
+    } finally {
+      setIsFetchingUkeSectors(false);
+    }
+  }, [derivedSectorCount, onChange, readOnly, sectors, t, ukeSectors]);
 
   return (
     <Collapsible defaultOpen={defaultOpen}>
@@ -272,12 +357,41 @@ export function SectorsPanel({ className, defaultOpen, sectors, derivedSectorCou
             />
             <span className="font-semibold text-sm">{t("tabs.sectors")}</span>
           </CollapsibleTrigger>
-          <span className="text-xs text-muted-foreground">
-            {sectors.length}/{derivedSectorCount}
-          </span>
+          <div className="flex items-center gap-2">
+            {!readOnly && ukeSectors ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleFetchUkeSectors}
+                disabled={isFetchingUkeSectors}
+                className="h-7 text-xs"
+              >
+                {isFetchingUkeSectors ? t("ukeSectors.fetching", { ns: "submissions" }) : t("ukeSectors.fetch", { ns: "submissions" })}
+              </Button>
+            ) : null}
+            {!readOnly && siblingSectors ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleFetchSiblingSectors}
+                disabled={isFetchingSiblingSectors}
+                className="h-7 gap-1.5 text-xs"
+              >
+                {siblingSectors.icon}
+                {isFetchingSiblingSectors
+                  ? t("siblingSectors.fetching", { ns: "submissions" })
+                  : t("siblingSectors.fetchFrom", { ns: "submissions", brand: siblingSectors.brand })}
+              </Button>
+            ) : null}
+            <span className="text-xs text-muted-foreground">
+              {sectors.length}/{derivedSectorCount}
+            </span>
+          </div>
         </div>
         <CollapsibleContent className="pt-2">
-          <SectorsEditor sectors={sectors} derivedSectorCount={derivedSectorCount} {...editorProps} />
+          <SectorsEditor sectors={sectors} onChange={onChange} derivedSectorCount={derivedSectorCount} readOnly={readOnly} {...editorProps} />
         </CollapsibleContent>
       </div>
     </Collapsible>

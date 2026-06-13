@@ -85,6 +85,10 @@ export async function getStationSectors(stationId: number) {
   return fetchJson<{ data: Sector[] }>(`${API_BASE}/stations/${stationId}/sectors`);
 }
 
+export async function fetchSiblingSectors(stationId: number) {
+  return fetchJson<{ data: Sector[] }>(`${API_BASE}/stations/${stationId}/sectors/sibling`);
+}
+
 export async function putStationSectors(stationId: number, sectors: { id?: number; azimuth: number }[]) {
   return fetchJson<{ data: Sector[] }>(`${API_BASE}/stations/${stationId}/sectors`, {
     method: "PUT",

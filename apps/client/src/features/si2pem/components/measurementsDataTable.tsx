@@ -51,11 +51,11 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
         }) => {
           if (!op) return <span className="text-muted-foreground">-</span>;
           return (
-            <div className="flex items-start gap-2">
+            <div className="flex min-w-0 items-start gap-2">
               <div className="size-3 rounded-[2px] shrink-0 mt-1" style={{ backgroundColor: getOperatorColor(op.mnc) }} />
-              <div className="flex flex-col">
-                <span className="font-medium">{op.name}</span>
-                {op.full_name !== op.name && <span className="text-xs text-muted-foreground truncate max-w-40">{op.full_name}</span>}
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate font-medium">{op.name}</span>
+                {op.full_name !== op.name && <span className="max-w-40 truncate text-xs text-muted-foreground">{op.full_name}</span>}
               </div>
             </div>
           );
@@ -92,13 +92,13 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
           const address = location.address;
           const regionName = region?.name ?? null;
           return (
-            <>
-              <h3 className="font-medium text-sm leading-tight">
-                {city || "Unknown"}
-                {regionName && <span className="font-normal text-[10px] text-muted-foreground ml-1">· {regionName}</span>}
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-medium leading-tight">
+                <span>{city || "Unknown"}</span>
+                {regionName && <span className="ml-1 text-[10px] font-normal text-muted-foreground">· {regionName}</span>}
               </h3>
-              {address && <p className="text-[11px] text-muted-foreground">{address}</p>}
-            </>
+              {address && <p className="truncate text-[11px] text-muted-foreground">{address}</p>}
+            </div>
           );
         },
       },
@@ -106,16 +106,16 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
         accessorKey: "lab.name",
         header: t("table.lab"),
         size: 150,
-        cell: ({ getValue }) => <span className="text-sm text-muted-foreground">{getValue<string>()}</span>,
+        cell: ({ getValue }) => <span className="block truncate text-sm text-muted-foreground">{getValue<string>()}</span>,
       },
       {
         accessorKey: "status",
         header: tCommon("labels.status"),
-        size: 80,
+        size: 90,
         cell: ({ getValue }) => {
           const value = getValue<string>();
           return (
-            <Badge variant="outline" className={STATUS_CLASSES[value]}>
+            <Badge variant="outline" className={`${STATUS_CLASSES[value]} whitespace-nowrap`}>
               {t(`tabs.${value.toLowerCase() as "planned" | "completed" | "canceled"}`)}
             </Badge>
           );
@@ -123,7 +123,7 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
       },
       {
         id: "map",
-        size: 80,
+        size: 112,
         cell: ({
           row: {
             original: { location },
@@ -131,10 +131,12 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
         }) => (
           <a
             href={`/#map=16.00/${location.latitude.toFixed(6)}/${location.longitude.toFixed(6)}~fp`}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border/60 hover:border-border"
+            aria-label={tCommon("actions.showOnMap")}
+            title={tCommon("actions.showOnMap")}
+            className="inline-flex size-8 items-center justify-center rounded border border-border/60 text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground sm:size-auto sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs"
           >
             <HugeiconsIcon icon={MapsIcon} className="size-3.5 shrink-0" />
-            {tCommon("actions.showOnMap")}
+            <span className="hidden whitespace-nowrap sm:inline">{tCommon("actions.showOnMap")}</span>
           </a>
         ),
       },

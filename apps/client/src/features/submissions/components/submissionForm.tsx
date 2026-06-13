@@ -1,14 +1,20 @@
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SectorsPanel } from "@/features/admin/stations/components/sectorsEditor";
+import { SectorsPanel, ukePermitsToAzimuthSectors } from "@/features/admin/stations/components/sectorsEditor";
+import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { operatorsQueryOptions } from "@/features/shared/queries";
+import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
+import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { useSettings } from "@/hooks/useSettings";
+import { EXTRA_IDENTIFICATORS_MNCS, getMnoBrand } from "@/lib/operatorUtils";
+import type { SectorDraft } from "@/types/station";
 
-import type { ProposedCellForm, ProposedLocationForm, RatType } from "../types";
+import { type SearchStation, fetchSiblingSectors } from "../api";
+import type { ProposedCellForm, ProposedLocationForm, ProposedStationForm, RatType, StationAction, SubmissionMode } from "../types";
 import { ActionSelector } from "./actionSelector";
 import { CellsSection } from "./cellsSection";
 import { ExtraIdentificatorsSection } from "./extraIdentificatorsSection";
@@ -42,6 +48,92 @@ function deriveSectorPanelState(cells: ProposedCellForm[], selectedRats: RatType
   const assignedSectorLocalIds = new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : [])));
 
   return { derivedSectorCount, assignedSectorLocalIds };
+}
+
+type SubmissionSectorsPanelFieldsProps = {
+  mode: SubmissionMode;
+  action: StationAction;
+  selectedStation: SearchStation | null;
+  newStation: ProposedStationForm;
+  selectedRats: RatType[];
+  location: ProposedLocationForm;
+  cells: ProposedCellForm[];
+  sectors: SectorDraft[];
+  mncById: ReadonlyMap<number, number>;
+  onSectorsChange: (sectors: SectorDraft[]) => void;
+};
+
+function SubmissionSectorsPanelFields({
+  mode,
+  action,
+  selectedStation,
+  newStation,
+  selectedRats,
+  location,
+  cells,
+  sectors,
+  mncById,
+  onSectorsChange,
+}: SubmissionSectorsPanelFieldsProps) {
+  const { derivedSectorCount, assignedSectorLocalIds } = useMemo(() => deriveSectorPanelState(cells, selectedRats), [cells, selectedRats]);
+  const selectedStationId = selectedStation?.id;
+  const operatorMnc = selectedStation?.operator?.mnc;
+  const siblingBrand = operatorMnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
+  const SiblingLogo = operatorMnc === 26002 ? OrangeIcon : TMobileIcon;
+  const canFetchSiblingSectors = mode === "existing" && operatorMnc !== undefined && EXTRA_IDENTIFICATORS_MNCS.includes(operatorMnc);
+  const ukeStationId = mode === "existing" ? selectedStation?.station_id : newStation.station_id;
+  const ukeOperatorMnc = mode === "existing" ? operatorMnc : (mncById.get(newStation.operator_id ?? -1) ?? null);
+  const trimmedUkeStationId = ukeStationId?.trim() ?? "";
+
+  const siblingSectorsIcon = useMemo(() => <SiblingLogo className="h-3.5 w-auto shrink-0" />, [SiblingLogo]);
+
+  const fetchSiblingAzimuthSectors = useCallback(async () => {
+    if (!selectedStationId) return [];
+    const { data } = await fetchSiblingSectors(selectedStationId);
+    return data;
+  }, [selectedStationId]);
+
+  const fetchUkeAzimuthSectors = useCallback(async () => {
+    if (!trimmedUkeStationId || !ukeOperatorMnc) return [];
+    return ukePermitsToAzimuthSectors(await fetchUkePermitsByStationId(trimmedUkeStationId, ukeOperatorMnc));
+  }, [trimmedUkeStationId, ukeOperatorMnc]);
+
+  const siblingSectors = useMemo(
+    () =>
+      canFetchSiblingSectors && selectedStationId
+        ? {
+            brand: siblingBrand,
+            icon: siblingSectorsIcon,
+            onFetch: fetchSiblingAzimuthSectors,
+          }
+        : undefined,
+    [canFetchSiblingSectors, fetchSiblingAzimuthSectors, selectedStationId, siblingBrand, siblingSectorsIcon],
+  );
+
+  const ukeSectors = useMemo(
+    () =>
+      trimmedUkeStationId && ukeOperatorMnc
+        ? {
+            onFetch: fetchUkeAzimuthSectors,
+          }
+        : undefined,
+    [fetchUkeAzimuthSectors, trimmedUkeStationId, ukeOperatorMnc],
+  );
+
+  if (mode === "existing" && action === "delete") return null;
+  if (mode === "new" && !hasCompleteLocation(location)) return null;
+  if (mode !== "new" && !selectedStation) return null;
+
+  return (
+    <SectorsPanel
+      sectors={sectors}
+      onChange={onSectorsChange}
+      derivedSectorCount={derivedSectorCount}
+      assignedSectorLocalIds={assignedSectorLocalIds}
+      siblingSectors={siblingSectors}
+      ukeSectors={ukeSectors}
+    />
+  );
 }
 
 export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeStationId }: SubmissionFormProps) {
@@ -185,26 +277,26 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             mode: s.values.mode,
             action: s.values.action,
             selectedStation: s.values.selectedStation,
+            newStation: s.values.newStation,
             selectedRats: s.values.selectedRats,
             location: s.values.location,
             cells: s.values.cells,
             sectors: s.values.sectors,
           })}
         >
-          {({ mode, action, selectedStation, selectedRats, location, cells, sectors }) => {
-            if (mode === "existing" && action === "delete") return null;
-            if (mode === "new") {
-              if (!hasCompleteLocation(location)) return null;
-            } else if (!selectedStation) return null;
-
-            const { derivedSectorCount, assignedSectorLocalIds } = deriveSectorPanelState(cells, selectedRats);
-
+          {({ mode, action, selectedStation, newStation, selectedRats, location, cells, sectors }) => {
             return (
-              <SectorsPanel
+              <SubmissionSectorsPanelFields
+                mode={mode}
+                action={action}
+                selectedStation={selectedStation}
+                newStation={newStation}
+                selectedRats={selectedRats}
+                location={location}
+                cells={cells}
                 sectors={sectors}
-                onChange={handleSectorsChange}
-                derivedSectorCount={derivedSectorCount}
-                assignedSectorLocalIds={assignedSectorLocalIds}
+                mncById={mncById}
+                onSectorsChange={handleSectorsChange}
               />
             );
           }}

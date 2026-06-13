@@ -163,8 +163,8 @@ async function handleBoundsMode(bbox: string, mncs: number[] | undefined): Promi
   const parsed = parseWfsFeatures(json.features);
   if (!parsed.length) throw new ErrorResponse("NOT_FOUND");
 
-  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-  const recent = parsed.filter((f) => new Date(f.date.to) >= oneYearAgo);
+  const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const recent = parsed.filter((f) => new Date(f.date.to) >= oneMonthAgo);
   const filtered = mncs?.length ? recent.filter((f) => mncs.includes(ENTITY_TO_MNC[f.operatorName] ?? 0)) : recent;
 
   const uniqueMncs = [...new Set(filtered.map((f) => ENTITY_TO_MNC[f.operatorName]).filter(Boolean))] as number[];

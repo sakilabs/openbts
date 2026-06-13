@@ -59,6 +59,9 @@ function AppLayout() {
     .reverse()
     .find((match) => (match.staticData as RouteHandle)?.titleKey || (match.staticData as RouteHandle)?.title);
   const handle = currentRoute?.staticData as RouteHandle | undefined;
+  const mainClassNameRoute = [...matches].reverse().find((match) => (match.staticData as RouteHandle)?.mainClassName)?.staticData as
+    | RouteHandle
+    | undefined;
 
   const pageTitle = handle?.titleKey ? t(handle.titleKey, { ns: handle.i18nNamespace }) : (handle?.title ?? "");
   const breadcrumbs = handle?.breadcrumbs ?? EMPTY_BREADCRUMBS;
@@ -163,7 +166,7 @@ function AppLayout() {
                 </div>
               </div>
             </header>
-            <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+            <div className={cn("flex min-h-0 flex-1 flex-col overflow-auto", mainClassNameRoute?.mainClassName)}>
               <AnnouncementBanner />
               <Outlet />
             </div>

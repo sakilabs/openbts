@@ -85,7 +85,7 @@ type Permit = z.infer<typeof ukePermitsSchema> & {
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-  const { limit = undefined, page = 1, bounds, rat, bands: bandValues, decisionType, decision_number, station_id, operator: operatorMnc } = req.query;
+  const { limit, page, bounds, rat, bands: bandValues, decisionType, decision_number, station_id, operator: operatorMnc } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   try {

@@ -270,7 +270,7 @@ const GROUPS: PreferenceGroup[] = [
             key: "azimuthSpread",
             labelKey: "preferences.azimuthSpread",
             hintKey: "preferences.azimuthSpreadHint",
-            min: 10,
+            min: 0,
             max: 120,
             step: 5,
             format: (v) => `${v}°`,
@@ -499,7 +499,7 @@ function PrivacySection({ t }: { t: (key: string) => string }) {
   const { data: session } = authClient.useSession();
   const role = session?.user?.role;
 
-  if (role !== undefined && PRIVILEGED_ROLES.has(role)) return null;
+  if (role !== undefined && role !== null && PRIVILEGED_ROLES.has(role)) return null;
 
   return (
     <section className="space-y-4">

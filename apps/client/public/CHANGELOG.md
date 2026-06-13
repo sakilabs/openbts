@@ -6,9 +6,18 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 ### 🚀 Enhancements
 
 - Added support for assigning sectors to stations and cells, including sector editing in station and submission forms
+- Added buttons to copy sector azimuths from sibling T-Mobile/Orange stations or import them from UKE permits in station and submission forms
 - Redesigned azimuths on the map to render sector wedges for both internal and UKE data
+- Azimuth spread can now be set to `0°` to render simple direction lines instead of wedges
+- Sector assignment updates now keep related PCI values in sync
 - CLF export now marks unconfirmed cells and uncertain NR PCI data directly in descriptions
 - Analyzer warning filters now include unconfirmed cells and cells from logs that were not found in the database
+- SI2PEM planned measurements on the map now only include recent measurements from the last month
+
+### 🩹 Fixes
+
+- Fixed `/pem-measurements` on mobile so the table scrolls inside its own area instead of making the whole page scroll
+- Fixed the SI2PEM "View on map" action layout on mobile
 
 # 2026-06-12
 

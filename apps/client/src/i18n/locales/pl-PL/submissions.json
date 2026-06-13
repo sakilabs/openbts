@@ -210,5 +210,19 @@
     "notFound": "Nie znaleziono stacji siostrzanej",
     "fetched": "Identyfikatory pobrane ze stacji siostrzanej",
     "fetchFailed": "Nie udało się pobrać identyfikatorów"
+  },
+  "siblingSectors": {
+    "fetchFrom": "Skopiuj azymuty z {{brand}}",
+    "fetching": "Kopiowanie...",
+    "notFound": "Nie znaleziono sektorów stacji siostrzanej",
+    "fetched": "Azymuty skopiowane ze stacji siostrzanej",
+    "fetchFailed": "Nie udało się skopiować azymutów"
+  },
+  "ukeSectors": {
+    "fetch": "Importuj z UKE",
+    "fetching": "Importowanie...",
+    "notFound": "Nie znaleziono azymutów UKE dla tej stacji i operatora",
+    "fetched": "Azymuty zaimportowane z UKE",
+    "fetchFailed": "Nie udało się zaimportować azymutów z UKE"
   }
 }

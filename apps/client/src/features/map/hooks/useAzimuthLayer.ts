@@ -32,6 +32,10 @@ type AzimuthFeatures = {
   labels: GeoJSON.Feature[];
 };
 
+type Coordinates = [number, number][];
+type LineLayerSpecification = Extract<maplibregl.LayerSpecification, { type: "line" }>;
+type LineLayerPaint = NonNullable<LineLayerSpecification["paint"]>;
+
 const AZIMUTH_ARC_SEGMENT_DEGREES = 4;
 
 function hasAzimuth<T extends { azimuth: number | null | undefined }>(sector: T): sector is T & { azimuth: number } {
@@ -52,64 +56,128 @@ function buildAzimuthArcCoordinates(lat: number, lng: number, startAngle: number
   return arcCoordinates;
 }
 
+function groupColorsByAzimuth(entries: AzimuthPoint["entries"], dedupeColors: boolean): Map<number, string[]> {
+  const azimuthColors = new Map<number, string[]>();
+
+  for (const { azimuth, color } of entries) {
+    const existing = azimuthColors.get(azimuth);
+    if (!existing) {
+      azimuthColors.set(azimuth, [color]);
+      continue;
+    }
+
+    if (!dedupeColors || !existing.includes(color)) existing.push(color);
+  }
+
+  return azimuthColors;
+}
+
+function createPolygonFeature(coordinates: Coordinates, color: string): GeoJSON.Feature {
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [coordinates],
+    },
+    properties: { color },
+  };
+}
+
+function createLineFeature(coordinates: Coordinates, azimuth: number, color: string): GeoJSON.Feature {
+  return {
+    type: "Feature",
+    geometry: {
+      type: "LineString",
+      coordinates,
+    },
+    properties: { azimuth, color },
+  };
+}
+
+function createLabelFeature(lat: number, lng: number, azimuth: number, lineLength: number): GeoJSON.Feature {
+  const [labelLat, labelLng] = destinationPoint(lat, lng, azimuth, lineLength * 0.55);
+  return {
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [labelLng, labelLat] },
+    properties: { label: `${azimuth}°` },
+  };
+}
+
 function buildAzimuthFeatures(points: AzimuthPoint[], lineLength: number, triangleHalfAngle: number): AzimuthFeatures {
   const fills: GeoJSON.Feature[] = [];
   const outlines: GeoJSON.Feature[] = [];
   const labels: GeoJSON.Feature[] = [];
 
   for (const { latitude: lat, longitude: lng, entries } of points) {
-    if (lat === null || lng === null || entries.length === 0) continue;
+    if (entries.length === 0) continue;
 
-    const azimuthColors = new Map<number, string[]>();
-    for (const { azimuth, color } of entries) {
-      const existing = azimuthColors.get(azimuth);
-      if (existing) {
-        if (!existing.includes(color)) existing.push(color);
-      } else {
-        azimuthColors.set(azimuth, [color]);
-      }
-    }
-
+    const azimuthColors = groupColorsByAzimuth(entries, true);
     for (const [azimuth, colors] of azimuthColors) {
       const startAngle = azimuth - triangleHalfAngle;
       const endAngle = azimuth + triangleHalfAngle;
       const wedgeAngle = (triangleHalfAngle * 2) / colors.length;
 
       const outlineArcCoordinates = buildAzimuthArcCoordinates(lat, lng, startAngle, endAngle, lineLength);
-
-      outlines.push({
-        type: "Feature",
-        geometry: {
-          type: "Polygon",
-          coordinates: [[[lng, lat], ...outlineArcCoordinates, [lng, lat]]],
-        },
-        properties: { color: colors[0] },
-      });
+      outlines.push(createPolygonFeature([[lng, lat], ...outlineArcCoordinates, [lng, lat]], colors[0]));
 
       for (let i = 0; i < colors.length; i++) {
         const fillStartAngle = startAngle + i * wedgeAngle;
         const fillEndAngle = startAngle + (i + 1) * wedgeAngle;
         const fillArcCoordinates = buildAzimuthArcCoordinates(lat, lng, fillStartAngle, fillEndAngle, lineLength);
-        fills.push({
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: [[[lng, lat], ...fillArcCoordinates, [lng, lat]]],
-          },
-          properties: { color: colors[i] },
-        });
+        fills.push(createPolygonFeature([[lng, lat], ...fillArcCoordinates, [lng, lat]], colors[i]));
       }
 
-      const [labelLat, labelLng] = destinationPoint(lat, lng, azimuth, lineLength * 0.55);
-      labels.push({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [labelLng, labelLat] },
-        properties: { label: `${azimuth}°` },
-      });
+      labels.push(createLabelFeature(lat, lng, azimuth, lineLength));
     }
   }
 
   return { fills, outlines, labels };
+}
+
+function buildAzimuthLineFeatures(points: AzimuthPoint[], lineLength: number): GeoJSON.Feature[] {
+  const features: GeoJSON.Feature[] = [];
+
+  for (const { latitude: lat, longitude: lng, entries } of points) {
+    if (entries.length === 0) continue;
+
+    const azimuthColors = groupColorsByAzimuth(entries, false);
+    for (const [azimuth, colorList] of azimuthColors) {
+      const uniqueColors = [...new Set(colorList)];
+
+      if (uniqueColors.length === 1) {
+        const [destLat, destLng] = destinationPoint(lat, lng, azimuth, lineLength);
+        features.push(
+          createLineFeature(
+            [
+              [lng, lat],
+              [destLng, destLat],
+            ],
+            azimuth,
+            uniqueColors[0],
+          ),
+        );
+        continue;
+      }
+
+      const totalSegments = uniqueColors.length * 4;
+      for (let i = 0; i < totalSegments; i++) {
+        const [startLat, startLng] = destinationPoint(lat, lng, azimuth, (i / totalSegments) * lineLength);
+        const [endLat, endLng] = destinationPoint(lat, lng, azimuth, ((i + 1) / totalSegments) * lineLength);
+        features.push(
+          createLineFeature(
+            [
+              [startLng, startLat],
+              [endLng, endLat],
+            ],
+            azimuth,
+            uniqueColors[i % uniqueColors.length],
+          ),
+        );
+      }
+    }
+  }
+
+  return features;
 }
 
 function ukeLocationsToAzimuthPoints(locations: UkeLocationWithPermits[]): AzimuthPoint[] {
@@ -137,6 +205,14 @@ function internalLocationsToAzimuthPoints(locations: LocationWithStations[]): Az
 type GeoJSONTriple = { fill: GeoJSON.FeatureCollection; outline: GeoJSON.FeatureCollection; label: GeoJSON.FeatureCollection };
 
 function makeGeoJSONTriple(points: AzimuthPoint[], lineLength: number, triangleHalfAngle: number): GeoJSONTriple {
+  if (triangleHalfAngle === 0) {
+    return {
+      fill: EMPTY_GEOJSON,
+      outline: { type: "FeatureCollection", features: buildAzimuthLineFeatures(points, lineLength) },
+      label: EMPTY_GEOJSON,
+    };
+  }
+
   const { fills, outlines, labels } = buildAzimuthFeatures(points, lineLength, triangleHalfAngle);
   return {
     fill: { type: "FeatureCollection", features: fills },
@@ -160,17 +236,29 @@ function createFillLayerConfig(id: string, sourceId: string, minzoom: number): m
   };
 }
 
-function createOutlineLayerConfig(id: string, sourceId: string, minzoom: number): maplibregl.LayerSpecification {
+function createOutlineLayerPaint(lineMode: boolean): LineLayerPaint {
+  if (lineMode) {
+    return {
+      "line-color": ["get", "color"],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1, 16, 2.5, 18, 4],
+      "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 15, 0.6, 17, 0.85],
+    };
+  }
+
+  return {
+    "line-color": ["get", "color"],
+    "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1, 18, 2],
+    "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.5, 17, 0.85],
+  };
+}
+
+function createOutlineLayerConfig(id: string, sourceId: string, minzoom: number, lineMode: boolean): maplibregl.LayerSpecification {
   return {
     id,
     type: "line",
     source: sourceId,
     minzoom,
-    paint: {
-      "line-color": ["get", "color"],
-      "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1, 18, 2],
-      "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.5, 17, 0.85],
-    },
+    paint: createOutlineLayerPaint(lineMode),
   };
 }
 
@@ -194,6 +282,112 @@ function createLabelLayerConfig(id: string, sourceId: string, minzoom: number): 
   };
 }
 
+type GeoJSONTripleKey = keyof GeoJSONTriple;
+
+type AzimuthLayerPart = {
+  sourceId: string;
+  layerId: string;
+  dataKey: GeoJSONTripleKey;
+  createLayerConfig: (id: string, sourceId: string, minzoom: number, lineMode: boolean) => maplibregl.LayerSpecification;
+  syncPaint?: (map: maplibregl.Map, layerId: string, lineMode: boolean) => void;
+};
+
+function syncOutlineLayerPaint(map: maplibregl.Map, layerId: string, lineMode: boolean): void {
+  const paint = createOutlineLayerPaint(lineMode);
+  map.setPaintProperty(layerId, "line-color", paint["line-color"]);
+  map.setPaintProperty(layerId, "line-width", paint["line-width"]);
+  map.setPaintProperty(layerId, "line-opacity", paint["line-opacity"]);
+}
+
+function syncAzimuthLayerPartStyle(map: maplibregl.Map, part: AzimuthLayerPart, minZoom: number, lineMode: boolean): void {
+  if (!map.getLayer(part.layerId)) return;
+  map.setLayerZoomRange(part.layerId, minZoom, 24);
+  part.syncPaint?.(map, part.layerId, lineMode);
+}
+
+const INTERNAL_AZIMUTH_LAYER_PARTS: AzimuthLayerPart[] = [
+  {
+    sourceId: INTERNAL_AZIMUTHS_SOURCE_ID,
+    layerId: INTERNAL_AZIMUTHS_FILL_LAYER_ID,
+    dataKey: "fill",
+    createLayerConfig: (id, sourceId, minzoom) => createFillLayerConfig(id, sourceId, minzoom),
+  },
+  {
+    sourceId: INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID,
+    layerId: INTERNAL_AZIMUTHS_OUTLINE_LAYER_ID,
+    dataKey: "outline",
+    createLayerConfig: createOutlineLayerConfig,
+    syncPaint: syncOutlineLayerPaint,
+  },
+  {
+    sourceId: INTERNAL_AZIMUTHS_LABEL_SOURCE_ID,
+    layerId: INTERNAL_AZIMUTHS_LABEL_LAYER_ID,
+    dataKey: "label",
+    createLayerConfig: (id, sourceId, minzoom) => createLabelLayerConfig(id, sourceId, minzoom),
+  },
+];
+
+const UKE_AZIMUTH_LAYER_PARTS: AzimuthLayerPart[] = [
+  {
+    sourceId: UKE_AZIMUTHS_SOURCE_ID,
+    layerId: UKE_AZIMUTHS_FILL_LAYER_ID,
+    dataKey: "fill",
+    createLayerConfig: (id, sourceId, minzoom) => createFillLayerConfig(id, sourceId, minzoom),
+  },
+  {
+    sourceId: UKE_AZIMUTHS_OUTLINE_SOURCE_ID,
+    layerId: UKE_AZIMUTHS_OUTLINE_LAYER_ID,
+    dataKey: "outline",
+    createLayerConfig: createOutlineLayerConfig,
+    syncPaint: syncOutlineLayerPaint,
+  },
+  {
+    sourceId: UKE_AZIMUTHS_LABEL_SOURCE_ID,
+    layerId: UKE_AZIMUTHS_LABEL_LAYER_ID,
+    dataKey: "label",
+    createLayerConfig: (id, sourceId, minzoom) => createLabelLayerConfig(id, sourceId, minzoom),
+  },
+];
+
+const AZIMUTH_LAYER_PARTS = [...INTERNAL_AZIMUTH_LAYER_PARTS, ...UKE_AZIMUTH_LAYER_PARTS];
+
+function ensureAzimuthLayerPartsExist(
+  map: maplibregl.Map,
+  parts: AzimuthLayerPart[],
+  triple: GeoJSONTriple,
+  minZoom: number,
+  beforeLayer: string | undefined,
+  lineMode: boolean,
+): void {
+  for (const part of parts) {
+    if (!map.getSource(part.sourceId)) map.addSource(part.sourceId, { type: "geojson", data: triple[part.dataKey] });
+    if (!map.getLayer(part.layerId)) map.addLayer(part.createLayerConfig(part.layerId, part.sourceId, minZoom, lineMode), beforeLayer);
+    if (map.getLayer(part.layerId)) part.syncPaint?.(map, part.layerId, lineMode);
+  }
+}
+
+function removeAzimuthLayerParts(map: maplibregl.Map): void {
+  for (const { layerId } of AZIMUTH_LAYER_PARTS) {
+    try {
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+    } catch {}
+  }
+
+  for (const { sourceId } of AZIMUTH_LAYER_PARTS) {
+    try {
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+    } catch {}
+  }
+}
+
+function setGeoJSONSourceData(map: maplibregl.Map, sourceId: string, data: GeoJSON.FeatureCollection): void {
+  void (map.getSource(sourceId) as GeoJSONSource | undefined)?.setData(data);
+}
+
+function syncAzimuthLayerPartsData(map: maplibregl.Map, parts: AzimuthLayerPart[], triple: GeoJSONTriple): void {
+  for (const part of parts) setGeoJSONSourceData(map, part.sourceId, triple[part.dataKey]);
+}
+
 type UseAzimuthLayerArgs = {
   map: maplibregl.Map | null;
   isLoaded: boolean;
@@ -207,6 +401,7 @@ type UseAzimuthLayerArgs = {
 
 export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enabled, minZoom, lineLength, spread }: UseAzimuthLayerArgs) {
   const halfAngle = spread / 2;
+  const lineMode = halfAngle === 0;
   const ukeTriple = useMemo(
     () => (enabled ? makeGeoJSONTriple(ukeLocationsToAzimuthPoints(ukeLocations), lineLength, halfAngle) : EMPTY_TRIPLE),
     [enabled, lineLength, ukeLocations, halfAngle],
@@ -220,6 +415,10 @@ export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enable
   ukeTripleRef.current = ukeTriple;
   const internalTripleRef = useRef(internalTriple);
   internalTripleRef.current = internalTriple;
+  const minZoomRef = useRef(minZoom);
+  minZoomRef.current = minZoom;
+  const lineModeRef = useRef(lineMode);
+  lineModeRef.current = lineMode;
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
@@ -228,37 +427,16 @@ export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enable
       try {
         const beforeLayer = map.getLayer(POINT_LAYER_ID) ? POINT_LAYER_ID : undefined;
 
-        if (!map.getSource(INTERNAL_AZIMUTHS_SOURCE_ID))
-          map.addSource(INTERNAL_AZIMUTHS_SOURCE_ID, { type: "geojson", data: internalTripleRef.current.fill });
-        if (!map.getLayer(INTERNAL_AZIMUTHS_FILL_LAYER_ID))
-          map.addLayer(createFillLayerConfig(INTERNAL_AZIMUTHS_FILL_LAYER_ID, INTERNAL_AZIMUTHS_SOURCE_ID, minZoom), beforeLayer);
-
-        if (!map.getSource(INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID))
-          map.addSource(INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID, { type: "geojson", data: internalTripleRef.current.outline });
-        if (!map.getLayer(INTERNAL_AZIMUTHS_OUTLINE_LAYER_ID))
-          map.addLayer(createOutlineLayerConfig(INTERNAL_AZIMUTHS_OUTLINE_LAYER_ID, INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID, minZoom), beforeLayer);
-
-        if (!map.getSource(INTERNAL_AZIMUTHS_LABEL_SOURCE_ID))
-          map.addSource(INTERNAL_AZIMUTHS_LABEL_SOURCE_ID, { type: "geojson", data: internalTripleRef.current.label });
-        if (!map.getLayer(INTERNAL_AZIMUTHS_LABEL_LAYER_ID))
-          map.addLayer(createLabelLayerConfig(INTERNAL_AZIMUTHS_LABEL_LAYER_ID, INTERNAL_AZIMUTHS_LABEL_SOURCE_ID, minZoom), beforeLayer);
-
-        if (!map.getSource(UKE_AZIMUTHS_SOURCE_ID)) map.addSource(UKE_AZIMUTHS_SOURCE_ID, { type: "geojson", data: ukeTripleRef.current.fill });
-        if (!map.getLayer(UKE_AZIMUTHS_FILL_LAYER_ID))
-          map.addLayer(createFillLayerConfig(UKE_AZIMUTHS_FILL_LAYER_ID, UKE_AZIMUTHS_SOURCE_ID, minZoom), beforeLayer);
-
-        if (!map.getSource(UKE_AZIMUTHS_OUTLINE_SOURCE_ID))
-          map.addSource(UKE_AZIMUTHS_OUTLINE_SOURCE_ID, { type: "geojson", data: ukeTripleRef.current.outline });
-        if (!map.getLayer(UKE_AZIMUTHS_OUTLINE_LAYER_ID))
-          map.addLayer(createOutlineLayerConfig(UKE_AZIMUTHS_OUTLINE_LAYER_ID, UKE_AZIMUTHS_OUTLINE_SOURCE_ID, minZoom), beforeLayer);
-
-        if (!map.getSource(UKE_AZIMUTHS_LABEL_SOURCE_ID))
-          map.addSource(UKE_AZIMUTHS_LABEL_SOURCE_ID, { type: "geojson", data: ukeTripleRef.current.label });
-        if (!map.getLayer(UKE_AZIMUTHS_LABEL_LAYER_ID))
-          map.addLayer(createLabelLayerConfig(UKE_AZIMUTHS_LABEL_LAYER_ID, UKE_AZIMUTHS_LABEL_SOURCE_ID, minZoom), beforeLayer);
-      } catch {
-        // Layer may not exist yet
-      }
+        ensureAzimuthLayerPartsExist(
+          map,
+          INTERNAL_AZIMUTH_LAYER_PARTS,
+          internalTripleRef.current,
+          minZoomRef.current,
+          beforeLayer,
+          lineModeRef.current,
+        );
+        ensureAzimuthLayerPartsExist(map, UKE_AZIMUTH_LAYER_PARTS, ukeTripleRef.current, minZoomRef.current, beforeLayer, lineModeRef.current);
+      } catch {}
     };
 
     ensureLayersExist();
@@ -266,44 +444,22 @@ export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enable
 
     return () => {
       map.off("styledata", ensureLayersExist);
-      for (const layerId of [
-        INTERNAL_AZIMUTHS_FILL_LAYER_ID,
-        INTERNAL_AZIMUTHS_OUTLINE_LAYER_ID,
-        INTERNAL_AZIMUTHS_LABEL_LAYER_ID,
-        UKE_AZIMUTHS_FILL_LAYER_ID,
-        UKE_AZIMUTHS_OUTLINE_LAYER_ID,
-        UKE_AZIMUTHS_LABEL_LAYER_ID,
-      ]) {
-        try {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
-        } catch {}
-      }
-      for (const sourceId of [
-        INTERNAL_AZIMUTHS_SOURCE_ID,
-        INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID,
-        INTERNAL_AZIMUTHS_LABEL_SOURCE_ID,
-        UKE_AZIMUTHS_SOURCE_ID,
-        UKE_AZIMUTHS_OUTLINE_SOURCE_ID,
-        UKE_AZIMUTHS_LABEL_SOURCE_ID,
-      ]) {
-        try {
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
-        } catch {}
-      }
+      removeAzimuthLayerParts(map);
     };
-  }, [map, isLoaded, enabled, minZoom]);
+  }, [map, isLoaded, enabled]);
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
-    void (map.getSource(UKE_AZIMUTHS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(ukeTriple.fill);
-    void (map.getSource(UKE_AZIMUTHS_OUTLINE_SOURCE_ID) as GeoJSONSource | undefined)?.setData(ukeTriple.outline);
-    void (map.getSource(UKE_AZIMUTHS_LABEL_SOURCE_ID) as GeoJSONSource | undefined)?.setData(ukeTriple.label);
+    for (const part of AZIMUTH_LAYER_PARTS) syncAzimuthLayerPartStyle(map, part, minZoom, lineMode);
+  }, [map, isLoaded, enabled, minZoom, lineMode]);
+
+  useEffect(() => {
+    if (!map || !isLoaded || !enabled) return;
+    syncAzimuthLayerPartsData(map, UKE_AZIMUTH_LAYER_PARTS, ukeTriple);
   }, [map, isLoaded, enabled, ukeTriple]);
 
   useEffect(() => {
     if (!map || !isLoaded || !enabled) return;
-    void (map.getSource(INTERNAL_AZIMUTHS_SOURCE_ID) as GeoJSONSource | undefined)?.setData(internalTriple.fill);
-    void (map.getSource(INTERNAL_AZIMUTHS_OUTLINE_SOURCE_ID) as GeoJSONSource | undefined)?.setData(internalTriple.outline);
-    void (map.getSource(INTERNAL_AZIMUTHS_LABEL_SOURCE_ID) as GeoJSONSource | undefined)?.setData(internalTriple.label);
+    syncAzimuthLayerPartsData(map, INTERNAL_AZIMUTH_LAYER_PARTS, internalTriple);
   }, [map, isLoaded, enabled, internalTriple]);
 }

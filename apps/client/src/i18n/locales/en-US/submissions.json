@@ -207,5 +207,19 @@
     "notFound": "No sibling station found",
     "fetched": "Identifiers fetched from sibling station",
     "fetchFailed": "Failed to fetch identifiers"
+  },
+  "siblingSectors": {
+    "fetchFrom": "Copy azimuths from {{brand}}",
+    "fetching": "Copying...",
+    "notFound": "No sibling sectors found",
+    "fetched": "Azimuths copied from sibling station",
+    "fetchFailed": "Failed to copy azimuths"
+  },
+  "ukeSectors": {
+    "fetch": "Import from UKE",
+    "fetching": "Importing...",
+    "notFound": "No UKE azimuths found for this station and operator",
+    "fetched": "Azimuths imported from UKE",
+    "fetchFailed": "Failed to import UKE azimuths"
   }
 }

@@ -56,7 +56,7 @@
     "azimuthLineLength": "Długość linii azymutu",
     "azimuthLineLengthHint": "Ustaw długość linii kierunkowych azymutów rysowanych na mapie",
     "azimuthSpread": "Rozwarcie azymutu",
-    "azimuthSpreadHint": "Ustaw kątową szerokość trójkąta azymutu na mapie",
+    "azimuthSpreadHint": "Ustaw kątową szerokość trójkąta azymutu na mapie. Użyj 0°, aby wyświetlać proste linie kierunkowe.",
     "groupNavigation": "Nawigacja",
     "groupMap": "Mapa",
     "groupAzimuths": "Azymuty",

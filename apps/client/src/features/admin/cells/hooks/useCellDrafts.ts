@@ -7,6 +7,7 @@ import type { Band } from "@/types/station";
 
 import type { CellDraftBase } from "../cellEditRow";
 import { RAT_ORDER, getSharedDetailFields } from "../rat";
+import { applySectorPatchWithPCISync } from "../sectorAssignmentSync";
 
 type UseCellDraftsOptions<T extends CellDraftBase> = {
   initialCells: T[];
@@ -113,7 +114,7 @@ export function useCellDrafts<T extends CellDraftBase>({
   const changeCell = useCallback(
     (localId: string, patch: Partial<CellDraftBase>) => {
       if (disabled) return;
-      setCells((prev) => prev.map((c) => (c._localId === localId ? { ...c, ...patch } : c)));
+      setCells((prev) => applySectorPatchWithPCISync(prev, localId, patch, (cell) => cell._localId));
     },
     [disabled],
   );
