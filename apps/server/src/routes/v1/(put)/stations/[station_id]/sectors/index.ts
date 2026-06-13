@@ -8,6 +8,7 @@ import z from "zod";
 import { ErrorResponse } from "../../../../../../errors.ts";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.ts";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.ts";
+import { createAuditLog } from "../../../../../../services/auditLog.service.ts";
 
 const sectorInputSchema = z.object({
   azimuth: z.number().int().min(0).max(359),
@@ -28,6 +29,12 @@ async function handler(req: FastifyRequest<ReqBodyParams>, res: ReplyPayload<JSO
   const station = await db.query.stations.findFirst({ where: { id: station_id } });
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
+  const previousSectors = await db.query.stationSectors.findMany({
+    where: { station_id },
+    columns: { station_id: false },
+    orderBy: { id: "asc" },
+  });
+
   const result = await db.transaction(async (tx) => {
     await tx.delete(stationSectors).where(eq(stationSectors.station_id, station_id));
     if (sectors.length === 0) return [];
@@ -37,11 +44,24 @@ async function handler(req: FastifyRequest<ReqBodyParams>, res: ReplyPayload<JSO
       .returning({ id: stationSectors.id, azimuth: stationSectors.azimuth });
   });
 
-  return res.send({ data: result.sort((a, b) => a.id - b.id) });
+  const sortedResult = result.sort((a, b) => a.id - b.id);
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "station_sectors",
+      record_id: station_id,
+      old_values: previousSectors,
+      new_values: sortedResult,
+      metadata: { station_id },
+    },
+    req,
+  );
+
+  return res.send({ data: sortedResult });
 }
 
 const putSectors: Route<ReqBodyParams, ResBody> = {
-  url: "/stations/:stations_id/sectors",
+  url: "/stations/:station_id/sectors",
   method: "PUT",
   config: { permissions: ["write:stations"] },
   schema: schemaRoute,

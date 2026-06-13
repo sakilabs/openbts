@@ -1,6 +1,7 @@
 {
   "tabs": {
     "specs": "Specification",
+    "sectors": "Sectors",
     "permits": "UKE Permits",
     "comments": "Comments",
     "photos": "Photos"
@@ -12,6 +13,14 @@
     "newCellTooltip": "This cell was added in the last 30 days",
     "updatedCellTooltip": "This cell was updated in the last 30 days",
     "si2pemLink": "Click to see all PEM reports from SI2PEM"
+  },
+  "sectors": {
+    "title": "Sectors",
+    "noAssignedCells": "No assigned cells",
+    "suggestedCount": "Suggested sector count:",
+    "azimuth": "Azimuth",
+    "empty": "No sectors",
+    "add": "Add sector"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} permit",

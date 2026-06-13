@@ -1,5 +1,5 @@
 import { API_BASE, fetchJson } from "@/lib/api";
-import type { Cell, Sector, SectorDraft, Station } from "@/types/station";
+import type { Cell, Sector, Station } from "@/types/station";
 
 export async function patchStation(stationId: number, body: Record<string, unknown>) {
   return fetchJson<{ data: Station }>(`${API_BASE}/stations/${stationId}`, {
@@ -85,10 +85,10 @@ export async function getStationSectors(stationId: number) {
   return fetchJson<{ data: Sector[] }>(`${API_BASE}/stations/${stationId}/sectors`);
 }
 
-export async function putStationSectors(stationId: number, sectors: Pick<SectorDraft, "azimuth">[]) {
+export async function putStationSectors(stationId: number, sectors: { azimuth: number }[]) {
   return fetchJson<{ data: Sector[] }>(`${API_BASE}/stations/${stationId}/sectors`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(sectors),
+    body: JSON.stringify({ sectors }),
   });
 }

@@ -28,7 +28,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { fetchApiData } from "@/lib/api";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { cn } from "@/lib/utils";
-import type { Station, StationComment } from "@/types/station";
+import type { Sector, Station, StationComment } from "@/types/station";
 
 import { fetchElevation, fetchPemReports, fetchStationPhotos } from "../api";
 import { TAB_OPTIONS, type TabId } from "../tabs";
@@ -52,6 +52,54 @@ type StationDetailsBodyProps = {
   onClose: () => void;
   isAdmin?: boolean;
 };
+
+const COMPASS_CENTER = 64;
+const COMPASS_LINE_RADIUS = 48;
+const COMPASS_LABEL_RADIUS = 58;
+
+function getCompassPoint(azimuth: number, radius: number) {
+  const radians = (azimuth * Math.PI) / 180;
+  return {
+    x: COMPASS_CENTER + Math.sin(radians) * radius,
+    y: COMPASS_CENTER - Math.cos(radians) * radius,
+  };
+}
+
+function SectorMiniCompass({ sectors }: { sectors: Sector[] }) {
+  return (
+    <div className="relative size-36 rounded-full border bg-background shadow-inner">
+      <div className="absolute inset-3 rounded-full border border-dashed border-border" />
+      <svg className="absolute inset-0 size-full overflow-visible text-primary" viewBox="0 0 128 128" aria-hidden="true">
+        {sectors.map((sector, index) => {
+          const end = getCompassPoint(sector.azimuth, COMPASS_LINE_RADIUS);
+          const label = getCompassPoint(sector.azimuth, COMPASS_LABEL_RADIUS);
+          return (
+            <g key={sector.id}>
+              <line x1={COMPASS_CENTER} y1={COMPASS_CENTER} x2={end.x} y2={end.y} stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx={label.x} cy={label.y} r="7" fill="currentColor" />
+              <text
+                x={label.x}
+                y={label.y}
+                fill="hsl(var(--primary-foreground))"
+                fontSize="9"
+                fontWeight="700"
+                textAnchor="middle"
+                dominantBaseline="central"
+              >
+                {index + 1}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <div className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm" />
+      <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-medium text-muted-foreground">N</span>
+      <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-muted-foreground">S</span>
+      <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground">W</span>
+      <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground">E</span>
+    </div>
+  );
+}
 
 export function StationDetailsBody({
   stationId,
@@ -98,6 +146,10 @@ export function StationDetailsBody({
   };
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
   const cellGroups = station ? groupCellsByRat(station.cells ?? []) : {};
+  const sectorInfoById = useMemo(
+    () => new Map((station?.sectors ?? []).map((sector, index) => [sector.id, { label: `S${index + 1}`, azimuth: sector.azimuth }])),
+    [station?.sectors],
+  );
 
   const { data: photos } = useQuery({
     queryKey: ["station-photos", stationId],
@@ -130,6 +182,7 @@ export function StationDetailsBody({
   });
 
   const tabCounts: Partial<Record<TabId, number>> = {
+    ...(station?.sectors && station.sectors.length > 0 ? { sectors: station.sectors.length } : {}),
     ...(photos !== undefined ? { photos: photos.length } : {}),
     ...(comments !== undefined ? { comments: comments.length } : {}),
   };
@@ -140,11 +193,12 @@ export function StationDetailsBody({
       source === "uke"
         ? TAB_OPTIONS.filter((tab) => tab.id === "permits")
         : TAB_OPTIONS.filter((tab) => {
+            if (tab.id === "sectors" && (station?.sectors?.length ?? 0) === 0) return false;
             if (tab.id === "comments" && !settings?.enableStationComments) return false;
             if (tab.id === "photos" && !settings?.photosEnabled) return false;
             return true;
           }),
-    [source, settings?.enableStationComments, settings?.photosEnabled],
+    [source, settings?.enableStationComments, settings?.photosEnabled, station?.sectors?.length],
   );
 
   return (
@@ -357,7 +411,7 @@ export function StationDetailsBody({
                     ) : (
                       <div className="space-y-4">
                         {RAT_ORDER.filter((rat) => cellGroups[rat]).map((rat) => (
-                          <CellTable key={rat} rat={rat} cells={cellGroups[rat]} />
+                          <CellTable key={rat} rat={rat} cells={cellGroups[rat]} sectorInfoById={sectorInfoById} />
                         ))}
                       </div>
                     )}
@@ -371,6 +425,21 @@ export function StationDetailsBody({
                       <p className="text-sm p-4 border rounded-xl bg-muted/20">{station.notes}</p>
                     </section>
                   )}
+                </div>
+              )}
+
+              {activeTab === "sectors" && (station.sectors?.length ?? 0) > 0 && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <section className="flex min-h-72 flex-col items-center justify-center gap-4">
+                    <SectorMiniCompass sectors={station.sectors ?? []} />
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {(station.sectors ?? []).map((sector, index) => (
+                        <span key={sector.id} className="text-xs font-medium text-muted-foreground tabular-nums">
+                          S{index + 1}: {sector.azimuth}°
+                        </span>
+                      ))}
+                    </div>
+                  </section>
                 </div>
               )}
 

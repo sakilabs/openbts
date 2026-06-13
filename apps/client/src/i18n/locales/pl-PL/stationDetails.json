@@ -1,6 +1,7 @@
 {
   "tabs": {
     "specs": "Specyfikacja",
+    "sectors": "Sektory",
     "permits": "Pozwolenia UKE",
     "comments": "Komentarze",
     "photos": "Zdjęcia"
@@ -12,6 +13,14 @@
     "newCellTooltip": "Ta komórka została dodana w ciągu ostatnich 30 dni",
     "updatedCellTooltip": "Ta komórka została zaktualizowana w ciągu ostatnich 30 dni",
     "si2pemLink": "Kliknij aby zobaczyć raporty PEM z SI2PEM"
+  },
+  "sectors": {
+    "title": "Sektory",
+    "noAssignedCells": "Brak przypisanych komórek",
+    "suggestedCount": "Sugerowana liczba sektorów:",
+    "azimuth": "Azymut",
+    "empty": "Brak sektorów",
+    "add": "Dodaj sektor"
   },
   "permits": {
     "permitsCount_one": "{{count, number}} pozwolenie",

@@ -84,7 +84,7 @@ export function StationInfoForm({
   onSectorsChange,
   cells,
 }: StationInfoFormProps) {
-  const { t } = useTranslation(["submissions", "common"]);
+  const { t } = useTranslation(["submissions", "common", "stationDetails"]);
   const [isFetchingSibling, setIsFetchingSibling] = useState(false);
 
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!networksId;
@@ -245,7 +245,7 @@ export function StationInfoForm({
                 icon={ArrowDown01Icon}
                 className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-0 -rotate-90"
               />
-              <span className="font-semibold text-sm">Sektory</span>
+              <span className="font-semibold text-sm">{t("tabs.sectors", { ns: "stationDetails" })}</span>
               <span className="text-xs text-muted-foreground">({sectors.length}/15)</span>
             </CollapsibleTrigger>
           </div>

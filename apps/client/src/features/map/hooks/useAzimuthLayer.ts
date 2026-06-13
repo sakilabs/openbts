@@ -36,19 +36,17 @@ function buildAzimuthFeatures(points: AzimuthPoint[], lineLength: number): GeoJS
 
       if (uniqueColors.length === 1) {
         const [destLat, destLng] = destinationPoint(lat, lng, azimuth, lineLength);
-        for (const color of colorList) {
-          features.push({
-            type: "Feature",
-            geometry: {
-              type: "LineString",
-              coordinates: [
-                [lng, lat],
-                [destLng, destLat],
-              ],
-            },
-            properties: { azimuth, color },
-          });
-        }
+        features.push({
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [lng, lat],
+              [destLng, destLat],
+            ],
+          },
+          properties: { azimuth, color: uniqueColors[0] },
+        });
       } else {
         const totalSegments = uniqueColors.length * 4;
         for (let i = 0; i < totalSegments; i++) {
@@ -148,7 +146,7 @@ export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enable
 
         if (!map.getSource(INTERNAL_AZIMUTHS_SOURCE_ID))
           map.addSource(INTERNAL_AZIMUTHS_SOURCE_ID, { type: "geojson", data: internalGeoJSONRef.current });
-        if (!map.getSource(INTERNAL_AZIMUTHS_LINE_LAYER_ID))
+        if (!map.getLayer(INTERNAL_AZIMUTHS_LINE_LAYER_ID))
           map.addLayer(createAzimuthLayerConfig(INTERNAL_AZIMUTHS_LINE_LAYER_ID, INTERNAL_AZIMUTHS_SOURCE_ID, minZoom), beforeLayer);
 
         if (!map.getSource(UKE_AZIMUTHS_SOURCE_ID)) map.addSource(UKE_AZIMUTHS_SOURCE_ID, { type: "geojson", data: ukeGeoJSONRef.current });
@@ -169,9 +167,9 @@ export function useAzimuthLayer({ map, isLoaded, locations, ukeLocations, enable
           if (map.getLayer(layerId)) map.removeLayer(layerId);
         } catch {}
       }
-      for (const layerId of [UKE_AZIMUTHS_SOURCE_ID, INTERNAL_AZIMUTHS_SOURCE_ID]) {
+      for (const sourceId of [UKE_AZIMUTHS_SOURCE_ID, INTERNAL_AZIMUTHS_SOURCE_ID]) {
         try {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
+          if (map.getSource(sourceId)) map.removeSource(sourceId);
         } catch {}
       }
     };

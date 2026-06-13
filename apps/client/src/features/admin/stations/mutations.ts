@@ -3,13 +3,25 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { pickCellDetails } from "@/features/submissions/api";
 import { shallowEqual } from "@/lib/shallowEqual";
-import type { Cell, Station } from "@/types/station";
+import type { Cell, Sector, SectorDraft, Station } from "@/types/station";
 
 import { patchLocation } from "../locations/api";
-import { createCells, createLocation, createStation, deleteCell, deleteStation, patchCell, patchCells, patchStation, updateExtraIds } from "./api";
+import {
+  createCells,
+  createLocation,
+  createStation,
+  deleteCell,
+  deleteStation,
+  patchCell,
+  patchCells,
+  patchStation,
+  putStationSectors,
+  updateExtraIds,
+} from "./api";
 
 export type LocalCell = CellDraftBase & {
   _serverId?: number;
+  _sectorLocalId?: string | null;
 };
 
 export function useCreateLocationMutation() {
@@ -66,12 +78,44 @@ export function useCreateCellsMutation(stationId: number) {
   });
 }
 
-export function isCellModified(lc: LocalCell, originalCells: Cell[]): boolean {
+function sectorLocalIdToOriginalId(localId: string | null | undefined): number | null {
+  if (!localId?.startsWith("sector-")) return null;
+  const id = Number.parseInt(localId.slice("sector-".length), 10);
+  return Number.isNaN(id) ? null : id;
+}
+
+function resolveSectorId(localId: string | null | undefined, sectorIdByLocalId?: ReadonlyMap<string, number>): number | null {
+  if (!localId) return null;
+  return sectorIdByLocalId?.get(localId) ?? sectorLocalIdToOriginalId(localId);
+}
+
+function sectorsChanged(drafts: SectorDraft[], original: Sector[] | undefined): boolean {
+  const originalSectors = original ?? [];
+  if (drafts.length !== originalSectors.length) return true;
+  return drafts.some((draft, index) => draft.azimuth !== originalSectors[index]?.azimuth);
+}
+
+function toSectorPayload(drafts: SectorDraft[]): { azimuth: number }[] {
+  return drafts.flatMap((sector) => (typeof sector.azimuth === "number" ? [{ azimuth: sector.azimuth }] : []));
+}
+
+function makeSectorIdMap(drafts: SectorDraft[], persisted?: Sector[]): Map<string, number> {
+  const map = new Map<string, number>();
+  drafts.forEach((draft, index) => {
+    const id = persisted?.[index]?.id ?? draft.id ?? sectorLocalIdToOriginalId(draft._localId);
+    if (id !== null) map.set(draft._localId, id);
+  });
+  return map;
+}
+
+export function isCellModified(lc: LocalCell, originalCells: Cell[], sectorIdByLocalId?: ReadonlyMap<string, number>): boolean {
   if (!lc._serverId) return false;
   const orig = originalCells.find((c) => c.id === lc._serverId);
   if (!orig) return false;
+  const sectorId = resolveSectorId(lc._sectorLocalId, sectorIdByLocalId);
   return (
     lc.band_id !== orig.band.id ||
+    sectorId !== (orig.sector_id ?? null) ||
     lc.notes !== (orig.notes ?? "") ||
     lc.is_confirmed !== orig.is_confirmed ||
     !shallowEqual(lc.details, orig.details ?? {})
@@ -94,6 +138,7 @@ export interface SaveStationPayload {
   };
   existingLocationId: number | null;
   localCells: LocalCell[];
+  sectors: SectorDraft[];
   deletedServerCellIds: number[];
   originalStation?: Station;
   networksId?: number;
@@ -147,6 +192,28 @@ export function useSaveStationMutation() {
           cells: cellsPayload,
         });
 
+        let sectorIdByLocalId = new Map<string, number>();
+        if (payload.sectors.length > 0) {
+          const savedSectors = await putStationSectors(res.data.id, toSectorPayload(payload.sectors));
+          sectorIdByLocalId = makeSectorIdMap(payload.sectors, savedSectors.data);
+        }
+
+        const assignedCreatedCells = payload.localCells.flatMap((lc, index) => {
+          const created = res.data.cells[index];
+          const sectorId = resolveSectorId(lc._sectorLocalId, sectorIdByLocalId);
+          if (!created || sectorId === null) return [];
+          return [{ created, sectorId }];
+        });
+        if (assignedCreatedCells.length > 0) {
+          await patchCells(
+            res.data.id,
+            assignedCreatedCells.map(({ created, sectorId }) => ({
+              cell_id: created.id,
+              sector_id: sectorId,
+            })),
+          );
+        }
+
         if (!payload.skipExtraIds && (payload.networksId || payload.networksName || payload.mnoName)) {
           await updateExtraIds(res.data.id, {
             networks_id: payload.networksId ?? null,
@@ -164,6 +231,11 @@ export function useSaveStationMutation() {
 
       const station = payload.originalStation;
       const originalCells = station.cells;
+      let sectorIdByLocalId = makeSectorIdMap(payload.sectors);
+      if (sectorsChanged(payload.sectors, station.sectors)) {
+        const savedSectors = await putStationSectors(station.id, toSectorPayload(payload.sectors));
+        sectorIdByLocalId = makeSectorIdMap(payload.sectors, savedSectors.data);
+      }
 
       const stationPatch: Record<string, unknown> = {
         station_id: payload.stationId,
@@ -212,6 +284,7 @@ export function useSaveStationMutation() {
           newCells.map((lc) => ({
             station_id: station.id,
             band_id: lc.band_id,
+            sector_id: resolveSectorId(lc._sectorLocalId, sectorIdByLocalId),
             rat: lc.rat,
             is_confirmed: lc.is_confirmed,
             notes: lc.notes || null,
@@ -220,13 +293,14 @@ export function useSaveStationMutation() {
         );
       }
 
-      const modifiedCells = payload.localCells.filter((lc) => lc._serverId && isCellModified(lc, originalCells));
+      const modifiedCells = payload.localCells.filter((lc) => lc._serverId && isCellModified(lc, originalCells, sectorIdByLocalId));
       if (modifiedCells.length > 0) {
         await patchCells(
           station.id,
           modifiedCells.map((lc) => ({
             cell_id: lc._serverId as number,
             band_id: lc.band_id,
+            sector_id: resolveSectorId(lc._sectorLocalId, sectorIdByLocalId),
             notes: lc.notes || null,
             is_confirmed: lc.is_confirmed,
             details: pickCellDetails(lc.rat, lc.details),

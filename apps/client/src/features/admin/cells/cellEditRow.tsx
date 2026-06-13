@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getBandName } from "@/features/station-details/frequencyCalc";
 import { cn } from "@/lib/utils";
-import type { Band } from "@/types/station";
+import type { Band, SectorDraft } from "@/types/station";
 
 import { CellDetailsFields } from "./cellDetailsFields";
 import { useBandSelection } from "./hooks/useBandSelection";
@@ -18,6 +18,7 @@ import { navigateRowHorizontal } from "./rowNav";
 
 export type CellDraftBase = {
   _localId: string;
+  _sectorLocalId?: string | null;
   rat: (typeof RAT_ORDER)[number];
   band_id: number;
   is_confirmed: boolean;
@@ -32,6 +33,7 @@ type CellEditRowProps = {
   leftBorderClass?: string;
   showDelete?: boolean;
   rowClassName?: string;
+  sectors?: SectorDraft[];
   onChange: (localId: string, patch: Partial<CellDraftBase>) => void;
   onDelete: (localId: string) => void;
   onClone?: (localId: string) => void;
@@ -44,6 +46,7 @@ export const CellEditRow = memo(function CellEditRow({
   leftBorderClass,
   showDelete = true,
   rowClassName,
+  sectors,
   onChange,
   onDelete,
   onClone,
@@ -54,6 +57,10 @@ export const CellEditRow = memo(function CellEditRow({
     localCell.rat,
     localCell.band_id,
   );
+  const selectedSectorIndex = sectors?.findIndex((sector) => sector._localId === localCell._sectorLocalId) ?? -1;
+  const selectedSector = selectedSectorIndex >= 0 ? sectors?.[selectedSectorIndex] : undefined;
+  const selectedSectorLabel = selectedSector ? `S${selectedSectorIndex + 1}` : "-";
+
   const handleBandValueChange = (value: number | null) => {
     const opts = value !== null ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
     const defaultDuplex = opts.length === 1 ? opts[0] : localCell.rat === "UMTS" && opts.includes("FDD") ? "FDD" : null;
@@ -141,6 +148,32 @@ export const CellEditRow = memo(function CellEditRow({
           )}
         </td>
       )}
+      {sectors && sectors.length > 0 ? (
+        <td className="px-1 py-1">
+          <Select
+            value={localCell._sectorLocalId ?? "_none"}
+            onValueChange={(value) => onChange(localCell._localId, { _sectorLocalId: value === "_none" ? null : value })}
+            disabled={disabled}
+          >
+            <SelectTrigger
+              className="h-7 w-17 text-sm focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+              onKeyDown={navigateRowHorizontal}
+              data-nav-cell
+            >
+              <SelectValue>{selectedSectorLabel}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">-</SelectItem>
+              {sectors.map((sector, index) => (
+                <SelectItem key={sector._localId} value={sector._localId}>
+                  S{index + 1}
+                  {typeof sector.azimuth === "number" ? ` (${sector.azimuth}°)` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </td>
+      ) : null}
       <CellDetailsFields
         rat={localCell.rat}
         bandValue={bandValue}
