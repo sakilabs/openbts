@@ -434,15 +434,6 @@ export function StationDetailsBody({
                       </div>
                     )}
                   </section>
-
-                  {station?.notes && (
-                    <section>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("specs.internalNotes")}
-                      </h3>
-                      <p className="text-sm p-4 border rounded-xl bg-muted/20">{station.notes}</p>
-                    </section>
-                  )}
                 </div>
               )}
 

@@ -1,4 +1,4 @@
-import { Alert02Icon, Cancel01Icon, PencilEdit02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Alert02Icon, Cancel01Icon, Note01Icon, PencilEdit02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -54,6 +54,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
 
   const operatorColor = station ? getOperatorColor(station.operator.mnc) : "#3b82f6";
   const leaseOperator = station ? getHardwareLeaseOperator(station.station_id, station.operator.mnc) : null;
+  const stationNotes = station?.notes?.trim();
 
   return (
     <>
@@ -164,6 +165,19 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                   </button>
                 </div>
               </div>
+              {stationNotes ? (
+                <div className="border-t border-primary/20 bg-primary/8 px-6 py-3 text-primary">
+                  <div className="flex items-start gap-2.5">
+                    <HugeiconsIcon icon={Note01Icon} className="mt-0.5 size-4 shrink-0" />
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="text-sm font-semibold">{t("specs.internalNotes")}</p>
+                      <p className="max-h-20 overflow-y-auto whitespace-pre-wrap wrap-break-word pr-1 text-xs leading-relaxed text-foreground custom-scrollbar">
+                        {stationNotes}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               {station?.status === "inactive" ? (
                 <div className="border-t border-amber-500/25 bg-amber-500/8 px-6 py-3 text-amber-700 dark:text-amber-400">
                   <div className="flex items-start gap-2.5">
