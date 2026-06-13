@@ -1,6 +1,15 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-13
+
+### 🚀 Enhancements
+
+- Added support for assigning sectors to stations and cells, including sector editing in station and submission forms
+- Redesigned azimuths on the map to render sector wedges for both internal and UKE data
+- CLF export now marks unconfirmed cells and uncertain NR PCI data directly in descriptions
+- Analyzer warning filters now include unconfirmed cells and cells from logs that were not found in the database
+
 # 2026-06-12
 
 ### 🚀 Enhancements
