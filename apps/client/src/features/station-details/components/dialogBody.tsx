@@ -22,7 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { RAT_ORDER } from "@/features/map/constants";
+import { RAT_ORDER } from "@/features/shared/rat";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { fetchApiData } from "@/lib/api";
@@ -55,7 +55,10 @@ type StationDetailsBodyProps = {
 
 const COMPASS_CENTER = 64;
 const COMPASS_LINE_RADIUS = 48;
-const COMPASS_LABEL_RADIUS = 58;
+const COMPASS_SECTOR_RADIUS = COMPASS_CENTER;
+const COMPASS_LABEL_RADIUS = Math.round(COMPASS_LINE_RADIUS * 0.6);
+
+const COMPASS_HALF_ANGLE = 20;
 
 function getCompassPoint(azimuth: number, radius: number) {
   const radians = (azimuth * Math.PI) / 180;
@@ -65,28 +68,42 @@ function getCompassPoint(azimuth: number, radius: number) {
   };
 }
 
+function getSectorPath(azimuth: number) {
+  const left = getCompassPoint(azimuth - COMPASS_HALF_ANGLE, COMPASS_SECTOR_RADIUS);
+  const right = getCompassPoint(azimuth + COMPASS_HALF_ANGLE, COMPASS_SECTOR_RADIUS);
+  return `M ${COMPASS_CENTER} ${COMPASS_CENTER} L ${left.x} ${left.y} A ${COMPASS_SECTOR_RADIUS} ${COMPASS_SECTOR_RADIUS} 0 0 1 ${right.x} ${right.y} Z`;
+}
+
 function SectorMiniCompass({ sectors }: { sectors: Sector[] }) {
   return (
-    <div className="relative size-36 rounded-full border bg-background shadow-inner">
+    <div className="relative size-64 rounded-full border bg-background shadow-inner">
       <div className="absolute inset-3 rounded-full border border-dashed border-border" />
       <svg className="absolute inset-0 size-full overflow-visible text-primary" viewBox="0 0 128 128" aria-hidden="true">
-        {sectors.map((sector, index) => {
-          const end = getCompassPoint(sector.azimuth, COMPASS_LINE_RADIUS);
+        {sectors.map((sector) => {
           const label = getCompassPoint(sector.azimuth, COMPASS_LABEL_RADIUS);
           return (
             <g key={sector.id}>
-              <line x1={COMPASS_CENTER} y1={COMPASS_CENTER} x2={end.x} y2={end.y} stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <circle cx={label.x} cy={label.y} r="7" fill="currentColor" />
+              <path
+                d={getSectorPath(sector.azimuth)}
+                fill="currentColor"
+                fillOpacity={0.25}
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+              />
               <text
                 x={label.x}
                 y={label.y}
-                fill="hsl(var(--primary-foreground))"
+                fill="currentColor"
+                stroke="hsl(var(--background))"
+                strokeWidth={3}
+                paintOrder="stroke"
                 fontSize="9"
                 fontWeight="700"
                 textAnchor="middle"
                 dominantBaseline="central"
               >
-                {index + 1}
+                {sector.azimuth}°
               </text>
             </g>
           );
@@ -145,7 +162,7 @@ export function StationDetailsBody({
     onTabChange(tab);
   };
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
-  const cellGroups = station ? groupCellsByRat(station.cells ?? []) : {};
+  const cellGroups = useMemo(() => (station ? groupCellsByRat(station.cells ?? []) : {}), [station?.cells]);
   const sectorInfoById = useMemo(
     () => new Map((station?.sectors ?? []).map((sector, index) => [sector.id, { label: `S${index + 1}`, azimuth: sector.azimuth }])),
     [station?.sectors],

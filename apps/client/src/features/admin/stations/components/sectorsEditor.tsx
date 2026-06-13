@@ -1,6 +1,6 @@
 import { Add01Icon, Cancel01Icon, DragDropVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type ChangeEvent, memo, useCallback, useTransition } from "react";
+import { type ChangeEvent, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,10 @@ const SectorRow = memo(function SectorRow({ sector, index, onAzimuthChange, onDe
 
 const COMPASS_CENTER = 64;
 const COMPASS_LINE_RADIUS = 48;
-const COMPASS_LABEL_RADIUS = 58;
+const COMPASS_SECTOR_RADIUS = COMPASS_CENTER;
+const COMPASS_LABEL_RADIUS = Math.round(COMPASS_LINE_RADIUS * 0.6);
+
+const COMPASS_HALF_ANGLE = 20;
 
 function getCompassPoint(azimuth: number, radius: number) {
   const radians = (azimuth * Math.PI) / 180;
@@ -74,9 +77,15 @@ function getCompassPoint(azimuth: number, radius: number) {
   };
 }
 
+function getSectorPath(azimuth: number) {
+  const left = getCompassPoint(azimuth - COMPASS_HALF_ANGLE, COMPASS_SECTOR_RADIUS);
+  const right = getCompassPoint(azimuth + COMPASS_HALF_ANGLE, COMPASS_SECTOR_RADIUS);
+  return `M ${COMPASS_CENTER} ${COMPASS_CENTER} L ${left.x} ${left.y} A ${COMPASS_SECTOR_RADIUS} ${COMPASS_SECTOR_RADIUS} 0 0 1 ${right.x} ${right.y} Z`;
+}
+
 function SectorCompass({ sectors }: { sectors: SectorDraft[] }) {
-  const validSectors = sectors.flatMap((sector, index) =>
-    typeof sector.azimuth === "number" ? [{ azimuth: sector.azimuth, index, localId: sector._localId }] : [],
+  const validSectors = sectors.flatMap((sector) =>
+    typeof sector.azimuth === "number" ? [{ azimuth: sector.azimuth, localId: sector._localId }] : [],
   );
 
   return (
@@ -84,22 +93,30 @@ function SectorCompass({ sectors }: { sectors: SectorDraft[] }) {
       <div className="absolute inset-3 rounded-full border border-dashed border-border" />
       <svg className="absolute inset-0 size-full overflow-visible text-primary" viewBox="0 0 128 128" aria-hidden="true">
         {validSectors.map((sector) => {
-          const end = getCompassPoint(sector.azimuth, COMPASS_LINE_RADIUS);
           const label = getCompassPoint(sector.azimuth, COMPASS_LABEL_RADIUS);
           return (
             <g key={sector.localId}>
-              <line x1={COMPASS_CENTER} y1={COMPASS_CENTER} x2={end.x} y2={end.y} stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <circle cx={label.x} cy={label.y} r="7" fill="currentColor" />
+              <path
+                d={getSectorPath(sector.azimuth)}
+                fill="currentColor"
+                fillOpacity={0.25}
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+              />
               <text
                 x={label.x}
                 y={label.y}
-                fill="hsl(var(--primary-foreground))"
+                fill="currentColor"
+                stroke="hsl(var(--background))"
+                strokeWidth={3}
+                paintOrder="stroke"
                 fontSize="9"
                 fontWeight="700"
                 textAnchor="middle"
                 dominantBaseline="central"
               >
-                {sector.index + 1}
+                {sector.azimuth}°
               </text>
             </g>
           );
@@ -128,13 +145,10 @@ function newSectorLocalId() {
 
 export function SectorsEditor({ sectors, onChange, derivedSectorCount, readOnly }: SectorsEditorProps) {
   const { t } = useTranslation("stationDetails");
-  const [isPending, startTransition] = useTransition();
 
   const handleAzimuthChange = useCallback(
     (localId: string, value: number | "") => {
-      startTransition(() => {
-        onChange(sectors.map((sector) => (sector._localId === localId ? { ...sector, azimuth: value } : sector)));
-      });
+      onChange(sectors.map((sector) => (sector._localId === localId ? { ...sector, azimuth: value } : sector)));
     },
     [sectors, onChange],
   );
@@ -193,7 +207,7 @@ export function SectorsEditor({ sectors, onChange, derivedSectorCount, readOnly 
           size="sm"
           className="mx-4 mb-4 h-8 text-xs"
           onClick={handleAdd}
-          disabled={sectors.length >= 15 || isPending}
+          disabled={sectors.length >= 15}
         >
           <HugeiconsIcon icon={Add01Icon} className="size-3.5 mr-1.5" />
           {t("sectors.add")}

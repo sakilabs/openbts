@@ -265,6 +265,16 @@ const GROUPS: PreferenceGroup[] = [
             step: 10,
             format: (v) => `${v} m`,
           },
+          {
+            type: "slider",
+            key: "azimuthSpread",
+            labelKey: "preferences.azimuthSpread",
+            hintKey: "preferences.azimuthSpreadHint",
+            min: 10,
+            max: 120,
+            step: 5,
+            format: (v) => `${v}°`,
+          },
         ],
       },
     ],
@@ -487,8 +497,9 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
 function PrivacySection({ t }: { t: (key: string) => string }) {
   const { consent, accept, reject, reset } = useCookieConsent();
   const { data: session } = authClient.useSession();
+  const role = session?.user?.role;
 
-  if (PRIVILEGED_ROLES.has(session?.user?.role as string)) return null;
+  if (role !== undefined && PRIVILEGED_ROLES.has(role)) return null;
 
   return (
     <section className="space-y-4">

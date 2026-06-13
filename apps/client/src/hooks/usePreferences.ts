@@ -23,6 +23,7 @@ export interface UserPreferences {
   hideFiltersOnMapClick: boolean;
   azimuthsMinZoom: number;
   azimuthLineLength: number;
+  azimuthSpread: number;
   cartoVariant: CartoVariant;
 }
 
@@ -45,19 +46,30 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   hideFiltersOnMapClick: false,
   azimuthsMinZoom: 14,
   azimuthLineLength: 200,
+  azimuthSpread: 60,
   cartoVariant: "light",
 };
 
 let listeners: Array<() => void> = [];
 let cachedSnapshot: UserPreferences | null = null;
 let cachedRaw: string | null = null;
+let isStorageListenerActive = false;
 
 function emitChange() {
-  cachedSnapshot = null;
-  cachedRaw = null;
   for (const listener of listeners) {
     listener();
   }
+}
+
+function invalidateSnapshot() {
+  cachedSnapshot = null;
+  cachedRaw = null;
+  emitChange();
+}
+
+function handleStorageChange(event: StorageEvent) {
+  if (event.key !== STORAGE_KEY) return;
+  invalidateSnapshot();
 }
 
 function getSnapshot(): UserPreferences {
@@ -82,15 +94,28 @@ function getSnapshot(): UserPreferences {
 
 function subscribe(listener: () => void) {
   listeners = [...listeners, listener];
+  if (!isStorageListenerActive && typeof window !== "undefined") {
+    window.addEventListener("storage", handleStorageChange);
+    isStorageListenerActive = true;
+  }
   return () => {
     listeners = listeners.filter((l) => l !== listener);
+    if (listeners.length === 0 && isStorageListenerActive && typeof window !== "undefined") {
+      window.removeEventListener("storage", handleStorageChange);
+      isStorageListenerActive = false;
+    }
   };
 }
 
 function setPreferences(update: Partial<UserPreferences>) {
   const current = getSnapshot();
   const next = { ...current, ...update };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  const nextRaw = JSON.stringify(next);
+  const currentRaw = cachedRaw ?? JSON.stringify(current);
+  if (nextRaw === currentRaw) return;
+  localStorage.setItem(STORAGE_KEY, nextRaw);
+  cachedSnapshot = next;
+  cachedRaw = nextRaw;
   emitChange();
 }
 

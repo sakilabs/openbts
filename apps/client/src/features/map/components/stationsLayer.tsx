@@ -31,6 +31,8 @@ import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const EMPTY_UKE_LOCATIONS: UkeLocationWithPermits[] = [];
 const EMPTY_INTERNAL_LOCATIONS: LocationWithStations[] = [];
+const EMPTY_BLOCKED_LAYERS: string[] = [];
+const PLANNED_PEM_BLOCKED_LAYERS = [PLANNED_PEM_LAYER_ID];
 
 export function locationQueryKey(locationId: number, filters: StationFilters) {
   return ["location", locationId, filters] as const;
@@ -251,6 +253,10 @@ export function StationsLayer({
   });
 
   const locations = useMemo(() => locationsResponse?.data ?? [], [locationsResponse]);
+  const locationById = useMemo(
+    () => new Map<number, LocationWithStations | UkeLocationWithPermits>(locations.map((location) => [location.id, location])),
+    [locations],
+  );
 
   const geoJSON = useMemo(() => {
     if (!filters.showStations && !filters.showHeatmap) return EMPTY_GEOJSON;
@@ -279,8 +285,7 @@ export function StationsLayer({
     const locationId = pendingUkeLocationId.current;
     if (!locationId || !map || filters.source !== "uke" || locations.length === 0) return;
 
-    const ukeLocations = locations as unknown as UkeLocationWithPermits[];
-    const ukeLocation = ukeLocations.find((loc) => loc.id === locationId);
+    const ukeLocation = locationById.get(locationId) as UkeLocationWithPermits | undefined;
     if (!ukeLocation) return;
 
     pendingUkeLocationId.current = null;
@@ -297,7 +302,7 @@ export function StationsLayer({
     const ukeStations = groupPermitsByStation(ukeLocation.permits ?? [], ukeLocation);
     showPopup([location.longitude, location.latitude], location, null, ukeStations, filters.source);
     onPopupLocationChange({ locationId, source: filters.source });
-  }, [map, locations, filters.source, showPopup, onPopupLocationChange]);
+  }, [map, locations, filters.source, showPopup, onPopupLocationChange, locationById]);
 
   const handleFeatureMouseDown = useCallback(
     (locationId: number) => {
@@ -317,7 +322,7 @@ export function StationsLayer({
       const [lng, lat] = coordinates;
 
       if (source === "uke") {
-        const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === locationId);
+        const ukeLocation = locationById.get(locationId) as UkeLocationWithPermits | undefined;
         const ukeStations = groupPermitsByStation(ukeLocation?.permits ?? [], ukeLocation);
         showPopup(
           coordinates,
@@ -330,7 +335,7 @@ export function StationsLayer({
         return;
       }
 
-      const locationData = locations.find((loc) => loc.id === locationId);
+      const locationData = locationById.get(locationId) as LocationWithStations | undefined;
       const location: LocationInfo = {
         id: locationId,
         city: locationData?.city ?? city,
@@ -343,7 +348,7 @@ export function StationsLayer({
       showPopup(coordinates, location, locationData?.stations ?? null, null, source as StationSource);
       onPopupLocationChange({ locationId, source: source as StationSource });
     },
-    [locations, showPopup, onPopupLocationChange],
+    [locationById, showPopup, onPopupLocationChange],
   );
 
   const handleFeatureContextMenu = useCallback(
@@ -363,7 +368,7 @@ export function StationsLayer({
 
       let entries: Array<{ name: string; color: string; stationId: string }>;
       if (isUke) {
-        const ukeLocation = (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === data.locationId);
+        const ukeLocation = locationById.get(data.locationId) as UkeLocationWithPermits | undefined;
         if (!ukeLocation?.permits?.length) return null;
         const ukeStations = groupPermitsByStation(ukeLocation.permits, ukeLocation);
         entries = ukeStations.map((s) => ({
@@ -372,7 +377,7 @@ export function StationsLayer({
           stationId: s.station_id,
         }));
       } else {
-        const locationData = locations.find((loc) => loc.id === data.locationId);
+        const locationData = locationById.get(data.locationId) as LocationWithStations | undefined;
         if (!locationData?.stations?.length) return null;
         entries = locationData.stations.map((s) => ({
           name: s.operator?.name || "Unknown",
@@ -384,12 +389,12 @@ export function StationsLayer({
       if (entries.length === 0) return null;
 
       const region = isUke
-        ? (locations as unknown as UkeLocationWithPermits[]).find((loc) => loc.id === data.locationId)?.region?.name
-        : locations.find((loc) => loc.id === data.locationId)?.region?.name;
+        ? (locationById.get(data.locationId) as UkeLocationWithPermits | undefined)?.region?.name
+        : (locationById.get(data.locationId) as LocationWithStations | undefined)?.region?.name;
 
       return <StationHoverTooltipContent city={data.city} address={data.address} region={region} stations={entries} />;
     },
-    [locations, activePopupLocationId],
+    [locationById, activePopupLocationId],
   );
 
   useMapLayer({
@@ -402,7 +407,7 @@ export function StationsLayer({
     renderHoverTooltip: preferences.showMapHoverTooltip ? renderHoverTooltip : undefined,
     pointStyle: preferences.mapPointStyle,
     useZabkaMarkers,
-    blockedByLayers: filters.showPlannedMeasurements ? [PLANNED_PEM_LAYER_ID] : [],
+    blockedByLayers: filters.showPlannedMeasurements ? PLANNED_PEM_BLOCKED_LAYERS : EMPTY_BLOCKED_LAYERS,
   });
 
   useHeatmapLayer({ map, isLoaded, enabled: filters.showHeatmap, showStations: filters.showStations });
@@ -417,6 +422,7 @@ export function StationsLayer({
     enabled: azimuthEnabled,
     minZoom: preferences.azimuthsMinZoom,
     lineLength: preferences.azimuthLineLength,
+    spread: preferences.azimuthSpread,
   });
 
   useEffect(() => cleanupPopup, [cleanupPopup]);
