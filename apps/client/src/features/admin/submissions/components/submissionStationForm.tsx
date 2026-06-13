@@ -5,10 +5,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { OperatorSelect } from "@/components/operator-select";
-
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +20,10 @@ import type { ProposedLocationForm } from "@/features/submissions/types";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
 import type { Operator, SectorDraft, Station } from "@/types/station";
+
+const StationDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
 
 import { ChangeBadge } from "./common";
 
@@ -100,6 +100,7 @@ export function SubmissionStationForm({
     }
     return previous;
   }, [currentStation?.sectors, sectors]);
+  const hasNewSectors = useMemo(() => sectors.some((sector) => sector.id === undefined), [sectors]);
 
   const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
@@ -318,7 +319,7 @@ export function SubmissionStationForm({
       {!isDeleteSubmission ? (
         <SectorsPanel
           className="bg-card"
-          defaultOpen={previousAzimuthByLocalId.size > 0}
+          defaultOpen={previousAzimuthByLocalId.size > 0 || hasNewSectors}
           sectors={sectors}
           onChange={onSectorsChange}
           derivedSectorCount={derivedSectorCount}
