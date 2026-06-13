@@ -3,8 +3,8 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-05-08
-  version: 1.0.2
+    Last updated: 2026-06-13
+  version: 1.0.3
 
 servers:
   - url: https://openbts.sakilabs.com/api/v1
