@@ -1,6 +1,6 @@
 import { Add01Icon, ArrowDown01Icon, Cancel01Icon, DragDropVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type ChangeEvent, type ReactNode, memo, useCallback, useState } from "react";
+import { type ChangeEvent, type ReactNode, memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -309,6 +309,16 @@ export function SectorsPanel({
   const { t } = useTranslation(["stationDetails", "submissions"]);
   const [isFetchingSiblingSectors, setIsFetchingSiblingSectors] = useState(false);
   const [isFetchingUkeSectors, setIsFetchingUkeSectors] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => defaultOpen ?? false);
+  const mountedEmptyRef = useRef(sectors.length === 0);
+
+  const handleSectorsChange = useCallback(
+    (nextSectors: SectorDraft[]) => {
+      if (mountedEmptyRef.current && sectors.length === 0 && nextSectors.length > 0) setIsOpen(true);
+      onChange(nextSectors);
+    },
+    [onChange, sectors.length],
+  );
 
   const handleFetchSiblingSectors = useCallback(async () => {
     if (!siblingSectors || readOnly) return;
@@ -319,14 +329,14 @@ export function SectorsPanel({
         toast.info(t("siblingSectors.notFound", { ns: "submissions" }));
         return;
       }
-      onChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
+      handleSectorsChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
       toast.success(t("siblingSectors.fetched", { ns: "submissions" }));
     } catch {
       toast.error(t("siblingSectors.fetchFailed", { ns: "submissions" }));
     } finally {
       setIsFetchingSiblingSectors(false);
     }
-  }, [derivedSectorCount, onChange, readOnly, sectors, siblingSectors, t]);
+  }, [derivedSectorCount, handleSectorsChange, readOnly, sectors, siblingSectors, t]);
 
   const handleFetchUkeSectors = useCallback(async () => {
     if (!ukeSectors || readOnly) return;
@@ -337,17 +347,17 @@ export function SectorsPanel({
         toast.info(t("ukeSectors.notFound", { ns: "submissions" }));
         return;
       }
-      onChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
+      handleSectorsChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
       toast.success(t("ukeSectors.fetched", { ns: "submissions" }));
     } catch {
       toast.error(t("ukeSectors.fetchFailed", { ns: "submissions" }));
     } finally {
       setIsFetchingUkeSectors(false);
     }
-  }, [derivedSectorCount, onChange, readOnly, sectors, t, ukeSectors]);
+  }, [derivedSectorCount, handleSectorsChange, readOnly, sectors, t, ukeSectors]);
 
   return (
-    <Collapsible defaultOpen={defaultOpen}>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className={cn("border rounded-xl overflow-hidden", className)}>
         <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center justify-between">
           <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer select-none group">
@@ -391,7 +401,13 @@ export function SectorsPanel({
           </div>
         </div>
         <CollapsibleContent className="pt-2">
-          <SectorsEditor sectors={sectors} onChange={onChange} derivedSectorCount={derivedSectorCount} readOnly={readOnly} {...editorProps} />
+          <SectorsEditor
+            sectors={sectors}
+            onChange={handleSectorsChange}
+            derivedSectorCount={derivedSectorCount}
+            readOnly={readOnly}
+            {...editorProps}
+          />
         </CollapsibleContent>
       </div>
     </Collapsible>
