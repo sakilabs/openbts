@@ -30,6 +30,8 @@ export interface CellExportData {
   arfcn?: number | null; // UMTS UARFCN
   region_code?: string | null;
   is_confirmed?: boolean | null;
+  sector_index?: number;
+  sector_azimuth?: number;
   nr_bands?: Array<{ value: number; duplex: "FDD" | "TDD" | null }>; // associated NR bands at same station (for LTE cells)
   nr_band_pcis?: NRBandPCIs[];
 }
@@ -107,7 +109,7 @@ function getNTMLocation(cell: CellExportData): string {
   const locationParts = [cell.city, cell.address].filter(Boolean).join(", ");
   if (locationParts) parts.push(locationParts);
   if (cell.notes) parts.push(cell.notes);
-  return (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
+  return withSectorPrefix(cell, parts.join(" - ") || cell.station_id).replace(/;/g, ",");
 }
 
 function getBandCode(
@@ -251,8 +253,13 @@ function getDescription(cell: CellExportData): string {
   if (locationParts) parts.push(locationParts);
   if (cell.notes) parts.push(cell.notes);
 
-  const description = (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
+  const description = withSectorPrefix(cell, parts.join(" - ") || cell.station_id).replace(/;/g, ",");
   return cell.is_confirmed === false ? `[!] ${description}` : description;
+}
+
+function withSectorPrefix(cell: CellExportData, description: string): string {
+  if (cell.sector_index === undefined || cell.sector_azimuth === undefined) return description;
+  return `[S${cell.sector_index}: ${cell.sector_azimuth}°] ${description}`;
 }
 
 function uniqueNRPcis(pcis: Array<{ value: number; is_confirmed: boolean | null }>): Array<{ value: number; is_confirmed: boolean | null }> {
@@ -280,7 +287,7 @@ function formatNRBandPCIsTag(nr_band_pcis: NRBandPCIs[]): string | null {
     const pcis = b.pcis.map((pci) => `${pci.value}${pci.is_confirmed === false ? "!" : ""}`);
     return `${b.desig}:${pcis.join(",")}`;
   });
-  return `NR ${parts.join("|")}`;
+  return `NR ${parts.join(" / ")}`;
 }
 
 function getTags(cell: CellExportData): string {

@@ -11,6 +11,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Azimuth spread can now be set to `0°` to render simple direction lines instead of wedges
 - Sector assignment updates now keep related PCI values in sync
 - CLF export now marks unconfirmed cells and uncertain NR PCI data directly in descriptions
+- CLF export descriptions now include assigned sector labels and azimuths, e.g. `[S1: 120°]`
 - Analyzer warning filters now include unconfirmed cells and cells from logs that were not found in the database
 - SI2PEM planned measurements on the map now only include recent measurements from the last month
 

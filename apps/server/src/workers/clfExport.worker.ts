@@ -1,4 +1,4 @@
-import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stations, umtsCells } from "@openbts/drizzle";
+import { bands, cells, gsmCells, locations, lteCells, nrCells, operators, regions, stationSectors, stations, umtsCells } from "@openbts/drizzle";
 import { and, eq, gte, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -60,8 +60,10 @@ parentPort.on("message", async (params: WorkerParams) => {
 
     const commonSelect = {
       notes: cells.notes,
+      station_pk: stations.id,
       station_sid: stations.station_id,
       extra_address: stations.extra_address,
+      sector_id: cells.sector_id,
       operator_mnc: operators.mnc,
       latitude: locations.latitude,
       longitude: locations.longitude,
@@ -111,7 +113,6 @@ parentPort.on("message", async (params: WorkerParams) => {
       ? db
           .select({
             ...commonSelect,
-            station_pk: stations.id,
             lte_tac: lteCells.tac,
             lte_enbid: lteCells.enbid,
             lte_clid: lteCells.clid,
@@ -133,7 +134,6 @@ parentPort.on("message", async (params: WorkerParams) => {
       ? db
           .select({
             ...commonSelect,
-            station_pk: stations.id,
             nr_nrtac: nrCells.nrtac,
             nr_gnbid: nrCells.gnbid,
             nr_clid: nrCells.clid,
@@ -175,6 +175,26 @@ parentPort.on("message", async (params: WorkerParams) => {
       nrBandsQuery,
     ]);
 
+    const exportedStationIds = [
+      ...new Set([...gsmRows, ...umtsRows, ...lteRows, ...nrRows].flatMap((row) => (row.station_pk ? [row.station_pk] : []))),
+    ];
+    const stationSectorRows =
+      exportedStationIds.length > 0
+        ? await db
+            .select({ id: stationSectors.id, station_id: stationSectors.station_id, azimuth: stationSectors.azimuth })
+            .from(stationSectors)
+            .where(inArray(stationSectors.station_id, exportedStationIds))
+        : [];
+    stationSectorRows.sort((a, b) => (a.station_id === b.station_id ? a.id - b.id : a.station_id - b.station_id));
+
+    const sectorMetaById = new Map<number, { index: number; azimuth: number }>();
+    const sectorIndexByStationId = new Map<number, number>();
+    for (const sector of stationSectorRows) {
+      const index = (sectorIndexByStationId.get(sector.station_id) ?? 0) + 1;
+      sectorIndexByStationId.set(sector.station_id, index);
+      sectorMetaById.set(sector.id, { index, azimuth: sector.azimuth });
+    }
+
     const stationNsaNrBandPciMap = new Map<number, Map<string, NRBandPCIs>>();
     for (const row of nrBandRows) {
       if (!row.band_value) continue;
@@ -202,6 +222,7 @@ parentPort.on("message", async (params: WorkerParams) => {
     const clfLines: string[] = [];
 
     for (const row of gsmRows) {
+      const sectorMeta = row.sector_id ? sectorMetaById.get(row.sector_id) : undefined;
       const line = convertToCLF(
         {
           cid: row.gsm_cid ?? 0,
@@ -220,6 +241,8 @@ parentPort.on("message", async (params: WorkerParams) => {
           e_gsm: row.gsm_e_gsm ?? null,
           region_code: row.region_code ?? null,
           is_confirmed: row.is_confirmed,
+          sector_index: sectorMeta?.index,
+          sector_azimuth: sectorMeta?.azimuth,
         },
         format,
       );
@@ -227,6 +250,7 @@ parentPort.on("message", async (params: WorkerParams) => {
     }
 
     for (const row of umtsRows) {
+      const sectorMeta = row.sector_id ? sectorMetaById.get(row.sector_id) : undefined;
       const line = convertToCLF(
         {
           cid: row.umts_cid ?? 0,
@@ -247,6 +271,8 @@ parentPort.on("message", async (params: WorkerParams) => {
           address: row.extra_address ?? row.address ?? null,
           region_code: row.region_code ?? null,
           is_confirmed: row.is_confirmed,
+          sector_index: sectorMeta?.index,
+          sector_azimuth: sectorMeta?.azimuth,
         },
         format,
       );
@@ -254,6 +280,7 @@ parentPort.on("message", async (params: WorkerParams) => {
     }
 
     for (const row of lteRows) {
+      const sectorMeta = row.sector_id ? sectorMetaById.get(row.sector_id) : undefined;
       const line = convertToCLF(
         {
           cid: row.lte_enbid ?? 0,
@@ -277,6 +304,8 @@ parentPort.on("message", async (params: WorkerParams) => {
           region_code: row.region_code ?? null,
           is_confirmed: row.is_confirmed,
           nr_band_pcis: row.station_pk ? [...(stationNsaNrBandPciMap.get(row.station_pk)?.values() ?? [])] : undefined,
+          sector_index: sectorMeta?.index,
+          sector_azimuth: sectorMeta?.azimuth,
         },
         format,
       );
@@ -285,6 +314,7 @@ parentPort.on("message", async (params: WorkerParams) => {
 
     for (const row of nrRows) {
       const nr_band_pcis = stationNrBandPciMap.get(row.station_pk) ? [...stationNrBandPciMap.get(row.station_pk)!.values()] : undefined;
+      const sectorMeta = row.sector_id ? sectorMetaById.get(row.sector_id) : undefined;
       const line = convertToCLF(
         {
           cid: row.nr_gnbid ?? 0,
@@ -308,6 +338,8 @@ parentPort.on("message", async (params: WorkerParams) => {
           region_code: row.region_code ?? null,
           is_confirmed: row.is_confirmed,
           nr_band_pcis,
+          sector_index: sectorMeta?.index,
+          sector_azimuth: sectorMeta?.azimuth,
         },
         format,
       );
