@@ -1224,9 +1224,9 @@ packages:
 
   '@better-auth/drizzle-adapter@https://pkg.pr.new/@better-auth/drizzle-adapter@9489':
     resolution: {tarball: https://pkg.pr.new/@better-auth/drizzle-adapter@9489}
-    version: 1.7.0-beta.2
+    version: 1.7.0-beta.3
     peerDependencies:
-      '@better-auth/core': ^1.7.0-beta.2
+      '@better-auth/core': ^1.7.0-beta.3
       '@better-auth/utils': 0.4.0
       drizzle-orm: ^0.45.2 || >=1.0.0-rc.1 <2.0.0
     peerDependenciesMeta:

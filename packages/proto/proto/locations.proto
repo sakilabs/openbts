@@ -5,7 +5,7 @@ package openbts.locations;
 
 message Sector {
   int32 id = 1;
-  int32 azimuth = 2;
+  optional int32 azimuth = 2;
 }
 
 message LocationStation {
