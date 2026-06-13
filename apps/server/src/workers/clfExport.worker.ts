@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { parentPort } from "node:worker_threads";
 
 import db from "../database/psql.js";
-import { type ClfFormat, convertToCLF } from "../utils/clf-export.js";
+import { type ClfFormat, type NRBandPCIs, convertToCLF } from "../utils/clf-export.js";
 
 if (!parentPort) throw new Error("This file must be run as a worker thread");
 
@@ -71,6 +71,7 @@ parentPort.on("message", async (params: WorkerParams) => {
       band_value: bands.value,
       band_name: bands.name,
       band_duplex: bands.duplex,
+      is_confirmed: cells.is_confirmed,
     };
 
     const gsmQuery = runGsm
@@ -151,7 +152,13 @@ parentPort.on("message", async (params: WorkerParams) => {
       : null;
 
     const nrBandsQuery = db
-      .select({ station_id: cells.station_id, band_value: bands.value, band_duplex: bands.duplex, nr_pci: nrCells.pci })
+      .select({
+        station_id: cells.station_id,
+        band_value: bands.value,
+        band_duplex: bands.duplex,
+        nr_pci: nrCells.pci,
+        is_confirmed: cells.is_confirmed,
+      })
       .from(cells)
       .innerJoin(nrCells, and(eq(nrCells.cell_id, cells.id), eq(nrCells.type, "nsa")))
       .innerJoin(bands, and(eq(cells.band_id, bands.id), eq(bands.variant, "commercial")))
@@ -168,24 +175,26 @@ parentPort.on("message", async (params: WorkerParams) => {
       nrBandsQuery,
     ]);
 
-    const stationNsaNrBandPciMap = new Map<number, Map<string, { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>>();
+    const stationNsaNrBandPciMap = new Map<number, Map<string, NRBandPCIs>>();
     for (const row of nrBandRows) {
       if (!row.band_value) continue;
       const key = `${row.band_value}:${row.band_duplex ?? "null"}`;
       const bandMap = stationNsaNrBandPciMap.get(row.station_id) ?? new Map();
-      const entry = bandMap.get(key) ?? { value: row.band_value, duplex: row.band_duplex ?? null, pcis: [] };
-      if (row.nr_pci !== null && row.nr_pci !== undefined && !entry.pcis.includes(row.nr_pci)) entry.pcis.push(row.nr_pci);
+      const entry = bandMap.get(key) ?? { value: row.band_value, duplex: row.band_duplex ?? null, pcis: [], has_missing_pci: false };
+      if (row.nr_pci !== null && row.nr_pci !== undefined) entry.pcis.push({ value: row.nr_pci, is_confirmed: row.is_confirmed });
+      if (row.nr_pci === null || row.nr_pci === undefined) entry.has_missing_pci = true;
       bandMap.set(key, entry);
       stationNsaNrBandPciMap.set(row.station_id, bandMap);
     }
 
-    const stationNrBandPciMap = new Map<number, Map<string, { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>>();
+    const stationNrBandPciMap = new Map<number, Map<string, NRBandPCIs>>();
     for (const row of nrRows) {
       if (!row.station_pk || !row.band_value) continue;
       const key = `${row.band_value}:${row.band_duplex ?? "null"}`;
       const bandMap = stationNrBandPciMap.get(row.station_pk) ?? new Map();
-      const entry = bandMap.get(key) ?? { value: row.band_value, duplex: row.band_duplex ?? null, pcis: [] };
-      if (row.nr_pci !== null && !entry.pcis.includes(row.nr_pci)) entry.pcis.push(row.nr_pci);
+      const entry = bandMap.get(key) ?? { value: row.band_value, duplex: row.band_duplex ?? null, pcis: [], has_missing_pci: false };
+      if (row.nr_pci !== null && row.nr_pci !== undefined) entry.pcis.push({ value: row.nr_pci, is_confirmed: row.is_confirmed });
+      if (row.nr_pci === null || row.nr_pci === undefined) entry.has_missing_pci = true;
       bandMap.set(key, entry);
       stationNrBandPciMap.set(row.station_pk, bandMap);
     }
@@ -210,6 +219,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           address: row.extra_address ?? row.address ?? null,
           e_gsm: row.gsm_e_gsm ?? null,
           region_code: row.region_code ?? null,
+          is_confirmed: row.is_confirmed,
         },
         format,
       );
@@ -236,6 +246,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           city: row.city ?? null,
           address: row.extra_address ?? row.address ?? null,
           region_code: row.region_code ?? null,
+          is_confirmed: row.is_confirmed,
         },
         format,
       );
@@ -264,6 +275,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           city: row.city ?? null,
           address: row.extra_address ?? row.address ?? null,
           region_code: row.region_code ?? null,
+          is_confirmed: row.is_confirmed,
           nr_band_pcis: row.station_pk ? [...(stationNsaNrBandPciMap.get(row.station_pk)?.values() ?? [])] : undefined,
         },
         format,
@@ -294,6 +306,7 @@ parentPort.on("message", async (params: WorkerParams) => {
           city: row.city ?? null,
           address: row.extra_address ?? row.address ?? null,
           region_code: row.region_code ?? null,
+          is_confirmed: row.is_confirmed,
           nr_band_pcis,
         },
         format,

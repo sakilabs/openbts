@@ -46,6 +46,8 @@
     "pciMissing": "PCI missing",
     "pciMissingFromDb": "This value is missing from the database",
     "enbidOnly": "eNBID only",
+    "notConfirmed": "Unconfirmed cells",
+    "notFound": "Not found in database",
     "dbValue": "Value from database"
   },
   "errors": {

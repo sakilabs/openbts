@@ -29,8 +29,16 @@ export interface CellExportData {
   e_gsm?: boolean | null;
   arfcn?: number | null; // UMTS UARFCN
   region_code?: string | null;
+  is_confirmed?: boolean | null;
   nr_bands?: Array<{ value: number; duplex: "FDD" | "TDD" | null }>; // associated NR bands at same station (for LTE cells)
-  nr_band_pcis?: Array<{ value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }>;
+  nr_band_pcis?: NRBandPCIs[];
+}
+
+export interface NRBandPCIs {
+  value: number;
+  duplex: "FDD" | "TDD" | null;
+  pcis: Array<{ value: number; is_confirmed: boolean | null }>;
+  has_missing_pci: boolean;
 }
 
 const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: number }>>> = {
@@ -243,16 +251,35 @@ function getDescription(cell: CellExportData): string {
   if (locationParts) parts.push(locationParts);
   if (cell.notes) parts.push(cell.notes);
 
-  return (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
+  const description = (parts.join(" - ") || cell.station_id).replace(/;/g, ",");
+  return cell.is_confirmed === false ? `[!] ${description}` : description;
 }
 
-function formatNRBandPCIsTag(nr_band_pcis: { value: number; duplex: "FDD" | "TDD" | null; pcis: number[] }[]): string | null {
+function uniqueNRPcis(pcis: Array<{ value: number; is_confirmed: boolean | null }>): Array<{ value: number; is_confirmed: boolean | null }> {
+  const byValue = new Map<number, { value: number; is_confirmed: boolean | null }>();
+  for (const pci of pcis) {
+    const existing = byValue.get(pci.value);
+    if (!existing) byValue.set(pci.value, pci);
+    else if (pci.is_confirmed === false) existing.is_confirmed = false;
+  }
+  return [...byValue.values()];
+}
+
+function formatNRBandPCIsTag(nr_band_pcis: NRBandPCIs[]): string | null {
   const entries = nr_band_pcis
-    .map((b) => ({ desig: getNrDesignation(b.value, b.duplex), pcis: [...new Set(b.pcis)].sort((a, c) => a - c) }))
-    .filter((b): b is { desig: string; pcis: number[] } => b.desig !== null)
+    .map((b) => ({
+      desig: getNrDesignation(b.value, b.duplex),
+      pcis: uniqueNRPcis(b.pcis).sort((a, c) => a.value - c.value),
+      has_missing_pci: b.has_missing_pci,
+    }))
+    .filter((b): b is { desig: string; pcis: Array<{ value: number; is_confirmed: boolean | null }>; has_missing_pci: boolean } => b.desig !== null)
     .sort((a, b) => Number.parseInt(a.desig.slice(1), 10) - Number.parseInt(b.desig.slice(1), 10));
   if (entries.length === 0) return null;
-  const parts = entries.map((b) => (b.pcis.length > 0 ? `${b.desig}:${b.pcis.join(",")}` : b.desig));
+  const parts = entries.map((b) => {
+    if (b.pcis.length === 0) return `${b.desig}${b.has_missing_pci ? "!" : ""}`;
+    const pcis = b.pcis.map((pci) => `${pci.value}${pci.is_confirmed === false ? "!" : ""}`);
+    return `${b.desig}:${pcis.join(",")}`;
+  });
   return `NR ${parts.join("|")}`;
 }
 

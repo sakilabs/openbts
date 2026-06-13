@@ -37,24 +37,24 @@ import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { type FileFormat, type ParsedRow, detectFormat, parseFile } from "@/lib/analyzer-parsers";
-import { postApiData, showApiError } from "@/lib/api";
-import { getOperatorColor } from "@/lib/operatorUtils";
-import type { Operator, Region } from "@/types/station";
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
-import { Separator } from "@/components/ui/separator";
 import { saveDraft } from "@/features/submissions/utils/analyzerDraftStore";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useTablePagination } from "@/hooks/useTablePageSize";
+import { type FileFormat, type ParsedRow, detectFormat, parseFile } from "@/lib/analyzer-parsers";
+import { postApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { getBandFromEARFCN, getBandFromUARFCN, getBandMhz } from "@/lib/band-utils";
 import { formatDuration } from "@/lib/format";
+import { getOperatorColor } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
+import type { Operator, Region } from "@/types/station";
+const StationDetailsDialog = lazy(() =>
+  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
+);
 
 type AnalyzerLocation = {
   id: number;
@@ -153,6 +153,14 @@ const WARNING_FILTER_ALIASES: Partial<Record<string, string[]>> = {
 const WARNING_I18N_KEY: Record<string, string> = {
   enbid_only: "warning.enbidOnly",
 };
+
+function isNotConfirmedCell(result: AnalyzerResult | undefined): boolean {
+  return !!(result?.cell && result.cell.rat !== "NR" && result.cell.is_confirmed === false);
+}
+
+function isNotFoundCell(result: AnalyzerResult | undefined): boolean {
+  return result?.status === "not_found";
+}
 
 const SORT_ASC_STYLE = { transform: "scaleY(-1)" };
 
@@ -458,6 +466,8 @@ function AnalyzerPage() {
       uarfcn_mismatch: "UARFCN · UMTS",
       earfcn_mismatch: "EARFCN · LTE",
       enbid_only: t("warning.enbidOnly"),
+      not_confirmed: t("warning.notConfirmed"),
+      not_found: t("warning.notFound"),
       mismatchGroup: t("filter.mismatchGroup"),
       otherGroup: t("filter.otherGroup"),
     }),
@@ -552,7 +562,11 @@ function AnalyzerPage() {
       if (warningFilter !== "all" && results) {
         if (!result) return acc;
         if (warningFilter === "any") {
-          if (result.warnings.length === 0) return acc;
+          if (result.warnings.length === 0 && !isNotConfirmedCell(result) && !isNotFoundCell(result)) return acc;
+        } else if (warningFilter === "not_confirmed") {
+          if (!isNotConfirmedCell(result)) return acc;
+        } else if (warningFilter === "not_found") {
+          if (!isNotFoundCell(result)) return acc;
         } else {
           const matches = WARNING_FILTER_ALIASES[warningFilter] ?? [warningFilter];
           if (!matches.some((w) => result.warnings.includes(w))) return acc;
@@ -599,7 +613,7 @@ function AnalyzerPage() {
           let band: number | null = null;
           if (row.rat === "LTE" && row.earfcn !== undefined) band = getBandFromEARFCN(row.earfcn);
           else if (row.rat === "UMTS" && row.uarfcn !== undefined) band = getBandFromUARFCN(row.uarfcn);
-          const isNotConfirmed = !!(result?.cell && result.cell.rat !== "NR" && !result.cell.is_confirmed);
+          const isNotConfirmed = isNotConfirmedCell(result);
           if (band === null && !isNotConfirmed) return <span className="text-muted-foreground text-xs">-</span>;
           const mhz = band !== null ? getBandMhz(band) : null;
           return (
@@ -1200,8 +1214,10 @@ function AnalyzerPage() {
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>{warningLabels.otherGroup}</SelectLabel>
+                    <SelectItem value="not_found">{warningLabels.not_found}</SelectItem>
                     <SelectItem value="pci_missing">{warningLabels.pci_missing}</SelectItem>
                     <SelectItem value="enbid_only">{warningLabels.enbid_only}</SelectItem>
+                    <SelectItem value="not_confirmed">{warningLabels.not_confirmed}</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
