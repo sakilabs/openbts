@@ -13,6 +13,7 @@ if (!connectionString) {
 }
 
 export const sql = postgres(connectionString, {
+  prepare: false,
   max: 10,
   idle_timeout: 100,
   connect_timeout: 10,
