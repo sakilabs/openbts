@@ -3624,7 +3624,7 @@ components:
       properties:
         station_id: { type: string }
         source: { type: string, enum: [map, search] }
-        date: { type: string }
+        date: { type: string, format: date-time }
         type: { type: string, enum: [planned_measurement, map_measurement, search_measurement] }
         details:
           oneOf:

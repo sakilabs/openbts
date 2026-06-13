@@ -10,6 +10,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
 import { syncStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
+import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidation.js";
 import { logger } from "../../../../utils/logger.js";
 import { INSERT_OMIT, lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../utils/ratCellSchemas.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
@@ -103,6 +104,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       }
     }
   }
+
+  await validateCellARFCNsForBands(cellsData.map((cell) => ({ rat: cell.rat, band_id: cell.band_id, details: cell.details })));
 
   try {
     const station = await db.transaction(async (tx) => {

@@ -1,3 +1,7 @@
 {
-  "extends": ["./packages/typescript-configs/base.json"]
+  "extends": ["./packages/typescript-configs/base.json"],
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "exclude": ["node_modules", "**/dist/**", "**/build/**"]
 }

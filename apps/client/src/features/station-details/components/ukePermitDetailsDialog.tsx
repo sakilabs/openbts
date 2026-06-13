@@ -22,7 +22,7 @@ import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
-import { formatFullDate, formatRelativeTime } from "@/lib/format";
+import { formatDayMonthYear, formatFullDate, formatRelativeTime } from "@/lib/format";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import type { UkeStation } from "@/types/station";
@@ -237,6 +237,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                         <DropdownMenuContent align="start" sideOffset={4} className="min-w-72">
                           {pemReports?.map((report) => {
                             const Icon = report.source === "search" ? FileSearchIcon : GlobalIcon;
+                            const label = report.source === "map" ? "generated" : "search";
                             return (
                               <DropdownMenuItem
                                 key={`${report.station_id}_${report.date}`}
@@ -246,7 +247,7 @@ export function UkePermitDetailsDialog({ station, onClose }: UkeStationDetailsDi
                                 <div className="flex-1 justify-between">
                                   <span className="text-sm block">{report.details.lab_name}</span>
                                   <span className="text-[11px] text-muted-foreground">
-                                    {report.date} | {t(`common:labels.${report.source}`)}
+                                    {formatDayMonthYear(report.date)} | {tCommon(`labels.${label}`)}
                                   </span>
                                 </div>
                               </DropdownMenuItem>

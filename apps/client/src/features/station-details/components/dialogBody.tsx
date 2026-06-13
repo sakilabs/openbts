@@ -26,6 +26,7 @@ import { RAT_ORDER } from "@/features/shared/rat";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { fetchApiData } from "@/lib/api";
+import { formatDayMonthYear } from "@/lib/format";
 import { formatCoordinates } from "@/lib/gpsUtils";
 import { cn } from "@/lib/utils";
 import type { Sector, Station, StationComment } from "@/types/station";
@@ -364,7 +365,7 @@ export function StationDetailsBody({
                                       <div className="flex-1 justify-between">
                                         <span className="text-sm block">{report.details.lab_name}</span>
                                         <span className="text-[11px] text-muted-foreground">
-                                          {report.date} | {t(`common:labels.${label}`)}
+                                          {formatDayMonthYear(report.date)} | {t(`common:labels.${label}`)}
                                         </span>
                                       </div>
                                     </DropdownMenuItem>

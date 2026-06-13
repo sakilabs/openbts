@@ -17,6 +17,7 @@ import {
   checkUMTSDuplicate,
   getOperatorIdForStation,
 } from "../../../../services/cellDuplicateCheck.service.js";
+import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidation.js";
 import { gsmInsertSchema, lteInsertSchema, nrInsertSchema, umtsInsertSchema } from "../../../../utils/ratCellSchemas.js";
 import { computeGnbidLength, makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
@@ -77,6 +78,8 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
         if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(req.body.station_id, req.body.band_id, d.pci, d.arfcn);
       }
     }
+
+    await validateCellARFCNsForBands([{ rat: req.body.rat, band_id: req.body.band_id, details: req.body.details }]);
 
     const [inserted] = await db.insert(cells).values(req.body).returning();
     if (!inserted) throw new ErrorResponse("FAILED_TO_CREATE");

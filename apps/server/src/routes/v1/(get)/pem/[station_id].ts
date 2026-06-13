@@ -33,7 +33,7 @@ const searchMeasurement = z.object({
 const PemReportResponse = z.object({
   station_id: z.string(),
   source: z.enum(["map", "search"]),
-  date: z.string(),
+  date: z.iso.datetime({ offset: true }),
   type: z.enum(["map_measurement", "search_measurement"]),
   details: z.union([mapMeasurement, searchMeasurement]),
 });
@@ -71,13 +71,32 @@ type InstallationsResponse = {
   results: InstallationResult[];
 };
 
+function parsePemDate(value: string): Date | null {
+  const si2pemDateMatch = /^(\d{2})\.(\d{2})\.(\d{4})(?: (\d{2}):(\d{2}):(\d{2}))?$/.exec(value);
+  if (si2pemDateMatch) {
+    const [, day, month, year, hour = "0", minute = "0", second = "0"] = si2pemDateMatch;
+    return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second)));
+  }
+
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function toIsoString(value: string): string {
+  const date = parsePemDate(value);
+  if (date === null) return value;
+  return date.toISOString();
+}
+
 function parsePublishedAt(value: string): number {
-  // format: "DD.MM.YYYY HH:MM:SS"
-  const [datePart, timePart] = value.split(" ");
-  if (!datePart) return 0;
-  const [day, month, year] = datePart.split(".");
-  const iso = `${year}-${month}-${day}${timePart ? `T${timePart}` : ""}`;
-  return new Date(iso).getTime();
+  return parsePemDate(value)?.getTime() ?? 0;
 }
 
 async function fetchInstallations(stationId: string, entityName: string): Promise<PemReport[] | null> {
@@ -114,7 +133,7 @@ async function fetchInstallations(stationId: string, entityName: string): Promis
     reports.push({
       station_id: r.base_station?.identity_name ?? "",
       source: "search",
-      date: r.published_at,
+      date: toIsoString(r.published_at),
       type: "search_measurement",
       details: {
         document_url: url,
@@ -178,7 +197,7 @@ function parseWmsReports(features: WmsFeature[]): PemReport[] {
     acc.push({
       station_id: identity_names ?? "",
       source: "map",
-      date,
+      date: toIsoString(date),
       type: "map_measurement",
       details: {
         document_url: url,

@@ -76,7 +76,7 @@ const EARFCN_MAP: Record<number, Partial<Record<number, { fdd?: number; tdd?: nu
   },
 };
 
-function getEarfcn(mnc: number | null | undefined, bandValue: number | null | undefined, duplex: "FDD" | "TDD" | null | undefined): number {
+function getEARFCN(mnc: number | null | undefined, bandValue: number | null | undefined, duplex: "FDD" | "TDD" | null | undefined): number {
   if (!mnc || !bandValue) return NTM_UNKNOWN;
   const entry = EARFCN_MAP[mnc]?.[bandValue];
   if (!entry) return NTM_UNKNOWN;
@@ -460,7 +460,7 @@ export function toNetMonitor(cell: CellExportData): string | null {
       const tac = cell.tac ?? 0;
       const ci = cell.ecid ?? 0;
       const pci = cell.pci ?? "";
-      const earfcn = getEarfcn(cell.operator_mnc, cell.band_value, cell.band_duplex);
+      const earfcn = getEARFCN(cell.operator_mnc, cell.band_value, cell.band_duplex);
       return `L;${mcc};${mnc};${tac};${ci};${pci};${earfcn !== NTM_UNKNOWN ? earfcn : ""};${lat};${lon};${accuracy};${description}`;
     }
     case "NR": {

@@ -11,16 +11,17 @@ import { getRuntimeSettings } from "../../../../../services/settings.service.js"
 import { approveSubmissionAction } from "../../../../../utils/submissions/actions.ts";
 
 const submissionsSelectSchema = createSelectSchema(submissions);
+const requestSchema = z
+  .object({
+    review_notes: z.string().nullable().optional(),
+  })
+  .optional();
 
 const schemaRoute = {
   params: z.object({
     id: z.coerce.string<string>(),
   }),
-  body: z
-    .object({
-      review_notes: z.string().nullable().optional(),
-    })
-    .optional(),
+  body: requestSchema,
   response: {
     200: z.object({
       data: submissionsSelectSchema,
@@ -29,7 +30,7 @@ const schemaRoute = {
 };
 
 type ReqParams = { Params: { id: string } };
-type ReqBody = { Body: { review_notes?: string } | undefined };
+type ReqBody = { Body: z.infer<typeof requestSchema> };
 type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof submissionsSelectSchema>;
 
@@ -38,8 +39,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   const { id } = req.params;
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
+
   const hasPermission = await verifyPermissions(session.user.id, { submissions: ["update"] });
   if (!hasPermission) throw new ErrorResponse("INSUFFICIENT_PERMISSIONS");
+
   const { submission } = await approveSubmissionAction({
     submissionId: id,
     reviewerId: session.user.id,

@@ -10,6 +10,7 @@ import type { ReplyPayload } from "../../../../../../interfaces/fastify.interfac
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../../../services/cellDuplicateCheck.service.js";
+import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
 import { lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../../../utils/ratCellSchemas.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
@@ -119,6 +120,22 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       }
     }
   }
+
+  await validateCellARFCNsForBands(
+    cellsData.map((cellData) => {
+      const existing = existingCells.find((cell) => cell.id === cellData.cell_id)!;
+      const effectiveBandId = cellData.band_id ?? existing.band_id;
+      const lteDetails = cellData.details as z.infer<typeof lteCellsUpdateSchema> | undefined;
+      const nrDetails = cellData.details as z.infer<typeof nrCellsUpdateSchema> | undefined;
+      const effectiveDetails =
+        existing.rat === "LTE"
+          ? { earfcn: lteDetails?.earfcn !== undefined ? lteDetails.earfcn : existing.lte?.earfcn }
+          : existing.rat === "NR"
+            ? { arfcn: nrDetails?.arfcn !== undefined ? nrDetails.arfcn : existing.nr?.arfcn }
+            : cellData.details;
+      return { rat: existing.rat, band_id: effectiveBandId, details: effectiveDetails };
+    }),
+  );
 
   try {
     const updated = await db.transaction(async (tx) => {

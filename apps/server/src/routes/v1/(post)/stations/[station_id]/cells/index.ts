@@ -17,6 +17,7 @@ import {
   checkNRPCIDuplicate,
   checkUMTSDuplicate,
 } from "../../../../../../services/cellDuplicateCheck.service.js";
+import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
 import { INSERT_OMIT, gsmInsertSchema, lteNullableFields, nrInsertSchema, umtsInsertSchema } from "../../../../../../utils/ratCellSchemas.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
@@ -114,6 +115,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, cell.band_id, d.pci, d.arfcn);
     }
   }
+
+  await validateCellARFCNsForBands(cellsData.map((cell) => ({ rat: cell.rat, band_id: cell.band_id, details: cell.details })));
 
   try {
     const created = await db

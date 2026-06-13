@@ -17,6 +17,7 @@ import z from "zod";
 import { ErrorResponse } from "../../errors.ts";
 import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../services/cellDuplicateCheck.service.ts";
 import type { DbTx } from "../../types/global.ts";
+import { formatARFCNBandErrorMessage } from "../cellARFCNValidation.ts";
 import {
   gsmInsertSchema,
   insertProposedCellDetails,
@@ -236,7 +237,7 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
         const arfcn = (details["earfcn"] ?? details["arfcn"]) as number | null | undefined;
         if (arfcn === null || arfcn === undefined) continue;
         if (!isARFCNValidForBand(cell.rat, band.value, arfcn, band.duplex))
-          throw new ErrorResponse("BAD_REQUEST", { message: `ARFCN ${arfcn} is not valid for band ${band.value} (${cell.rat})` });
+          throw new ErrorResponse("BAD_REQUEST", { message: formatARFCNBandErrorMessage(cell.rat, band.value, arfcn) });
       }
     }
   }

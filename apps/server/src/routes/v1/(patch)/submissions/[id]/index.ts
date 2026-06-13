@@ -13,6 +13,7 @@ import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
 import { checkCellDuplicatesBatch, getOperatorIdForStation } from "../../../../../services/cellDuplicateCheck.service.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
+import type { DbTx } from "../../../../../types/global.js";
 import {
   detailsSelectSchema,
   gsmInsertSchema,
@@ -78,8 +79,17 @@ type ReqBody = { Body: z.infer<typeof requestSchema> };
 type RequestData = ReqParams & ReqBody;
 type ResponseData = z.infer<typeof responseSchema>;
 type ExistingSubmission = NonNullable<Awaited<ReturnType<typeof db.query.submissions.findFirst>>>;
+type RequestBody = z.infer<typeof requestSchema>;
+type ProposedCellInput = NonNullable<RequestBody["cells"]>[number];
+type ProposedCellDetails = z.infer<typeof detailsSelectSchema>;
+type ProposedCellWithRelations = typeof proposedCells.$inferSelect & {
+  gsm: ProposedCellDetails;
+  umts: ProposedCellDetails;
+  lte: ProposedCellDetails;
+  nr: ProposedCellDetails;
+};
 
-function hasActualChanges(body: z.infer<typeof requestSchema>, existing: ExistingSubmission): boolean {
+function hasActualChanges(body: RequestBody, existing: ExistingSubmission): boolean {
   if (body.review_notes !== undefined && body.review_notes !== existing.review_notes) return true;
   if (body.submitter_note !== undefined && body.submitter_note !== existing.submitter_note) return true;
 
@@ -89,6 +99,114 @@ function hasActualChanges(body: z.infer<typeof requestSchema>, existing: Existin
   if (body.cells?.length && body.cells.some(isNonEmpty)) return true;
 
   return false;
+}
+
+function buildSubmissionUpdate(body: RequestBody): Partial<typeof submissions.$inferInsert> {
+  const updateFields: Partial<typeof submissions.$inferInsert> = { updatedAt: new Date() };
+  if (body.review_notes !== undefined) updateFields.review_notes = body.review_notes;
+  if (body.submitter_note !== undefined) updateFields.submitter_note = body.submitter_note;
+  return updateFields;
+}
+
+function getCellDuplicateEntries(cells: ProposedCellInput[]): { rat: string; details: Record<string, unknown>; excludeCellId?: number }[] {
+  return cells
+    .filter((cell) => cell.details && cell.operation !== "delete")
+    .map((cell) => ({
+      rat: cell.rat!,
+      details: cell.details as Record<string, unknown>,
+      excludeCellId: cell.target_cell_id ?? undefined,
+    }));
+}
+
+function withCellDetails({ gsm, umts, lte, nr, ...base }: ProposedCellWithRelations): ResponseData["cells"][number] {
+  return {
+    ...base,
+    details: gsm ?? umts ?? lte ?? nr ?? null,
+  };
+}
+
+async function validateCellConflicts(cells: ProposedCellInput[] | undefined, stationId: number | null): Promise<void> {
+  if (!cells || cells.length === 0) return;
+
+  validateCellDuplicates(cells);
+  const operatorId = stationId ? await getOperatorIdForStation(stationId) : null;
+  if (!operatorId) return;
+
+  const entries = getCellDuplicateEntries(cells);
+  if (entries.length > 0) await checkCellDuplicatesBatch(entries, operatorId);
+}
+
+async function replaceProposedStation(tx: DbTx, submissionId: string, station: RequestBody["station"]): Promise<void> {
+  if (!station) return;
+
+  await tx.delete(proposedStations).where(eq(proposedStations.submission_id, submissionId));
+  await tx.insert(proposedStations).values({ ...station, submission_id: submissionId } as typeof proposedStations.$inferInsert);
+}
+
+async function replaceProposedLocation(tx: DbTx, submissionId: string, location: RequestBody["location"]): Promise<void> {
+  if (!location) return;
+
+  await tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, submissionId));
+  await tx.insert(proposedLocations).values({ ...location, submission_id: submissionId } as typeof proposedLocations.$inferInsert);
+}
+
+async function replaceProposedSectors(tx: DbTx, submissionId: string, sectors: RequestBody["sectors"]): Promise<void> {
+  if (!sectors) return;
+
+  await tx.delete(proposedSectors).where(eq(proposedSectors.submission_id, submissionId));
+  if (sectors.length > 0) await tx.insert(proposedSectors).values(sectors.map((sector) => ({ ...sector, submission_id: submissionId })));
+}
+
+async function replaceProposedCells(
+  tx: DbTx,
+  submissionId: string,
+  cells: ProposedCellInput[] | undefined,
+  hasAdminPermission: boolean,
+): Promise<void> {
+  if (!cells) return;
+
+  await tx.delete(proposedCells).where(eq(proposedCells.submission_id, submissionId));
+  if (cells.length === 0) return;
+
+  const insertRows = cells.map(({ details: _details, ...cell }) => ({
+    ...cell,
+    submission_id: submissionId,
+    is_confirmed: hasAdminPermission ? (cell.is_confirmed ?? false) : false,
+    operation: cell.operation ?? "add",
+  }));
+
+  const insertedCells = await tx.insert(proposedCells).values(insertRows).returning({ id: proposedCells.id });
+  if (insertedCells.length !== cells.length) throw new ErrorResponse("FAILED_TO_UPDATE");
+
+  await Promise.all(
+    insertedCells.map((inserted, index) => {
+      const cell = cells[index];
+      if (!cell || !cell.details || cell.operation === "delete") return Promise.resolve();
+      return insertProposedCellDetails(tx, cell.rat, cell.details as Record<string, unknown>, inserted.id);
+    }),
+  );
+}
+
+async function updateSubmissionDraft(tx: DbTx, submissionId: string, body: RequestBody, hasAdminPermission: boolean): Promise<ResponseData> {
+  await tx.update(submissions).set(buildSubmissionUpdate(body)).where(eq(submissions.id, submissionId));
+
+  await Promise.all([
+    replaceProposedStation(tx, submissionId, body.station),
+    replaceProposedLocation(tx, submissionId, body.location),
+    replaceProposedSectors(tx, submissionId, body.sectors),
+    replaceProposedCells(tx, submissionId, body.cells, hasAdminPermission),
+  ]);
+
+  const [updated, sectors, rawCells] = await Promise.all([
+    tx.query.submissions.findFirst({ where: { id: submissionId } }),
+    tx.query.proposedSectors.findMany({ where: { submission_id: submissionId }, orderBy: { id: "asc" } }),
+    tx.query.proposedCells.findMany({ where: { submission_id: submissionId }, with: { gsm: true, umts: true, lte: true, nr: true } }) as Promise<
+      ProposedCellWithRelations[]
+    >,
+  ]);
+  if (!updated) throw new ErrorResponse("NOT_FOUND");
+
+  return { ...updated, sectors, cells: rawCells.map(withCellDetails) };
 }
 
 async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONBody<ResponseData>>) {
@@ -117,87 +235,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (!hasActualChanges(req.body, submission))
     throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before updating." });
 
-  if (req.body.cells && req.body.cells.length > 0) {
-    validateCellDuplicates(req.body.cells);
-    const operatorId = submission.station_id ? await getOperatorIdForStation(submission.station_id) : null;
-    if (operatorId) {
-      const entries = req.body.cells
-        .filter((c) => c.details && c.operation !== "delete")
-        .map((c) => ({ rat: c.rat!, details: c.details as Record<string, unknown>, excludeCellId: c.target_cell_id ?? undefined }));
-      await checkCellDuplicatesBatch(entries, operatorId);
-    }
-  }
+  await validateCellConflicts(req.body.cells, submission.station_id);
 
   try {
-    const result = await db.transaction(async (tx) => {
-      const updateFields: Record<string, unknown> = { updatedAt: new Date() };
-      if (req.body.review_notes !== undefined) updateFields.review_notes = req.body.review_notes;
-      if (req.body.submitter_note !== undefined) updateFields.submitter_note = req.body.submitter_note;
-
-      await tx.update(submissions).set(updateFields).where(eq(submissions.id, id));
-
-      if (req.body.station) {
-        await tx.delete(proposedStations).where(eq(proposedStations.submission_id, id));
-        await tx.insert(proposedStations).values({
-          ...req.body.station,
-          submission_id: id,
-        } as typeof proposedStations.$inferInsert);
-      }
-
-      if (req.body.location) {
-        await tx.delete(proposedLocations).where(eq(proposedLocations.submission_id, id));
-        await tx.insert(proposedLocations).values({
-          ...req.body.location,
-          submission_id: id,
-        } as typeof proposedLocations.$inferInsert);
-      }
-
-      if (req.body.sectors) {
-        await tx.delete(proposedSectors).where(eq(proposedSectors.submission_id, id));
-        if (req.body.sectors.length > 0)
-          await tx.insert(proposedSectors).values(req.body.sectors.map((sector) => ({ ...sector, submission_id: id })));
-      }
-
-      if (req.body.cells) {
-        await tx.delete(proposedCells).where(eq(proposedCells.submission_id, id));
-
-        /* eslint-disable no-await-in-loop */
-        for (const cell of req.body.cells) {
-          const { details, ...cellData } = cell;
-
-          const [base] = await tx
-            .insert(proposedCells)
-            .values({
-              ...cellData,
-              submission_id: id,
-              is_confirmed: hasAdminPermission ? (cellData.is_confirmed ?? false) : false,
-              operation: cell.operation ?? "add",
-            })
-            .returning();
-          if (!base) throw new ErrorResponse("FAILED_TO_UPDATE");
-
-          if (details && cell.operation !== "delete") {
-            await insertProposedCellDetails(tx, cell.rat, details as Record<string, unknown>, base.id);
-          }
-        }
-        /* eslint-enable no-await-in-loop */
-      }
-
-      const [updated, rawCells] = await Promise.all([
-        tx.query.submissions.findFirst({ where: { id } }),
-        tx.query.proposedCells.findMany({ where: { submission_id: id }, with: { gsm: true, umts: true, lte: true, nr: true } }),
-      ]);
-      if (!updated) throw new ErrorResponse("NOT_FOUND");
-
-      const sectors = await tx.query.proposedSectors.findMany({ where: { submission_id: id }, orderBy: { id: "asc" } });
-
-      const cells = rawCells.map(({ gsm, umts, lte, nr, ...base }) => ({
-        ...base,
-        details: gsm ?? umts ?? lte ?? nr ?? null,
-      }));
-
-      return { ...updated, sectors, cells };
-    });
+    const result = await db.transaction((tx) => updateSubmissionDraft(tx, id, req.body, hasAdminPermission));
 
     await createAuditLog(
       {
@@ -214,7 +255,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     return res.send({ data: result });
   } catch (error) {
     if (error instanceof ErrorResponse) throw error;
-    throw (new ErrorResponse("FAILED_TO_UPDATE"), { cause: error });
+    throw new ErrorResponse("FAILED_TO_UPDATE", { cause: error });
   }
 }
 

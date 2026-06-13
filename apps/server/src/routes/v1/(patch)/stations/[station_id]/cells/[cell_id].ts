@@ -15,6 +15,7 @@ import {
   checkLTEPCIDuplicate,
   checkNRPCIDuplicate,
 } from "../../../../../../services/cellDuplicateCheck.service.js";
+import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -152,6 +153,19 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
         await checkNRPCIDuplicate(station_id, effectiveBandId, d.pci, effectiveARFCN, cell_id);
       }
     }
+  }
+
+  {
+    const effectiveBandId = req.body.band_id ?? cell.band_id;
+    const lteDetails = req.body.details as z.infer<typeof lteCellsUpdateSchema> | undefined;
+    const nrDetails = req.body.details as z.infer<typeof nrCellsUpdateSchema> | undefined;
+    const effectiveDetails =
+      cell.rat === "LTE"
+        ? { earfcn: lteDetails?.earfcn !== undefined ? lteDetails.earfcn : cell.lte?.earfcn }
+        : cell.rat === "NR"
+          ? { arfcn: nrDetails?.arfcn !== undefined ? nrDetails.arfcn : cell.nr?.arfcn }
+          : req.body.details;
+    await validateCellARFCNsForBands([{ rat: cell.rat, band_id: effectiveBandId, details: effectiveDetails }]);
   }
 
   try {

@@ -53,3 +53,12 @@ export function formatShortDate(dateString: string | null, locale: string): stri
     day: "numeric",
   });
 }
+
+export function formatDayMonthYear(dateString: string | null): string {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  return `${day}.${month}.${date.getUTCFullYear()}`;
+}
