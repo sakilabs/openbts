@@ -15,6 +15,7 @@ const sectorInputSchema = z.object({
   azimuth: z.number().int().min(0).max(359),
 });
 const sectorSchema = createSelectSchema(stationSectors).omit({ station_id: true });
+const MAX_SECTORS = 15;
 
 const schemaRoute = {
   params: z.object({ station_id: z.coerce.number() }),
@@ -36,12 +37,8 @@ async function handler(req: FastifyRequest<ReqBodyParams>, res: ReplyPayload<JSO
     orderBy: { id: "asc" },
   });
 
-  const stationCells = await db.query.cells.findMany({ where: { station_id }, columns: { band_id: true } });
-  const cellsByBand = new Map<number, number>();
-  for (const cell of stationCells) cellsByBand.set(cell.band_id, (cellsByBand.get(cell.band_id) ?? 0) + 1);
-  const maxSectors = cellsByBand.size > 0 ? Math.max(...cellsByBand.values()) : 0;
-  if (sectors.length > maxSectors)
-    throw new ErrorResponse("BAD_REQUEST", { message: `Too many sectors for the station cells. Maximum allowed is ${maxSectors}` });
+  if (sectors.length > MAX_SECTORS)
+    throw new ErrorResponse("BAD_REQUEST", { message: `Too many sectors for the station. Maximum allowed is ${MAX_SECTORS}` });
 
   const result = await db.transaction(async (tx) => {
     const previousById = new Map(previousSectors.map((sector) => [sector.id, sector]));

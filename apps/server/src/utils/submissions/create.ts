@@ -31,6 +31,7 @@ import {
 
 export const submissionsSelectSchema = createSelectSchema(submissions);
 export const submissionsInsertBase = createInsertSchema(submissions).omit({ createdAt: true, updatedAt: true, submitter_id: true });
+const MAX_SECTORS = 15;
 export const proposedStationInsert = createInsertSchema(proposedStations).omit({ createdAt: true, updatedAt: true, submission_id: true }).strict();
 export const proposedLocationInsert = createInsertSchema(proposedLocations)
   .omit({ createdAt: true, updatedAt: true, submission_id: true })
@@ -95,48 +96,7 @@ export function hasMeaningfulChanges(input: SingleSubmission): boolean {
   return isNonEmpty(payload);
 }
 
-function incrementBandCount(counts: Map<number, number>, bandId: number): void {
-  counts.set(bandId, (counts.get(bandId) ?? 0) + 1);
-}
-
-function decrementBandCount(counts: Map<number, number>, bandId: number): void {
-  counts.set(bandId, Math.max((counts.get(bandId) ?? 1) - 1, 0));
-}
-
-function getMaxSectorCount(cellsInput: SingleSubmission["cells"], targetCells?: Array<{ id: number; band_id: number }>): number {
-  const counts = new Map<number, number>();
-  const targetCellById = new Map(targetCells?.map((cell) => [cell.id, cell]) ?? []);
-
-  for (const cell of targetCells ?? []) incrementBandCount(counts, cell.band_id);
-
-  if (cellsInput) {
-    for (const cell of cellsInput) {
-      const target = cell.target_cell_id !== null && cell.target_cell_id !== undefined ? targetCellById.get(cell.target_cell_id) : undefined;
-
-      if (cell.operation === "delete") {
-        if (target) decrementBandCount(counts, target.band_id);
-        continue;
-      }
-
-      if (cell.operation === "update" && cell.band_id) {
-        if (target && target.band_id !== cell.band_id) {
-          decrementBandCount(counts, target.band_id);
-          incrementBandCount(counts, cell.band_id);
-        }
-        continue;
-      }
-
-      if (cell.band_id) incrementBandCount(counts, cell.band_id);
-    }
-  }
-
-  return counts.size > 0 ? Math.max(...counts.values()) : 0;
-}
-
-function validateSectorRefs(
-  input: SingleSubmission,
-  targetStation?: { cells: Array<{ id: number; band_id: number }>; sectors: Array<{ id: number }> } | null,
-) {
+function validateSectorRefs(input: SingleSubmission, targetStation?: { sectors: Array<{ id: number }> } | null) {
   const sectorsInput = input.sectors ?? [];
   const sectorLocalIds = new Set<string>();
   for (const sector of sectorsInput) {
@@ -150,9 +110,8 @@ function validateSectorRefs(
       throw new ErrorResponse("BAD_REQUEST", { message: "One or more target sectors do not belong to the target station" });
   }
 
-  const maxSectorCount = getMaxSectorCount(input.cells, targetStation?.cells);
-  if (sectorsInput.length > maxSectorCount)
-    throw new ErrorResponse("BAD_REQUEST", { message: `Too many sectors for the submitted cells. Maximum allowed is ${maxSectorCount}` });
+  if (sectorsInput.length > MAX_SECTORS)
+    throw new ErrorResponse("BAD_REQUEST", { message: `Too many sectors for the submission. Maximum allowed is ${MAX_SECTORS}` });
 
   for (const cell of input.cells ?? []) {
     if (cell.target_sector_id !== null && cell.target_sector_id !== undefined && !targetSectorIds.has(cell.target_sector_id))
@@ -177,7 +136,6 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
           where: { id: stationId },
           with: {
             location: true,
-            cells: { columns: { id: true, band_id: true } },
             sectors: { columns: { id: true } },
           },
         })

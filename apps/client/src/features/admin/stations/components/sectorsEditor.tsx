@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { SectorDraft } from "@/types/station";
 
+const MAX_SECTORS = 15;
+
 type SectorRowProps = {
   sector: SectorDraft;
   index: number;
@@ -174,7 +176,6 @@ export function SectorsEditor({
   renderPreviousAzimuth,
 }: SectorsEditorProps) {
   const { t } = useTranslation(["stationDetails", "submissions"]);
-  const maxSectors = derivedSectorCount;
 
   const handleAzimuthChange = useCallback(
     (localId: string, value: number | "") => {
@@ -192,9 +193,9 @@ export function SectorsEditor({
   );
 
   const handleAdd = useCallback(() => {
-    if (sectors.length >= maxSectors) return;
+    if (sectors.length >= MAX_SECTORS) return;
     onChange([...sectors, { _localId: newSectorLocalId(), azimuth: "" }]);
-  }, [maxSectors, sectors, onChange]);
+  }, [sectors, onChange]);
 
   return (
     <div className="space-y-4">
@@ -241,12 +242,12 @@ export function SectorsEditor({
           size="sm"
           className="mx-4 mb-4 h-8 text-xs"
           onClick={handleAdd}
-          disabled={sectors.length >= maxSectors}
+          disabled={sectors.length >= MAX_SECTORS}
         >
           <HugeiconsIcon icon={Add01Icon} className="size-3.5 mr-1.5" />
           {t("sectors.add")}
           <span className="ml-auto text-muted-foreground tabular-nums">
-            {sectors.length}/{maxSectors}
+            {sectors.length}/{MAX_SECTORS}
           </span>
         </Button>
       ) : null}
@@ -267,8 +268,8 @@ type SectorsPanelProps = SectorsEditorProps & {
   };
 };
 
-function applyFetchedAzimuths(sectors: SectorDraft[], fetchedSectors: Array<{ azimuth: number }>, maxSectors: number): SectorDraft[] {
-  const copyCount = maxSectors > 0 ? Math.min(fetchedSectors.length, maxSectors) : 0;
+function applyFetchedAzimuths(sectors: SectorDraft[], fetchedSectors: Array<{ azimuth: number }>): SectorDraft[] {
+  const copyCount = Math.min(fetchedSectors.length, MAX_SECTORS);
   const next = [...sectors];
 
   for (let i = 0; i < copyCount; i++) {
@@ -325,36 +326,36 @@ export function SectorsPanel({
     setIsFetchingSiblingSectors(true);
     try {
       const fetchedSectors = await siblingSectors.onFetch();
-      if (fetchedSectors.length === 0 || derivedSectorCount === 0) {
+      if (fetchedSectors.length === 0) {
         toast.info(t("siblingSectors.notFound", { ns: "submissions" }));
         return;
       }
-      handleSectorsChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
+      handleSectorsChange(applyFetchedAzimuths(sectors, fetchedSectors));
       toast.success(t("siblingSectors.fetched", { ns: "submissions" }));
     } catch {
       toast.error(t("siblingSectors.fetchFailed", { ns: "submissions" }));
     } finally {
       setIsFetchingSiblingSectors(false);
     }
-  }, [derivedSectorCount, handleSectorsChange, readOnly, sectors, siblingSectors, t]);
+  }, [handleSectorsChange, readOnly, sectors, siblingSectors, t]);
 
   const handleFetchUkeSectors = useCallback(async () => {
     if (!ukeSectors || readOnly) return;
     setIsFetchingUkeSectors(true);
     try {
       const fetchedSectors = await ukeSectors.onFetch();
-      if (fetchedSectors.length === 0 || derivedSectorCount === 0) {
+      if (fetchedSectors.length === 0) {
         toast.info(t("ukeSectors.notFound", { ns: "submissions" }));
         return;
       }
-      handleSectorsChange(applyFetchedAzimuths(sectors, fetchedSectors, derivedSectorCount));
+      handleSectorsChange(applyFetchedAzimuths(sectors, fetchedSectors));
       toast.success(t("ukeSectors.fetched", { ns: "submissions" }));
     } catch {
       toast.error(t("ukeSectors.fetchFailed", { ns: "submissions" }));
     } finally {
       setIsFetchingUkeSectors(false);
     }
-  }, [derivedSectorCount, handleSectorsChange, readOnly, sectors, t, ukeSectors]);
+  }, [handleSectorsChange, readOnly, sectors, t, ukeSectors]);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -396,7 +397,7 @@ export function SectorsPanel({
               </Button>
             ) : null}
             <span className="text-xs text-muted-foreground">
-              {sectors.length}/{derivedSectorCount}
+              {sectors.length}/{MAX_SECTORS}
             </span>
           </div>
         </div>
