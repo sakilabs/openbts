@@ -1,5 +1,10 @@
 upstream sora_backend {
-    server 127.0.0.1:3031;
+    least_conn;
+    server 127.0.0.1:3031 max_fails=3 fail_timeout=10s;
+    server 127.0.0.1:3032 max_fails=3 fail_timeout=10s;
+    server 127.0.0.1:3033 max_fails=3 fail_timeout=10s;
+    server 127.0.0.1:3034 max_fails=3 fail_timeout=10s;
+    keepalive 64;
 }
 
 server {
@@ -34,6 +39,8 @@ server {
 
     location /uploads {
         proxy_pass http://sora_backend/uploads;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_buffering off;
@@ -43,6 +50,8 @@ server {
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Server $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_pass http://sora_backend/api;
         proxy_pass_request_headers on;
         proxy_buffering off;
