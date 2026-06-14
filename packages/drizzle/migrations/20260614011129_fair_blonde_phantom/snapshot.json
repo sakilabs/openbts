@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "c8c8809a-e799-4592-94e9-75615c781785",
+  "id": "56431daa-5298-4dc0-990c-c2e6e5fcb5bc",
   "prevIds": ["92e8bf4d-ec61-4aed-bfd8-a3aa851bcc51"],
   "ddl": [
     {
@@ -7536,6 +7536,90 @@
           "opclass": null
         },
         {
+          "value": "id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uke_permits_location_id_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "uke_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "location_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "createdAt",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uke_permits_location_created_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "uke_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "createdAt",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "location_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uke_permits_created_at_location_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "uke_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "location_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
           "value": "operator_id",
           "isExpression": false,
           "asc": true,
@@ -7556,6 +7640,48 @@
       "method": "btree",
       "concurrently": false,
       "name": "uke_permits_location_operator_band_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "uke_permits"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "location_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "operator_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "band_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "uke_permits_location_operator_band_id_idx",
       "entityType": "indexes",
       "schema": "public",
       "table": "uke_permits"
