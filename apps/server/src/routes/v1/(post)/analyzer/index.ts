@@ -8,11 +8,12 @@ import db from "../../../../database/psql.js";
 import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { type AnalyzerResult, type CellInput, type LookupMaps, groupCellsByMnc, pairKey } from "./logic.js";
+import { type AnalyzerResult, type CellGroups, type CellInput, type LookupMaps, addPair, groupCellsByMnc, pairKey } from "./logic.js";
 import { analyzerPool } from "./pool.js";
 
 const MAX_CELLS = 20_000;
 const BATCH_SIZE = 200;
+const LOOKUP_CONCURRENCY = 4;
 const CACHE_TTL_S = 5 * 60;
 
 const dateTime = z.union([z.date().transform((d) => d.toISOString()), z.iso.datetime()]);
@@ -111,191 +112,203 @@ const STATION_WITH = {
 const STATION_COLS = { operator_id: false, location_id: false, status: false } as const;
 const CELL_COLS = { station_id: false } as const;
 
-async function executeLookups(groups: ReturnType<typeof groupCellsByMnc>): Promise<LookupMaps<AnalyzerStation>> {
-  const gsmMap = new Map<
-    string,
-    { station: AnalyzerStation; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }
-  >();
-  const umtsRncMap = new Map<
-    string,
-    {
-      station: AnalyzerStation;
-      cell_id: number;
-      band_id: number | null;
-      rnc: number;
-      cid: number;
-      lac: number | null;
-      arfcn: number | null;
-      is_confirmed: boolean | undefined;
-    }
-  >();
-  const umtsLacMap = new Map<
-    string,
-    {
-      station: AnalyzerStation;
-      cell_id: number;
-      band_id: number | null;
-      rnc: number;
-      cid: number;
-      lac: number | null;
-      arfcn: number | null;
-      is_confirmed: boolean | undefined;
-    }
-  >();
-  const lteMap = new Map<
-    string,
-    {
-      station: AnalyzerStation;
-      cell_id: number;
-      band_id: number | null;
-      enbid: number;
-      clid: number;
-      tac: number | null;
-      pci: number | null;
-      earfcn: number | null;
-      is_confirmed: boolean | undefined;
-    }
-  >();
-  const lteEnbidMap = new Map<
-    string,
-    { station: AnalyzerStation; cell_id: number; band_id: number | null; enbid: number; is_confirmed: boolean | undefined }
-  >();
+type LookupTask = () => Promise<void>;
 
-  const promises: Promise<void>[] = [];
+function chunks<T>(items: Iterable<T>): T[][] {
+  const values = [...items];
+  const result: T[][] = [];
+  for (let i = 0; i < values.length; i += BATCH_SIZE) result.push(values.slice(i, i + BATCH_SIZE));
+  return result;
+}
 
-  for (const [mnc, pairMap] of groups.gsmByMnc) {
-    for (let i = 0, pairs = [...pairMap.values()]; i < pairs.length; i += BATCH_SIZE) {
-      const chunk = pairs.slice(i, i + BATCH_SIZE);
-      promises.push(
-        db.query.gsmCells
-          .findMany({
-            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
-            with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
-          })
-          .then((rows) => {
-            for (const row of rows)
-              gsmMap.set(pairKey(mnc, row.lac, row.cid), {
-                station: row.cell.station as unknown as AnalyzerStation,
-                cell_id: row.cell_id,
-                band_id: row.cell.band_id,
-                lac: row.lac,
-                cid: row.cid,
-                is_confirmed: row.cell.is_confirmed,
-              });
-          }),
-      );
+function addLookupTasks<TGroup, TItem>(
+  groups: ReadonlyMap<number, TGroup>,
+  tasks: LookupTask[],
+  getItems: (group: TGroup) => Iterable<TItem>,
+  runLookup: (mnc: number, chunk: TItem[]) => Promise<void>,
+): void {
+  for (const [mnc, group] of groups) for (const chunk of chunks(getItems(group))) tasks.push(() => runLookup(mnc, chunk));
+}
+
+async function runLookupTasks(tasks: LookupTask[]): Promise<void> {
+  let nextTaskIndex = 0;
+
+  async function runNext(): Promise<void> {
+    while (nextTaskIndex < tasks.length) {
+      const task = tasks[nextTaskIndex];
+      nextTaskIndex += 1;
+      if (task === undefined) return;
+      await task();
     }
   }
 
-  for (const [mnc, pairMap] of groups.umtsRncByMnc) {
-    for (let i = 0, pairs = [...pairMap.values()]; i < pairs.length; i += BATCH_SIZE) {
-      const chunk = pairs.slice(i, i + BATCH_SIZE);
-      promises.push(
-        db.query.umtsCells
-          .findMany({
-            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([rnc, cid]) => ({ rnc, cid })) },
-            with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
-          })
-          .then((rows) => {
-            for (const row of rows)
-              umtsRncMap.set(pairKey(mnc, row.rnc, row.cid), {
-                station: row.cell.station as unknown as AnalyzerStation,
-                cell_id: row.cell_id,
-                band_id: row.cell.band_id,
-                rnc: row.rnc,
-                cid: row.cid,
-                lac: row.lac ?? null,
-                arfcn: row.arfcn ?? null,
-                is_confirmed: row.cell.is_confirmed ?? null,
-              });
-          }),
-      );
-    }
-  }
+  await Promise.all(Array.from({ length: Math.min(LOOKUP_CONCURRENCY, tasks.length) }, runNext));
+}
 
-  for (const [mnc, pairMap] of groups.umtsLacByMnc) {
-    for (let i = 0, pairs = [...pairMap.values()]; i < pairs.length; i += BATCH_SIZE) {
-      const chunk = pairs.slice(i, i + BATCH_SIZE);
-      promises.push(
-        db.query.umtsCells
-          .findMany({
-            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
-            with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
-          })
-          .then((rows) => {
-            for (const row of rows) {
-              if (row.lac !== null)
-                umtsLacMap.set(pairKey(mnc, row.lac, row.cid), {
-                  station: row.cell.station as unknown as AnalyzerStation,
-                  cell_id: row.cell_id,
-                  band_id: row.cell.band_id,
-                  rnc: row.rnc,
-                  cid: row.cid,
-                  lac: row.lac,
-                  arfcn: row.arfcn ?? null,
-                  is_confirmed: row.cell.is_confirmed ?? null,
-                });
-            }
-          }),
-      );
-    }
+function getMissingUMTSLACGroups(inputCells: CellInput[], umtsRNCMap: LookupMaps<AnalyzerStation>["umtsRncMap"]): CellGroups["umtsLacByMnc"] {
+  const groups: CellGroups["umtsLacByMnc"] = new Map();
+  for (const cell of inputCells) {
+    if (cell.rat !== "UMTS") continue;
+    const hasPrimary = cell.rnc !== null && umtsRNCMap.has(pairKey(cell.mnc, cell.rnc, cell.cid));
+    if (!hasPrimary) addPair(groups, cell.mnc, cell.lac, cell.cid);
   }
+  return groups;
+}
 
-  for (const [mnc, pairMap] of groups.lteByMnc) {
-    for (let i = 0, pairs = [...pairMap.values()]; i < pairs.length; i += BATCH_SIZE) {
-      const chunk = pairs.slice(i, i + BATCH_SIZE);
-      promises.push(
-        db.query.lteCells
-          .findMany({
-            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([enbid, clid]) => ({ enbid, clid })) },
-            with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
-          })
-          .then((rows) => {
-            for (const row of rows)
-              lteMap.set(pairKey(mnc, row.enbid, row.clid), {
-                station: row.cell.station as unknown as AnalyzerStation,
-                cell_id: row.cell_id,
-                band_id: row.cell.band_id,
-                enbid: row.enbid,
-                clid: row.clid,
-                tac: row.tac ?? null,
-                pci: row.pci ?? null,
-                earfcn: row.earfcn ?? null,
-                is_confirmed: row.cell.is_confirmed ?? null,
-              });
-          }),
-      );
+function getMissingLTEENBIDGroups(inputCells: CellInput[], lteMap: LookupMaps<AnalyzerStation>["lteMap"]): CellGroups["lteEnbidsByMnc"] {
+  const groups: CellGroups["lteEnbidsByMnc"] = new Map();
+  for (const cell of inputCells) {
+    if (cell.rat !== "LTE" || lteMap.has(pairKey(cell.mnc, cell.enbid, cell.clid))) continue;
+    let enbids = groups.get(cell.mnc);
+    if (!enbids) {
+      enbids = new Set();
+      groups.set(cell.mnc, enbids);
     }
+    enbids.add(cell.enbid);
   }
+  return groups;
+}
 
-  for (const [mnc, enbidSet] of groups.lteEnbidsByMnc) {
-    for (let i = 0, enbids = [...enbidSet]; i < enbids.length; i += BATCH_SIZE) {
-      const chunk = enbids.slice(i, i + BATCH_SIZE);
-      promises.push(
-        db.query.lteCells
-          .findMany({
-            where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map((enbid) => ({ enbid })) },
-            with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
-          })
-          .then((rows) => {
-            for (const row of rows) {
-              const key = `${mnc}:${row.enbid}`;
-              if (!lteEnbidMap.has(key))
-                lteEnbidMap.set(key, {
-                  station: row.cell.station as unknown as AnalyzerStation,
-                  cell_id: row.cell_id,
-                  band_id: row.cell.band_id,
-                  enbid: row.enbid,
-                  is_confirmed: row.cell.is_confirmed,
-                });
-            }
-          }),
-      );
-    }
-  }
+async function executeLookups(inputCells: CellInput[], groups: CellGroups): Promise<LookupMaps<AnalyzerStation>> {
+  const maps: LookupMaps<AnalyzerStation> = {
+    gsmMap: new Map(),
+    umtsRncMap: new Map(),
+    umtsLacMap: new Map(),
+    lteMap: new Map(),
+    lteEnbidMap: new Map(),
+  };
 
-  await Promise.all(promises);
-  return { gsmMap, umtsRncMap, umtsLacMap, lteMap, lteEnbidMap };
+  const primaryTasks: LookupTask[] = [];
+  const fallbackTasks: LookupTask[] = [];
+
+  addLookupTasks(
+    groups.gsmByMnc,
+    primaryTasks,
+    (pairMap) => pairMap.values(),
+    async (mnc, chunk) => {
+      const rows = await db.query.gsmCells.findMany({
+        where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
+        with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
+      });
+
+      for (const row of rows)
+        maps.gsmMap.set(pairKey(mnc, row.lac, row.cid), {
+          station: row.cell.station as unknown as AnalyzerStation,
+          cell_id: row.cell_id,
+          band_id: row.cell.band_id,
+          lac: row.lac,
+          cid: row.cid,
+          is_confirmed: row.cell.is_confirmed,
+        });
+    },
+  );
+
+  addLookupTasks(
+    groups.umtsRncByMnc,
+    primaryTasks,
+    (pairMap) => pairMap.values(),
+    async (mnc, chunk) => {
+      const rows = await db.query.umtsCells.findMany({
+        where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([rnc, cid]) => ({ rnc, cid })) },
+        with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
+      });
+
+      for (const row of rows)
+        maps.umtsRncMap.set(pairKey(mnc, row.rnc, row.cid), {
+          station: row.cell.station as unknown as AnalyzerStation,
+          cell_id: row.cell_id,
+          band_id: row.cell.band_id,
+          rnc: row.rnc,
+          cid: row.cid,
+          lac: row.lac ?? null,
+          arfcn: row.arfcn ?? null,
+          is_confirmed: row.cell.is_confirmed,
+        });
+    },
+  );
+
+  addLookupTasks(
+    groups.lteByMnc,
+    primaryTasks,
+    (pairMap) => pairMap.values(),
+    async (mnc, chunk) => {
+      const rows = await db.query.lteCells.findMany({
+        where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([enbid, clid]) => ({ enbid, clid })) },
+        with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
+      });
+
+      for (const row of rows)
+        maps.lteMap.set(pairKey(mnc, row.enbid, row.clid), {
+          station: row.cell.station as unknown as AnalyzerStation,
+          cell_id: row.cell_id,
+          band_id: row.cell.band_id,
+          enbid: row.enbid,
+          clid: row.clid,
+          tac: row.tac ?? null,
+          pci: row.pci ?? null,
+          earfcn: row.earfcn ?? null,
+          is_confirmed: row.cell.is_confirmed,
+        });
+    },
+  );
+
+  await runLookupTasks(primaryTasks);
+
+  const missingUMTSLACGroups = getMissingUMTSLACGroups(inputCells, maps.umtsRncMap);
+  const missingLTEENBIDGroups = getMissingLTEENBIDGroups(inputCells, maps.lteMap);
+
+  addLookupTasks(
+    missingUMTSLACGroups,
+    fallbackTasks,
+    (pairMap) => pairMap.values(),
+    async (mnc, chunk) => {
+      const rows = await db.query.umtsCells.findMany({
+        where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map(([lac, cid]) => ({ lac, cid })) },
+        with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
+      });
+
+      for (const row of rows) {
+        if (row.lac !== null)
+          maps.umtsLacMap.set(pairKey(mnc, row.lac, row.cid), {
+            station: row.cell.station as unknown as AnalyzerStation,
+            cell_id: row.cell_id,
+            band_id: row.cell.band_id,
+            rnc: row.rnc,
+            cid: row.cid,
+            lac: row.lac,
+            arfcn: row.arfcn ?? null,
+            is_confirmed: row.cell.is_confirmed,
+          });
+      }
+    },
+  );
+
+  addLookupTasks(
+    missingLTEENBIDGroups,
+    fallbackTasks,
+    (enbidSet) => enbidSet,
+    async (mnc, chunk) => {
+      const rows = await db.query.lteCells.findMany({
+        where: { cell: { station: { operator: { mnc }, status: "published" } }, OR: chunk.map((enbid) => ({ enbid })) },
+        with: { cell: { columns: CELL_COLS, with: { station: { columns: STATION_COLS, with: STATION_WITH } } } },
+      });
+
+      for (const row of rows) {
+        const key = `${mnc}:${row.enbid}`;
+        if (!maps.lteEnbidMap.has(key))
+          maps.lteEnbidMap.set(key, {
+            station: row.cell.station as unknown as AnalyzerStation,
+            cell_id: row.cell_id,
+            band_id: row.cell.band_id,
+            enbid: row.enbid,
+            is_confirmed: row.cell.is_confirmed,
+          });
+      }
+    },
+  );
+
+  await runLookupTasks(fallbackTasks);
+  return maps;
 }
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<AnalyzerResult<AnalyzerStation>[]>>) {
@@ -306,7 +319,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   if (cached) return res.send({ data: JSON.parse(cached) });
 
   const groups = groupCellsByMnc(inputCells);
-  const maps = await executeLookups(groups);
+  const maps = await executeLookups(inputCells, groups);
 
   const json = await analyzerPool.run(inputCells, maps);
   await redis.set(key, json, { EX: CACHE_TTL_S });

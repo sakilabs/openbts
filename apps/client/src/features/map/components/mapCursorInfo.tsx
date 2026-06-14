@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useMap } from "@/components/ui/map";
+import { onBeforeStyleChange, useMap } from "@/components/ui/map";
 import { Separator } from "@/components/ui/separator";
 import { usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
@@ -9,6 +9,12 @@ import { cn } from "@/lib/utils";
 import { calculateBearing, calculateDistance, calculateTA } from "../utils";
 
 const EMPTY_FC: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
+function safeSetData(source: maplibregl.GeoJSONSource | null, data: GeoJSON.GeoJSON) {
+  try {
+    void source?.setData(data);
+  } catch {}
+}
 
 type SavedMeasurement = {
   marker: { lat: number; lng: number };
@@ -54,6 +60,19 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
   const savedMeasurementsRef = useRef<SavedMeasurement[]>([]);
   const sourcesPopulated = useRef(false);
   const rafRef = useRef<number | null>(null);
+
+  const clearSourceRefs = useCallback(() => {
+    lineSourceRef.current = null;
+    circleSourceRef.current = null;
+    savedLineSourceRef.current = null;
+    savedCircleSourceRef.current = null;
+    sourcesPopulated.current = false;
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     activeMarkerRef.current = activeMarker;
   }, [activeMarker]);
@@ -68,7 +87,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
 
   const updateSavedSources = useCallback(() => {
     const measurements = savedMeasurementsRef.current;
-    void savedLineSourceRef.current?.setData({
+    safeSetData(savedLineSourceRef.current, {
       type: "FeatureCollection",
       features: measurements.map(({ marker, cursor }) => ({
         type: "Feature",
@@ -82,7 +101,8 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         },
       })),
     });
-    void savedCircleSourceRef.current?.setData(
+    safeSetData(
+      savedCircleSourceRef.current,
       circleEnabledRef.current && circleVisibleRef.current
         ? {
             type: "FeatureCollection",
@@ -118,8 +138,8 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         if (marker && cursor) {
           if (circleVisibleRef.current) {
             const radius = calculateDistance(marker.latitude, marker.longitude, cursor.lat, cursor.lng);
-            void circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
-          } else void circleSourceRef.current?.setData(EMPTY_FC);
+            safeSetData(circleSourceRef.current, generateCirclePolygon(marker.latitude, marker.longitude, radius));
+          } else safeSetData(circleSourceRef.current, EMPTY_FC);
         }
       } else if (e.key === "Escape") {
         savedMeasurementsRef.current = [];
@@ -134,6 +154,11 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    if (!map) return;
+    return onBeforeStyleChange(map, clearSourceRefs);
+  }, [map, clearSourceRefs]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -153,12 +178,12 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
     }
 
     return () => {
-      lineSourceRef.current = null;
+      clearSourceRefs();
       if (map.getStyle() === undefined) return;
       if (map.getLayer("cursor-measure-line")) map.removeLayer("cursor-measure-line");
       if (map.getSource("cursor-measure-line")) map.removeSource("cursor-measure-line");
     };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, clearSourceRefs]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -188,13 +213,13 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
     }
 
     return () => {
-      circleSourceRef.current = null;
+      clearSourceRefs();
       if (map.getStyle() === undefined) return;
       if (map.getLayer("cursor-measure-circle-line")) map.removeLayer("cursor-measure-circle-line");
       if (map.getLayer("cursor-measure-circle-fill")) map.removeLayer("cursor-measure-circle-fill");
       if (map.getSource("cursor-measure-circle")) map.removeSource("cursor-measure-circle");
     };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, clearSourceRefs]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -211,13 +236,14 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         paint: { "line-color": "#f59f0b", "line-width": 2 },
       });
     }
+    updateSavedSources();
     return () => {
-      savedLineSourceRef.current = null;
+      clearSourceRefs();
       if (map.getStyle() === undefined) return;
       if (map.getLayer("saved-measure-lines")) map.removeLayer("saved-measure-lines");
       if (map.getSource("saved-measure-lines")) map.removeSource("saved-measure-lines");
     };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, clearSourceRefs, updateSavedSources]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -242,14 +268,15 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         paint: { "line-color": "#f59f0b", "line-width": 2 },
       });
     }
+    updateSavedSources();
     return () => {
-      savedCircleSourceRef.current = null;
+      clearSourceRefs();
       if (map.getStyle() === undefined) return;
       if (map.getLayer("saved-measure-circles-line")) map.removeLayer("saved-measure-circles-line");
       if (map.getLayer("saved-measure-circles-fill")) map.removeLayer("saved-measure-circles-fill");
       if (map.getSource("saved-measure-circles")) map.removeSource("saved-measure-circles");
     };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, clearSourceRefs, updateSavedSources]);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
@@ -266,7 +293,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
       const marker = activeMarkerRef.current;
       if (marker) {
         sourcesPopulated.current = true;
-        void lineSourceRef.current?.setData({
+        safeSetData(lineSourceRef.current, {
           type: "Feature",
           properties: {},
           geometry: {
@@ -279,12 +306,12 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
         });
         if (circleEnabledRef.current && circleVisibleRef.current) {
           const radius = calculateDistance(marker.latitude, marker.longitude, lat, lng);
-          void circleSourceRef.current?.setData(generateCirclePolygon(marker.latitude, marker.longitude, radius));
-        } else void circleSourceRef.current?.setData(EMPTY_FC);
+          safeSetData(circleSourceRef.current, generateCirclePolygon(marker.latitude, marker.longitude, radius));
+        } else safeSetData(circleSourceRef.current, EMPTY_FC);
       } else if (sourcesPopulated.current) {
         sourcesPopulated.current = false;
-        void lineSourceRef.current?.setData(EMPTY_FC);
-        void circleSourceRef.current?.setData(EMPTY_FC);
+        safeSetData(lineSourceRef.current, EMPTY_FC);
+        safeSetData(circleSourceRef.current, EMPTY_FC);
       }
     };
 
@@ -310,7 +337,7 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
 
     if (markerLat !== null && markerLng !== null && cursor) {
       sourcesPopulated.current = true;
-      void lineSourceRef.current?.setData({
+      safeSetData(lineSourceRef.current, {
         type: "Feature",
         properties: {},
         geometry: {
@@ -323,12 +350,12 @@ export function MapCursorInfo({ activeMarker, onActiveMarkerClear, className }: 
       });
       if (circleEnabled && circleVisibleRef.current) {
         const radius = calculateDistance(markerLat, markerLng, cursor.lat, cursor.lng);
-        void circleSourceRef.current?.setData(generateCirclePolygon(markerLat, markerLng, radius));
-      } else void circleSourceRef.current?.setData(EMPTY_FC);
+        safeSetData(circleSourceRef.current, generateCirclePolygon(markerLat, markerLng, radius));
+      } else safeSetData(circleSourceRef.current, EMPTY_FC);
     } else {
       sourcesPopulated.current = false;
-      void lineSourceRef.current?.setData(EMPTY_FC);
-      void circleSourceRef.current?.setData(EMPTY_FC);
+      safeSetData(lineSourceRef.current, EMPTY_FC);
+      safeSetData(circleSourceRef.current, EMPTY_FC);
     }
   }, [map, isLoaded, markerLat, markerLng, circleEnabled]);
 

@@ -461,7 +461,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           />
         </div>
 
-        <MapCursorInfo activeMarker={activeMarker} onActiveMarkerClear={onActiveMarkerClear} />
+        {!isMobile ? <MapCursorInfo activeMarker={activeMarker} onActiveMarkerClear={onActiveMarkerClear} /> : null}
 
         <div className="pointer-events-auto">
           <MapStyleSwitcher />

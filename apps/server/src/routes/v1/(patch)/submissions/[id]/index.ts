@@ -136,6 +136,19 @@ async function validateCellConflicts(cells: ProposedCellInput[] | undefined, sta
   if (entries.length > 0) await checkCellDuplicatesBatch(entries, operatorId);
 }
 
+function validateSectorInputs(sectors: RequestBody["sectors"]): void {
+  if (!sectors) return;
+
+  const localIds = new Set<string>();
+  const azimuths = new Set<number>();
+  for (const sector of sectors) {
+    if (localIds.has(sector.local_id)) throw new ErrorResponse("BAD_REQUEST", { message: "Sector local_id values must be unique" });
+    localIds.add(sector.local_id);
+    if (azimuths.has(sector.azimuth)) throw new ErrorResponse("BAD_REQUEST", { message: "Sector azimuth values must be unique" });
+    azimuths.add(sector.azimuth);
+  }
+}
+
 async function replaceProposedStation(tx: DbTx, submissionId: string, station: RequestBody["station"]): Promise<void> {
   if (!station) return;
 
@@ -235,6 +248,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   if (!hasActualChanges(req.body, submission))
     throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before updating." });
 
+  validateSectorInputs(req.body.sectors);
   await validateCellConflicts(req.body.cells, submission.station_id);
 
   try {

@@ -26,7 +26,7 @@ import type { ProposedLocationForm } from "@/features/submissions/types";
 import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { fetchApiData, showApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { Band, Cell, SectorDraft, Station } from "@/types/station";
+import type { Band, Cell, Sector, SectorDraft, Station } from "@/types/station";
 
 type LocalCell = CellDraftBase & {
   _serverId?: number;
@@ -58,13 +58,15 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
     }));
   }
 
-  const proposedTargetIds = new Set(
-    submission.cells
-      .filter((c) => (c.operation === "update" || c.operation === "delete") && c.target_cell_id !== null)
-      .map((c) => c.target_cell_id as number),
-  );
+  const proposedTargetIds = new Set<number>();
+  for (const cell of submission.cells)
+    if ((cell.operation === "update" || cell.operation === "delete") && cell.target_cell_id !== null && cell.target_cell_id !== undefined)
+      proposedTargetIds.add(cell.target_cell_id);
 
-  const unchangedCells: LocalCell[] = (currentStation?.cells ?? [])
+  const currentCells = currentStation?.cells ?? [];
+  const currentCellsById = new Map(currentCells.map((cell) => [cell.id, cell] as const));
+
+  const unchangedCells: LocalCell[] = currentCells
     .filter((c) => !proposedTargetIds.has(c.id))
     .map((c) => ({
       _localId: crypto.randomUUID(),
@@ -79,8 +81,8 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
     }));
 
   const proposedCells: LocalCell[] = submission.cells.map((cell) => {
-    if (cell.operation === "delete" && cell.target_cell_id && currentStation?.cells) {
-      const target = currentStation.cells.find((c) => c.id === cell.target_cell_id);
+    if (cell.operation === "delete" && cell.target_cell_id !== null && cell.target_cell_id !== undefined) {
+      const target = currentCellsById.get(cell.target_cell_id);
       if (target) {
         return {
           _localId: crypto.randomUUID(),
@@ -111,6 +113,71 @@ function computeInitialCells(submission: SubmissionDetail, currentStation: Stati
   });
 
   return [...unchangedCells, ...proposedCells];
+}
+
+function parseExistingSectorLocalId(localId: string): number | null {
+  if (!localId.startsWith("sector-")) return null;
+  const sectorId = Number.parseInt(localId.slice("sector-".length), 10);
+  return Number.isNaN(sectorId) ? null : sectorId;
+}
+
+function getAssignedExistingSectorId(
+  sectorLocalId: string | null | undefined,
+  draftSectorByLocalId: ReadonlyMap<string, SectorDraft>,
+  fallbackSectorId: number | null,
+): number | null {
+  if (sectorLocalId === undefined) return fallbackSectorId;
+  if (sectorLocalId === null) return null;
+  return draftSectorByLocalId.get(sectorLocalId)?.id ?? parseExistingSectorLocalId(sectorLocalId);
+}
+
+function isSectorAssignmentChanged(
+  sectorLocalId: string | null | undefined,
+  draftSectorByLocalId: ReadonlyMap<string, SectorDraft>,
+  targetSectorId: number | null,
+): boolean {
+  if (sectorLocalId === undefined) return false;
+  if (sectorLocalId === null) return targetSectorId !== null;
+
+  const draftSectorId = draftSectorByLocalId.get(sectorLocalId)?.id ?? parseExistingSectorLocalId(sectorLocalId);
+  if (draftSectorId === null) return true;
+  return draftSectorId !== targetSectorId;
+}
+
+function hasSectorAzimuthChanged(
+  sectorId: number | null,
+  currentSectorById: ReadonlyMap<number, Sector>,
+  draftSectorById: ReadonlyMap<number, SectorDraft>,
+): boolean {
+  if (sectorId === null) return false;
+  const currentSector = currentSectorById.get(sectorId);
+  const draftSector = draftSectorById.get(sectorId);
+  return currentSector !== undefined && draftSector !== undefined && draftSector.azimuth !== currentSector.azimuth;
+}
+
+function getChangedDetailKeys(oldDetails: Record<string, unknown>, newDetails: Record<string, unknown>): Set<string> {
+  const changedKeys = new Set<string>();
+  for (const key of Object.keys(oldDetails)) if (oldDetails[key] !== newDetails[key]) changedKeys.add(key);
+  for (const key of Object.keys(newDetails)) if (oldDetails[key] !== newDetails[key]) changedKeys.add(key);
+  return changedKeys;
+}
+
+function countCellOperations(cellsForRat: LocalCell[]): { added: number; modified: number; deleted: number } {
+  const counts = { added: 0, modified: 0, deleted: 0 };
+  for (const cell of cellsForRat) {
+    switch (cell.operation) {
+      case "add":
+        counts.added += 1;
+        break;
+      case "update":
+        counts.modified += 1;
+        break;
+      case "delete":
+        counts.deleted += 1;
+        break;
+    }
+  }
+  return counts;
 }
 
 function SubmissionDetailPage() {
@@ -195,9 +262,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
   const [reviewNotes, setReviewNotes] = useState(submission.review_notes ?? "");
   const initialUpdatedAt = useRef(submission.updatedAt);
 
-  const saveMutation = useSaveSubmissionMutation();
-  const approveMutation = useApproveSubmissionMutation();
-  const rejectMutation = useRejectSubmissionMutation();
+  const { mutate: saveSubmission, isPending: isSaving } = useSaveSubmissionMutation();
+  const { mutate: approveSubmission, isPending: isApproving } = useApproveSubmissionMutation();
+  const { mutate: rejectSubmission, isPending: isRejecting } = useRejectSubmissionMutation();
 
   const [stationForm, setStationForm] = useState<{
     station_id: string;
@@ -297,7 +364,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
 
   const visibleRats = useMemo(() => RAT_ORDER.filter((r) => enabledRats.includes(r)), [enabledRats]);
 
-  const isProcessing = saveMutation.isPending || approveMutation.isPending || rejectMutation.isPending;
+  const isProcessing = isSaving || isApproving || isRejecting;
 
   const checkStaleness = useCallback(async (): Promise<boolean> => {
     try {
@@ -313,8 +380,8 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     return false;
   }, [submission.id, t, queryClient]);
 
-  const handleSave = () => {
-    saveMutation.mutate(
+  const handleSave = useCallback(() => {
+    saveSubmission(
       {
         submissionId: submission.id,
         reviewNotes,
@@ -333,16 +400,16 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         onError: (error) => showApiError(error),
       },
     );
-  };
+  }, [extraForm, localCells, locationForm, reviewNotes, saveSubmission, sectors, stationForm, submission.id, t]);
 
   useSaveShortcut({
     canSave: !isReadOnly && !isProcessing,
     onSave: handleSave,
   });
 
-  const handleApprove = async () => {
+  const handleApprove = useCallback(async () => {
     if (await checkStaleness()) return;
-    approveMutation.mutate(
+    approveSubmission(
       { submissionId: submission.id, reviewNotes },
       {
         onSuccess: () => {
@@ -352,11 +419,11 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         onError: (error) => showApiError(error),
       },
     );
-  };
+  }, [approveSubmission, checkStaleness, reviewNotes, submission.id, t]);
 
-  const handleReject = async () => {
+  const handleReject = useCallback(async () => {
     if (await checkStaleness()) return;
-    rejectMutation.mutate(
+    rejectSubmission(
       { submissionId: submission.id, reviewNotes },
       {
         onSuccess: () => {
@@ -366,13 +433,14 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         onError: (error) => showApiError(error),
       },
     );
-  };
+  }, [checkStaleness, rejectSubmission, reviewNotes, submission.id, t]);
 
   const selectedOperator = useMemo(() => operators.find((o) => o.id === stationForm.operator_id), [operators, stationForm.operator_id]);
 
+  const currentOperatorId = submission.station?.operator_id ?? null;
   const currentOperator = useMemo(
-    () => (submission.station ? operators.find((o) => o.id === submission.station?.operator_id) : null),
-    [operators, submission],
+    () => (currentOperatorId !== null ? (operators.find((o) => o.id === currentOperatorId) ?? null) : null),
+    [operators, currentOperatorId],
   );
 
   const stationDiffs = useMemo(() => {
@@ -403,20 +471,37 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     return new Map(currentStation.cells.map((c) => [c.id, c]));
   }, [currentStation]);
 
-  const currentSectorLabelById = useMemo(() => {
-    const map = new Map<number, string>();
-    (currentStation?.sectors ?? []).forEach((sector, index) => map.set(sector.id, `S${index + 1} (${sector.azimuth}°)`));
+  const currentSectorById = useMemo(() => {
+    const map = new Map<number, Sector>();
+    (currentStation?.sectors ?? []).forEach((sector) => map.set(sector.id, sector));
     return map;
   }, [currentStation]);
 
-  const getSubmissionDiffBadges = useCallback(
-    (_rat: string, cellsForRat: LocalCell[]) => ({
-      added: cellsForRat.filter((c) => c.operation === "add").length,
-      modified: cellsForRat.filter((c) => c.operation === "update").length,
-      deleted: cellsForRat.filter((c) => c.operation === "delete").length,
-    }),
-    [],
-  );
+  const draftSectorByLocalId = useMemo(() => new Map(sectors.map((sector) => [sector._localId, sector] as const)), [sectors]);
+
+  const draftSectorById = useMemo(() => {
+    const map = new Map<number, SectorDraft>();
+    sectors.forEach((sector) => {
+      if (sector.id !== undefined) map.set(sector.id, sector);
+    });
+    return map;
+  }, [sectors]);
+
+  const oldSectorLabelById = useMemo(() => {
+    const draftIndexById = new Map<number, number>();
+    sectors.forEach((sector, index) => {
+      if (sector.id !== undefined) draftIndexById.set(sector.id, index);
+    });
+
+    const map = new Map<number, string>();
+    (currentStation?.sectors ?? []).forEach((sector, index) => {
+      const displayIndex = draftIndexById.get(sector.id) ?? index;
+      map.set(sector.id, `S${displayIndex + 1} (${sector.azimuth}°)`);
+    });
+    return map;
+  }, [currentStation, sectors]);
+
+  const getSubmissionDiffBadges = useCallback((_rat: string, cellsForRat: LocalCell[]) => countCellOperations(cellsForRat), []);
 
   const handleConfirmAllCellsInRat = useCallback(
     (rat: string) => {
@@ -445,11 +530,12 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
       if (!targetCell) return null;
 
       const details = (targetCell.details ?? {}) as Record<string, unknown>;
-      const changedKeys = new Set(Object.keys({ ...details, ...cell.details }).filter((k) => details[k] !== cell.details[k]));
-      const proposedTargetSectorId = cell._sectorLocalId?.startsWith("sector-")
-        ? Number.parseInt(cell._sectorLocalId.slice("sector-".length), 10)
-        : null;
-      const sectorChanged = (Number.isNaN(proposedTargetSectorId) ? null : proposedTargetSectorId) !== (targetCell.sector_id ?? null);
+      const changedKeys = getChangedDetailKeys(details, cell.details);
+      const targetSectorId = targetCell.sector_id ?? null;
+      const assignedExistingSectorId = getAssignedExistingSectorId(cell._sectorLocalId, draftSectorByLocalId, targetSectorId);
+      const sectorChanged =
+        isSectorAssignmentChanged(cell._sectorLocalId, draftSectorByLocalId, targetSectorId) ||
+        hasSectorAzimuthChanged(assignedExistingSectorId, currentSectorById, draftSectorById);
 
       return (
         <tr className="bg-amber-50/40 dark:bg-amber-950/15 border-b last:border-0">
@@ -462,7 +548,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
           {targetCell.rat !== "GSM" && <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>}
           {sectors.length > 0 && (
             <td className={cn("px-3 py-1 font-mono text-xs text-muted-foreground", sectorChanged && "text-amber-700 dark:text-amber-300")}>
-              {targetCell.sector_id ? (currentSectorLabelById.get(targetCell.sector_id) ?? "-") : "-"}
+              {targetSectorId !== null ? (oldSectorLabelById.get(targetSectorId) ?? "-") : "-"}
             </td>
           )}
           <SubmissionDiffDetailCells details={details} rat={targetCell.rat} changedKeys={changedKeys} />
@@ -472,7 +558,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
         </tr>
       );
     },
-    [currentCellsMap, isReadOnly, t],
+    [currentCellsMap, currentSectorById, draftSectorById, draftSectorByLocalId, isReadOnly, oldSectorLabelById, sectors.length, t],
   );
 
   return (

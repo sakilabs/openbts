@@ -40,6 +40,7 @@ import { NavigationLinks } from "@/features/station-details/components/navLinks"
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { type GpsFormat, usePreferences } from "@/hooks/usePreferences";
 import { formatCoordinates } from "@/lib/gpsUtils";
+import { hasReliableHoverPointer } from "@/lib/pointer";
 import { cn } from "@/lib/utils";
 
 import { Spinner } from "./spinner";
@@ -481,12 +482,21 @@ const MapComponent = forwardRef<MapRef, MapProps>(function MapComponent(
       ...viewport,
     });
 
-    // MapLibre sets _style = null mid setStyle(). A mousemove in that window crashes on getLayer()
-    // Return undefined instead of throwing, same as "layer not found"
+    // MapLibre sets _style = null mid setStyle(). Return undefined from style accessors
+    // instead of throwing, same as "layer/source not found".
     const _originalGetLayer = map.getLayer.bind(map);
     map.getLayer = (id: string) => {
       try {
         return _originalGetLayer(id);
+      } catch {
+        return undefined;
+      }
+    };
+
+    const _originalGetSource = map.getSource.bind(map);
+    map.getSource = (id: string) => {
+      try {
+        return _originalGetSource(id);
       } catch {
         return undefined;
       }
@@ -1602,6 +1612,8 @@ function MapRoute({
   useEffect(() => {
     if (!isLoaded || !map || !interactive) return;
 
+    const useHoverListeners = hasReliableHoverPointer();
+
     const handleClick = () => {
       onClick?.();
     };
@@ -1616,14 +1628,17 @@ function MapRoute({
 
     const attach = () => {
       map.on("click", layerId, handleClick);
+      if (!useHoverListeners) return;
       map.on("mouseenter", layerId, handleMouseEnter);
       map.on("mouseleave", layerId, handleMouseLeave);
     };
 
     const detach = () => {
       map.off("click", layerId, handleClick);
+      if (!useHoverListeners) return;
       map.off("mouseenter", layerId, handleMouseEnter);
       map.off("mouseleave", layerId, handleMouseLeave);
+      map.getCanvas().style.cursor = "";
     };
 
     attach();
@@ -1813,6 +1828,8 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
   useEffect(() => {
     if (!isLoaded || !map) return;
 
+    const useHoverListeners = hasReliableHoverPointer();
+
     // Cluster click handler - zoom into cluster
     const handleClusterClick = async (
       e: MapMouseEvent & {
@@ -1880,6 +1897,7 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
     const attach = () => {
       map.on("click", clusterLayerId, handleClusterClick);
       map.on("click", unclusteredLayerId, handlePointClick);
+      if (!useHoverListeners) return;
       map.on("mouseenter", clusterLayerId, handleMouseEnterCluster);
       map.on("mouseleave", clusterLayerId, handleMouseLeaveCluster);
       map.on("mouseenter", unclusteredLayerId, handleMouseEnterPoint);
@@ -1889,10 +1907,12 @@ function MapClusterLayer<P extends GeoJSON.GeoJsonProperties = GeoJSON.GeoJsonPr
     const detach = () => {
       map.off("click", clusterLayerId, handleClusterClick);
       map.off("click", unclusteredLayerId, handlePointClick);
+      if (!useHoverListeners) return;
       map.off("mouseenter", clusterLayerId, handleMouseEnterCluster);
       map.off("mouseleave", clusterLayerId, handleMouseLeaveCluster);
       map.off("mouseenter", unclusteredLayerId, handleMouseEnterPoint);
       map.off("mouseleave", unclusteredLayerId, handleMouseLeavePoint);
+      map.getCanvas().style.cursor = "";
     };
 
     attach();

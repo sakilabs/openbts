@@ -223,6 +223,18 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
                 const hasTooltip = freqInfo || bandName;
                 const bandLabel = Number(cell.band.value) === 0 ? t("stations:cells.unknownBand") : cell.band.value;
                 const sectorInfo = cell.sector_id !== null ? sectorInfoById?.get(cell.sector_id) : undefined;
+                const nrType = rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") ? cell.details.type : null;
+                const nrTypeTooltip = nrType === "nsa" ? "Non-Standalone (LTE anchor)" : "Standalone";
+                const sectorBadge = sectorInfo ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="secondary" className="h-5 min-w-6 justify-center px-1 py-0 text-[10px] font-semibold tabular-nums cursor-help">
+                        {sectorInfo.label}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">{sectorInfo.azimuth}°</TooltipContent>
+                  </Tooltip>
+                ) : null;
                 return (
                   <tr
                     key={cell.id}
@@ -249,24 +261,21 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
                         ) : (
                           <span>{bandLabel}</span>
                         )}
-                        {sectorInfo ? (
+                        {rat !== "NR" && rat !== "GSM" ? sectorBadge : null}
+                        {nrType !== null && (
                           <Tooltip>
                             <TooltipTrigger>
                               <Badge
                                 variant="secondary"
-                                className="h-5 min-w-6 justify-center px-1 py-0 text-[10px] font-semibold tabular-nums cursor-help"
+                                className="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] px-1.5 py-0 font-medium cursor-help"
                               >
-                                {sectorInfo.label}
+                                {nrType.toUpperCase()}
                               </Badge>
                             </TooltipTrigger>
-                            <TooltipContent side="top">{sectorInfo.azimuth}°</TooltipContent>
+                            <TooltipContent side="top">{nrTypeTooltip}</TooltipContent>
                           </Tooltip>
-                        ) : null}
-                        {rat === "NR" && (cell.details?.type === "nsa" || cell.details?.type === "sa") && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
-                            {cell.details.type.toUpperCase()}
-                          </Badge>
                         )}
+                        {rat === "NR" ? sectorBadge : null}
                         {rat === "GSM" && cell.details?.e_gsm && (
                           <Tooltip>
                             <TooltipTrigger>
@@ -279,6 +288,7 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
                             </TooltipContent>
                           </Tooltip>
                         )}
+                        {rat === "GSM" ? sectorBadge : null}
                         {!cell.is_confirmed && (
                           <Tooltip>
                             <TooltipTrigger>

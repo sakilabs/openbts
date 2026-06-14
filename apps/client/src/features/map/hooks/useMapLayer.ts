@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { onBeforeStyleChange } from "@/components/ui/map";
 import zabkaLogoUrl from "@/features/station-details/components/logos/zabka.svg?url";
 import type { MapPointStyle } from "@/hooks/usePreferences";
+import { hasReliableHoverPointer } from "@/lib/pointer";
 
 import { POINT_LAYER_ID, SOURCE_ID } from "../constants";
 import { syncMarkerImages, syncPieImages } from "../pieChart";
@@ -208,6 +209,8 @@ export function useMapLayer({
   useEffect(() => {
     if (!map || !isLoaded) return;
 
+    const useHoverListeners = hasReliableHoverPointer();
+
     const ensureLayersExist = () => {
       try {
         if (!map.getSource(SOURCE_ID)) {
@@ -317,6 +320,7 @@ export function useMapLayer({
         map.on("mousedown", layerId, handleMouseDown);
         map.on("click", layerId, handleClick);
         map.on("contextmenu", layerId, handleContextMenu);
+        if (!useHoverListeners) continue;
         map.on("mouseenter", layerId, handleMouseEnter);
         map.on("mousemove", layerId, handleMouseMove);
         map.on("mouseleave", layerId, handleMouseLeave);
@@ -328,10 +332,13 @@ export function useMapLayer({
         map.off("mousedown", layerId, handleMouseDown);
         map.off("click", layerId, handleClick);
         map.off("contextmenu", layerId, handleContextMenu);
+        if (!useHoverListeners) continue;
         map.off("mouseenter", layerId, handleMouseEnter);
         map.off("mousemove", layerId, handleMouseMove);
         map.off("mouseleave", layerId, handleMouseLeave);
       }
+      if (useHoverListeners) map.getCanvas().style.cursor = "";
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
 
     ensureLayersExist();

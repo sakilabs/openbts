@@ -1,6 +1,24 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-14
+
+### 🚀 Enhancements
+
+- Analyzer lookups now run exact GSM, UMTS and LTE matches before fallback UMTS LAC and LTE eNBID searches, reducing unnecessary database work
+- Station cell tables now show NR `NSA`/`SA` pills in blue with explanatory tooltips and place sector badges after RAT-specific pills for NR and GSM
+- Submission approval now records clearer audit logs for sector and cell changes and applies station, location, cell, sector and photo updates through a more reliable flow
+
+### 🩹 Fixes
+
+- Submission forms now reject duplicate sector azimuths in addition to duplicate sector local IDs
+- Admin submission review now detects sector assignment and sector azimuth changes in cell diffs more accurately
+- Approving submissions now checks LTE and NR PCI conflicts in batches and prevents deleting sectors that are still assigned to cells
+- Fixed frequent mobile map crashes caused by hover layer handlers during style changes
+- Fixed map crashes caused by temporary missing MapLibre sources during style changes
+- Map cursor measurement overlays now handle style changes more reliably
+- Expected unauthorized API responses are no longer logged as server errors
+
 # 2026-06-13
 
 ### 🚀 Enhancements

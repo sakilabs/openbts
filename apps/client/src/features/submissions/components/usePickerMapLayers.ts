@@ -13,6 +13,7 @@ import {
   PICKER_UKE_SYMBOL_LAYER_ID,
 } from "@/features/map/constants";
 import { syncPieImages } from "@/features/map/pieChart";
+import { hasReliableHoverPointer } from "@/lib/pointer";
 
 type LayerConfig = {
   sourceId: string;
@@ -83,6 +84,8 @@ function cleanupMapLayers(map: MaplibreMap, config: LayerConfig, imageTracker: S
 }
 
 function attachCursorHandlers(map: MaplibreMap, layerIds: readonly string[]): () => void {
+  if (!hasReliableHoverPointer()) return () => {};
+
   const handleMouseEnter = () => {
     map.getCanvas().style.cursor = "pointer";
   };
@@ -102,6 +105,7 @@ function attachCursorHandlers(map: MaplibreMap, layerIds: readonly string[]): ()
       map.off("mouseenter", layerId, handleMouseEnter);
       map.off("mouseleave", layerId, handleMouseLeave);
     }
+    map.getCanvas().style.cursor = "";
   };
 
   attach();

@@ -42,7 +42,7 @@ export function NavUser({ data: session }: { data: ReturnType<typeof authClient.
                 {t("items.myProfile")}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem render={<Link to="/settings" />}>
+            <DropdownMenuItem render={<Link to="/settings" search={{ tab: "account" }} />}>
               <HugeiconsIcon icon={Settings02Icon} className="size-4" />
               {t("items.accountSettings")}
             </DropdownMenuItem>

@@ -2,9 +2,11 @@ import { Popup } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
+import { onBeforeStyleChange } from "@/components/ui/map";
 import type { PlannedPEMStation } from "@/features/si2pem/api";
 import { API_BASE } from "@/lib/api";
 import { getOperatorColor } from "@/lib/operatorUtils";
+import { hasReliableHoverPointer } from "@/lib/pointer";
 
 import { PemPopupContent } from "../components/pemPopupContent";
 import { PLANNED_PEM_LAYER_ID, PLANNED_PEM_SOURCE_ID } from "../constants";
@@ -85,6 +87,7 @@ export function usePlannedMeasurementsLayer({
     let requestId = 0;
     const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     const selectedOperators = operatorsKey ? operatorsKey.split(",").map(Number) : [];
+    const useHoverListeners = hasReliableHoverPointer();
 
     const initLayer = () => {
       try {
@@ -173,21 +176,34 @@ export function usePlannedMeasurementsLayer({
       loadData();
     };
 
+    const attachLayerListeners = () => {
+      map.on("click", PLANNED_PEM_LAYER_ID, handleClick);
+      if (!useHoverListeners) return;
+      map.on("mouseenter", PLANNED_PEM_LAYER_ID, handleMouseEnter);
+      map.on("mouseleave", PLANNED_PEM_LAYER_ID, handleMouseLeave);
+    };
+
+    const detachLayerListeners = () => {
+      map.off("click", PLANNED_PEM_LAYER_ID, handleClick);
+      if (!useHoverListeners) return;
+      map.off("mouseenter", PLANNED_PEM_LAYER_ID, handleMouseEnter);
+      map.off("mouseleave", PLANNED_PEM_LAYER_ID, handleMouseLeave);
+      map.getCanvas().style.cursor = "";
+    };
+
     refresh();
     map.on("styledata", refresh);
     map.on("moveend", loadData);
-    map.on("click", PLANNED_PEM_LAYER_ID, handleClick);
-    map.on("mouseenter", PLANNED_PEM_LAYER_ID, handleMouseEnter);
-    map.on("mouseleave", PLANNED_PEM_LAYER_ID, handleMouseLeave);
+    attachLayerListeners();
+    const unsubscribe = onBeforeStyleChange(map, detachLayerListeners);
 
     return () => {
       cancelled = true;
       popupRef.current = destroyPopup(popupRef.current);
       map.off("styledata", refresh);
       map.off("moveend", loadData);
-      map.off("click", PLANNED_PEM_LAYER_ID, handleClick);
-      map.off("mouseenter", PLANNED_PEM_LAYER_ID, handleMouseEnter);
-      map.off("mouseleave", PLANNED_PEM_LAYER_ID, handleMouseLeave);
+      unsubscribe();
+      detachLayerListeners();
       try {
         if (map.getStyle() !== undefined) {
           if (map.getLayer(PLANNED_PEM_LAYER_ID)) map.removeLayer(PLANNED_PEM_LAYER_ID);

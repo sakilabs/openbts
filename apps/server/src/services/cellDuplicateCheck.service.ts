@@ -79,6 +79,13 @@ interface CellDuplicateEntry {
   excludeCellId?: number;
 }
 
+interface PciDuplicateEntry {
+  bandId: number;
+  pci: number;
+  channel?: number | null;
+  excludeCellId?: number;
+}
+
 export async function checkCellDuplicatesBatch(
   cellEntries: CellDuplicateEntry[],
   operatorId: number,
@@ -209,6 +216,33 @@ export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pc
   }
 }
 
+export async function checkLTEPCIDuplicatesBatch(stationId: number, entries: PciDuplicateEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+
+  const conditions = entries.map((entry) =>
+    and(
+      eq(cells.band_id, entry.bandId),
+      eq(lteCells.pci, entry.pci),
+      entry.channel !== null && entry.channel !== undefined ? or(isNull(lteCells.earfcn), eq(lteCells.earfcn, entry.channel)) : undefined,
+      entry.excludeCellId ? ne(lteCells.cell_id, entry.excludeCellId) : undefined,
+    ),
+  );
+
+  const existing = await db
+    .select({ pci: lteCells.pci })
+    .from(lteCells)
+    .innerJoin(cells, eq(cells.id, lteCells.cell_id))
+    .where(and(eq(cells.station_id, stationId), or(...conditions)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const duplicate = existing[0]!;
+    throw new ErrorResponse("DUPLICATE_ENTRY", {
+      message: `An LTE cell with PCI ${duplicate.pci} already exists on this band for this station`,
+    });
+  }
+}
+
 export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci: number, arfcn?: number | null, excludeCellId?: number) {
   const existing = await db
     .select({ id: nrCells.cell_id })
@@ -228,6 +262,33 @@ export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci
   if (existing.length > 0) {
     throw new ErrorResponse("DUPLICATE_ENTRY", {
       message: `An NR cell with PCI ${pci} already exists on this band for this station`,
+    });
+  }
+}
+
+export async function checkNRPCIDuplicatesBatch(stationId: number, entries: PciDuplicateEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+
+  const conditions = entries.map((entry) =>
+    and(
+      eq(cells.band_id, entry.bandId),
+      eq(nrCells.pci, entry.pci),
+      entry.channel !== null && entry.channel !== undefined ? or(isNull(nrCells.arfcn), eq(nrCells.arfcn, entry.channel)) : undefined,
+      entry.excludeCellId ? ne(nrCells.cell_id, entry.excludeCellId) : undefined,
+    ),
+  );
+
+  const existing = await db
+    .select({ pci: nrCells.pci })
+    .from(nrCells)
+    .innerJoin(cells, eq(cells.id, nrCells.cell_id))
+    .where(and(eq(cells.station_id, stationId), or(...conditions)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const duplicate = existing[0]!;
+    throw new ErrorResponse("DUPLICATE_ENTRY", {
+      message: `An NR cell with PCI ${duplicate.pci} already exists on this band for this station`,
     });
   }
 }

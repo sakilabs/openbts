@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import { onBeforeStyleChange } from "@/components/ui/map";
 import { normalizeOperatorName } from "@/lib/operatorUtils";
+import { hasReliableHoverPointer } from "@/lib/pointer";
 
 import { RadioLineTooltipContent } from "../components/radioLineTooltipContent";
 import {
@@ -146,6 +147,8 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
   useEffect(() => {
     if (!map || !isLoaded) return;
 
+    const useHoverListeners = hasReliableHoverPointer();
+
     const ensureLayersExist = () => {
       try {
         const { linesGeoJSON, endpointsGeoJSON } = stableRefs.current;
@@ -185,14 +188,11 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
       stableRefs.current.onFeatureClick(links, [e.lngLat.lng, e.lngLat.lat]);
     };
 
-    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-
     const handleMouseEnter = () => {
       map.getCanvas().style.cursor = "pointer";
     };
 
     const handleMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
-      if (isTouchDevice) return;
       if (isNearStation(e.point)) {
         tooltipRef.current = destroyTooltip(tooltipRef.current);
         return;
@@ -252,6 +252,7 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     const attachLayerListeners = () => {
       for (const layerId of HITBOX_LAYERS) {
         map.on("click", layerId, handleClick);
+        if (!useHoverListeners) continue;
         map.on("mouseenter", layerId, handleMouseEnter);
         map.on("mousemove", layerId, handleMouseMove);
         map.on("mouseleave", layerId, handleMouseLeave);
@@ -261,10 +262,13 @@ export function useRadioLinesLayer({ map, isLoaded, linesGeoJSON, endpointsGeoJS
     const detachLayerListeners = () => {
       for (const layerId of HITBOX_LAYERS) {
         map.off("click", layerId, handleClick);
+        if (!useHoverListeners) continue;
         map.off("mouseenter", layerId, handleMouseEnter);
         map.off("mousemove", layerId, handleMouseMove);
         map.off("mouseleave", layerId, handleMouseLeave);
       }
+      if (useHoverListeners) map.getCanvas().style.cursor = "";
+      tooltipRef.current = destroyTooltip(tooltipRef.current);
     };
 
     ensureLayersExist();

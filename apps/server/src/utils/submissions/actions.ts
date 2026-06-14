@@ -20,7 +20,7 @@ import type { FastifyRequest } from "fastify";
 
 import { ErrorResponse } from "../../errors.ts";
 import { createAuditLog } from "../../services/auditLog.service.ts";
-import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../services/cellDuplicateCheck.service.ts";
+import { checkCellDuplicatesBatch, checkLTEPCIDuplicatesBatch, checkNRPCIDuplicatesBatch } from "../../services/cellDuplicateCheck.service.ts";
 import { createAndDeliverNotification } from "../../services/notification.service.ts";
 import { syncStationsPermitsAssociations } from "../../services/stationsPermitsAssociation.service.ts";
 import type { DbTx } from "../../types/global.ts";
@@ -31,12 +31,16 @@ async function upsertLocation(
   proposedLocation: { region_id: number; city: string | null; address: string | null; longitude: number; latitude: number },
   req: FastifyRequest,
   submissionId: string,
+  knownLocationAtCoords?: LocationRow | null,
 ): Promise<number> {
-  const existingLocation = await tx.query.locations.findFirst({
-    where: {
-      AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
-    },
-  });
+  const existingLocation =
+    knownLocationAtCoords !== undefined
+      ? knownLocationAtCoords
+      : await tx.query.locations.findFirst({
+          where: {
+            AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }],
+          },
+        });
 
   if (existingLocation) {
     const metadataChanged =
@@ -153,11 +157,1059 @@ type ProposedCellSectorRef = {
   sector_unassigned?: boolean;
 };
 
+type ApprovalQueryClient = Pick<DbTx, "query">;
+type SubmissionRow = NonNullable<Awaited<ReturnType<typeof db.query.submissions.findFirst>>>;
+type LocationRow = NonNullable<Awaited<ReturnType<DbTx["query"]["locations"]["findFirst"]>>>;
+type ApprovalDraft = {
+  proposedStation: Awaited<ReturnType<typeof loadProposedStationForApproval>>;
+  proposedLocation: Awaited<ReturnType<DbTx["query"]["proposedLocations"]["findFirst"]>>;
+  proposedSectorRows: Awaited<ReturnType<DbTx["query"]["proposedSectors"]["findMany"]>>;
+  proposedCellRows: Awaited<ReturnType<typeof loadProposedCellsForApproval>>;
+};
+type ProposedCellRow = ApprovalDraft["proposedCellRows"][number];
+type TargetCellRow = NonNullable<Awaited<ReturnType<typeof loadTargetCells>>[number]>;
+type SubmissionPhotoRow = Awaited<ReturnType<DbTx["query"]["submissionPhotos"]["findMany"]>>[number];
+type SubmissionLocationPhotoSelectionRow = Awaited<ReturnType<DbTx["query"]["submissionLocationPhotoSelections"]["findMany"]>>[number];
+type ApprovalDuplicateCheckDraft = Pick<ApprovalDraft, "proposedStation" | "proposedCellRows">;
+type ApprovalStationContext = { operatorId: number | null; stationStringId: string | null };
+type CellAuditChanges = {
+  added: Array<Record<string, unknown>>;
+  updated: Array<{ old: Record<string, unknown>; new: Record<string, unknown> }>;
+  deleted: Array<Record<string, unknown>>;
+};
+
 function resolveProposedCellSectorId(proposed: ProposedCellSectorRef, sectorIdByLocalId: ReadonlyMap<string, number>): number | null | undefined {
   if (proposed.target_sector_id !== null && proposed.target_sector_id !== undefined) return proposed.target_sector_id;
   if (proposed.sector_local_id) return sectorIdByLocalId.get(proposed.sector_local_id) ?? null;
   if (proposed.sector_unassigned) return null;
   return undefined;
+}
+
+function getSiblingMnc(mnc: number | null | undefined): number | null {
+  const TMOBILE_MNC = 26002;
+  const ORANGE_MNC = 26003;
+
+  if (mnc === TMOBILE_MNC) return ORANGE_MNC;
+  if (mnc === ORANGE_MNC) return TMOBILE_MNC;
+  return null;
+}
+
+function getProposedCellDetails(proposed: ProposedCellRow): Record<string, unknown> | null {
+  return (proposed.lte ?? proposed.gsm ?? proposed.umts ?? proposed.nr) as Record<string, unknown> | null;
+}
+
+function getTargetCellDetails(targetCell: TargetCellRow): Record<string, unknown> | null {
+  return (targetCell.gsm ?? targetCell.umts ?? targetCell.lte ?? targetCell.nr) as Record<string, unknown> | null;
+}
+
+async function validatePublishedStation(submission: SubmissionRow): Promise<ApprovalStationContext | null> {
+  if (submission.station_id === null) return null;
+
+  const station = await db.query.stations.findFirst({
+    where: { id: submission.station_id },
+    columns: { status: true, operator_id: true, station_id: true },
+  });
+  if (!station || station.status !== "published") throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+  return { operatorId: station.operator_id, stationStringId: station.station_id ?? null };
+}
+
+async function loadProposedStationForApproval(client: ApprovalQueryClient, submissionId: string) {
+  return client.query.proposedStations.findFirst({ where: { submission_id: submissionId } });
+}
+
+async function loadProposedCellsForApproval(client: ApprovalQueryClient, submissionId: string) {
+  return client.query.proposedCells.findMany({ where: { submission_id: submissionId }, with: { gsm: true, umts: true, lte: true, nr: true } });
+}
+
+async function loadApprovalDraft(tx: DbTx, submissionId: string, preloaded?: ApprovalDuplicateCheckDraft) {
+  const [proposedStation, proposedLocation, proposedSectorRows, proposedCellRows] = await Promise.all([
+    preloaded ? Promise.resolve(preloaded.proposedStation) : loadProposedStationForApproval(tx, submissionId),
+    tx.query.proposedLocations.findFirst({ where: { submission_id: submissionId } }),
+    tx.query.proposedSectors.findMany({ where: { submission_id: submissionId }, orderBy: { id: "asc" } }),
+    preloaded ? Promise.resolve(preloaded.proposedCellRows) : loadProposedCellsForApproval(tx, submissionId),
+  ]);
+
+  return { proposedStation, proposedLocation, proposedSectorRows, proposedCellRows };
+}
+
+async function loadApprovalDuplicateCheckDraft(submissionId: string): Promise<ApprovalDuplicateCheckDraft> {
+  const [proposedStation, proposedCellRows] = await Promise.all([
+    loadProposedStationForApproval(db, submissionId),
+    loadProposedCellsForApproval(db, submissionId),
+  ]);
+
+  return { proposedStation, proposedCellRows };
+}
+
+async function createExtraIdentifierForNewStation(
+  tx: DbTx,
+  proposedStation: NonNullable<ApprovalDraft["proposedStation"]>,
+  stationId: number,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<void> {
+  if (!proposedStation.networks_id && !proposedStation.mno_name) return;
+
+  const [newIdentifier] = await tx
+    .insert(extraIdentificators)
+    .values({
+      station_id: stationId,
+      networks_id: proposedStation.networks_id ?? null,
+      networks_name: proposedStation.networks_name ?? null,
+      mno_name: proposedStation.mno_name ?? null,
+    })
+    .returning();
+
+  if (!newIdentifier) return;
+
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "extra_identificators",
+      record_id: stationId,
+      old_values: null,
+      new_values: newIdentifier,
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function createStationFromProposal(
+  tx: DbTx,
+  proposedStation: NonNullable<ApprovalDraft["proposedStation"]>,
+  locationId: number | null,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<number> {
+  const [newStation] = await tx
+    .insert(stations)
+    .values({
+      station_id: proposedStation.station_id ?? "",
+      location_id: locationId,
+      operator_id: proposedStation.operator_id,
+      notes: typeof proposedStation.notes === "string" && proposedStation.notes.trim() !== "" ? proposedStation.notes : null,
+      is_confirmed: true,
+      status: "published",
+    })
+    .returning();
+  if (!newStation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station" });
+
+  await createAuditLog(
+    {
+      action: "stations.create",
+      table_name: "stations",
+      record_id: newStation.id,
+      new_values: newStation,
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+
+  await createExtraIdentifierForNewStation(tx, proposedStation, newStation.id, submissionId, req);
+  return newStation.id;
+}
+
+async function applyNewSubmission(
+  tx: DbTx,
+  draft: ApprovalDraft,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<{ stationId: number | null; resolvedLocationId: number | null }> {
+  let locationId: number | null = null;
+
+  if (draft.proposedLocation) locationId = await upsertLocation(tx, draft.proposedLocation, req, submissionId);
+
+  let stationId: number | null = null;
+  if (draft.proposedStation) stationId = await createStationFromProposal(tx, draft.proposedStation, locationId, submissionId, req);
+
+  return { stationId, resolvedLocationId: locationId };
+}
+
+async function deleteOrphanedLocationIfNeeded(
+  tx: DbTx,
+  stationId: number,
+  currentLocation: LocationRow,
+  nextLocationId: number,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<void> {
+  const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
+  if (Number(orphanedResult?.orphaned ?? 0) !== 0) return;
+
+  await migrateStationPhotos(tx, stationId, nextLocationId);
+  await tx.delete(locations).where(eq(locations.id, currentLocation.id));
+  await createAuditLog(
+    {
+      action: "locations.delete",
+      table_name: "locations",
+      record_id: currentLocation.id,
+      old_values: { longitude: currentLocation.longitude, latitude: currentLocation.latitude },
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function updateStationLocation(tx: DbTx, stationId: number, locationId: number, submissionId: string, req: FastifyRequest): Promise<void> {
+  await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "stations",
+      record_id: stationId,
+      new_values: { location_id: locationId },
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function updateLocationMetadata(
+  tx: DbTx,
+  currentLocation: LocationRow,
+  proposedLocation: NonNullable<ApprovalDraft["proposedLocation"]>,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<void> {
+  const metadataChanged =
+    currentLocation.region_id !== proposedLocation.region_id ||
+    currentLocation.city !== proposedLocation.city ||
+    currentLocation.address !== proposedLocation.address;
+
+  if (!metadataChanged) return;
+
+  await tx
+    .update(locations)
+    .set({ region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address, updatedAt: new Date() })
+    .where(eq(locations.id, currentLocation.id));
+  await createAuditLog(
+    {
+      action: "locations.update",
+      table_name: "locations",
+      record_id: currentLocation.id,
+      old_values: { region_id: currentLocation.region_id, city: currentLocation.city, address: currentLocation.address },
+      new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function createReplacementLocation(
+  tx: DbTx,
+  proposedLocation: NonNullable<ApprovalDraft["proposedLocation"]>,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<number> {
+  const [newLoc] = await tx
+    .insert(locations)
+    .values({
+      longitude: proposedLocation.longitude,
+      latitude: proposedLocation.latitude,
+      region_id: proposedLocation.region_id,
+      city: proposedLocation.city,
+      address: proposedLocation.address,
+    })
+    .returning();
+  if (!newLoc) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
+
+  await createAuditLog(
+    {
+      action: "locations.create",
+      table_name: "locations",
+      record_id: newLoc.id,
+      new_values: newLoc,
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+
+  return newLoc.id;
+}
+
+async function applyUpdatedLocation(
+  tx: DbTx,
+  proposedLocation: NonNullable<ApprovalDraft["proposedLocation"]>,
+  stationId: number,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<number | null> {
+  const currentStation = await tx.query.stations.findFirst({
+    where: { id: stationId },
+    with: { location: true },
+  });
+
+  const currentLocation = currentStation?.location ?? null;
+  const coordsUnchanged =
+    currentLocation && currentLocation.longitude === proposedLocation.longitude && currentLocation.latitude === proposedLocation.latitude;
+
+  if (coordsUnchanged) {
+    await updateLocationMetadata(tx, currentLocation, proposedLocation, submissionId, req);
+    return currentLocation.id;
+  }
+
+  const locationAtNewCoords = await tx.query.locations.findFirst({
+    where: { AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }] },
+  });
+
+  if (currentLocation && !locationAtNewCoords) {
+    const newLocationId = await createReplacementLocation(tx, proposedLocation, submissionId, req);
+    await updateStationLocation(tx, stationId, newLocationId, submissionId, req);
+    await deleteOrphanedLocationIfNeeded(tx, stationId, currentLocation, newLocationId, submissionId, req);
+    return newLocationId;
+  }
+
+  const locationId = await upsertLocation(tx, proposedLocation, req, submissionId, locationAtNewCoords);
+  await updateStationLocation(tx, stationId, locationId, submissionId, req);
+  if (currentLocation) await deleteOrphanedLocationIfNeeded(tx, stationId, currentLocation, locationId, submissionId, req);
+  return locationId;
+}
+
+async function applyExtraIdentifierUpdate(
+  tx: DbTx,
+  proposedStation: NonNullable<ApprovalDraft["proposedStation"]>,
+  stationId: number,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<void> {
+  if (!proposedStation.networks_id && !proposedStation.mno_name) return;
+
+  const existingIdentifier = await tx.query.extraIdentificators.findFirst({ where: { station_id: stationId } });
+  const proposedNetworksId = proposedStation.networks_id ?? null;
+  const proposedNetworksName = proposedStation.networks_name ?? null;
+  const proposedMnoName = proposedStation.mno_name ?? null;
+  const hasIdentifierChanges =
+    !existingIdentifier ||
+    existingIdentifier.networks_id !== proposedNetworksId ||
+    existingIdentifier.networks_name !== proposedNetworksName ||
+    existingIdentifier.mno_name !== proposedMnoName;
+
+  if (!hasIdentifierChanges) return;
+
+  const [updatedIdentifier] = existingIdentifier
+    ? await tx
+        .update(extraIdentificators)
+        .set({
+          networks_id: proposedNetworksId,
+          networks_name: proposedNetworksName,
+          mno_name: proposedMnoName,
+          updatedAt: new Date(),
+        })
+        .where(eq(extraIdentificators.id, existingIdentifier.id))
+        .returning()
+    : await tx
+        .insert(extraIdentificators)
+        .values({
+          station_id: stationId,
+          networks_id: proposedNetworksId,
+          networks_name: proposedNetworksName,
+          mno_name: proposedMnoName,
+        })
+        .returning();
+
+  if (!updatedIdentifier) return;
+
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "extra_identificators",
+      record_id: stationId,
+      old_values: existingIdentifier ?? null,
+      new_values: updatedIdentifier,
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function applyDeletedSubmission(tx: DbTx, stationId: number | null, submissionId: string, req: FastifyRequest): Promise<void> {
+  if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete without a station" });
+
+  await tx.update(stations).set({ status: "inactive", updatedAt: new Date() }).where(eq(stations.id, stationId));
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "stations",
+      record_id: stationId,
+      new_values: { status: "inactive" },
+      metadata: { submission_id: submissionId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function loadTargetCells(tx: DbTx, proposedCellRows: ProposedCellRow[]) {
+  const targetCellIds = proposedCellRows
+    .filter((cell) => (cell.operation === "update" || cell.operation === "delete") && cell.target_cell_id)
+    .map((cell) => cell.target_cell_id!);
+
+  if (targetCellIds.length === 0) return [];
+
+  return tx.query.cells.findMany({
+    where: { id: { in: targetCellIds } },
+    with: { gsm: true, umts: true, lte: true, nr: true },
+  });
+}
+
+function getApprovalOperatorId(
+  submission: SubmissionRow,
+  proposedStation: ApprovalDraft["proposedStation"],
+  stationContext: ApprovalStationContext | null,
+): number | null {
+  if (submission.type === "new") return proposedStation?.operator_id ?? null;
+  return stationContext?.operatorId ?? null;
+}
+
+async function checkApprovalCellDuplicates(
+  submission: SubmissionRow,
+  draft: ApprovalDuplicateCheckDraft,
+  stationContext: ApprovalStationContext | null,
+): Promise<void> {
+  const operatorId = getApprovalOperatorId(submission, draft.proposedStation, stationContext);
+  if (!operatorId) return;
+
+  const duplicateEntries = draft.proposedCellRows
+    .filter((cell) => cell.operation !== "delete" && cell.rat)
+    .map((cell) => ({ rat: cell.rat!, details: getProposedCellDetails(cell), excludeCellId: cell.target_cell_id ?? undefined }))
+    .filter((entry): entry is typeof entry & { details: Record<string, unknown> } => entry.details !== null);
+
+  if (duplicateEntries.length > 0) await checkCellDuplicatesBatch(duplicateEntries, operatorId);
+}
+
+async function applyProposedSectors(
+  tx: DbTx,
+  stationId: number | null,
+  proposedSectorRows: ApprovalDraft["proposedSectorRows"],
+): Promise<{
+  sectorIdByLocalId: Map<string, number>;
+  sectorIdsToDeleteAfterCells: number[];
+  previousSectors: Array<{ id: number; azimuth: number }>;
+  nextSectors: Array<{ id: number; azimuth: number }>;
+}> {
+  const sectorIdByLocalId = new Map<string, number>();
+  if (!stationId || proposedSectorRows.length === 0)
+    return { sectorIdByLocalId, sectorIdsToDeleteAfterCells: [], previousSectors: [], nextSectors: [] };
+
+  const previousSectors = await tx.query.stationSectors.findMany({
+    where: { station_id: stationId },
+    columns: { id: true, azimuth: true },
+    orderBy: { id: "asc" },
+  });
+  const previousById = new Map(previousSectors.map((sector) => [sector.id, sector]));
+  const retainedSectorIds = new Set<number>();
+  const nextSectors: Array<{ id: number; azimuth: number }> = [];
+  const proposedAzimuths = new Set<number>();
+
+  for (const proposed of proposedSectorRows as ProposedSectorRow[]) {
+    if (proposedAzimuths.has(proposed.azimuth)) throw new ErrorResponse("BAD_REQUEST", { message: "Sector azimuth values must be unique" });
+    proposedAzimuths.add(proposed.azimuth);
+
+    const matchingPrevious =
+      proposed.target_sector_id !== null
+        ? previousById.get(proposed.target_sector_id)
+        : previousSectors.find((sector) => sector.azimuth === proposed.azimuth && !retainedSectorIds.has(sector.id));
+
+    if (matchingPrevious) {
+      retainedSectorIds.add(matchingPrevious.id);
+      sectorIdByLocalId.set(proposed.local_id, matchingPrevious.id);
+      nextSectors.push({ id: matchingPrevious.id, azimuth: proposed.azimuth });
+      if (matchingPrevious.azimuth !== proposed.azimuth)
+        await tx
+          .update(stationSectors)
+          .set({ azimuth: proposed.azimuth })
+          .where(and(eq(stationSectors.id, matchingPrevious.id), eq(stationSectors.station_id, stationId)));
+      continue;
+    }
+
+    const [insertedSector] = await tx
+      .insert(stationSectors)
+      .values({ station_id: stationId, azimuth: proposed.azimuth })
+      .returning({ id: stationSectors.id });
+    if (!insertedSector) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station sector" });
+    sectorIdByLocalId.set(proposed.local_id, insertedSector.id);
+    nextSectors.push({ id: insertedSector.id, azimuth: proposed.azimuth });
+  }
+
+  const sectorIdsToDeleteAfterCells = previousSectors.filter((sector) => !retainedSectorIds.has(sector.id)).map((sector) => sector.id);
+  return { sectorIdByLocalId, sectorIdsToDeleteAfterCells, previousSectors, nextSectors: nextSectors.sort((a, b) => a.id - b.id) };
+}
+
+async function checkProposedPciDuplicates(stationId: number | null, proposedCellRows: ProposedCellRow[]): Promise<void> {
+  if (!stationId) return;
+
+  const lteEntries: { bandId: number; pci: number; channel?: number | null; excludeCellId?: number }[] = [];
+  const nrEntries: { bandId: number; pci: number; channel?: number | null; excludeCellId?: number }[] = [];
+
+  for (const proposed of proposedCellRows) {
+    if (proposed.operation === "delete" || !proposed.band_id) continue;
+    const excludeCellId = proposed.target_cell_id ?? undefined;
+    if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined)
+      lteEntries.push({ bandId: proposed.band_id, pci: proposed.lte.pci, channel: proposed.lte.earfcn, excludeCellId });
+    else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined)
+      nrEntries.push({ bandId: proposed.band_id, pci: proposed.nr.pci, channel: proposed.nr.arfcn, excludeCellId });
+  }
+
+  await Promise.all([checkLTEPCIDuplicatesBatch(stationId, lteEntries), checkNRPCIDuplicatesBatch(stationId, nrEntries)]);
+}
+
+async function insertCellDetails(tx: DbTx, proposed: ProposedCellRow, cellId: number): Promise<Record<string, unknown> | null> {
+  switch (proposed.rat) {
+    case "GSM": {
+      const d = proposed.gsm;
+      if (!d) return null;
+      const [inserted] = await tx.insert(gsmCells).values({ cell_id: cellId, lac: d.lac, cid: d.cid, e_gsm: d.e_gsm }).returning();
+      return inserted ?? null;
+    }
+    case "UMTS": {
+      const d = proposed.umts;
+      if (!d) return null;
+      const [inserted] = await tx.insert(umtsCells).values({ cell_id: cellId, lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid }).returning();
+      return inserted ?? null;
+    }
+    case "LTE": {
+      const d = proposed.lte;
+      if (!d) return null;
+      const [inserted] = await tx
+        .insert(lteCells)
+        .values({
+          cell_id: cellId,
+          tac: d.tac,
+          enbid: d.enbid,
+          clid: d.clid,
+          pci: d.pci,
+          earfcn: d.earfcn,
+          supports_iot: d.supports_iot,
+        })
+        .returning();
+      return inserted ?? null;
+    }
+    case "NR": {
+      const d = proposed.nr;
+      if (!d) return null;
+      const [inserted] = await tx
+        .insert(nrCells)
+        .values({
+          cell_id: cellId,
+          nrtac: d.nrtac,
+          gnbid: d.gnbid,
+          gnbid_length: computeGnbidLength(d.gnbid),
+          clid: d.clid,
+          pci: d.pci,
+          arfcn: d.arfcn,
+          type: d.type,
+          supports_nr_redcap: d.supports_nr_redcap,
+        })
+        .returning();
+      return inserted ?? null;
+    }
+    default:
+      return null;
+  }
+}
+
+async function updateCellDetails(tx: DbTx, proposed: ProposedCellRow, targetCell: TargetCellRow): Promise<Record<string, unknown> | null> {
+  const rat = proposed.rat ?? targetCell.rat;
+
+  switch (rat) {
+    case "GSM": {
+      const d = proposed.gsm;
+      if (!d) return null;
+      const [updated] = await tx
+        .update(gsmCells)
+        .set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm, updatedAt: new Date() })
+        .where(eq(gsmCells.cell_id, targetCell.id))
+        .returning();
+      return updated ?? null;
+    }
+    case "UMTS": {
+      const d = proposed.umts;
+      if (!d) return null;
+      const [updated] = await tx
+        .update(umtsCells)
+        .set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid, updatedAt: new Date() })
+        .where(eq(umtsCells.cell_id, targetCell.id))
+        .returning();
+      return updated ?? null;
+    }
+    case "LTE": {
+      const d = proposed.lte;
+      if (!d) return null;
+      const [updated] = await tx
+        .update(lteCells)
+        .set({
+          tac: d.tac,
+          enbid: d.enbid,
+          clid: d.clid,
+          pci: d.pci,
+          earfcn: d.earfcn,
+          supports_iot: d.supports_iot,
+          updatedAt: new Date(),
+        })
+        .where(eq(lteCells.cell_id, targetCell.id))
+        .returning();
+      return updated ?? null;
+    }
+    case "NR": {
+      const d = proposed.nr;
+      if (!d) return null;
+      const [updated] = await tx
+        .update(nrCells)
+        .set({
+          nrtac: d.nrtac,
+          gnbid: d.gnbid,
+          gnbid_length: d.gnbid ? computeGnbidLength(d.gnbid) : d.gnbid_length,
+          clid: d.clid,
+          pci: d.pci,
+          arfcn: d.arfcn,
+          supports_nr_redcap: d.supports_nr_redcap,
+          updatedAt: new Date(),
+        })
+        .where(eq(nrCells.cell_id, targetCell.id))
+        .returning();
+      return updated ?? null;
+    }
+    default:
+      return null;
+  }
+}
+
+async function addProposedCell(
+  tx: DbTx,
+  proposed: ProposedCellRow,
+  stationId: number | null,
+  sectorIdByLocalId: ReadonlyMap<string, number>,
+): Promise<Record<string, unknown>> {
+  if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without a station" });
+  if (!proposed.rat) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without RAT" });
+  if (!proposed.band_id) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without band" });
+
+  const sectorId = resolveProposedCellSectorId(proposed, sectorIdByLocalId);
+  const [newCell] = await tx
+    .insert(cells)
+    .values({
+      station_id: stationId,
+      band_id: proposed.band_id,
+      sector_id: sectorId ?? null,
+      rat: proposed.rat,
+      notes: proposed.notes,
+      is_confirmed: proposed.is_confirmed,
+    })
+    .returning();
+  if (!newCell) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create cell" });
+
+  const details = await insertCellDetails(tx, proposed, newCell.id);
+  return { ...newCell, details };
+}
+
+async function updateProposedCell(
+  tx: DbTx,
+  proposed: ProposedCellRow,
+  targetCellsMap: ReadonlyMap<number, TargetCellRow>,
+  sectorIdByLocalId: ReadonlyMap<string, number>,
+): Promise<{ old: Record<string, unknown>; new: Record<string, unknown> }> {
+  const targetCellId = proposed.target_cell_id;
+  if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot update cell without target_cell_id" });
+
+  const targetCell = targetCellsMap.get(targetCellId);
+  if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
+
+  const cellUpdate: Record<string, unknown> = { updatedAt: new Date() };
+  if (proposed.band_id) cellUpdate.band_id = proposed.band_id;
+  if (proposed.rat) cellUpdate.rat = proposed.rat;
+  if (proposed.notes !== null) cellUpdate.notes = proposed.notes;
+  const sectorId = resolveProposedCellSectorId(proposed, sectorIdByLocalId);
+  if (sectorId !== undefined) cellUpdate.sector_id = sectorId;
+
+  await tx.update(cells).set(cellUpdate).where(eq(cells.id, targetCellId));
+
+  const newDetails = await updateCellDetails(tx, proposed, targetCell);
+  const { gsm: _gsm, umts: _umts, lte: _lte, nr: _nr, ...baseCellOld } = targetCell;
+  const oldDetails = getTargetCellDetails(targetCell);
+
+  return { old: { ...baseCellOld, details: oldDetails }, new: { ...baseCellOld, ...cellUpdate, details: newDetails } };
+}
+
+async function deleteProposedCell(
+  tx: DbTx,
+  proposed: ProposedCellRow,
+  targetCellsMap: ReadonlyMap<number, TargetCellRow>,
+): Promise<Record<string, unknown>> {
+  const targetCellId = proposed.target_cell_id;
+  if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete cell without target_cell_id" });
+
+  const targetCell = targetCellsMap.get(targetCellId);
+  if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
+
+  await tx.delete(cells).where(eq(cells.id, targetCellId));
+  const { gsm: _dGsm, umts: _dUmts, lte: _dLte, nr: _dNr, ...baseCellDelete } = targetCell;
+  return { ...baseCellDelete, details: getTargetCellDetails(targetCell) };
+}
+
+async function applyProposedCells(
+  tx: DbTx,
+  proposedCellRows: ProposedCellRow[],
+  stationId: number | null,
+  targetCellsMap: ReadonlyMap<number, TargetCellRow>,
+  sectorIdByLocalId: ReadonlyMap<string, number>,
+): Promise<CellAuditChanges> {
+  const changes: CellAuditChanges = { added: [], updated: [], deleted: [] };
+
+  for (const proposed of proposedCellRows) {
+    switch (proposed.operation) {
+      case "add":
+        changes.added.push(await addProposedCell(tx, proposed, stationId, sectorIdByLocalId));
+        break;
+      case "update":
+        changes.updated.push(await updateProposedCell(tx, proposed, targetCellsMap, sectorIdByLocalId));
+        break;
+      case "delete":
+        changes.deleted.push(await deleteProposedCell(tx, proposed, targetCellsMap));
+        break;
+    }
+  }
+
+  return changes;
+}
+
+async function deleteUnretainedSectors(tx: DbTx, stationId: number | null, sectorIdsToDelete: number[]): Promise<void> {
+  if (!stationId || sectorIdsToDelete.length === 0) return;
+
+  const [assignedResult] = await tx.select({ value: count() }).from(cells).where(inArray(cells.sector_id, sectorIdsToDelete));
+  if (Number(assignedResult?.value ?? 0) > 0)
+    throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete sectors that are still assigned to cells" });
+  await tx.delete(stationSectors).where(inArray(stationSectors.id, sectorIdsToDelete));
+}
+
+async function createSectorAuditLog(
+  tx: DbTx,
+  stationId: number | null,
+  proposedSectorRows: ApprovalDraft["proposedSectorRows"],
+  previousSectors: Array<{ id: number; azimuth: number }>,
+  nextSectors: Array<{ id: number; azimuth: number }>,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<void> {
+  if (!stationId || proposedSectorRows.length === 0) return;
+
+  await createAuditLog(
+    {
+      action: "stations.update",
+      table_name: "station_sectors",
+      record_id: stationId,
+      old_values: previousSectors,
+      new_values: nextSectors,
+      metadata: { submission_id: submissionId, station_id: stationId },
+    },
+    req,
+    tx,
+  );
+}
+
+async function createCellAuditLogs(
+  tx: DbTx,
+  changes: CellAuditChanges,
+  stationId: number | null,
+  submissionId: string,
+  req: FastifyRequest,
+): Promise<void> {
+  if (changes.added.length > 0)
+    await createAuditLog(
+      {
+        action: "cells.create",
+        table_name: "cells",
+        record_id: null,
+        new_values: { cells: changes.added },
+        metadata: { submission_id: submissionId, station_id: stationId },
+      },
+      req,
+      tx,
+    );
+  if (changes.updated.length > 0)
+    await createAuditLog(
+      {
+        action: "cells.update",
+        table_name: "cells",
+        record_id: null,
+        old_values: { cells: changes.updated.map((cell) => cell.old) },
+        new_values: { cells: changes.updated.map((cell) => cell.new) },
+        metadata: { submission_id: submissionId },
+      },
+      req,
+      tx,
+    );
+  if (changes.deleted.length > 0)
+    await createAuditLog(
+      {
+        action: "cells.delete",
+        table_name: "cells",
+        record_id: null,
+        old_values: { cells: changes.deleted },
+        metadata: { submission_id: submissionId },
+      },
+      req,
+      tx,
+    );
+}
+
+async function loadStationPhotoContext(tx: DbTx, stationId: number): Promise<{ locationId: number | null; mnc: number | null } | null> {
+  const [stationPhotoContext] = await tx
+    .select({ locationId: stations.location_id, mnc: operators.mnc })
+    .from(stations)
+    .leftJoin(operators, eq(stations.operator_id, operators.id))
+    .where(eq(stations.id, stationId))
+    .limit(1);
+  return stationPhotoContext ?? null;
+}
+
+async function applyUploadedSubmissionPhotos(
+  tx: DbTx,
+  submission: SubmissionRow,
+  submissionId: string,
+  stationId: number,
+  resolvedLocationId: number | null,
+  photos: SubmissionPhotoRow[],
+): Promise<void> {
+  if (photos.length === 0) return;
+
+  let stationPhotoContext: Awaited<ReturnType<typeof loadStationPhotoContext>> = null;
+  let photoLocationId = resolvedLocationId;
+  if (!photoLocationId) {
+    stationPhotoContext = await loadStationPhotoContext(tx, stationId);
+    photoLocationId = stationPhotoContext?.locationId ?? null;
+  }
+  if (!photoLocationId) return;
+
+  await tx
+    .insert(locationPhotos)
+    .values(
+      photos.map((photo) => ({
+        location_id: photoLocationId,
+        attachment_id: photo.attachment_id,
+        submission_id: submissionId,
+        uploaded_by: submission.submitter_id,
+        note: photo.note,
+        taken_at: photo.taken_at,
+      })),
+    )
+    .onConflictDoNothing();
+
+  const locationPhotoRows = await tx
+    .select({ id: locationPhotos.id })
+    .from(locationPhotos)
+    .where(
+      and(
+        eq(locationPhotos.location_id, photoLocationId),
+        inArray(
+          locationPhotos.attachment_id,
+          photos.map((photo) => photo.attachment_id),
+        ),
+      ),
+    );
+
+  if (locationPhotoRows.length === 0) return;
+
+  const [existingMain, loadedStationPhotoContext] = await Promise.all([
+    tx.query.stationPhotoSelections.findFirst({
+      where: { station_id: stationId, is_main: true },
+    }),
+    stationPhotoContext ? Promise.resolve(stationPhotoContext) : loadStationPhotoContext(tx, stationId),
+  ]);
+
+  await tx
+    .insert(stationPhotoSelections)
+    .values(
+      locationPhotoRows.map((locationPhoto, index) => ({
+        station_id: stationId,
+        location_photo_id: locationPhoto.id,
+        is_main: !existingMain && index === 0,
+      })),
+    )
+    .onConflictDoNothing();
+
+  const siblingMnc = getSiblingMnc(loadedStationPhotoContext?.mnc);
+  if (siblingMnc === null) return;
+
+  const [siblingStation] = await tx
+    .select({ id: stations.id })
+    .from(stations)
+    .innerJoin(operators, eq(stations.operator_id, operators.id))
+    .where(and(eq(stations.location_id, photoLocationId), eq(operators.mnc, siblingMnc)));
+
+  if (!siblingStation) return;
+
+  const siblingExistingMain = await tx.query.stationPhotoSelections.findFirst({
+    where: { station_id: siblingStation.id, is_main: true },
+  });
+  await tx
+    .insert(stationPhotoSelections)
+    .values(
+      locationPhotoRows.map((locationPhoto, index) => ({
+        station_id: siblingStation.id,
+        location_photo_id: locationPhoto.id,
+        is_main: !siblingExistingMain && index === 0,
+      })),
+    )
+    .onConflictDoNothing();
+}
+
+async function applyLocationPhotoSelections(tx: DbTx, locationPhotoSels: SubmissionLocationPhotoSelectionRow[], stationId: number): Promise<void> {
+  if (locationPhotoSels.length === 0) return;
+
+  const requestedIds = locationPhotoSels.map((selection) => selection.location_photo_id);
+  const existingRows = await tx
+    .select({ location_photo_id: stationPhotoSelections.location_photo_id })
+    .from(stationPhotoSelections)
+    .where(and(eq(stationPhotoSelections.station_id, stationId), inArray(stationPhotoSelections.location_photo_id, requestedIds)));
+  const existingIds = new Set(existingRows.map((row) => row.location_photo_id));
+  const toInsert = locationPhotoSels.filter((selection) => !existingIds.has(selection.location_photo_id));
+
+  const mainSel = locationPhotoSels.find((selection) => selection.is_main);
+  const mainIsAlreadyAssigned = mainSel !== undefined && existingIds.has(mainSel.location_photo_id);
+
+  if (toInsert.length > 0) {
+    const existingMain = await tx.query.stationPhotoSelections.findFirst({
+      where: { station_id: stationId, is_main: true },
+    });
+    await tx.insert(stationPhotoSelections).values(
+      toInsert.map((selection) => ({
+        station_id: stationId,
+        location_photo_id: selection.location_photo_id,
+        is_main: !existingMain && !mainIsAlreadyAssigned && selection.is_main,
+      })),
+    );
+  }
+
+  if (!mainIsAlreadyAssigned) return;
+
+  await tx.update(stationPhotoSelections).set({ is_main: false }).where(eq(stationPhotoSelections.station_id, stationId));
+  await tx
+    .update(stationPhotoSelections)
+    .set({ is_main: true })
+    .where(and(eq(stationPhotoSelections.station_id, stationId), eq(stationPhotoSelections.location_photo_id, mainSel.location_photo_id)));
+}
+
+async function applySubmissionPhotos(
+  tx: DbTx,
+  submission: SubmissionRow,
+  submissionId: string,
+  stationId: number | null,
+  resolvedLocationId: number | null,
+): Promise<void> {
+  if (!stationId || submission.type === "delete") return;
+
+  const [photos, locationPhotoSelections] = await Promise.all([
+    tx.query.submissionPhotos.findMany({ where: { submission_id: submissionId } }),
+    tx.query.submissionLocationPhotoSelections.findMany({ where: { submission_id: submissionId } }),
+  ]);
+
+  await applyUploadedSubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId, photos);
+  await applyLocationPhotoSelections(tx, locationPhotoSelections, stationId);
+}
+
+async function finalizeApprovedSubmission(
+  tx: DbTx,
+  submission: SubmissionRow,
+  submissionId: string,
+  reviewerId: string,
+  reviewerNotes: string | null | undefined,
+): Promise<SubmissionRow> {
+  const now = new Date();
+  const [updated] = await tx
+    .update(submissions)
+    .set({
+      status: "approved",
+      reviewer_id: reviewerId,
+      review_notes: reviewerNotes ?? submission.review_notes,
+      reviewed_at: now,
+      updatedAt: now,
+    })
+    .where(eq(submissions.id, submissionId))
+    .returning();
+  if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
+  return updated;
+}
+
+function getApprovedStationStringId(
+  submission: SubmissionRow,
+  proposedStation: ApprovalDraft["proposedStation"],
+  stationId: number | null,
+  stationContext: ApprovalStationContext | null,
+): string | null {
+  if (submission.type === "new" && proposedStation) return proposedStation.station_id ?? null;
+  if (!stationId) return null;
+  return stationContext?.stationStringId ?? null;
+}
+
+async function runApprovalTransaction({
+  tx,
+  submission,
+  submissionId,
+  reviewerId,
+  reviewerNotes,
+  req,
+  duplicateCheckDraft,
+  stationContext,
+}: {
+  tx: DbTx;
+  submission: SubmissionRow;
+  submissionId: string;
+  reviewerId: string;
+  reviewerNotes?: string | null;
+  req: FastifyRequest;
+  duplicateCheckDraft: ApprovalDuplicateCheckDraft;
+  stationContext: ApprovalStationContext | null;
+}): Promise<{ submission: SubmissionRow; resolvedStationId: number | null; stationStringId: string | null }> {
+  const draft = await loadApprovalDraft(tx, submissionId, duplicateCheckDraft);
+  const targetCellsPromise = loadTargetCells(tx, draft.proposedCellRows);
+  let stationId = submission.station_id;
+  let resolvedLocationId: number | null = null;
+
+  if (submission.type === "new") {
+    const result = await applyNewSubmission(tx, draft, submissionId, req);
+    stationId = result.stationId;
+    resolvedLocationId = result.resolvedLocationId;
+  }
+
+  if (submission.type === "update" && draft.proposedLocation && stationId)
+    resolvedLocationId = await applyUpdatedLocation(tx, draft.proposedLocation, stationId, submissionId, req);
+
+  if (submission.type === "update" && draft.proposedStation && stationId)
+    await applyExtraIdentifierUpdate(tx, draft.proposedStation, stationId, submissionId, req);
+
+  if (submission.type === "delete") await applyDeletedSubmission(tx, stationId, submissionId, req);
+
+  const { sectorIdByLocalId, sectorIdsToDeleteAfterCells, previousSectors, nextSectors } = await applyProposedSectors(
+    tx,
+    stationId,
+    draft.proposedSectorRows,
+  );
+
+  await checkProposedPciDuplicates(stationId, draft.proposedCellRows);
+  const targetCellsArr = await targetCellsPromise;
+  const targetCellsMap = new Map(targetCellsArr.map((targetCell) => [targetCell.id, targetCell] as const));
+  const cellChanges = await applyProposedCells(tx, draft.proposedCellRows, stationId, targetCellsMap, sectorIdByLocalId);
+
+  await deleteUnretainedSectors(tx, stationId, sectorIdsToDeleteAfterCells);
+  await createSectorAuditLog(tx, stationId, draft.proposedSectorRows, previousSectors, nextSectors, submissionId, req);
+  await createCellAuditLogs(tx, cellChanges, stationId, submissionId, req);
+
+  if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
+
+  await applySubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId);
+
+  const updated = await finalizeApprovedSubmission(tx, submission, submissionId, reviewerId, reviewerNotes);
+  const stationStringId = getApprovedStationStringId(submission, draft.proposedStation, stationId, stationContext);
+
+  return { submission: updated, resolvedStationId: stationId, stationStringId };
 }
 
 export async function approveSubmissionAction({
@@ -175,778 +1227,22 @@ export async function approveSubmissionAction({
   if (!submission) throw new ErrorResponse("NOT_FOUND");
   if (submission.status !== "pending") throw new ErrorResponse("BAD_REQUEST", { message: "Only pending submissions can be approved" });
 
-  if (submission.station_id !== null) {
-    const station = await db.query.stations.findFirst({ where: { id: submission.station_id }, columns: { status: true } });
-    if (!station || station.status !== "published")
-      throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
-  }
+  const stationContext = await validatePublishedStation(submission);
+  const duplicateCheckDraft = await loadApprovalDuplicateCheckDraft(submissionId);
+  await checkApprovalCellDuplicates(submission, duplicateCheckDraft, stationContext);
 
-  const transactionResult = await db.transaction(async (tx) => {
-    const [proposedStation, proposedLocation, proposedSectorRows, proposedCellRows] = await Promise.all([
-      tx.query.proposedStations.findFirst({ where: { submission_id: submissionId } }),
-      tx.query.proposedLocations.findFirst({ where: { submission_id: submissionId } }),
-      tx.query.proposedSectors.findMany({ where: { submission_id: submissionId }, orderBy: { id: "asc" } }),
-      tx.query.proposedCells.findMany({ where: { submission_id: submissionId }, with: { gsm: true, umts: true, lte: true, nr: true } }),
-    ]);
-
-    let stationId = submission.station_id;
-
-    let resolvedLocationId: number | null = null;
-
-    if (submission.type === "new") {
-      let locationId: number | null = null;
-
-      if (proposedLocation) {
-        locationId = await upsertLocation(tx, proposedLocation, req, submissionId);
-      }
-
-      if (proposedStation) {
-        const [newStation] = await tx
-          .insert(stations)
-          .values({
-            station_id: proposedStation.station_id ?? "",
-            location_id: locationId,
-            operator_id: proposedStation.operator_id,
-            notes: typeof proposedStation.notes === "string" && proposedStation.notes.trim() !== "" ? proposedStation.notes : null,
-            is_confirmed: true,
-            status: "published",
-          })
-          .returning();
-        if (!newStation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station" });
-        stationId = newStation.id;
-        await createAuditLog(
-          {
-            action: "stations.create",
-            table_name: "stations",
-            record_id: newStation.id,
-            new_values: newStation,
-            metadata: { submission_id: submissionId },
-          },
-          req,
-          tx,
-        );
-
-        if (proposedStation.networks_id || proposedStation.mno_name) {
-          const [newIdentifier] = await tx
-            .insert(extraIdentificators)
-            .values({
-              station_id: newStation.id,
-              networks_id: proposedStation.networks_id ?? null,
-              networks_name: proposedStation.networks_name ?? null,
-              mno_name: proposedStation.mno_name ?? null,
-            })
-            .returning();
-          if (newIdentifier) {
-            await createAuditLog(
-              {
-                action: "stations.update",
-                table_name: "extra_identificators",
-                record_id: newStation.id,
-                old_values: null,
-                new_values: newIdentifier,
-                metadata: { submission_id: submissionId },
-              },
-              req,
-              tx,
-            );
-          }
-        }
-      }
-      resolvedLocationId = locationId;
-    }
-
-    if (submission.type === "update" && proposedLocation && stationId) {
-      const currentStation = await tx.query.stations.findFirst({
-        where: { id: stationId },
-        with: { location: true },
-      });
-
-      const currentLocation = currentStation?.location ?? null;
-
-      const coordsUnchanged =
-        currentLocation && currentLocation.longitude === proposedLocation.longitude && currentLocation.latitude === proposedLocation.latitude;
-
-      if (coordsUnchanged) {
-        resolvedLocationId = currentLocation.id;
-        const metadataChanged =
-          currentLocation.region_id !== proposedLocation.region_id ||
-          currentLocation.city !== proposedLocation.city ||
-          currentLocation.address !== proposedLocation.address;
-
-        if (metadataChanged) {
-          await tx
-            .update(locations)
-            .set({ region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address, updatedAt: new Date() })
-            .where(eq(locations.id, currentLocation.id));
-          await createAuditLog(
-            {
-              action: "locations.update",
-              table_name: "locations",
-              record_id: currentLocation.id,
-              old_values: { region_id: currentLocation.region_id, city: currentLocation.city, address: currentLocation.address },
-              new_values: { region_id: proposedLocation.region_id, city: proposedLocation.city, address: proposedLocation.address },
-              metadata: { submission_id: submissionId },
-            },
-            req,
-            tx,
-          );
-        }
-      } else {
-        const locationAtNewCoords = await tx.query.locations.findFirst({
-          where: { AND: [{ longitude: proposedLocation.longitude }, { latitude: proposedLocation.latitude }] },
-        });
-
-        if (currentLocation && !locationAtNewCoords) {
-          const [newLoc] = await tx
-            .insert(locations)
-            .values({
-              longitude: proposedLocation.longitude,
-              latitude: proposedLocation.latitude,
-              region_id: proposedLocation.region_id,
-              city: proposedLocation.city,
-              address: proposedLocation.address,
-            })
-            .returning();
-          if (!newLoc) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create location" });
-          resolvedLocationId = newLoc.id;
-          await createAuditLog(
-            {
-              action: "locations.create",
-              table_name: "locations",
-              record_id: newLoc.id,
-              new_values: newLoc,
-              metadata: { submission_id: submissionId },
-            },
-            req,
-            tx,
-          );
-          await tx.update(stations).set({ location_id: newLoc.id, updatedAt: new Date() }).where(eq(stations.id, stationId));
-          await createAuditLog(
-            {
-              action: "stations.update",
-              table_name: "stations",
-              record_id: stationId,
-              new_values: { location_id: newLoc.id },
-              metadata: { submission_id: submissionId },
-            },
-            req,
-            tx,
-          );
-          const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
-          if (Number(orphanedResult?.orphaned ?? 0) === 0) {
-            await migrateStationPhotos(tx, stationId, newLoc.id);
-            await tx.delete(locations).where(eq(locations.id, currentLocation.id));
-            await createAuditLog(
-              {
-                action: "locations.delete",
-                table_name: "locations",
-                record_id: currentLocation.id,
-                old_values: { longitude: currentLocation.longitude, latitude: currentLocation.latitude },
-                metadata: { submission_id: submissionId },
-              },
-              req,
-              tx,
-            );
-          }
-        } else {
-          const locationId = await upsertLocation(tx, proposedLocation, req, submissionId);
-          resolvedLocationId = locationId;
-          await tx.update(stations).set({ location_id: locationId, updatedAt: new Date() }).where(eq(stations.id, stationId));
-          await createAuditLog(
-            {
-              action: "stations.update",
-              table_name: "stations",
-              record_id: stationId,
-              new_values: { location_id: locationId },
-              metadata: { submission_id: submissionId },
-            },
-            req,
-            tx,
-          );
-          if (currentLocation) {
-            const [orphanedResult] = await tx.select({ orphaned: count() }).from(stations).where(eq(stations.location_id, currentLocation.id));
-            if (Number(orphanedResult?.orphaned ?? 0) === 0) {
-              await migrateStationPhotos(tx, stationId, locationId);
-              await tx.delete(locations).where(eq(locations.id, currentLocation.id));
-              await createAuditLog(
-                {
-                  action: "locations.delete",
-                  table_name: "locations",
-                  record_id: currentLocation.id,
-                  old_values: { longitude: currentLocation.longitude, latitude: currentLocation.latitude },
-                  metadata: { submission_id: submissionId },
-                },
-                req,
-                tx,
-              );
-            }
-          }
-        }
-      }
-    }
-
-    if (submission.type === "update" && proposedStation && (proposedStation.networks_id || proposedStation.mno_name) && stationId) {
-      const existingIdentifier = await tx.query.extraIdentificators.findFirst({ where: { station_id: stationId } });
-      const proposedNetworksId = proposedStation.networks_id ?? null;
-      const proposedNetworksName = proposedStation.networks_name ?? null;
-      const proposedMnoName = proposedStation.mno_name ?? null;
-      const hasIdentifierChanges =
-        !existingIdentifier ||
-        existingIdentifier.networks_id !== proposedNetworksId ||
-        existingIdentifier.networks_name !== proposedNetworksName ||
-        existingIdentifier.mno_name !== proposedMnoName;
-
-      if (hasIdentifierChanges) {
-        const [updatedIdentifier] = existingIdentifier
-          ? await tx
-              .update(extraIdentificators)
-              .set({
-                networks_id: proposedNetworksId,
-                networks_name: proposedNetworksName,
-                mno_name: proposedMnoName,
-                updatedAt: new Date(),
-              })
-              .where(eq(extraIdentificators.id, existingIdentifier.id))
-              .returning()
-          : await tx
-              .insert(extraIdentificators)
-              .values({
-                station_id: stationId,
-                networks_id: proposedNetworksId,
-                networks_name: proposedNetworksName,
-                mno_name: proposedMnoName,
-              })
-              .returning();
-        if (updatedIdentifier) {
-          await createAuditLog(
-            {
-              action: "stations.update",
-              table_name: "extra_identificators",
-              record_id: stationId,
-              old_values: existingIdentifier ?? null,
-              new_values: updatedIdentifier,
-              metadata: { submission_id: submissionId },
-            },
-            req,
-            tx,
-          );
-        }
-      }
-    }
-
-    if (submission.type === "delete") {
-      if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete without a station" });
-      await tx.update(stations).set({ status: "inactive", updatedAt: new Date() }).where(eq(stations.id, stationId));
-      await createAuditLog(
-        {
-          action: "stations.update",
-          table_name: "stations",
-          record_id: stationId,
-          new_values: { status: "inactive" },
-          metadata: { submission_id: submissionId },
-        },
-        req,
-        tx,
-      );
-    }
-
-    const targetCellIds = proposedCellRows
-      .filter((c) => (c.operation === "update" || c.operation === "delete") && c.target_cell_id)
-      .map((c) => c.target_cell_id!);
-
-    const targetCellsArr =
-      targetCellIds.length > 0
-        ? await tx.query.cells.findMany({
-            where: { id: { in: targetCellIds } },
-            with: { gsm: true, umts: true, lte: true, nr: true },
-          })
-        : [];
-    const targetCellsMap = new Map(targetCellsArr.map((tc) => [tc.id, tc] as const));
-
-    const cellsAdded: Array<Record<string, unknown>> = [];
-    const cellsUpdated: Array<{ old: Record<string, unknown>; new: Record<string, unknown> }> = [];
-    const cellsDeleted: Array<Record<string, unknown>> = [];
-    const sectorIdByLocalId = new Map<string, number>();
-    let sectorIdsToDeleteAfterCells: number[] = [];
-    let previousSectors: Array<{ id: number; azimuth: number }> = [];
-
-    const approveOperatorId =
-      submission.type === "new"
-        ? (proposedStation?.operator_id ?? null)
-        : stationId
-          ? ((await tx.query.stations.findFirst({ where: { id: stationId }, columns: { operator_id: true } }))?.operator_id ?? null)
-          : null;
-
-    if (approveOperatorId) {
-      const dupEntries = proposedCellRows
-        .filter((c) => c.operation !== "delete" && c.rat)
-        .map((c) => {
-          const details = (c.lte ?? c.gsm ?? c.umts ?? c.nr) as Record<string, unknown> | null;
-          return { rat: c.rat!, details, excludeCellId: c.target_cell_id ?? undefined };
-        })
-        .filter((e): e is typeof e & { details: Record<string, unknown> } => e.details !== null);
-      if (dupEntries.length > 0) await checkCellDuplicatesBatch(dupEntries, approveOperatorId);
-    }
-
-    if (stationId && proposedSectorRows.length > 0) {
-      previousSectors = await tx.query.stationSectors.findMany({
-        where: { station_id: stationId },
-        columns: { id: true, azimuth: true },
-        orderBy: { id: "asc" },
-      });
-      const previousSectorIds = new Set(previousSectors.map((sector) => sector.id));
-      const retainedSectorIds = new Set<number>();
-
-      for (const proposed of proposedSectorRows as ProposedSectorRow[]) {
-        if (proposed.target_sector_id !== null && previousSectorIds.has(proposed.target_sector_id)) {
-          retainedSectorIds.add(proposed.target_sector_id);
-          sectorIdByLocalId.set(proposed.local_id, proposed.target_sector_id);
-          const current = previousSectors.find((sector) => sector.id === proposed.target_sector_id);
-          if (current && current.azimuth !== proposed.azimuth)
-            await tx
-              .update(stationSectors)
-              .set({ azimuth: proposed.azimuth })
-              .where(and(eq(stationSectors.id, proposed.target_sector_id), eq(stationSectors.station_id, stationId)));
-          continue;
-        }
-
-        const [insertedSector] = await tx
-          .insert(stationSectors)
-          .values({ station_id: stationId, azimuth: proposed.azimuth })
-          .returning({ id: stationSectors.id });
-        if (!insertedSector) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station sector" });
-        sectorIdByLocalId.set(proposed.local_id, insertedSector.id);
-      }
-
-      sectorIdsToDeleteAfterCells = previousSectors.filter((sector) => !retainedSectorIds.has(sector.id)).map((sector) => sector.id);
-    }
-
-    /* eslint-disable no-await-in-loop */
-    if (stationId) {
-      for (const proposed of proposedCellRows) {
-        if (proposed.operation === "delete" || !proposed.band_id) continue;
-        const excludeCellId = proposed.target_cell_id ?? undefined;
-        if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined)
-          await checkLTEPCIDuplicate(stationId, proposed.band_id, proposed.lte.pci, proposed.lte.earfcn, excludeCellId);
-        else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined)
-          await checkNRPCIDuplicate(stationId, proposed.band_id, proposed.nr.pci, proposed.nr.arfcn, excludeCellId);
-      }
-    }
-
-    for (const proposed of proposedCellRows) {
-      switch (proposed.operation) {
-        case "add": {
-          if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without a station" });
-          if (!proposed.rat) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without RAT" });
-          if (!proposed.band_id) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot add cell without band" });
-          const sectorId = resolveProposedCellSectorId(proposed, sectorIdByLocalId);
-
-          const [newCell] = await tx
-            .insert(cells)
-            .values({
-              station_id: stationId,
-              band_id: proposed.band_id,
-              sector_id: sectorId ?? null,
-              rat: proposed.rat,
-              notes: proposed.notes,
-              is_confirmed: proposed.is_confirmed,
-            })
-            .returning();
-          if (!newCell) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create cell" });
-
-          let newCellDetails: Record<string, unknown> | null = null;
-          switch (proposed.rat) {
-            case "GSM": {
-              const d = proposed.gsm;
-              if (d) {
-                const [inserted] = await tx.insert(gsmCells).values({ cell_id: newCell.id, lac: d.lac, cid: d.cid, e_gsm: d.e_gsm }).returning();
-                newCellDetails = inserted ?? null;
-              }
-              break;
-            }
-            case "UMTS": {
-              const d = proposed.umts;
-              if (d) {
-                const [inserted] = await tx
-                  .insert(umtsCells)
-                  .values({ cell_id: newCell.id, lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid })
-                  .returning();
-                newCellDetails = inserted ?? null;
-              }
-              break;
-            }
-            case "LTE": {
-              const d = proposed.lte;
-              if (d) {
-                const [inserted] = await tx
-                  .insert(lteCells)
-                  .values({
-                    cell_id: newCell.id,
-                    tac: d.tac,
-                    enbid: d.enbid,
-                    clid: d.clid,
-                    pci: d.pci,
-                    earfcn: d.earfcn,
-                    supports_iot: d.supports_iot,
-                  })
-                  .returning();
-                newCellDetails = inserted ?? null;
-              }
-              break;
-            }
-            case "NR": {
-              const d = proposed.nr;
-              if (d) {
-                const [inserted] = await tx
-                  .insert(nrCells)
-                  .values({
-                    cell_id: newCell.id,
-                    nrtac: d.nrtac,
-                    gnbid: d.gnbid,
-                    gnbid_length: computeGnbidLength(d.gnbid),
-                    clid: d.clid,
-                    pci: d.pci,
-                    arfcn: d.arfcn,
-                    type: d.type,
-                    supports_nr_redcap: d.supports_nr_redcap,
-                  })
-                  .returning();
-                newCellDetails = inserted ?? null;
-              }
-              break;
-            }
-          }
-          cellsAdded.push({ ...newCell, details: newCellDetails });
-          break;
-        }
-
-        case "update": {
-          const targetCellId = proposed.target_cell_id;
-          if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot update cell without target_cell_id" });
-
-          const targetCell = targetCellsMap.get(targetCellId);
-          if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
-
-          const cellUpdate: Record<string, unknown> = { updatedAt: new Date() };
-          if (proposed.band_id) cellUpdate.band_id = proposed.band_id;
-          if (proposed.rat) cellUpdate.rat = proposed.rat;
-          if (proposed.notes !== null) cellUpdate.notes = proposed.notes;
-          const sectorId = resolveProposedCellSectorId(proposed, sectorIdByLocalId);
-          if (sectorId !== undefined) cellUpdate.sector_id = sectorId;
-
-          await tx.update(cells).set(cellUpdate).where(eq(cells.id, targetCellId));
-
-          const rat = proposed.rat ?? targetCell.rat;
-          let newDetails: Record<string, unknown> | null = null;
-          switch (rat) {
-            case "GSM": {
-              const d = proposed.gsm;
-              if (d) {
-                const [updated] = await tx
-                  .update(gsmCells)
-                  .set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm, updatedAt: new Date() })
-                  .where(eq(gsmCells.cell_id, targetCellId))
-                  .returning();
-                newDetails = updated ?? null;
-              }
-              break;
-            }
-            case "UMTS": {
-              const d = proposed.umts;
-              if (d) {
-                const [updated] = await tx
-                  .update(umtsCells)
-                  .set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid, updatedAt: new Date() })
-                  .where(eq(umtsCells.cell_id, targetCellId))
-                  .returning();
-                newDetails = updated ?? null;
-              }
-              break;
-            }
-            case "LTE": {
-              const d = proposed.lte;
-              if (d) {
-                const [updated] = await tx
-                  .update(lteCells)
-                  .set({
-                    tac: d.tac,
-                    enbid: d.enbid,
-                    clid: d.clid,
-                    pci: d.pci,
-                    earfcn: d.earfcn,
-                    supports_iot: d.supports_iot,
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(lteCells.cell_id, targetCellId))
-                  .returning();
-                newDetails = updated ?? null;
-              }
-              break;
-            }
-            case "NR": {
-              const d = proposed.nr;
-              if (d) {
-                const [updated] = await tx
-                  .update(nrCells)
-                  .set({
-                    nrtac: d.nrtac,
-                    gnbid: d.gnbid,
-                    gnbid_length: d.gnbid ? computeGnbidLength(d.gnbid) : d.gnbid_length,
-                    clid: d.clid,
-                    pci: d.pci,
-                    arfcn: d.arfcn,
-                    supports_nr_redcap: d.supports_nr_redcap,
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(nrCells.cell_id, targetCellId))
-                  .returning();
-                newDetails = updated ?? null;
-              }
-              break;
-            }
-          }
-
-          const { gsm: _gsm, umts: _umts, lte: _lte, nr: _nr, ...baseCellOld } = targetCell;
-          const oldDetails = _gsm ?? _umts ?? _lte ?? _nr ?? null;
-
-          cellsUpdated.push({ old: { ...baseCellOld, details: oldDetails }, new: { ...baseCellOld, ...cellUpdate, details: newDetails } });
-          break;
-        }
-
-        case "delete": {
-          const targetCellId = proposed.target_cell_id;
-          if (!targetCellId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete cell without target_cell_id" });
-
-          const targetCell = targetCellsMap.get(targetCellId);
-          if (!targetCell) throw new ErrorResponse("NOT_FOUND", { message: `Target cell ${targetCellId} not found` });
-
-          await tx.delete(cells).where(eq(cells.id, targetCellId));
-          const { gsm: _dGsm, umts: _dUmts, lte: _dLte, nr: _dNr, ...baseCellDelete } = targetCell;
-          const deleteDetails = _dGsm ?? _dUmts ?? _dLte ?? _dNr ?? null;
-          cellsDeleted.push({ ...baseCellDelete, details: deleteDetails });
-          break;
-        }
-      }
-    }
-    /* eslint-enable no-await-in-loop */
-
-    if (stationId && sectorIdsToDeleteAfterCells.length > 0) {
-      const [assignedResult] = await tx.select({ value: count() }).from(cells).where(inArray(cells.sector_id, sectorIdsToDeleteAfterCells));
-      if (Number(assignedResult?.value ?? 0) > 0)
-        throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete sectors that are still assigned to cells" });
-      await tx.delete(stationSectors).where(inArray(stationSectors.id, sectorIdsToDeleteAfterCells));
-    }
-
-    if (stationId && proposedSectorRows.length > 0) {
-      const newSectors = await tx.query.stationSectors.findMany({
-        where: { station_id: stationId },
-        columns: { id: true, azimuth: true },
-        orderBy: { id: "asc" },
-      });
-      await createAuditLog(
-        {
-          action: "stations.update",
-          table_name: "station_sectors",
-          record_id: stationId,
-          old_values: previousSectors,
-          new_values: newSectors,
-          metadata: { submission_id: submissionId, station_id: stationId },
-        },
-        req,
-        tx,
-      );
-    }
-
-    if (cellsAdded.length > 0)
-      await createAuditLog(
-        {
-          action: "cells.create",
-          table_name: "cells",
-          record_id: null,
-          new_values: { cells: cellsAdded },
-          metadata: { submission_id: submissionId, station_id: stationId },
-        },
-        req,
-        tx,
-      );
-    if (cellsUpdated.length > 0)
-      await createAuditLog(
-        {
-          action: "cells.update",
-          table_name: "cells",
-          record_id: null,
-          old_values: { cells: cellsUpdated.map((c) => c.old) },
-          new_values: { cells: cellsUpdated.map((c) => c.new) },
-          metadata: { submission_id: submissionId },
-        },
-        req,
-        tx,
-      );
-    if (cellsDeleted.length > 0)
-      await createAuditLog(
-        {
-          action: "cells.delete",
-          table_name: "cells",
-          record_id: null,
-          old_values: { cells: cellsDeleted },
-          metadata: { submission_id: submissionId },
-        },
-        req,
-        tx,
-      );
-
-    if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
-
-    if (stationId && submission.type !== "delete") {
-      const sid = stationId;
-      const [photos, locationPhotoSels] = await Promise.all([
-        tx.query.submissionPhotos.findMany({ where: { submission_id: submissionId } }),
-        tx.query.submissionLocationPhotoSelections.findMany({ where: { submission_id: submissionId } }),
-      ]);
-
-      if (photos.length > 0) {
-        const photoLocationId =
-          resolvedLocationId ?? (await tx.query.stations.findFirst({ where: { id: sid }, columns: { location_id: true } }))?.location_id ?? null;
-        if (photoLocationId) {
-          await tx
-            .insert(locationPhotos)
-            .values(
-              photos.map((p) => ({
-                location_id: photoLocationId,
-                attachment_id: p.attachment_id,
-                submission_id: submissionId,
-                uploaded_by: submission.submitter_id,
-                note: p.note,
-                taken_at: p.taken_at,
-              })),
-            )
-            .onConflictDoNothing();
-
-          const locationPhotoRows = await tx
-            .select({ id: locationPhotos.id })
-            .from(locationPhotos)
-            .where(
-              and(
-                eq(locationPhotos.location_id, photoLocationId),
-                inArray(
-                  locationPhotos.attachment_id,
-                  photos.map((p) => p.attachment_id),
-                ),
-              ),
-            );
-
-          if (locationPhotoRows.length > 0) {
-            const existingMain = await tx.query.stationPhotoSelections.findFirst({
-              where: { station_id: sid, is_main: true },
-            });
-            await tx
-              .insert(stationPhotoSelections)
-              .values(
-                locationPhotoRows.map((lp, i) => ({
-                  station_id: sid,
-                  location_photo_id: lp.id,
-                  is_main: !existingMain && i === 0,
-                })),
-              )
-              .onConflictDoNothing();
-
-            const TMOBILE_MNC = 26002;
-            const ORANGE_MNC = 26003;
-            const stationOperator = await tx
-              .select({ mnc: operators.mnc })
-              .from(stations)
-              .innerJoin(operators, eq(stations.operator_id, operators.id))
-              .where(eq(stations.id, sid))
-              .limit(1)
-              .then((rows) => rows[0] ?? null);
-            const siblingMnc = stationOperator?.mnc === TMOBILE_MNC ? ORANGE_MNC : stationOperator?.mnc === ORANGE_MNC ? TMOBILE_MNC : null;
-
-            if (siblingMnc !== null) {
-              const [siblingStation] = await tx
-                .select({ id: stations.id })
-                .from(stations)
-                .innerJoin(operators, eq(stations.operator_id, operators.id))
-                .where(and(eq(stations.location_id, photoLocationId), eq(operators.mnc, siblingMnc)));
-
-              if (siblingStation) {
-                const siblingExistingMain = await tx.query.stationPhotoSelections.findFirst({
-                  where: { station_id: siblingStation.id, is_main: true },
-                });
-                await tx
-                  .insert(stationPhotoSelections)
-                  .values(
-                    locationPhotoRows.map((lp, i) => ({
-                      station_id: siblingStation.id,
-                      location_photo_id: lp.id,
-                      is_main: !siblingExistingMain && i === 0,
-                    })),
-                  )
-                  .onConflictDoNothing();
-              }
-            }
-          }
-        }
-      }
-
-      if (locationPhotoSels.length > 0) {
-        const requestedIds = locationPhotoSels.map((s) => s.location_photo_id);
-        const existingRows = await tx
-          .select({ location_photo_id: stationPhotoSelections.location_photo_id })
-          .from(stationPhotoSelections)
-          .where(and(eq(stationPhotoSelections.station_id, sid), inArray(stationPhotoSelections.location_photo_id, requestedIds)));
-        const existingIds = new Set(existingRows.map((r) => r.location_photo_id));
-        const toInsert = locationPhotoSels.filter((s) => !existingIds.has(s.location_photo_id));
-
-        const mainSel = locationPhotoSels.find((s) => s.is_main);
-        const mainIsAlreadyAssigned = mainSel !== undefined && existingIds.has(mainSel.location_photo_id);
-
-        if (toInsert.length > 0) {
-          const existingMain = await tx.query.stationPhotoSelections.findFirst({
-            where: { station_id: sid, is_main: true },
-          });
-          await tx.insert(stationPhotoSelections).values(
-            toInsert.map((s) => ({
-              station_id: sid,
-              location_photo_id: s.location_photo_id,
-              is_main: !existingMain && !mainIsAlreadyAssigned && s.is_main,
-            })),
-          );
-        }
-
-        if (mainIsAlreadyAssigned) {
-          await tx.update(stationPhotoSelections).set({ is_main: false }).where(eq(stationPhotoSelections.station_id, sid));
-          await tx
-            .update(stationPhotoSelections)
-            .set({ is_main: true })
-            .where(and(eq(stationPhotoSelections.station_id, sid), eq(stationPhotoSelections.location_photo_id, mainSel.location_photo_id)));
-        }
-      }
-    }
-
-    const now = new Date();
-    const [updated] = await tx
-      .update(submissions)
-      .set({
-        status: "approved",
-        reviewer_id: reviewerId,
-        review_notes: reviewerNotes ?? submission.review_notes,
-        reviewed_at: now,
-        updatedAt: now,
-      })
-      .where(eq(submissions.id, submissionId))
-      .returning();
-    if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
-
-    let stationStringId: string | null = null;
-    if (submission.type === "new" && proposedStation) {
-      stationStringId = proposedStation.station_id ?? null;
-    } else if (stationId) {
-      const stationRow = await tx.query.stations.findFirst({ where: { id: stationId }, columns: { station_id: true } });
-      stationStringId = stationRow?.station_id ?? null;
-    }
-
-    return { submission: updated, resolvedStationId: stationId, stationStringId };
-  });
+  const transactionResult = await db.transaction((tx) =>
+    runApprovalTransaction({
+      tx,
+      submission,
+      submissionId,
+      reviewerId,
+      reviewerNotes,
+      req,
+      duplicateCheckDraft,
+      stationContext,
+    }),
+  );
 
   const { submission: result, stationStringId } = transactionResult;
 
@@ -981,7 +1277,6 @@ export async function approveSubmissionAction({
 
   return { submission: result, station_id: stationStringId };
 }
-
 export async function rejectSubmissionAction({
   submissionId,
   reviewerId,
