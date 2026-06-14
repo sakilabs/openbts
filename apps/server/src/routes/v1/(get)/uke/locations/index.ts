@@ -182,10 +182,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
     if (recentDays) {
       const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${ukePermits}
-        WHERE ${ukePermits.location_id} = ${locFields.id}
-        AND ${ukePermits.createdAt} >= ${cutoff.toISOString()}
+      conditions.push(sql`${locFields.id} IN (
+        SELECT DISTINCT ${ukePermits.location_id}
+        FROM ${ukePermits}
+        WHERE ${ukePermits.createdAt} >= ${cutoff.toISOString()}
       )`);
     }
     return conditions;
@@ -201,6 +201,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   try {
     const locationConditions = buildLocationOnlyConditions(ukeLocations);
     if (hasPermitFilters) locationConditions.push(buildPermitExistsCondition(ukeLocations.id));
+    const locationWhereClause = locationConditions.length ? and(...locationConditions) : undefined;
 
     const permitJoinCondition = hasPermitFilters
       ? and(
@@ -282,15 +283,21 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         '[]'::json
       )`;
 
+    const pageLocations = db
+      .select({ id: ukeLocations.id })
+      .from(ukeLocations)
+      .where(locationWhereClause)
+      .orderBy(desc(ukeLocations.id))
+      .limit(limit)
+      .offset(offset)
+      .as("page_locations");
+
     const runCountQuery = async (): Promise<number> => {
       if (!locationConditions.length) {
         const result = await db.select({ count: count() }).from(ukeLocations);
         return result[0]?.count ?? 0;
       }
-      const result = await db
-        .select({ count: count() })
-        .from(ukeLocations)
-        .where(and(...locationConditions));
+      const result = await db.select({ count: count() }).from(ukeLocations).where(locationWhereClause);
       return result[0]?.count ?? 0;
     };
 
@@ -312,16 +319,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           )`,
           permits: permitsAgg,
         })
-        .from(ukeLocations)
+        .from(pageLocations)
+        .innerJoin(ukeLocations, eq(ukeLocations.id, pageLocations.id))
         .innerJoin(regions, eq(regions.id, ukeLocations.region_id))
         .leftJoin(ukePermits, permitJoinCondition)
         .leftJoin(bands, eq(bands.id, ukePermits.band_id))
         .leftJoin(operators, eq(operators.id, ukePermits.operator_id))
-        .where(locationConditions.length ? and(...locationConditions) : undefined)
         .groupBy(ukeLocations.id, regions.id)
-        .orderBy(desc(ukeLocations.id))
-        .limit(limit)
-        .offset(offset),
+        .orderBy(desc(ukeLocations.id)),
     ]);
 
     const data = rows.map((row) => ({

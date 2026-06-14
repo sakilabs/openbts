@@ -1,2 +1,0 @@
-CREATE INDEX "stations_published_location_idx" ON "stations" ("location_id","id") WHERE "status" = 'published';--> statement-breakpoint
-CREATE INDEX "stations_published_location_operator_idx" ON "stations" ("location_id","operator_id","id") WHERE "status" = 'published';
