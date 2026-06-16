@@ -6,15 +6,24 @@
   "tabs": {
     "planned": "Planowane",
     "completed": "Zakończone",
-    "canceled": "Odwołane"
+    "canceled": "Odwołane",
+    "inactive": "Nieaktywne stacje"
+  },
+  "status": {
+    "planned": "Zaplanowane",
+    "completed": "Zakończone",
+    "canceled": "Odwołane",
+    "inactive": "Nieaktywna"
   },
   "table": {
     "dateFrom": "Data od",
     "dateTo": "Data do",
+    "disabledDate": "Data wyłączenia",
     "lab": "Laboratorium"
   },
   "filters": {
     "stationIdPlaceholder": "Nr stacji...",
-    "allOperators": "Wszyscy operatorzy"
+    "allOperators": "Wszyscy operatorzy",
+    "allRegions": "Wszystkie województwa"
   }
 }

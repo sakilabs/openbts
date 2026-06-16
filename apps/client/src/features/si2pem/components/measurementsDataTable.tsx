@@ -15,6 +15,7 @@ import type { PlannedPEMStation } from "../api";
 
 type Props = {
   data: PlannedPEMStation[];
+  status: PlannedPEMStation["status"];
   isLoading: boolean;
   totalItems: number;
   pagination: PaginationState;
@@ -29,16 +30,68 @@ const STATUS_CLASSES: Record<string, string> = {
   PLANNED: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300",
   COMPLETED: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
   CANCELED: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
+  INACTIVE: "bg-zinc-100 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-300",
 };
 
-export function MeasurementsDataTable({ data, isLoading, totalItems, pagination, onPaginationChange, pageSizeOptions, t, tCommon, locale }: Props) {
-  const columns = useMemo<ColumnDef<PlannedPEMStation>[]>(
-    () => [
+export function MeasurementsDataTable({
+  data,
+  status,
+  isLoading,
+  totalItems,
+  pagination,
+  onPaginationChange,
+  pageSizeOptions,
+  t,
+  tCommon,
+  locale,
+}: Props) {
+  const columns = useMemo<ColumnDef<PlannedPEMStation>[]>(() => {
+    const measurementDateColumns: ColumnDef<PlannedPEMStation>[] =
+      status === "INACTIVE"
+        ? [
+            {
+              accessorKey: "disabled_date",
+              header: t("table.disabledDate"),
+              size: 140,
+              cell: ({ getValue }) => {
+                const date = getValue<string | null>();
+                return <p className="text-muted-foreground tabular-nums text-sm">{date ? formatShortDate(date, locale) : "-"}</p>;
+              },
+            },
+          ]
+        : [
+            {
+              accessorKey: "date.from",
+              header: t("table.dateFrom"),
+              size: 140,
+              cell: ({ getValue }) => {
+                const date = getValue<string | null>();
+                return <p className="text-muted-foreground tabular-nums text-sm">{date ? formatShortDate(date, locale) : "-"}</p>;
+              },
+            },
+            {
+              accessorKey: "date.to",
+              header: t("table.dateTo"),
+              size: 140,
+              cell: ({ getValue }) => {
+                const date = getValue<string | null>();
+                return <p className="text-muted-foreground tabular-nums text-sm">{date ? formatShortDate(date, locale) : "-"}</p>;
+              },
+            },
+            {
+              accessorKey: "lab.name",
+              header: t("table.lab"),
+              size: 150,
+              cell: ({ getValue }) => <span className="block truncate text-sm text-muted-foreground">{getValue<string | null>() ?? "-"}</span>,
+            },
+          ];
+
+    return [
       {
         accessorKey: "station_id",
         header: tCommon("labels.stationId"),
         size: 80,
-        cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">{getValue<string>()}</span>,
+        cell: ({ getValue }) => <span className="font-mono text-sm text-muted-foreground pl-2">{getValue<string | null>() ?? "-"}</span>,
       },
       {
         accessorKey: "operator",
@@ -61,24 +114,7 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
           );
         },
       },
-      {
-        accessorKey: "date.from",
-        header: t("table.dateFrom"),
-        size: 140,
-        cell: ({ getValue }) => {
-          const date = getValue<string>();
-          return <p className="text-muted-foreground tabular-nums text-sm">{formatShortDate(date, locale)}</p>;
-        },
-      },
-      {
-        accessorKey: "date.to",
-        header: t("table.dateTo"),
-        size: 140,
-        cell: ({ getValue }) => {
-          const date = getValue<string>();
-          return <p className="text-muted-foreground tabular-nums text-sm">{formatShortDate(date, locale)}</p>;
-        },
-      },
+      ...measurementDateColumns,
       {
         accessorKey: "location",
         header: tCommon("labels.location"),
@@ -103,12 +139,6 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
         },
       },
       {
-        accessorKey: "lab.name",
-        header: t("table.lab"),
-        size: 150,
-        cell: ({ getValue }) => <span className="block truncate text-sm text-muted-foreground">{getValue<string>()}</span>,
-      },
-      {
         accessorKey: "status",
         header: tCommon("labels.status"),
         size: 90,
@@ -116,7 +146,7 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
           const value = getValue<string>();
           return (
             <Badge variant="outline" className={`${STATUS_CLASSES[value]} whitespace-nowrap`}>
-              {t(`tabs.${value.toLowerCase() as "planned" | "completed" | "canceled"}`)}
+              {t(`status.${value.toLowerCase() as "planned" | "completed" | "canceled" | "inactive"}`)}
             </Badge>
           );
         },
@@ -140,9 +170,8 @@ export function MeasurementsDataTable({ data, isLoading, totalItems, pagination,
           </a>
         ),
       },
-    ],
-    [t, tCommon, locale],
-  );
+    ];
+  }, [t, tCommon, locale, status]);
 
   const table = useReactTable({
     data,

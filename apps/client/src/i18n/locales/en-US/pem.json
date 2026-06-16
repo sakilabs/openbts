@@ -6,15 +6,24 @@
   "tabs": {
     "planned": "Planned",
     "completed": "Completed",
-    "canceled": "Canceled"
+    "canceled": "Canceled",
+    "inactive": "Inactive stations"
+  },
+  "status": {
+    "planned": "Planned",
+    "completed": "Completed",
+    "canceled": "Canceled",
+    "inactive": "Inactive"
   },
   "table": {
     "dateFrom": "Data from",
     "dateTo": "Data to",
+    "disabledDate": "Disabling date",
     "lab": "Lab"
   },
   "filters": {
     "stationIdPlaceholder": "Station ID...",
-    "allOperators": "All operators"
+    "allOperators": "All operators",
+    "allRegions": "All regions"
   }
 }

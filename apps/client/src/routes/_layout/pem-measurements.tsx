@@ -1,6 +1,6 @@
 import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,14 +9,14 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { operatorsQueryOptions } from "@/features/shared/queries";
+import { operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
 import { fetchPlannedMeasurements } from "@/features/si2pem/api";
 import { MeasurementsDataTable } from "@/features/si2pem/components/measurementsDataTable";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { getOperatorColor } from "@/lib/operatorUtils";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45, minRows: 1 };
-type Tab = "PLANNED" | "COMPLETED" | "CANCELED";
+type Tab = "PLANNED" | "COMPLETED" | "CANCELED" | "INACTIVE";
 
 const PEM_MNC_TO_ENTITY: Record<number, string> = {
   26002: "T-Mobile Polska S.A.",
@@ -33,9 +33,11 @@ function PEMMeasurementsPage() {
   const [tab, setTab] = useState<Tab>("PLANNED");
   const [stationIdInput, setStationIdInput] = useState("");
   const [operatorFilter, setOperatorFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<number | null>(null);
   const stationId = useDeferredValue(stationIdInput);
 
   const { data: allOperators = [] } = useQuery(operatorsQueryOptions());
+  const { data: allRegions = [] } = useQuery(regionsQueryOptions());
   const pemOperators = allOperators.filter((op) => PEM_MNCS.has(op.mnc));
   const selectedOperatorObj = pemOperators.find((op) => PEM_MNC_TO_ENTITY[op.mnc] === operatorFilter) ?? null;
 
@@ -44,7 +46,7 @@ function PEMMeasurementsPage() {
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["pem", "measurements", tab, pagination.pageIndex, pagination.pageSize, stationId, operatorFilter],
+    queryKey: ["pem", "measurements", tab, pagination.pageIndex, pagination.pageSize, stationId, operatorFilter, regionFilter],
     queryFn: () =>
       fetchPlannedMeasurements({
         page: pagination.pageIndex + 1,
@@ -52,8 +54,8 @@ function PEMMeasurementsPage() {
         status: tab,
         stationId: stationId || undefined,
         operator: operatorFilter || undefined,
+        region: regionFilter ?? undefined,
       }),
-    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -75,6 +77,11 @@ function PEMMeasurementsPage() {
     resetPage();
   };
 
+  const handleRegionChange = (value: string) => {
+    setRegionFilter(value === "__all__" ? null : Number(value));
+    resetPage();
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       <div className="px-6 pt-4 pb-0 shrink-0">
@@ -84,9 +91,9 @@ function PEMMeasurementsPage() {
 
       <div className="px-6 py-2.5 border-b shrink-0 flex flex-col sm:flex-row sm:items-center gap-2 mt-3">
         <ButtonGroup>
-          {(["PLANNED", "COMPLETED", "CANCELED"] as const).map((value) => (
+          {(["PLANNED", "COMPLETED", "CANCELED", "INACTIVE"] as const).map((value) => (
             <Button key={value} size="sm" variant={tab === value ? "default" : "outline"} onClick={() => handleTabChange(value)}>
-              {t(`tabs.${value.toLowerCase() as "planned" | "completed" | "canceled"}`)}
+              {t(`tabs.${value.toLowerCase() as "planned" | "completed" | "canceled" | "inactive"}`)}
             </Button>
           ))}
         </ButtonGroup>
@@ -144,6 +151,24 @@ function PEMMeasurementsPage() {
               ))}
             </SelectContent>
           </Select>
+
+          <Select value={regionFilter !== null ? String(regionFilter) : "__all__"} onValueChange={handleRegionChange}>
+            <SelectTrigger className="h-8 w-40 sm:w-52 text-sm shrink-0">
+              <SelectValue>
+                <span className="truncate">
+                  {regionFilter !== null ? (allRegions.find((r) => r.id === regionFilter)?.name ?? t("filters.allRegions")) : t("filters.allRegions")}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{t("filters.allRegions")}</SelectItem>
+              {allRegions.map((r) => (
+                <SelectItem key={r.id} value={String(r.id)}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -151,6 +176,7 @@ function PEMMeasurementsPage() {
         <div ref={containerRef} className="flex-1 min-h-0 overflow-auto">
           <MeasurementsDataTable
             data={measurements}
+            status={tab}
             isLoading={isLoading}
             totalItems={totalItems}
             pagination={pagination}

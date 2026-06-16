@@ -1,7 +1,7 @@
 import { API_BASE, fetchJson } from "@/lib/api";
 import type { Operator, Region } from "@/types/station";
 
-type PlannedStatus = "PLANNED" | "COMPLETED" | "CANCELED";
+type PlannedStatus = "PLANNED" | "COMPLETED" | "CANCELED" | "INACTIVE";
 type Lab = { PCA: string; name: string };
 type Location = { longitude: number; latitude: number; city: string; address: string };
 type DateObj = { from: string; to: string };
@@ -12,9 +12,10 @@ export type PlannedPEMStation = {
   location: Location;
   region: Region | null;
   operator: Operator | null;
-  lab: Lab;
-  date: DateObj;
+  lab: Lab | null;
+  date: DateObj | null;
   status: PlannedStatus;
+  disabled_date?: string | null;
 };
 export type PlannedPEMsResponse = {
   totalCount: number;
@@ -27,6 +28,7 @@ type PlannedParams = {
   operators?: number[];
   stationId?: string;
   operator?: string;
+  region?: number;
 };
 
 export async function fetchPlannedMeasurements(params: PlannedParams): Promise<PlannedPEMsResponse> {
@@ -38,6 +40,7 @@ export async function fetchPlannedMeasurements(params: PlannedParams): Promise<P
   if (params.operators?.length) searchParams.set("operators", params.operators.join(","));
   if (params.stationId?.trim()) searchParams.set("station_id", params.stationId.trim());
   if (params.operator) searchParams.set("operator", params.operator);
+  if (params.region) searchParams.set("region", String(params.region));
 
   return fetchJson<PlannedPEMsResponse>(`${API_BASE}/pem/planned?${searchParams.toString()}`);
 }
