@@ -434,7 +434,7 @@
         comment: "openbts: block external access"
       loop:
         - "3000"
-        - "3031"
+        - "3031:3034"
         - "6379"
       notify: Save iptables rules
 
@@ -449,7 +449,7 @@
         comment: "openbts: block external access"
       loop:
         - "3000"
-        - "3031"
+        - "3031:3034"
         - "6379"
       notify: Save iptables rules
 

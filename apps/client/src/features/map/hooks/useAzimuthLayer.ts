@@ -202,7 +202,11 @@ function internalLocationsToAzimuthPoints(locations: LocationWithStations[]): Az
   }));
 }
 
-type GeoJSONTriple = { fill: GeoJSON.FeatureCollection; outline: GeoJSON.FeatureCollection; label: GeoJSON.FeatureCollection };
+type GeoJSONTriple = {
+  fill: GeoJSON.FeatureCollection;
+  outline: GeoJSON.FeatureCollection;
+  label: GeoJSON.FeatureCollection;
+};
 
 function makeGeoJSONTriple(points: AzimuthPoint[], lineLength: number, triangleHalfAngle: number): GeoJSONTriple {
   if (triangleHalfAngle === 0) {
@@ -238,17 +242,21 @@ function createFillLayerConfig(id: string, sourceId: string, minzoom: number): m
 
 function createOutlineLayerPaint(lineMode: boolean): LineLayerPaint {
   if (lineMode) {
-    return {
-      "line-color": ["get", "color"],
-      "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1, 16, 2.5, 18, 4],
-      "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 15, 0.6, 17, 0.85],
-    };
+    return createLineModeOutlineLayerPaint();
   }
 
   return {
     "line-color": ["get", "color"],
     "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1, 18, 2],
     "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.5, 17, 0.85],
+  };
+}
+
+function createLineModeOutlineLayerPaint(): LineLayerPaint {
+  return {
+    "line-color": ["get", "color"],
+    "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1.5, 15, 3, 17, 4.5, 18, 5.5],
+    "line-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 15, 0.7, 17, 0.9],
   };
 }
 

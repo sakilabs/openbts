@@ -12,7 +12,5 @@ allowBuilds:
   msw: true
   protobufjs: true
   sharp: true
-  zlib-sync: true
 
-settings:
-  minimumReleaseAge: 1440
+minimumReleaseAge: 1440
