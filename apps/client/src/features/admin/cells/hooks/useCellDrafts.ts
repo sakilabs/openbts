@@ -7,7 +7,7 @@ import type { Band } from "@/types/station";
 
 import type { CellDraftBase } from "../cellEditRow";
 import { RAT_ORDER, getSharedDetailFields } from "../rat";
-import { applySectorPatchWithPCISync } from "../sectorAssignmentSync";
+import { applyMissingSectorPCISync } from "../sectorAssignmentSync";
 
 type UseCellDraftsOptions<T extends CellDraftBase> = {
   initialCells: T[];
@@ -28,6 +28,7 @@ type UseCellDraftsReturn<T extends CellDraftBase> = {
   visibleRats: string[];
   toggleRat: (rat: string) => void;
   changeCell: (localId: string, patch: Partial<CellDraftBase>) => void;
+  syncMissingSectorsByPCI: () => void;
   addCell: (rat: string) => void;
   addRemainingLteCells: () => void;
   cloneCell: (localId: string) => void;
@@ -114,10 +115,15 @@ export function useCellDrafts<T extends CellDraftBase>({
   const changeCell = useCallback(
     (localId: string, patch: Partial<CellDraftBase>) => {
       if (disabled) return;
-      setCells((prev) => applySectorPatchWithPCISync(prev, localId, patch, (cell) => cell._localId));
+      setCells((prev) => prev.map((cell) => (cell._localId === localId ? { ...cell, ...patch } : cell)));
     },
     [disabled],
   );
+
+  const syncMissingSectorsByPCI = useCallback(() => {
+    if (disabled) return;
+    setCells((prev) => applyMissingSectorPCISync(prev));
+  }, [disabled]);
 
   const addCell = useCallback(
     (rat: string) => {
@@ -235,6 +241,7 @@ export function useCellDrafts<T extends CellDraftBase>({
     visibleRats,
     toggleRat,
     changeCell,
+    syncMissingSectorsByPCI,
     addCell,
     addRemainingLteCells,
     cloneCell,

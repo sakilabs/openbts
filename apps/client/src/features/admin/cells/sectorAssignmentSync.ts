@@ -3,28 +3,32 @@ type SectorSyncCell = {
   details: object;
 };
 
+function hasSector(cell: SectorSyncCell): boolean {
+  return cell._sectorLocalId !== undefined && cell._sectorLocalId !== null && cell._sectorLocalId !== "";
+}
+
 function getPCI(cell: SectorSyncCell): number | null {
   const details = cell.details as Record<string, unknown>;
   return typeof details.pci === "number" ? details.pci : null;
 }
 
-export function applySectorPatchWithPCISync<T extends SectorSyncCell>(
-  cells: T[],
-  targetId: string,
-  patch: object & { _sectorLocalId?: string | null },
-  getId: (cell: T) => string,
-): T[] {
-  if (!("_sectorLocalId" in patch)) return cells.map((cell) => (getId(cell) === targetId ? { ...cell, ...patch } : cell));
+export function applyMissingSectorPCISync<T extends SectorSyncCell>(cells: T[]): T[] {
+  const sectorsByPci = new Map<number, string>();
+  for (const cell of cells) {
+    if (!hasSector(cell)) continue;
+    const pci = getPCI(cell);
+    if (pci === null || sectorsByPci.has(pci)) continue;
+    sectorsByPci.set(pci, cell._sectorLocalId);
+  }
 
-  const targetCell = cells.find((cell) => getId(cell) === targetId);
-  if (!targetCell) return cells;
-
-  const targetPci = getPCI(targetCell);
-  if (targetPci === null) return cells.map((cell) => (getId(cell) === targetId ? { ...cell, ...patch } : cell));
+  if (sectorsByPci.size === 0) return cells;
 
   return cells.map((cell) => {
-    if (getId(cell) === targetId) return { ...cell, ...patch };
-    if (getPCI(cell) !== targetPci) return cell;
-    return { ...cell, _sectorLocalId: patch._sectorLocalId };
+    if (hasSector(cell)) return cell;
+    const pci = getPCI(cell);
+    if (pci === null) return cell;
+    const sectorLocalId = sectorsByPci.get(pci);
+    if (sectorLocalId === undefined) return cell;
+    return { ...cell, _sectorLocalId: sectorLocalId };
   });
 }
