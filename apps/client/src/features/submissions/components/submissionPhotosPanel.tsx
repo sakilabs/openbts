@@ -32,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchLocationPhotos, fetchStationPhotos, type LocationPhoto } from "@/features/station-details/api";
+import { type LocationPhoto, fetchLocationPhotos, fetchStationPhotos } from "@/features/station-details/api";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { cn } from "@/lib/utils";
 

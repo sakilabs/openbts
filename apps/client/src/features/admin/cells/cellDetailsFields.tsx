@@ -1,7 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DetailComputedCell, DetailInputCell } from "@/features/admin/cells/components/detailFieldCells";
-import { getRatDetailFields, type RatDetailField } from "@/features/shared/ratCellFields";
+import { type RatDetailField, getRatDetailFields } from "@/features/shared/ratCellFields";
 import { calculateComputedValues } from "@/features/shared/ratComputedValues";
 import { cn } from "@/lib/utils";
 

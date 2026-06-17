@@ -40,6 +40,9 @@ export const RAT_CELL_SPECS: Record<RatType, RatCellSpec> = {
     channelField: "arfcn",
     sortDetailField: "nci",
     defaultBandDuplexByValue: {
+      700: "FDD",
+      2100: "FDD",
+      2600: "TDD",
       3500: "TDD",
     },
     siblingSyncField: "nrtac",
@@ -55,6 +58,13 @@ export const RAT_CELL_SPECS: Record<RatType, RatCellSpec> = {
     identityDuplicateRules: [{ fields: ["enbid", "clid"], messageKey: "validation.enbidClidDuplicate" }],
     channelField: "earfcn",
     sortDetailField: "ecid",
+    defaultBandDuplexByValue: {
+      700: "FDD",
+      800: "FDD",
+      900: "FDD",
+      1800: "FDD",
+      2100: "FDD",
+    },
     siblingSyncField: "tac",
     supportsSectorPciSync: true,
   },
