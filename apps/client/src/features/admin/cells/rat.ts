@@ -2,6 +2,7 @@ export {
   RAT_ORDER,
   RAT_ICONS,
   RAT_OPTIONS,
+  findPreferredRatBand,
   ratToGenLabel,
   getRatDefaultBandDuplex,
   getRatSectorColumnIndex,

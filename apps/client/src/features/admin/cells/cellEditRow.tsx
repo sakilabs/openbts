@@ -13,7 +13,7 @@ import type { Band, SectorDraft } from "@/types/station";
 
 import { CellDetailsFields } from "./cellDetailsFields";
 import { useBandSelection } from "./hooks/useBandSelection";
-import { getRatDefaultBandDuplex, getRatShowsBandDuplex, type RAT_ORDER } from "./rat";
+import { type RAT_ORDER, getRatShowsBandDuplex } from "./rat";
 import { navigateRowHorizontal } from "./rowNav";
 
 export type CellDraftBase = {
@@ -62,7 +62,7 @@ export const CellEditRow = memo(function CellEditRow({
   const selectedSectorLabel = selectedSector ? `S${selectedSectorIndex + 1}` : "-";
 
   const handleBandValueChange = (value: number | null) => {
-    const newBandId = findPreferredBandId(value, duplex, getRatDefaultBandDuplex(localCell.rat, value));
+    const newBandId = findPreferredBandId(value, undefined, duplex);
     if (newBandId) {
       const patch: Partial<CellDraftBase> = { band_id: newBandId };
       if (localCell.rat === "GSM" && value === 1800) patch.details = { ...localCell.details, e_gsm: false };

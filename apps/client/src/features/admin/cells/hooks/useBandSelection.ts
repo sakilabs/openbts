@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 
+import { findPreferredRatBand } from "@/features/shared/rat";
 import type { Band } from "@/types/station";
 
 export function useBandSelection(bands: Band[], rat: string, bandId: number) {
@@ -26,18 +27,10 @@ export function useBandSelection(bands: Band[], rat: string, bandId: number) {
   );
 
   const findPreferredBandId = useCallback(
-    (value: number | null, preferredDuplex: string | null, fallbackDuplex?: string): number | null => {
-      if (value === null) return null;
-      const matchingBands = bandsForRat.filter((b) => b.value === value);
-      if (matchingBands.length === 0) return null;
-      if (matchingBands.some((b) => b.duplex === preferredDuplex)) return matchingBands.find((b) => b.duplex === preferredDuplex)?.id ?? null;
-      if (matchingBands.length === 1) return matchingBands[0]?.id ?? null;
-      if (fallbackDuplex && matchingBands.some((b) => b.duplex === fallbackDuplex)) {
-        return matchingBands.find((b) => b.duplex === fallbackDuplex)?.id ?? null;
-      }
-      return matchingBands[0]?.id ?? null;
+    (value: number | null, preferredDuplex: string | null | undefined, fallbackDuplex?: string | null): number | null => {
+      return findPreferredRatBand(bandsForRat, rat, value, preferredDuplex, fallbackDuplex)?.id ?? null;
     },
-    [bandsForRat],
+    [bandsForRat, rat],
   );
 
   return { bandsForRat, uniqueBandValues, currentBand, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, findPreferredBandId };

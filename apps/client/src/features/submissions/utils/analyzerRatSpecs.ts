@@ -1,3 +1,4 @@
+import { findPreferredRatBand } from "@/features/shared/rat";
 import { getBandFromEARFCN, getBandFromUARFCN, getBandMhz } from "@/lib/band-utils";
 import type { AnalyzerResult } from "@/routes/_layout/analyzer";
 import type { Band } from "@/types/station";
@@ -124,6 +125,10 @@ export function resolveAnalyzerBandChoices(
   const mhz = Number(getBandMhz(bandNumber));
   const matching = bands.filter((band) => band.rat === rat && band.value === mhz);
   if (matching.length === 1) return { band_id: matching[0].id, duplexChoices: [] };
-  if (matching.length > 1) return { band_id: null, duplexChoices: matching.map((band) => ({ duplex: band.duplex, band_id: band.id })) };
+  if (matching.length > 1) {
+    const defaultBand = findPreferredRatBand(matching, rat, mhz);
+    if (defaultBand) return { band_id: defaultBand.id, duplexChoices: [] };
+    return { band_id: null, duplexChoices: matching.map((band) => ({ duplex: band.duplex, band_id: band.id })) };
+  }
   return { band_id: null, duplexChoices: [] };
 }

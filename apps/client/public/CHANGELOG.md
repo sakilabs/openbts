@@ -18,6 +18,8 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - In-request PCI duplicate detection now catches conflicts on the same band before writes are applied
 - ARFCN/band validation is now shared across API paths so LTE EARFCN, UMTS UARFCN and NR ARFCN errors are validated consistently
 - Batch cell updates now preserve existing selected or edited cells while checking sibling duplicates, avoiding false conflicts
+- Band selection now respects RAT-specific per-band duplex defaults on submission, admin station and analyzer flows
+- Admin station photo uploads now clean up newly uploaded location photos if station assignment fails, preventing unassigned leftover photos
 
 # 2026-06-14
 

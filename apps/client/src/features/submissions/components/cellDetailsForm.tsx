@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CellDetailsFields } from "@/features/admin/cells/cellDetailsFields";
 import { useBandSelection } from "@/features/admin/cells/hooks/useBandSelection";
 import { navigateRowHorizontal } from "@/features/admin/cells/rowNav";
-import { getRatDefaultBandDuplex, getRatShowsBandDuplex } from "@/features/shared/rat";
+import { getRatShowsBandDuplex } from "@/features/shared/rat";
 import { getBandName } from "@/features/station-details/frequencyCalc";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { getKnownEARFCN } from "@/lib/earfcn-fill";
@@ -214,7 +214,7 @@ const CellRow = memo(function CellRow({
   );
   const handleBandValueChange = useCallback(
     (value: number | null) => {
-      const newBandId = findPreferredBandId(value, duplex, getRatDefaultBandDuplex(rat, value));
+      const newBandId = findPreferredBandId(value, undefined, duplex);
       if (!newBandId) return;
       const patch: Partial<ProposedCellForm> = { band_id: newBandId };
       if (rat === "GSM" && value === 1800) patch.details = { ...cell.details, e_gsm: false } as ProposedCellForm["details"];

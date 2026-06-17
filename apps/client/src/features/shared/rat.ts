@@ -28,6 +28,12 @@ type RatCellSpec = {
   supportsSectorPciSync?: boolean;
 };
 
+type RatBandChoice = {
+  rat: string;
+  value: number;
+  duplex: string | null;
+};
+
 export const RAT_CELL_SPECS: Record<RatType, RatCellSpec> = {
   NR: {
     value: "NR",
@@ -147,6 +153,43 @@ export function getRatDefaultBandDuplex(rat: string, bandValue?: number | null):
   const spec = getRatCellSpec(rat);
   if (bandValue !== undefined && bandValue !== null) return spec?.defaultBandDuplexByValue?.[bandValue] ?? spec?.defaultBandDuplex;
   return spec?.defaultBandDuplex;
+}
+
+export function findPreferredRatBand<T extends RatBandChoice>(
+  bands: readonly T[],
+  rat: string,
+  bandValue?: number | null,
+  preferredDuplex?: string | null,
+  fallbackDuplex?: string | null,
+): T | undefined {
+  if (bandValue === null) return undefined;
+  const matchingBands = bands.filter((band) => band.rat === rat && (bandValue === undefined || band.value === bandValue));
+  if (matchingBands.length === 0) return undefined;
+  if (preferredDuplex !== undefined) {
+    const preferredBand = matchingBands.find((band) => band.duplex === preferredDuplex);
+    if (preferredBand) return preferredBand;
+  }
+  if (bandValue !== undefined) {
+    const defaultDuplex = getRatDefaultBandDuplex(rat, bandValue);
+    const defaultBand = defaultDuplex !== undefined ? matchingBands.find((band) => band.duplex === defaultDuplex) : undefined;
+    if (defaultBand) return defaultBand;
+  } else {
+    const defaultBand = matchingBands.find((band) => {
+      const defaultDuplex = getRatDefaultBandDuplex(rat, band.value);
+      return defaultDuplex !== undefined && band.duplex === defaultDuplex;
+    });
+    if (defaultBand) return defaultBand;
+  }
+  if (fallbackDuplex !== undefined) {
+    const fallbackBand = matchingBands.find((band) => band.duplex === fallbackDuplex);
+    if (fallbackBand) return fallbackBand;
+  }
+  if (bandValue === undefined) {
+    const defaultDuplex = getRatDefaultBandDuplex(rat);
+    const defaultBand = defaultDuplex !== undefined ? matchingBands.find((band) => band.duplex === defaultDuplex) : undefined;
+    if (defaultBand) return defaultBand;
+  }
+  return matchingBands[0];
 }
 
 export function getRatSiblingSyncField(rat: string): string | undefined {

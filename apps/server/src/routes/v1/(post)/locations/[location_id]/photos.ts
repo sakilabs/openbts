@@ -1,5 +1,6 @@
 import type { MultipartFile } from "@fastify/multipart";
 import { attachments, locationPhotos } from "@openbts/drizzle";
+import { inArray } from "drizzle-orm";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { fileTypeFromBuffer } from "file-type";
 import fs from "node:fs/promises";
@@ -53,6 +54,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   await ensureUploadDir();
 
   const savedPaths: string[] = [];
+  const insertedAttachmentIds: number[] = [];
   const insertedRows: PhotoItem[] = [];
   const notes: string[] = [];
 
@@ -102,6 +104,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
         .values({ uuid: fileUuid, name: filePart.filename ?? filename, author_id: session.user.id, mime_type: "image/webp", size: stats.size })
         .returning();
       if (!newAttachment) throw new ErrorResponse("FAILED_TO_CREATE");
+      insertedAttachmentIds.push(newAttachment.id);
 
       const [photoRow] = await db
         .insert(locationPhotos)
@@ -118,6 +121,11 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       });
     }
   } catch (error) {
+    if (insertedAttachmentIds.length > 0) {
+      try {
+        await db.delete(attachments).where(inArray(attachments.id, insertedAttachmentIds));
+      } catch {}
+    }
     await Promise.all(
       savedPaths.map(async (p) => {
         try {
@@ -126,7 +134,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       }),
     );
     if (error instanceof ErrorResponse) throw error;
-    throw (new ErrorResponse("INTERNAL_SERVER_ERROR"), { cause: error });
+    throw new ErrorResponse("INTERNAL_SERVER_ERROR", { cause: error });
   }
 
   await createAuditLog(

@@ -16,7 +16,7 @@ import {
   setStationPhotoSelection,
   updateLocationPhotoNote,
   updateLocationPhotoTakenAt,
-  uploadLocationPhotos,
+  uploadAndAssignStationPhotos,
 } from "@/features/station-details/api";
 import { cn } from "@/lib/utils";
 
@@ -102,12 +102,16 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: (files: File[]) => uploadLocationPhotos(locationId, files),
-    onSuccess: async (newPhotos) => {
-      const newIds = newPhotos.map((p) => p.id);
-      const mergedSelected = [...new Set([...selected, ...newIds])];
-      const newMainId = locationPhotos.length === 0 ? (newIds[0] ?? null) : mainId;
-      await setStationPhotoSelection(stationId, mergedSelected, newMainId);
+    mutationFn: (files: File[]) =>
+      uploadAndAssignStationPhotos({
+        locationId,
+        stationId,
+        files,
+        selected: Array.from(selected),
+        mainId,
+        useFirstUploadedAsMain: locationPhotos.length === 0,
+      }),
+    onSuccess: async () => {
       setSelectedOverride(null);
       setMainIdOverride("unset");
       await Promise.all([
@@ -116,7 +120,13 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
       ]);
       toast.success(t("photos.uploaded"));
     },
-    onError: () => toast.error(t("photos.uploadFailed")),
+    onError: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["location-photos", locationId] }),
+        queryClient.invalidateQueries({ queryKey: ["station-photos", stationId] }),
+      ]);
+      toast.error(t("photos.uploadFailed"));
+    },
   });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

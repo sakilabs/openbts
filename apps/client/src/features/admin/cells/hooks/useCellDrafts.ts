@@ -6,7 +6,7 @@ import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaini
 import type { Band } from "@/types/station";
 
 import type { CellDraftBase } from "../cellEditRow";
-import { RAT_ORDER, getRatDefaultBandDuplex, getRatSortDetailField, getSharedDetailFields } from "../rat";
+import { RAT_ORDER, findPreferredRatBand, getRatSortDetailField, getSharedDetailFields } from "../rat";
 import { applyMissingSectorPCISync } from "../sectorAssignmentSync";
 
 type UseCellDraftsOptions<T extends CellDraftBase> = {
@@ -124,8 +124,7 @@ export function useCellDrafts<T extends CellDraftBase>({
         return;
       }
       setCells((prev) => {
-        const defaultDuplex = getRatDefaultBandDuplex(rat);
-        const defaultBand = defaultDuplex ? (bandsForRat.find((b) => b.duplex === defaultDuplex) ?? bandsForRat[0]) : bandsForRat[0];
+        const defaultBand = findPreferredRatBand(bandsForRat, rat) ?? bandsForRat[0];
         const newCell = createNewCell(rat, defaultBand);
         const existingSibling = prev.find((c) => c.rat === rat);
         if (existingSibling) {

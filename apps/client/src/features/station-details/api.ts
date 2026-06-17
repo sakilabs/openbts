@@ -89,6 +89,36 @@ export async function deleteLocationPhoto(locationId: number, photoId: number): 
   await fetchJson(`${API_BASE}/locations/${locationId}/photos/${photoId}`, { method: "DELETE" });
 }
 
+export async function uploadAndAssignStationPhotos({
+  locationId,
+  stationId,
+  files,
+  selected,
+  mainId,
+  useFirstUploadedAsMain,
+}: {
+  locationId: number;
+  stationId: number;
+  files: File[];
+  selected: number[];
+  mainId: number | null;
+  useFirstUploadedAsMain: boolean;
+}): Promise<LocationPhoto[]> {
+  const newPhotos = await uploadLocationPhotos(locationId, files);
+  const newIds = newPhotos.map((photo) => photo.id);
+  const nextSelected = [...new Set([...selected, ...newIds])];
+  const nextMainId = useFirstUploadedAsMain ? (newIds[0] ?? mainId) : mainId;
+
+  try {
+    await setStationPhotoSelection(stationId, nextSelected, nextMainId);
+  } catch (error) {
+    await Promise.allSettled(newIds.map((id) => deleteLocationPhoto(locationId, id)));
+    throw error;
+  }
+
+  return newPhotos;
+}
+
 export async function fetchElevation(latitude: number, longitude: number): Promise<number> {
   const res = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${latitude}&longitude=${longitude}`);
   if (!res.ok) throw new Error("Failed to fetch elevation");

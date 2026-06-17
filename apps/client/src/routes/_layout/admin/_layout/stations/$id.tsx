@@ -20,7 +20,7 @@ import { StationInfoForm } from "@/features/admin/stations/components/stationInf
 import { StationPhotoSelector } from "@/features/admin/stations/components/StationPhotoSelector";
 import { type LocalCell, isCellModified, useSaveStationMutation } from "@/features/admin/stations/mutations";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
-import { setStationPhotoSelection, uploadLocationPhotos } from "@/features/station-details/api";
+import { uploadAndAssignStationPhotos } from "@/features/station-details/api";
 import { PhotoUploadSection } from "@/features/submissions/components/photoUploadSection";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { findDuplicateCids, findDuplicateEnbidClids } from "@/features/submissions/utils/cellDuplicates";
@@ -470,17 +470,16 @@ function StationDetailForm({
           if (result.mode === "create") {
             const resultLocationId = result.station.location?.id;
             if (photos.length > 0 && resultLocationId) {
-              await uploadLocationPhotos(resultLocationId, photos)
-                .then((uploaded) =>
-                  setStationPhotoSelection(
-                    result.station.id,
-                    uploaded.map((p) => p.id),
-                    uploaded[0]?.id ?? null,
-                  ),
-                )
-                .catch(() => {
-                  toast.error(t("toast.photoUploadFailed"));
-                });
+              await uploadAndAssignStationPhotos({
+                locationId: resultLocationId,
+                stationId: result.station.id,
+                files: photos,
+                selected: [],
+                mainId: null,
+                useFirstUploadedAsMain: true,
+              }).catch(() => {
+                toast.error(t("toast.photoUploadFailed"));
+              });
             }
             toast.success(t("toast.created"));
             void navigate({ to: `/admin/stations/${result.station.id}`, replace: true });
