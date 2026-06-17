@@ -15,7 +15,7 @@ import type {
   SubmissionMode,
   UMTSCellDetails,
 } from "../types";
-import { type CellLike, findDuplicateCids, findDuplicateEnbidClids } from "./cellDuplicates";
+import { type CellLike, findDuplicateIdentityGroups } from "./cellDuplicates";
 import { buildOriginalCellsMap, getCellDiffStatus } from "./cells";
 export type StationErrors = {
   station_id?: string;
@@ -111,19 +111,12 @@ export function validateCells(cells: ProposedCellForm[], bands?: Band[], origina
 
   const cellLikes: CellLike[] = cells.map((c) => ({ id: c.id, rat: c.rat, details: c.details }));
 
-  for (const [_, duplicateIds] of findDuplicateCids(cellLikes)) {
-    for (const cellId of duplicateIds) {
+  for (const group of findDuplicateIdentityGroups(cellLikes)) {
+    for (const cellId of group.duplicateIds) {
       if (!errors[cellId]) errors[cellId] = {};
       if (!errors[cellId].details) errors[cellId].details = {};
-      errors[cellId].details!.cid = "validation.cidDuplicate";
+      for (const field of group.fields) errors[cellId].details![field] = group.messageKey;
     }
-  }
-
-  for (const cellId of findDuplicateEnbidClids(cellLikes)) {
-    if (!errors[cellId]) errors[cellId] = {};
-    if (!errors[cellId].details) errors[cellId].details = {};
-    errors[cellId].details!.enbid = "validation.enbidClidDuplicate";
-    errors[cellId].details!.clid = "validation.enbidClidDuplicate";
   }
 
   return errors;

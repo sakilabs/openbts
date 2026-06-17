@@ -1,4 +1,4 @@
-import { Cancel01Icon, Image01Icon, PencilEdit02Icon, StarIcon, Tick02Icon, Upload04Icon, ZoomInAreaIcon } from "@hugeicons/core-free-icons";
+import { Image01Icon, StarIcon, Tick02Icon, Upload04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -6,9 +6,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Lightbox } from "@/components/lightbox";
+import { AddPhotoTile, PhotoEditPopover, PhotoImage, isRecentPhoto } from "@/components/photoGridPrimitives";
 import { Button } from "@/components/ui/button";
-import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import type { LocationPhoto } from "@/features/station-details/api";
 import {
@@ -20,11 +19,6 @@ import {
   uploadLocationPhotos,
 } from "@/features/station-details/api";
 import { cn } from "@/lib/utils";
-
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-function isNew(createdAt: string) {
-  return Date.now() - new Date(createdAt).getTime() < SEVEN_DAYS_MS;
-}
 
 type Props = { stationId: number; locationId: number };
 
@@ -87,11 +81,6 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
     },
     onError: () => toast.error(t("photos.noteFailed")),
   });
-
-  function openEdit(photo: LocationPhoto, e: React.MouseEvent) {
-    e.stopPropagation();
-    setEditState({ id: photo.id, note: photo.note ?? "", takenAt: photo.taken_at ? new Date(photo.taken_at) : null });
-  }
 
   const isDirty = useMemo(() => {
     const serverIds = new Set(stationPhotos.map((p) => p.id));
@@ -266,30 +255,18 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                   if (e.key === "Enter" || e.key === " ") toggleSelect(photo);
                 }}
               >
-                <div className="relative h-36">
-                  <img
-                    src={`/uploads/${photo.attachment_uuid}.webp`}
-                    alt={photo.note ?? ""}
-                    className={cn("w-full h-full object-cover transition-opacity", isSelected ? "" : "opacity-40")}
-                    loading="lazy"
-                  />
+                <PhotoImage
+                  src={`/uploads/${photo.attachment_uuid}.webp`}
+                  alt={photo.note ?? ""}
+                  imageClassName={cn("transition-opacity", isSelected ? "" : "opacity-40")}
+                  onOpen={() => setLightboxIndex(locationPhotos.indexOf(photo))}
+                >
                   {isMain && (
                     <span className="absolute top-1 left-1 bg-amber-500 text-white rounded-full p-0.5">
                       <HugeiconsIcon icon={StarIcon} className="size-3" />
                     </span>
                   )}
-                  <button
-                    type="button"
-                    className="absolute top-1 right-1 size-8 sm:size-6 rounded-full bg-black/50 ring-1 ring-white/30 shadow-sm flex items-center justify-center cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxIndex(locationPhotos.indexOf(photo));
-                    }}
-                    aria-label="View full size"
-                  >
-                    <HugeiconsIcon icon={ZoomInAreaIcon} className="size-3 text-white" />
-                  </button>
-                  {isNew(photo.createdAt) ? (
+                  {isRecentPhoto(photo.createdAt) ? (
                     <span className="absolute bottom-1.5 left-1.5 bg-amber-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none pointer-events-none">
                       NEW
                     </span>
@@ -302,7 +279,7 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                   >
                     {isSelected && <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" />}
                   </span>
-                </div>
+                </PhotoImage>
                 <div className={cn("border-t", isSelected && !isMain ? "grid grid-cols-2 divide-x" : "")}>
                   {isSelected && !isMain && (
                     <button
@@ -317,82 +294,30 @@ export function StationPhotoSelector({ stationId, locationId }: Props) {
                       <HugeiconsIcon icon={StarIcon} className="size-3.5" />
                     </button>
                   )}
-                  <Popover
-                    open={editState?.id === photo.id}
-                    onOpenChange={(open) => {
-                      if (!open) setEditState(null);
-                    }}
-                  >
-                    <PopoverTrigger
-                      type="button"
-                      onClick={(e) => openEdit(photo, e)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                    >
-                      <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-                      {t("common:actions.edit")}
-                    </PopoverTrigger>
-                    <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
-                        <input
-                          value={editState?.note ?? ""}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setEditState((prev) => (prev ? { ...prev, note: v } : prev));
-                          }}
-                          maxLength={100}
-                          placeholder={t("photos.notePlaceholder")}
-                          className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                        <DatePickerInput
-                          value={editState?.takenAt ?? null}
-                          onChange={(v) => setEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
-                        />
-                      </div>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => setEditState(null)}>
-                          <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
-                          {t("common:actions.cancel")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            editMutation.mutate({
-                              id: photo.id,
-                              note: editState?.note ?? "",
-                              takenAt: editState?.takenAt?.toISOString() ?? null,
-                              originalNote: photo.note ?? "",
-                              originalTakenAt: photo.taken_at ?? null,
-                            })
-                          }
-                          disabled={editMutation.isPending}
-                        >
-                          {editMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
-                          {t("common:actions.save")}
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <PhotoEditPopover
+                    isOpen={editState?.id === photo.id}
+                    note={editState?.note ?? ""}
+                    takenAt={editState?.takenAt ?? null}
+                    onOpen={() => setEditState({ id: photo.id, note: photo.note ?? "", takenAt: photo.taken_at ? new Date(photo.taken_at) : null })}
+                    onOpenChange={(open) => !open && setEditState(null)}
+                    onNoteChange={(note) => setEditState(editState ? { ...editState, note } : editState)}
+                    onTakenAtChange={(takenAt) => setEditState(editState ? { ...editState, takenAt } : editState)}
+                    onSave={() =>
+                      editMutation.mutate({
+                        id: photo.id,
+                        note: editState?.note ?? "",
+                        takenAt: editState?.takenAt?.toISOString() ?? null,
+                        originalNote: photo.note ?? "",
+                        originalTakenAt: photo.taken_at ?? null,
+                      })
+                    }
+                    isSaving={editMutation.isPending}
+                  />
                 </div>
               </div>
             );
           })}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadMutation.isPending}
-            className="h-36 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
-          >
-            {uploadMutation.isPending ? (
-              <Spinner className="size-5" />
-            ) : (
-              <HugeiconsIcon icon={Upload04Icon} className="size-5 text-muted-foreground" />
-            )}
-            <span className="text-xs text-muted-foreground">{t("photos.add")}</span>
-          </button>
+          <AddPhotoTile onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending} isLoading={uploadMutation.isPending} />
         </div>
       </div>
       <Lightbox photos={locationPhotos} index={lightboxIndex} onClose={closeLightbox} onPrev={prevLightbox} onNext={nextLightbox} />

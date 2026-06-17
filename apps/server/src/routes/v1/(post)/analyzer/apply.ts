@@ -1,8 +1,6 @@
-import { cells, gsmCells, lteCells, nrCells, stations, umtsCells } from "@openbts/drizzle";
+import { cells, lteCells, stations } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
-import { isARFCNValidForBand } from "@openbts/shared/frequency";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify";
 import z from "zod";
 
@@ -10,22 +8,18 @@ import { ErrorResponse } from "../../../../errors.ts";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.ts";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.ts";
 import { createAuditLog } from "../../../../services/auditLog.service.ts";
-import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../../../services/cellDuplicateCheck.service.ts";
-import { formatARFCNBandErrorMessage } from "../../../../utils/cellARFCNValidation.ts";
+import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../services/cellDuplicateCheck.service.ts";
+import { validateCellARFCNsAgainstBands } from "../../../../utils/cellARFCNValidation.ts";
 import {
-  gsmInsertSchema,
-  gsmUpdateSchema,
-  lteInsertSchema,
-  lteUpdateSchema,
-  nrInsertSchema,
-  nrUpdateSchema,
-  umtsInsertSchema,
-  umtsUpdateSchema,
-} from "../../../../utils/ratCellSchemas.ts";
-import { computeGnbidLength, makeDetailsRatRefine, validateCellDuplicates } from "../../../../utils/submission.helpers.ts";
-
-const lteCellsSchema = createSelectSchema(lteCells);
-const nrCellsSchema = createSelectSchema(nrCells);
+  insertRATCellDetails,
+  type LTEInsertDetails,
+  type LTEUpdateDetails,
+  type RATInsertDetails,
+  type RATUpdateDetails,
+  updateRATCellDetails,
+} from "../../../../utils/ratCellPersistence.ts";
+import { normalRatInsertSchemaMap, normalRatUpdateSchemaMap } from "../../../../utils/ratCellSchemas.ts";
+import { makeDetailsRatRefine, validateCellDuplicates } from "../../../../utils/submission.helpers.ts";
 
 const ITEMS_CAP = 50;
 const cellSchema = z.discriminatedUnion("operation", [
@@ -37,7 +31,7 @@ const cellSchema = z.discriminatedUnion("operation", [
       rat: z.enum(["GSM", "UMTS", "LTE", "NR"]),
       details: z.unknown().optional(),
     })
-    .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchema })),
+    .superRefine(makeDetailsRatRefine(normalRatInsertSchemaMap)),
   z
     .object({
       operation: z.literal("update"),
@@ -46,7 +40,7 @@ const cellSchema = z.discriminatedUnion("operation", [
       rat: z.enum(["GSM", "UMTS", "LTE", "NR"]),
       details: z.unknown().optional(),
     })
-    .superRefine(makeDetailsRatRefine({ GSM: gsmUpdateSchema, UMTS: umtsUpdateSchema, LTE: lteUpdateSchema, NR: nrUpdateSchema })),
+    .superRefine(makeDetailsRatRefine(normalRatUpdateSchemaMap)),
 ]);
 
 const requestSchema = z.object({
@@ -69,17 +63,6 @@ const responseSchema = z.object({
     }),
   ),
 });
-
-type GSMUpdateDetails = z.infer<typeof gsmUpdateSchema>;
-type UMTSUpdateDetails = z.infer<typeof umtsUpdateSchema>;
-type LTEUpdateDetails = z.infer<typeof lteUpdateSchema>;
-type NRUpdateDetails = z.infer<typeof nrUpdateSchema>;
-type GSMInsertDetails = z.infer<typeof gsmInsertSchema>;
-type UMTSInsertDetails = z.infer<typeof umtsInsertSchema>;
-type LTEInsertDetails = z.infer<typeof lteInsertSchema>;
-type NRInsertDetails = z.infer<typeof nrInsertSchema>;
-type RATInsertDetails = GSMInsertDetails | UMTSInsertDetails | LTEInsertDetails | NRInsertDetails;
-type RATUpdateDetails = GSMUpdateDetails | UMTSUpdateDetails | LTEUpdateDetails | NRUpdateDetails;
 
 type ReqBody = { Body: z.infer<typeof requestSchema> };
 type ResponseData = z.infer<typeof responseSchema.shape.data>;
@@ -165,16 +148,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
       validateCellDuplicates(item.cells);
 
-      for (const cell of item.cells) {
-        if (!cell.band_id || !cell.details) continue;
-        const band = bandMap.get(cell.band_id);
-        if (!band?.value) continue;
-        const details = cell.details as Record<string, unknown>;
-        const arfcn = (details["earfcn"] ?? details["arfcn"]) as number | null | undefined;
-        if (arfcn === null || arfcn === undefined) continue;
-        if (!isARFCNValidForBand(cell.rat, band.value, arfcn, band.duplex))
-          throw new ErrorResponse("BAD_REQUEST", { message: formatARFCNBandErrorMessage(cell.rat, band.value, arfcn) });
-      }
+      validateCellARFCNsAgainstBands(item.cells, bandMap);
 
       const checks: Promise<void>[] = [];
 
@@ -187,104 +161,24 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
         checks.push(checkCellDuplicatesBatch(cellEntries, station.operator_id));
       }
 
-      for (const cell of item.cells) {
-        const excludeId = cell.operation === "update" ? cell.target_cell_id : undefined;
-        if (cell.rat === "LTE") {
-          const details = cell.details as z.infer<typeof lteCellsSchema>;
-          if (details.pci !== null && details.pci !== undefined)
-            checks.push(checkLTEPCIDuplicate(station.id, cell.band_id, details.pci, details.earfcn, excludeId));
-        } else if (cell.rat === "NR") {
-          const details = cell.details as z.infer<typeof nrCellsSchema>;
-          if (details.pci !== null && details.pci !== undefined)
-            checks.push(checkNRPCIDuplicate(station.id, cell.band_id, details.pci, details.arfcn, excludeId));
-        }
-      }
+      checks.push(
+        checkPciDuplicates(
+          station.id,
+          item.cells.map((cell) => ({
+            rat: cell.rat,
+            bandId: cell.band_id,
+            details: cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null } | undefined,
+            excludeCellId: cell.operation === "update" ? cell.target_cell_id : undefined,
+          })),
+          item.cells.filter((cell) => cell.operation === "update" && cell.target_cell_id !== undefined).map((cell) => cell.target_cell_id!),
+        ),
+      );
 
       if (checks.length > 0) await Promise.all(checks);
     }),
   );
 
   const updateRecords = await db.transaction(async (tx) => {
-    async function updateRATDetails(rat: "GSM" | "UMTS" | "LTE" | "NR", cellId: number, cellDetails: RATUpdateDetails) {
-      switch (rat) {
-        case "GSM": {
-          const details = cellDetails as GSMUpdateDetails;
-          await tx
-            .update(gsmCells)
-            .set({ ...details, updatedAt: new Date() })
-            .where(eq(gsmCells.cell_id, cellId));
-          break;
-        }
-        case "UMTS": {
-          const details = cellDetails as UMTSUpdateDetails;
-          await tx
-            .update(umtsCells)
-            .set({ ...details, updatedAt: new Date() })
-            .where(eq(umtsCells.cell_id, cellId));
-          break;
-        }
-        case "LTE": {
-          const details = cellDetails as LTEUpdateDetails;
-          await tx
-            .update(lteCells)
-            .set({ ...details, updatedAt: new Date() })
-            .where(eq(lteCells.cell_id, cellId));
-          break;
-        }
-        case "NR": {
-          const details = cellDetails as NRUpdateDetails;
-          await tx
-            .update(nrCells)
-            .set({ ...details, updatedAt: new Date() })
-            .where(eq(nrCells.cell_id, cellId));
-          break;
-        }
-      }
-    }
-
-    async function insertRATDetails(rat: "GSM" | "UMTS" | "LTE" | "NR", cellId: number, cellDetails: RATInsertDetails) {
-      switch (rat) {
-        case "GSM": {
-          const details = cellDetails as GSMInsertDetails;
-          await tx.insert(gsmCells).values({ cell_id: cellId, lac: details.lac, cid: details.cid, e_gsm: details.e_gsm });
-          break;
-        }
-        case "UMTS": {
-          const details = cellDetails as UMTSInsertDetails;
-          await tx.insert(umtsCells).values({ cell_id: cellId, lac: details.lac, rnc: details.rnc, cid: details.cid, arfcn: details.arfcn });
-          break;
-        }
-        case "LTE": {
-          const details = cellDetails as LTEInsertDetails;
-          await tx.insert(lteCells).values({
-            cell_id: cellId,
-            tac: details.tac,
-            enbid: details.enbid,
-            clid: details.clid,
-            pci: details.pci,
-            earfcn: details.earfcn,
-            supports_iot: details.supports_iot,
-          });
-          break;
-        }
-        case "NR": {
-          const details = cellDetails as NRInsertDetails;
-          await tx.insert(nrCells).values({
-            cell_id: cellId,
-            type: details.type,
-            nrtac: details.nrtac,
-            gnbid: details.gnbid,
-            gnbid_length: computeGnbidLength(details.gnbid),
-            clid: details.clid,
-            pci: details.pci,
-            arfcn: details.arfcn,
-            supports_nr_redcap: details.supports_nr_redcap,
-          });
-          break;
-        }
-      }
-    }
-
     const records: StationChangeRecord[] = [];
 
     for (const { item, station } of stationItems) {
@@ -296,7 +190,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
           // oxlint-disable-next-line no-await-in-loop
           await tx.update(cells).set({ band_id: cell.band_id, updatedAt: new Date() }).where(eq(cells.id, cell.target_cell_id));
           // oxlint-disable-next-line no-await-in-loop
-          await updateRATDetails(cell.rat, cell.target_cell_id, cell.details as RATUpdateDetails);
+          await updateRATCellDetails(tx, cell.rat, cell.target_cell_id, cell.details as RATUpdateDetails);
           updatedCellIds.push(cell.target_cell_id);
         } else if (cell.operation === "add") {
           // oxlint-disable-next-line no-await-in-loop
@@ -306,7 +200,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
             .returning();
           if (newCell) {
             // oxlint-disable-next-line no-await-in-loop
-            await insertRATDetails(cell.rat, newCell.id, cell.details as RATInsertDetails);
+            await insertRATCellDetails(tx, cell.rat, newCell.id, cell.details as RATInsertDetails);
             addedCellIds.push(newCell.id);
           }
         }

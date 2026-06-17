@@ -20,6 +20,7 @@
     "fillEarfcn": "Wstaw EARFCN",
     "addRemainingCells": "Dodaj brakujące komórki",
     "confirmCells": "Potwierdź komórki",
+    "syncSectorsByPci": "Wpisz sektory po PCI",
     "noRats": "Brak komórek. Wybierz technologię radiową powyżej, aby dodać komórki.",
     "noStationCells": "Nie znaleziono komórek dla tej stacji",
     "noCells": "Brak komórek. Kliknij \"Dodaj komórkę\", aby dodać.",

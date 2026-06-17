@@ -13,7 +13,7 @@ import type { Band, SectorDraft } from "@/types/station";
 
 import { CellDetailsFields } from "./cellDetailsFields";
 import { useBandSelection } from "./hooks/useBandSelection";
-import type { RAT_ORDER } from "./rat";
+import { getRatDefaultBandDuplex, getRatShowsBandDuplex, type RAT_ORDER } from "./rat";
 import { navigateRowHorizontal } from "./rowNav";
 
 export type CellDraftBase = {
@@ -52,7 +52,7 @@ export const CellEditRow = memo(function CellEditRow({
   onClone,
 }: CellEditRowProps) {
   const { t } = useTranslation();
-  const { uniqueBandValues, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, bandsForRat } = useBandSelection(
+  const { uniqueBandValues, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, findPreferredBandId } = useBandSelection(
     bands,
     localCell.rat,
     localCell.band_id,
@@ -62,9 +62,7 @@ export const CellEditRow = memo(function CellEditRow({
   const selectedSectorLabel = selectedSector ? `S${selectedSectorIndex + 1}` : "-";
 
   const handleBandValueChange = (value: number | null) => {
-    const opts = value !== null ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
-    const defaultDuplex = opts.length === 1 ? opts[0] : localCell.rat === "UMTS" && opts.includes("FDD") ? "FDD" : null;
-    const newBandId = findBandId(value, defaultDuplex);
+    const newBandId = findPreferredBandId(value, duplex, getRatDefaultBandDuplex(localCell.rat, value));
     if (newBandId) {
       const patch: Partial<CellDraftBase> = { band_id: newBandId };
       if (localCell.rat === "GSM" && value === 1800) patch.details = { ...localCell.details, e_gsm: false };
@@ -121,7 +119,7 @@ export const CellEditRow = memo(function CellEditRow({
           </SelectContent>
         </Select>
       </td>
-      {localCell.rat !== "GSM" && (
+      {getRatShowsBandDuplex(localCell.rat) && (
         <td className="px-3 py-1">
           {hasDuplexChoice ? (
             <Select value={duplex ?? "_none"} onValueChange={(v) => handleDuplexChange(v === "_none" ? null : v)} disabled={disabled}>

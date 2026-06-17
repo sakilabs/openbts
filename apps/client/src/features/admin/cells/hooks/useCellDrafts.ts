@@ -6,7 +6,7 @@ import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaini
 import type { Band } from "@/types/station";
 
 import type { CellDraftBase } from "../cellEditRow";
-import { RAT_ORDER, getSharedDetailFields } from "../rat";
+import { RAT_ORDER, getRatDefaultBandDuplex, getRatSortDetailField, getSharedDetailFields } from "../rat";
 import { applyMissingSectorPCISync } from "../sectorAssignmentSync";
 
 type UseCellDraftsOptions<T extends CellDraftBase> = {
@@ -28,7 +28,7 @@ type UseCellDraftsReturn<T extends CellDraftBase> = {
   visibleRats: string[];
   toggleRat: (rat: string) => void;
   changeCell: (localId: string, patch: Partial<CellDraftBase>) => void;
-  syncMissingSectorsByPCI: () => void;
+  syncMissingSectorsByPCIInRat: (rat: string) => void;
   addCell: (rat: string) => void;
   addRemainingLteCells: () => void;
   cloneCell: (localId: string) => void;
@@ -72,26 +72,9 @@ export function useCellDrafts<T extends CellDraftBase>({
         const bandA = bandValueMap.get(a.band_id) ?? 0;
         const bandB = bandValueMap.get(b.band_id) ?? 0;
         if (bandA !== bandB) return bandA - bandB;
-        let clidA = 0;
-        let clidB = 0;
-        switch (a.rat) {
-          case "GSM":
-            clidA = (a.details.cid as number) ?? 0;
-            clidB = (b.details.cid as number) ?? 0;
-            break;
-          case "UMTS":
-            clidA = (a.details.cid_long as number) ?? 0;
-            clidB = (b.details.cid_long as number) ?? 0;
-            break;
-          case "LTE":
-            clidA = (a.details.ecid as number) ?? 0;
-            clidB = (b.details.ecid as number) ?? 0;
-            break;
-          case "NR":
-            clidA = (a.details.nci as number) ?? 0;
-            clidB = (b.details.nci as number) ?? 0;
-            break;
-        }
+        const sortField = getRatSortDetailField(a.rat);
+        const clidA = sortField ? ((a.details[sortField] as number) ?? 0) : 0;
+        const clidB = sortField ? ((b.details[sortField] as number) ?? 0) : 0;
         return clidA - clidB;
       }),
     );
@@ -120,10 +103,17 @@ export function useCellDrafts<T extends CellDraftBase>({
     [disabled],
   );
 
-  const syncMissingSectorsByPCI = useCallback(() => {
-    if (disabled) return;
-    setCells((prev) => applyMissingSectorPCISync(prev));
-  }, [disabled]);
+  const syncMissingSectorsByPCIInRat = useCallback(
+    (rat: string) => {
+      if (disabled) return;
+      setCells((prev) => {
+        const syncedCells = applyMissingSectorPCISync(prev.filter((cell) => cell.rat === rat));
+        const syncedByLocalId = new Map(syncedCells.map((cell) => [cell._localId, cell] as const));
+        return prev.map((cell) => (cell.rat === rat ? (syncedByLocalId.get(cell._localId) ?? cell) : cell));
+      });
+    },
+    [disabled],
+  );
 
   const addCell = useCallback(
     (rat: string) => {
@@ -134,7 +124,8 @@ export function useCellDrafts<T extends CellDraftBase>({
         return;
       }
       setCells((prev) => {
-        const defaultBand = rat === "UMTS" ? (bandsForRat.find((b) => b.duplex === "FDD") ?? bandsForRat[0]) : bandsForRat[0];
+        const defaultDuplex = getRatDefaultBandDuplex(rat);
+        const defaultBand = defaultDuplex ? (bandsForRat.find((b) => b.duplex === defaultDuplex) ?? bandsForRat[0]) : bandsForRat[0];
         const newCell = createNewCell(rat, defaultBand);
         const existingSibling = prev.find((c) => c.rat === rat);
         if (existingSibling) {
@@ -241,7 +232,7 @@ export function useCellDrafts<T extends CellDraftBase>({
     visibleRats,
     toggleRat,
     changeCell,
-    syncMissingSectorsByPCI,
+    syncMissingSectorsByPCIInRat,
     addCell,
     addRemainingLteCells,
     cloneCell,

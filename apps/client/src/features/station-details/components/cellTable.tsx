@@ -6,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getRatChannelField, getRatShowsBandDuplex } from "@/features/shared/rat";
+import { getRatDetailFields, type RatDetailField } from "@/features/shared/ratCellFields";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { isRecent } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,7 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
   const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const [open, setOpen] = useState(true);
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
+  const detailFields = getRatDetailFields(rat, "station");
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="border rounded-xl overflow-hidden">
@@ -40,175 +43,10 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("common:labels.band")}</th>
-                {rat !== "GSM" && <th className="px-4 py-2 text-left font-medium text-muted-foreground">Duplex</th>}
-                {rat === "GSM" && (
-                  <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">LAC</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Local Area Code</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">CID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Cell ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                  </>
-                )}
-                {rat === "UMTS" && (
-                  <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">LAC</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Local Area Code</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">RNC</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Radio Network Controller</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">CID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Cell ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">LongCID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Long Cell ID · (RNC * 65536) + CID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">UARFCN</span>
-                        </TooltipTrigger>
-                        <TooltipContent>UTRA Absolute Radio Frequency Channel Number</TooltipContent>
-                      </Tooltip>
-                    </th>
-                  </>
-                )}
-                {rat === "LTE" && (
-                  <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">TAC</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Tracking Area Code</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">eNBID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>eNodeB ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">CLID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Cell Local ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">E-CID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Enhanced CID · (eNBID * 256) + CLID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">PCI</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Physical Cell ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">EARFCN</span>
-                        </TooltipTrigger>
-                        <TooltipContent>E-UTRA Absolute Radio Frequency Channel Number</TooltipContent>
-                      </Tooltip>
-                    </th>
-                  </>
-                )}
-                {rat === "NR" && (
-                  <>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">TAC</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Tracking Area Code</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">CLID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Cell Local ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">gNBID</span>
-                        </TooltipTrigger>
-                        <TooltipContent>gNodeB ID (22-32 bits)</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">NCI</span>
-                        </TooltipTrigger>
-                        <TooltipContent>NR Cell Identity</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">PCI</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Physical Cell ID</TooltipContent>
-                      </Tooltip>
-                    </th>
-                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <span className="cursor-help">ARFCN</span>
-                        </TooltipTrigger>
-                        <TooltipContent>Absolute Radio Frequency Channel Number</TooltipContent>
-                      </Tooltip>
-                    </th>
-                  </>
-                )}
+                {getRatShowsBandDuplex(rat) && <th className="px-4 py-2 text-left font-medium text-muted-foreground">Duplex</th>}
+                {detailFields.map((field) => (
+                  <StationDetailHeaderCell key={field.key} field={field} />
+                ))}
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">{t("common:labels.notes")}</th>
               </tr>
             </thead>
@@ -216,8 +54,8 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
               {cells.map((cell) => {
                 const isNew = isRecent(cell.createdAt);
                 const isUpdated = !isNew && isRecent(cell.updatedAt);
-                const arfcnForCalc =
-                  rat === "UMTS" ? cell.details?.arfcn : rat === "LTE" ? cell.details?.earfcn : rat === "NR" ? cell.details?.arfcn : null;
+                const channelField = getRatChannelField(rat);
+                const arfcnForCalc = channelField ? (cell.details?.[channelField as keyof typeof cell.details] as number | null | undefined) : null;
                 const freqInfo = calcExactFrequency(rat, Number(cell.band.value), arfcnForCalc, cell.band.duplex);
                 const bandName = freqInfo?.bandName ?? getBandName(rat, Number(cell.band.value), cell.band.duplex);
                 const hasTooltip = freqInfo || bandName;
@@ -303,42 +141,12 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
                         )}
                       </div>
                     </td>
-                    {rat !== "GSM" && <td className="px-4 py-2">{cell.band.duplex || "-"}</td>}
-                    {rat === "GSM" && (
-                      <>
-                        <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
-                      </>
-                    )}
-                    {rat === "UMTS" && (
-                      <>
-                        <td className="px-4 py-2 font-mono">{cell.details?.lac ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.rnc ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.cid ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.cid_long ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.arfcn ?? "-"}</td>
-                      </>
-                    )}
-                    {rat === "LTE" && (
-                      <>
-                        <td className="px-4 py-2 font-mono">{cell.details?.tac ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.enbid ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.ecid ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.earfcn ?? "-"}</td>
-                      </>
-                    )}
-                    {rat === "NR" && (
-                      <>
-                        <td className="px-4 py-2 font-mono">{cell.details?.nrtac ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.clid ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.gnbid ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.nci ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.pci ?? "-"}</td>
-                        <td className="px-4 py-2 font-mono">{cell.details?.arfcn ?? "-"}</td>
-                      </>
-                    )}
+                    {getRatShowsBandDuplex(rat) && <td className="px-4 py-2">{cell.band.duplex || "-"}</td>}
+                    {detailFields.map((field) => (
+                      <td key={field.key} className="px-4 py-2 font-mono">
+                        {getStationDetailValue(field, cell.details as Record<string, unknown> | null | undefined)}
+                      </td>
+                    ))}
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-1.5">
                         {cell.notes ? (
@@ -410,4 +218,29 @@ export function CellTable({ rat, cells, sectorInfoById }: CellTableProps) {
       </CollapsibleContent>
     </Collapsible>
   );
+}
+
+function StationDetailHeaderCell({ field }: { field: RatDetailField }) {
+  return (
+    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+      {field.tooltip ? (
+        <Tooltip>
+          <TooltipTrigger>
+            <span className="cursor-help">{field.label}</span>
+          </TooltipTrigger>
+          <TooltipContent>{field.tooltip}</TooltipContent>
+        </Tooltip>
+      ) : (
+        field.label
+      )}
+    </th>
+  );
+}
+
+function getStationDetailValue(field: RatDetailField, details: Record<string, unknown> | null | undefined): string | number {
+  if (!details) return "-";
+  const value = details[field.valueKey ?? field.key];
+  if (value === null || value === undefined) return "-";
+  if (typeof value === "string" || typeof value === "number") return value;
+  return String(value);
 }

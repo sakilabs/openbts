@@ -21,6 +21,7 @@
     "fillEarfcn": "Fill EARFCN",
     "addRemainingCells": "Add remaining cells",
     "confirmCells": "Confirm cells",
+    "syncSectorsByPci": "Sync sectors by PCI",
     "noRats": "No cells yet. Select a radio technology above to add cells.",
     "noStationCells": "No cells found for this station",
     "noCells": "No cells yet. Click \"Add Cell\" to add one.",

@@ -8,7 +8,17 @@ import db from "../../../../database/psql.js";
 import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
-import { type AnalyzerResult, type CellGroups, type CellInput, type LookupMaps, addPair, groupCellsByMnc, pairKey } from "./logic.js";
+import {
+  type AnalyzerResult,
+  type CellGroups,
+  type CellInput,
+  type LookupMaps,
+  addPair,
+  candidateLTEEnbids,
+  groupCellsByMnc,
+  lteEnbidKey,
+  pairKey,
+} from "./logic.js";
 import { analyzerPool } from "./pool.js";
 
 const MAX_CELLS = 20_000;
@@ -164,7 +174,7 @@ function getMissingLTEENBIDGroups(inputCells: CellInput[], lteMap: LookupMaps<An
       enbids = new Set();
       groups.set(cell.mnc, enbids);
     }
-    enbids.add(cell.enbid);
+    for (const enbid of candidateLTEEnbids(cell.mnc, cell.enbid)) enbids.add(enbid);
   }
   return groups;
 }
@@ -294,7 +304,7 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
       });
 
       for (const row of rows) {
-        const key = `${mnc}:${row.enbid}`;
+        const key = lteEnbidKey(mnc, row.enbid);
         if (!maps.lteEnbidMap.has(key))
           maps.lteEnbidMap.set(key, {
             station: row.cell.station as unknown as AnalyzerStation,

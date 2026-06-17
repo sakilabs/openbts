@@ -1,4 +1,4 @@
-import { RAT_ICONS } from "@/features/shared/rat";
+import { RAT_ICONS, getRatSortDetailField } from "@/features/shared/rat";
 import type { Cell } from "@/types/station";
 
 export { RAT_ICONS };
@@ -16,18 +16,10 @@ export function groupCellsByRat(cells: Cell[]): Record<string, Cell[]> {
       const bandB = Number(b.band.value);
       if (bandA !== bandB) return bandA - bandB;
 
-      switch (rat) {
-        case "GSM":
-          return (a.details?.cid ?? 0) - (b.details?.cid ?? 0);
-        case "UMTS":
-          return (a.details?.cid_long ?? 0) - (b.details?.cid_long ?? 0);
-        case "LTE":
-          return (a.details?.ecid ?? 0) - (b.details?.ecid ?? 0);
-        case "NR":
-          return (a.details?.nci ?? 0) - (b.details?.nci ?? 0);
-        default:
-          return 0;
-      }
+      const sortField = getRatSortDetailField(rat);
+      const valueA = sortField ? ((a.details?.[sortField as keyof typeof a.details] as number) ?? 0) : 0;
+      const valueB = sortField ? ((b.details?.[sortField as keyof typeof b.details] as number) ?? 0) : 0;
+      return valueA - valueB;
     });
   }
 

@@ -166,6 +166,8 @@
     "selectionFailed": "Nie udało się zapisać wyboru zdjęć",
     "emptyLocation": "Brak zdjęć w tej lokalizacji.",
     "uploadBelow": "Prześlij nowe zdjęcia poniżej.",
+    "locationPhotos": "Istniejące zdjęcia lokalizacji",
+    "uploadedPhotos": "Nowe zdjęcia do tego zgłoszenia",
     "alreadyAssigned": "Przypisane",
     "selectedLocationPhotos": "Wybrane zdjęcia przez zgłaszającego",
     "pendingCount_one": "{{count}} zdjęcie może być jeszcze przesyłane",

@@ -1,7 +1,8 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculateComputedValues } from "@/features/admin/cells/calculateComputedValues";
 import { DetailComputedCell, DetailInputCell } from "@/features/admin/cells/components/detailFieldCells";
+import { getRatDetailFields, type RatDetailField } from "@/features/shared/ratCellFields";
+import { calculateComputedValues } from "@/features/shared/ratComputedValues";
 import { cn } from "@/lib/utils";
 
 import { navigateRowHorizontal } from "./rowNav";
@@ -22,246 +23,173 @@ type CellDetailsFieldsProps = {
 };
 
 export function CellDetailsFields({ rat, bandValue, details, detailErrors, disabled, onDetailChange, onDetailsBulkChange }: CellDetailsFieldsProps) {
-  const d = details;
-  switch (rat) {
-    case "GSM":
-      return (
-        <>
-          <DetailInputCell
-            field="lac"
-            placeholder="LAC"
-            value={(d.lac as number) ?? ""}
-            error={!!detailErrors?.lac}
-            disabled={disabled}
-            max={65535}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="cid"
-            placeholder="CID"
-            value={(d.cid as number) ?? ""}
-            error={!!detailErrors?.cid}
-            disabled={disabled}
-            max={65535}
-            onDetailChange={onDetailChange}
-          />
-          <td className="px-1.5 py-1">
-            <Checkbox
-              checked={bandValue === 1800 ? false : ((d.e_gsm as boolean) ?? false)}
-              onCheckedChange={(checked) => onDetailChange("e_gsm", checked === true)}
-              onKeyDown={navigateRowHorizontal}
-              data-nav-cell
-              disabled={disabled || (rat === "GSM" && bandValue === 1800)}
-            />
-          </td>
-        </>
-      );
-    case "UMTS": {
-      const longCid = calculateComputedValues("longCID", d);
-      return (
-        <>
-          <DetailInputCell
-            field="lac"
-            placeholder="LAC"
-            value={(d.lac as number) ?? ""}
-            error={!!detailErrors?.lac}
-            disabled={disabled}
-            max={65535}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="rnc"
-            placeholder="RNC"
-            value={(d.rnc as number) ?? ""}
-            error={!!detailErrors?.rnc}
-            disabled={disabled}
-            max={65535}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="cid"
-            placeholder="CID"
-            value={(d.cid as number) ?? ""}
-            error={!!detailErrors?.cid}
-            disabled={disabled}
-            max={65535}
-            onDetailChange={onDetailChange}
-          />
-          <DetailComputedCell value={longCid} />
-          <DetailInputCell
-            field="arfcn"
-            placeholder="UARFCN"
-            value={(d.arfcn as number) ?? ""}
-            error={!!detailErrors?.arfcn}
-            disabled={disabled}
-            max={16383}
-            onDetailChange={onDetailChange}
-          />
-        </>
-      );
-    }
-    case "LTE": {
-      const eCid = calculateComputedValues("eCID", d);
-      return (
-        <>
-          <DetailInputCell
-            field="tac"
-            placeholder="TAC"
-            value={(d.tac as number) ?? ""}
-            error={!!detailErrors?.tac}
-            disabled={disabled}
-            max={65535}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="enbid"
-            placeholder="eNBID"
-            value={(d.enbid as number) ?? ""}
-            error={!!detailErrors?.enbid}
-            disabled={disabled}
-            max={1048575}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="clid"
-            placeholder="CLID"
-            value={(d.clid as number) ?? ""}
-            error={!!detailErrors?.clid}
-            disabled={disabled}
-            max={255}
-            onDetailChange={onDetailChange}
-          />
-          <DetailComputedCell value={eCid} />
-          <DetailInputCell
-            field="pci"
-            placeholder="PCI"
-            value={(d.pci as number) ?? ""}
-            error={!!detailErrors?.pci}
-            disabled={disabled}
-            max={503}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="earfcn"
-            placeholder="EARFCN"
-            value={(d.earfcn as number) ?? ""}
-            error={!!detailErrors?.earfcn}
-            disabled={disabled}
-            max={262143}
-            onDetailChange={onDetailChange}
-          />
-          <td className="px-1.5 py-1">
-            <Checkbox
-              checked={(d.supports_iot as boolean) ?? false}
-              onCheckedChange={(checked) => onDetailChange("supports_iot", checked === true)}
-              onKeyDown={navigateRowHorizontal}
-              data-nav-cell
-              disabled={disabled}
-            />
-          </td>
-        </>
-      );
-    }
-    case "NR": {
-      const nrType = (d.type as "nsa" | "sa") ?? "nsa";
-      const nrTypeLabel = NR_TYPE_OPTIONS.find((opt) => opt.value === nrType)?.label ?? "NSA";
-      const nci = calculateComputedValues("nci", d);
-      const nsaLock = (val: unknown) => disabled || (nrType !== "sa" && (val === null || val === undefined));
-      return (
-        <>
-          <td className="px-1.5 py-1">
-            <Select
-              value={nrType}
-              onValueChange={(value) => {
-                if (value === "nsa") {
-                  if (onDetailsBulkChange)
-                    onDetailsBulkChange({
-                      type: "nsa",
-                      nrtac: undefined,
-                      clid: undefined,
-                      gnbid: undefined,
-                      supports_nr_redcap: undefined,
-                    });
-                  else onDetailChange("type", "nsa");
-                } else onDetailChange("type", value as "nsa" | "sa");
-              }}
-              disabled={disabled}
-            >
-              <SelectTrigger
-                className={cn("h-7 w-18 text-sm", detailErrors?.type && "border-destructive")}
-                onKeyDown={navigateRowHorizontal}
-                data-nav-cell
-              >
-                <SelectValue>{nrTypeLabel}</SelectValue>
-              </SelectTrigger>
-              <SelectContent className="min-w-48">
-                {NR_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </td>
-          <DetailInputCell
-            field="nrtac"
-            placeholder="TAC"
-            value={(d.nrtac as number) ?? ""}
-            error={!!detailErrors?.nrtac}
-            disabled={nsaLock(d.nrtac)}
-            max={16777215}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="clid"
-            placeholder="CLID"
-            value={(d.clid as number) ?? ""}
-            error={!!detailErrors?.clid}
-            disabled={nsaLock(d.clid)}
-            max={16383}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="gnbid"
-            placeholder="gNBID"
-            value={(d.gnbid as number) ?? ""}
-            error={!!detailErrors?.gnbid}
-            disabled={nsaLock(d.gnbid)}
-            max={4294967295}
-            onDetailChange={onDetailChange}
-          />
-          <DetailComputedCell value={nci} />
-          <DetailInputCell
-            field="pci"
-            placeholder="PCI"
-            value={(d.pci as number) ?? ""}
-            error={!!detailErrors?.pci}
-            disabled={disabled}
-            max={1007}
-            onDetailChange={onDetailChange}
-          />
-          <DetailInputCell
-            field="arfcn"
-            placeholder="ARFCN"
-            value={(d.arfcn as number) ?? ""}
-            error={!!detailErrors?.arfcn}
-            disabled={disabled}
-            max={3279165}
-            onDetailChange={onDetailChange}
-          />
-          <td className="px-1.5 py-1">
-            <Checkbox
-              checked={(d.supports_nr_redcap as boolean) ?? false}
-              onCheckedChange={(checked) => onDetailChange("supports_nr_redcap", checked === true)}
-              onKeyDown={navigateRowHorizontal}
-              data-nav-cell
-              disabled={disabled || (nrType !== "sa" && d.supports_nr_redcap !== true)}
-            />
-          </td>
-        </>
-      );
-    }
-    default:
-      return null;
-  }
+  const fields = getRatDetailFields(rat);
+  if (fields.length === 0) return null;
+
+  const nrType = (details.type as "nsa" | "sa") ?? "nsa";
+  return (
+    <>
+      {fields.map((field) => (
+        <EditorDetailField
+          key={field.key}
+          field={field}
+          rat={rat}
+          bandValue={bandValue}
+          details={details}
+          detailErrors={detailErrors}
+          disabled={disabled}
+          nrType={nrType}
+          onDetailChange={onDetailChange}
+          onDetailsBulkChange={onDetailsBulkChange}
+        />
+      ))}
+    </>
+  );
+}
+
+function EditorDetailField({
+  field,
+  rat,
+  bandValue,
+  details,
+  detailErrors,
+  disabled,
+  nrType,
+  onDetailChange,
+  onDetailsBulkChange,
+}: CellDetailsFieldsProps & { field: RatDetailField; nrType: "nsa" | "sa" }) {
+  if (field.kind === "computed") return <DetailComputedCell value={field.computed ? calculateComputedValues(field.computed, details) : null} />;
+  if (field.kind === "select")
+    return (
+      <NrTypeCell
+        value={nrType}
+        error={!!detailErrors?.type}
+        disabled={disabled}
+        onDetailChange={onDetailChange}
+        onDetailsBulkChange={onDetailsBulkChange}
+      />
+    );
+  if (field.kind === "boolean")
+    return (
+      <BooleanDetailCell
+        field={field.key}
+        rat={rat}
+        bandValue={bandValue}
+        details={details}
+        disabled={disabled}
+        nrType={nrType}
+        onDetailChange={onDetailChange}
+      />
+    );
+
+  return (
+    <DetailInputCell
+      field={field.key}
+      placeholder={field.placeholder ?? field.label}
+      value={(details[field.key] as number) ?? ""}
+      error={!!detailErrors?.[field.key]}
+      disabled={getInputDisabled(field.key, details[field.key], disabled, nrType)}
+      max={field.max}
+      onDetailChange={onDetailChange}
+    />
+  );
+}
+
+function NrTypeCell({
+  value,
+  error,
+  disabled,
+  onDetailChange,
+  onDetailsBulkChange,
+}: {
+  value: "nsa" | "sa";
+  error: boolean;
+  disabled?: boolean;
+  onDetailChange: CellDetailsFieldsProps["onDetailChange"];
+  onDetailsBulkChange?: CellDetailsFieldsProps["onDetailsBulkChange"];
+}) {
+  const nrTypeLabel = NR_TYPE_OPTIONS.find((opt) => opt.value === value)?.label ?? "NSA";
+  return (
+    <td className="px-1.5 py-1">
+      <Select
+        value={value}
+        onValueChange={(nextValue) => {
+          if (nextValue === "nsa") {
+            if (onDetailsBulkChange)
+              onDetailsBulkChange({
+                type: "nsa",
+                nrtac: undefined,
+                clid: undefined,
+                gnbid: undefined,
+                supports_nr_redcap: undefined,
+              });
+            else onDetailChange("type", "nsa");
+          } else onDetailChange("type", nextValue as "nsa" | "sa");
+        }}
+        disabled={disabled}
+      >
+        <SelectTrigger className={cn("h-7 w-18 text-sm", error && "border-destructive")} onKeyDown={navigateRowHorizontal} data-nav-cell>
+          <SelectValue>{nrTypeLabel}</SelectValue>
+        </SelectTrigger>
+        <SelectContent className="min-w-48">
+          {NR_TYPE_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </td>
+  );
+}
+
+function BooleanDetailCell({
+  field,
+  rat,
+  bandValue,
+  details,
+  disabled,
+  nrType,
+  onDetailChange,
+}: {
+  field: string;
+  rat: string;
+  bandValue?: number | null;
+  details: Record<string, unknown>;
+  disabled?: boolean;
+  nrType: "nsa" | "sa";
+  onDetailChange: CellDetailsFieldsProps["onDetailChange"];
+}) {
+  const checked = field === "e_gsm" && bandValue === 1800 ? false : ((details[field] as boolean) ?? false);
+  return (
+    <td className="px-1.5 py-1">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(value) => onDetailChange(field, value === true)}
+        onKeyDown={navigateRowHorizontal}
+        data-nav-cell
+        disabled={getBooleanDisabled(field, rat, bandValue, details, disabled, nrType)}
+      />
+    </td>
+  );
+}
+
+function getInputDisabled(field: string, value: unknown, disabled: boolean | undefined, nrType: "nsa" | "sa"): boolean | undefined {
+  if (disabled) return true;
+  if (!["nrtac", "clid", "gnbid"].includes(field)) return disabled;
+  return nrType !== "sa" && (value === null || value === undefined);
+}
+
+function getBooleanDisabled(
+  field: string,
+  rat: string,
+  bandValue: number | null | undefined,
+  details: Record<string, unknown>,
+  disabled: boolean | undefined,
+  nrType: "nsa" | "sa",
+): boolean | undefined {
+  if (disabled) return true;
+  if (field === "e_gsm") return rat === "GSM" && bandValue === 1800;
+  if (field === "supports_nr_redcap") return nrType !== "sa" && details.supports_nr_redcap !== true;
+  return disabled;
 }

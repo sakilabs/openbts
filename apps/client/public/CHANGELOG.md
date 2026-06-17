@@ -1,6 +1,24 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-17
+
+### 🚀 Enhancements
+
+- Added a "Sync sectors by PCI" action for LTE and NR cell editors to fill missing sector assignments from matching PCI groups
+- Reworked submission photos into one panel for existing location photos and new uploads, including selection counts, main-photo selection, metadata editing, previews and delete controls
+- Unified RAT-specific cell field labels, table headers, computed IDs, sorting and badges across station details, admin cell editing, analyzer results and submission review
+- Analyzer batch results now use RAT-aware field labels and channel/band inference instead of LTE-specific assumptions
+- Standardized station basics fields and empty states across station admin and submission admin screens
+
+### 🩹 Fixes
+
+- Duplicate cell identity and PCI checks now apply consistently across direct cell APIs, station create/update APIs, submissions and analyzer apply
+- LTE and NR PCI duplicate checks now handle same-band cell swaps without blocking valid PCI exchanges
+- In-request PCI duplicate detection now catches conflicts on the same band before writes are applied
+- ARFCN/band validation is now shared across API paths so LTE EARFCN, UMTS UARFCN and NR ARFCN errors are validated consistently
+- Batch cell updates now preserve existing selected or edited cells while checking sibling duplicates, avoiding false conflicts
+
 # 2026-06-14
 
 ### 🚀 Enhancements

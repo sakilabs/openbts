@@ -5,15 +5,14 @@ import { useTranslation } from "react-i18next";
 import { RatBadge } from "@/components/rat-badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getBandFromEARFCN, getBandFromUARFCN, getBandMhz } from "@/lib/band-utils";
+import { getRatChannelField } from "@/features/shared/rat";
+import { getRatDetailFieldLabel } from "@/features/shared/ratCellFields";
+import { type AnalyzerDetailKey, getAnalyzerBandMhz, getAnalyzerBandNumber } from "@/features/submissions/utils/analyzerRatSpecs";
 import { cn } from "@/lib/utils";
 
-import type { DraftCell, MismatchDetails } from "../../utils/fromAnalyzer";
+import type { DraftCell } from "../../utils/fromAnalyzer";
 
-const FIELD_LABELS: Record<string, string> = {
-  enbid: "eNBID",
-  e_gsm: "E-GSM",
-};
+type AnalyzerFieldValue = number | boolean | string | undefined;
 
 interface Props {
   change: DraftCell;
@@ -26,26 +25,28 @@ export function AnalyzerCellChangeRow({ change, selectedDuplex, onDuplexChange, 
   const { t } = useTranslation(["submissions"]);
   const isAddOperation = change.operation === "add";
 
-  const earfcn = change.rat === "LTE" ? (change.details.earfcn ?? change.baseDetails?.earfcn) : undefined;
-  const uarfcn = change.rat === "UMTS" ? (change.details.arfcn ?? change.baseDetails?.arfcn) : undefined;
+  const channelField = getRatChannelField(change.rat);
+  const channelKey = channelField as AnalyzerDetailKey | null;
+  const channelValue = channelKey ? (change.details[channelKey] ?? change.baseDetails?.[channelKey]) : undefined;
+  const channel = typeof channelValue === "number" ? channelValue : undefined;
   const ambiguousDuplex = isAddOperation && change.duplexChoices.length > 0;
-  const band = earfcn !== undefined ? getBandFromEARFCN(earfcn) : uarfcn !== undefined ? getBandFromUARFCN(uarfcn) : null;
-  const mhz = band !== null ? getBandMhz(band) : null;
+  const band = channel !== undefined ? getAnalyzerBandNumber(change.rat, channel) : null;
+  const mhz = channel !== undefined ? getAnalyzerBandMhz(change.rat, channel) : null;
   const showBandNumber = !ambiguousDuplex || !!selectedDuplex;
 
-  const fields: { key: string; currentVal: number | boolean | undefined; newVal: number | boolean | undefined; isChanged: boolean }[] = [];
+  const fields: { key: AnalyzerDetailKey; currentVal: AnalyzerFieldValue; newVal: AnalyzerFieldValue; isChanged: boolean }[] = [];
 
   if (isAddOperation) {
     for (const [key, val] of Object.entries(change.details)) {
-      if (val !== null && val !== undefined) fields.push({ key: key, currentVal: undefined, newVal: val, isChanged: true });
+      if (val !== null && val !== undefined) fields.push({ key: key as AnalyzerDetailKey, currentVal: undefined, newVal: val, isChanged: true });
     }
   } else {
     const base = change.baseDetails ?? {};
     const changed = change.details;
-    const allKeys = [...new Set([...Object.keys(base), ...Object.keys(changed)])];
+    const allKeys = [...new Set([...Object.keys(base), ...Object.keys(changed)])] as AnalyzerDetailKey[];
     for (const key of allKeys) {
-      const currentVal = base[key as keyof MismatchDetails];
-      const newVal = changed[key as keyof MismatchDetails];
+      const currentVal = base[key];
+      const newVal = changed[key];
       const isChanged = key in changed && newVal !== null && newVal !== undefined;
       if ((currentVal !== null && currentVal !== undefined) || isChanged)
         fields.push({ key, currentVal, newVal: isChanged ? newVal : undefined, isChanged });
@@ -96,7 +97,7 @@ export function AnalyzerCellChangeRow({ change, selectedDuplex, onDuplexChange, 
       <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
         {fields.map(({ key, currentVal, newVal, isChanged }) => (
           <span key={key} className="flex items-center gap-1">
-            <span className="font-mono text-[11px] text-muted-foreground">{FIELD_LABELS[key] ?? key.toUpperCase()}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{getRatDetailFieldLabel(change.rat, key)}</span>
             {isChanged && currentVal !== null && currentVal !== undefined ? (
               <>
                 <span className="font-mono text-[11px] tabular-nums text-muted-foreground line-through">{String(currentVal)}</span>

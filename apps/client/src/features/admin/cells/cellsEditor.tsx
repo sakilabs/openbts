@@ -1,10 +1,12 @@
-import { Add01Icon, ArrowDown01Icon, Copy01Icon, FlashIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowDown01Icon, ArrowReloadHorizontalIcon, Copy01Icon, FlashIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Fragment, type ReactNode, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+import { EmptyPanel } from "@/components/empty-panel";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { RatCellsTableHeader } from "@/features/shared/RatCellsTableHeader";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { getKnownEARFCN } from "@/lib/earfcn-fill";
 import { cn } from "@/lib/utils";
@@ -12,8 +14,7 @@ import type { Band, SectorDraft } from "@/types/station";
 
 import type { CellDraftBase } from "./cellEditRow";
 import { CellEditRow } from "./cellEditRow";
-import { getTableHeaders } from "./cellsTableHeaders";
-import { RAT_ICONS, RAT_ORDER, ratToGenLabel } from "./rat";
+import { RAT_ICONS, RAT_ORDER, getRatSupportsSectorPciSync, ratToGenLabel } from "./rat";
 
 export type DiffBadges = {
   added?: number;
@@ -30,6 +31,7 @@ export type CellsEditorProps<T extends CellDraftBase> = {
 
   onToggleRat: (rat: string) => void;
   onCellChange: (localId: string, patch: Partial<CellDraftBase>) => void;
+  onSyncSectorsByPCIInRat?: (rat: string) => void;
   onAddCell: (rat: string) => void;
   onAddRemainingLteCells?: () => void;
   onCloneCell?: (localId: string) => void;
@@ -78,7 +80,6 @@ const TAC_LAC_FIELD: Partial<Record<string, string>> = {
 
 type RatTableProps<T extends CellDraftBase> = {
   cells: T[];
-  headers: string[];
   bands: Band[];
   sectors?: SectorDraft[];
   getCellProps?: CellsEditorProps<T>["getCellProps"];
@@ -91,7 +92,6 @@ type RatTableProps<T extends CellDraftBase> = {
 
 function RatTable<T extends CellDraftBase>({
   cells,
-  headers,
   bands,
   sectors,
   getCellProps,
@@ -101,6 +101,7 @@ function RatTable<T extends CellDraftBase>({
   clonedIds,
   onDeleteCell,
 }: RatTableProps<T>) {
+  const { t } = useTranslation(["stations"]);
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   const cellsRef = useRef(cells);
   cellsRef.current = cells;
@@ -133,15 +134,7 @@ function RatTable<T extends CellDraftBase>({
   return (
     <div ref={scrollRef} className="overflow-x-auto custom-scrollbar">
       <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/30">
-            {headers.map((h) => (
-              <th key={h} className="px-4 py-2 text-left font-medium text-muted-foreground text-xs whitespace-nowrap">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
+        <RatCellsTableHeader rat={cells[0]?.rat ?? ""} t={t} showSectors={sectors !== undefined && sectors.length > 0} />
         <tbody>
           {cells.map((cell) => {
             const cellProps = getCellProps?.(cell) ?? {};
@@ -178,6 +171,7 @@ export function CellsEditor<T extends CellDraftBase>({
   sectors,
   onToggleRat,
   onCellChange,
+  onSyncSectorsByPCIInRat,
   onAddCell,
   onAddRemainingLteCells,
   onCloneCell,
@@ -223,18 +217,19 @@ export function CellsEditor<T extends CellDraftBase>({
       </div>
 
       {visibleRats.length === 0 ? (
-        <div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
-          {readOnly ? t("submissions:detail.readOnly") : t("stations:cells.noRats")}
-        </div>
+        <EmptyPanel>{readOnly ? t("submissions:detail.readOnly") : t("stations:cells.noRats")}</EmptyPanel>
       ) : (
         visibleRats.map((rat) => {
           const cellsForRat = cellsByRat[rat] ?? [];
-          const baseHeaders = getTableHeaders(rat, t);
-          const sectorHeaderIndex = rat === "GSM" ? 1 : 2;
-          const headers =
-            sectors && sectors.length > 0 ? [...baseHeaders.slice(0, sectorHeaderIndex), "S", ...baseHeaders.slice(sectorHeaderIndex)] : baseHeaders;
           const badges = getDiffBadges?.(rat, cellsForRat);
           const hasChanges = badges && ((badges.added ?? 0) > 0 || (badges.modified ?? 0) > 0 || (badges.deleted ?? 0) > 0);
+          const canSyncSectorsByPCI =
+            !readOnly &&
+            getRatSupportsSectorPciSync(rat) &&
+            onSyncSectorsByPCIInRat !== undefined &&
+            sectors !== undefined &&
+            sectors.length > 0 &&
+            cellsForRat.length > 0;
 
           return (
             <Collapsible key={rat} defaultOpen>
@@ -276,6 +271,20 @@ export function CellsEditor<T extends CellDraftBase>({
                     )}
                   </CollapsibleTrigger>
                   <div className="flex items-center gap-1">
+                    {canSyncSectorsByPCI && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onSyncSectorsByPCIInRat?.(rat)}
+                        className="h-7 text-xs text-cyan-700/80 hover:text-cyan-700 hover:bg-cyan-600/10 dark:text-cyan-400 dark:hover:text-cyan-300 dark:hover:bg-cyan-400/10"
+                        aria-label={t("stations:cells.syncSectorsByPci")}
+                        title={t("stations:cells.syncSectorsByPci")}
+                      >
+                        <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-3.5" />
+                        <span className="hidden sm:inline">{t("stations:cells.syncSectorsByPci")}</span>
+                      </Button>
+                    )}
                     {showConfirmCellsButton && onConfirmAllCellsInRat && cellsForRat.length > 0 && (
                       <Button
                         type="button"
@@ -336,7 +345,6 @@ export function CellsEditor<T extends CellDraftBase>({
                   ) : (
                     <RatTable
                       cells={cellsForRat}
-                      headers={headers}
                       bands={bands}
                       sectors={sectors}
                       getCellProps={getCellProps}

@@ -1,14 +1,4 @@
-import {
-  ArrowDown01Icon,
-  Cancel01Icon,
-  Delete02Icon,
-  Image01Icon,
-  PencilEdit02Icon,
-  StarIcon,
-  Tick02Icon,
-  Upload04Icon,
-  ZoomInAreaIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Image01Icon, StarIcon, Upload04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
@@ -16,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Lightbox } from "@/components/lightbox";
+import { AddPhotoTile, PhotoDeleteButton, PhotoEditPopover, PhotoImage, isRecentPhoto } from "@/components/photoGridPrimitives";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,16 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-function isNew(createdAt: string) {
-  return Date.now() - new Date(createdAt).getTime() < SEVEN_DAYS_MS;
-}
 
 export type Photo = {
   id: number;
@@ -266,32 +249,18 @@ export function PhotosSection({
                     className="rounded-lg overflow-hidden border bg-muted animate-in fade-in zoom-in-95 duration-300 motion-reduce:animate-none"
                     style={{ animationDelay: `${Math.min(idx * 40, 400)}ms`, animationFillMode: "both" }}
                   >
-                    <div className="relative h-36">
-                      <img
-                        src={`/uploads/${photo.attachment_uuid}.webp`}
-                        alt={photo.note ?? ""}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                    <PhotoImage src={`/uploads/${photo.attachment_uuid}.webp`} alt={photo.note ?? ""} onOpen={() => setLightboxIndex(idx)}>
                       {photo.is_main ? (
                         <span className="absolute top-1.5 left-1.5 bg-amber-500 text-white rounded-full p-0.5">
                           <HugeiconsIcon icon={StarIcon} className="size-3" />
                         </span>
                       ) : null}
-                      <button
-                        type="button"
-                        className="absolute top-1 right-1 size-8 sm:size-6 rounded-full bg-black/50 ring-1 ring-white/30 shadow-sm flex items-center justify-center cursor-pointer"
-                        onClick={() => setLightboxIndex(idx)}
-                        aria-label="View full size"
-                      >
-                        <HugeiconsIcon icon={ZoomInAreaIcon} className="size-3 text-white" />
-                      </button>
-                      {isNew(photo.createdAt) ? (
+                      {isRecentPhoto(photo.createdAt) ? (
                         <span className="absolute bottom-1.5 left-1.5 bg-amber-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none">
                           NEW
                         </span>
                       ) : null}
-                    </div>
+                    </PhotoImage>
                     {!readOnly ? (
                       <div className={cn("border-t divide-x", setMainFn && !photo.is_main ? "grid grid-cols-3" : "grid grid-cols-2")}>
                         {setMainFn && !photo.is_main ? (
@@ -305,93 +274,38 @@ export function PhotosSection({
                             <HugeiconsIcon icon={StarIcon} className="size-3.5" />
                           </button>
                         ) : null}
-                        <Popover
-                          open={editState?.id === photo.id}
-                          onOpenChange={(open) => {
-                            if (!open) setEditState(null);
-                          }}
-                        >
-                          <PopoverTrigger
-                            type="button"
-                            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                            onClick={() => openEdit(photo)}
-                          >
-                            <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-                            {t("common:actions.edit")}
-                          </PopoverTrigger>
-                          <PopoverContent side="bottom" align="end" className="w-64 flex flex-col gap-3">
-                            <div className="flex flex-col gap-1.5">
-                              <label className="text-xs font-medium text-foreground">{t("photos.note")}</label>
-                              <Input
-                                value={editState?.note ?? ""}
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  setEditState((prev) => (prev ? { ...prev, note: v } : prev));
-                                }}
-                                maxLength={100}
-                                placeholder={t("photos.notePlaceholder")}
-                              />
-                            </div>
-                            {updateTakenAtFn ? (
-                              <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium text-foreground">{t("photos.takenAt")}</label>
-                                <DatePickerInput
-                                  value={editState?.takenAt ?? null}
-                                  onChange={(v) => setEditState((prev) => (prev ? { ...prev, takenAt: v } : prev))}
-                                />
-                              </div>
-                            ) : null}
-                            <div className="flex items-center justify-end gap-2">
-                              <Button size="sm" variant="ghost" onClick={() => setEditState(null)}>
-                                <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
-                                {t("common:actions.cancel")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() =>
-                                  editMutation.mutate({
-                                    id: photo.id,
-                                    note: editState?.note ?? "",
-                                    takenAt: editState?.takenAt?.toISOString() ?? null,
-                                    originalNote: photo.note ?? "",
-                                    originalTakenAt: photo.taken_at ?? null,
-                                  })
-                                }
-                                disabled={editMutation.isPending}
-                              >
-                                {editMutation.isPending ? <Spinner className="size-3" /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
-                                {t("common:actions.save")}
-                              </Button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        <button
-                          type="button"
-                          onClick={() => setDeletePhotoId(photo.id)}
-                          className="flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-destructive hover:bg-accent transition-colors"
-                        >
-                          <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
-                          {t("photos.remove")}
-                        </button>
+                        <PhotoEditPopover
+                          isOpen={editState?.id === photo.id}
+                          note={editState?.note ?? ""}
+                          takenAt={editState?.takenAt ?? null}
+                          onOpen={() => openEdit(photo)}
+                          onOpenChange={(open) => !open && setEditState(null)}
+                          onNoteChange={(note) => setEditState(editState ? { ...editState, note } : editState)}
+                          onTakenAtChange={(takenAt) => setEditState(editState ? { ...editState, takenAt } : editState)}
+                          showTakenAt={updateTakenAtFn !== undefined}
+                          onSave={() =>
+                            editMutation.mutate({
+                              id: photo.id,
+                              note: editState?.note ?? "",
+                              takenAt: editState?.takenAt?.toISOString() ?? null,
+                              originalNote: photo.note ?? "",
+                              originalTakenAt: photo.taken_at ?? null,
+                            })
+                          }
+                          isSaving={editMutation.isPending}
+                        />
+                        <PhotoDeleteButton onClick={() => setDeletePhotoId(photo.id)} label={t("photos.remove")} />
                       </div>
                     ) : null}
                   </div>
                 ))}
 
                 {uploadFn ? (
-                  <button
-                    type="button"
+                  <AddPhotoTile
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadMutation.isPending}
-                    className="h-36 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
-                  >
-                    {uploadMutation.isPending ? (
-                      <Spinner className="size-5" />
-                    ) : (
-                      <HugeiconsIcon icon={Upload04Icon} className="size-5 text-muted-foreground" />
-                    )}
-                    <span className="text-xs text-muted-foreground">{t("photos.add")}</span>
-                  </button>
+                    isLoading={uploadMutation.isPending}
+                  />
                 ) : null}
               </div>
             )}

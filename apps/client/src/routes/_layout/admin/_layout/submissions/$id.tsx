@@ -22,6 +22,7 @@ import { SubmissionStationForm } from "@/features/admin/submissions/components/s
 import { SubmitterCard } from "@/features/admin/submissions/components/submitterCard";
 import { useApproveSubmissionMutation, useRejectSubmissionMutation, useSaveSubmissionMutation } from "@/features/admin/submissions/mutations";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
+import { getRatShowsBandDuplex } from "@/features/shared/rat";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { fetchApiData, showApiError } from "@/lib/api";
@@ -350,6 +351,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
     enabledRats,
     toggleRat: handleToggleRat,
     changeCell: handleCellChange,
+    syncMissingSectorsByPCIInRat: handleSyncMissingSectorsByPCIInRat,
     addCell: handleAddCell,
     addRemainingLteCells: handleAddRemainingLteCells,
     cloneCell: handleCloneCell,
@@ -545,7 +547,9 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
             </span>
             <span className="ml-1.5 font-mono text-xs text-muted-foreground">{targetCell.band.value}</span>
           </td>
-          {targetCell.rat !== "GSM" && <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>}
+          {getRatShowsBandDuplex(targetCell.rat) && (
+            <td className="px-3 py-1 font-mono text-xs text-muted-foreground">{targetCell.band.duplex ?? "-"}</td>
+          )}
           {sectors.length > 0 && (
             <td className={cn("px-3 py-1 font-mono text-xs text-muted-foreground", sectorChanged && "text-amber-700 dark:text-amber-300")}>
               {targetSectorId !== null ? (oldSectorLabelById.get(targetSectorId) ?? "-") : "-"}
@@ -624,6 +628,7 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               sectors={sectors}
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
+              onSyncSectorsByPCIInRat={handleSyncMissingSectorsByPCIInRat}
               onAddCell={handleAddCell}
               onAddRemainingLteCells={handleAddRemainingLteCells}
               onCloneCell={!isFormDisabled ? handleCloneCell : undefined}

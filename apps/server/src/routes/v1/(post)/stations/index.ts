@@ -8,12 +8,13 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
-import { checkGSMDuplicate, checkLTEDuplicate, checkUMTSDuplicate } from "../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicatesBatch } from "../../../../services/cellDuplicateCheck.service.js";
 import { syncStationsPermitsAssociations } from "../../../../services/stationsPermitsAssociation.service.js";
 import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidation.js";
 import { logger } from "../../../../utils/logger.js";
+import { type RATInsertDetails, insertRATCellDetails, isNormalRat } from "../../../../utils/ratCellPersistence.js";
 import { INSERT_OMIT, lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../utils/ratCellSchemas.js";
-import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
+import { makeDetailsRatRefine, validateCellDuplicates } from "../../../../utils/submission.helpers.js";
 
 const stationsInsertSchema = createInsertSchema(stations).omit({ extra_address: true });
 const stationSchema = createSelectSchema(stations).omit({ status: true });
@@ -86,23 +87,13 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { cells: cellsData, ...stationData } = req.body;
 
+  validateCellDuplicates(cellsData);
+
   if (stationData.operator_id && cellsData && cellsData.length > 0) {
-    for (const cell of cellsData) {
-      if (!cell.details) continue;
-      if (cell.rat === "GSM") {
-        const d = cell.details as z.infer<typeof gsmInsertSchema>;
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkGSMDuplicate(d.lac, d.cid, stationData.operator_id);
-      } else if (cell.rat === "UMTS") {
-        const d = cell.details as z.infer<typeof umtsInsertSchema>;
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkUMTSDuplicate(d.rnc, d.cid, stationData.operator_id);
-      } else if (cell.rat === "LTE") {
-        const d = cell.details as z.infer<typeof lteInsertSchema>;
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkLTEDuplicate(d.enbid, d.clid, stationData.operator_id);
-      }
-    }
+    await checkCellDuplicatesBatch(
+      cellsData.map((cell) => ({ rat: cell.rat, details: cell.details as Record<string, unknown> | undefined })),
+      stationData.operator_id,
+    );
   }
 
   await validateCellARFCNsForBands(cellsData.map((cell) => ({ rat: cell.rat, band_id: cell.band_id, details: cell.details })));
@@ -141,20 +132,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
           createdCells.map(async (row, idx) => {
             const details = cellsData[idx]?.details;
             if (!details) return;
-            switch (row.rat) {
-              case "GSM":
-                await tx.insert(gsmCells).values({ ...(details as z.infer<typeof gsmInsertSchema>), cell_id: row.id });
-                break;
-              case "UMTS":
-                await tx.insert(umtsCells).values({ ...(details as z.infer<typeof umtsInsertSchema>), cell_id: row.id });
-                break;
-              case "LTE":
-                await tx.insert(lteCells).values({ ...(details as z.infer<typeof lteInsertSchema>), cell_id: row.id });
-                break;
-              case "NR":
-                await tx.insert(nrCells).values({ ...(details as z.infer<typeof nrInsertSchema>), cell_id: row.id });
-                break;
-            }
+            if (isNormalRat(row.rat)) await insertRATCellDetails(tx, row.rat, row.id, details as RATInsertDetails);
           }),
         );
       }

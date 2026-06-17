@@ -1,45 +1,7 @@
 import type { TFunction } from "i18next";
 
+import { getRatCellsTableHeaders } from "@/features/shared/RatCellsTableHeader";
+
 export function getTableHeaders(rat: string, t: TFunction, options?: { showConfirmed?: boolean }): string[] {
-  const showConfirmed = options?.showConfirmed ?? true;
-  switch (rat) {
-    case "GSM": {
-      const headers = [t("common:labels.band"), "LAC", "CID", "E-GSM", t("common:labels.notes")];
-      if (showConfirmed) headers.push(t("common:labels.confirmed"));
-      headers.push("");
-      return headers;
-    }
-    case "UMTS": {
-      const headers = [t("common:labels.band"), "Duplex", "LAC", "RNC", "CID", "LongCID", "UARFCN", t("common:labels.notes")];
-      if (showConfirmed) headers.push(t("common:labels.confirmed"));
-      headers.push("");
-      return headers;
-    }
-    case "LTE": {
-      const headers = [t("common:labels.band"), "Duplex", "TAC", "eNBID", "CLID", "E-CID", "PCI", "EARFCN", "IoT", t("common:labels.notes")];
-      if (showConfirmed) headers.push(t("common:labels.confirmed"));
-      headers.push("");
-      return headers;
-    }
-    case "NR": {
-      const headers = [
-        t("common:labels.band"),
-        "Duplex",
-        t("common:labels.type"),
-        "TAC",
-        "CLID",
-        "gNBID",
-        "NCI",
-        "PCI",
-        "ARFCN",
-        "RedCap",
-        t("common:labels.notes"),
-      ];
-      if (showConfirmed) headers.push(t("common:labels.confirmed"));
-      headers.push("");
-      return headers;
-    }
-    default:
-      return [];
-  }
+  return getRatCellsTableHeaders(rat, t, options);
 }

@@ -10,16 +10,11 @@ import { ErrorResponse } from "../../../../../../errors.js";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
-import {
-  checkGSMDuplicate,
-  checkLTEDuplicate,
-  checkLTEPCIDuplicate,
-  checkNRPCIDuplicate,
-  checkUMTSDuplicate,
-} from "../../../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../../../services/cellDuplicateCheck.service.js";
 import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
+import { type RATInsertDetails, insertRATCellDetails, isNormalRat } from "../../../../../../utils/ratCellPersistence.js";
 import { INSERT_OMIT, gsmInsertSchema, lteNullableFields, nrInsertSchema, umtsInsertSchema } from "../../../../../../utils/ratCellSchemas.js";
-import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
+import { makeDetailsRatRefine, validateCellDuplicates } from "../../../../../../utils/submission.helpers.js";
 
 const cellsInsertSchema = createInsertSchema(cells)
   .omit({
@@ -84,39 +79,25 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
 
-  if (station.operator_id) {
-    for (const cell of cellsData) {
-      if (!cell.details) continue;
-      if (cell.rat === "GSM") {
-        const d = cell.details as z.infer<typeof gsmInsertSchema>;
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkGSMDuplicate(d.lac, d.cid, station.operator_id);
-      } else if (cell.rat === "UMTS") {
-        const d = cell.details as z.infer<typeof umtsInsertSchema>;
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkUMTSDuplicate(d.rnc, d.cid, station.operator_id);
-      } else if (cell.rat === "LTE") {
-        const d = cell.details as z.infer<typeof lteInsertSchema>;
-        /* eslint-disable-next-line no-await-in-loop */
-        await checkLTEDuplicate(d.enbid, d.clid, station.operator_id);
-      }
-    }
-  }
+  validateCellDuplicates(cellsData);
 
-  for (const cell of cellsData) {
-    if (!cell.details || !cell.band_id) continue;
-    if (cell.rat === "LTE") {
-      const d = cell.details as z.infer<typeof lteInsertSchema>;
-      /* eslint-disable-next-line no-await-in-loop */
-      if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(station_id, cell.band_id, d.pci, d.earfcn);
-    } else if (cell.rat === "NR") {
-      const d = cell.details as z.infer<typeof nrInsertSchema>;
-      /* eslint-disable-next-line no-await-in-loop */
-      if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(station_id, cell.band_id, d.pci, d.arfcn);
-    }
-  }
-
-  await validateCellARFCNsForBands(cellsData.map((cell) => ({ rat: cell.rat, band_id: cell.band_id, details: cell.details })));
+  await Promise.all([
+    station.operator_id
+      ? checkCellDuplicatesBatch(
+          cellsData.map((cell) => ({ rat: cell.rat, details: cell.details as Record<string, unknown> | undefined })),
+          station.operator_id,
+        )
+      : Promise.resolve(),
+    validateCellARFCNsForBands(cellsData.map((cell) => ({ rat: cell.rat, band_id: cell.band_id, details: cell.details }))),
+    checkPciDuplicates(
+      station_id,
+      cellsData.map((cell) => ({
+        rat: cell.rat,
+        bandId: cell.band_id,
+        details: cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null } | undefined,
+      })),
+    ),
+  ]);
 
   try {
     const created = await db
@@ -135,20 +116,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       created.map(async (row, idx) => {
         const details = cellsData[idx]?.details;
         if (!details) return;
-        switch (row.rat) {
-          case "GSM":
-            await db.insert(gsmCells).values({ ...(details as z.infer<typeof gsmInsertSchema>), cell_id: row.id });
-            break;
-          case "UMTS":
-            await db.insert(umtsCells).values({ ...(details as z.infer<typeof umtsInsertSchema>), cell_id: row.id });
-            break;
-          case "LTE":
-            await db.insert(lteCells).values({ ...(details as z.infer<typeof lteInsertSchema>), cell_id: row.id });
-            break;
-          case "NR":
-            await db.insert(nrCells).values({ ...(details as z.infer<typeof nrInsertSchema>), cell_id: row.id });
-            break;
-        }
+        if (isNormalRat(row.rat)) await insertRATCellDetails(db, row.rat, row.id, details as RATInsertDetails);
       }),
     );
 

@@ -40,6 +40,7 @@ export type AnalyzerResult<TStation = unknown> = {
 
 type Pair = [a: number, b: number];
 type PairMap = Map<number, Map<string, Pair>>;
+const NETWORKS_MNCS = new Set([26002, 26003]);
 
 export type LookupMaps<TStation> = {
   gsmMap: Map<string, { station: TStation; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }>;
@@ -105,6 +106,28 @@ export function addPair(byMnc: PairMap, mnc: number, a: number, b: number): void
 
 export function pairKey(mnc: number, a: number, b: number): string {
   return `${mnc}:${a}:${b}`;
+}
+
+export function stripFirstDigit(enbid: number): number | null {
+  if (enbid <= 9) return null;
+  return enbid % 10 ** Math.floor(Math.log10(enbid));
+}
+
+export function lteEnbidKey(mnc: number, enbid: number): string {
+  if (!NETWORKS_MNCS.has(mnc)) return `${mnc}:${enbid}`;
+  return `${mnc}:${stripFirstDigit(enbid) ?? enbid}`;
+}
+
+export function candidateEnbids(enbid: number): number[] {
+  const stripped = stripFirstDigit(enbid);
+  if (stripped === null) return [enbid];
+  const magnitude = 10 ** (Math.floor(Math.log10(stripped)) + 1);
+  return Array.from({ length: 9 }, (_, i) => stripped + (i + 1) * magnitude);
+}
+
+export function candidateLTEEnbids(mnc: number, enbid: number): number[] {
+  if (!NETWORKS_MNCS.has(mnc)) return [enbid];
+  return candidateEnbids(enbid);
 }
 
 export function groupCellsByMnc(inputCells: CellInput[]): CellGroups {
@@ -224,7 +247,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
           warnings,
         };
       }
-      const fallback = maps.lteEnbidMap.get(`${cell.mnc}:${cell.enbid}`);
+      const fallback = maps.lteEnbidMap.get(lteEnbidKey(cell.mnc, cell.enbid));
       if (!fallback) return NOT_FOUND;
       return {
         status: "probable",

@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { DiffBadges } from "@/features/admin/cells/cellsEditor";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
-import { RAT_ORDER } from "@/features/admin/cells/rat";
+import { RAT_ORDER, getRatSortDetailField } from "@/features/admin/cells/rat";
 import { bandsQueryOptions, operatorsQueryOptions } from "@/features/admin/queries";
 import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
 import { StationDetailHeader } from "@/features/admin/stations/components/stationDetailHeader";
@@ -50,18 +50,9 @@ function sortAndMapCells(cells: Cell[]): LocalCell[] {
   return [...cells]
     .sort((a, b) => {
       if (a.band.value !== b.band.value) return a.band.value - b.band.value;
-      switch (a.rat) {
-        case "GSM":
-          return ((a.details?.cid as number) ?? 0) - ((b.details?.cid as number) ?? 0);
-        case "UMTS":
-          return ((a.details?.cid_long as number) ?? 0) - ((b.details?.cid_long as number) ?? 0);
-        case "LTE":
-          return ((a.details?.ecid as number) ?? 0) - ((b.details?.ecid as number) ?? 0);
-        case "NR":
-          return ((a.details?.nci as number) ?? 0) - ((b.details?.nci as number) ?? 0);
-        default:
-          return 0;
-      }
+      const sortField = getRatSortDetailField(a.rat);
+      if (!sortField) return 0;
+      return ((a.details?.[sortField] as number) ?? 0) - ((b.details?.[sortField] as number) ?? 0);
     })
     .map(cellToLocal);
 }
@@ -313,6 +304,7 @@ function StationDetailForm({
     visibleRats,
     toggleRat: handleToggleRat,
     changeCell: handleCellChange,
+    syncMissingSectorsByPCIInRat: handleSyncMissingSectorsByPCIInRat,
     addCell: handleAddCell,
     addRemainingLteCells: handleAddRemainingLteCells,
     cloneCell: handleCloneCell,
@@ -691,6 +683,7 @@ function StationDetailForm({
               sectors={sectors}
               onToggleRat={handleToggleRat}
               onCellChange={handleCellChange}
+              onSyncSectorsByPCIInRat={handleSyncMissingSectorsByPCIInRat}
               onAddCell={handleAddCell}
               onAddRemainingLteCells={handleAddRemainingLteCells}
               onCloneCell={handleCloneCell}

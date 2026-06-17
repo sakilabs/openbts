@@ -9,14 +9,9 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
-import {
-  checkGSMDuplicate,
-  checkLTEDuplicate,
-  checkLTEPCIDuplicate,
-  checkNRPCIDuplicate,
-  getOperatorIdForStation,
-} from "../../../../services/cellDuplicateCheck.service.js";
-import { gsmUpdateSchema, lteUpdateSchema, nrUpdateSchema, umtsUpdateSchema } from "../../../../utils/ratCellSchemas.js";
+import { checkCellDuplicate, checkPciDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
+import { type RATUpdateDetails, isNormalRat, updateRATCellDetailsReturning } from "../../../../utils/ratCellPersistence.js";
+import { lteUpdateSchema, normalRatUpdateSchemaMap, nrUpdateSchema } from "../../../../utils/ratCellSchemas.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -32,9 +27,7 @@ const umtsCellsSchema = createSelectSchema(umtsCells).omit({ cell_id: true }).st
 const lteCellsSchema = createSelectSchema(lteCells).omit({ cell_id: true }).strict();
 const nrCellsSchema = createSelectSchema(nrCells).omit({ cell_id: true }).strict();
 const cellDetailsSchema = z.union([gsmCellsSchema, umtsCellsSchema, lteCellsSchema, nrCellsSchema]).nullable();
-const requestSchema = cellsUpdateSchema
-  .extend({ details: z.unknown().optional() })
-  .superRefine(makeDetailsRatRefine({ GSM: gsmUpdateSchema, UMTS: umtsUpdateSchema, LTE: lteUpdateSchema, NR: nrUpdateSchema }));
+const requestSchema = cellsUpdateSchema.extend({ details: z.unknown().optional() }).superRefine(makeDetailsRatRefine(normalRatUpdateSchemaMap));
 
 const schemaRoute = {
   params: z.object({
@@ -61,19 +54,14 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
 
-  if (req.body.details) {
-    const operatorId = await getOperatorIdForStation(cell.station_id);
-    if (operatorId) {
-      if (cell.rat === "GSM") {
-        const d = req.body.details as z.infer<typeof gsmUpdateSchema>;
-        if (d.lac !== undefined && d.cid !== undefined) await checkGSMDuplicate(d.lac, d.cid, operatorId, id);
-      } else if (cell.rat === "LTE") {
-        const d = req.body.details as z.infer<typeof lteUpdateSchema>;
-        if (d.enbid !== undefined && d.clid !== undefined) await checkLTEDuplicate(d.enbid, d.clid, operatorId, id);
-      }
+  if (req.body.details || req.body.band_id !== undefined) {
+    if (req.body.details) {
+      const operatorId = await getOperatorIdForStation(cell.station_id);
+      if (operatorId)
+        await checkCellDuplicate({ rat: cell.rat, details: req.body.details as Record<string, unknown>, excludeCellId: id }, operatorId);
     }
 
-    if (cell.rat === "NR") {
+    if (req.body.details && cell.rat === "NR") {
       const nrDetails = req.body.details as z.infer<typeof nrUpdateSchema>;
       const effectiveType = nrDetails.type ?? cell.nr?.type;
       if (effectiveType === "nsa") {
@@ -87,19 +75,21 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     }
 
     const effectiveBandId = req.body.band_id ?? cell.band_id;
-    if (cell.rat === "LTE") {
-      const d = req.body.details as z.infer<typeof lteUpdateSchema>;
-      if (d.pci !== null && d.pci !== undefined) {
-        const effectiveEARFCN = d.earfcn !== undefined ? d.earfcn : (cell.lte?.earfcn ?? null);
-        await checkLTEPCIDuplicate(cell.station_id, effectiveBandId, d.pci, effectiveEARFCN, id);
-      }
-    } else if (cell.rat === "NR") {
-      const d = req.body.details as z.infer<typeof nrUpdateSchema>;
-      if (d.pci !== null && d.pci !== undefined) {
-        const effectiveARFCN = d.arfcn !== undefined ? d.arfcn : (cell.nr?.arfcn ?? null);
-        await checkNRPCIDuplicate(cell.station_id, effectiveBandId, d.pci, effectiveARFCN, id);
-      }
-    }
+    const lteDetails = req.body.details as z.infer<typeof lteUpdateSchema> | undefined;
+    const nrDetails = req.body.details as z.infer<typeof nrUpdateSchema> | undefined;
+    const effectiveDetails =
+      cell.rat === "LTE"
+        ? {
+            pci: lteDetails?.pci !== undefined ? lteDetails.pci : cell.lte?.pci,
+            earfcn: lteDetails?.earfcn !== undefined ? lteDetails.earfcn : cell.lte?.earfcn,
+          }
+        : cell.rat === "NR"
+          ? {
+              pci: nrDetails?.pci !== undefined ? nrDetails.pci : cell.nr?.pci,
+              arfcn: nrDetails?.arfcn !== undefined ? nrDetails.arfcn : cell.nr?.arfcn,
+            }
+          : null;
+    await checkPciDuplicate(cell.station_id, { rat: cell.rat, bandId: effectiveBandId, details: effectiveDetails, excludeCellId: id });
   }
 
   try {
@@ -113,69 +103,12 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       .returning();
     if (!updated) throw new ErrorResponse("FAILED_TO_UPDATE");
 
-    if (req.body.details) {
-      switch (cell.rat) {
-        case "GSM":
-          {
-            const details = req.body.details as z.infer<typeof gsmUpdateSchema>;
-            const [updated] = await db
-              .update(gsmCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(gsmCells.cell_id, id))
-              .returning();
-            if (!updated) {
-              throw new ErrorResponse("FAILED_TO_UPDATE", {
-                message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
-              });
-            }
-          }
-          break;
-        case "UMTS":
-          {
-            const details = req.body.details as z.infer<typeof umtsUpdateSchema>;
-            const [updated] = await db
-              .update(umtsCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(umtsCells.cell_id, id))
-              .returning();
-            if (!updated) {
-              throw new ErrorResponse("FAILED_TO_UPDATE", {
-                message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
-              });
-            }
-          }
-          break;
-        case "LTE":
-          {
-            const details = req.body.details as z.infer<typeof lteUpdateSchema>;
-            const [updated] = await db
-              .update(lteCells)
-              .set({ ...details, updatedAt: new Date() })
-              .where(eq(lteCells.cell_id, id))
-              .returning();
-            if (!updated) {
-              throw new ErrorResponse("FAILED_TO_UPDATE", {
-                message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
-              });
-            }
-          }
-          break;
-        case "NR":
-          {
-            const details = req.body.details as z.infer<typeof nrUpdateSchema>;
-            const [updated] = await db
-              .update(nrCells)
-              .set({ ...details, ...(details.gnbid ? { gnbid_length: Number(details.gnbid).toString(2).length } : {}), updatedAt: new Date() })
-              .where(eq(nrCells.cell_id, id))
-              .returning();
-            if (!updated) {
-              throw new ErrorResponse("FAILED_TO_UPDATE", {
-                message: "This cell has no NR data assigned. Try removing the cell first and re-adding it with the actual data",
-              });
-            }
-          }
-          break;
-      }
+    if (req.body.details && isNormalRat(cell.rat)) {
+      const updatedDetails = await updateRATCellDetailsReturning(db, cell.rat, id, req.body.details as RATUpdateDetails);
+      if (!updatedDetails)
+        throw new ErrorResponse("FAILED_TO_UPDATE", {
+          message: `This cell has no ${cell.rat} data assigned. Try removing the cell first and re-adding it with the actual data`,
+        });
     }
 
     const full = await db.query.cells.findFirst({

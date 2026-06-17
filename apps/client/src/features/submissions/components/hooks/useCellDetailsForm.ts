@@ -4,30 +4,20 @@ import { useTranslation } from "react-i18next";
 
 import { applyMissingSectorPCISync } from "@/features/admin/cells/sectorAssignmentSync";
 import { bandsQueryOptions } from "@/features/shared/queries";
-import { getSharedDetailFields } from "@/features/shared/rat";
+import { getCellDetailDefaultValue, getRatSiblingSyncField, getSharedDetailFields } from "@/features/shared/rat";
 import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaining-lte-cells";
 
-import type { GSMCellDetails, LTECellDetails, NRCellDetails, ProposedCellForm, RatType, UMTSCellDetails } from "../../types";
+import type { ProposedCellForm, RatType } from "../../types";
 import { buildOriginalCellsMap, generateCellId, getCellDiffStatus } from "../../utils/cells";
 
-const TAC_LAC_FIELD: Partial<Record<string, string>> = {
-  GSM: "lac",
-  UMTS: "lac",
-  LTE: "tac",
-  NR: "nrtac",
-};
-
 function getDefaultCellDetails(rat: RatType): ProposedCellForm["details"] {
-  switch (rat) {
-    case "GSM":
-      return {} as GSMCellDetails;
-    case "UMTS":
-      return {} as UMTSCellDetails;
-    case "LTE":
-      return {} as LTECellDetails;
-    case "NR":
-      return { type: "nsa" } as NRCellDetails;
-  }
+  const type = getCellDetailDefaultValue(rat, "type");
+  return type === null ? {} : ({ type } as ProposedCellForm["details"]);
+}
+
+function getEditableSortDetailField(rat: RatType): string {
+  if (rat === "GSM" || rat === "UMTS") return "cid";
+  return "clid";
 }
 
 export type UseCellDetailsFormProps = {
@@ -62,15 +52,15 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
   const stableOrderRef = useRef<string[] | null>(null);
 
   const sortedCells = useMemo(() => {
-    const clidKey = rat === "GSM" || rat === "UMTS" ? "cid" : "clid";
+    const sortField = getEditableSortDetailField(rat);
     const bandSort = (a: ProposedCellForm, b: ProposedCellForm) => {
       const bandA = a.band_id !== null ? (bandValueMap.get(a.band_id) ?? 0) : 0;
       const bandB = b.band_id !== null ? (bandValueMap.get(b.band_id) ?? 0) : 0;
       if (bandA !== bandB) return bandA - bandB;
       const detailsA = a.details as Record<string, unknown>;
       const detailsB = b.details as Record<string, unknown>;
-      const clidA = (detailsA[clidKey] as number) ?? 0;
-      const clidB = (detailsB[clidKey] as number) ?? 0;
+      const clidA = sortField ? ((detailsA[sortField] as number) ?? 0) : 0;
+      const clidB = sortField ? ((detailsB[sortField] as number) ?? 0) : 0;
       return clidA - clidB;
     };
 
@@ -216,7 +206,7 @@ export function useCellDetailsForm({ rat, cells, originalCells, isNewStation, on
 
   const handleDetailsChange = useCallback(
     (id: string, field: string, value: number | boolean | string | undefined) => {
-      const syncSiblings = TAC_LAC_FIELD[rat] === field && cells.length >= 2;
+      const syncSiblings = getRatSiblingSyncField(rat) === field && cells.length >= 2;
       onCellsChange(
         rat,
         cells.map((cell) => {

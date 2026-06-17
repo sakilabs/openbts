@@ -9,6 +9,7 @@ import { ErrorResponse } from "../../../../../../errors.ts";
 import type { ReplyPayload } from "../../../../../../interfaces/fastify.interface.ts";
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.ts";
 import { createAuditLog } from "../../../../../../services/auditLog.service.ts";
+import type { DbTx } from "../../../../../../types/global.ts";
 
 const sectorInputSchema = z.object({
   id: z.number().int().optional(),
@@ -23,7 +24,48 @@ const schemaRoute = {
   response: { 200: z.object({ data: z.array(sectorSchema) }) },
 };
 type ReqBodyParams = { Params: z.infer<typeof schemaRoute.params>; Body: z.infer<typeof schemaRoute.body> };
-type ResBody = z.infer<typeof sectorSchema>[];
+type SectorInput = z.infer<typeof sectorInputSchema>;
+type SectorRow = z.infer<typeof sectorSchema>;
+type ResBody = SectorRow[];
+
+function findPreviousSector(
+  sector: SectorInput,
+  previousById: ReadonlyMap<number, SectorRow>,
+  previousSectors: SectorRow[],
+  usedPreviousIds: ReadonlySet<number>,
+): SectorRow | undefined {
+  if (sector.id !== undefined) return previousById.get(sector.id);
+
+  return previousSectors.find((previous) => previous.azimuth === sector.azimuth && !usedPreviousIds.has(previous.id));
+}
+
+async function saveSector(tx: DbTx, stationId: number, sector: SectorInput, previous?: SectorRow): Promise<SectorRow | null> {
+  if (previous) {
+    if (previous.azimuth !== sector.azimuth)
+      await tx
+        .update(stationSectors)
+        .set({ azimuth: sector.azimuth })
+        .where(and(eq(stationSectors.id, previous.id), eq(stationSectors.station_id, stationId)));
+
+    return { id: previous.id, azimuth: sector.azimuth };
+  }
+
+  const [inserted] = await tx
+    .insert(stationSectors)
+    .values({ station_id: stationId, azimuth: sector.azimuth })
+    .returning({ id: stationSectors.id, azimuth: stationSectors.azimuth });
+  return inserted ?? null;
+}
+
+async function deleteUnusedSectors(tx: DbTx, deletedIds: number[]): Promise<void> {
+  if (deletedIds.length === 0) return;
+
+  const [assignedResult] = await tx.select({ value: count() }).from(cells).where(inArray(cells.sector_id, deletedIds));
+  if (Number(assignedResult?.value ?? 0) > 0)
+    throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete sectors that are already assigned to cells" });
+
+  await tx.delete(stationSectors).where(inArray(stationSectors.id, deletedIds));
+}
 
 async function handler(req: FastifyRequest<ReqBodyParams>, res: ReplyPayload<JSONBody<ResBody>>) {
   const { station_id } = req.params;
@@ -42,40 +84,19 @@ async function handler(req: FastifyRequest<ReqBodyParams>, res: ReplyPayload<JSO
 
   const result = await db.transaction(async (tx) => {
     const previousById = new Map(previousSectors.map((sector) => [sector.id, sector]));
-    const usedPreviousIds = new Set<number>();
+    const retainedSectorIds = new Set<number>();
     const nextSectors: ResBody = [];
 
     for (const sector of sectors) {
-      const matchingPrevious =
-        sector.id !== undefined
-          ? previousById.get(sector.id)
-          : previousSectors.find((previous) => previous.azimuth === sector.azimuth && !usedPreviousIds.has(previous.id));
+      const matchingPrevious = findPreviousSector(sector, previousById, previousSectors, retainedSectorIds);
 
-      if (matchingPrevious) {
-        usedPreviousIds.add(matchingPrevious.id);
-        if (matchingPrevious.azimuth !== sector.azimuth)
-          await tx
-            .update(stationSectors)
-            .set({ azimuth: sector.azimuth })
-            .where(and(eq(stationSectors.id, matchingPrevious.id), eq(stationSectors.station_id, station_id)));
-        nextSectors.push({ id: matchingPrevious.id, azimuth: sector.azimuth });
-        continue;
-      }
-
-      const [inserted] = await tx
-        .insert(stationSectors)
-        .values({ station_id, azimuth: sector.azimuth })
-        .returning({ id: stationSectors.id, azimuth: stationSectors.azimuth });
-      if (inserted) nextSectors.push(inserted);
+      const saved = await saveSector(tx, station_id, sector, matchingPrevious);
+      if (matchingPrevious) retainedSectorIds.add(matchingPrevious.id);
+      if (saved) nextSectors.push(saved);
     }
 
-    const deletedIds = previousSectors.filter((sector) => !usedPreviousIds.has(sector.id)).map((sector) => sector.id);
-    if (deletedIds.length > 0) {
-      const [assignedResult] = await tx.select({ value: count() }).from(cells).where(inArray(cells.sector_id, deletedIds));
-      if (Number(assignedResult?.value ?? 0) > 0)
-        throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete sectors that are already assigned to cells" });
-      await tx.delete(stationSectors).where(inArray(stationSectors.id, deletedIds));
-    }
+    const deletedIds = previousSectors.filter((sector) => !retainedSectorIds.has(sector.id)).map((sector) => sector.id);
+    await deleteUnusedSectors(tx, deletedIds);
 
     return nextSectors;
   });

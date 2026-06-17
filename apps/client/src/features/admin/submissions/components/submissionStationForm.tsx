@@ -4,15 +4,15 @@ import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { OperatorSelect } from "@/components/operator-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { fetchSiblingExtraIds, fetchSiblingSectors } from "@/features/admin/stations/api";
 import { SectorsPanel, ukePermitsToAzimuthSectors } from "@/features/admin/stations/components/sectorsEditor";
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { deriveSectorPanelState } from "@/features/shared/sectorPanelState";
+import { StationBasicsFields } from "@/features/shared/StationBasicsFields";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
@@ -84,12 +84,7 @@ export function SubmissionStationForm({
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!extraIdsForm.networks_id;
   const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !extraIdsForm.networks_id && !!extraIdsForm.mno_name;
   const showSection = showExtraIdsFields || showMnoNameOnly;
-  const derivedSectorCount = useMemo(() => {
-    const byBand = new Map<number, number>();
-    for (const cell of cells) byBand.set(cell.band_id, (byBand.get(cell.band_id) ?? 0) + 1);
-    return byBand.size > 0 ? Math.max(...byBand.values()) : 0;
-  }, [cells]);
-  const assignedSectorLocalIds = useMemo(() => new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : []))), [cells]);
+  const { derivedSectorCount, assignedSectorLocalIds } = useMemo(() => deriveSectorPanelState(cells), [cells]);
   const previousAzimuthByLocalId = useMemo(() => {
     const currentById = new Map((currentStation?.sectors ?? []).map((sector) => [sector.id, sector.azimuth]));
     const previous = new Map<string, number>();
@@ -191,33 +186,19 @@ export function SubmissionStationForm({
           )}
         </div>
         <div className="px-4 py-3 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t("common:labels.stationId")}</Label>
-              <Input
-                value={stationForm.station_id}
-                onChange={(e) => onStationFormChange({ station_id: e.target.value })}
-                maxLength={16}
-                disabled={isFormDisabled}
-              />
-              {stationDiffs?.station_id && <ChangeBadge label={t("diff.was")} current={submission.station?.station_id as string} />}
-            </div>
-            <div className="space-y-2">
-              <Label>{t("common:labels.operator")}</Label>
-              <OperatorSelect
-                operators={operators}
-                value={stationForm.operator_id}
-                onChange={(v) => onStationFormChange({ operator_id: v })}
-                disabled={isFormDisabled}
-              />
-              {stationDiffs?.operator_id && currentOperator && <ChangeBadge label={t("diff.was")} current={currentOperator.name} />}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>{t("common:labels.notes")}</Label>
-            <Textarea value={stationForm.notes} onChange={(e) => onStationFormChange({ notes: e.target.value })} rows={3} disabled={isFormDisabled} />
-            {stationDiffs?.notes && <ChangeBadge label={t("diff.was")} current={submission.station?.notes ?? "-"} />}
-          </div>
+          <StationBasicsFields
+            stationId={stationForm.station_id}
+            operatorId={stationForm.operator_id}
+            notes={stationForm.notes}
+            operators={operators}
+            disabled={isFormDisabled}
+            onStationIdChange={(value) => onStationFormChange({ station_id: value })}
+            onOperatorIdChange={(value) => onStationFormChange({ operator_id: value })}
+            onNotesChange={(value) => onStationFormChange({ notes: value })}
+            stationIdMeta={stationDiffs?.station_id && <ChangeBadge label={t("diff.was")} current={submission.station?.station_id as string} />}
+            operatorMeta={stationDiffs?.operator_id && currentOperator && <ChangeBadge label={t("diff.was")} current={currentOperator.name} />}
+            notesMeta={stationDiffs?.notes && <ChangeBadge label={t("diff.was")} current={submission.station?.notes ?? "-"} />}
+          />
         </div>
       </div>
 

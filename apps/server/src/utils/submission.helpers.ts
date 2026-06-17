@@ -3,6 +3,8 @@ import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import { ErrorResponse } from "../errors.js";
+import { getCellIdentityDuplicateKey, type CellIdentityDuplicateDetails } from "./cellIdentityDuplicateSpecs.js";
+import { getPciDuplicateKey, type PciDuplicateDetails } from "./pciDuplicateSpecs.js";
 
 export const gsmInsertSchema = createInsertSchema(proposedGSMCells)
   .omit({ proposed_cell_id: true })
@@ -79,45 +81,36 @@ interface CellWithDetails {
 }
 
 export function validateCellDuplicates(cells: CellWithDetails[]): void {
-  for (const rat of ["GSM", "UMTS"] as const) {
-    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
-    const seen = new Set<string>();
-    for (const cell of ratCells) {
-      const d = cell.details as { lac?: number; rnc?: number; cid?: number } | undefined;
-      const cid = d?.cid;
-      if (cid === undefined) continue;
-      const key = rat === "GSM" ? `${d?.lac ?? 0}:${cid}` : `${d?.rnc ?? 0}:${cid}`;
-      if (seen.has(key))
-        throw new ErrorResponse("BAD_REQUEST", {
-          message:
-            rat === "GSM" ? `Duplicate LAC+CID (${d?.lac}+${cid}) found in GSM cells` : `Duplicate RNC+CID (${d?.rnc}+${cid}) found in UMTS cells`,
-        });
-      seen.add(key);
-    }
+  const seenIdentityKeysByRat = new Map<string, Set<string>>();
+  for (const cell of cells) {
+    if (cell.operation === "delete") continue;
+    const duplicateKey = getCellIdentityDuplicateKey({
+      rat: cell.rat,
+      details: cell.details as CellIdentityDuplicateDetails | undefined,
+    });
+    if (!duplicateKey) continue;
+
+    const seen = seenIdentityKeysByRat.get(duplicateKey.rat) ?? new Set<string>();
+    if (seen.has(duplicateKey.key)) throw new ErrorResponse("BAD_REQUEST", { message: duplicateKey.message });
+    seen.add(duplicateKey.key);
+    seenIdentityKeysByRat.set(duplicateKey.rat, seen);
   }
 
-  const lteCells = cells.filter((c) => c.rat === "LTE" && c.operation !== "delete");
-  const seen = new Set<string>();
-  for (const cell of lteCells) {
-    const d = cell.details as { enbid?: number; clid?: number } | undefined;
-    if (d?.enbid === undefined || d?.clid === undefined) continue;
-    const key = `${d.enbid}:${d.clid}`;
-    if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate eNBID+CLID (${d.enbid}+${d.clid}) found in LTE cells` });
-    seen.add(key);
-  }
+  const seenPciKeysByRat = new Map<string, Set<string>>();
+  for (const cell of cells) {
+    if (cell.operation === "delete") continue;
+    const duplicateKey = getPciDuplicateKey({
+      rat: cell.rat,
+      bandId: cell.band_id,
+      details: cell.details as PciDuplicateDetails | undefined,
+    });
+    if (!duplicateKey) continue;
 
-  for (const rat of ["LTE", "NR"] as const) {
-    const ratCells = cells.filter((c) => c.rat === rat && c.operation !== "delete");
-    const seen = new Set<string>();
-    for (const cell of ratCells) {
-      const d = cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null } | undefined;
-      const bandId = cell.band_id;
-      if (d?.pci === null || d?.pci === undefined || bandId === null || bandId === undefined) continue;
-      const arfcn = rat === "LTE" ? (d.earfcn ?? null) : (d.arfcn ?? null);
-      const key = `${bandId}:${d.pci}:${arfcn ?? ""}`;
-      if (seen.has(key)) throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate PCI ${d.pci} found on the same band in ${rat} cells` });
-      seen.add(key);
-    }
+    const seen = seenPciKeysByRat.get(duplicateKey.rat) ?? new Set<string>();
+    if (seen.has(duplicateKey.key))
+      throw new ErrorResponse("BAD_REQUEST", { message: `Duplicate PCI ${duplicateKey.pci} found on the same band in ${duplicateKey.rat} cells` });
+    seen.add(duplicateKey.key);
+    seenPciKeysByRat.set(duplicateKey.rat, seen);
   }
 }
 

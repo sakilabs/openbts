@@ -25,5 +25,20 @@ export function useBandSelection(bands: Band[], rat: string, bandId: number) {
     [bandsForRat],
   );
 
-  return { bandsForRat, uniqueBandValues, currentBand, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId };
+  const findPreferredBandId = useCallback(
+    (value: number | null, preferredDuplex: string | null, fallbackDuplex?: string): number | null => {
+      if (value === null) return null;
+      const matchingBands = bandsForRat.filter((b) => b.value === value);
+      if (matchingBands.length === 0) return null;
+      if (matchingBands.some((b) => b.duplex === preferredDuplex)) return matchingBands.find((b) => b.duplex === preferredDuplex)?.id ?? null;
+      if (matchingBands.length === 1) return matchingBands[0]?.id ?? null;
+      if (fallbackDuplex && matchingBands.some((b) => b.duplex === fallbackDuplex)) {
+        return matchingBands.find((b) => b.duplex === fallbackDuplex)?.id ?? null;
+      }
+      return matchingBands[0]?.id ?? null;
+    },
+    [bandsForRat],
+  );
+
+  return { bandsForRat, uniqueBandValues, currentBand, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, findPreferredBandId };
 }

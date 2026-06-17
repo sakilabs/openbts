@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { EmptyPanel } from "@/components/empty-panel";
 import type { SectorDraft } from "@/types/station";
 
 import type { ProposedCellForm, RatType } from "../types";
@@ -41,11 +42,7 @@ export function CellsSection({
   }, [cells]);
 
   if (selectedRats.length === 0) {
-    return (
-      <div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
-        {t("ratSelector.noSelection")}
-      </div>
-    );
+    return <EmptyPanel>{t("ratSelector.noSelection")}</EmptyPanel>;
   }
 
   return (

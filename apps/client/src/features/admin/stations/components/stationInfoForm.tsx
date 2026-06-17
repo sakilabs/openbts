@@ -5,14 +5,14 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { OperatorSelect } from "@/components/operator-select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { fetchSiblingExtraIds, fetchSiblingSectors } from "@/features/admin/stations/api";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { deriveSectorPanelState } from "@/features/shared/sectorPanelState";
+import { StationBasicsFields } from "@/features/shared/StationBasicsFields";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
@@ -94,16 +94,7 @@ export function StationInfoForm({
   const siblingBrand = selectedOperator?.mnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
 
-  const derivedSectorCount = useMemo(() => {
-    const byBand = new Map<number, number>();
-    for (const cell of cells) {
-      byBand.set(cell.band_id, (byBand.get(cell.band_id) ?? 0) + 1);
-    }
-
-    return byBand.size > 0 ? Math.max(...byBand.values()) : 0;
-  }, [cells]);
-
-  const assignedSectorLocalIds = useMemo(() => new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : []))), [cells]);
+  const { derivedSectorCount, assignedSectorLocalIds } = useMemo(() => deriveSectorPanelState(cells), [cells]);
 
   const siblingSectorsIcon = useMemo(() => <SiblingLogo className="h-3.5 w-auto shrink-0" />, [SiblingLogo]);
 
@@ -186,31 +177,28 @@ export function StationInfoForm({
           )}
         </div>
         <div className="px-4 py-3 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t("common:labels.stationId")}</Label>
-              <Input value={stationId} onChange={(e) => onStationIdChange(e.target.value)} maxLength={16} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t("common:labels.operator")}</Label>
-              <OperatorSelect operators={operators} value={operatorId} onChange={onOperatorIdChange} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>{t("common:labels.notes")}</Label>
-            <Textarea value={notes} onChange={(e) => onNotesChange(e.target.value)} rows={3} />
-          </div>
-          {extraAddress && (
-            <div className="space-y-2">
-              <Label>{t("common:labels.extraAddress")}</Label>
-              <Input
-                value={extraAddress}
-                onChange={(e) => {
-                  if (e.target.value.length < extraAddress.length) onExtraAddressChange?.(e.target.value);
-                }}
-              />
-            </div>
-          )}
+          <StationBasicsFields
+            stationId={stationId}
+            operatorId={operatorId}
+            notes={notes}
+            operators={operators}
+            onStationIdChange={onStationIdChange}
+            onOperatorIdChange={onOperatorIdChange}
+            onNotesChange={onNotesChange}
+            extraFields={
+              extraAddress ? (
+                <div className="space-y-2">
+                  <Label>{t("common:labels.extraAddress")}</Label>
+                  <Input
+                    value={extraAddress}
+                    onChange={(e) => {
+                      if (e.target.value.length < extraAddress.length) onExtraAddressChange?.(e.target.value);
+                    }}
+                  />
+                </div>
+              ) : null
+            }
+          />
           <div className="flex items-center gap-2">
             <Checkbox checked={isConfirmed} onCheckedChange={(checked) => onIsConfirmedChange(checked === true)} />
             <Label>{t("common:labels.confirmed")}</Label>

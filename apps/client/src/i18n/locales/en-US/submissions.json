@@ -166,6 +166,8 @@
     "selectionFailed": "Failed to save photo selection",
     "emptyLocation": "No photos at this location yet.",
     "uploadBelow": "Upload new photos below.",
+    "locationPhotos": "Existing location photos",
+    "uploadedPhotos": "New photos for this submission",
     "alreadyAssigned": "Assigned",
     "selectedLocationPhotos": "Photos selected by submitter",
     "pendingCount_one": "{{count}} photo may still be uploading",

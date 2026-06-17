@@ -9,17 +9,11 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
-import {
-  checkGSMDuplicate,
-  checkLTEDuplicate,
-  checkLTEPCIDuplicate,
-  checkNRPCIDuplicate,
-  checkUMTSDuplicate,
-  getOperatorIdForStation,
-} from "../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicate, checkPciDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
 import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidation.js";
-import { gsmInsertSchema, lteInsertSchema, nrInsertSchema, umtsInsertSchema } from "../../../../utils/ratCellSchemas.js";
-import { computeGnbidLength, makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
+import { type RATInsertDetails, insertRATCellDetailsReturning, isNormalRat } from "../../../../utils/ratCellPersistence.js";
+import { normalRatInsertSchemaMap } from "../../../../utils/ratCellSchemas.js";
+import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 const cellsSelectSchema = createSelectSchema(cells);
 const gsmCellsSchema = createSelectSchema(gsmCells);
@@ -35,9 +29,7 @@ const cellsInsertSchema = createInsertSchema(cells)
   .extend({ rat: z.enum(["GSM", "CDMA", "UMTS", "LTE", "NR"]) })
   .strict();
 
-const requestSchema = cellsInsertSchema
-  .extend({ details: z.unknown().optional() })
-  .superRefine(makeDetailsRatRefine({ GSM: gsmInsertSchema, UMTS: umtsInsertSchema, LTE: lteInsertSchema, NR: nrInsertSchema }));
+const requestSchema = cellsInsertSchema.extend({ details: z.unknown().optional() }).superRefine(makeDetailsRatRefine(normalRatInsertSchemaMap));
 
 type ReqWithDetails = { Body: z.infer<typeof requestSchema> };
 
@@ -55,28 +47,15 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
   try {
     if (req.body.details && req.body.station_id) {
       const operatorId = await getOperatorIdForStation(req.body.station_id);
-      if (operatorId) {
-        if (req.body.rat === "GSM") {
-          const d = req.body.details as z.infer<typeof gsmInsertSchema>;
-          await checkGSMDuplicate(d.lac, d.cid, operatorId);
-        } else if (req.body.rat === "UMTS") {
-          const d = req.body.details as z.infer<typeof umtsInsertSchema>;
-          await checkUMTSDuplicate(d.rnc, d.cid, operatorId);
-        } else if (req.body.rat === "LTE") {
-          const d = req.body.details as z.infer<typeof lteInsertSchema>;
-          await checkLTEDuplicate(d.enbid, d.clid, operatorId);
-        }
-      }
+      if (operatorId) await checkCellDuplicate({ rat: req.body.rat, details: req.body.details as Record<string, unknown> }, operatorId);
     }
 
     if (req.body.details && req.body.station_id && req.body.band_id) {
-      if (req.body.rat === "LTE") {
-        const d = req.body.details as z.infer<typeof lteInsertSchema>;
-        if (d.pci !== null && d.pci !== undefined) await checkLTEPCIDuplicate(req.body.station_id, req.body.band_id, d.pci, d.earfcn);
-      } else if (req.body.rat === "NR") {
-        const d = req.body.details as z.infer<typeof nrInsertSchema>;
-        if (d.pci !== null && d.pci !== undefined) await checkNRPCIDuplicate(req.body.station_id, req.body.band_id, d.pci, d.arfcn);
-      }
+      await checkPciDuplicate(req.body.station_id, {
+        rat: req.body.rat,
+        bandId: req.body.band_id,
+        details: req.body.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null },
+      });
     }
 
     await validateCellARFCNsForBands([{ rat: req.body.rat, band_id: req.body.band_id, details: req.body.details }]);
@@ -85,55 +64,9 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
     if (!inserted) throw new ErrorResponse("FAILED_TO_CREATE");
 
     let details: z.infer<typeof cellDetailsSchema> = null;
-    if (req.body.details) {
-      switch (inserted.rat) {
-        case "GSM":
-          {
-            const d = req.body.details as z.infer<typeof gsmInsertSchema>;
-            await db.insert(gsmCells).values({ ...d, cell_id: inserted.id });
-            details = {
-              lac: d.lac,
-              cid: d.cid,
-            } as z.infer<typeof gsmCellsSchema>;
-          }
-          break;
-        case "UMTS":
-          {
-            const d = req.body.details as z.infer<typeof umtsInsertSchema>;
-            await db.insert(umtsCells).values({ ...d, cell_id: inserted.id });
-            details = {
-              lac: d.lac ?? null,
-              arfcn: d.arfcn ?? null,
-              rnc: d.rnc,
-              cid: d.cid,
-            } as z.infer<typeof umtsCellsSchema>;
-          }
-          break;
-        case "LTE":
-          {
-            const d = req.body.details as z.infer<typeof lteInsertSchema>;
-            await db.insert(lteCells).values({ ...d, cell_id: inserted.id });
-            details = {
-              tac: d.tac ?? null,
-              enbid: d.enbid,
-              clid: d.clid,
-              supports_iot: d.supports_iot ?? null,
-            } as z.infer<typeof lteCellsSchema>;
-          }
-          break;
-        case "NR":
-          {
-            const d = req.body.details as z.infer<typeof nrInsertSchema>;
-            await db.insert(nrCells).values({ ...d, cell_id: inserted.id, gnbid_length: computeGnbidLength(d.gnbid_length) });
-            details = {
-              nrtac: d.nrtac ?? null,
-              gnbid: d.gnbid ?? null,
-              clid: d.clid,
-              supports_nr_redcap: d.supports_nr_redcap ?? null,
-            } as z.infer<typeof nrCellsSchema>;
-          }
-          break;
-      }
+    if (req.body.details && isNormalRat(inserted.rat)) {
+      const insertedDetails = await insertRATCellDetailsReturning(db, inserted.rat, inserted.id, req.body.details as RATInsertDetails);
+      details = insertedDetails as z.infer<typeof cellDetailsSchema>;
     }
 
     await createAuditLog(

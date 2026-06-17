@@ -15,7 +15,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import z from "zod";
 
 import { ErrorResponse } from "../../errors.ts";
-import { checkCellDuplicatesBatch, checkLTEPCIDuplicate, checkNRPCIDuplicate } from "../../services/cellDuplicateCheck.service.ts";
+import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../services/cellDuplicateCheck.service.ts";
 import type { DbTx } from "../../types/global.ts";
 import { formatARFCNBandErrorMessage } from "../cellARFCNValidation.ts";
 import {
@@ -214,9 +214,9 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
       throw new ErrorResponse("BAD_REQUEST", { message: "One or more location_photo_ids are invalid or do not belong to this station's location" });
   }
 
+  const allModifiedCellIds = input.cells?.map((c) => c.target_cell_id).filter((id): id is number => id !== null && id !== undefined) ?? [];
   const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
   if (operatorId && input.cells && input.cells.length > 0) {
-    const allModifiedCellIds = input.cells.map((c) => c.target_cell_id).filter((id): id is number => id !== null && id !== undefined);
     const dupEntries = input.cells
       .filter((cell) => cell.details && cell.operation !== "delete")
       .map((cell) => ({ rat: cell.rat!, details: cell.details as Record<string, unknown>, excludeCellId: cell.target_cell_id ?? undefined }));
@@ -224,17 +224,18 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
   }
 
   if (stationId !== null && input.cells && input.cells.length > 0) {
-    /* eslint-disable no-await-in-loop */
-    for (const cell of input.cells) {
-      if (cell.operation === "delete" || !cell.band_id || !cell.details) continue;
-      const excludeCellId = cell.target_cell_id ?? undefined;
-      const d = cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null };
-      if (cell.rat === "LTE" && d.pci !== null && d.pci !== undefined)
-        await checkLTEPCIDuplicate(stationId, cell.band_id, d.pci, d.earfcn, excludeCellId);
-      else if (cell.rat === "NR" && d.pci !== null && d.pci !== undefined)
-        await checkNRPCIDuplicate(stationId, cell.band_id, d.pci, d.arfcn, excludeCellId);
-    }
-    /* eslint-enable no-await-in-loop */
+    await checkPciDuplicates(
+      stationId,
+      input.cells
+        .filter((cell) => cell.operation !== "delete")
+        .map((cell) => ({
+          rat: cell.rat,
+          bandId: cell.band_id,
+          details: cell.details as { pci?: number | null; earfcn?: number | null; arfcn?: number | null } | undefined,
+          excludeCellId: cell.target_cell_id ?? undefined,
+        })),
+      allModifiedCellIds,
+    );
   }
 
   if (type === "update" && targetStation) {

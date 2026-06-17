@@ -59,3 +59,17 @@ export const nrExtendFields = {
 };
 export const nrInsertSchema = createInsertSchema(nrCells).omit(INSERT_OMIT).extend(nrExtendFields).strict();
 export const nrUpdateSchema = createUpdateSchema(nrCells).omit(UPDATE_OMIT).extend(nrExtendFields).strict();
+
+export const normalRatInsertSchemaMap = {
+  GSM: gsmInsertSchema,
+  UMTS: umtsInsertSchema,
+  LTE: lteInsertSchema,
+  NR: nrInsertSchema,
+} as const;
+
+export const normalRatUpdateSchemaMap = {
+  GSM: gsmUpdateSchema,
+  UMTS: umtsUpdateSchema,
+  LTE: lteUpdateSchema,
+  NR: nrUpdateSchema,
+} as const;

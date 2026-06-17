@@ -1,17 +1,13 @@
 import {
   cells,
   extraIdentificators,
-  gsmCells,
   locationPhotos,
   locations,
-  lteCells,
-  nrCells,
   operators,
   stationPhotoSelections,
   stationSectors,
   stations,
   submissions,
-  umtsCells,
 } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
 import { logger } from "better-auth";
@@ -20,11 +16,19 @@ import type { FastifyRequest } from "fastify";
 
 import { ErrorResponse } from "../../errors.ts";
 import { createAuditLog } from "../../services/auditLog.service.ts";
-import { checkCellDuplicatesBatch, checkLTEPCIDuplicatesBatch, checkNRPCIDuplicatesBatch } from "../../services/cellDuplicateCheck.service.ts";
+import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../services/cellDuplicateCheck.service.ts";
 import { createAndDeliverNotification } from "../../services/notification.service.ts";
 import { syncStationsPermitsAssociations } from "../../services/stationsPermitsAssociation.service.ts";
 import type { DbTx } from "../../types/global.ts";
-import { computeGnbidLength } from "../submission.helpers.ts";
+import {
+  type NormalRat,
+  type RATCellDetailsRow,
+  type RATInsertDetails,
+  type RATUpdateDetails,
+  insertRATCellDetailsReturning,
+  isNormalRat,
+  updateRATCellDetailsReturning,
+} from "../ratCellPersistence.ts";
 
 async function upsertLocation(
   tx: DbTx,
@@ -646,140 +650,51 @@ async function applyProposedSectors(
 async function checkProposedPciDuplicates(stationId: number | null, proposedCellRows: ProposedCellRow[]): Promise<void> {
   if (!stationId) return;
 
-  const lteEntries: { bandId: number; pci: number; channel?: number | null; excludeCellId?: number }[] = [];
-  const nrEntries: { bandId: number; pci: number; channel?: number | null; excludeCellId?: number }[] = [];
-
-  for (const proposed of proposedCellRows) {
-    if (proposed.operation === "delete" || !proposed.band_id) continue;
-    const excludeCellId = proposed.target_cell_id ?? undefined;
-    if (proposed.rat === "LTE" && proposed.lte?.pci !== null && proposed.lte?.pci !== undefined)
-      lteEntries.push({ bandId: proposed.band_id, pci: proposed.lte.pci, channel: proposed.lte.earfcn, excludeCellId });
-    else if (proposed.rat === "NR" && proposed.nr?.pci !== null && proposed.nr?.pci !== undefined)
-      nrEntries.push({ bandId: proposed.band_id, pci: proposed.nr.pci, channel: proposed.nr.arfcn, excludeCellId });
-  }
-
-  await Promise.all([checkLTEPCIDuplicatesBatch(stationId, lteEntries), checkNRPCIDuplicatesBatch(stationId, nrEntries)]);
+  const allModifiedCellIds = proposedCellRows.map((cell) => cell.target_cell_id).filter((id): id is number => id !== null && id !== undefined);
+  await checkPciDuplicates(
+    stationId,
+    proposedCellRows
+      .filter((cell) => cell.operation !== "delete")
+      .map((cell) => ({
+        rat: cell.rat,
+        bandId: cell.band_id,
+        details: cell.rat === "LTE" ? cell.lte : cell.nr,
+        excludeCellId: cell.target_cell_id ?? undefined,
+      })),
+    allModifiedCellIds,
+  );
 }
 
-async function insertCellDetails(tx: DbTx, proposed: ProposedCellRow, cellId: number): Promise<Record<string, unknown> | null> {
-  switch (proposed.rat) {
-    case "GSM": {
-      const d = proposed.gsm;
-      if (!d) return null;
-      const [inserted] = await tx.insert(gsmCells).values({ cell_id: cellId, lac: d.lac, cid: d.cid, e_gsm: d.e_gsm }).returning();
-      return inserted ?? null;
-    }
-    case "UMTS": {
-      const d = proposed.umts;
-      if (!d) return null;
-      const [inserted] = await tx.insert(umtsCells).values({ cell_id: cellId, lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid }).returning();
-      return inserted ?? null;
-    }
-    case "LTE": {
-      const d = proposed.lte;
-      if (!d) return null;
-      const [inserted] = await tx
-        .insert(lteCells)
-        .values({
-          cell_id: cellId,
-          tac: d.tac,
-          enbid: d.enbid,
-          clid: d.clid,
-          pci: d.pci,
-          earfcn: d.earfcn,
-          supports_iot: d.supports_iot,
-        })
-        .returning();
-      return inserted ?? null;
-    }
-    case "NR": {
-      const d = proposed.nr;
-      if (!d) return null;
-      const [inserted] = await tx
-        .insert(nrCells)
-        .values({
-          cell_id: cellId,
-          nrtac: d.nrtac,
-          gnbid: d.gnbid,
-          gnbid_length: computeGnbidLength(d.gnbid),
-          clid: d.clid,
-          pci: d.pci,
-          arfcn: d.arfcn,
-          type: d.type,
-          supports_nr_redcap: d.supports_nr_redcap,
-        })
-        .returning();
-      return inserted ?? null;
-    }
-    default:
-      return null;
-  }
-}
-
-async function updateCellDetails(tx: DbTx, proposed: ProposedCellRow, targetCell: TargetCellRow): Promise<Record<string, unknown> | null> {
-  const rat = proposed.rat ?? targetCell.rat;
-
+function getProposedRATDetails(proposed: ProposedCellRow, rat: NormalRat): RATInsertDetails | RATUpdateDetails | null {
   switch (rat) {
-    case "GSM": {
-      const d = proposed.gsm;
-      if (!d) return null;
-      const [updated] = await tx
-        .update(gsmCells)
-        .set({ lac: d.lac, cid: d.cid, e_gsm: d.e_gsm, updatedAt: new Date() })
-        .where(eq(gsmCells.cell_id, targetCell.id))
-        .returning();
-      return updated ?? null;
-    }
-    case "UMTS": {
-      const d = proposed.umts;
-      if (!d) return null;
-      const [updated] = await tx
-        .update(umtsCells)
-        .set({ lac: d.lac, arfcn: d.arfcn, rnc: d.rnc, cid: d.cid, updatedAt: new Date() })
-        .where(eq(umtsCells.cell_id, targetCell.id))
-        .returning();
-      return updated ?? null;
-    }
-    case "LTE": {
-      const d = proposed.lte;
-      if (!d) return null;
-      const [updated] = await tx
-        .update(lteCells)
-        .set({
-          tac: d.tac,
-          enbid: d.enbid,
-          clid: d.clid,
-          pci: d.pci,
-          earfcn: d.earfcn,
-          supports_iot: d.supports_iot,
-          updatedAt: new Date(),
-        })
-        .where(eq(lteCells.cell_id, targetCell.id))
-        .returning();
-      return updated ?? null;
-    }
-    case "NR": {
-      const d = proposed.nr;
-      if (!d) return null;
-      const [updated] = await tx
-        .update(nrCells)
-        .set({
-          nrtac: d.nrtac,
-          gnbid: d.gnbid,
-          gnbid_length: d.gnbid ? computeGnbidLength(d.gnbid) : d.gnbid_length,
-          clid: d.clid,
-          pci: d.pci,
-          arfcn: d.arfcn,
-          supports_nr_redcap: d.supports_nr_redcap,
-          updatedAt: new Date(),
-        })
-        .where(eq(nrCells.cell_id, targetCell.id))
-        .returning();
-      return updated ?? null;
-    }
-    default:
-      return null;
+    case "GSM":
+      return proposed.gsm ?? null;
+    case "UMTS":
+      return proposed.umts ?? null;
+    case "LTE":
+      return proposed.lte ?? null;
+    case "NR":
+      return proposed.nr ?? null;
   }
+}
+
+async function insertCellDetails(tx: DbTx, proposed: ProposedCellRow, cellId: number): Promise<RATCellDetailsRow | null> {
+  if (!proposed.rat || !isNormalRat(proposed.rat)) return null;
+
+  const details = getProposedRATDetails(proposed, proposed.rat);
+  if (!details) return null;
+
+  return insertRATCellDetailsReturning(tx, proposed.rat, cellId, details as RATInsertDetails);
+}
+
+async function updateCellDetails(tx: DbTx, proposed: ProposedCellRow, targetCell: TargetCellRow): Promise<RATCellDetailsRow | null> {
+  const rat = proposed.rat ?? targetCell.rat;
+  if (!isNormalRat(rat)) return null;
+
+  const details = getProposedRATDetails(proposed, rat);
+  if (!details) return null;
+
+  return updateRATCellDetailsReturning(tx, rat, targetCell.id, details as RATUpdateDetails);
 }
 
 async function addProposedCell(

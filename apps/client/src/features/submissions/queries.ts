@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchSubmissionBatch } from "./api";
+import { fetchSubmissionForEdit } from "./api";
 
 export const useBatchDetail = (id: string) =>
-  useQuery({ queryKey: ["submissionBatches", "details", id], queryFn: () => fetchSubmissionBatch(id), enabled: !!id });
+  useQuery({ queryKey: ["submissionBatches", "details", id], queryFn: () => fetchSubmissionForEdit(id), enabled: !!id });

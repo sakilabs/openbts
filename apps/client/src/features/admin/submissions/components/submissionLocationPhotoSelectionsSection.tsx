@@ -1,9 +1,10 @@
-import { Camera01Icon, Image01Icon, StarIcon, Upload04Icon } from "@hugeicons/core-free-icons";
+import { Image01Icon, StarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Lightbox } from "@/components/lightbox";
+import { PhotoMeta } from "@/components/photoGridPrimitives";
 import type { SubmissionLocationPhoto } from "@/features/admin/submissions/types";
 
 type Props = { photos: SubmissionLocationPhoto[] };
@@ -45,24 +46,7 @@ export function SubmissionLocationPhotoSelectionsSection({ photos }: Props) {
                   </span>
                 )}
               </div>
-              <div className="px-2 pt-1 pb-1 text-[10px] space-y-0.5">
-                <p className="truncate font-medium text-foreground/70">@{photo.author?.username ?? "-"}</p>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <HugeiconsIcon icon={Upload04Icon} className="size-2.5 shrink-0" />
-                  <span className="tabular-nums truncate">
-                    {new Date(photo.createdAt).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
-                  </span>
-                </div>
-                {photo.taken_at ? (
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <HugeiconsIcon icon={Camera01Icon} className="size-2.5 shrink-0" />
-                    <span className="tabular-nums truncate">
-                      {new Date(photo.taken_at).toLocaleDateString(i18n.language, { year: "numeric", month: "short" })}
-                    </span>
-                  </div>
-                ) : null}
-                {photo.note ? <p className="truncate italic text-muted-foreground">{photo.note}</p> : null}
-              </div>
+              <PhotoMeta photo={photo} locale={i18n.language} className="text-[10px]" />
             </div>
           ))}
         </div>

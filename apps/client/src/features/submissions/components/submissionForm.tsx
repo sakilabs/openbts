@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { EmptyPanel } from "@/components/empty-panel";
 import { SectorsPanel, ukePermitsToAzimuthSectors } from "@/features/admin/stations/components/sectorsEditor";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { operatorsQueryOptions } from "@/features/shared/queries";
+import { deriveSectorPanelState } from "@/features/shared/sectorPanelState";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
 import { useSettings } from "@/hooks/useSettings";
@@ -20,10 +22,9 @@ import { CellsSection } from "./cellsSection";
 import { ExtraIdentificatorsSection } from "./extraIdentificatorsSection";
 import { LocationPicker } from "./locationPicker";
 import { NewStationForm } from "./newStationForm";
-import { PhotoUploadSection } from "./photoUploadSection";
 import { RatSelector } from "./ratSelector";
 import { StationSelector } from "./stationSelector";
-import { SubmissionLocationPhotoSelector } from "./submissionLocationPhotoSelector";
+import { SubmissionPhotosPanel } from "./submissionPhotosPanel";
 import { SubmitSection } from "./submitSection";
 import { useSubmissionForm } from "./useSubmissionForm";
 
@@ -35,19 +36,6 @@ export interface SubmissionFormProps {
 
 function hasCompleteLocation(location: ProposedLocationForm): boolean {
   return location.latitude !== null && location.longitude !== null && location.region_id !== null;
-}
-
-function deriveSectorPanelState(cells: ProposedCellForm[], selectedRats: RatType[]) {
-  const bandCounts = new Map<number, number>();
-  for (const cell of cells) {
-    if (!selectedRats.includes(cell.rat) || cell.band_id === null) continue;
-    bandCounts.set(cell.band_id, (bandCounts.get(cell.band_id) ?? 0) + 1);
-  }
-
-  const derivedSectorCount = bandCounts.size > 0 ? Math.max(...bandCounts.values()) : 0;
-  const assignedSectorLocalIds = new Set(cells.flatMap((cell) => (cell._sectorLocalId ? [cell._sectorLocalId] : [])));
-
-  return { derivedSectorCount, assignedSectorLocalIds };
 }
 
 type SubmissionSectorsPanelFieldsProps = {
@@ -75,7 +63,8 @@ function SubmissionSectorsPanelFields({
   mncById,
   onSectorsChange,
 }: SubmissionSectorsPanelFieldsProps) {
-  const { derivedSectorCount, assignedSectorLocalIds } = useMemo(() => deriveSectorPanelState(cells, selectedRats), [cells, selectedRats]);
+  const sectorCells = useMemo(() => cells.filter((cell) => selectedRats.includes(cell.rat)), [cells, selectedRats]);
+  const { derivedSectorCount, assignedSectorLocalIds } = useMemo(() => deriveSectorPanelState(sectorCells), [sectorCells]);
   const selectedStationId = selectedStation?.id;
   const operatorMnc = selectedStation?.operator?.mnc;
   const siblingBrand = operatorMnc === 26002 ? getMnoBrand(26003) : getMnoBrand(26002);
@@ -312,45 +301,22 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
             })}
           >
             {({ mode, selectedStation, location, action }) => {
-              if (action === "delete") return null;
-
-              if (mode === "existing" && selectedStation) {
-                const locationId = selectedStation.location?.id;
-                return (
-                  <>
-                    {locationId !== undefined ? (
-                      <SubmissionLocationPhotoSelector
-                        stationId={selectedStation.id}
-                        locationId={locationId}
-                        selectedIds={locationPhotoIds}
-                        onSelectionChange={setLocationPhotoIds}
-                        mainPhotoId={mainLocationPhotoId}
-                        onMainPhotoChange={setMainLocationPhotoId}
-                      />
-                    ) : null}
-                    <PhotoUploadSection
-                      photos={photos}
-                      onPhotosChange={setPhotos}
-                      notes={photoNotes}
-                      onNotesChange={setPhotoNotes}
-                      takenAts={photoTakenAts}
-                      onTakenAtsChange={setPhotoTakenAts}
-                      editSubmissionId={editSubmissionId}
-                    />
-                  </>
-                );
-              }
-
-              const showForNew = mode === "new" && location.latitude !== null && location.longitude !== null;
-              if (!showForNew) return null;
               return (
-                <PhotoUploadSection
+                <SubmissionPhotosPanel
+                  mode={mode}
+                  action={action}
+                  selectedStation={selectedStation}
+                  location={location}
                   photos={photos}
                   onPhotosChange={setPhotos}
                   notes={photoNotes}
                   onNotesChange={setPhotoNotes}
                   takenAts={photoTakenAts}
                   onTakenAtsChange={setPhotoTakenAts}
+                  locationPhotoIds={locationPhotoIds}
+                  onLocationPhotoIdsChange={setLocationPhotoIds}
+                  mainLocationPhotoId={mainLocationPhotoId}
+                  onMainLocationPhotoIdChange={setMainLocationPhotoId}
                   editSubmissionId={editSubmissionId}
                 />
               );
@@ -461,11 +427,7 @@ export function SubmissionForm({ preloadStationId, editSubmissionId, preloadUkeS
         >
           {({ selectedRats, cells, originalCells, sectors, mode, action, operatorId }) => {
             if (mode === "existing" && action === "delete") {
-              return (
-                <div className="border rounded-xl h-full min-h-32 flex items-center justify-center text-sm text-muted-foreground text-center px-4">
-                  {t("deleteStation.warning")}
-                </div>
-              );
+              return <EmptyPanel>{t("deleteStation.warning")}</EmptyPanel>;
             }
 
             const operatorMnc = mncById.get(operatorId ?? -1) ?? null;

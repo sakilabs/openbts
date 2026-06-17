@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CellDetailsFields } from "@/features/admin/cells/cellDetailsFields";
 import { useBandSelection } from "@/features/admin/cells/hooks/useBandSelection";
 import { navigateRowHorizontal } from "@/features/admin/cells/rowNav";
+import { getRatDefaultBandDuplex, getRatShowsBandDuplex } from "@/features/shared/rat";
 import { getBandName } from "@/features/station-details/frequencyCalc";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { getKnownEARFCN } from "@/lib/earfcn-fill";
@@ -206,22 +207,20 @@ const CellRow = memo(function CellRow({
 }: CellRowProps) {
   const { t } = useTranslation(["submissions", "common"]);
 
-  const { uniqueBandValues, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, bandsForRat } = useBandSelection(
+  const { uniqueBandValues, bandValue, duplex, duplexOptions, hasDuplexChoice, findBandId, findPreferredBandId } = useBandSelection(
     bands,
     rat,
     cell.band_id ?? -1,
   );
   const handleBandValueChange = useCallback(
     (value: number | null) => {
-      const opts = value ? [...new Set(bandsForRat.filter((b) => b.value === value).map((b) => b.duplex))] : [];
-      const defaultDuplex = opts.length === 1 ? opts[0] : rat === "UMTS" && opts.includes("FDD") ? "FDD" : null;
-      const newBandId = findBandId(value, defaultDuplex);
+      const newBandId = findPreferredBandId(value, duplex, getRatDefaultBandDuplex(rat, value));
       if (!newBandId) return;
       const patch: Partial<ProposedCellForm> = { band_id: newBandId };
       if (rat === "GSM" && value === 1800) patch.details = { ...cell.details, e_gsm: false } as ProposedCellForm["details"];
       onUpdate(cell.id, patch);
     },
-    [bandsForRat, findBandId, rat, cell.id, cell.details, onUpdate],
+    [findPreferredBandId, duplex, rat, cell.id, cell.details, onUpdate],
   );
 
   const handleDuplexChange = useCallback(
@@ -277,7 +276,7 @@ const CellRow = memo(function CellRow({
           </SelectContent>
         </Select>
       </td>
-      {rat !== "GSM" ? (
+      {getRatShowsBandDuplex(rat) ? (
         <td className={cn("px-3 py-1", deletedCellClass)}>
           {hasDuplexChoice ? (
             <Select

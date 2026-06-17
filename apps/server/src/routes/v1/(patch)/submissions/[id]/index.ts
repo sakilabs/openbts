@@ -11,7 +11,7 @@ import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.j
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 import { verifyPermissions } from "../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../services/auditLog.service.js";
-import { checkCellDuplicatesBatch, getOperatorIdForStation } from "../../../../../services/cellDuplicateCheck.service.js";
+import { checkCellDuplicatesBatch, checkPciDuplicates, getOperatorIdForStation } from "../../../../../services/cellDuplicateCheck.service.js";
 import { getRuntimeSettings } from "../../../../../services/settings.service.js";
 import type { DbTx } from "../../../../../types/global.js";
 import {
@@ -118,6 +118,17 @@ function getCellDuplicateEntries(cells: ProposedCellInput[]): { rat: string; det
     }));
 }
 
+function getPciDuplicateSources(cells: ProposedCellInput[]) {
+  return cells
+    .filter((cell) => cell.operation !== "delete")
+    .map((cell) => ({
+      rat: cell.rat,
+      bandId: cell.band_id,
+      details: cell.details as Record<string, unknown> | undefined,
+      excludeCellId: cell.target_cell_id ?? undefined,
+    }));
+}
+
 function withCellDetails({ gsm, umts, lte, nr, ...base }: ProposedCellWithRelations): ResponseData["cells"][number] {
   return {
     ...base,
@@ -129,11 +140,16 @@ async function validateCellConflicts(cells: ProposedCellInput[] | undefined, sta
   if (!cells || cells.length === 0) return;
 
   validateCellDuplicates(cells);
-  const operatorId = stationId ? await getOperatorIdForStation(stationId) : null;
-  if (!operatorId) return;
+  if (stationId !== null) {
+    const allModifiedCellIds = cells.map((cell) => cell.target_cell_id).filter((id): id is number => id !== null && id !== undefined);
+    await checkPciDuplicates(stationId, getPciDuplicateSources(cells), allModifiedCellIds);
+  }
 
-  const entries = getCellDuplicateEntries(cells);
-  if (entries.length > 0) await checkCellDuplicatesBatch(entries, operatorId);
+  const operatorId = stationId !== null ? await getOperatorIdForStation(stationId) : null;
+  if (operatorId !== null) {
+    const entries = getCellDuplicateEntries(cells);
+    if (entries.length > 0) await checkCellDuplicatesBatch(entries, operatorId);
+  }
 }
 
 function validateSectorInputs(sectors: RequestBody["sectors"]): void {

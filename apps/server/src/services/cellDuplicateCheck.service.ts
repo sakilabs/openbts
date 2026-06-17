@@ -3,292 +3,313 @@ import { and, eq, isNull, ne, notInArray, or } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { ErrorResponse } from "../errors.js";
+import { getCellIdentityDuplicateSpec, type CellIdentityDuplicateDetails } from "../utils/cellIdentityDuplicateSpecs.js";
+import { getPciDuplicateKey, getPciDuplicateSpec, type PciDuplicateDetails, type PciDuplicateSpec } from "../utils/pciDuplicateSpecs.js";
 
-export async function checkGSMDuplicate(lac: number, cid: number, operatorId: number, excludeCellId?: number) {
-  const existing = await db
-    .select({ id: gsmCells.cell_id })
-    .from(gsmCells)
-    .innerJoin(cells, eq(cells.id, gsmCells.cell_id))
-    .innerJoin(stations, eq(stations.id, cells.station_id))
-    .where(
-      and(
-        eq(gsmCells.lac, lac),
-        eq(gsmCells.cid, cid),
-        eq(stations.operator_id, operatorId),
-        excludeCellId ? ne(gsmCells.cell_id, excludeCellId) : undefined,
-      ),
-    )
-    .limit(1);
-
-  if (existing.length > 0) {
-    throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `A GSM cell with LAC ${lac} and CID ${cid} already exists for this operator`,
-    });
-  }
-}
-
-export async function checkUMTSDuplicate(rnc: number, cid: number, operatorId: number, excludeCellId?: number) {
-  const existing = await db
-    .select({ id: umtsCells.cell_id })
-    .from(umtsCells)
-    .innerJoin(cells, eq(cells.id, umtsCells.cell_id))
-    .innerJoin(stations, eq(stations.id, cells.station_id))
-    .where(
-      and(
-        eq(umtsCells.rnc, rnc),
-        eq(umtsCells.cid, cid),
-        eq(stations.operator_id, operatorId),
-        excludeCellId ? ne(umtsCells.cell_id, excludeCellId) : undefined,
-      ),
-    )
-    .limit(1);
-
-  if (existing.length > 0) {
-    throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `A UMTS cell with RNC ${rnc} and CID ${cid} already exists for this operator`,
-    });
-  }
-}
-
-export async function checkLTEDuplicate(enbid: number, clid: number, operatorId: number, excludeCellId?: number) {
-  const existing = await db
-    .select({ id: lteCells.cell_id })
-    .from(lteCells)
-    .innerJoin(cells, eq(cells.id, lteCells.cell_id))
-    .innerJoin(stations, eq(stations.id, cells.station_id))
-    .where(
-      and(
-        eq(lteCells.enbid, enbid),
-        eq(lteCells.clid, clid),
-        eq(stations.operator_id, operatorId),
-        excludeCellId ? ne(lteCells.cell_id, excludeCellId) : undefined,
-      ),
-    )
-    .limit(1);
-
-  if (existing.length > 0) {
-    throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `An LTE cell with eNBID ${enbid} and CLID ${clid} already exists for this operator`,
-    });
-  }
-}
-
-interface CellDuplicateEntry {
-  rat: string;
-  details: Record<string, unknown>;
+type CellIdentityDuplicateEntry = {
+  values: Record<string, number>;
   excludeCellId?: number;
-}
+};
 
-interface PciDuplicateEntry {
+type CellIdentityDuplicateSource = {
+  rat?: string | null;
+  details?: CellIdentityDuplicateDetails | null;
+  excludeCellId?: number;
+};
+
+type CellIdentityDuplicateCheck = {
+  rat: string;
+  checkEntries: (operatorId: number, entries: CellIdentityDuplicateEntry[], siblingExcludeIds: number[]) => Promise<void>;
+};
+
+type PciDuplicateEntry = {
   bandId: number;
   pci: number;
   channel?: number | null;
   excludeCellId?: number;
+};
+
+export interface PciDuplicateSource {
+  rat?: string | null;
+  bandId?: number | null;
+  details?: PciDuplicateDetails | null;
+  excludeCellId?: number;
+}
+
+type PciDuplicateCheckSpec = PciDuplicateSpec & {
+  table: typeof lteCells | typeof nrCells;
+  cellIdColumn: typeof lteCells.cell_id | typeof nrCells.cell_id;
+  pciColumn: typeof lteCells.pci | typeof nrCells.pci;
+  channelColumn: typeof lteCells.earfcn | typeof nrCells.arfcn;
+  label: string;
+};
+
+function withPciDuplicateCheck(rat: string, config: Omit<PciDuplicateCheckSpec, keyof PciDuplicateSpec>): PciDuplicateCheckSpec {
+  const spec = getPciDuplicateSpec(rat);
+  if (!spec) throw new Error(`Missing PCI duplicate spec for ${rat}`);
+  return { ...spec, ...config };
+}
+
+const PCI_DUPLICATE_CHECKS: PciDuplicateCheckSpec[] = [
+  withPciDuplicateCheck("LTE", {
+    table: lteCells,
+    cellIdColumn: lteCells.cell_id,
+    pciColumn: lteCells.pci,
+    channelColumn: lteCells.earfcn,
+    label: "LTE",
+  }),
+  withPciDuplicateCheck("NR", {
+    table: nrCells,
+    cellIdColumn: nrCells.cell_id,
+    pciColumn: nrCells.pci,
+    channelColumn: nrCells.arfcn,
+    label: "NR",
+  }),
+];
+
+const CELL_IDENTITY_DUPLICATE_CHECKS: CellIdentityDuplicateCheck[] = [
+  {
+    rat: "GSM",
+    checkEntries: async (operatorId, entries, siblingExcludeIds) => {
+      if (entries.length === 0) return;
+
+      const conditions = entries.flatMap((entry) => {
+        const lac = entry.values.lac;
+        const cid = entry.values.cid;
+        if (lac === undefined || cid === undefined) return [];
+        return [
+          and(
+            eq(gsmCells.lac, lac),
+            eq(gsmCells.cid, cid),
+            entry.excludeCellId !== undefined ? ne(gsmCells.cell_id, entry.excludeCellId) : undefined,
+          ),
+        ];
+      });
+      if (conditions.length === 0) return;
+
+      const existing = await db
+        .select({ lac: gsmCells.lac, cid: gsmCells.cid })
+        .from(gsmCells)
+        .innerJoin(cells, eq(cells.id, gsmCells.cell_id))
+        .innerJoin(stations, eq(stations.id, cells.station_id))
+        .where(
+          and(
+            eq(stations.operator_id, operatorId),
+            siblingExcludeIds.length > 0 ? notInArray(gsmCells.cell_id, siblingExcludeIds) : undefined,
+            or(...conditions),
+          ),
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        const duplicate = existing[0]!;
+        throw new ErrorResponse("DUPLICATE_ENTRY", {
+          message: `A GSM cell with LAC ${duplicate.lac} and CID ${duplicate.cid} already exists for this operator`,
+        });
+      }
+    },
+  },
+  {
+    rat: "UMTS",
+    checkEntries: async (operatorId, entries, siblingExcludeIds) => {
+      if (entries.length === 0) return;
+
+      const conditions = entries.flatMap((entry) => {
+        const rnc = entry.values.rnc;
+        const cid = entry.values.cid;
+        if (rnc === undefined || cid === undefined) return [];
+        return [
+          and(
+            eq(umtsCells.rnc, rnc),
+            eq(umtsCells.cid, cid),
+            entry.excludeCellId !== undefined ? ne(umtsCells.cell_id, entry.excludeCellId) : undefined,
+          ),
+        ];
+      });
+      if (conditions.length === 0) return;
+
+      const existing = await db
+        .select({ rnc: umtsCells.rnc, cid: umtsCells.cid })
+        .from(umtsCells)
+        .innerJoin(cells, eq(cells.id, umtsCells.cell_id))
+        .innerJoin(stations, eq(stations.id, cells.station_id))
+        .where(
+          and(
+            eq(stations.operator_id, operatorId),
+            siblingExcludeIds.length > 0 ? notInArray(umtsCells.cell_id, siblingExcludeIds) : undefined,
+            or(...conditions),
+          ),
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        const duplicate = existing[0]!;
+        throw new ErrorResponse("DUPLICATE_ENTRY", {
+          message: `A UMTS cell with RNC ${duplicate.rnc} and CID ${duplicate.cid} already exists for this operator`,
+        });
+      }
+    },
+  },
+  {
+    rat: "LTE",
+    checkEntries: async (operatorId, entries, siblingExcludeIds) => {
+      if (entries.length === 0) return;
+
+      const conditions = entries.flatMap((entry) => {
+        const enbid = entry.values.enbid;
+        const clid = entry.values.clid;
+        if (enbid === undefined || clid === undefined) return [];
+        return [
+          and(
+            eq(lteCells.enbid, enbid),
+            eq(lteCells.clid, clid),
+            entry.excludeCellId !== undefined ? ne(lteCells.cell_id, entry.excludeCellId) : undefined,
+          ),
+        ];
+      });
+      if (conditions.length === 0) return;
+
+      const existing = await db
+        .select({ enbid: lteCells.enbid, clid: lteCells.clid })
+        .from(lteCells)
+        .innerJoin(cells, eq(cells.id, lteCells.cell_id))
+        .innerJoin(stations, eq(stations.id, cells.station_id))
+        .where(
+          and(
+            eq(stations.operator_id, operatorId),
+            siblingExcludeIds.length > 0 ? notInArray(lteCells.cell_id, siblingExcludeIds) : undefined,
+            or(...conditions),
+          ),
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        const duplicate = existing[0]!;
+        throw new ErrorResponse("DUPLICATE_ENTRY", {
+          message: `An LTE cell with eNBID ${duplicate.enbid} and CLID ${duplicate.clid} already exists for this operator`,
+        });
+      }
+    },
+  },
+];
+
+function getCellIdentityDuplicateEntriesByRat(sources: CellIdentityDuplicateSource[]): Map<string, CellIdentityDuplicateEntry[]> {
+  const entriesByRat = new Map<string, CellIdentityDuplicateEntry[]>();
+
+  for (const source of sources) {
+    const spec = getCellIdentityDuplicateSpec(source.rat);
+    if (!spec || !source.details) continue;
+
+    const values: Record<string, number> = {};
+    for (const { field } of spec.fields) {
+      const value = source.details[field];
+      if (typeof value === "number") values[field] = value;
+    }
+    if (!spec.fields.every(({ field }) => values[field] !== undefined)) continue;
+
+    const duplicateCheck = CELL_IDENTITY_DUPLICATE_CHECKS.find((candidate) => candidate.rat === spec.rat);
+    if (!duplicateCheck) continue;
+
+    const entries = entriesByRat.get(spec.rat) ?? [];
+    entries.push({ values, excludeCellId: source.excludeCellId });
+    entriesByRat.set(spec.rat, entries);
+  }
+
+  return entriesByRat;
+}
+
+function getPciDuplicateEntriesByRat(sources: PciDuplicateSource[]): Map<string, PciDuplicateEntry[]> {
+  const entriesByRat = new Map<string, PciDuplicateEntry[]>();
+
+  for (const source of sources) {
+    const duplicateKey = getPciDuplicateKey(source);
+    if (!duplicateKey || !source.details || source.bandId === null || source.bandId === undefined) continue;
+
+    const spec = PCI_DUPLICATE_CHECKS.find((candidate) => candidate.rat === duplicateKey.rat);
+    if (!spec) continue;
+    const entries = entriesByRat.get(duplicateKey.rat) ?? [];
+    entries.push({
+      bandId: source.bandId,
+      pci: duplicateKey.pci,
+      channel: source.details[spec.channelField] as number | null | undefined,
+      excludeCellId: source.excludeCellId,
+    });
+    entriesByRat.set(duplicateKey.rat, entries);
+  }
+
+  return entriesByRat;
+}
+
+export async function checkPciDuplicate(stationId: number, source: PciDuplicateSource, siblingExcludeIds: number[] = []): Promise<void> {
+  await checkPciDuplicates(stationId, [source], siblingExcludeIds);
+}
+
+export async function checkPciDuplicates(stationId: number, sources: PciDuplicateSource[], siblingExcludeIds: number[] = []): Promise<void> {
+  const entriesByRat = getPciDuplicateEntriesByRat(sources);
+  await Promise.all(
+    PCI_DUPLICATE_CHECKS.map((spec) => checkPciDuplicatesForSpec(spec, stationId, entriesByRat.get(spec.rat) ?? [], siblingExcludeIds)),
+  );
+}
+
+export async function checkGSMDuplicate(lac: number, cid: number, operatorId: number, excludeCellId?: number): Promise<void> {
+  await checkCellDuplicate({ rat: "GSM", details: { lac, cid }, excludeCellId }, operatorId);
+}
+
+export async function checkUMTSDuplicate(rnc: number, cid: number, operatorId: number, excludeCellId?: number): Promise<void> {
+  await checkCellDuplicate({ rat: "UMTS", details: { rnc, cid }, excludeCellId }, operatorId);
+}
+
+export async function checkLTEDuplicate(enbid: number, clid: number, operatorId: number, excludeCellId?: number): Promise<void> {
+  await checkCellDuplicate({ rat: "LTE", details: { enbid, clid }, excludeCellId }, operatorId);
+}
+
+export async function checkCellDuplicate(source: CellIdentityDuplicateSource, operatorId: number, siblingExcludeIds: number[] = []): Promise<void> {
+  await checkCellDuplicatesBatch([source], operatorId, siblingExcludeIds);
 }
 
 export async function checkCellDuplicatesBatch(
-  cellEntries: CellDuplicateEntry[],
+  cellEntries: CellIdentityDuplicateSource[],
   operatorId: number,
   siblingExcludeIds: number[] = [],
 ): Promise<void> {
-  const gsmEntries = cellEntries.filter((c) => c.rat === "GSM");
-  const umtsEntries = cellEntries.filter((c) => c.rat === "UMTS");
-  const lteEntries = cellEntries.filter((c) => c.rat === "LTE");
-
-  const checks: Promise<void>[] = [];
-
-  if (gsmEntries.length > 0) {
-    checks.push(
-      (async () => {
-        const conditions = gsmEntries.map((e) => {
-          const d = e.details as { lac: number; cid: number };
-          return and(eq(gsmCells.lac, d.lac), eq(gsmCells.cid, d.cid), e.excludeCellId ? ne(gsmCells.cell_id, e.excludeCellId) : undefined);
-        });
-
-        const existing = await db
-          .select({ lac: gsmCells.lac, cid: gsmCells.cid })
-          .from(gsmCells)
-          .innerJoin(cells, eq(cells.id, gsmCells.cell_id))
-          .innerJoin(stations, eq(stations.id, cells.station_id))
-          .where(
-            and(
-              eq(stations.operator_id, operatorId),
-              siblingExcludeIds.length > 0 ? notInArray(gsmCells.cell_id, siblingExcludeIds) : undefined,
-              or(...conditions),
-            ),
-          );
-
-        if (existing.length > 0) {
-          const dup = existing[0]!;
-          throw new ErrorResponse("DUPLICATE_ENTRY", {
-            message: `A GSM cell with LAC ${dup.lac} and CID ${dup.cid} already exists for this operator`,
-          });
-        }
-      })(),
-    );
-  }
-
-  if (umtsEntries.length > 0) {
-    checks.push(
-      (async () => {
-        const conditions = umtsEntries.map((e) => {
-          const d = e.details as { rnc: number; cid: number };
-          return and(eq(umtsCells.rnc, d.rnc), eq(umtsCells.cid, d.cid), e.excludeCellId ? ne(umtsCells.cell_id, e.excludeCellId) : undefined);
-        });
-
-        const existing = await db
-          .select({ rnc: umtsCells.rnc, cid: umtsCells.cid })
-          .from(umtsCells)
-          .innerJoin(cells, eq(cells.id, umtsCells.cell_id))
-          .innerJoin(stations, eq(stations.id, cells.station_id))
-          .where(
-            and(
-              eq(stations.operator_id, operatorId),
-              siblingExcludeIds.length > 0 ? notInArray(umtsCells.cell_id, siblingExcludeIds) : undefined,
-              or(...conditions),
-            ),
-          );
-
-        if (existing.length > 0) {
-          const dup = existing[0]!;
-          throw new ErrorResponse("DUPLICATE_ENTRY", {
-            message: `A UMTS cell with RNC ${dup.rnc} and CID ${dup.cid} already exists for this operator`,
-          });
-        }
-      })(),
-    );
-  }
-
-  if (lteEntries.length > 0) {
-    checks.push(
-      (async () => {
-        const conditions = lteEntries.map((e) => {
-          const d = e.details as { enbid: number; clid: number };
-          return and(eq(lteCells.enbid, d.enbid), eq(lteCells.clid, d.clid), e.excludeCellId ? ne(lteCells.cell_id, e.excludeCellId) : undefined);
-        });
-
-        const existing = await db
-          .select({ enbid: lteCells.enbid, clid: lteCells.clid })
-          .from(lteCells)
-          .innerJoin(cells, eq(cells.id, lteCells.cell_id))
-          .innerJoin(stations, eq(stations.id, cells.station_id))
-          .where(
-            and(
-              eq(stations.operator_id, operatorId),
-              siblingExcludeIds.length > 0 ? notInArray(lteCells.cell_id, siblingExcludeIds) : undefined,
-              or(...conditions),
-            ),
-          );
-
-        if (existing.length > 0) {
-          const dup = existing[0]!;
-          throw new ErrorResponse("DUPLICATE_ENTRY", {
-            message: `An LTE cell with eNBID ${dup.enbid} and CLID ${dup.clid} already exists for this operator`,
-          });
-        }
-      })(),
-    );
-  }
-
-  await Promise.all(checks);
+  const entriesByRat = getCellIdentityDuplicateEntriesByRat(cellEntries);
+  await Promise.all(CELL_IDENTITY_DUPLICATE_CHECKS.map((spec) => spec.checkEntries(operatorId, entriesByRat.get(spec.rat) ?? [], siblingExcludeIds)));
 }
 
-export async function checkLTEPCIDuplicate(stationId: number, bandId: number, pci: number, earfcn?: number | null, excludeCellId?: number) {
-  const existing = await db
-    .select({ id: lteCells.cell_id })
-    .from(lteCells)
-    .innerJoin(cells, eq(cells.id, lteCells.cell_id))
-    .where(
-      and(
-        eq(cells.station_id, stationId),
-        eq(cells.band_id, bandId),
-        eq(lteCells.pci, pci),
-        earfcn !== null && earfcn !== undefined ? or(isNull(lteCells.earfcn), eq(lteCells.earfcn, earfcn)) : undefined,
-        excludeCellId ? ne(lteCells.cell_id, excludeCellId) : undefined,
-      ),
-    )
-    .limit(1);
-
-  if (existing.length > 0) {
-    throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `An LTE cell with PCI ${pci} already exists on this band for this station`,
-    });
-  }
-}
-
-export async function checkLTEPCIDuplicatesBatch(stationId: number, entries: PciDuplicateEntry[]): Promise<void> {
+async function checkPciDuplicatesForSpec(
+  spec: PciDuplicateCheckSpec,
+  stationId: number,
+  entries: PciDuplicateEntry[],
+  siblingExcludeIds: number[],
+): Promise<void> {
   if (entries.length === 0) return;
 
   const conditions = entries.map((entry) =>
     and(
       eq(cells.band_id, entry.bandId),
-      eq(lteCells.pci, entry.pci),
-      entry.channel !== null && entry.channel !== undefined ? or(isNull(lteCells.earfcn), eq(lteCells.earfcn, entry.channel)) : undefined,
-      entry.excludeCellId ? ne(lteCells.cell_id, entry.excludeCellId) : undefined,
+      eq(spec.pciColumn, entry.pci),
+      entry.channel !== null && entry.channel !== undefined ? or(isNull(spec.channelColumn), eq(spec.channelColumn, entry.channel)) : undefined,
+      entry.excludeCellId !== undefined ? ne(spec.cellIdColumn, entry.excludeCellId) : undefined,
     ),
   );
 
   const existing = await db
-    .select({ pci: lteCells.pci })
-    .from(lteCells)
-    .innerJoin(cells, eq(cells.id, lteCells.cell_id))
-    .where(and(eq(cells.station_id, stationId), or(...conditions)))
-    .limit(1);
-
-  if (existing.length > 0) {
-    const duplicate = existing[0]!;
-    throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `An LTE cell with PCI ${duplicate.pci} already exists on this band for this station`,
-    });
-  }
-}
-
-export async function checkNRPCIDuplicate(stationId: number, bandId: number, pci: number, arfcn?: number | null, excludeCellId?: number) {
-  const existing = await db
-    .select({ id: nrCells.cell_id })
-    .from(nrCells)
-    .innerJoin(cells, eq(cells.id, nrCells.cell_id))
+    .select({ pci: spec.pciColumn })
+    .from(spec.table)
+    .innerJoin(cells, eq(cells.id, spec.cellIdColumn))
     .where(
       and(
         eq(cells.station_id, stationId),
-        eq(cells.band_id, bandId),
-        eq(nrCells.pci, pci),
-        arfcn !== null && arfcn !== undefined ? or(isNull(nrCells.arfcn), eq(nrCells.arfcn, arfcn)) : undefined,
-        excludeCellId ? ne(nrCells.cell_id, excludeCellId) : undefined,
+        siblingExcludeIds.length > 0 ? notInArray(spec.cellIdColumn, siblingExcludeIds) : undefined,
+        or(...conditions),
       ),
     )
     .limit(1);
 
   if (existing.length > 0) {
-    throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `An NR cell with PCI ${pci} already exists on this band for this station`,
-    });
-  }
-}
-
-export async function checkNRPCIDuplicatesBatch(stationId: number, entries: PciDuplicateEntry[]): Promise<void> {
-  if (entries.length === 0) return;
-
-  const conditions = entries.map((entry) =>
-    and(
-      eq(cells.band_id, entry.bandId),
-      eq(nrCells.pci, entry.pci),
-      entry.channel !== null && entry.channel !== undefined ? or(isNull(nrCells.arfcn), eq(nrCells.arfcn, entry.channel)) : undefined,
-      entry.excludeCellId ? ne(nrCells.cell_id, entry.excludeCellId) : undefined,
-    ),
-  );
-
-  const existing = await db
-    .select({ pci: nrCells.pci })
-    .from(nrCells)
-    .innerJoin(cells, eq(cells.id, nrCells.cell_id))
-    .where(and(eq(cells.station_id, stationId), or(...conditions)))
-    .limit(1);
-
-  if (existing.length > 0) {
     const duplicate = existing[0]!;
     throw new ErrorResponse("DUPLICATE_ENTRY", {
-      message: `An NR cell with PCI ${duplicate.pci} already exists on this band for this station`,
+      message: `An ${spec.label} cell with PCI ${duplicate.pci} already exists on this band for this station`,
     });
   }
 }

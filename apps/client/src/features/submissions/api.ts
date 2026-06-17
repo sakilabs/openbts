@@ -1,4 +1,5 @@
 import type { SubmissionDetail, SubmissionRow } from "@/features/admin/submissions/types";
+import { getCellDetailDefaultValue, getCellDetailKeys } from "@/features/shared/rat";
 import { API_BASE, fetchApiData, fetchJson, postApiData } from "@/lib/api";
 import { type GeocodingResult, reverseGeocode as reverseGeocodeWithMapbox } from "@/lib/mapboxGeocoding";
 import type { CellDetails, Location, LocationWithStations, Operator, Region, Sector, Station, UkeLocationWithPermits } from "@/types/station";
@@ -112,25 +113,17 @@ export async function fetchStationForSubmission(id: number): Promise<SearchStati
   };
 }
 
-const ALLOWED_DETAIL_KEYS: Record<string, string[]> = {
-  GSM: ["lac", "cid", "e_gsm"],
-  UMTS: ["lac", "arfcn", "rnc", "cid"],
-  LTE: ["tac", "enbid", "clid", "pci", "earfcn", "supports_iot"],
-  NR: ["type", "nrtac", "gnbid", "clid", "pci", "arfcn", "supports_nr_redcap"],
-};
-
-const BOOLEAN_DETAIL_KEYS = new Set(["e_gsm", "supports_iot", "supports_nr_redcap"]);
-
 export function pickCellDetails(rat: RatType | undefined, details: Partial<CellFormDetails> | undefined): Partial<CellFormDetails> | undefined {
   if (!details) return undefined;
-  const allowedKeys = rat ? ALLOWED_DETAIL_KEYS[rat] : undefined;
-  if (!allowedKeys) return details;
+  if (!rat) return details;
+
+  const detailKeys = getCellDetailKeys(rat);
+  if (detailKeys.length === 0) return details;
 
   const picked: Record<string, unknown> = {};
-  for (const key of allowedKeys) {
+  for (const key of detailKeys) {
     if (key in details) picked[key] = (details as Record<string, unknown>)[key];
-    else if (key === "type" && rat === "NR") picked[key] = "nsa";
-    else picked[key] = BOOLEAN_DETAIL_KEYS.has(key) ? false : null;
+    else picked[key] = getCellDetailDefaultValue(rat, key);
   }
 
   return picked as Partial<CellFormDetails>;

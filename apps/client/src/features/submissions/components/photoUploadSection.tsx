@@ -245,9 +245,8 @@ export function PhotoUploadSection({ photos, onPhotosChange, notes, onNotesChang
                 </span>
               ) : null}
             </CollapsibleTrigger>
-
-            <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleFileChange} />
           </div>
+          <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleFileChange} />
 
           <CollapsibleContent>
             {isLoadingExisting ? (
