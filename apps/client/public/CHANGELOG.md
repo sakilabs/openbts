@@ -10,6 +10,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Unified RAT-specific cell field labels, table headers, computed IDs, sorting and badges across station details, admin cell editing, analyzer results and submission review
 - Analyzer batch results now use RAT-aware field labels and channel/band inference instead of LTE-specific assumptions
 - Standardized station basics fields and empty states across station admin and submission admin screens
+- Pressing `M` on a shared list map now returns to the main map
 
 ### 🩹 Fixes
 

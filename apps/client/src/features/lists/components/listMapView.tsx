@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { LngLatBounds } from "maplibre-gl";
 import { type JSX, Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 
@@ -52,7 +53,14 @@ function detailReducer(_state: DetailState, action: DetailAction): DetailState {
   return { selectedStation: null };
 }
 
+function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT";
+}
+
 function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
+  const navigate = useNavigate();
   const { map, isLoaded } = useMap();
   const { zoom } = useMapBounds({ map, isLoaded });
   const { data: runtimeSettings } = useSettings();
@@ -160,6 +168,21 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   });
 
   const handleActiveMarkerClear = useCallback(() => setActiveMarker(null), []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (isEditableKeyboardTarget(event.target)) return;
+      if (event.key.toLowerCase() !== "m") return;
+
+      event.preventDefault();
+      void navigate({ to: "/" });
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
   const handleLocationSelect = useCallback(
     (lat: number, lng: number) => {
