@@ -88,7 +88,7 @@ function EditorDetailField({
       placeholder={field.placeholder ?? field.label}
       value={(details[field.key] as number) ?? ""}
       error={!!detailErrors?.[field.key]}
-      disabled={getInputDisabled(field.key, details[field.key], disabled, nrType)}
+      disabled={getInputDisabled(field.key, rat, details[field.key], disabled, nrType)}
       max={field.max}
       onDetailChange={onDetailChange}
     />
@@ -174,8 +174,9 @@ function BooleanDetailCell({
   );
 }
 
-function getInputDisabled(field: string, value: unknown, disabled: boolean | undefined, nrType: "nsa" | "sa"): boolean | undefined {
+function getInputDisabled(field: string, rat: string, value: unknown, disabled: boolean | undefined, nrType: "nsa" | "sa"): boolean | undefined {
   if (disabled) return true;
+  if (rat !== "NR") return disabled;
   if (!["nrtac", "clid", "gnbid"].includes(field)) return disabled;
   return nrType !== "sa" && (value === null || value === undefined);
 }
