@@ -179,7 +179,7 @@ function buildWmsParams(identityName: string, lat: number, lng: number, featureC
     Y: "50",
     FORMAT: "image/png",
     BBOX: bbox,
-    CQL_FILTER: `identity_names='${identityName}' AND is_old=false AND url IS NOT NULL`,
+    CQL_FILTER: `identity_names='${identityName}' AND url IS NOT NULL`,
     SORTBY: "year D,date D",
   });
 }
