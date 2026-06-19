@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CellDraftBase } from "@/features/admin/cells/cellEditRow";
 import { pickCellDetails } from "@/features/submissions/api";
 import { shallowEqual } from "@/lib/shallowEqual";
-import type { Cell, Sector, SectorDraft, Station } from "@/types/station";
+import type { Cell, Sector, SectorDraft, Station, StationStatus } from "@/types/station";
 
 import { patchLocation } from "../locations/api";
 import {
@@ -147,6 +147,7 @@ export interface SaveStationPayload {
   networksName?: string;
   mnoName?: string;
   skipExtraIds?: boolean;
+  stationStatus?: StationStatus;
 }
 
 export function useSaveStationMutation() {
@@ -246,6 +247,7 @@ export function useSaveStationMutation() {
         notes: payload.notes || null,
         extra_address: payload.extraAddress || null,
         is_confirmed: payload.isConfirmed,
+        ...(payload.stationStatus !== undefined && { status: payload.stationStatus }),
       };
 
       if (payload.existingLocationId !== null && payload.existingLocationId !== (station.location?.id ?? null)) {
@@ -355,6 +357,7 @@ export function useSaveStationMutation() {
         stationPatch.notes !== (station.notes ?? null) ||
         stationPatch.extra_address !== (station.extra_address ?? null) ||
         stationPatch.is_confirmed !== station.is_confirmed ||
+        stationPatch.status !== station.status ||
         ("location_id" in stationPatch && stationPatch.location_id !== (station.location?.id ?? null));
 
       if (stationChanged) await patchStation(station.id, stationPatch);

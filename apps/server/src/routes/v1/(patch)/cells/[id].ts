@@ -12,6 +12,7 @@ import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkCellDuplicate, checkPciDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
 import { type RATUpdateDetails, isNormalRat, updateRATCellDetailsReturning } from "../../../../utils/ratCellPersistence.js";
 import { lteUpdateSchema, normalRatUpdateSchemaMap, nrUpdateSchema } from "../../../../utils/ratCellSchemas.js";
+import { assertCanMutateStationCells } from "../../../../utils/stationStatus.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -53,6 +54,10 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     with: { gsm: true, umts: true, lte: true, nr: true },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
+
+  const station = await db.query.stations.findFirst({ where: { id: cell.station_id } });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
+  assertCanMutateStationCells(station);
 
   if (req.body.details || req.body.band_id !== undefined) {
     if (req.body.details) {

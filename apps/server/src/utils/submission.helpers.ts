@@ -3,8 +3,8 @@ import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { z } from "zod/v4";
 
 import { ErrorResponse } from "../errors.js";
-import { getCellIdentityDuplicateKey, type CellIdentityDuplicateDetails } from "./cellIdentityDuplicateSpecs.js";
-import { getPciDuplicateKey, type PciDuplicateDetails } from "./pciDuplicateSpecs.js";
+import { type CellIdentityDuplicateDetails, getCellIdentityDuplicateKey } from "./cellIdentityDuplicateSpecs.js";
+import { type PciDuplicateDetails, getPciDuplicateKey } from "./pciDuplicateSpecs.js";
 
 export const gsmInsertSchema = createInsertSchema(proposedGSMCells)
   .omit({ proposed_cell_id: true })

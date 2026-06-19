@@ -97,7 +97,7 @@ export type SubmissionDetail = SubmissionBase & {
 
 export type SubmissionListItem = SubmissionBase & {
   submitter_note: string | null;
-  station: { id: number; station_id: string } | null;
+  station: { id: number; station_id: string; operator_id: number | null } | null;
   submitter: SubmissionUser;
   proposedStation: ProposedStation | null;
   cells: ProposedCellWithDetails[];

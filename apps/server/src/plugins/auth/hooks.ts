@@ -23,7 +23,7 @@ function getRegistrationKey(ctx: HookCtx): string | null {
 }
 
 async function checkAccountLimit(key: string): Promise<void> {
-  const count = parseInt((await redis.get(key)) ?? "0");
+  const count = Number.parseInt((await redis.get(key)) ?? "0");
   if (count >= MAX_ACCOUNTS_PER_FINGERPRINT) throw new APIError("TOO_MANY_REQUESTS", { message: "Account creation limit reached for this network" });
 }
 

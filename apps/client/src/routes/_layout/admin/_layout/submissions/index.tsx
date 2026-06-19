@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Input } from "@/components/ui/input";
+import { operatorsQueryOptions } from "@/features/admin/queries";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionListItem } from "@/features/admin/submissions/types";
 import { UserPickerPopover } from "@/features/admin/users/components/UserPickerPopover";
@@ -18,11 +19,30 @@ import type { PaginationState } from "@/hooks/useTablePageSize";
 import { useTablePagination } from "@/hooks/useTablePageSize";
 import { API_BASE, fetchJson } from "@/lib/api";
 import { formatShortDate, resolveAvatarUrl } from "@/lib/format";
+import { getOperatorColor } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
+import type { Operator } from "@/types/station";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 
 const columnHelper = createColumnHelper<SubmissionListItem>();
+
+function StationIdentityCell({ stationId, operator, fallback }: { stationId: string | null; operator: Operator | undefined; fallback: string }) {
+  if (!stationId && !operator) return <span className="text-muted-foreground italic text-xs">{fallback}</span>;
+
+  const operatorMnc = operator?.mnc;
+  const color = operatorMnc !== null && operatorMnc !== undefined ? getOperatorColor(operatorMnc) : "#00E1FF";
+
+  return (
+    <div className="flex items-start gap-2 min-w-0">
+      <div className="size-3 rounded-[2px] shrink-0 mt-1" style={{ backgroundColor: color }} />
+      <div className="min-w-0">
+        <div className="font-mono text-sm font-medium truncate">{stationId ?? fallback}</div>
+        <div className="text-xs text-muted-foreground truncate">{operator?.name ?? "-"}</div>
+      </div>
+    </div>
+  );
+}
 
 function SortableHeader({ label, sort, onToggle }: { label: string; sort: "asc" | "desc"; onToggle: () => void }) {
   return (
@@ -60,6 +80,7 @@ function AdminSubmissionsListPage() {
     return saved === "desc" ? "desc" : "asc";
   });
   const [searchInput, setSearchInput] = useState(q ?? "");
+  const [activeSearch, setActiveSearch] = useState(q ?? "");
   const [selectedSubmitterIds, setSelectedSubmitterIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem("admin:submissions:submitters");
@@ -70,7 +91,8 @@ function AdminSubmissionsListPage() {
     }
   });
 
-  const debouncedNavigateSearch = useDebouncedCallback((value: string) => {
+  const debouncedUpdate = useDebouncedCallback((value: string) => {
+    setActiveSearch(value);
     void navigate({
       from: Route.fullPath,
       search: (s) => ({ ...s, q: value || undefined, page: 0 }),
@@ -81,9 +103,9 @@ function AdminSubmissionsListPage() {
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchInput(value);
-      debouncedNavigateSearch(value.trim());
+      debouncedUpdate(value.trim());
     },
-    [debouncedNavigateSearch],
+    [debouncedUpdate],
   );
 
   const handleStatusFilter = useCallback(
@@ -138,15 +160,32 @@ function AdminSubmissionsListPage() {
     [pagination, setSizePagination, navigate],
   );
 
+  const { data: operators = [] } = useQuery(operatorsQueryOptions());
+  const operatorById = useMemo(() => new Map(operators.map((operator) => [operator.id, operator])), [operators]);
+  const getOperatorById = useCallback(
+    (operatorId: number | null | undefined) => (operatorId !== null && operatorId !== undefined ? operatorById.get(operatorId) : undefined),
+    [operatorById],
+  );
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "submissions", pagination.pageIndex, pagination.pageSize, statusFilter, typeFilter, q, sortOrder, selectedSubmitterIds],
+    queryKey: [
+      "admin",
+      "submissions",
+      pagination.pageIndex,
+      pagination.pageSize,
+      statusFilter,
+      typeFilter,
+      activeSearch,
+      sortOrder,
+      selectedSubmitterIds,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set("limit", pagination.pageSize.toString());
       params.set("offset", (pagination.pageIndex * pagination.pageSize).toString());
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (typeFilter !== "all") params.set("type", typeFilter);
-      if (q) params.set("search", q);
+      if (activeSearch) params.set("search", activeSearch);
       if (selectedSubmitterIds.length > 0) params.set("submitter_ids", selectedSubmitterIds.join(","));
       params.set("sort", sortOrder);
       return fetchJson<{ data: SubmissionListItem[]; totalCount: number }>(`${API_BASE}/submissions/admin?${params.toString()}`);
@@ -203,9 +242,16 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue, row }) => {
           const station = getValue();
           const proposedStation = row.original.proposedStation;
-          if (station) return <div className="font-mono font-medium">{station.station_id}</div>;
-          if (proposedStation?.station_id) return <div className="font-mono font-medium">{proposedStation.station_id}</div>;
-          return <span className="text-muted-foreground italic text-xs">{t("common:labels.newStation")}</span>;
+          const fallback = t("common:labels.newStation");
+          if (station)
+            return <StationIdentityCell stationId={station.station_id} operator={getOperatorById(station.operator_id)} fallback={fallback} />;
+          return (
+            <StationIdentityCell
+              stationId={proposedStation?.station_id ?? null}
+              operator={getOperatorById(proposedStation?.operator_id)}
+              fallback={fallback}
+            />
+          );
         },
       }),
       columnHelper.accessor("submitter", {
@@ -242,7 +288,7 @@ function AdminSubmissionsListPage() {
         cell: ({ getValue }) => <span className="text-muted-foreground tabular-nums text-xs">{formatShortDate(getValue(), i18n.language)}</span>,
       }),
     ],
-    [t, i18n.language, sortOrder, handleSortToggle],
+    [t, i18n.language, sortOrder, handleSortToggle, getOperatorById],
   );
 
   const handleRowClick = useCallback((submission: SubmissionListItem) => navigate({ to: `/admin/submissions/${submission.id}` }), [navigate]);

@@ -37,5 +37,6 @@ export function getPciDuplicateKey(source: PciDuplicateKeySource): PciDuplicateK
   if (pci === null || pci === undefined) return null;
 
   const channel = source.details[spec.channelField];
-  return { rat: spec.rat, pci, key: `${source.bandId}:${pci}:${channel ?? ""}` };
+  const channelKey = typeof channel === "number" ? channel.toString() : typeof channel === "string" ? channel : "";
+  return { rat: spec.rat, pci, key: `${source.bandId}:${pci}:${channelKey}` };
 }

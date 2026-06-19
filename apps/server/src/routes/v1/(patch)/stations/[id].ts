@@ -9,11 +9,13 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { assertStationStatusTransition, stationStatusUpdate } from "../../../../utils/stationStatus.js";
 
 const stationsUpdateSchema = createUpdateSchema(stations)
   .omit({
     createdAt: true,
     updatedAt: true,
+    statusChangedAt: true,
   })
   .strict();
 const stationsSelectSchema = createSelectSchema(stations);
@@ -46,11 +48,16 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     throw new ErrorResponse("FORBIDDEN");
 
   try {
+    const { status: nextStatus, ...stationPatch } = req.body;
+    if (nextStatus !== undefined) assertStationStatusTransition(station.status, nextStatus);
+    const now = new Date();
+    const statusPatch = nextStatus !== undefined && nextStatus !== station.status ? stationStatusUpdate(nextStatus, now) : {};
     const [updated] = await db
       .update(stations)
       .set({
-        ...req.body,
-        updatedAt: new Date(),
+        ...stationPatch,
+        ...statusPatch,
+        updatedAt: now,
       })
       .where(eq(stations.id, station_id))
       .returning();

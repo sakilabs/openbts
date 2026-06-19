@@ -6,11 +6,11 @@ import type { AnalyzerDraft } from "./analyzerDraftStore";
 import {
   type AnalyzerBandChoice,
   type AnalyzerRat,
+  type MismatchDetails,
   buildAnalyzerBaseDetails,
   buildAnalyzerProbableAddDetails,
   buildAnalyzerWarningDetails,
   resolveAnalyzerBandChoices,
-  type MismatchDetails,
 } from "./analyzerRatSpecs";
 
 export interface DraftCell {

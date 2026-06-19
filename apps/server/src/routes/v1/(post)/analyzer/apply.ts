@@ -11,11 +11,11 @@ import { createAuditLog } from "../../../../services/auditLog.service.ts";
 import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../services/cellDuplicateCheck.service.ts";
 import { validateCellARFCNsAgainstBands } from "../../../../utils/cellARFCNValidation.ts";
 import {
-  insertRATCellDetails,
   type LTEInsertDetails,
   type LTEUpdateDetails,
   type RATInsertDetails,
   type RATUpdateDetails,
+  insertRATCellDetails,
   updateRATCellDetails,
 } from "../../../../utils/ratCellPersistence.ts";
 import { normalRatInsertSchemaMap, normalRatUpdateSchemaMap } from "../../../../utils/ratCellSchemas.ts";

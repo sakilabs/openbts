@@ -9,8 +9,9 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { buildStatusCondition, parseStationStatusParam } from "../../../../utils/stationStatus.js";
 
-const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const regionSchema = createSelectSchema(regions);
@@ -65,6 +66,11 @@ const schemaRoute = {
               .filter((n) => !Number.isNaN(n))
           : undefined,
       ),
+    status: z
+      .string()
+      .regex(/^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$/)
+      .optional()
+      .transform(parseStationStatusParam),
     regions: z
       .string()
       .regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
@@ -85,7 +91,7 @@ type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 type ResponseBody = { data: Station[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit, page, bounds, rat, operators: operatorMncs, bands: bandValues, regions, sort, sortBy } = req.query;
+  const { limit, page, bounds, rat, operators: operatorMncs, bands: bandValues, status: selectedStatuses, regions, sort, sortBy } = req.query;
   const offset = limit ? (page - 1) * limit : undefined;
 
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
@@ -138,7 +144,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const iotRequested = requestedRats.includes("iot");
 
   const buildStationConditions = (stationFields: typeof stations): ReturnType<typeof sql>[] => {
-    const conditions: ReturnType<typeof sql>[] = [eq(stationFields.status, "published")];
+    const conditions: ReturnType<typeof sql>[] = [buildStatusCondition(stationFields, selectedStatuses)];
 
     if (operatorIds.length) {
       conditions.push(
@@ -203,7 +209,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       db.select({ count: count() }).from(stations).where(countWhere),
       db.query.stations.findMany({
         columns: {
-          status: false,
           operator_id: false,
           location_id: false,
         },

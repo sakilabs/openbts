@@ -11,6 +11,17 @@
   "actions": {
     "newStation": "Create New Station"
   },
+  "status": {
+    "published": "Active",
+    "pending": "In Progress",
+    "inactive": "Inactive"
+  },
+  "statusTooltip": {
+    "published": "The station is active",
+    "pending": "The station is under construction or being prepared for activation",
+    "inactive": "The station has been disabled indefinitely or decommissioned",
+    "changedAt": "Status changed: {{date}}"
+  },
   "cells": {
     "cellsCount_one": "{{count, number}} cell",
     "cellsCount_few": "{{count, number}} cells",
@@ -39,6 +50,10 @@
   "inactiveBanner": {
     "title": "Inactive station",
     "description": "Not visible on the map. Pending deletion from the database"
+  },
+  "pendingBanner": {
+    "title": "Pending station",
+    "description": "Publicly visible without cells. Change the status to published to edit cells"
   },
   "toast": {
     "locationSaved": "Location has been saved",

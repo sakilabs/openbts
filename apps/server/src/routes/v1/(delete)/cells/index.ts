@@ -1,5 +1,5 @@
 import { cells, stations } from "@openbts/drizzle";
-import { eq, inArray } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
@@ -8,6 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { assertCanDeleteCells } from "../../../../utils/stationStatus.js";
 
 const schemaRoute = {
   body: z.object({
@@ -27,9 +28,24 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<EmptyResp
   if (foundCells.length !== ids.length) throw new ErrorResponse("NOT_FOUND");
 
   const uniqueStationIds = [...new Set(foundCells.map((c) => c.station_id))];
+  const stationRows = await db.query.stations.findMany({ where: { id: { in: uniqueStationIds } } });
+  if (stationRows.length !== uniqueStationIds.length) throw new ErrorResponse("NOT_FOUND");
 
   try {
     await db.transaction(async (tx) => {
+      const cellCounts = await tx
+        .select({ stationId: cells.station_id, total: count() })
+        .from(cells)
+        .where(inArray(cells.station_id, uniqueStationIds))
+        .groupBy(cells.station_id);
+      const cellCountByStationId = new Map(cellCounts.map(({ stationId, total }) => [stationId, total]));
+
+      for (const station of stationRows) {
+        const currentCellCount = cellCountByStationId.get(station.id) ?? 0;
+        const deletedForStation = foundCells.filter((cell) => cell.station_id === station.id).length;
+        assertCanDeleteCells(station, currentCellCount - deletedForStation);
+      }
+
       await tx.delete(cells).where(inArray(cells.id, ids));
 
       await createAuditLog(

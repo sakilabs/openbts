@@ -123,6 +123,7 @@
     "approved": "Approved",
     "rejected": "Rejected",
     "active": "Active",
+    "published": "Published",
     "inactive": "Inactive",
     "expired": "Expired",
     "never": "Never"

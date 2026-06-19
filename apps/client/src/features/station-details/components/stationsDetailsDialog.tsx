@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AddToListPopover } from "@/features/lists/components/addToListPopover";
+import { StationStatusBadge } from "@/features/stations/components/StationStatusBadge";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
@@ -80,25 +81,30 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                   ) : station ? (
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2 min-w-0">
-                        <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
-                          {station.operator.name}
-                        </h2>
-                        {leaseOperator ? (
-                          <Tooltip>
-                            <TooltipTrigger className="text-sm text-muted-foreground font-mono font-medium cursor-help underline decoration-dashed decoration-amber-500/50 underline-offset-2 shrink-0">
-                              {station.station_id}
-                            </TooltipTrigger>
-                            <TooltipContent>{t("dialog.hardwareLease", { operator: leaseOperator })}</TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
-                        )}
-                        {station.is_confirmed && (
-                          <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold">
-                            <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
-                            <span className="hidden sm:inline">{t("common:labels.confirmed")}</span>
-                          </span>
-                        )}
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
+                              {station.operator.name}
+                            </h2>
+                            {leaseOperator ? (
+                              <Tooltip>
+                                <TooltipTrigger className="text-sm text-muted-foreground font-mono font-medium cursor-help underline decoration-dashed decoration-amber-500/50 underline-offset-2 shrink-0">
+                                  {station.station_id}
+                                </TooltipTrigger>
+                                <TooltipContent>{t("dialog.hardwareLease", { operator: leaseOperator })}</TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
+                            )}
+                            {station.is_confirmed && (
+                              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shrink-0">
+                                <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
+                                <span className="hidden sm:inline">{t("common:labels.confirmed")}</span>
+                              </span>
+                            )}
+                          </div>
+                          {station.status && <StationStatusBadge status={station.status} statusChangedAt={station.statusChangedAt} />}
+                        </div>
                       </div>
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{station.location.city}</p>
@@ -179,12 +185,12 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                 </div>
               ) : null}
               {station?.status === "inactive" ? (
-                <div className="border-t border-amber-500/25 bg-amber-500/8 px-6 py-3 text-amber-700 dark:text-amber-400">
+                <div className="border-t border-red-600/30 bg-red-500/10 px-6 py-3 text-red-700 dark:border-red-400/35 dark:bg-red-400/12 dark:text-red-300">
                   <div className="flex items-start gap-2.5">
                     <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 size-4 shrink-0" />
                     <div className="space-y-0.5">
                       <p className="text-sm font-semibold">{t("dialog.inactiveStationTitle")}</p>
-                      <p className="text-xs text-amber-700/80 dark:text-amber-400/80">{t("dialog.inactiveStationDescription")}</p>
+                      <p className="text-xs text-red-700/85 dark:text-red-300/80">{t("dialog.inactiveStationDescription")}</p>
                     </div>
                   </div>
                 </div>

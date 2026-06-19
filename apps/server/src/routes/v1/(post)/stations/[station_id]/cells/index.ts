@@ -14,6 +14,7 @@ import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../../../
 import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
 import { type RATInsertDetails, insertRATCellDetails, isNormalRat } from "../../../../../../utils/ratCellPersistence.js";
 import { INSERT_OMIT, gsmInsertSchema, lteNullableFields, nrInsertSchema, umtsInsertSchema } from "../../../../../../utils/ratCellSchemas.js";
+import { assertCanMutateStationCells } from "../../../../../../utils/stationStatus.js";
 import { makeDetailsRatRefine, validateCellDuplicates } from "../../../../../../utils/submission.helpers.js";
 
 const cellsInsertSchema = createInsertSchema(cells)
@@ -78,6 +79,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     },
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
+  assertCanMutateStationCells(station);
 
   validateCellDuplicates(cellsData);
 

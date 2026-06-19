@@ -18,6 +18,7 @@ type StationBasicsFieldsProps = {
   onNotesChange: (value: string) => void;
   stationIdMeta?: ReactNode;
   operatorMeta?: ReactNode;
+  operatorAccessory?: ReactNode;
   notesMeta?: ReactNode;
   extraFields?: ReactNode;
 };
@@ -33,6 +34,7 @@ export function StationBasicsFields({
   onNotesChange,
   stationIdMeta,
   operatorMeta,
+  operatorAccessory,
   notesMeta,
   extraFields,
 }: StationBasicsFieldsProps) {
@@ -46,10 +48,13 @@ export function StationBasicsFields({
           <Input value={stationId} onChange={(e) => onStationIdChange(e.target.value)} maxLength={16} disabled={disabled} />
           {stationIdMeta}
         </div>
-        <div className="space-y-2">
-          <Label>{t("labels.operator")}</Label>
-          <OperatorSelect operators={operators} value={operatorId} onChange={onOperatorIdChange} disabled={disabled} />
-          {operatorMeta}
+        <div className="flex flex-wrap items-start gap-3">
+          <div className="space-y-2">
+            <Label>{t("labels.operator")}</Label>
+            <OperatorSelect operators={operators} value={operatorId} onChange={onOperatorIdChange} disabled={disabled} />
+            {operatorMeta}
+          </div>
+          {operatorAccessory}
         </div>
       </div>
       <div className="space-y-2">

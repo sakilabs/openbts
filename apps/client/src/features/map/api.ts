@@ -17,10 +17,11 @@ export type UkeLocationsResponse = {
 function buildFilterParams(filters: StationFilters): URLSearchParams {
   const params = new URLSearchParams();
 
-  const { operators, bands, rat, recentDays, recentDateFields } = filters;
+  const { operators, bands, rat, status, recentDays, recentDateFields } = filters;
   if (operators.length) params.set("operators", operators.join(","));
   if (bands.length) params.set("bands", bands.join(","));
   if (rat.length) params.set("rat", rat.join(","));
+  if (filters.source === "internal" && status.length) params.set("status", status.join(","));
   if (recentDays !== null && filters.source === "internal") params.set("since", `${recentDateFields.join(",")}:${recentDays}`);
   if (recentDays !== null && filters.source === "uke") params.set("since", String(recentDays));
 

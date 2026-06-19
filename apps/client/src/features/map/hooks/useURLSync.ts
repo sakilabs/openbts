@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { StationFilters, StationSource } from "@/types/station";
+import type { StationFilters, StationSource, StationStatus } from "@/types/station";
 
 type UseUrlSyncArgs = {
   map: maplibregl.Map | null;
@@ -16,7 +16,8 @@ type UseUrlSyncArgs = {
   }) => void;
 };
 
-const LEGACY_FILTER_PARAM_KEYS = ["operators", "bands", "rat", "source", "new", "radiolines", "stations", "rl_operators", "heatmap"];
+const LEGACY_FILTER_PARAM_KEYS = ["operators", "bands", "rat", "status", "source", "new", "radiolines", "stations", "rl_operators", "heatmap"];
+const VALID_STATION_STATUSES = new Set<StationStatus>(["published", "pending", "inactive"]);
 
 function parseLegacyFilters(params: URLSearchParams): Partial<StationFilters> | null {
   if (!LEGACY_FILTER_PARAM_KEYS.some((key) => params.has(key))) return null;
@@ -34,6 +35,10 @@ function parseLegacyFilters(params: URLSearchParams): Partial<StationFilters> | 
       .map(Number)
       .filter((n) => !Number.isNaN(n)) || [];
   const rat = params.get("rat")?.split(",").filter(Boolean) || [];
+  const status = (params
+    .get("status")
+    ?.split(",")
+    .filter((value): value is StationStatus => VALID_STATION_STATUSES.has(value as StationStatus)) ?? ["published"]) as StationStatus[];
   const source: StationSource = params.get("source") === "uke" ? "uke" : "internal";
   const newParam = params.get("new");
   const recentDays = newParam === "true" ? 30 : newParam ? Math.min(30, Math.max(1, Number(newParam))) || null : null;
@@ -51,6 +56,7 @@ function parseLegacyFilters(params: URLSearchParams): Partial<StationFilters> | 
     operators,
     bands,
     rat,
+    status,
     source,
     recentDays,
     recentDateFields: ["createdAt"] as ("createdAt" | "updatedAt")[],
@@ -67,6 +73,7 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
   let operators: number[] = [];
   let bands: number[] = [];
   let rat: string[] = [];
+  let status: StationStatus[] = ["published"];
   let recentDays: number | null = null;
   let recentDateFields: ("createdAt" | "updatedAt")[] = ["createdAt"];
   let showRadiolines = false;
@@ -94,6 +101,9 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
         break;
       case "r":
         rat = value.split(",").filter(Boolean);
+        break;
+      case "t":
+        status = value.split(",").filter((entry): entry is StationStatus => VALID_STATION_STATUSES.has(entry as StationStatus));
         break;
       case "n":
         const numPart = value.replace(/[^0-9]/g, "");
@@ -126,6 +136,7 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
     operators,
     bands,
     rat,
+    status,
     source,
     recentDays,
     recentDateFields,
@@ -201,6 +212,7 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
   if (filters.operators.length > 0) tokens.push(`o${filters.operators.join(",")}`);
   if (filters.bands.length > 0) tokens.push(`b${filters.bands.join(",")}`);
   if (filters.rat.length > 0) tokens.push(`r${filters.rat.join(",")}`);
+  if (!(filters.status.length === 1 && filters.status.includes("published"))) tokens.push(`t${filters.status.join(",")}`);
   if (filters.recentDays !== null) {
     const fields = filters.recentDateFields.map((field) => (field === "createdAt" ? "c" : "u")).join("");
     const suffix = fields === "c" ? "" : fields;
@@ -254,6 +266,7 @@ export function useUrlSync({ map, isLoaded, filters, onInitialize }: UseUrlSyncA
             operators: urlFilters.operators || [],
             bands: urlFilters.bands || [],
             rat: urlFilters.rat || [],
+            status: urlFilters.status ?? ["published"],
             source: urlFilters.source || "internal",
             recentDays: urlFilters.recentDays ?? null,
             recentDateFields: urlFilters.recentDateFields ?? ["createdAt"],

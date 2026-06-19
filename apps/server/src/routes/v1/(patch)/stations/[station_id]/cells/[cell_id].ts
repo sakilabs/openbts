@@ -12,6 +12,7 @@ import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { checkCellDuplicate, checkPciDuplicate } from "../../../../../../services/cellDuplicateCheck.service.js";
 import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
 import { type RATUpdateDetails, isNormalRat, updateRATCellDetailsReturning } from "../../../../../../utils/ratCellPersistence.js";
+import { assertCanMutateStationCells } from "../../../../../../utils/stationStatus.js";
 import { makeDetailsRatRefine } from "../../../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -97,6 +98,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     },
   });
   if (!station) throw new ErrorResponse("NOT_FOUND");
+  assertCanMutateStationCells(station);
 
   const cell = await db.query.cells.findFirst({
     where: {

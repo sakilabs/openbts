@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getRatChannelField, getRatShowsBandDuplex } from "@/features/shared/rat";
-import { getRatDetailFields, type RatDetailField } from "@/features/shared/ratCellFields";
+import { type RatDetailField, getRatDetailFields } from "@/features/shared/ratCellFields";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { isRecent } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
@@ -242,5 +242,6 @@ function getStationDetailValue(field: RatDetailField, details: Record<string, un
   const value = details[field.valueKey ?? field.key];
   if (value === null || value === undefined) return "-";
   if (typeof value === "string" || typeof value === "number") return value;
-  return String(value);
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return "-";
 }

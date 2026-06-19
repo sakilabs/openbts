@@ -8,7 +8,7 @@ const LIMIT = 50;
 export function useUserLists(): UseInfiniteQueryResult<InfiniteData<Awaited<ReturnType<typeof fetchUserLists>>>> {
   return useInfiniteQuery({
     queryKey: ["user-lists"],
-    queryFn: ({ pageParam = 1 }) => fetchUserLists(LIMIT, pageParam as number),
+    queryFn: ({ pageParam }) => fetchUserLists(LIMIT, pageParam as number),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       const fetched = allPages.length * LIMIT;

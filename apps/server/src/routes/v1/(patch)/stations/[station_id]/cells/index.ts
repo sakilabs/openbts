@@ -13,6 +13,7 @@ import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../../../
 import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
 import { type RATUpdateDetails, isNormalRat, updateRATCellDetailsReturning } from "../../../../../../utils/ratCellPersistence.js";
 import { lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../../../utils/ratCellSchemas.js";
+import { assertCanMutateStationCells } from "../../../../../../utils/stationStatus.js";
 import { makeDetailsRatRefine, validateCellDuplicates } from "../../../../../../utils/submission.helpers.js";
 
 const cellsUpdateSchema = createUpdateSchema(cells)
@@ -73,6 +74,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
 
   const station = await db.query.stations.findFirst({ where: { id: station_id } });
   if (!station) throw new ErrorResponse("NOT_FOUND");
+  assertCanMutateStationCells(station);
 
   const existingCells = await db.query.cells.findMany({
     where: {
@@ -101,11 +103,7 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     const lteDetails = cellData.details as z.infer<typeof lteCellsUpdateSchema> | undefined;
     const nrDetails = cellData.details as z.infer<typeof nrCellsUpdateSchema> | undefined;
     const effectiveDetails =
-      existing.rat === "LTE"
-        ? { ...(existing.lte ?? {}), ...(lteDetails ?? {}) }
-        : existing.rat === "NR"
-          ? { ...(existing.nr ?? {}), ...(nrDetails ?? {}) }
-          : cellData.details;
+      existing.rat === "LTE" ? { ...existing.lte, ...lteDetails } : existing.rat === "NR" ? { ...existing.nr, ...nrDetails } : cellData.details;
     return { rat: existing.rat, band_id: effectiveBandId, details: effectiveDetails };
   });
 

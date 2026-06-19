@@ -3,8 +3,8 @@ import { and, eq, isNull, ne, notInArray, or } from "drizzle-orm";
 
 import db from "../database/psql.js";
 import { ErrorResponse } from "../errors.js";
-import { getCellIdentityDuplicateSpec, type CellIdentityDuplicateDetails } from "../utils/cellIdentityDuplicateSpecs.js";
-import { getPciDuplicateKey, getPciDuplicateSpec, type PciDuplicateDetails, type PciDuplicateSpec } from "../utils/pciDuplicateSpecs.js";
+import { type CellIdentityDuplicateDetails, getCellIdentityDuplicateSpec } from "../utils/cellIdentityDuplicateSpecs.js";
+import { type PciDuplicateDetails, type PciDuplicateSpec, getPciDuplicateKey, getPciDuplicateSpec } from "../utils/pciDuplicateSpecs.js";
 
 type CellIdentityDuplicateEntry = {
   values: Record<string, number>;

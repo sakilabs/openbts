@@ -1,6 +1,23 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-20
+
+### 🚀 Enhancements
+
+- Added station status support across the map, station details and admin station editor, including Active, In Progress and Inactive states
+- Map filters can now include station status, with published stations kept as the default view
+- Station detail and admin station headers now show clearer status badges, status timestamps and related metadata
+- Admin submissions now show station and operator identity more clearly
+
+### 🩹 Fixes
+
+- Deleting a station now marks it inactive first, with old inactive stations cleaned up automatically after the grace period
+- New or submitted stations without cells now stay in progress instead of being published as complete stations
+- Cell edits and deletions now respect station status rules so pending or inactive stations cannot be mutated like published stations
+- Public exports now ignore non-published stations
+- Audit-log searches now match record IDs, old values, new values and metadata
+
 # 2026-06-17
 
 ### 🚀 Enhancements

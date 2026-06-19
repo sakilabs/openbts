@@ -128,6 +128,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     handleToggleOperator,
     handleToggleBand,
     handleToggleRat,
+    handleToggleStatus,
     handleSelectAllRats,
     handleClearAllRats,
     handleSelectAllBands,
@@ -305,6 +306,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     onTogglePlannedMeasurements,
     handleToggleOperator,
     handleToggleRat,
+    handleToggleStatus,
     preferences.showAzimuths,
     updatePreferences,
   ]);
@@ -378,6 +380,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
               onToggleRat={handleToggleRat}
               onRecentDaysChange={handleRecentDaysChange}
               onRecentDateFieldChange={handleRecentDateFieldChange}
+              onToggleStatus={handleToggleStatus}
               onSelectAllRats={handleSelectAllRats}
               onClearAllRats={handleClearAllRats}
               onSelectAllBands={handleSelectAllBands}
@@ -426,6 +429,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
                 onToggleRat={handleToggleRat}
                 onRecentDaysChange={handleRecentDaysChange}
                 onRecentDateFieldChange={handleRecentDateFieldChange}
+                onToggleStatus={handleToggleStatus}
                 onSelectAllRats={handleSelectAllRats}
                 onClearAllRats={handleClearAllRats}
                 onSelectAllBands={handleSelectAllBands}

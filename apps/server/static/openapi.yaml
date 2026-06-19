@@ -228,7 +228,7 @@ paths:
     get:
       tags: [Stats]
       summary: Get unique station counts per operator over time
-      description: Returns unique station count per operator per snapshot date.
+      description: Returns unique station count per operator per snapshot date
       parameters:
         - name: operator_id
           in: query
@@ -312,7 +312,7 @@ paths:
     delete:
       tags: [Cells]
       summary: Batch delete cells
-      description: Deletes multiple cells by ID. Also updates the `updatedAt` timestamp on all affected stations.
+      description: Deletes multiple cells by ID. Also updates the `updatedAt` timestamp on all affected stations
       security:
         - CookieAuth: []
       requestBody:
@@ -494,6 +494,10 @@ paths:
         - name: sortBy
           in: query
           schema: { type: string, enum: [station_id, updatedAt, createdAt] }
+        - name: status
+          in: query
+          description: "Comma-separated station statuses to include. Defaults to `published`"
+          schema: { type: string, pattern: "^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$" }
       responses:
         "200":
           description: OK
@@ -776,7 +780,7 @@ paths:
     put:
       tags: [Stations]
       summary: Replace sectors for a station
-      description: Replaces the station sector list. Existing sectors can be retained or updated by `id`; sectors omitted from the request are deleted only if no cells are assigned to them. The maximum number of sectors is the largest number of cells in any single band on the station.
+      description: Replaces the station sector list. Existing sectors can be retained or updated by `id`; sectors omitted from the request are deleted only if no cells are assigned to them. The maximum number of sectors is the largest number of cells in any single band on the station
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1021,7 +1025,7 @@ paths:
     get:
       tags: [Stations]
       summary: List selected photos for a station
-      description: Returns location photos that have been explicitly selected for this station, including which one is marked as main.
+      description: Returns location photos that have been explicitly selected for this station, including which one is marked as main
       parameters:
         - $ref: "#/components/parameters/StationIdPath"
       responses:
@@ -1040,7 +1044,7 @@ paths:
     put:
       tags: [Stations]
       summary: Replace photo selection for a station
-      description: Atomically replaces the full set of location photos assigned to this station. All provided IDs must belong to the station's location.
+      description: Atomically replaces the full set of location photos assigned to this station. All provided IDs must belong to the station's location
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1538,8 +1542,12 @@ paths:
           schema: { type: string, enum: [id, updatedAt, createdAt] }
         - name: azimuths
           in: query
-          description: Include station sector azimuths under each station when true.
+          description: Include station sector azimuths under each station when true
           schema: { type: boolean, default: false }
+        - name: status
+          in: query
+          description: "Comma-separated station statuses to include. Defaults to `published,pending`"
+          schema: { type: string, pattern: "^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$" }
       responses:
         "200":
           description: OK
@@ -1601,8 +1609,12 @@ paths:
           schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
         - name: azimuths
           in: query
-          description: Include station sector azimuths under each station when true.
+          description: Include station sector azimuths under each station when true
           schema: { type: boolean, default: false }
+        - name: status
+          in: query
+          description: "Comma-separated station statuses to include. Defaults to `published,pending`"
+          schema: { type: string, pattern: "^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$" }
       responses:
         "200":
           description: OK
@@ -1685,7 +1697,7 @@ paths:
     post:
       tags: [Locations]
       summary: Upload photos for a location (multipart/form-data)
-      description: Accepts interleaved `notes` fields and `files` fields. Each note corresponds to the file at the same index. Max 3 MB per file.
+      description: Accepts interleaved `notes` fields and `files` fields. Each note corresponds to the file at the same index. Max 3 MB per file
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1724,7 +1736,7 @@ paths:
     patch:
       tags: [Locations]
       summary: Update a location photo
-      description: Updates note and/or taken_at for a photo. At least one field must be provided.
+      description: Updates note and/or taken_at for a photo. At least one field must be provided
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1771,7 +1783,7 @@ paths:
     delete:
       tags: [Locations]
       summary: Delete a location photo
-      description: Also removes all station photo selections referencing this photo via cascade.
+      description: Also removes all station photo selections referencing this photo via cascade
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1796,7 +1808,7 @@ paths:
     get:
       tags: [Submissions]
       summary: List own submissions
-      description: Returns only submissions belonging to the authenticated user.
+      description: Returns only submissions belonging to the authenticated user
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1877,7 +1889,7 @@ paths:
     get:
       tags: [Submissions]
       summary: List all submissions (admin)
-      description: Returns all submissions across all users. Requires `submissions:read` permission.
+      description: Returns all submissions across all users. Requires `submissions:read` permission
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -1904,7 +1916,7 @@ paths:
           schema: { type: string }
         - name: sort
           in: query
-          description: Sort direction by createdAt. Defaults to asc (oldest first).
+          description: Sort direction by createdAt. Defaults to asc (oldest first)
           schema: { type: string, enum: [asc, desc], default: asc }
       responses:
         "200":
@@ -1924,7 +1936,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Create submission(s) (single object or array of 1-10)
-      description: If any of the items in the array is invalid or will throw an error, the entire request will be rejected with an error and no submissions will be created.
+      description: If any of the items in the array is invalid or will throw an error, the entire request will be rejected with an error and no submissions will be created
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -2136,7 +2148,7 @@ paths:
     post:
       tags: [Submissions]
       summary: Upload photos for a submission (multipart/form-data)
-      description: Accepts interleaved `notes` fields and `files` fields. Max 5 photos per submission, max 10 MB per file. Only the submission's owner can upload while status is pending.
+      description: Accepts interleaved `notes` fields and `files` fields. Max 5 photos per submission, max 10 MB per file. Only the submission's owner can upload while status is pending
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -2488,7 +2500,7 @@ paths:
     post:
       tags: [Analyzer]
       summary: Analyze NTM/NetMonster log cells against the database
-      description: Cross-references up to 20,000 parsed cell records against the internal station database. Returns a result for each input cell indicating whether it was found, probably matched, or not found.
+      description: Cross-references up to 20,000 parsed cell records against the internal station database. Returns a result for each input cell indicating whether it was found, probably matched, or not found
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -3040,7 +3052,7 @@ paths:
           schema: { type: string, enum: [zmP, P] }
         - name: new
           in: query
-          description: Only return radiolines updated within the last N days (1-30). Pass `true` for 30 days.
+          description: Only return radiolines updated within the last N days (1-30). Pass `true` for 30 days
           schema: { type: string }
       responses:
         "200":
@@ -3097,7 +3109,7 @@ paths:
     post:
       tags: [UKE]
       summary: Search UKE permits and radiolines
-      description: Searches UKE permits by decision_number or station_id and radiolines by permit_number. Results are grouped by station_id for permits and by permit_number for radiolines.
+      description: Searches UKE permits by decision_number or station_id and radiolines by permit_number. Results are grouped by station_id for permits and by permit_number for radiolines
       requestBody:
         required: true
         content:
@@ -3187,7 +3199,7 @@ paths:
     get:
       tags: [Lists]
       summary: List user lists
-      description: Returns lists owned by the authenticated user. Admins with `user_lists:read` permission can pass `all=true` to see all lists across all users.
+      description: Returns lists owned by the authenticated user. Admins with `user_lists:read` permission can pass `all=true` to see all lists across all users
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -3203,7 +3215,7 @@ paths:
           schema: { type: string }
         - name: all
           in: query
-          description: Return all users' lists. Requires `user_lists:read` admin permission. Ignored for non-admins.
+          description: Return all users' lists. Requires `user_lists:read` admin permission. Ignored for non-admins
           schema: { type: boolean, default: false }
       responses:
         "200":
@@ -3252,7 +3264,7 @@ paths:
     get:
       tags: [Lists]
       summary: Get list by UUID with full station and radioline data
-      description: Public lists are accessible without authentication. Private lists require authentication and ownership (or admin `user_lists:read` permission).
+      description: Public lists are accessible without authentication. Private lists require authentication and ownership (or admin `user_lists:read` permission)
       security:
         - ApiKeyAuth: []
         - CookieAuth: []
@@ -3263,7 +3275,7 @@ paths:
           schema: { type: string, format: uuid }
         - name: azimuths
           in: query
-          description: When `true`, each UKE permit in the response will include a `sectors` array with azimuth data.
+          description: When `true`, each UKE permit in the response will include a `sectors` array with azimuth data
           schema: { type: boolean, default: false }
       responses:
         "200":
@@ -3416,7 +3428,7 @@ paths:
         - name: operator
           in: query
           required: true
-          description: Operator MNC (e.g. 26002 for T-Mobile). Used to map to the SI2PEM legal entity name.
+          description: Operator MNC (e.g. 26002 for T-Mobile). Used to map to the SI2PEM legal entity name
           schema: { type: integer }
       responses:
         "200":
@@ -3739,7 +3751,7 @@ components:
         name: { type: string }
     StationPhoto:
       type: object
-      description: A location photo selected for display on a station, with is_main indicating the station's primary photo.
+      description: A location photo selected for display on a station, with is_main indicating the station's primary photo
       required: [id, attachment_uuid, mime_type, is_main, note, taken_at, createdAt, author]
       properties:
         id: { type: integer, description: "ID of the location_photo record" }
@@ -3752,7 +3764,7 @@ components:
         author: { $ref: "#/components/schemas/PhotoAuthor" }
     LocationPhoto:
       type: object
-      description: A photo belonging to a location, shared across all stations at that location.
+      description: A photo belonging to a location, shared across all stations at that location
       required: [id, attachment_uuid, mime_type, note, taken_at, createdAt, author]
       properties:
         id: { type: integer }
@@ -3911,7 +3923,7 @@ components:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithBand" } }
             sectors:
               type: array
-              description: Included only when the location endpoint is called with `?azimuths=true`.
+              description: Included only when the location endpoint is called with `?azimuths=true`
               items: { $ref: "#/components/schemas/StationSector" }
             operator:
               allOf:
@@ -3937,7 +3949,7 @@ components:
         location: { $ref: "#/components/schemas/LocationWithRegion" }
     StationRecord:
       type: object
-      description: Raw station database record as returned by update operations (no joined relations).
+      description: Raw station database record as returned by update operations (no joined relations)
       properties:
         id: { type: integer }
         station_id: { type: string }
@@ -3949,6 +3961,7 @@ components:
         createdAt: { type: string, format: date-time }
         is_confirmed: { type: boolean, nullable: true }
         status: { type: string, enum: [published, inactive, pending] }
+        statusChangedAt: { type: string, format: date-time, nullable: true }
     StationSector:
       type: object
       properties:
@@ -3972,6 +3985,8 @@ components:
         updatedAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
         is_confirmed: { type: boolean, nullable: true }
+        status: { type: string, enum: [published, inactive, pending] }
+        statusChangedAt: { type: string, format: date-time, nullable: true }
         operator: { $ref: "#/components/schemas/Operator" }
         location: { $ref: "#/components/schemas/Location" }
         extra_identificators:
@@ -3986,6 +4001,12 @@ components:
         operator_id: { type: integer, nullable: true }
         notes: { type: string, nullable: true }
         is_confirmed: { type: boolean, nullable: true }
+        status:
+          {
+            type: string,
+            enum: [published, inactive, pending],
+            description: "Station status. Only valid transitions are allowed: pending→published, pending→inactive, published→inactive.",
+          }
     StationCreate:
       type: object
       required: [cells]
@@ -4004,7 +4025,7 @@ components:
             cells: { type: array, items: { $ref: "#/components/schemas/CellWithBandAndDetails" } }
             sectors:
               type: array
-              description: Included on station detail responses.
+              description: Included on station detail responses
               items: { $ref: "#/components/schemas/StationSector" }
             location: { $ref: "#/components/schemas/LocationWithRegion" }
             operator:
@@ -4098,7 +4119,7 @@ components:
         type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     UmtsCellDetailsInsert:
-      description: UMTS cell details for create/update.
+      description: UMTS cell details for create/update
       type: object
       properties:
         lac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
@@ -4106,7 +4127,7 @@ components:
         rnc: { type: integer, minimum: 0, maximum: 65535 }
         cid: { type: integer, minimum: 0, maximum: 65535 }
     LteCellDetailsInsert:
-      description: LTE cell details for create/update.
+      description: LTE cell details for create/update
       type: object
       properties:
         tac: { type: integer, minimum: 0, maximum: 65535, nullable: true }
@@ -4116,7 +4137,7 @@ components:
         earfcn: { type: integer, minimum: 0, maximum: 262143, nullable: true }
         supports_iot: { type: boolean, nullable: true }
     NrCellDetailsInsert:
-      description: NR cell details for create/update.
+      description: NR cell details for create/update
       type: object
       properties:
         nrtac: { type: integer, minimum: 0, maximum: 16777215, nullable: true }
@@ -4127,7 +4148,7 @@ components:
         type: { type: string, enum: [nsa, sa], nullable: true }
         supports_nr_redcap: { type: boolean, nullable: true }
     CellDetailsInsert:
-      description: Cell RAT-specific payload for create/update.
+      description: Cell RAT-specific payload for create/update
       oneOf:
         - $ref: "#/components/schemas/GsmCellDetails"
         - $ref: "#/components/schemas/UmtsCellDetailsInsert"
@@ -4973,7 +4994,7 @@ components:
 
     UserListRecord:
       type: object
-      description: Raw database record for a user list as returned by create/update operations.
+      description: Raw database record for a user list as returned by create/update operations
       required: [id, uuid, name, is_public, created_by, stations, radiolines, createdAt, updatedAt]
       properties:
         id: { type: integer }

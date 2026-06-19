@@ -11,6 +11,17 @@
   "actions": {
     "newStation": "Utwórz nową stację"
   },
+  "status": {
+    "published": "Aktywna",
+    "pending": "W budowie",
+    "inactive": "Nieaktywna"
+  },
+  "statusTooltip": {
+    "published": "Stacja jest uruchomiona",
+    "pending": "Stacja jest w trakcie budowy lub w trakcie przygotowania do włączenia",
+    "inactive": "Stacja została wyłączona na czas nieokreślony lub zlikwidowana",
+    "changedAt": "Status zmieniony: {{date}}"
+  },
   "cells": {
     "cellsCount_one": "{{count, number}} komórka",
     "cellsCount_few": "{{count, number}} komórki",
@@ -46,6 +57,10 @@
   "inactiveBanner": {
     "title": "Stacja nieaktywna",
     "description": "Niewidoczna na mapie. Oczekuje na usunięcie z bazy danych"
+  },
+  "pendingBanner": {
+    "title": "Stacja oczekująca",
+    "description": "Widoczna publicznie bez komórek. Zmień status na opublikowany, aby edytować komórki"
   },
   "toast": {
     "locationSaved": "Lokalizacja została zapisana",

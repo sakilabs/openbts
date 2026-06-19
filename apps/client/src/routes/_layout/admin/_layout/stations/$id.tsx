@@ -31,7 +31,7 @@ import { fetchApiData, showApiError } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { isRecent } from "@/lib/dateUtils";
 import { shallowEqual } from "@/lib/shallowEqual";
-import { type Band, type Cell, type SectorDraft, type Station, type UkeStation } from "@/types/station";
+import { type Band, type Cell, type SectorDraft, type Station, type StationStatus, type UkeStation } from "@/types/station";
 
 function cellToLocal(cell: Cell): LocalCell {
   return {
@@ -158,6 +158,7 @@ function getInitialFormState(station: Station | undefined): {
   networksId: number | null;
   networksName: string;
   mnoName: string;
+  stationStatus: StationStatus;
 } {
   return {
     stationId: station?.station_id ?? "",
@@ -179,6 +180,7 @@ function getInitialFormState(station: Station | undefined): {
     networksId: station?.extra_identificators?.networks_id ?? null,
     networksName: station?.extra_identificators?.networks_name ?? "",
     mnoName: station?.extra_identificators?.mno_name ?? "",
+    stationStatus: station?.status ?? "pending",
   };
 }
 
@@ -197,7 +199,8 @@ type FormAction =
   | { type: "LOAD_STATION"; payload: Station }
   | { type: "SET_NETWORKS_ID"; payload: number | null }
   | { type: "SET_NETWORKS_NAME"; payload: string }
-  | { type: "SET_MNO_NAME"; payload: string };
+  | { type: "SET_MNO_NAME"; payload: string }
+  | { type: "SET_STATUS"; payload: StationStatus };
 
 function formReducer(state: ReturnType<typeof getInitialFormState>, action: FormAction): ReturnType<typeof getInitialFormState> {
   switch (action.type) {
@@ -231,6 +234,8 @@ function formReducer(state: ReturnType<typeof getInitialFormState>, action: Form
       return { ...state, networksName: action.payload };
     case "SET_MNO_NAME":
       return { ...state, mnoName: action.payload };
+    case "SET_STATUS":
+      return { ...state, stationStatus: action.payload };
     default:
       return state;
   }
@@ -262,6 +267,7 @@ function StationDetailForm({
     networksId,
     networksName,
     mnoName,
+    stationStatus,
   } = formState;
 
   const { data: settings } = useSettings();
@@ -269,6 +275,8 @@ function StationDetailForm({
   const { data: allBands = [] } = useQuery(bandsQueryOptions());
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user?.role === "admin";
+
+  const areCellActionsLocked = !isCreateMode && station?.status !== "published";
 
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
@@ -316,6 +324,7 @@ function StationDetailForm({
     createNewCell: createNewStationCell,
     onDelete: handleServerCellDelete,
     sortCellsByRat: false,
+    disabled: areCellActionsLocked,
   });
 
   const handleSectorsChange = useCallback(
@@ -464,6 +473,7 @@ function StationDetailForm({
         networksName: networksName || undefined,
         mnoName: mnoName || undefined,
         skipExtraIds: false,
+        stationStatus,
       },
       {
         onSuccess: async (result) => {
@@ -538,6 +548,7 @@ function StationDetailForm({
     if (networksId !== initial.networksId) return true;
     if (networksName !== initial.networksName) return true;
     if (mnoName !== initial.mnoName) return true;
+    if (stationStatus !== initial.stationStatus) return true;
     if (!sectorsMatchDrafts(sectors, station)) return true;
     for (const lc of localCells) {
       if (getLocalCellDiffStatus(lc, originalCells) !== "unchanged") return true;
@@ -558,6 +569,7 @@ function StationDetailForm({
     networksId,
     networksName,
     mnoName,
+    stationStatus,
     sectors,
   ]);
 
@@ -596,9 +608,11 @@ function StationDetailForm({
       return {
         leftBorderClass: getDiffBorderClass(diffStatus),
         rowClassName,
+        disabled: areCellActionsLocked,
+        showDelete: !areCellActionsLocked,
       };
     },
-    [originalCells],
+    [areCellActionsLocked, originalCells],
   );
 
   return (
@@ -614,14 +628,25 @@ function StationDetailForm({
         onRevert={handleRevert}
       />
 
-      {station?.status === "inactive" && (
-        <div className="shrink-0 flex items-center gap-2.5 border-b border-amber-500/25 bg-amber-500/8 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
+      {station?.status === "pending" && (
+        <div className="shrink-0 flex items-center gap-2.5 border-b border-yellow-600/30 bg-yellow-300/15 px-4 py-2 text-sm text-yellow-800 dark:border-yellow-400/30 dark:bg-yellow-400/12 dark:text-yellow-300">
           <HugeiconsIcon icon={Alert02Icon} className="size-4 shrink-0" />
-          <span className="font-medium">{t("inactiveBanner.title")}</span>
-          <span className="text-amber-700/50 dark:text-amber-400/50 select-none" aria-hidden>
+          <span className="font-medium">{t("pendingBanner.title")}</span>
+          <span className="text-yellow-800/55 dark:text-yellow-300/55 select-none" aria-hidden>
             ·
           </span>
-          <span className="text-amber-700/80 dark:text-amber-400/75">{t("inactiveBanner.description")}</span>
+          <span className="text-yellow-800/85 dark:text-yellow-300/80">{t("pendingBanner.description")}</span>
+        </div>
+      )}
+
+      {station?.status === "inactive" && (
+        <div className="shrink-0 flex items-center gap-2.5 border-b border-red-600/30 bg-red-500/10 px-4 py-2 text-sm text-red-700 dark:border-red-400/35 dark:bg-red-400/12 dark:text-red-300">
+          <HugeiconsIcon icon={Alert02Icon} className="size-4 shrink-0" />
+          <span className="font-medium">{t("inactiveBanner.title")}</span>
+          <span className="text-red-700/55 dark:text-red-300/55 select-none" aria-hidden>
+            ·
+          </span>
+          <span className="text-red-700/85 dark:text-red-300/80">{t("inactiveBanner.description")}</span>
         </div>
       )}
 
@@ -639,6 +664,8 @@ function StationDetailForm({
               {...(!isCreateMode && { extraAddress, onExtraAddressChange: (v: string) => dispatch({ type: "SET_EXTRA_ADDRESS", payload: v }) })}
               isConfirmed={isConfirmed}
               onIsConfirmedChange={(v) => dispatch({ type: "SET_CONFIRMED", payload: v })}
+              status={!isCreateMode ? stationStatus : undefined}
+              onStatusChange={!isCreateMode ? (v) => dispatch({ type: "SET_STATUS", payload: v }) : undefined}
               location={location}
               onLocationChange={handleLocationChange}
               onExistingLocationSelect={handleExistingLocationSelect}
@@ -691,6 +718,9 @@ function StationDetailForm({
               getDiffBadges={getStationDiffBadges}
               getCellProps={getStationCellProps}
               operatorMnc={selectedOperator?.mnc ?? null}
+              readOnly={areCellActionsLocked}
+              ratPillsDisabled={areCellActionsLocked}
+              showAddButton={!areCellActionsLocked}
             />
           </div>
         </div>

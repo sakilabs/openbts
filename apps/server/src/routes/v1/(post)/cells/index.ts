@@ -13,6 +13,7 @@ import { checkCellDuplicate, checkPciDuplicate, getOperatorIdForStation } from "
 import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidation.js";
 import { type RATInsertDetails, insertRATCellDetailsReturning, isNormalRat } from "../../../../utils/ratCellPersistence.js";
 import { normalRatInsertSchemaMap } from "../../../../utils/ratCellSchemas.js";
+import { assertCanMutateStationCells } from "../../../../utils/stationStatus.js";
 import { makeDetailsRatRefine } from "../../../../utils/submission.helpers.js";
 
 const cellsSelectSchema = createSelectSchema(cells);
@@ -44,6 +45,10 @@ const schemaRoute = {
 };
 
 async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JSONBody<ResponseData>>) {
+  const station = await db.query.stations.findFirst({ where: { id: req.body.station_id } });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
+  assertCanMutateStationCells(station);
+
   try {
     if (req.body.details && req.body.station_id) {
       const operatorId = await getOperatorIdForStation(req.body.station_id);

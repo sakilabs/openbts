@@ -77,6 +77,7 @@
     "searchRadiolineOperators": "Szukaj operatorów radiolinii...",
     "toggleHint": "<kbd>F</kbd> panel · <kbd>Shift</kbd>+<kbd>F</kbd> wyczyść filtry",
     "ratKeybindHint": "+litera",
+    "stationStatus": "Status stacji",
     "date": {
       "createdAt": "Utworzone",
       "updatedAt": "Zaktualizowane"

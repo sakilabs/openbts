@@ -1,5 +1,5 @@
-import { AirportTowerIcon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { AirportTowerIcon, Cancel01Icon, CheckmarkCircle02Icon, Clock01Icon, Globe02Icon, MapsLocation01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { fetchSiblingExtraIds, fetchSiblingSectors } from "@/features/admin/stations/api";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
 import { deriveSectorPanelState } from "@/features/shared/sectorPanelState";
@@ -18,10 +19,17 @@ import TMobileIcon from "@/features/station-details/components/logos/t-mobile.sv
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
-import { type Location, type LocationWithStations, type Operator, type SectorDraft, type UkeStation } from "@/types/station";
+import { type Location, type LocationWithStations, type Operator, type SectorDraft, type StationStatus, type UkeStation } from "@/types/station";
 
 import type { CellDraftBase } from "../../cells/cellEditRow";
 import { SectorsPanel, ukePermitsToAzimuthSectors } from "./sectorsEditor";
+type StationStatusOption = { status: StationStatus; icon: IconSvgElement };
+
+const STATION_STATUS_OPTIONS: StationStatusOption[] = [
+  { status: "published", icon: CheckmarkCircle02Icon },
+  { status: "pending", icon: Clock01Icon },
+  { status: "inactive", icon: Cancel01Icon },
+];
 
 type StationInfoFormProps = {
   stationDbId?: number;
@@ -35,6 +43,8 @@ type StationInfoFormProps = {
   onExtraAddressChange?: (value: string) => void;
   isConfirmed: boolean;
   onIsConfirmedChange: (checked: boolean) => void;
+  status?: StationStatus;
+  onStatusChange?: (status: StationStatus) => void;
   location: ProposedLocationForm;
   onLocationChange: (patch: Partial<ProposedLocationForm>) => void;
   onExistingLocationSelect?: (location: LocationWithStations) => void;
@@ -66,6 +76,8 @@ export function StationInfoForm({
   onExtraAddressChange,
   isConfirmed,
   onIsConfirmedChange,
+  status,
+  onStatusChange,
   location,
   onLocationChange,
   onExistingLocationSelect,
@@ -84,7 +96,7 @@ export function StationInfoForm({
   onSectorsChange,
   cells,
 }: StationInfoFormProps) {
-  const { t } = useTranslation(["submissions", "common", "stationDetails"]);
+  const { t } = useTranslation(["submissions", "common", "stationDetails", "stations"]);
   const [isFetchingSibling, setIsFetchingSibling] = useState(false);
 
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!networksId;
@@ -95,6 +107,7 @@ export function StationInfoForm({
   const SiblingLogo = selectedOperator?.mnc === 26002 ? OrangeIcon : TMobileIcon;
 
   const { derivedSectorCount, assignedSectorLocalIds } = useMemo(() => deriveSectorPanelState(cells), [cells]);
+  const selectedStatusOption = status ? STATION_STATUS_OPTIONS.find((option) => option.status === status) : undefined;
 
   const siblingSectorsIcon = useMemo(() => <SiblingLogo className="h-3.5 w-auto shrink-0" />, [SiblingLogo]);
 
@@ -185,6 +198,31 @@ export function StationInfoForm({
             onStationIdChange={onStationIdChange}
             onOperatorIdChange={onOperatorIdChange}
             onNotesChange={onNotesChange}
+            operatorAccessory={
+              status && onStatusChange ? (
+                <div className="space-y-2">
+                  <Label>{t("common:labels.status")}</Label>
+                  <Select value={status} onValueChange={(value) => onStatusChange(value as StationStatus)}>
+                    <SelectTrigger className="h-9">
+                      <span className="flex min-w-0 items-center gap-2">
+                        {selectedStatusOption ? <HugeiconsIcon icon={selectedStatusOption.icon} className="size-3.5 shrink-0" /> : null}
+                        <span className="truncate">{t(`stations:status.${status}`)}</span>
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATION_STATUS_OPTIONS.map((option) => (
+                        <SelectItem key={option.status} value={option.status}>
+                          <span className="flex items-center gap-2">
+                            <HugeiconsIcon icon={option.icon} className="size-3.5 shrink-0" />
+                            <span>{t(`stations:status.${option.status}`)}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : undefined
+            }
             extraFields={
               extraAddress ? (
                 <div className="space-y-2">

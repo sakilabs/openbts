@@ -21,6 +21,7 @@ message LocationStation {
   repeated openbts.stations.CellWithoutDetails cells = 10;
   openbts.stations.ExtraIdentificators extra_identificators = 11;
   repeated Sector sectors = 12;
+  string statusChangedAt = 13;
 }
 
 message Location {

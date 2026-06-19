@@ -9,10 +9,11 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { buildStatusCondition, parseStationStatusParam } from "../../../../utils/stationStatus.js";
 
 const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
-const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ operator_id: true, location_id: true });
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true, station_id: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorSchema = createSelectSchema(operators);
@@ -34,6 +35,11 @@ const schemaRoute = {
       .regex(/^(?:cdma|umts|gsm|lte|nr|iot)(?:,(?:cdma|umts|gsm|lte|nr|iot))*$/i)
       .optional()
       .transform((val): string[] | undefined => (val ? val.toLowerCase().split(",").filter(Boolean) : undefined)),
+    status: z
+      .string()
+      .regex(/^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$/)
+      .optional()
+      .transform(parseStationStatusParam),
     operators: z
       .string()
       .regex(/^\d+(,\d+)*$/)
@@ -87,7 +93,7 @@ type ResponseData = z.infer<typeof locationsSchema> & { region: z.infer<typeof r
 
 async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const { id } = req.params;
-  const { rat, operators: operatorMncs, bands: bandValues, since } = req.query;
+  const { rat, status: selectedStatuses, operators: operatorMncs, bands: bandValues, since } = req.query;
 
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
@@ -120,7 +126,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const iotRequested = requestedRats.includes("iot");
 
   const buildStationFilter = (stationFields: typeof stations) => {
-    const conditions: ReturnType<typeof sql>[] = [sql`${stationFields.status} = 'published'`];
+    const conditions: ReturnType<typeof sql>[] = [buildStatusCondition(stationFields, selectedStatuses)];
     if (operatorIds.length) {
       conditions.push(
         sql`${stationFields.operator_id} = ANY(ARRAY[${sql.join(
@@ -191,7 +197,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
     with: {
       region: true,
       stations: {
-        columns: { status: false, location_id: false, operator_id: false },
+        columns: { location_id: false, operator_id: false },
         where: { RAW: (fields) => buildStationFilter(fields) ?? sql`true` },
         with: {
           cells: {

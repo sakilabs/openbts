@@ -29,6 +29,7 @@ import {
   isNormalRat,
   updateRATCellDetailsReturning,
 } from "../ratCellPersistence.ts";
+import { stationStatusForCellCount, stationStatusUpdate } from "../stationStatus.ts";
 
 async function upsertLocation(
   tx: DbTx,
@@ -286,6 +287,7 @@ async function createStationFromProposal(
   locationId: number | null,
   submissionId: string,
   req: FastifyRequest,
+  proposedCellCount: number,
 ): Promise<number> {
   const [newStation] = await tx
     .insert(stations)
@@ -295,7 +297,8 @@ async function createStationFromProposal(
       operator_id: proposedStation.operator_id,
       notes: typeof proposedStation.notes === "string" && proposedStation.notes.trim() !== "" ? proposedStation.notes : null,
       is_confirmed: true,
-      status: "published",
+      status: stationStatusForCellCount(proposedCellCount),
+      statusChangedAt: new Date(),
     })
     .returning();
   if (!newStation) throw new ErrorResponse("FAILED_TO_CREATE", { message: "Failed to create station" });
@@ -327,7 +330,8 @@ async function applyNewSubmission(
   if (draft.proposedLocation) locationId = await upsertLocation(tx, draft.proposedLocation, req, submissionId);
 
   let stationId: number | null = null;
-  if (draft.proposedStation) stationId = await createStationFromProposal(tx, draft.proposedStation, locationId, submissionId, req);
+  if (draft.proposedStation)
+    stationId = await createStationFromProposal(tx, draft.proposedStation, locationId, submissionId, req, draft.proposedCellRows.length);
 
   return { stationId, resolvedLocationId: locationId };
 }
@@ -537,7 +541,7 @@ async function applyExtraIdentifierUpdate(
 async function applyDeletedSubmission(tx: DbTx, stationId: number | null, submissionId: string, req: FastifyRequest): Promise<void> {
   if (!stationId) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot delete without a station" });
 
-  await tx.update(stations).set({ status: "inactive", updatedAt: new Date() }).where(eq(stations.id, stationId));
+  await tx.update(stations).set(stationStatusUpdate("inactive")).where(eq(stations.id, stationId));
   await createAuditLog(
     {
       action: "stations.update",

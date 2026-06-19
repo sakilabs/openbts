@@ -7,7 +7,7 @@ import { useTheme } from "@/components/theme-provider";
 import { Spinner } from "./spinner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const { theme } = useTheme();
 
   return (
     <Sonner

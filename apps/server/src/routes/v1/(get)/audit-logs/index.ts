@@ -53,7 +53,17 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const buildConditions = (fields: typeof auditLogs) => {
     const conditions = [];
     if (table_name) conditions.push(eq(fields.table_name, table_name));
-    if (record_id) conditions.push(ilike(sql`${fields.record_id}::text`, `%${record_id}%`));
+    if (record_id) {
+      const term = `%${record_id}%`;
+      conditions.push(
+        or(
+          ilike(sql`${fields.record_id}::text`, term),
+          ilike(sql`${fields.old_values}::text`, term),
+          ilike(sql`${fields.new_values}::text`, term),
+          ilike(sql`${fields.metadata}::text`, term),
+        )!,
+      );
+    }
     if (actionList.length === 1) conditions.push(eq(fields.action, actionList[0]!));
     else if (actionList.length > 1) conditions.push(inArray(fields.action, actionList));
     if (invoked_by) conditions.push(eq(fields.invoked_by, invoked_by));

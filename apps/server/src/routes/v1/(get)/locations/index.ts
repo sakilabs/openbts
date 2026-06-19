@@ -9,10 +9,11 @@ import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { buildStatusCondition, parseStationStatusParam } from "../../../../utils/stationStatus.js";
 
 const locationsSchema = createSelectSchema(locations).omit({ point: true, region_id: true });
 const regionsSchema = createSelectSchema(regions);
-const stationsSchema = createSelectSchema(stations).omit({ status: true, operator_id: true, location_id: true });
+const stationsSchema = createSelectSchema(stations).omit({ operator_id: true, location_id: true });
 const operatorSchema = createSelectSchema(operators);
 const sectorSchema = createSelectSchema(stationSectors).omit({ station_id: true });
 const stationResponseSchema = stationsSchema.extend({
@@ -58,6 +59,11 @@ const schemaRoute = {
               .filter((n) => !Number.isNaN(n))
           : undefined,
       ),
+    status: z
+      .string()
+      .regex(/^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$/)
+      .optional()
+      .transform(parseStationStatusParam),
     regions: z
       .string()
       .regex(/^[A-Z]{3}(,[A-Z]{3})*$/)
@@ -112,6 +118,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     operators: operatorMncs,
     bands: bandValues,
     regions: regionNames,
+    status: selectedStatuses,
     since,
     search,
     orphaned,
@@ -182,7 +189,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
 
   const buildStationFilter = (stationFields: typeof stations) => {
-    const conditions: ReturnType<typeof sql>[] = [sql`${stationFields.status} = 'published'`];
+    const conditions: ReturnType<typeof sql>[] = [buildStatusCondition(stationFields, selectedStatuses)];
 
     if (operatorIds.length) {
       conditions.push(
@@ -264,7 +271,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         OR EXISTS (
           SELECT 1 FROM ${stations}
           WHERE ${stations.location_id} = ${locFields.id}
-          AND ${stations.status} = 'published'
+          AND ${buildStatusCondition(stations, selectedStatuses)}
           AND ${stations.station_id} LIKE ${like}
         )
       )`);
@@ -284,7 +291,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sql`EXISTS (
         SELECT 1 FROM ${stations}
         WHERE ${stations.location_id} = ${locFields.id}
-        AND ${stations.status} = 'published'
+        AND ${buildStatusCondition(stations, selectedStatuses)}
         AND (${sinceConditions})
       )`);
     }
@@ -322,7 +329,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
-						AND ${stations.status} = 'published'
+						AND ${buildStatusCondition(stations, selectedStatuses)}
 						${operatorCond}
 						AND ${sql.join(cellAndConditions, sql` AND `)}
 					)`);
@@ -340,7 +347,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						FROM ${stations}
 						JOIN ${cells} ON ${cells.station_id} = ${stations.id}
 						WHERE ${stations.location_id} = ${locFields.id}
-						AND ${stations.status} = 'published'
+						AND ${buildStatusCondition(stations, selectedStatuses)}
 						${operatorCond}
 						${iotBandCond}
 						AND (
@@ -357,7 +364,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 						SELECT 1
 						FROM ${stations}
 						WHERE ${stations.location_id} = ${locFields.id}
-						AND ${stations.status} = 'published'
+						AND ${buildStatusCondition(stations, selectedStatuses)}
 						${operatorCond}
 					)
 				`);
@@ -368,7 +375,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					SELECT 1
 					FROM ${stations}
 					WHERE ${stations.location_id} = ${locFields.id}
-					AND ${stations.status} = 'published'
+					AND ${buildStatusCondition(stations, selectedStatuses)}
 				)
 			`);
     }
@@ -386,7 +393,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         with: {
           region: true,
           stations: {
-            columns: { status: false, location_id: false },
+            columns: { location_id: false },
             where: { RAW: (fields) => buildStationFilter(fields) ?? sql`true` },
             with: {
               operator: true,

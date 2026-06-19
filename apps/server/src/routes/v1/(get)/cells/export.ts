@@ -113,7 +113,7 @@ async function getLastModified({
     resolvedOperatorIds = matched.map((o) => o.id);
   }
 
-  const conditions = [];
+  const conditions = [eq(stations.status, "published")];
   if (resolvedOperatorIds && resolvedOperatorIds.length > 0) conditions.push(inArray(stations.operator_id, resolvedOperatorIds));
   if (regionCodes && regionCodes.length > 0) conditions.push(inArray(regions.code, regionCodes));
   if (bandIds && bandIds.length > 0) conditions.push(inArray(bands.value, bandIds));

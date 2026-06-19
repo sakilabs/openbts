@@ -8,6 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, IdParams, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { assertCanDeleteCells } from "../../../../utils/stationStatus.js";
 
 const schemaRoute = {
   params: z.object({
@@ -24,6 +25,11 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
     },
   });
   if (!cell) throw new ErrorResponse("NOT_FOUND");
+
+  const station = await db.query.stations.findFirst({ where: { id: cell.station_id } });
+  if (!station) throw new ErrorResponse("NOT_FOUND");
+  const currentCellCount = await db.$count(cells, eq(cells.station_id, cell.station_id));
+  assertCanDeleteCells(station, currentCellCount - 1);
 
   try {
     await db.transaction(async (tx) => {

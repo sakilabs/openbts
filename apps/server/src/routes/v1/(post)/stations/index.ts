@@ -14,10 +14,11 @@ import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidatio
 import { logger } from "../../../../utils/logger.js";
 import { type RATInsertDetails, insertRATCellDetails, isNormalRat } from "../../../../utils/ratCellPersistence.js";
 import { INSERT_OMIT, lteNullableFields, nrExtendFields, umtsNullableFields } from "../../../../utils/ratCellSchemas.js";
+import { stationStatusForCellCount } from "../../../../utils/stationStatus.js";
 import { makeDetailsRatRefine, validateCellDuplicates } from "../../../../utils/submission.helpers.js";
 
-const stationsInsertSchema = createInsertSchema(stations).omit({ extra_address: true });
-const stationSchema = createSelectSchema(stations).omit({ status: true });
+const stationsInsertSchema = createInsertSchema(stations).omit({ extra_address: true, status: true, statusChangedAt: true });
+const stationSchema = createSelectSchema(stations);
 const cellsSchema = createSelectSchema(cells).omit({ band_id: true });
 const bandsSchema = createSelectSchema(bands);
 const gsmCellsSchema = createSelectSchema(gsmCells).omit({ cell_id: true });
@@ -100,13 +101,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   try {
     const station = await db.transaction(async (tx) => {
+      const now = new Date();
       const [newStation] = await tx
         .insert(stations)
         .values({
           ...stationData,
-          status: "published",
-          updatedAt: new Date(),
-          createdAt: new Date(),
+          status: stationStatusForCellCount(cellsData.length),
+          statusChangedAt: now,
+          updatedAt: now,
+          createdAt: now,
         })
         .returning();
 
@@ -115,15 +118,15 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
         throw new ErrorResponse("FAILED_TO_CREATE");
       }
 
-      if (cellsData && cellsData?.length > 0) {
+      if (cellsData.length > 0) {
         const createdCells = await tx
           .insert(cells)
           .values(
             cellsData.map((cell) => ({
               ...cell,
               station_id: newStation.id,
-              updatedAt: new Date(),
-              createdAt: new Date(),
+              updatedAt: now,
+              createdAt: now,
             })),
           )
           .returning();

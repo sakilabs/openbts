@@ -73,9 +73,6 @@ const schemaRoute = {
 async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody<StationResponse>>) {
   const { id } = req.params;
 
-  const role = req.userSession?.user?.role as string | undefined;
-  const isStaff = ["admin", "editor"].includes(role ?? "");
-
   const station = await db.query.stations.findFirst({
     where: { id },
     with: {
@@ -88,7 +85,7 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<JSONBody
         orderBy: { id: "asc" },
       },
     },
-    columns: { operator_id: false, location_id: false, ...(!isStaff && { status: false }) },
+    columns: { operator_id: false, location_id: false },
   });
 
   if (!station) throw new ErrorResponse("NOT_FOUND");

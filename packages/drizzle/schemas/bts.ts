@@ -142,6 +142,7 @@ export const stations = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     is_confirmed: boolean("is_confirmed").default(false),
     status: StationStatus("status").notNull().default("pending"),
+    statusChangedAt: timestamp("status_changed_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("station_location_id_idx").on(t.location_id),
@@ -157,6 +158,9 @@ export const stations = pgTable(
     index("stations_station_id_idx").on(t.station_id),
     index("stations_updated_at_idx").on(t.updatedAt),
     index("stations_created_at_idx").on(t.createdAt),
+    index("stations_inactive_status_changed_at_idx")
+      .on(t.statusChangedAt)
+      .where(sql`${t.status} = 'inactive'`),
     unique("stations_station_id_operator_unique").on(t.station_id, t.operator_id),
     check("stations_station_id_16_length", sql`${t.station_id} ~ '(^.{1,16}$)'`),
   ],

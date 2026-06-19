@@ -9,7 +9,7 @@ const LIMIT = 20;
 export function useMySubmissions(userId?: string): UseInfiniteQueryResult<InfiniteData<MySubmissionsResponse>> {
   return useInfiniteQuery({
     queryKey: ["my-submissions", userId],
-    queryFn: ({ pageParam = 0 }) => fetchMySubmissions(LIMIT, pageParam as number),
+    queryFn: ({ pageParam }) => fetchMySubmissions(LIMIT, pageParam as number),
     initialPageParam: 0,
     enabled: !!userId,
     getNextPageParam: (lastPage, allPages) => {

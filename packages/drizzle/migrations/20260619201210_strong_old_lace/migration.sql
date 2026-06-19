@@ -1,0 +1,2 @@
+ALTER TABLE "stations" ADD COLUMN "status_changed_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+CREATE INDEX "stations_inactive_status_changed_at_idx" ON "stations" ("status_changed_at") WHERE "status" = 'inactive';

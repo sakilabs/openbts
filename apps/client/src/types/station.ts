@@ -92,6 +92,7 @@ export type Station = {
   createdAt: string;
   is_confirmed: boolean;
   status?: StationStatus;
+  statusChangedAt?: string;
   cells: Cell[];
   location: Location;
   operator: Operator;
@@ -157,6 +158,7 @@ export type StationFilters = {
   operators: number[];
   bands: number[];
   rat: string[];
+  status: StationStatus[];
   source: StationSource;
   recentDays: number | null;
   recentDateFields: ("createdAt" | "updatedAt")[];

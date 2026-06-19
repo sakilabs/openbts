@@ -1,5 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { getRatDetailFields, type RatDetailField } from "@/features/shared/ratCellFields";
+import { type RatDetailField, getRatDetailFields } from "@/features/shared/ratCellFields";
 import { calculateComputedValues } from "@/features/shared/ratComputedValues";
 import { cn } from "@/lib/utils";
 

@@ -5,6 +5,7 @@ import { availableParallelism } from "node:os";
 import App from "./app.js";
 import { port } from "./config.js";
 import redis from "./database/redis.js";
+import { cleanupExpiredInactiveStations } from "./services/inactiveStationCleanup.service.js";
 import { cleanupOrphanedSubmissions } from "./services/submissionCleanup.service.js";
 import { startImportJob } from "./services/ukeImportJob.service.js";
 import { installProcessErrorHandlers, logger } from "./utils/logger.js";
@@ -52,6 +53,7 @@ async function runAsScheduler() {
 
   scheduleUkeImport();
   scheduleSubmissionCleanup();
+  scheduleInactiveStationCleanup();
 }
 
 async function tryBecomeScheduler() {
@@ -129,6 +131,12 @@ function scheduleSubmissionCleanup() {
   );
 }
 
+function scheduleInactiveStationCleanup() {
+  setTimeout(async function run() {
+    await cleanupExpiredInactiveStations().catch((e) => logger.error("Failed to cleanup inactive stations", { error: e }));
+    setTimeout(run, 24 * 60 * 60 * 1000);
+  }, 60 * 1000);
+}
 if (cluster.isPrimary) {
   console.log(await figlet("sora"));
   installProcessErrorHandlers();

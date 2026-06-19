@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 
 import { toggleValue } from "@/lib/utils.js";
-import type { StationFilters } from "@/types/station.js";
+import type { StationFilters, StationStatus } from "@/types/station.js";
 
 import { RAT_OPTIONS, UKE_RAT_OPTIONS } from "../constants.js";
 
@@ -29,6 +29,15 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
   const handleToggleRat = useCallback(
     (rat: string) => {
       onFiltersChange({ ...filters, rat: toggleValue(filters.rat, rat) });
+    },
+    [filters, onFiltersChange],
+  );
+
+  const handleToggleStatus = useCallback(
+    (status: StationStatus) => {
+      const nextStatus = toggleValue(filters.status, status);
+      if (nextStatus.length === 0) return;
+      onFiltersChange({ ...filters, status: nextStatus });
     },
     [filters, onFiltersChange],
   );
@@ -70,6 +79,7 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
       operators: [],
       bands: [],
       rat: [],
+      status: ["published"],
       source: filters.source,
       recentDays: null,
       recentDateFields: ["createdAt"],
@@ -86,6 +96,7 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
       filters.operators.length +
       filters.bands.length +
       filters.rat.length +
+      (filters.status.length === 1 && filters.status.includes("published") ? 0 : filters.status.length) +
       (filters.recentDays !== null ? 1 : 0) +
       (filters.showRadiolines ? (filters.radiolineOperators?.length ?? 0) : 0)
     );
@@ -95,6 +106,7 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
     handleToggleOperator,
     handleToggleBand,
     handleToggleRat,
+    handleToggleStatus,
     handleSelectAllRats,
     handleClearAllRats,
     handleSelectAllBands,
