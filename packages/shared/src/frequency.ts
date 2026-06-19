@@ -6,7 +6,7 @@ const UMTS_BAND_DEFS: UMTSBandDef[] = [
   { name: "Band IV", range: [4357, 4458], offset: 1805 },
   { name: "Band V", range: [4132, 4233], offset: 0 },
   { name: "Band VI", range: [4387, 4413], offset: 0 },
-  { name: "Band VIII", range: [2937, 3088], offset: 0 },
+  { name: "Band VIII", range: [2937, 3088], offset: 340 },
 ];
 
 function calcUmtsFrequency(uarfcn: number): { freq: number; bandName: string } | null {
