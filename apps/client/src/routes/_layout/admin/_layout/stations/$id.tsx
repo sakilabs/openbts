@@ -719,6 +719,7 @@ function StationDetailForm({
               getCellProps={getStationCellProps}
               operatorMnc={selectedOperator?.mnc ?? null}
               readOnly={areCellActionsLocked}
+              readOnlyPlaceholder={t("cells.pendingReadOnly")}
               ratPillsDisabled={areCellActionsLocked}
               showAddButton={!areCellActionsLocked}
             />

@@ -87,9 +87,9 @@ export function useFilterHandlers({ filters, uniqueBandValues, onFiltersChange }
       showRadiolines: filters.showRadiolines,
       radiolineOperators: [],
       showHeatmap: filters.showHeatmap,
-      showPlannedMeasurements: false,
+      showPlannedMeasurements: filters.showPlannedMeasurements,
     });
-  }, [filters.source, filters.showStations, filters.showRadiolines, filters.showHeatmap, onFiltersChange]);
+  }, [filters.source, filters.showStations, filters.showRadiolines, filters.showHeatmap, filters.showPlannedMeasurements, onFiltersChange]);
 
   const activeFilterCount = useMemo(() => {
     return (

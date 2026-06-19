@@ -9,6 +9,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Map filters can now include station status, with published stations kept as the default view
 - Station detail and admin station headers now show clearer status badges, status timestamps and related metadata
 - Admin submissions now show station and operator identity more clearly
+- Pending stations now show a clearer read-only cell message explaining that cells can be edited after publishing
 
 ### 🩹 Fixes
 
@@ -17,6 +18,10 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 - Cell edits and deletions now respect station status rules so pending or inactive stations cannot be mutated like published stations
 - Public exports now ignore non-published stations
 - Audit-log searches now match record IDs, old values, new values and metadata
+- Pending station popups on the map no longer show cell technology loading placeholders
+- Clearing map technology filters now preserves the planned-measurements overlay setting
+- Station status tooltips now have improved timestamp contrast
+- Station create API responses and OpenAPI docs now include the station status field consistently
 
 # 2026-06-17
 

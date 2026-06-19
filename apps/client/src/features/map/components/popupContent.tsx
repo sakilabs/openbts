@@ -93,6 +93,7 @@ function PopupStationList({
       const stationId = station.station_id;
       const color = mnc ? getOperatorColor(mnc) : "#3b82f6";
       const hasCells = station.cells !== undefined;
+      const showTechBadges = station.status !== "pending";
       const bands = hasCells && station.cells?.length ? getStationBands(station.cells) : [];
 
       return (
@@ -110,22 +111,24 @@ function PopupStationList({
                 <span className="text-[10px] text-foreground/70 font-mono">N!{station.extra_identificators.networks_id}</span>
               )}
             </div>
-            {hasCells ? (
-              bands.length > 0 ? (
-                <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
-                  {bands.map((band) => (
-                    <span
-                      key={band}
-                      className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
-                    >
-                      {band}
-                    </span>
-                  ))}
-                </div>
-              ) : null
-            ) : (
-              <TechBadgesSkeleton />
-            )}
+            {showTechBadges ? (
+              hasCells ? (
+                bands.length > 0 ? (
+                  <div className="flex flex-wrap gap-1 mt-1 pl-3.5">
+                    {bands.map((band) => (
+                      <span
+                        key={band}
+                        className="px-1 py-px rounded-md bg-muted text-[8px] font-semibold uppercase tracking-wider text-muted-foreground border border-border/50"
+                      >
+                        {band}
+                      </span>
+                    ))}
+                  </div>
+                ) : null
+              ) : (
+                <TechBadgesSkeleton />
+              )
+            ) : null}
           </button>
           {showAddToList && (
             <div className="absolute top-2 right-2">

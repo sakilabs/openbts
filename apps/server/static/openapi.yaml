@@ -3977,6 +3977,7 @@ components:
         azimuth: { type: integer, minimum: 0, maximum: 359 }
     Station:
       type: object
+      required: [status]
       properties:
         id: { type: integer }
         station_id: { type: string }
@@ -4005,7 +4006,7 @@ components:
           {
             type: string,
             enum: [published, inactive, pending],
-            description: "Station status. Only valid transitions are allowed: pending→published, pending→inactive, published→inactive.",
+            description: "Station status. Only valid transitions are allowed: pending→published, pending→inactive, published→inactive",
           }
     StationCreate:
       type: object

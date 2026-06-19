@@ -69,6 +69,7 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   sectionClassName?: string;
 
   readOnly?: boolean;
+  readOnlyPlaceholder?: ReactNode;
 };
 
 const TAC_LAC_FIELD: Partial<Record<string, string>> = {
@@ -186,6 +187,7 @@ export function CellsEditor<T extends CellDraftBase>({
   renderAfterRow,
   sectionClassName,
   readOnly,
+  readOnlyPlaceholder,
   operatorMnc,
 }: CellsEditorProps<T>) {
   const { t } = useTranslation(["stations"]);
@@ -217,7 +219,7 @@ export function CellsEditor<T extends CellDraftBase>({
       </div>
 
       {visibleRats.length === 0 ? (
-        <EmptyPanel>{readOnly ? t("submissions:detail.readOnly") : t("stations:cells.noRats")}</EmptyPanel>
+        <EmptyPanel>{readOnly ? (readOnlyPlaceholder ?? t("submissions:detail.readOnly")) : t("stations:cells.noRats")}</EmptyPanel>
       ) : (
         visibleRats.map((rat) => {
           const cellsForRat = cellsByRat[rat] ?? [];

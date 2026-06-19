@@ -149,7 +149,6 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
           location: { columns: { point: false } },
           operator: true,
         },
-        columns: { status: false },
       });
       if (!full) {
         tx.rollback();

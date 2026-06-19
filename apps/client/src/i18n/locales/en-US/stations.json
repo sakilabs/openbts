@@ -34,6 +34,7 @@
     "confirmCells": "Confirm cells",
     "syncSectorsByPci": "Sync sectors by PCI",
     "noRats": "No cells yet. Select a radio technology above to add cells.",
+    "pendingReadOnly": "Cells cannot be modified while this station has pending status. Change the status to published to edit cells.",
     "noStationCells": "No cells found for this station",
     "noCells": "No cells yet. Click \"Add Cell\" to add one.",
     "diffAdded": "new",

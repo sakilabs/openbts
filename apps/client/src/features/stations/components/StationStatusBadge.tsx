@@ -32,7 +32,7 @@ export function StationStatusBadge({ status, className, statusChangedAt }: Stati
         <div className="space-y-1">
           <p>{t(`statusTooltip.${status}`)}</p>
           {showStatusChangedAt ? (
-            <p className="text-foreground/70">{t("statusTooltip.changedAt", { date: formatFullDate(statusChangedAt, i18n.language) })}</p>
+            <p className="text-background/85">{t("statusTooltip.changedAt", { date: formatFullDate(statusChangedAt, i18n.language) })}</p>
           ) : null}
         </div>
       </TooltipContent>
