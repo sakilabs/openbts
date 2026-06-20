@@ -2804,7 +2804,8 @@ paths:
           schema: { type: string }
         - name: record_id
           in: query
-          schema: { type: integer }
+          description: Search record ID, IP address, old/new values, and metadata
+          schema: { type: string }
         - name: actions
           in: query
           description: Comma-separated list of audit actions to filter by (e.g. `stations.create,stations.delete`)
@@ -2815,10 +2816,6 @@ paths:
         - name: user_ids
           in: query
           description: Comma-separated list of user IDs to filter by actor
-          schema: { type: string }
-        - name: search
-          in: query
-          description: Search across user name, username, and email
           schema: { type: string }
         - name: from
           in: query

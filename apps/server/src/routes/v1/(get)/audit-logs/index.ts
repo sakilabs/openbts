@@ -20,7 +20,6 @@ const schemaRoute = {
     actions: z.string().optional(),
     invoked_by: z.string().optional(),
     user_ids: z.string().optional(),
-    search: z.string().optional(),
     from: z.string().optional(),
     to: z.string().optional(),
     sort: z.enum(["asc", "desc"]).optional().default("desc"),
@@ -44,7 +43,7 @@ type AuditLogWithUser = z.infer<typeof auditLogSchema> & {
 type ResponseBody = { data: AuditLogWithUser[]; totalCount: number };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit, offset, table_name, record_id, actions, invoked_by, user_ids, search, from, to, sort } = req.query;
+  const { limit, offset, table_name, record_id, actions, invoked_by, user_ids, from, to, sort } = req.query;
 
   const actionList = actions
     ? actions.split(",").filter((a): a is (typeof AuditAction.enumValues)[number] => AuditAction.enumValues.includes(a as never))
@@ -57,11 +56,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       const term = `%${record_id}%`;
       conditions.push(
         or(
+          ilike(fields.ip_address, term),
           ilike(sql`${fields.record_id}::text`, term),
           ilike(sql`${fields.old_values}::text`, term),
           ilike(sql`${fields.new_values}::text`, term),
           ilike(sql`${fields.metadata}::text`, term),
-        )!,
+        ),
       );
     }
     if (actionList.length === 1) conditions.push(eq(fields.action, actionList[0]!));
@@ -71,24 +71,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       const ids = user_ids.split(",").filter(Boolean);
       if (ids.length === 1) conditions.push(eq(fields.invoked_by, ids[0]!));
       else if (ids.length > 1) conditions.push(inArray(fields.invoked_by, ids));
-    }
-    if (search) {
-      const term = `%${search}%`;
-      const userSubquery = db
-        .select({ id: users.id })
-        .from(users)
-        .where(or(ilike(users.name, term), ilike(users.username, term), ilike(users.email, term)));
-      conditions.push(
-        or(
-          ilike(fields.ip_address, term),
-          ilike(sql`${fields.record_id}::text`, term),
-          ilike(sql`${fields.action}::text`, term),
-          ilike(sql`${fields.old_values}::text`, term),
-          ilike(sql`${fields.new_values}::text`, term),
-          ilike(sql`${fields.metadata}::text`, term),
-          inArray(fields.invoked_by, userSubquery),
-        ),
-      );
     }
     if (from) conditions.push(gte(fields.createdAt, new Date(from)));
     if (to) conditions.push(lte(fields.createdAt, new Date(to)));

@@ -35,6 +35,7 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
   const { data: settings } = useSettings();
   const { data: session } = authClient.useSession();
   const userRole = session?.user?.role as string | undefined;
+  const isAuditLogUser = userRole === "admin";
   const isAdmin = userRole === "admin" || userRole === "editor";
   const { preferences } = usePreferences();
 
@@ -120,9 +121,24 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
                           </Tooltip>
                           <span className="hidden sm:inline text-xs text-muted-foreground/40">·</span>
                           <Tooltip>
-                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
-                              {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
-                            </TooltipTrigger>
+                            {isAdmin ? (
+                              <TooltipTrigger
+                                render={
+                                  <Link
+                                    to={isAuditLogUser ? "/admin/audit-logs" : "/admin/submissions"}
+                                    search={isAuditLogUser ? { q: String(station.id) } : { q: station.station_id, page: 0 }}
+                                    className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 transition-colors whitespace-nowrap"
+                                    onClick={onClose}
+                                  />
+                                }
+                              >
+                                {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
+                              </TooltipTrigger>
+                            ) : (
+                              <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
+                                {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
+                              </TooltipTrigger>
+                            )}
                             <TooltipContent>{formatFullDate(station.updatedAt, i18n.language)}</TooltipContent>
                           </Tooltip>
                         </div>

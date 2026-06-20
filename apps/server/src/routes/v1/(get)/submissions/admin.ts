@@ -106,6 +106,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           WHERE ${stations.id} = ${t.station_id}
           AND ${stations.station_id} ILIKE ${like}
         )
+        OR EXISTS (
+          SELECT 1 FROM ${proposedStations}
+          WHERE ${proposedStations.submission_id} = ${t.id}
+          AND ${proposedStations.station_id} ILIKE ${like}
+        )
       )`);
     }
     return conds;

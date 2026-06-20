@@ -1,9 +1,9 @@
 import { AlertCircleIcon, ArrowDown01Icon, Cancel01Icon, Search01Icon, Sorting05Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { useCallback, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,10 +44,27 @@ type AuditLogsFilterState = {
   actionsFilter: string[];
   dateFrom: string;
   dateTo: string;
-  recordIdFilter: string;
+  queryFilter: string;
   sort: "asc" | "desc";
   selectedEntry: AuditLogEntry | null;
 };
+
+type AuditLogsSearch = {
+  q?: string;
+};
+
+function parseAuditLogsQuery(value: unknown): string | undefined {
+  if (typeof value === "string") return value ? value : undefined;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
+}
+
+function getInitialFilterState(search: AuditLogsSearch): AuditLogsFilterState {
+  return {
+    ...initialFilterState,
+    queryFilter: search.q ?? "",
+  };
+}
 
 function auditLogsFilterReducer(
   state: AuditLogsFilterState,
@@ -56,7 +73,7 @@ function auditLogsFilterReducer(
     | { type: "SET_ACTIONS_FILTER"; payload: string[] }
     | { type: "SET_DATE_FROM"; payload: string }
     | { type: "SET_DATE_TO"; payload: string }
-    | { type: "SET_RECORD_ID_FILTER"; payload: string }
+    | { type: "SET_QUERY_FILTER"; payload: string }
     | { type: "SET_SORT"; payload: "asc" | "desc" }
     | { type: "SET_SELECTED_ENTRY"; payload: AuditLogEntry | null }
     | { type: "CLEAR_FILTERS" },
@@ -70,14 +87,14 @@ function auditLogsFilterReducer(
       return { ...state, dateFrom: action.payload };
     case "SET_DATE_TO":
       return { ...state, dateTo: action.payload };
-    case "SET_RECORD_ID_FILTER":
-      return { ...state, recordIdFilter: action.payload };
+    case "SET_QUERY_FILTER":
+      return { ...state, queryFilter: action.payload };
     case "SET_SORT":
       return { ...state, sort: action.payload };
     case "SET_SELECTED_ENTRY":
       return { ...state, selectedEntry: action.payload };
     case "CLEAR_FILTERS":
-      return { ...state, tableFilter: "", actionsFilter: [], dateFrom: "", dateTo: "", recordIdFilter: "" };
+      return { ...state, tableFilter: "", actionsFilter: [], dateFrom: "", dateTo: "", queryFilter: "" };
     default:
       return state;
   }
@@ -88,7 +105,7 @@ const initialFilterState: AuditLogsFilterState = {
   actionsFilter: [],
   dateFrom: "",
   dateTo: "",
-  recordIdFilter: "",
+  queryFilter: "",
   sort: "desc",
   selectedEntry: null,
 };
@@ -160,9 +177,11 @@ function ActionsFilterButton({
 function AdminAuditLogsPage() {
   "use no memo";
   const { t, i18n } = useTranslation(["admin", "common", "stationDetails"]);
+  const navigate = useNavigate();
+  const search = Route.useSearch();
 
-  const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, initialFilterState);
-  const { tableFilter, actionsFilter, dateFrom, dateTo, recordIdFilter, sort, selectedEntry } = filterState;
+  const [filterState, dispatchFilter] = useReducer(auditLogsFilterReducer, search, getInitialFilterState);
+  const { tableFilter, actionsFilter, dateFrom, dateTo, queryFilter, sort, selectedEntry } = filterState;
 
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
@@ -170,16 +189,29 @@ function AdminAuditLogsPage() {
 
   const resetPage = useCallback(() => setPagination((prev) => ({ ...prev, pageIndex: 0 })), [setPagination]);
 
-  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || recordIdFilter || selectedUserIds.length);
-  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, recordIdFilter, selectedUserIds.length > 0].filter(
-    Boolean,
-  ).length;
+  useEffect(() => {
+    dispatchFilter({ type: "SET_QUERY_FILTER", payload: search.q ?? "" });
+    resetPage();
+  }, [search.q, resetPage]);
+
+  const hasActiveFilters = !!(tableFilter || actionsFilter.length || dateFrom || dateTo || queryFilter || selectedUserIds.length);
+  const activeFilterCount = [tableFilter, actionsFilter.length > 0, dateFrom, dateTo, queryFilter, selectedUserIds.length > 0].filter(Boolean).length;
 
   const clearAllFilters = useCallback(() => {
     dispatchFilter({ type: "CLEAR_FILTERS" });
     setSelectedUserIds([]);
     resetPage();
-  }, [resetPage]);
+    void navigate({ from: Route.fullPath, search: (s) => ({ ...s, q: undefined }), replace: true });
+  }, [navigate, resetPage]);
+
+  const handleQueryFilterChange = useCallback(
+    (value: string) => {
+      dispatchFilter({ type: "SET_QUERY_FILTER", payload: value });
+      resetPage();
+      void navigate({ from: Route.fullPath, search: (s) => ({ ...s, q: value || undefined }), replace: true });
+    },
+    [navigate, resetPage],
+  );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [
@@ -191,7 +223,7 @@ function AdminAuditLogsPage() {
       actionsFilter,
       dateFrom,
       dateTo,
-      recordIdFilter,
+      queryFilter,
       selectedUserIds,
       sort,
     ],
@@ -202,7 +234,7 @@ function AdminAuditLogsPage() {
       params.set("sort", sort);
       if (tableFilter) params.set("table_name", tableFilter);
       if (actionsFilter.length > 0) params.set("actions", actionsFilter.join(","));
-      if (recordIdFilter) params.set("record_id", recordIdFilter);
+      if (queryFilter) params.set("record_id", queryFilter);
       if (selectedUserIds.length > 0) params.set("user_ids", selectedUserIds.join(","));
       if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
       if (dateTo) {
@@ -387,11 +419,8 @@ function AdminAuditLogsPage() {
             <Input
               className="h-8 pl-7 w-40"
               placeholder={t("auditLogs.filters.recordId")}
-              value={recordIdFilter}
-              onChange={(e) => {
-                dispatchFilter({ type: "SET_RECORD_ID_FILTER", payload: e.target.value });
-                resetPage();
-              }}
+              value={queryFilter}
+              onChange={(e) => handleQueryFilterChange(e.target.value)}
             />
           </div>
 
@@ -489,6 +518,9 @@ function AdminAuditLogsPage() {
 }
 
 export const Route = createFileRoute("/_layout/admin/_layout/audit-logs")({
+  validateSearch: (search: Record<string, unknown>): AuditLogsSearch => ({
+    q: parseAuditLogsQuery(search.q),
+  }),
   component: AdminAuditLogsPage,
   staticData: {
     titleKey: "items.auditLogs",
