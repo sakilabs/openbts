@@ -214,7 +214,8 @@ async function validatePublishedStation(submission: SubmissionRow): Promise<Appr
     where: { id: submission.station_id },
     columns: { status: true, operator_id: true, station_id: true },
   });
-  if (!station || station.status !== "published") throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
+  if (!station || (station.status !== "published" && station.status !== "pending"))
+    throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
   return { operatorId: station.operator_id, stationStringId: station.station_id ?? null };
 }
 

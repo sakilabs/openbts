@@ -171,7 +171,7 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
   ]);
 
   if (stationId !== null && !targetStation) throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
-  if (stationId !== null && targetStation && targetStation.status !== "published")
+  if (stationId !== null && targetStation && targetStation.status !== "published" && targetStation.status !== "pending")
     throw new ErrorResponse("NOT_FOUND", { message: "Station not found for the provided station_id" });
   validateSectorRefs(input, targetStation);
 
