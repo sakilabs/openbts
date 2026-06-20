@@ -30,7 +30,7 @@ const dateTime = z.union([z.date().transform((d) => d.toISOString()), z.iso.date
 
 const stationSchema = createSelectSchema(stations)
   .omit({ operator_id: true, location_id: true, status: true })
-  .extend({ updatedAt: dateTime, createdAt: dateTime });
+  .extend({ updatedAt: dateTime, createdAt: dateTime, statusChangedAt: dateTime });
 const locationSchema = createSelectSchema(locations).omit({ point: true, region_id: true }).extend({ updatedAt: dateTime, createdAt: dateTime });
 const regionSchema = createSelectSchema(regions);
 const operatorSchema = createSelectSchema(operators);
