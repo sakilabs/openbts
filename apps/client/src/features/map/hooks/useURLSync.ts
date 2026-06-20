@@ -17,7 +17,20 @@ type UseUrlSyncArgs = {
 };
 
 const LEGACY_FILTER_PARAM_KEYS = ["operators", "bands", "rat", "status", "source", "new", "radiolines", "stations", "rl_operators", "heatmap"];
-const VALID_STATION_STATUSES = new Set<StationStatus>(["published", "pending", "inactive"]);
+const STATION_STATUS_URL_CODES: Record<StationStatus, string> = {
+  published: "p",
+  pending: "n",
+  inactive: "i",
+};
+const STATION_STATUS_BY_URL_CODE = new Map<string, StationStatus>([
+  ["p", "published"],
+  ["n", "pending"],
+  ["i", "inactive"],
+]);
+
+function decodeStationStatusUrlToken(value: string): StationStatus | null {
+  return STATION_STATUS_BY_URL_CODE.get(value.toLowerCase()) ?? null;
+}
 
 function parseLegacyFilters(params: URLSearchParams): Partial<StationFilters> | null {
   if (!LEGACY_FILTER_PARAM_KEYS.some((key) => params.has(key))) return null;
@@ -35,13 +48,16 @@ function parseLegacyFilters(params: URLSearchParams): Partial<StationFilters> | 
       .map(Number)
       .filter((n) => !Number.isNaN(n)) || [];
   const rat = params.get("rat")?.split(",").filter(Boolean) || [];
-  const status = (params
+  const status = params
     .get("status")
     ?.split(",")
-    .filter((value): value is StationStatus => VALID_STATION_STATUSES.has(value as StationStatus)) ?? ["published"]) as StationStatus[];
+    .map(decodeStationStatusUrlToken)
+    .filter((value): value is StationStatus => value !== null) ?? ["published"];
   const source: StationSource = params.get("source") === "uke" ? "uke" : "internal";
   const newParam = params.get("new");
-  const recentDays = newParam === "true" ? 30 : newParam ? Math.min(30, Math.max(1, Number(newParam))) || null : null;
+  let recentDays: number | null = null;
+  if (newParam === "true") recentDays = 30;
+  else if (newParam) recentDays = Math.min(30, Math.max(1, Number(newParam))) || null;
   const showRadiolines = params.get("radiolines") === "1";
   const showStations = params.get("stations") !== "0";
   const radiolineOperators =
@@ -103,9 +119,12 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
         rat = value.split(",").filter(Boolean);
         break;
       case "t":
-        status = value.split(",").filter((entry): entry is StationStatus => VALID_STATION_STATUSES.has(entry as StationStatus));
+        status = value
+          .split(",")
+          .map(decodeStationStatusUrlToken)
+          .filter((entry): entry is StationStatus => entry !== null);
         break;
-      case "n":
+      case "n": {
         const numPart = value.replace(/[^0-9]/g, "");
         const fieldPart = value.replace(/[0-9]/g, "");
         recentDays = Math.min(30, Math.max(1, Number(numPart))) || null;
@@ -116,6 +135,7 @@ function parseTokenFilters(tokens: string[]): Partial<StationFilters> | null {
           if (fieldPart.length) recentDateFields = fields;
         }
         break;
+      }
       case "p":
         radiolineOperators = value
           .split(",")
@@ -212,7 +232,8 @@ function buildUrlHash(filters: StationFilters, map: maplibregl.Map, zoomOverride
   if (filters.operators.length > 0) tokens.push(`o${filters.operators.join(",")}`);
   if (filters.bands.length > 0) tokens.push(`b${filters.bands.join(",")}`);
   if (filters.rat.length > 0) tokens.push(`r${filters.rat.join(",")}`);
-  if (!(filters.status.length === 1 && filters.status.includes("published"))) tokens.push(`t${filters.status.join(",")}`);
+  if (!(filters.status.length === 1 && filters.status.includes("published")))
+    tokens.push(`t${filters.status.map((status) => STATION_STATUS_URL_CODES[status]).join(",")}`);
   if (filters.recentDays !== null) {
     const fields = filters.recentDateFields.map((field) => (field === "createdAt" ? "c" : "u")).join("");
     const suffix = fields === "c" ? "" : fields;

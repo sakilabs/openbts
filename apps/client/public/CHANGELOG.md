@@ -13,6 +13,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🩹 Fixes
 
+- Map URL `status` filter now accepts short codes (`p`, `n`, `i`)
 - Deleting a station now marks it inactive first, with old inactive stations cleaned up automatically after the grace period
 - New or submitted stations without cells now stay in progress instead of being published as complete stations
 - Cell edits and deletions now respect station status rules so pending or inactive stations cannot be mutated like published stations
