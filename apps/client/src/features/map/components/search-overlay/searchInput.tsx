@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Checkbox } from "@/components/ui/checkbox.js";
 import { Spinner } from "@/components/ui/spinner.js";
 import { cn } from "@/lib/utils.js";
 
@@ -28,6 +29,9 @@ type SearchInputProps = {
   onContainerBlur: (e: React.FocusEvent) => void;
   onMobileExpand: () => void;
   onMobileCollapse: () => void;
+  affectMap: boolean;
+  showAffectMap: boolean;
+  onAffectMapChange: (v: boolean) => void;
 };
 
 export function SearchInput({
@@ -50,6 +54,9 @@ export function SearchInput({
   onContainerBlur,
   onMobileExpand,
   onMobileCollapse,
+  affectMap,
+  showAffectMap,
+  onAffectMapChange,
 }: SearchInputProps) {
   const { t } = useTranslation(["main", "common"]);
 
@@ -116,6 +123,13 @@ export function SearchInput({
             className="flex-1 min-w-25 bg-transparent text-base md:text-sm outline-none placeholder:text-muted-foreground/60"
           />
         </div>
+
+        {isFocused && showAffectMap ? (
+          <label className="flex items-center select-none animate-in fade-in slide-in-from-right-2 duration-200 gap-1.5 shrink-0">
+            <Checkbox checked={affectMap} onCheckedChange={(checked) => onAffectMapChange(checked)} />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{t("common:labels.map")}</span>
+          </label>
+        ) : null}
 
         {isSearching && query.trim() !== "" && <Spinner className="size-4 text-muted-foreground shrink-0" />}
 

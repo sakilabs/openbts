@@ -57,6 +57,7 @@ type MapSearchOverlayProps = {
   onToggleHeatmap?: () => void;
   showPlannedMeasurements?: boolean;
   onTogglePlannedMeasurements?: () => void;
+  onFilterQueryChange: (q: string | undefined) => void;
 };
 
 export const MapSearchOverlay = memo(function MapSearchOverlay({
@@ -82,6 +83,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   onToggleHeatmap,
   showPlannedMeasurements = false,
   onTogglePlannedMeasurements,
+  onFilterQueryChange,
 }: MapSearchOverlayProps) {
   const { t } = useTranslation("main");
   const [showFilters, setShowFilters] = useState(false);
@@ -91,6 +93,24 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   const { preferences, updatePreferences } = usePreferences();
   const mapFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map")), []);
+  const [affectMap, setAffectMap] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("map:search:affectMap") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleAffectMapChange = useCallback(
+    (v: boolean) => {
+      setAffectMap(v);
+      try {
+        localStorage.setItem("map:search:affectMap", String(v));
+      } catch {}
+      if (!v) onFilterQueryChange(undefined);
+    },
+    [onFilterQueryChange],
+  );
 
   const {
     query,
@@ -113,7 +133,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     clearSearch,
     removeFilter,
     closeOverlay,
-  } = useSearchState({ filterKeywords: mapFilterKeywords, parseFilters });
+  } = useSearchState({ filterKeywords: mapFilterKeywords, parseFilters, affectMap });
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
 
@@ -155,6 +175,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   const gpsResult = gpsCoords ? { lat: gpsCoords.lat, lng: gpsCoords.lng, address: reverseGeocodeResult?.display_name ?? null } : null;
 
   const shouldSearchLocations = searchKeyword.trim().length >= 3 && activeOverlay !== "autocomplete" && autocompleteOptions.length === 0;
+  const shouldShowSearchResults = !affectMap;
 
   const { data: locationResults = [], isLoading: isLocationSearchLoading } = useQuery({
     queryKey: ["geocoding-search", searchKeyword],
@@ -166,7 +187,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   const { data: rawStationResults, isLoading: isStationSearchLoading } = useQuery({
     queryKey: ["station-search", debouncedQuery, filters.source],
     queryFn: () => searchStations(debouncedQuery),
-    enabled: !isUkeSource && debouncedQuery.trim().length > 0,
+    enabled: !isUkeSource && debouncedQuery.trim().length > 0 && shouldShowSearchResults,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -191,6 +212,14 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
       stationResults.length > 0 ||
       permitResults.length > 0 ||
       radiolineResults.length > 0);
+
+  useEffect(() => {
+    if (!affectMap) {
+      onFilterQueryChange(undefined);
+      return;
+    }
+    onFilterQueryChange(debouncedQuery || undefined);
+  }, [affectMap, debouncedQuery, onFilterQueryChange]);
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     handleChipKeyDown(e);
@@ -340,6 +369,9 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
           onContainerBlur={handleContainerBlur}
           onMobileExpand={handleMobileExpand}
           onMobileCollapse={handleMobileCollapse}
+          affectMap={affectMap}
+          showAffectMap={filters.source !== "uke"}
+          onAffectMapChange={handleAffectMapChange}
           filterSlot={
             <>
               <div className="h-6 w-px bg-border shrink-0" />

@@ -11,7 +11,7 @@ export async function fetchLocationsList(params: {
   sort?: string;
   sortBy?: string;
   orphaned?: boolean;
-  search?: string;
+  q?: string;
 }): Promise<LocationsResponse> {
   const searchParams = new URLSearchParams();
   searchParams.set("page", params.page.toString());
@@ -21,7 +21,7 @@ export async function fetchLocationsList(params: {
   if (params.sort) searchParams.set("sort", params.sort);
   if (params.sortBy) searchParams.set("sortBy", params.sortBy);
   if (params.orphaned) searchParams.set("orphaned", "true");
-  if (params.search) searchParams.set("search", params.search);
+  if (params.q) searchParams.set("q", params.q);
   return fetchJson<LocationsResponse>(`${API_BASE}/locations?${searchParams.toString()}`);
 }
 

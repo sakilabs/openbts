@@ -13,12 +13,13 @@ type UseSearchStateArgs = {
     remainingText: string;
   };
   initialValue?: string;
+  affectMap?: boolean;
 };
 
-function computeOverlay(input: string, hasMatches: boolean): OverlayType {
+function computeOverlay(input: string, hasMatches: boolean, affectMap: boolean): OverlayType {
   if (input === "") return "autocomplete";
   if (hasMatches) return "autocomplete";
-  if (input.trim() !== "") return "results";
+  if (!affectMap && input.trim() !== "") return "results";
   return null;
 }
 
@@ -49,7 +50,7 @@ function getUrlHashQueryParam(key: string): string | null {
   return params.get(key);
 }
 
-export function useSearchState({ filterKeywords, parseFilters, initialValue }: UseSearchStateArgs) {
+export function useSearchState({ filterKeywords, parseFilters, initialValue, affectMap = false }: UseSearchStateArgs) {
   const [inputValue, setInputValue] = useState(() => {
     if (!initialValue) return "";
     return parseFilters(initialValue).remainingText;
@@ -70,8 +71,9 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
   const query = useMemo(() => [...parsedFilters.map((f) => f.raw), inputValue.trim()].filter(Boolean).join(" "), [parsedFilters, inputValue]);
 
   const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedInput = useDebouncedValue(inputValue.trim(), 500);
 
-  const searchMode = debouncedQuery.trim() === "" ? "bounds" : "search";
+  const searchMode = affectMap || debouncedInput === "" ? "bounds" : "search";
 
   const autocompleteOptions = useMemo(() => getAutocompleteMatches(inputValue, filterKeywords), [inputValue, filterKeywords]);
 
@@ -82,8 +84,8 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
     const { filters, remainingText } = parseFilters(q);
     setParsedFilters(filters);
     setInputValue(remainingText);
-    setActiveOverlay(computeOverlay(remainingText, getAutocompleteMatches(remainingText, filterKeywords).length > 0));
-  }, [filterKeywords, parseFilters]);
+    setActiveOverlay(computeOverlay(remainingText, getAutocompleteMatches(remainingText, filterKeywords).length > 0, affectMap));
+  }, [filterKeywords, parseFilters, affectMap]);
 
   function handleContainerBlur(e: FocusEvent) {
     const relatedTarget = e.relatedTarget as Node | null;
@@ -111,7 +113,7 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
     }
 
     const matches = getAutocompleteMatches(value, filterKeywords);
-    setActiveOverlay(computeOverlay(value, matches.length > 0));
+    setActiveOverlay(computeOverlay(value, matches.length > 0, affectMap));
   }
 
   function applyAutocomplete(keyword: string) {
@@ -194,6 +196,7 @@ export function useSearchState({ filterKeywords, parseFilters, initialValue }: U
 
     inputValue,
     debouncedQuery,
+    debouncedInput,
     isFocused,
     parsedFilters,
     activeOverlay,

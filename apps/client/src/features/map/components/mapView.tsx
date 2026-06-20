@@ -98,7 +98,12 @@ function MapViewInner() {
   const [filters, setFiltersState] = useState<StationFilters>(() => loadMapFilters() ?? DEFAULT_FILTERS);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [activePopupLocation, setActivePopupLocation] = useState<{ locationId: number; source: StationSource } | null>(null);
+  const [mapQuery, setMapQuery] = useState<string | undefined>(undefined);
   const [useZabkaMarkers, setUseZabkaMarkers] = useState(false);
+
+  const handleFilterQueryChange = useCallback((q: string | undefined) => {
+    setMapQuery((prev) => (prev === q ? prev : q));
+  }, []);
 
   const setFilters = useCallback((update: StationFilters | ((prev: StationFilters) => StationFilters)) => {
     setFiltersState((prev) => {
@@ -176,8 +181,12 @@ function MapViewInner() {
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["locations", bounds, filters, preferences.mapStationsLimit, wantAzimuths],
-    queryFn: () => fetchLocations(bounds, filters, preferences.mapStationsLimit, { azimuths: wantAzimuths }),
+    queryKey: ["locations", bounds, filters, preferences.mapStationsLimit, wantAzimuths, mapQuery],
+    queryFn: () =>
+      fetchLocations(bounds, filters, preferences.mapStationsLimit, {
+        azimuths: wantAzimuths,
+        q: filters.source === "internal" ? mapQuery : undefined,
+      }),
     enabled: isLoaded && !!bounds && !isMoving,
     staleTime: 1000 * 60 * 2,
     placeholderData: (prev) => prev,
@@ -369,6 +378,7 @@ function MapViewInner() {
         onToggleHeatmap={handleToggleHeatmap}
         showPlannedMeasurements={filters.showPlannedMeasurements}
         onTogglePlannedMeasurements={handleTogglePlannedMeasurements}
+        onFilterQueryChange={handleFilterQueryChange}
       />
       {showSelectedDot && selectedLocation && (
         <MapMarker longitude={selectedLocation.lng} latitude={selectedLocation.lat}>

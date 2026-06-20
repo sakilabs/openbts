@@ -96,7 +96,8 @@
     "operators_many": "{{count, number}} operatorów",
     "filtersActive_one": "{{count, number}} aktywny filtr",
     "filtersActive_few": "{{count, number}} aktywne filtry",
-    "filtersActive_many": "{{count, number}} aktywnych filtrów"
+    "filtersActive_many": "{{count, number}} aktywnych filtrów",
+    "map": "Mapa"
   },
   "placeholder": {
     "search": "Szukaj...",

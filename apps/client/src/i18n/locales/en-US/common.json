@@ -101,7 +101,8 @@
     "filtersActive_one": "{{count, number}} active filter",
     "filtersActive_few": "{{count, number}} active filters",
     "filtersActive_many": "{{count, number}} active filters",
-    "filtersActive_other": "{{count, number}} active filters"
+    "filtersActive_other": "{{count, number}} active filters",
+    "map": "Map"
   },
   "placeholder": {
     "search": "Search...",

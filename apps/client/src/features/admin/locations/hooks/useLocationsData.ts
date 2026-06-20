@@ -129,7 +129,7 @@ export function useLocationsData() {
         sort,
         sortBy,
         orphaned: true,
-        search: debouncedSearch || undefined,
+        q: debouncedSearch || undefined,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {

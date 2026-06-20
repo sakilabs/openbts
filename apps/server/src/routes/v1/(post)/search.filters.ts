@@ -1,12 +1,49 @@
-import { cells, extraIdentificators, gsmCells, locations, lteCells, nrCells, stationPhotoSelections, stations, umtsCells } from "@openbts/drizzle";
+import {
+  bands,
+  cells,
+  extraIdentificators,
+  gsmCells,
+  locations,
+  lteCells,
+  nrCells,
+  operators,
+  regions,
+  stationPhotoSelections,
+  stations,
+  umtsCells,
+} from "@openbts/drizzle";
 import { type SQL, gte, inArray, lte, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 export type FilterValue = string | number | boolean;
 export type FilterTable = "stations" | "cells" | "gsmCells" | "umtsCells" | "lteCells" | "nrCells" | "locations" | "extraIdentificators";
+type FilterRefs = {
+  locations: typeof locations;
+  stations: typeof stations;
+  cells: typeof cells;
+  gsmCells: typeof gsmCells;
+  umtsCells: typeof umtsCells;
+  lteCells: typeof lteCells;
+  nrCells: typeof nrCells;
+  extraIdentificators: typeof extraIdentificators;
+  bands: typeof bands;
+  operators: typeof operators;
+};
+export const defaultFilterRefs: FilterRefs = {
+  locations,
+  stations,
+  cells,
+  gsmCells,
+  umtsCells,
+  lteCells,
+  nrCells,
+  extraIdentificators,
+  bands,
+  operators,
+};
 export type FilterCondition = {
   table: FilterTable;
-  buildCondition: (value: FilterValue) => SQL;
+  buildCondition: (value: FilterValue, refs: FilterRefs) => SQL;
 };
 
 const splitList = (value: string) =>
@@ -103,7 +140,8 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   },
   mnc: {
     table: "stations",
-    buildCondition: buildInArrayFromSubquery(stations.operator_id, (values) => sql`(SELECT id FROM operators WHERE mnc IN ${values})`),
+    buildCondition: (value, refs) =>
+      buildInArrayFromSubquery(stations.operator_id, (values) => sql`(SELECT id FROM ${refs.operators} WHERE mnc IN ${values})`)(value),
   },
 
   created_after: {
@@ -125,9 +163,9 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
 
   has_photo: {
     table: "stations",
-    buildCondition: (value: FilterValue) => {
+    buildCondition: (value, refs) => {
       const hasPhoto = parseBoolean(value);
-      const subquery = sql`(SELECT 1 FROM ${stationPhotoSelections} WHERE ${stationPhotoSelections.station_id} = ${stations.id})`;
+      const subquery = sql`(SELECT 1 FROM ${stationPhotoSelections} WHERE ${stationPhotoSelections.station_id} = ${refs.stations.id})`;
       return hasPhoto ? sql`EXISTS ${subquery}` : sql`NOT EXISTS ${subquery}`;
     },
   },
@@ -135,7 +173,8 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   // cells
   band: {
     table: "cells",
-    buildCondition: buildInArrayFromSubquery(cells.band_id, (values) => sql`(SELECT id FROM bands WHERE value IN ${values})`),
+    buildCondition: (value, refs) =>
+      buildInArrayFromSubquery(cells.band_id, (values) => sql`(SELECT id FROM ${refs.bands} WHERE value IN ${values})`)(value),
   },
   rat: {
     table: "cells",
@@ -237,39 +276,40 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   // gps
   gps: {
     table: "locations",
-    buildCondition: (value: FilterValue) => {
+    buildCondition: (value, refs) => {
       const [latStr = "", lngStr = ""] = String(value).split(",");
       const lat = Number.parseFloat(latStr.trim());
       const lng = Number.parseFloat(lngStr.trim());
-      return sql`ST_DWithin(${locations.point}::geography, ST_MakePoint(${lng}, ${lat})::geography, 1000)`;
+      return sql`ST_DWithin(${refs.locations.point}::geography, ST_MakePoint(${lng}, ${lat})::geography, 1000)`;
     },
   },
 
   // locations
   region: {
     table: "locations",
-    buildCondition: buildInArrayFromStringSubquery(
-      locations.region_id,
-      (values) =>
-        sql`(SELECT id FROM regions WHERE code IN (${sql.join(
-          values.map((v) => sql`${v.toUpperCase()}`),
-          sql`, `,
-        )}))`,
-    ),
+    buildCondition: (value, refs) =>
+      buildInArrayFromStringSubquery(
+        refs.locations.region_id,
+        (values) =>
+          sql`(SELECT id FROM ${regions} WHERE code IN (${sql.join(
+            values.map((v) => sql`${v.toUpperCase()}`),
+            sql`, `,
+          )}))`,
+      )(value),
   },
   city: {
     table: "locations",
-    buildCondition: (value: FilterValue) => {
+    buildCondition: (value, refs) => {
       const values = parseStrings(value);
-      const conditions = values.map((val) => sql`(${val} <% ${locations.city} OR ${locations.city} ILIKE ${`%${val}%`})`);
+      const conditions = values.map((val) => sql`(${val} <% ${refs.locations.city} OR ${refs.locations.city} ILIKE ${`%${val}%`})`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },
   },
   address: {
     table: "locations",
-    buildCondition: (value: FilterValue) => {
+    buildCondition: (value, refs) => {
       const values = parseStrings(value);
-      const conditions = values.map((val) => sql`(${val} <% ${locations.address} OR ${locations.address} ILIKE ${`%${val}%`})`);
+      const conditions = values.map((val) => sql`(${val} <% ${refs.locations.address} OR ${refs.locations.address} ILIKE ${`%${val}%`})`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },
   },
@@ -277,9 +317,9 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   // extraIdentificators
   networks_id: {
     table: "extraIdentificators",
-    buildCondition: (value: FilterValue) => {
+    buildCondition: (value, refs) => {
       const values = parseStrings(value);
-      const conditions = values.map((val) => sql`CAST(${extraIdentificators.networks_id} AS TEXT) ILIKE ${`%${val}%`}`);
+      const conditions = values.map((val) => sql`CAST(${refs.extraIdentificators.networks_id} AS TEXT) ILIKE ${`%${val}%`}`);
       return (conditions.length === 1 ? conditions[0] : or(...conditions)) as SQL;
     },
   },
@@ -377,10 +417,10 @@ export function parseFilterQuery(query: string): { filters: ParsedFilters; remai
   return { filters, remainingQuery };
 }
 
-export function groupFiltersByTable(filters: ParsedFilters): GroupedFilters {
+export function groupFiltersByTable(filters: ParsedFilters, refs: FilterRefs = defaultFilterRefs): GroupedFilters {
   return Object.entries(filters).reduce((grouped, [key, value]) => {
     const definition = FILTER_DEFINITIONS[key];
-    if (definition) grouped[definition.table].push(definition.buildCondition(value));
+    if (definition) grouped[definition.table].push(definition.buildCondition(value, refs));
     return grouped;
   }, createEmptyGroupedFilters());
 }

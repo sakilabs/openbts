@@ -135,6 +135,8 @@ export function StationsFilters({
       showStations: true,
       recentDateFields: ["createdAt"],
       showHeatmap: false,
+      status: ["published", "pending"],
+      showPlannedMeasurements: false,
     });
     onRegionsChange([]);
   };

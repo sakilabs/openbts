@@ -1527,9 +1527,9 @@ paths:
         - name: since
           in: query
           schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
-        - name: search
+        - name: q
           in: query
-          description: Search by city, address, or station ID (partial match)
+          description: Advanced filters from POST /search or normal city and address search
           schema: { type: string, maxLength: 100 }
         - name: orphaned
           in: query

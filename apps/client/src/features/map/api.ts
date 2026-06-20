@@ -32,7 +32,7 @@ export async function fetchLocations(
   bounds: string,
   filters: StationFilters,
   limit = 1000,
-  options?: { azimuths?: boolean },
+  options?: { azimuths?: boolean; q?: string },
 ): Promise<LocationsResponse> {
   if (filters.source === "uke") {
     const params = buildFilterParams(filters);
@@ -48,6 +48,7 @@ export async function fetchLocations(
   const params = buildFilterParams(filters);
   params.set("limit", String(limit));
   params.set("bounds", bounds);
+  if (options?.q) params.set("q", options.q);
   if (options?.azimuths) params.set("azimuths", "true");
 
   const result = await fetchJson<LocationsResponse>(`${API_BASE}/locations?${decodeURIComponent(params.toString())}`, {

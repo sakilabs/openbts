@@ -1,10 +1,23 @@
-import { cells, locations, lteCells, nrCells, operators, regions, stationSectors, stations } from "@openbts/drizzle";
+import {
+  cells,
+  extraIdentificators,
+  gsmCells,
+  locations,
+  lteCells,
+  nrCells,
+  operators,
+  regions,
+  stationSectors,
+  stations,
+  umtsCells,
+} from "@openbts/drizzle";
 import { LocationsResponseType } from "@openbts/proto/server";
 import { and, count, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
+import { defaultFilterRefs, groupFiltersByTable, parseFilterQuery } from "../../(post)/search.filters.ts";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -59,6 +72,7 @@ const schemaRoute = {
               .filter((n) => !Number.isNaN(n))
           : undefined,
       ),
+    q: z.string().max(500).optional(),
     status: z
       .string()
       .regex(/^(?:published|pending|inactive)(?:,(?:published|pending|inactive))*$/)
@@ -120,11 +134,11 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     regions: regionNames,
     status: selectedStatuses,
     since,
-    search,
     orphaned,
     azimuths,
     sort,
     sortBy,
+    q: query,
   } = req.query;
   const offset = (page - 1) * limit;
 
@@ -187,9 +201,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const iotRequested = requestedRats.includes("iot");
 
   const hasStationFilters = operatorIds.length || bandIds.length || nonIotRats.length || iotRequested;
+  const { filters, remainingQuery: remainingSearch } = query ? parseFilterQuery(query) : { filters: {}, remainingQuery: "" };
 
   const buildStationFilter = (stationFields: typeof stations) => {
     const conditions: ReturnType<typeof sql>[] = [buildStatusCondition(stationFields, selectedStatuses)];
+    const stationGroupedFilters = groupFiltersByTable(filters, {
+      ...defaultFilterRefs,
+      stations: stationFields,
+    });
 
     if (operatorIds.length) {
       conditions.push(
@@ -257,14 +276,73 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       conditions.push(sinceConditions!);
     }
 
+    for (const condition of stationGroupedFilters.stations) conditions.push(condition);
+
+    if (stationGroupedFilters.cells.length > 0) {
+      conditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          WHERE ${cells.station_id} = ${stationFields.id}
+          AND ${and(...stationGroupedFilters.cells)}
+        )
+        `);
+    }
+
+    if (stationGroupedFilters.gsmCells.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${cells}
+        JOIN ${gsmCells} ON ${gsmCells.cell_id} = ${cells.id}
+        WHERE ${cells.station_id} = ${stationFields.id}
+        AND ${and(...stationGroupedFilters.gsmCells)}
+        )`);
+    }
+
+    if (stationGroupedFilters.umtsCells.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${cells}
+        JOIN ${umtsCells} ON ${umtsCells.cell_id} = ${cells.id}
+        WHERE ${cells.station_id} = ${stationFields.id}
+        AND ${and(...stationGroupedFilters.umtsCells)}
+        )`);
+    }
+
+    if (stationGroupedFilters.lteCells.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${cells}
+        JOIN ${lteCells} ON ${lteCells.cell_id} = ${cells.id}
+        WHERE ${cells.station_id} = ${stationFields.id}
+        AND ${and(...stationGroupedFilters.lteCells)}
+        )`);
+    }
+
+    if (stationGroupedFilters.nrCells.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${cells}
+        JOIN ${nrCells} ON ${nrCells.cell_id} = ${cells.id}
+        WHERE ${cells.station_id} = ${stationFields.id}
+        AND ${and(...stationGroupedFilters.nrCells)}
+        )`);
+    }
+
+    if (stationGroupedFilters.extraIdentificators.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${extraIdentificators}
+        WHERE ${extraIdentificators.station_id} = ${stationFields.id}
+        AND ${and(...stationGroupedFilters.extraIdentificators)}
+        )`);
+    }
+
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
 
   const buildLocationConditions = (locFields: typeof locations) => {
     const conditions: ReturnType<typeof sql>[] = [];
+    const locationGroupedFilters = groupFiltersByTable(filters, {
+      ...defaultFilterRefs,
+      locations: locFields,
+    });
 
-    if (search) {
-      const like = `%${search}%`;
+    if (remainingSearch) {
+      const like = `%${remainingSearch}%`;
       conditions.push(sql`(
         ${locFields.city} ILIKE ${like}
         OR ${locFields.address} ILIKE ${like}
@@ -378,6 +456,80 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 					AND ${buildStatusCondition(stations, selectedStatuses)}
 				)
 			`);
+    }
+
+    for (const condition of locationGroupedFilters.locations) conditions.push(condition);
+
+    const hasNonLocationFilters =
+      locationGroupedFilters.stations.length > 0 ||
+      locationGroupedFilters.cells.length > 0 ||
+      locationGroupedFilters.gsmCells.length > 0 ||
+      locationGroupedFilters.umtsCells.length > 0 ||
+      locationGroupedFilters.lteCells.length > 0 ||
+      locationGroupedFilters.nrCells.length > 0 ||
+      locationGroupedFilters.extraIdentificators.length > 0;
+
+    if (hasNonLocationFilters) {
+      const innerConditions: ReturnType<typeof sql>[] = [
+        sql`${stations.location_id} = ${locFields.id}`,
+        buildStatusCondition(stations, selectedStatuses),
+      ];
+      for (const condition of locationGroupedFilters.stations) innerConditions.push(condition);
+
+      if (locationGroupedFilters.cells.length > 0) {
+        innerConditions.push(sql`EXISTS (
+            SELECT 1 FROM ${cells}
+            WHERE ${cells.station_id} = ${stations.id}
+            AND ${and(...locationGroupedFilters.cells)}
+          )
+          `);
+      }
+
+      if (locationGroupedFilters.gsmCells.length > 0) {
+        innerConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          JOIN ${gsmCells} ON ${gsmCells.cell_id} = ${cells.id}
+          WHERE ${cells.station_id} = ${stations.id}
+          AND ${and(...locationGroupedFilters.gsmCells)}
+          )`);
+      }
+
+      if (locationGroupedFilters.umtsCells.length > 0) {
+        innerConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          JOIN ${umtsCells} ON ${umtsCells.cell_id} = ${cells.id}
+          WHERE ${cells.station_id} = ${stations.id}
+          AND ${and(...locationGroupedFilters.umtsCells)}
+          )`);
+      }
+
+      if (locationGroupedFilters.lteCells.length > 0) {
+        innerConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          JOIN ${lteCells} ON ${lteCells.cell_id} = ${cells.id}
+          WHERE ${cells.station_id} = ${stations.id}
+          AND ${and(...locationGroupedFilters.lteCells)}
+          )`);
+      }
+
+      if (locationGroupedFilters.nrCells.length > 0) {
+        innerConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${cells}
+          JOIN ${nrCells} ON ${nrCells.cell_id} = ${cells.id}
+          WHERE ${cells.station_id} = ${stations.id}
+          AND ${and(...locationGroupedFilters.nrCells)}
+          )`);
+      }
+
+      if (locationGroupedFilters.extraIdentificators.length > 0) {
+        innerConditions.push(sql`EXISTS (
+          SELECT 1 FROM ${extraIdentificators}
+          WHERE ${extraIdentificators.station_id} = ${stations.id}
+          AND ${and(...locationGroupedFilters.extraIdentificators)}
+          )`);
+      }
+
+      conditions.push(sql`EXISTS (SELECT 1 FROM ${stations} WHERE ${and(...innerConditions)})`);
     }
 
     return conditions;

@@ -80,7 +80,7 @@ export const FILTER_KEYWORDS: FilterKeyword[] = [
   // Location filters
   { key: "city:", description: "City name (partial match)", availableOn: ["map", "stations"] },
   { key: "address:", description: "Address (partial match)", availableOn: ["map", "stations"] },
-  { key: "region:", description: "Region code (e.g., MAZ, SL, WP)", availableOn: [] },
+  { key: "region:", description: "Region code (e.g., MAZ, SL, WP)", availableOn: ["map"] },
 
   // Cell filters
   { key: "band:", description: "Frequency in MHz (e.g., 800, 1800, 2100)", availableOn: ["map"] },
