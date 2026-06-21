@@ -229,7 +229,7 @@ export function StationDetailsBody({
     activeTabIndex === 0 ? "translate3d(0, 0, 0)" : `translate3d(calc(${activeTabIndex * 100}% + ${activeTabIndex * tabGapRem}rem), 0, 0)`;
 
   return (
-    <div ref={bodyRef} className="flex-1 overflow-y-auto custom-scrollbar">
+    <div ref={bodyRef} className="flex-1 overflow-y-auto custom-scrollbar scrollbar-gutter-stable">
       <div ref={bodyContentRef}>
         {isLoading ? (
           <div className="p-6 space-y-8">
