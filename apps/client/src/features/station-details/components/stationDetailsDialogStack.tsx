@@ -290,7 +290,7 @@ export function StationDetailsDialogStack({ dialogs, onClose, onCloseTop, onFocu
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[110] pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 z-40 pointer-events-none overflow-hidden">
       {orderedDialogs.map((dialog) => (
         <FloatingStationDialogFrame
           key={dialog.key}
