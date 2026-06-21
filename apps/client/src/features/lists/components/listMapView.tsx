@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LngLatBounds } from "maplibre-gl";
-import { type JSX, Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { type JSX, Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 
 import { Map as LibreMap, MapControls, useMap } from "@/components/ui/map";
 import { useListDetail } from "@/features/lists/hooks/useListDetail";
@@ -13,15 +13,13 @@ import { POLAND_BOUNDS, POLAND_CENTER } from "@/features/map/constants";
 import { useMapBounds } from "@/features/map/hooks/useMapBounds";
 import { useMapPopup } from "@/features/map/hooks/useMapPopup";
 import { toLocationInfo } from "@/features/map/utils";
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
 import type { LocationWithStations, RadioLine, Station, StationFilters, StationSource, StationWithoutCells, UkeStation } from "@/types/station";
 
 const RadioLinesLayer = lazy(() => import("@/features/map/components/radioLinesLayer"));
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 const UkePermitDetailsDialog = lazy(() =>
   import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
 );
@@ -40,17 +38,6 @@ function ListInfoBanner({ name, description }: ListInfoBannerProps): JSX.Element
       </div>
     </div>
   );
-}
-
-type DetailState = {
-  selectedStation: { id: number; source: StationSource } | null;
-};
-
-type DetailAction = { type: "OPEN"; id: number; source: StationSource } | { type: "CLOSE" };
-
-function detailReducer(_state: DetailState, action: DetailAction): DetailState {
-  if (action.type === "OPEN") return { selectedStation: { id: action.id, source: action.source } };
-  return { selectedStation: null };
 }
 
 function isEditableKeyboardTarget(target: EventTarget | null): boolean {
@@ -79,11 +66,12 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       return next;
     });
   }, []);
+  const handleFilterQueryChange = useCallback((_q: string | undefined) => {}, []);
 
   const wantAzimuths = preferences.showAzimuths && filters.source === "uke";
   const { data: listData, isLoading, isError } = useListDetail(uuid, wantAzimuths);
 
-  const [detailState, dispatchDetail] = useReducer(detailReducer, { selectedStation: null });
+  const { openStationDialog } = useStationDialogStack();
   const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [popupLocationState, setPopupLocationState] = useState<{
@@ -149,7 +137,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
     if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 80, maxZoom: 14 });
   }, [map, isLoaded, listStations, listRadiolines, ukeLocations]);
 
-  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN", id, source }), []);
+  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => openStationDialog(id, source), [openStationDialog]);
   const handleOpenUkeStationDetails = useCallback((station: UkeStation) => setSelectedUkeStation(station), []);
   const handlePopupClose = useCallback(() => {
     setPopupLocationState({ location: null, tempLocations: [] });
@@ -283,6 +271,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
         onFiltersChange={setFilters}
         onLocationSelect={handleLocationSelect}
         onStationSelect={handleStationSelect}
+        onFilterQueryChange={handleFilterQueryChange}
         hideAPIFilters
       />
 
@@ -311,17 +300,6 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       ) : null}
 
       <MapControls showLocate showCompass showScale showFullscreen />
-
-      <Suspense fallback={null}>
-        {detailState.selectedStation ? (
-          <StationDetailsDialog
-            key={detailState.selectedStation.id}
-            stationId={detailState.selectedStation.id}
-            source={detailState.selectedStation.source}
-            onClose={() => dispatchDetail({ type: "CLOSE" })}
-          />
-        ) : null}
-      </Suspense>
 
       <Suspense fallback={null}>
         {selectedUkeStation ? <UkePermitDetailsDialog station={selectedUkeStation} onClose={() => setSelectedUkeStation(null)} /> : null}

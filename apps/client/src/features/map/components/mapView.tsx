@@ -3,6 +3,7 @@ import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRe
 
 import { Map as LibreMap, MapControls, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
 import ZabkaIcon from "@/features/station-details/components/logos/zabka.svg?react";
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { showApiError } from "@/lib/api";
@@ -21,9 +22,6 @@ import { DEFAULT_FILTERS, StationsLayer, loadMapFilters, locationQueryKey, saveM
 
 const RadioLinesLayer = lazy(() => import("./radioLinesLayer"));
 
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 const UkePermitDetailsDialog = lazy(() =>
   import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
 );
@@ -52,30 +50,22 @@ function saveMapPosition(center: [number, number], zoom: number) {
 }
 
 type DetailState = {
-  selectedStation: { id: number; source: StationSource } | null;
   selectedUkeStation: UkeStation | null;
   pendingRadiolineId: number | null;
 };
 
 type DetailAction =
-  | { type: "OPEN_STATION"; id: number; source: StationSource }
-  | { type: "CLOSE_STATION" }
   | { type: "OPEN_UKE_STATION"; station: UkeStation }
   | { type: "CLOSE_UKE_STATION" }
   | { type: "SET_PENDING_RADIOLINE"; id: number | null };
 
 const initialDetailState: DetailState = {
-  selectedStation: null,
   selectedUkeStation: null,
   pendingRadiolineId: null,
 };
 
 function detailReducer(state: DetailState, action: DetailAction): DetailState {
   switch (action.type) {
-    case "OPEN_STATION":
-      return { ...state, selectedStation: { id: action.id, source: action.source } };
-    case "CLOSE_STATION":
-      return { ...state, selectedStation: null };
     case "OPEN_UKE_STATION":
       return { ...state, selectedUkeStation: action.station };
     case "CLOSE_UKE_STATION":
@@ -157,9 +147,10 @@ function MapViewInner() {
   }, []);
 
   const [detailState, dispatchDetail] = useReducer(detailReducer, initialDetailState);
-  const { selectedStation, selectedUkeStation, pendingRadiolineId } = detailState;
+  const { selectedUkeStation, pendingRadiolineId } = detailState;
+  const { openStationDialog } = useStationDialogStack();
 
-  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => dispatchDetail({ type: "OPEN_STATION", id, source }), []);
+  const handleOpenStationDetails = useCallback((id: number, source: StationSource) => openStationDialog(id, source), [openStationDialog]);
   const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []);
 
   const {
@@ -306,7 +297,6 @@ function MapViewInner() {
     () => setFilters((prev) => ({ ...prev, showPlannedMeasurements: !prev.showPlannedMeasurements })),
     [setFilters],
   );
-  const handleCloseStationDetails = useCallback(() => dispatchDetail({ type: "CLOSE_STATION" }), []);
   const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
   const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
 
@@ -418,14 +408,6 @@ function MapViewInner() {
       ) : null}
       <MapControls showLocate showCompass showScale showFullscreen />
       <Suspense fallback={null}>
-        {selectedStation ? (
-          <StationDetailsDialog
-            key={selectedStation.id}
-            stationId={selectedStation.id}
-            source={selectedStation.source}
-            onClose={handleCloseStationDetails}
-          />
-        ) : null}
         {selectedUkeStation ? <UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} /> : null}
       </Suspense>
     </>

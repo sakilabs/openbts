@@ -11,19 +11,16 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, lazy, useState } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { API_BASE, fetchJson } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { resolveAvatarUrl } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
-
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 
 type ProfilePrivate = {
   isPrivate: true;
@@ -83,7 +80,8 @@ function ProfileSkeleton() {
 function UserProfilePage() {
   const { username } = Route.useParams();
   const { t, i18n } = useTranslation("main");
-  const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
+  const { openStationDialog } = useStationDialogStack();
+  const handleStationClick = useCallback((stationId: number) => openStationDialog(stationId, "internal"), [openStationDialog]);
   const { data: session } = authClient.useSession();
 
   const {
@@ -248,7 +246,7 @@ function UserProfilePage() {
                           />
                           <button
                             type="button"
-                            onClick={() => setSelectedStationId(comment.station.id)}
+                            onClick={() => handleStationClick(comment.station.id)}
                             className="text-xs font-medium text-muted-foreground truncate hover:text-foreground hover:underline hover:cursor-pointer transition-colors"
                           >
                             {comment.station.station_id ?? t("userProfile.stationFallback", { id: comment.station.id })}
@@ -275,9 +273,6 @@ function UserProfilePage() {
           </div>
         )}
       </div>
-      <Suspense fallback={null}>
-        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
-      </Suspense>
     </main>
   );
 }

@@ -39,6 +39,8 @@
     "restore": "Restore",
     "noChanges": "No changes to save",
     "retry": "Try again",
+    "resize": "Resize",
+    "resizeHorizontally": "Resize horizontally",
     "showOnMap": "Show on map"
   },
   "labels": {
@@ -180,6 +182,9 @@
     "tryAgain": "Try again",
     "reload": "Reload page",
     "toast": "Something went wrong. Please try again."
+  },
+  "toast": {
+    "closeStationDialogFirst": "Close one first to open another"
   },
   "backendUnavailable": {
     "title": "Service Unavailable",

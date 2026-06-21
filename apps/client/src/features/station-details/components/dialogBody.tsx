@@ -15,7 +15,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type Ref, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -52,6 +52,9 @@ type StationDetailsBodyProps = {
   onTabChange: (tab: TabId) => void;
   onClose: () => void;
   isAdmin?: boolean;
+  bodyRef?: Ref<HTMLDivElement>;
+  bodyContentRef?: Ref<HTMLDivElement>;
+  onContentLayoutChange?: () => void;
 };
 
 const COMPASS_CENTER = 64;
@@ -129,41 +132,16 @@ export function StationDetailsBody({
   onTabChange,
   onClose,
   isAdmin = false,
+  bodyRef,
+  bodyContentRef,
+  onContentLayoutChange,
 }: StationDetailsBodyProps) {
   const { t } = useTranslation(["stationDetails", "common"]);
   const { data: settings } = useSettings();
   const { preferences } = usePreferences();
   const location = useLocation();
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [minContentHeight, setMinContentHeight] = useState(0);
   const [displayedTab, setDisplayedTab] = useState<TabId>(activeTab);
-  const [fading, setFading] = useState(false);
   const skipNextSyncRef = useRef(false);
-  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tabBarRef = useRef<HTMLDivElement>(null);
-  const tabButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [pillStyle, setPillStyle] = useState<{ left: number; right: number } | null>(null);
-
-  useEffect(() => {
-    if (!minContentHeight || !contentRef.current) return;
-    const el = contentRef.current;
-    const observer = new ResizeObserver(() => {
-      if (el.offsetHeight >= minContentHeight) {
-        setMinContentHeight(0);
-        observer.disconnect();
-      }
-    });
-
-    observer.observe(el);
-    const id = setTimeout(() => {
-      setMinContentHeight(0);
-      observer.disconnect();
-    }, 1500);
-    return () => {
-      observer.disconnect();
-      clearTimeout(id);
-    };
-  }, [minContentHeight]);
 
   useEffect(() => {
     if (skipNextSyncRef.current) {
@@ -175,21 +153,10 @@ export function StationDetailsBody({
 
   const handleTabChange = (tab: TabId) => {
     if (tab === displayedTab) return;
-    if (contentRef.current) setMinContentHeight(contentRef.current.offsetHeight);
 
     skipNextSyncRef.current = true;
     onTabChange(tab);
-
-    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
-    setFading(true);
-
-    fadeTimerRef.current = setTimeout(() => {
-      setDisplayedTab(tab);
-      requestAnimationFrame(() => {
-        setFading(false);
-        fadeTimerRef.current = null;
-      });
-    }, 150);
+    setDisplayedTab(tab);
   };
   const isOnMap = location.pathname === "/" || location.pathname.startsWith("/lists/");
   const cellGroups = useMemo(() => (station ? groupCellsByRat(station.cells ?? []) : {}), [station]);
@@ -228,6 +195,10 @@ export function StationDetailsBody({
     retry: false,
   });
 
+  useLayoutEffect(() => {
+    onContentLayoutChange?.();
+  }, [displayedTab, station?.id, photos?.length, comments?.length, pemReports?.length, elevation, onContentLayoutChange]);
+
   const tabCounts: Partial<Record<TabId, number>> = {
     ...(station?.sectors && station.sectors.length > 0 ? { sectors: station.sectors.length } : {}),
     ...(photos !== undefined ? { photos: photos.length } : {}),
@@ -247,316 +218,310 @@ export function StationDetailsBody({
           }),
     [source, settings?.enableStationComments, settings?.photosEnabled, station?.sectors?.length],
   );
-
-  useLayoutEffect(() => {
-    const bar = tabBarRef.current;
-    const activeIndex = visibleTabs.findIndex((t) => t.id === activeTab);
-    const btn = tabButtonRefs.current[activeIndex];
-    if (!bar || !btn) return;
-    setPillStyle({ left: btn.offsetLeft, right: bar.offsetWidth - btn.offsetLeft - btn.offsetWidth });
-  }, [activeTab, visibleTabs, station?.id]);
+  const tabCount = Math.max(visibleTabs.length, 1);
+  const activeTabIndex = Math.max(
+    0,
+    visibleTabs.findIndex((tab) => tab.id === displayedTab),
+  );
+  const tabGapRem = 0.25;
+  const tabPillAvailableOffsetRem = 0.5 + (tabCount - 1) * tabGapRem;
+  const tabPillTransform =
+    activeTabIndex === 0 ? "translate3d(0, 0, 0)" : `translate3d(calc(${activeTabIndex * 100}% + ${activeTabIndex * tabGapRem}rem), 0, 0)`;
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar">
-      {isLoading ? (
-        <div className="p-6 space-y-8">
-          <div className="flex p-1 bg-muted/50 rounded-xl gap-1">
-            {[1, 2, 3].map((i) => (
-              <div key={`skeleton-tab-${i}`} className="flex-1 flex items-center justify-center gap-2 py-2 px-3">
-                <Skeleton className="size-4 rounded" />
-                <Skeleton className="h-4 w-16 rounded hidden sm:block" />
+    <div ref={bodyRef} className="flex-1 overflow-y-auto custom-scrollbar">
+      <div ref={bodyContentRef}>
+        {isLoading ? (
+          <div className="p-6 space-y-8">
+            <div className="flex p-1 bg-muted/50 rounded-xl gap-1">
+              {[1, 2, 3].map((i) => (
+                <div key={`skeleton-tab-${i}`} className="flex-1 flex items-center justify-center gap-2 py-2 px-3">
+                  <Skeleton className="size-4 rounded" />
+                  <Skeleton className="h-4 w-16 rounded hidden sm:block" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-32 rounded" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={`skeleton-field-${i}`} className="flex items-center gap-2">
+                    <Skeleton className="size-4 rounded shrink-0" />
+                    <Skeleton className="h-3 w-20 rounded" />
+                    <Skeleton className="h-3 w-24 rounded ml-auto" />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-32 rounded" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={`skeleton-field-${i}`} className="flex items-center gap-2">
-                  <Skeleton className="size-4 rounded shrink-0" />
-                  <Skeleton className="h-3 w-20 rounded" />
-                  <Skeleton className="h-3 w-24 rounded ml-auto" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-24 rounded" />
+              {[1, 2].map((i) => (
+                <div key={`skeleton-card-${i}`} className="rounded-xl border overflow-hidden">
+                  <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
+                    <Skeleton className="size-4 rounded" />
+                    <Skeleton className="h-4 w-12 rounded" />
+                    <Skeleton className="h-3 w-16 rounded ml-auto" />
+                  </div>
+                  <div className="p-4 space-y-3">
+                    {[1, 2, 3].map((j) => (
+                      <div key={`skeleton-row-${j}`} className="flex gap-4">
+                        <Skeleton className="h-4 w-20 rounded" />
+                        <Skeleton className="h-4 w-16 rounded" />
+                        <Skeleton className="h-4 w-32 rounded" />
+                        <Skeleton className="h-4 w-24 rounded" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-24 rounded" />
-            {[1, 2].map((i) => (
-              <div key={`skeleton-card-${i}`} className="rounded-xl border overflow-hidden">
-                <div className="px-4 py-2.5 bg-muted/50 border-b flex items-center gap-2">
-                  <Skeleton className="size-4 rounded" />
-                  <Skeleton className="h-4 w-12 rounded" />
-                  <Skeleton className="h-3 w-16 rounded ml-auto" />
-                </div>
-                <div className="p-4 space-y-3">
-                  {[1, 2, 3].map((j) => (
-                    <div key={`skeleton-row-${j}`} className="flex gap-4">
-                      <Skeleton className="h-4 w-20 rounded" />
-                      <Skeleton className="h-4 w-16 rounded" />
-                      <Skeleton className="h-4 w-32 rounded" />
-                      <Skeleton className="h-4 w-24 rounded" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+            <div className="size-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-4">
+              <HugeiconsIcon icon={InformationCircleIcon} className="size-6" />
+            </div>
+            <p className="text-muted-foreground max-w-xs">{error instanceof Error ? error.message : t("common:placeholder.errorFetching")}</p>
           </div>
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-          <div className="size-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-4">
-            <HugeiconsIcon icon={InformationCircleIcon} className="size-6" />
-          </div>
-          <p className="text-muted-foreground max-w-xs">{error instanceof Error ? error.message : t("common:placeholder.errorFetching")}</p>
-        </div>
-      ) : station ? (
-        <div ref={contentRef} className="p-6 space-y-8" style={minContentHeight ? { minHeight: minContentHeight } : undefined}>
-          <div ref={tabBarRef} className="relative flex p-1 bg-muted/50 rounded-xl gap-1">
-            {pillStyle !== null && (
-              <div
-                aria-hidden="true"
-                className="absolute top-1 bottom-1 rounded-lg bg-background shadow-sm pointer-events-none"
-                style={{
-                  left: pillStyle.left,
-                  right: pillStyle.right,
-                  transition: "left 220ms cubic-bezier(0.25, 1, 0.5, 1), right 220ms cubic-bezier(0.25, 1, 0.5, 1)",
-                }}
-              />
-            )}
-            {visibleTabs.map((tab, index) => (
-              <button
-                type="button"
-                key={tab.id}
-                ref={(el) => {
-                  tabButtonRefs.current[index] = el;
-                }}
-                onClick={() => handleTabChange(tab.id)}
-                className={cn(
-                  "relative flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition-colors duration-200",
-                  activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <HugeiconsIcon icon={tab.icon} className="size-4" />
-                <span className="hidden sm:inline">{t(`tabs.${tab.id}`)}</span>
-                {tabCounts[tab.id] !== undefined && tabCounts[tab.id]! > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-xs font-bold bg-primary text-primary-foreground leading-none animate-in fade-in zoom-in-50 duration-200">
-                    {tabCounts[tab.id]! > 99 ? "99+" : tabCounts[tab.id]}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+        ) : station ? (
+          <div className="p-6 space-y-8">
+            <div className="relative grid p-1 bg-muted/50 rounded-xl gap-1" style={{ gridTemplateColumns: `repeat(${tabCount}, minmax(0, 1fr))` }}>
+              {visibleTabs.length > 0 && (
+                <div
+                  aria-hidden="true"
+                  className="absolute top-1 bottom-1 left-1 rounded-lg bg-background shadow-sm pointer-events-none transition-transform duration-200 ease-out motion-reduce:transition-none"
+                  style={{
+                    width: `calc((100% - ${tabPillAvailableOffsetRem}rem) / ${tabCount})`,
+                    transform: tabPillTransform,
+                  }}
+                />
+              )}
+              {visibleTabs.map((tab) => (
+                <button
+                  type="button"
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    "relative min-w-0 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition-colors duration-200",
+                    displayedTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <HugeiconsIcon icon={tab.icon} className="size-4" />
+                  <span className="hidden sm:inline">{t(`tabs.${tab.id}`)}</span>
+                  {tabCounts[tab.id] !== undefined && tabCounts[tab.id]! > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-xs font-bold bg-primary text-primary-foreground leading-none animate-in fade-in zoom-in-50 duration-200">
+                      {tabCounts[tab.id]! > 99 ? "99+" : tabCounts[tab.id]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-          <div
-            className={cn(
-              "transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none",
-              fading ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0",
-            )}
-          >
-            {source === "internal" ? (
-              <>
-                {displayedTab === "specs" && (
-                  <div className="space-y-8">
-                    <section>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.basicInfo")}</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl bg-muted/20">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}:</span>
-                          <span className="text-sm font-mono font-medium break-all">
-                            {formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
-                          </span>
-                          <CopyButton text={`${station?.location.latitude}, ${station?.location.longitude}`} />
-                          {preferences.navLinksDisplay === "inline" && (
-                            <NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
-                          <span className="text-sm font-medium">{station.location.region?.name || "-"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
-                          <span className="text-sm font-mono font-medium">{station.station_id}</span>
-                          <div className="flex items-center gap-1">
-                            <CopyButton text={station.station_id || ""} />
-                            {showSI2PEMLink && pemReports && pemReports.length > 0 ? (
-                              <DropdownMenu>
-                                <Tooltip>
-                                  <TooltipTrigger
-                                    render={
-                                      <DropdownMenuTrigger className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0" />
-                                    }
-                                  >
-                                    <span
-                                      aria-hidden="true"
-                                      className="block h-3.5 bg-[#2e2e5a] dark:bg-[#9898ce]"
-                                      style={{
-                                        aspectRatio: "2435/521",
-                                        maskImage: "url(/si2pem.svg)",
-                                        WebkitMaskImage: "url(/si2pem.svg)",
-                                        maskSize: "contain",
-                                        WebkitMaskSize: "contain",
-                                        maskRepeat: "no-repeat",
-                                        WebkitMaskRepeat: "no-repeat",
-                                      }}
-                                    />
-                                  </TooltipTrigger>
-                                  <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
-                                </Tooltip>
-                                <DropdownMenuContent align="start" sideOffset={4} className="min-w-72">
-                                  {pemReports?.map((report) => {
-                                    const Icon = report.source === "search" ? FileSearchIcon : GlobalIcon;
-                                    const label = report.source === "map" ? "generated" : "search";
-                                    return (
-                                      <DropdownMenuItem
-                                        key={`${report.station_id}_${report.date}`}
-                                        render={<a target="_blank" href={report.details.document_url} />}
-                                      >
-                                        <HugeiconsIcon icon={Icon} className="size-4 text-muted-foreground shrink-0" />
-                                        <div className="flex-1 justify-between">
-                                          <span className="text-sm block">{report.details.lab_name}</span>
-                                          <span className="text-[11px] text-muted-foreground">
-                                            {formatDayMonthYear(report.date)} | {t(`common:labels.${label}`)}
-                                          </span>
-                                        </div>
-                                      </DropdownMenuItem>
-                                    );
-                                  })}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            ) : null}
+            <div>
+              {source === "internal" ? (
+                <>
+                  {displayedTab === "specs" && (
+                    <div className="space-y-8">
+                      <section>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.basicInfo")}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-xl bg-muted/20">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <HugeiconsIcon icon={Location01Icon} className="size-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">{t("common:labels.coordinates")}:</span>
+                            <span className="text-sm font-mono font-medium break-all">
+                              {formatCoordinates(station.location.latitude, station.location.longitude, preferences.gpsFormat)}
+                            </span>
+                            <CopyButton text={`${station?.location.latitude}, ${station?.location.longitude}`} />
+                            {preferences.navLinksDisplay === "inline" && (
+                              <NavigationLinks latitude={station.location.latitude} longitude={station.location.longitude} displayMode="inline" />
+                            )}
                           </div>
-                        </div>
-                        {station.extra_identificators && (
-                          <ExtraIdentificatorsDisplay data={station.extra_identificators} operatorMnc={station.operator?.mnc} />
-                        )}
-                        {elevation !== undefined && (
                           <div className="flex items-center gap-2">
-                            <HugeiconsIcon icon={MountainIcon} className="size-4 text-muted-foreground shrink-0" />
-                            <span className="text-sm text-muted-foreground">{t("common:labels.elevation")}:</span>
-                            <span className="text-sm font-medium">{elevation} m</span>
+                            <HugeiconsIcon icon={Globe02Icon} className="size-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm text-muted-foreground">{t("common:labels.region")}:</span>
+                            <span className="text-sm font-medium">{station.location.region?.name || "-"}</span>
                           </div>
-                        )}
-                        {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
-                          <div className="sm:col-span-2 pt-3 border-t border-border/50">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {!isOnMap && (
-                                <Tooltip>
-                                  <TooltipTrigger
-                                    render={
-                                      <Link
-                                        to="/"
-                                        hash={`map=16/${station.location.latitude}/${station.location.longitude}~f~L${station.location.id}`}
-                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                        onClick={onClose}
+                          <div className="flex items-center gap-2">
+                            <HugeiconsIcon icon={Tag01Icon} className="size-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm text-muted-foreground">{t("common:labels.stationId")}:</span>
+                            <span className="text-sm font-mono font-medium">{station.station_id}</span>
+                            <div className="flex items-center gap-1">
+                              <CopyButton text={station.station_id || ""} />
+                              {showSI2PEMLink && pemReports && pemReports.length > 0 ? (
+                                <DropdownMenu>
+                                  <Tooltip>
+                                    <TooltipTrigger
+                                      render={
+                                        <DropdownMenuTrigger className="inline-flex items-center justify-center h-5.5 w-auto px-0.5 hover:bg-muted rounded transition-colors cursor-pointer shrink-0" />
+                                      }
+                                    >
+                                      <span
+                                        aria-hidden="true"
+                                        className="block h-3.5 bg-[#2e2e5a] dark:bg-[#9898ce]"
+                                        style={{
+                                          aspectRatio: "2435/521",
+                                          maskImage: "url(/si2pem.svg)",
+                                          WebkitMaskImage: "url(/si2pem.svg)",
+                                          maskSize: "contain",
+                                          WebkitMaskSize: "contain",
+                                          maskRepeat: "no-repeat",
+                                          WebkitMaskRepeat: "no-repeat",
+                                        }}
                                       />
-                                    }
-                                  >
-                                    <HugeiconsIcon icon={MapsLocation01Icon} className="size-3.5" />
-                                    {t("dialog.showOnMap")}
-                                  </TooltipTrigger>
-                                  <TooltipContent>{t("dialog.showOnMap")}</TooltipContent>
-                                </Tooltip>
-                              )}
-                              {preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
-                                <>
-                                  {!isOnMap && <Separator orientation="vertical" className="h-5 mx-1" />}
-                                  <NavigationLinks
-                                    latitude={station.location.latitude}
-                                    longitude={station.location.longitude}
-                                    displayMode="buttons"
-                                  />
-                                </>
-                              )}
+                                    </TooltipTrigger>
+                                    <TooltipContent>{t("specs.si2pemLink")}</TooltipContent>
+                                  </Tooltip>
+                                  <DropdownMenuContent align="start" sideOffset={4} className="min-w-72">
+                                    {pemReports?.map((report) => {
+                                      const Icon = report.source === "search" ? FileSearchIcon : GlobalIcon;
+                                      const label = report.source === "map" ? "generated" : "search";
+                                      return (
+                                        <DropdownMenuItem
+                                          key={`${report.station_id}_${report.date}`}
+                                          render={<a target="_blank" href={report.details.document_url} />}
+                                        >
+                                          <HugeiconsIcon icon={Icon} className="size-4 text-muted-foreground shrink-0" />
+                                          <div className="flex-1 justify-between">
+                                            <span className="text-sm block">{report.details.lab_name}</span>
+                                            <span className="text-[11px] text-muted-foreground">
+                                              {formatDayMonthYear(report.date)} | {t(`common:labels.${label}`)}
+                                            </span>
+                                          </div>
+                                        </DropdownMenuItem>
+                                      );
+                                    })}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : null}
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.cellDetails")}</h3>
-                      {Object.keys(cellGroups).length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
-                          <HugeiconsIcon icon={SignalFull02Icon} className="size-8 mb-2 opacity-20" />
-                          <p className="text-sm">{t("stations:cells.noStationCells")}</p>
+                          {station.extra_identificators && (
+                            <ExtraIdentificatorsDisplay data={station.extra_identificators} operatorMnc={station.operator?.mnc} />
+                          )}
+                          {elevation !== undefined && (
+                            <div className="flex items-center gap-2">
+                              <HugeiconsIcon icon={MountainIcon} className="size-4 text-muted-foreground shrink-0" />
+                              <span className="text-sm text-muted-foreground">{t("common:labels.elevation")}:</span>
+                              <span className="text-sm font-medium">{elevation} m</span>
+                            </div>
+                          )}
+                          {(!isOnMap || (preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0)) && (
+                            <div className="sm:col-span-2 pt-3 border-t border-border/50">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {!isOnMap && (
+                                  <Tooltip>
+                                    <TooltipTrigger
+                                      render={
+                                        <Link
+                                          to="/"
+                                          hash={`map=16/${station.location.latitude}/${station.location.longitude}~f~L${station.location.id}`}
+                                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                          onClick={onClose}
+                                        />
+                                      }
+                                    >
+                                      <HugeiconsIcon icon={MapsLocation01Icon} className="size-3.5" />
+                                      {t("dialog.showOnMap")}
+                                    </TooltipTrigger>
+                                    <TooltipContent>{t("dialog.showOnMap")}</TooltipContent>
+                                  </Tooltip>
+                                )}
+                                {preferences.navLinksDisplay === "buttons" && preferences.navigationApps.length > 0 && (
+                                  <>
+                                    {!isOnMap && <Separator orientation="vertical" className="h-5 mx-1" />}
+                                    <NavigationLinks
+                                      latitude={station.location.latitude}
+                                      longitude={station.location.longitude}
+                                      displayMode="buttons"
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {RAT_ORDER.filter((rat) => cellGroups[rat]).map((rat) => (
-                            <CellTable key={rat} rat={rat} cells={cellGroups[rat]} sectorInfoById={sectorInfoById} />
+                      </section>
+
+                      <section>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("specs.cellDetails")}</h3>
+                        {Object.keys(cellGroups).length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+                            <HugeiconsIcon icon={SignalFull02Icon} className="size-8 mb-2 opacity-20" />
+                            <p className="text-sm">{t("stations:cells.noStationCells")}</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {RAT_ORDER.filter((rat) => cellGroups[rat]).map((rat) => (
+                              <CellTable key={rat} rat={rat} cells={cellGroups[rat]} sectorInfoById={sectorInfoById} />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    </div>
+                  )}
+
+                  {displayedTab === "sectors" && (station.sectors?.length ?? 0) > 0 && (
+                    <div>
+                      <section className="flex min-h-72 flex-col items-center justify-center gap-4">
+                        <SectorMiniCompass sectors={station.sectors ?? []} />
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          {(station.sectors ?? []).map((sector, index) => (
+                            <span key={sector.id} className="text-xs font-medium text-muted-foreground tabular-nums">
+                              S{index + 1}: {sector.azimuth}°
+                            </span>
                           ))}
                         </div>
-                      )}
-                    </section>
-                  </div>
-                )}
+                      </section>
+                    </div>
+                  )}
 
-                {displayedTab === "sectors" && (station.sectors?.length ?? 0) > 0 && (
-                  <div>
-                    <section className="flex min-h-72 flex-col items-center justify-center gap-4">
-                      <SectorMiniCompass sectors={station.sectors ?? []} />
-                      <div className="flex flex-wrap items-center justify-center gap-2">
-                        {(station.sectors ?? []).map((sector, index) => (
-                          <span key={sector.id} className="text-xs font-medium text-muted-foreground tabular-nums">
-                            S{index + 1}: {sector.azimuth}°
-                          </span>
-                        ))}
-                      </div>
-                    </section>
-                  </div>
-                )}
+                  {displayedTab === "permits" && (
+                    <div>
+                      <section>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("tabs.permits")}
+                        </h3>
+                        <PermitsList stationId={stationId} />
+                      </section>
+                    </div>
+                  )}
 
-                {displayedTab === "permits" && (
-                  <div>
-                    <section>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("tabs.permits")}
-                      </h3>
-                      <PermitsList stationId={stationId} />
-                    </section>
-                  </div>
-                )}
+                  {displayedTab === "comments" && (
+                    <div>
+                      <section>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
+                          <HugeiconsIcon icon={Message01Icon} className="size-4" /> {t("comments.title")}
+                        </h3>
+                        <CommentsList stationId={stationId} isAdmin={isAdmin} />
+                      </section>
+                    </div>
+                  )}
 
-                {displayedTab === "comments" && (
-                  <div>
-                    <section>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6 flex items-center gap-2">
-                        <HugeiconsIcon icon={Message01Icon} className="size-4" /> {t("comments.title")}
-                      </h3>
-                      <CommentsList stationId={stationId} isAdmin={isAdmin} />
-                    </section>
-                  </div>
-                )}
-
-                {displayedTab === "photos" && (
-                  <div>
-                    <section>
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <HugeiconsIcon icon={Image01Icon} className="size-4" /> {t("photos.title")}
-                      </h3>
-                      <PhotoGallery stationId={stationId} isAdmin={isAdmin} />
-                    </section>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div>
-                <section>
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("tabs.permits")}
-                  </h3>
-                  <PermitsList stationId={stationId} isUkeSource />
-                </section>
-              </div>
-            )}
+                  {displayedTab === "photos" && (
+                    <div>
+                      <section>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <HugeiconsIcon icon={Image01Icon} className="size-4" /> {t("photos.title")}
+                        </h3>
+                        <PhotoGallery stationId={stationId} isAdmin={isAdmin} />
+                      </section>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <section>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <HugeiconsIcon icon={Note01Icon} className="size-4" /> {t("tabs.permits")}
+                    </h3>
+                    <PermitsList stationId={stationId} isUkeSource />
+                  </section>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }

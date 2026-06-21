@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -24,6 +24,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SUBMISSION_STATUS, SUBMISSION_TYPE } from "@/features/admin/submissions/submissionUI";
 import type { SubmissionRow } from "@/features/admin/submissions/types";
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { deleteSubmission } from "@/features/submissions/api";
 import { useMySubmissions } from "@/features/submissions/hooks/useMySubmissions";
 import { showApiError } from "@/lib/api";
@@ -32,9 +33,6 @@ import { formatShortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ESTIMATED_ROW_HEIGHT = 56;
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 
 export function MySubmissions() {
   const { t, i18n } = useTranslation(["submissions", "common"]);
@@ -56,8 +54,8 @@ export function MySubmissions() {
   const submissions = useMemo<SubmissionRow[]>(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
-  const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
-  const handleStationClick = useCallback((stationId: number) => setSelectedStationId(stationId), []);
+  const { openStationDialog } = useStationDialogStack();
+  const handleStationClick = useCallback((stationId: number) => openStationDialog(stationId, "internal"), [openStationDialog]);
 
   const virtualizer = useVirtualizer({
     count: submissions.length,
@@ -271,9 +269,6 @@ export function MySubmissions() {
           </div>
         )}
       </div>
-      <Suspense fallback={null}>
-        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
-      </Suspense>
     </>
   );
 }

@@ -2,7 +2,7 @@ import { Alert02Icon, Cancel01Icon, Note01Icon, PencilEdit02Icon, Tick02Icon } f
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { type CSSProperties, type HTMLAttributes, type Ref, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,6 +15,7 @@ import { authClient } from "@/lib/authClient";
 import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { getHardwareLeaseOperator } from "@/lib/stationUtils";
+import { cn } from "@/lib/utils";
 
 import { fetchStation } from "../api";
 import type { TabId } from "../tabs";
@@ -28,7 +29,35 @@ type StationDetailsDialogProps = {
   onClose: () => void;
 };
 
-export function StationDetailsDialog({ stationId, source, onClose }: StationDetailsDialogProps) {
+type StationDetailsDialogPanelProps = {
+  stationId: number;
+  source: "internal" | "uke";
+  onClose: () => void;
+  className?: string;
+  contentClassName?: string;
+  contentRef?: Ref<HTMLDivElement>;
+  bodyRef?: Ref<HTMLDivElement>;
+  bodyContentRef?: Ref<HTMLDivElement>;
+  onContentLayoutChange?: () => void;
+  style?: CSSProperties;
+  headerDragProps?: HTMLAttributes<HTMLDivElement>;
+  showPhotoPanel?: boolean;
+};
+
+export function StationDetailsDialogPanel({
+  stationId,
+  source,
+  onClose,
+  className,
+  contentClassName,
+  contentRef,
+  bodyRef,
+  bodyContentRef,
+  onContentLayoutChange,
+  style,
+  headerDragProps,
+  showPhotoPanel = true,
+}: StationDetailsDialogPanelProps) {
   const { t, i18n } = useTranslation(["stationDetails", "common"]);
   const { t: tCommon } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<TabId>(source === "uke" ? "permits" : "specs");
@@ -45,18 +74,205 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
     error,
   } = useQuery({
     queryKey: ["station", stationId, source],
-    queryFn: () => fetchStation(stationId as number),
-    enabled: !!stationId && source === "internal",
+    queryFn: () => fetchStation(stationId),
+    enabled: source === "internal",
     staleTime: 1000 * 60 * 5,
   });
-
-  useEscapeKey(onClose, !!stationId);
-
-  if (!stationId) return null;
 
   const operatorColor = station ? getOperatorColor(station.operator.mnc) : "#3b82f6";
   const leaseOperator = station ? getHardwareLeaseOperator(station.station_id, station.operator.mnc) : null;
   const stationNotes = station?.notes?.trim();
+  const headerDragClassName = headerDragProps?.className;
+
+  return (
+    <div className={cn("relative", className)} style={style}>
+      <div
+        ref={contentRef}
+        className={cn(
+          "relative bg-background rounded-2xl shadow-2xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden",
+          contentClassName,
+        )}
+      >
+        <div {...headerDragProps} className={cn("shrink-0 bg-background/95 backdrop-blur-sm border-b", headerDragClassName)}>
+          <div className="h-1" style={{ backgroundColor: operatorColor }} />
+          <div className="px-6 py-4 flex items-start">
+            <div className="flex-1 min-w-0">
+              {isLoading ? (
+                <div className="space-y-2">
+                  <div className="h-5 w-48 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                </div>
+              ) : station ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
+                          {station.operator.name}
+                        </h2>
+                        {leaseOperator ? (
+                          <Tooltip>
+                            <TooltipTrigger className="text-sm text-muted-foreground font-mono font-medium cursor-help underline decoration-dashed decoration-amber-500/50 underline-offset-2 shrink-0">
+                              {station.station_id}
+                            </TooltipTrigger>
+                            <TooltipContent>{t("dialog.hardwareLease", { operator: leaseOperator })}</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
+                        )}
+                        {station.is_confirmed && (
+                          <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shrink-0">
+                            <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
+                            <span className="hidden sm:inline">{t("common:labels.confirmed")}</span>
+                          </span>
+                        )}
+                      </div>
+                      {station.status && <StationStatusBadge status={station.status} statusChangedAt={station.statusChangedAt} />}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{station.location.city}</p>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {station.extra_address || station.location.address || t("dialog.btsStation")}
+                    </p>
+                    <div className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 pt-0.5">
+                      <Tooltip>
+                        <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
+                          {tCommon("labels.created")}: {formatRelativeTime(station.createdAt, tCommon)}
+                        </TooltipTrigger>
+                        <TooltipContent>{formatFullDate(station.createdAt, i18n.language)}</TooltipContent>
+                      </Tooltip>
+                      <span className="hidden sm:inline text-xs text-muted-foreground/40">·</span>
+                      <Tooltip>
+                        {isAdmin ? (
+                          <TooltipTrigger
+                            render={
+                              <Link
+                                to={isAuditLogUser ? "/admin/audit-logs" : "/admin/submissions"}
+                                search={isAuditLogUser ? { q: String(station.id) } : { q: station.station_id, page: 0 }}
+                                className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 transition-colors whitespace-nowrap"
+                                onClick={onClose}
+                              />
+                            }
+                          >
+                            {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
+                          </TooltipTrigger>
+                        ) : (
+                          <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
+                            {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
+                          </TooltipTrigger>
+                        )}
+                        <TooltipContent>{formatFullDate(station.updatedAt, i18n.language)}</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
+              {station && (
+                <>
+                  <AddToListPopover stationId={station.id} size="md" />
+                  <ShareButton
+                    title={`${station.operator.name} - ${station.station_id}`}
+                    text={`${station.operator.name} ${station.station_id} - ${station.location.city}`}
+                    url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}~f~S${station.id}`}
+                    size="md"
+                  />
+                  {isAdmin ? (
+                    <Link
+                      to="/admin/stations/$id"
+                      params={{ id: String(station.id) }}
+                      search={{ uke: undefined }}
+                      className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+                      onClick={onClose}
+                    >
+                      <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                      <span className="hidden sm:inline">{t("common:actions.edit")}</span>
+                    </Link>
+                  ) : (
+                    settings?.submissionsEnabled && (
+                      <Link
+                        to="/submission"
+                        search={{ station: String(station.id) }}
+                        className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
+                        onClick={onClose}
+                      >
+                        <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
+                        <span className="hidden sm:inline">{t("common:actions.edit")}</span>
+                      </Link>
+                    )
+                  )}
+                </>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                onPointerDown={(event) => event.stopPropagation()}
+                className="p-2 hover:bg-muted rounded-xl transition-colors [&_svg]:pointer-events-none"
+                aria-label={t("common:actions.close")}
+              >
+                <HugeiconsIcon icon={Cancel01Icon} className="size-5 shrink-0" />
+              </button>
+            </div>
+          </div>
+          {stationNotes ? (
+            <div className="border-t border-primary/20 bg-primary/8 px-6 py-3 text-primary">
+              <div className="flex items-start gap-2.5">
+                <HugeiconsIcon icon={Note01Icon} className="mt-0.5 size-4 shrink-0" />
+                <div className="min-w-0 space-y-0.5">
+                  <p className="text-sm font-semibold">{t("specs.internalNotes")}</p>
+                  <p className="max-h-20 overflow-y-auto whitespace-pre-wrap wrap-break-word pr-1 text-xs leading-relaxed text-foreground custom-scrollbar">
+                    {stationNotes}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {station?.status === "inactive" ? (
+            <div className="border-t border-red-600/30 bg-red-500/10 px-6 py-3 text-red-700 dark:border-red-400/35 dark:bg-red-400/12 dark:text-red-300">
+              <div className="flex items-start gap-2.5">
+                <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 size-4 shrink-0" />
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold">{t("dialog.inactiveStationTitle")}</p>
+                  <p className="text-xs text-red-700/85 dark:text-red-300/80">{t("dialog.inactiveStationDescription")}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <StationDetailsBody
+          stationId={stationId}
+          source={source}
+          isLoading={isLoading}
+          error={error}
+          station={station}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onClose={onClose}
+          isAdmin={isAdmin}
+          bodyRef={bodyRef}
+          bodyContentRef={bodyContentRef}
+          onContentLayoutChange={onContentLayoutChange}
+        />
+      </div>
+
+      {source === "internal" && showPhotoPanel && preferences.showStationPhotoPanel && (
+        <div className="absolute top-0 left-full pl-3 hidden xl:flex h-full max-h-[calc(100dvh-2rem)]">
+          <MainPhotoPanel stationId={stationId} onOpenPhotoTab={() => setActiveTab("photos")} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function StationDetailsDialog({ stationId, source, onClose }: StationDetailsDialogProps) {
+  const { t } = useTranslation("common");
+
+  useEscapeKey(onClose, stationId !== null);
+
+  if (stationId === null) return null;
 
   return (
     <>
@@ -65,173 +281,15 @@ export function StationDetailsDialog({ stationId, source, onClose }: StationDeta
         className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm cursor-default"
         onClick={onClose}
         onKeyDown={(e) => e.key === "Enter" && onClose()}
-        aria-label={t("common:actions.close")}
+        aria-label={t("actions.close")}
       />
       <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto sm:items-center pointer-events-none">
-        <div className="relative pointer-events-auto animate-in fade-in zoom-in-95 duration-200 w-full max-w-4xl">
-          <div className="relative bg-background rounded-2xl shadow-2xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
-            <div className="shrink-0 bg-background/95 backdrop-blur-sm border-b">
-              <div className="h-1" style={{ backgroundColor: operatorColor }} />
-              <div className="px-6 py-4 flex items-start">
-                <div className="flex-1 min-w-0">
-                  {isLoading ? (
-                    <div className="space-y-2">
-                      <div className="h-5 w-48 bg-muted rounded animate-pulse" />
-                      <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-                    </div>
-                  ) : station ? (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="flex min-w-0 flex-col gap-0.5">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <h2 className="text-lg font-bold tracking-tight truncate" style={{ color: operatorColor }}>
-                              {station.operator.name}
-                            </h2>
-                            {leaseOperator ? (
-                              <Tooltip>
-                                <TooltipTrigger className="text-sm text-muted-foreground font-mono font-medium cursor-help underline decoration-dashed decoration-amber-500/50 underline-offset-2 shrink-0">
-                                  {station.station_id}
-                                </TooltipTrigger>
-                                <TooltipContent>{t("dialog.hardwareLease", { operator: leaseOperator })}</TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <span className="text-sm text-muted-foreground font-mono font-medium shrink-0">{station.station_id}</span>
-                            )}
-                            {station.is_confirmed && (
-                              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shrink-0">
-                                <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />
-                                <span className="hidden sm:inline">{t("common:labels.confirmed")}</span>
-                              </span>
-                            )}
-                          </div>
-                          {station.status && <StationStatusBadge status={station.status} statusChangedAt={station.statusChangedAt} />}
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{station.location.city}</p>
-                        <p className="text-xs text-muted-foreground font-medium">
-                          {station.extra_address || station.location.address || t("dialog.btsStation")}
-                        </p>
-                        <div className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 pt-0.5">
-                          <Tooltip>
-                            <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
-                              {tCommon("labels.created")}: {formatRelativeTime(station.createdAt, tCommon)}
-                            </TooltipTrigger>
-                            <TooltipContent>{formatFullDate(station.createdAt, i18n.language)}</TooltipContent>
-                          </Tooltip>
-                          <span className="hidden sm:inline text-xs text-muted-foreground/40">·</span>
-                          <Tooltip>
-                            {isAdmin ? (
-                              <TooltipTrigger
-                                render={
-                                  <Link
-                                    to={isAuditLogUser ? "/admin/audit-logs" : "/admin/submissions"}
-                                    search={isAuditLogUser ? { q: String(station.id) } : { q: station.station_id, page: 0 }}
-                                    className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2 transition-colors whitespace-nowrap"
-                                    onClick={onClose}
-                                  />
-                                }
-                              >
-                                {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
-                              </TooltipTrigger>
-                            ) : (
-                              <TooltipTrigger className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
-                                {tCommon("labels.updated")}: {formatRelativeTime(station.updatedAt, tCommon)}
-                              </TooltipTrigger>
-                            )}
-                            <TooltipContent>{formatFullDate(station.updatedAt, i18n.language)}</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
-                  {station && (
-                    <>
-                      <AddToListPopover stationId={station.id} size="md" />
-                      <ShareButton
-                        title={`${station.operator.name} - ${station.station_id}`}
-                        text={`${station.operator.name} ${station.station_id} - ${station.location.city}`}
-                        url={`${window.location.origin}/#map=16/${station.location.latitude}/${station.location.longitude}~f~S${station.id}`}
-                        size="md"
-                      />
-                      {isAdmin ? (
-                        <Link
-                          to="/admin/stations/$id"
-                          params={{ id: String(station.id) }}
-                          search={{ uke: undefined }}
-                          className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
-                          onClick={onClose}
-                        >
-                          <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-                          <span className="hidden sm:inline">{t("common:actions.edit")}</span>
-                        </Link>
-                      ) : (
-                        settings?.submissionsEnabled && (
-                          <Link
-                            to="/submission"
-                            search={{ station: String(station.id) }}
-                            className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-bold shadow-sm hover:bg-primary/20 transition-colors"
-                            onClick={onClose}
-                          >
-                            <HugeiconsIcon icon={PencilEdit02Icon} className="size-3.5" />
-                            <span className="hidden sm:inline">{t("common:actions.edit")}</span>
-                          </Link>
-                        )
-                      )}
-                    </>
-                  )}
-                  <button type="button" onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
-                    <HugeiconsIcon icon={Cancel01Icon} className="size-5" />
-                  </button>
-                </div>
-              </div>
-              {stationNotes ? (
-                <div className="border-t border-primary/20 bg-primary/8 px-6 py-3 text-primary">
-                  <div className="flex items-start gap-2.5">
-                    <HugeiconsIcon icon={Note01Icon} className="mt-0.5 size-4 shrink-0" />
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="text-sm font-semibold">{t("specs.internalNotes")}</p>
-                      <p className="max-h-20 overflow-y-auto whitespace-pre-wrap wrap-break-word pr-1 text-xs leading-relaxed text-foreground custom-scrollbar">
-                        {stationNotes}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              {station?.status === "inactive" ? (
-                <div className="border-t border-red-600/30 bg-red-500/10 px-6 py-3 text-red-700 dark:border-red-400/35 dark:bg-red-400/12 dark:text-red-300">
-                  <div className="flex items-start gap-2.5">
-                    <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 size-4 shrink-0" />
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-semibold">{t("dialog.inactiveStationTitle")}</p>
-                      <p className="text-xs text-red-700/85 dark:text-red-300/80">{t("dialog.inactiveStationDescription")}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <StationDetailsBody
-              stationId={stationId}
-              source={source}
-              isLoading={isLoading}
-              error={error}
-              station={station}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              onClose={onClose}
-              isAdmin={isAdmin}
-            />
-          </div>
-
-          {source === "internal" && !!stationId && preferences.showStationPhotoPanel && (
-            <div className="absolute top-0 left-full pl-3 hidden xl:flex h-full max-h-[calc(100dvh-2rem)]">
-              <MainPhotoPanel stationId={stationId} onOpenPhotoTab={() => setActiveTab("photos")} />
-            </div>
-          )}
-        </div>
+        <StationDetailsDialogPanel
+          stationId={stationId}
+          source={source}
+          onClose={onClose}
+          className="pointer-events-auto animate-in fade-in zoom-in-95 duration-200 w-full max-w-4xl"
+        />
       </div>
     </>
   );

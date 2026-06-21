@@ -39,6 +39,8 @@
     "restore": "Przywróć",
     "noChanges": "Brak zmian do zapisania",
     "retry": "Spróbuj ponownie",
+    "resize": "Zmień rozmiar",
+    "resizeHorizontally": "Zmień szerokość",
     "showOnMap": "Pokaż na mapie"
   },
   "labels": {
@@ -169,6 +171,9 @@
     "tryAgain": "Spróbuj ponownie",
     "reload": "Odśwież stronę",
     "toast": "Coś poszło nie tak. Spróbuj ponownie."
+  },
+  "toast": {
+    "closeStationDialogFirst": "Zamknij najpierw jedno okno, aby otworzyć kolejne"
   },
   "backendUnavailable": {
     "title": "Serwer niedostępny",

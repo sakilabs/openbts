@@ -1,26 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, lazy, useCallback, useState } from "react";
+import { useCallback } from "react";
 
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { StationsListLayout } from "@/features/stations/components/stationsFilterLayout";
 import { useStationsData } from "@/features/stations/hooks/useStationsData";
 import type { Station } from "@/types/station";
 
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
-
 function StationsListPage() {
-  const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
+  const { openStationDialog } = useStationDialogStack();
   const data = useStationsData();
-  const handleRowClick = useCallback((station: Station) => setSelectedStationId(station.id), []);
+  const handleRowClick = useCallback((station: Station) => openStationDialog(station.id, "internal"), [openStationDialog]);
 
-  return (
-    <StationsListLayout data={data} onRowClick={handleRowClick}>
-      <Suspense fallback={null}>
-        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
-      </Suspense>
-    </StationsListLayout>
-  );
+  return <StationsListLayout data={data} onRowClick={handleRowClick} />;
 }
 
 export const Route = createFileRoute("/_layout/stations")({

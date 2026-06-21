@@ -1,6 +1,6 @@
 import { AirportTowerIcon, Globe02Icon, SquareArrowExpand01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Suspense, lazy, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -15,15 +15,12 @@ import { deriveSectorPanelState } from "@/features/shared/sectorPanelState";
 import { StationBasicsFields } from "@/features/shared/StationBasicsFields";
 import OrangeIcon from "@/features/station-details/components/logos/orange.svg?react";
 import TMobileIcon from "@/features/station-details/components/logos/t-mobile.svg?react";
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
 import { EXTRA_IDENTIFICATORS_MNCS, MNO_NAME_ONLY_MNCS, getMnoBrand, normalizeCityForMNOName } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
 import type { Operator, SectorDraft, Station } from "@/types/station";
-
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 
 import { ChangeBadge } from "./common";
 
@@ -79,7 +76,7 @@ export function SubmissionStationForm({
   isDeleteSubmission,
 }: SubmissionStationFormProps) {
   const { t } = useTranslation(["submissions", "common", "stationDetails"]);
-  const [stationDialogOpen, setStationDialogOpen] = useState(false);
+  const { openStationDialog } = useStationDialogStack();
   const [isFetchingSibling, setIsFetchingSibling] = useState(false);
   const showExtraIdsFields = selectedOperator ? EXTRA_IDENTIFICATORS_MNCS.includes(selectedOperator.mnc) : !!extraIdsForm.networks_id;
   const showMnoNameOnly = selectedOperator ? MNO_NAME_ONLY_MNCS.includes(selectedOperator.mnc) : !extraIdsForm.networks_id && !!extraIdsForm.mno_name;
@@ -177,7 +174,7 @@ export function SubmissionStationForm({
           {currentStation && (
             <button
               type="button"
-              onClick={() => setStationDialogOpen(true)}
+              onClick={() => openStationDialog(currentStation.id, "internal")}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
             >
               <HugeiconsIcon icon={SquareArrowExpand01Icon} className="size-3.5" />
@@ -312,12 +309,6 @@ export function SubmissionStationForm({
           ukeSectors={ukeSectors}
         />
       ) : null}
-
-      {currentStation && stationDialogOpen && (
-        <Suspense>
-          <StationDetailsDialog stationId={currentStation.id} source="internal" onClose={() => setStationDialogOpen(false)} />
-        </Suspense>
-      )}
     </>
   );
 }

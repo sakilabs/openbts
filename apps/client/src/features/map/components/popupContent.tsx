@@ -23,8 +23,8 @@ type PopupStationListProps = {
   ukeStations?: UkeStation[] | null;
   stations: StationWithoutCells[] | null;
   showAddToList: boolean;
-  onOpenStationDetails: (id: number) => void;
-  onOpenUkeStationDetails: (station: UkeStation) => void;
+  onOpenStationDetails: (id: number) => boolean | void;
+  onOpenUkeStationDetails: (station: UkeStation) => boolean | void;
 };
 
 function PopupStationList({
@@ -150,8 +150,8 @@ type PopupContentProps = {
   ukeStations?: UkeStation[] | null;
   source: StationSource;
   showAddToList?: boolean;
-  onOpenStationDetails: (id: number) => void;
-  onOpenUkeStationDetails: (station: UkeStation) => void;
+  onOpenStationDetails: (id: number) => boolean | void;
+  onOpenUkeStationDetails: (station: UkeStation) => boolean | void;
 };
 
 function StationSkeleton() {

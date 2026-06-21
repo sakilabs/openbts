@@ -24,7 +24,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Suspense, lazy, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSepa
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { saveDraft } from "@/features/submissions/utils/analyzerDraftStore";
 import { useHorizontalScroll } from "@/hooks/useHorizontalScroll";
 import { useIsMobile } from "@/hooks/useMobile";
@@ -52,9 +53,6 @@ import { formatDuration } from "@/lib/format";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
 import type { Operator, Region } from "@/types/station";
-const StationDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/stationsDetailsDialog").then((m) => ({ default: m.StationDetailsDialog })),
-);
 
 type AnalyzerLocation = {
   id: number;
@@ -335,7 +333,7 @@ function AnalyzerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [state, dispatch] = useReducer(analyzerReducer, initialState);
-  const [selectedStationId, setSelectedStationId] = useState<number | null>(null);
+  const { openStationDialog } = useStationDialogStack();
   const [sorting, setSorting] = useState<SortingState>([]);
   const analyzeStartRef = useRef<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -847,7 +845,7 @@ function AnalyzerPage() {
               <button
                 type="button"
                 className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                onClick={() => setSelectedStationId(station.id)}
+                onClick={() => openStationDialog(station.id, "internal")}
               >
                 <HugeiconsIcon icon={Tag01Icon} className="size-3 shrink-0" />
                 <span className="font-mono">{station.station_id}</span>
@@ -1271,9 +1269,6 @@ function AnalyzerPage() {
           </DataTable.Root>
         </div>
       </div>
-      <Suspense fallback={null}>
-        <StationDetailsDialog key={selectedStationId} stationId={selectedStationId} source="internal" onClose={() => setSelectedStationId(null)} />
-      </Suspense>
     </RequireAuth>
   );
 }

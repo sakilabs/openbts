@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import type { MapMouseEvent } from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useMap } from "@/components/ui/map";
@@ -28,7 +29,7 @@ import { useUrlSync } from "../hooks/useURLSync";
 import { groupPermitsByStation, toLocationInfo } from "../utils";
 import { StationHoverTooltipContent } from "./stationHoverTooltipContent";
 
-const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+const EMPTY_GEOJSON = { type: "FeatureCollection" as const, features: [] };
 const EMPTY_UKE_LOCATIONS: UkeLocationWithPermits[] = [];
 const EMPTY_INTERNAL_LOCATIONS: LocationWithStations[] = [];
 const EMPTY_BLOCKED_LAYERS: string[] = [];
@@ -105,8 +106,8 @@ type PopupActions = {
 };
 
 type StationActions = {
-  openDetails: (id: number, source: StationSource) => void;
-  openUkeDetails: (station: UkeStation) => void;
+  openDetails: (id: number, source: StationSource) => boolean | void;
+  openUkeDetails: (station: UkeStation) => boolean | void;
 };
 
 type StationsLayerProps = {
@@ -449,7 +450,7 @@ export function StationsLayer({
   useEffect(() => {
     if (!map) return;
 
-    const handleContextMenu = (e: maplibregl.MapMouseEvent) => {
+    const handleContextMenu = (e: MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER_ID, `${POINT_LAYER_ID}-symbol`] });
       if (features.length === 0) {
         if (mapRightClickMeasureRef.current) {

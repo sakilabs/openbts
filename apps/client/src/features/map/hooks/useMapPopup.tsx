@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Popup } from "maplibre-gl";
+import { type Map as MaplibreMap, Popup } from "maplibre-gl";
 import { useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -9,10 +9,10 @@ import type { LocationInfo, StationSource, StationWithoutCells, UkeStation } fro
 import { PopupContent } from "../components/popupContent";
 
 type UseMapPopupArgs = {
-  map: maplibregl.Map | null;
+  map: MaplibreMap | null;
   showAddToList?: boolean;
-  onOpenStationDetails: (id: number, source: StationSource) => void;
-  onOpenUkeStationDetails: (station: UkeStation) => void;
+  onOpenStationDetails: (id: number, source: StationSource) => boolean | void;
+  onOpenUkeStationDetails: (station: UkeStation) => boolean | void;
   onClose?: () => void;
 };
 
@@ -45,12 +45,12 @@ export function useMapPopup({ map, showAddToList, onOpenStationDetails, onOpenUk
             source={source}
             showAddToList={showAddToList}
             onOpenStationDetails={(id) => {
-              onOpenStationDetails(id, source);
-              popupRef.current?.remove();
+              const didOpen = onOpenStationDetails(id, source);
+              if (didOpen !== false) popupRef.current?.remove();
             }}
             onOpenUkeStationDetails={(station) => {
-              onOpenUkeStationDetails(station);
-              popupRef.current?.remove();
+              const didOpen = onOpenUkeStationDetails(station);
+              if (didOpen !== false) popupRef.current?.remove();
             }}
           />
         </QueryClientProvider>,
