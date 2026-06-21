@@ -203,7 +203,6 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
         stationId={dialog.id}
         source={dialog.source}
         onClose={onClose}
-        showPhotoPanel={false}
         contentRef={contentRef}
         bodyRef={bodyRef}
         bodyContentRef={bodyContentRef}
