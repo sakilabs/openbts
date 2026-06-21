@@ -60,13 +60,19 @@ export function createInitialStationDialogRect(index: number): StationDialogRect
 
 export function applyStationDialogRect(node: HTMLDivElement | null, rect: StationDialogRect) {
   if (node === null) return;
-  node.style.transform = getStationDialogTransform(rect);
-  node.style.width = `${rect.width}px`;
-  node.style.height = `${rect.height}px`;
+  node.style.left = `${Math.round(rect.x)}px`;
+  node.style.top = `${Math.round(rect.y)}px`;
+  node.style.width = `${Math.round(rect.width)}px`;
+  node.style.height = `${Math.round(rect.height)}px`;
 }
 
-export function getStationDialogTransform(rect: StationDialogRect) {
-  return `translate3d(${Math.round(rect.x)}px, ${Math.round(rect.y)}px, 0)`;
+export function getStationDialogPosition(rect: StationDialogRect) {
+  return {
+    left: Math.round(rect.x),
+    top: Math.round(rect.y),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
 }
 
 export function getNaturalStationDialogHeight(content: HTMLDivElement, body: HTMLDivElement, bodyContent: HTMLDivElement) {
