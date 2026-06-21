@@ -12,6 +12,7 @@ import {
   getNaturalStationDialogHeight,
   getStationDialogCursor,
   getStationDialogInteractionRect,
+  getStationDialogTransform,
   shouldSyncStationDialogRect,
 } from "./stationDialogGeometry";
 import type { StationDialogItem, StationDialogRect } from "./stationDialogStackState";
@@ -183,7 +184,7 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
       ref={panelRef}
       className="fixed pointer-events-auto animate-in fade-in duration-100 will-change-transform"
       style={{
-        transform: `translate3d(${dialog.rect.x}px, ${dialog.rect.y}px, 0)`,
+        transform: getStationDialogTransform(dialog.rect),
         minWidth: STATION_DIALOG_DESKTOP_MIN_WIDTH,
         width: dialog.rect.width,
         height: dialog.rect.height,

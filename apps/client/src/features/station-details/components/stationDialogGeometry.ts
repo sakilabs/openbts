@@ -16,6 +16,12 @@ const DIALOG_OFFSET = 32;
 const DIALOG_MARGIN = 16;
 const RECT_SYNC_THRESHOLD = 1;
 
+function snapStationDialogCoordinate(value: number, min: number, max: number) {
+  const minPixel = Math.ceil(min);
+  const maxPixel = Math.floor(max);
+  return Math.min(Math.max(Math.round(value), minPixel), Math.max(minPixel, maxPixel));
+}
+
 function getViewportBounds() {
   return {
     width: window.innerWidth,
@@ -31,8 +37,10 @@ export function clampStationDialogRect(rect: StationDialogRect): StationDialogRe
   const minHeight = Math.min(STATION_DIALOG_DESKTOP_MIN_HEIGHT, maxAvailableHeight);
   const width = Math.min(Math.max(rect.width, minWidth), maxAvailableWidth);
   const height = Math.min(Math.max(rect.height, minHeight), maxAvailableHeight);
-  const x = Math.min(Math.max(rect.x, DIALOG_MARGIN), Math.max(DIALOG_MARGIN, bounds.width - width - DIALOG_MARGIN));
-  const y = Math.min(Math.max(rect.y, DIALOG_MARGIN), Math.max(DIALOG_MARGIN, bounds.height - height - DIALOG_MARGIN));
+  const maxX = Math.max(DIALOG_MARGIN, bounds.width - width - DIALOG_MARGIN);
+  const maxY = Math.max(DIALOG_MARGIN, bounds.height - height - DIALOG_MARGIN);
+  const x = snapStationDialogCoordinate(Math.min(Math.max(rect.x, DIALOG_MARGIN), maxX), DIALOG_MARGIN, maxX);
+  const y = snapStationDialogCoordinate(Math.min(Math.max(rect.y, DIALOG_MARGIN), maxY), DIALOG_MARGIN, maxY);
 
   return { x, y, width, height };
 }
@@ -52,9 +60,13 @@ export function createInitialStationDialogRect(index: number): StationDialogRect
 
 export function applyStationDialogRect(node: HTMLDivElement | null, rect: StationDialogRect) {
   if (node === null) return;
-  node.style.transform = `translate3d(${rect.x}px, ${rect.y}px, 0)`;
+  node.style.transform = getStationDialogTransform(rect);
   node.style.width = `${rect.width}px`;
   node.style.height = `${rect.height}px`;
+}
+
+export function getStationDialogTransform(rect: StationDialogRect) {
+  return `translate3d(${Math.round(rect.x)}px, ${Math.round(rect.y)}px, 0)`;
 }
 
 export function getNaturalStationDialogHeight(content: HTMLDivElement, body: HTMLDivElement, bodyContent: HTMLDivElement) {
@@ -76,8 +88,8 @@ export function getStationDialogInteractionRect(mode: StationDialogInteractionMo
 
 export function shouldSyncStationDialogRect(current: StationDialogRect, next: StationDialogRect) {
   return (
-    Math.abs(current.x - next.x) >= RECT_SYNC_THRESHOLD ||
-    Math.abs(current.y - next.y) >= RECT_SYNC_THRESHOLD ||
+    current.x !== next.x ||
+    current.y !== next.y ||
     Math.abs(current.width - next.width) >= RECT_SYNC_THRESHOLD ||
     Math.abs(current.height - next.height) >= RECT_SYNC_THRESHOLD
   );
