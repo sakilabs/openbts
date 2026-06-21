@@ -23,6 +23,8 @@ import { TOP4_MNCS, getOperatorColor } from "@/lib/operatorUtils";
 import { cn, toggleValue } from "@/lib/utils";
 import type { Operator, Region, StationFilters } from "@/types/station";
 
+const STATIONS_FILTER_KEYWORDS = FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("stations"));
+
 const RAT_OPTIONS = [
   { value: "NR", label: "NR", gen: "5G" },
   { value: "LTE", label: "LTE", gen: "4G" },
@@ -72,8 +74,6 @@ export function StationsFilters({
   const otherOperators = useMemo(() => operators.filter((op) => !TOP4_MNCS.includes(op.mnc)), [operators]);
   const hasSelectedOther = useMemo(() => otherOperators.some((op) => filters.operators.includes(op.mnc)), [otherOperators, filters.operators]);
 
-  const stationsFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("stations")), []);
-
   const {
     query,
     inputValue,
@@ -92,7 +92,7 @@ export function StationsFilters({
     applyAutocomplete,
     clearSearch,
     removeFilter,
-  } = useSearchState({ filterKeywords: stationsFilterKeywords, parseFilters, initialValue: parentSearchQuery });
+  } = useSearchState({ filterKeywords: STATIONS_FILTER_KEYWORDS, parseFilters, initialValue: parentSearchQuery });
 
   const searchDebounceRef = useRef<number | null>(null);
 

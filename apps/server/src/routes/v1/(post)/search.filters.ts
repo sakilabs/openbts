@@ -28,6 +28,7 @@ type FilterRefs = {
   extraIdentificators: typeof extraIdentificators;
   bands: typeof bands;
   operators: typeof operators;
+  regions: typeof regions;
 };
 export const defaultFilterRefs: FilterRefs = {
   locations,
@@ -40,6 +41,7 @@ export const defaultFilterRefs: FilterRefs = {
   extraIdentificators,
   bands,
   operators,
+  regions,
 };
 export type FilterCondition = {
   table: FilterTable;
@@ -136,29 +138,29 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   // stations
   bts_id: {
     table: "stations",
-    buildCondition: buildLikeAny(stations.station_id),
+    buildCondition: (value, refs) => buildLikeAny(refs.stations.station_id)(value),
   },
   mnc: {
     table: "stations",
     buildCondition: (value, refs) =>
-      buildInArrayFromSubquery(stations.operator_id, (values) => sql`(SELECT id FROM ${refs.operators} WHERE mnc IN ${values})`)(value),
+      buildInArrayFromSubquery(refs.stations.operator_id, (values) => sql`(SELECT id FROM ${refs.operators} WHERE mnc IN ${values})`)(value),
   },
 
   created_after: {
     table: "stations",
-    buildCondition: buildDateGte(stations.createdAt),
+    buildCondition: (value, refs) => buildDateGte(refs.stations.createdAt)(value),
   },
   created_before: {
     table: "stations",
-    buildCondition: buildDateLte(stations.createdAt),
+    buildCondition: (value, refs) => buildDateLte(refs.stations.createdAt)(value),
   },
   updated_after: {
     table: "stations",
-    buildCondition: buildDateGte(stations.updatedAt),
+    buildCondition: (value, refs) => buildDateGte(refs.stations.updatedAt)(value),
   },
   updated_before: {
     table: "stations",
-    buildCondition: buildDateLte(stations.updatedAt),
+    buildCondition: (value, refs) => buildDateLte(refs.stations.updatedAt)(value),
   },
 
   has_photo: {
@@ -174,103 +176,103 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   band: {
     table: "cells",
     buildCondition: (value, refs) =>
-      buildInArrayFromSubquery(cells.band_id, (values) => sql`(SELECT id FROM ${refs.bands} WHERE value IN ${values})`)(value),
+      buildInArrayFromSubquery(refs.cells.band_id, (values) => sql`(SELECT id FROM ${refs.bands} WHERE value IN ${values})`)(value),
   },
   rat: {
     table: "cells",
-    buildCondition: buildInArray(cells.rat, parseRats),
+    buildCondition: (value, refs) => buildInArray(refs.cells.rat, parseRats)(value),
   },
   is_confirmed: {
     table: "cells",
-    buildCondition: buildBooleanEq(cells.is_confirmed),
+    buildCondition: (value, refs) => buildBooleanEq(refs.cells.is_confirmed)(value),
   },
   cell_notes: {
     table: "cells",
-    buildCondition: buildLikeAny(cells.notes),
+    buildCondition: (value, refs) => buildLikeAny(refs.cells.notes)(value),
   },
 
   // gsmCells
   lac: {
     table: "gsmCells",
-    buildCondition: buildInArray(gsmCells.lac, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.gsmCells.lac, parseNumbers)(value),
   },
   cid: {
     table: "gsmCells",
-    buildCondition: buildInArray(gsmCells.cid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.gsmCells.cid, parseNumbers)(value),
   },
 
   // umtsCells
   rnc: {
     table: "umtsCells",
-    buildCondition: buildInArray(umtsCells.rnc, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.umtsCells.rnc, parseNumbers)(value),
   },
   umts_cid: {
     table: "umtsCells",
-    buildCondition: buildInArray(umtsCells.cid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.umtsCells.cid, parseNumbers)(value),
   },
   cid_long: {
     table: "umtsCells",
-    buildCondition: buildInArray(umtsCells.cid_long, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.umtsCells.cid_long, parseNumbers)(value),
   },
   umts_lac: {
     table: "umtsCells",
-    buildCondition: buildInArray(umtsCells.lac, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.umtsCells.lac, parseNumbers)(value),
   },
 
   // lteCells
   enbid: {
     table: "lteCells",
-    buildCondition: buildInArray(lteCells.enbid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.lteCells.enbid, parseNumbers)(value),
   },
   ecid: {
     table: "lteCells",
-    buildCondition: buildInArray(lteCells.ecid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.lteCells.ecid, parseNumbers)(value),
   },
   lte_clid: {
     table: "lteCells",
-    buildCondition: buildInArray(lteCells.clid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.lteCells.clid, parseNumbers)(value),
   },
   tac: {
     table: "lteCells",
-    buildCondition: buildInArray(lteCells.tac, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.lteCells.tac, parseNumbers)(value),
   },
   lte_pci: {
     table: "lteCells",
-    buildCondition: buildInArray(lteCells.pci, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.lteCells.pci, parseNumbers)(value),
   },
   earfcn: {
     table: "lteCells",
-    buildCondition: buildInArray(lteCells.earfcn, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.lteCells.earfcn, parseNumbers)(value),
   },
   supports_iot: {
     table: "lteCells",
-    buildCondition: buildBooleanEq(lteCells.supports_iot),
+    buildCondition: (value, refs) => buildBooleanEq(refs.lteCells.supports_iot)(value),
   },
 
   // nrCells
   gnbid: {
     table: "nrCells",
-    buildCondition: buildInArray(nrCells.gnbid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.nrCells.gnbid, parseNumbers)(value),
   },
   nci: {
     table: "nrCells",
-    buildCondition: buildInArray(nrCells.nci, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.nrCells.nci, parseNumbers)(value),
   },
   nr_clid: {
     table: "nrCells",
-    buildCondition: buildInArray(nrCells.clid, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.nrCells.clid, parseNumbers)(value),
   },
   nrtac: {
     table: "nrCells",
-    buildCondition: buildInArray(nrCells.nrtac, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.nrCells.nrtac, parseNumbers)(value),
   },
   nr_pci: {
     table: "nrCells",
-    buildCondition: buildInArray(nrCells.pci, parseNumbers),
+    buildCondition: (value, refs) => buildInArray(refs.nrCells.pci, parseNumbers)(value),
   },
   supports_nr_redcap: {
     table: "nrCells",
-    buildCondition: buildBooleanEq(nrCells.supports_nr_redcap),
+    buildCondition: (value, refs) => buildBooleanEq(refs.nrCells.supports_nr_redcap)(value),
   },
 
   // gps
@@ -291,7 +293,7 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
       buildInArrayFromStringSubquery(
         refs.locations.region_id,
         (values) =>
-          sql`(SELECT id FROM ${regions} WHERE code IN (${sql.join(
+          sql`(SELECT id FROM ${refs.regions} WHERE code IN (${sql.join(
             values.map((v) => sql`${v.toUpperCase()}`),
             sql`, `,
           )}))`,
@@ -325,11 +327,11 @@ export const FILTER_DEFINITIONS: Record<string, FilterCondition> = {
   },
   networks_name: {
     table: "extraIdentificators",
-    buildCondition: buildLikeAny(extraIdentificators.networks_name),
+    buildCondition: (value, refs) => buildLikeAny(refs.extraIdentificators.networks_name)(value),
   },
   mno_name: {
     table: "extraIdentificators",
-    buildCondition: buildLikeAny(extraIdentificators.mno_name),
+    buildCondition: (value, refs) => buildLikeAny(refs.extraIdentificators.mno_name)(value),
   },
 };
 

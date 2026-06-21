@@ -1530,7 +1530,7 @@ paths:
         - name: q
           in: query
           description: Advanced filters from POST /search or normal city and address search
-          schema: { type: string, maxLength: 100 }
+          schema: { type: string, maxLength: 500 }
         - name: orphaned
           in: query
           schema: { type: boolean, default: false }

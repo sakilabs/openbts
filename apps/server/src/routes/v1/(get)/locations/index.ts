@@ -17,7 +17,7 @@ import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
-import { defaultFilterRefs, groupFiltersByTable, parseFilterQuery } from "../../(post)/search.filters.ts";
+import { type GroupedFilters, defaultFilterRefs, groupFiltersByTable, parseFilterQuery } from "../../(post)/search.filters.ts";
 import db from "../../../../database/psql.js";
 import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
@@ -122,6 +122,54 @@ type ResponseData = z.infer<typeof locationsSchema> & { region: z.infer<typeof r
 type ResponseBody = { data: ResponseData[]; totalCount: number };
 
 const ORPHANED_ALLOWED_ROLES = new Set(["admin", "editor"]);
+
+function appendStationScopedFilterConditions(conditions: ReturnType<typeof sql>[], groupedFilters: GroupedFilters, stationFields: typeof stations) {
+  if (groupedFilters.cells.length > 0)
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${cells}
+      WHERE ${cells.station_id} = ${stationFields.id}
+      AND ${and(...groupedFilters.cells)}
+    )`);
+
+  if (groupedFilters.gsmCells.length > 0)
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${cells}
+      JOIN ${gsmCells} ON ${gsmCells.cell_id} = ${cells.id}
+      WHERE ${cells.station_id} = ${stationFields.id}
+      AND ${and(...groupedFilters.gsmCells)}
+    )`);
+
+  if (groupedFilters.umtsCells.length > 0)
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${cells}
+      JOIN ${umtsCells} ON ${umtsCells.cell_id} = ${cells.id}
+      WHERE ${cells.station_id} = ${stationFields.id}
+      AND ${and(...groupedFilters.umtsCells)}
+    )`);
+
+  if (groupedFilters.lteCells.length > 0)
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${cells}
+      JOIN ${lteCells} ON ${lteCells.cell_id} = ${cells.id}
+      WHERE ${cells.station_id} = ${stationFields.id}
+      AND ${and(...groupedFilters.lteCells)}
+    )`);
+
+  if (groupedFilters.nrCells.length > 0)
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${cells}
+      JOIN ${nrCells} ON ${nrCells.cell_id} = ${cells.id}
+      WHERE ${cells.station_id} = ${stationFields.id}
+      AND ${and(...groupedFilters.nrCells)}
+    )`);
+
+  if (groupedFilters.extraIdentificators.length > 0)
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${extraIdentificators}
+      WHERE ${extraIdentificators.station_id} = ${stationFields.id}
+      AND ${and(...groupedFilters.extraIdentificators)}
+    )`);
+}
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
   const {
@@ -277,59 +325,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     }
 
     for (const condition of stationGroupedFilters.stations) conditions.push(condition);
-
-    if (stationGroupedFilters.cells.length > 0) {
-      conditions.push(sql`EXISTS (
-          SELECT 1 FROM ${cells}
-          WHERE ${cells.station_id} = ${stationFields.id}
-          AND ${and(...stationGroupedFilters.cells)}
-        )
-        `);
-    }
-
-    if (stationGroupedFilters.gsmCells.length > 0) {
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${cells}
-        JOIN ${gsmCells} ON ${gsmCells.cell_id} = ${cells.id}
-        WHERE ${cells.station_id} = ${stationFields.id}
-        AND ${and(...stationGroupedFilters.gsmCells)}
-        )`);
-    }
-
-    if (stationGroupedFilters.umtsCells.length > 0) {
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${cells}
-        JOIN ${umtsCells} ON ${umtsCells.cell_id} = ${cells.id}
-        WHERE ${cells.station_id} = ${stationFields.id}
-        AND ${and(...stationGroupedFilters.umtsCells)}
-        )`);
-    }
-
-    if (stationGroupedFilters.lteCells.length > 0) {
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${cells}
-        JOIN ${lteCells} ON ${lteCells.cell_id} = ${cells.id}
-        WHERE ${cells.station_id} = ${stationFields.id}
-        AND ${and(...stationGroupedFilters.lteCells)}
-        )`);
-    }
-
-    if (stationGroupedFilters.nrCells.length > 0) {
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${cells}
-        JOIN ${nrCells} ON ${nrCells.cell_id} = ${cells.id}
-        WHERE ${cells.station_id} = ${stationFields.id}
-        AND ${and(...stationGroupedFilters.nrCells)}
-        )`);
-    }
-
-    if (stationGroupedFilters.extraIdentificators.length > 0) {
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${extraIdentificators}
-        WHERE ${extraIdentificators.station_id} = ${stationFields.id}
-        AND ${and(...stationGroupedFilters.extraIdentificators)}
-        )`);
-    }
+    appendStationScopedFilterConditions(conditions, stationGroupedFilters, stationFields);
 
     return conditions.length > 1 ? sql`(${sql.join(conditions, sql` AND `)})` : conditions[0];
   };
@@ -475,59 +471,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         buildStatusCondition(stations, selectedStatuses),
       ];
       for (const condition of locationGroupedFilters.stations) innerConditions.push(condition);
-
-      if (locationGroupedFilters.cells.length > 0) {
-        innerConditions.push(sql`EXISTS (
-            SELECT 1 FROM ${cells}
-            WHERE ${cells.station_id} = ${stations.id}
-            AND ${and(...locationGroupedFilters.cells)}
-          )
-          `);
-      }
-
-      if (locationGroupedFilters.gsmCells.length > 0) {
-        innerConditions.push(sql`EXISTS (
-          SELECT 1 FROM ${cells}
-          JOIN ${gsmCells} ON ${gsmCells.cell_id} = ${cells.id}
-          WHERE ${cells.station_id} = ${stations.id}
-          AND ${and(...locationGroupedFilters.gsmCells)}
-          )`);
-      }
-
-      if (locationGroupedFilters.umtsCells.length > 0) {
-        innerConditions.push(sql`EXISTS (
-          SELECT 1 FROM ${cells}
-          JOIN ${umtsCells} ON ${umtsCells.cell_id} = ${cells.id}
-          WHERE ${cells.station_id} = ${stations.id}
-          AND ${and(...locationGroupedFilters.umtsCells)}
-          )`);
-      }
-
-      if (locationGroupedFilters.lteCells.length > 0) {
-        innerConditions.push(sql`EXISTS (
-          SELECT 1 FROM ${cells}
-          JOIN ${lteCells} ON ${lteCells.cell_id} = ${cells.id}
-          WHERE ${cells.station_id} = ${stations.id}
-          AND ${and(...locationGroupedFilters.lteCells)}
-          )`);
-      }
-
-      if (locationGroupedFilters.nrCells.length > 0) {
-        innerConditions.push(sql`EXISTS (
-          SELECT 1 FROM ${cells}
-          JOIN ${nrCells} ON ${nrCells.cell_id} = ${cells.id}
-          WHERE ${cells.station_id} = ${stations.id}
-          AND ${and(...locationGroupedFilters.nrCells)}
-          )`);
-      }
-
-      if (locationGroupedFilters.extraIdentificators.length > 0) {
-        innerConditions.push(sql`EXISTS (
-          SELECT 1 FROM ${extraIdentificators}
-          WHERE ${extraIdentificators.station_id} = ${stations.id}
-          AND ${and(...locationGroupedFilters.extraIdentificators)}
-          )`);
-      }
+      appendStationScopedFilterConditions(innerConditions, locationGroupedFilters, stations);
 
       conditions.push(sql`EXISTS (SELECT 1 FROM ${stations} WHERE ${and(...innerConditions)})`);
     }

@@ -34,6 +34,8 @@ import { SearchInput } from "./searchInput.js";
 import { SearchResults } from "./searchResults.js";
 import { StationCounter } from "./stationCounter.js";
 
+const MAP_FILTER_KEYWORDS = FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map"));
+
 type MapSearchOverlayProps = {
   locationCount: number;
   totalCount: number;
@@ -57,7 +59,7 @@ type MapSearchOverlayProps = {
   onToggleHeatmap?: () => void;
   showPlannedMeasurements?: boolean;
   onTogglePlannedMeasurements?: () => void;
-  onFilterQueryChange: (q: string | undefined) => void;
+  onFilterQueryChange?: (q: string | undefined) => void;
 };
 
 export const MapSearchOverlay = memo(function MapSearchOverlay({
@@ -92,7 +94,6 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   const isMobile = useIsMobile();
 
   const { preferences, updatePreferences } = usePreferences();
-  const mapFilterKeywords = useMemo(() => FILTER_KEYWORDS.filter((kw) => kw.availableOn.includes("map")), []);
   const [affectMap, setAffectMap] = useState<boolean>(() => {
     try {
       return localStorage.getItem("map:search:affectMap") === "true";
@@ -107,7 +108,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
       try {
         localStorage.setItem("map:search:affectMap", String(v));
       } catch {}
-      if (!v) onFilterQueryChange(undefined);
+      if (!v) onFilterQueryChange?.(undefined);
     },
     [onFilterQueryChange],
   );
@@ -133,7 +134,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     clearSearch,
     removeFilter,
     closeOverlay,
-  } = useSearchState({ filterKeywords: mapFilterKeywords, parseFilters, affectMap });
+  } = useSearchState({ filterKeywords: MAP_FILTER_KEYWORDS, parseFilters, affectMap });
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
 
@@ -215,10 +216,10 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
 
   useEffect(() => {
     if (!affectMap) {
-      onFilterQueryChange(undefined);
+      onFilterQueryChange?.(undefined);
       return;
     }
-    onFilterQueryChange(debouncedQuery || undefined);
+    onFilterQueryChange?.(debouncedQuery || undefined);
   }, [affectMap, debouncedQuery, onFilterQueryChange]);
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -335,7 +336,6 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
     onTogglePlannedMeasurements,
     handleToggleOperator,
     handleToggleRat,
-    handleToggleStatus,
     preferences.showAzimuths,
     updatePreferences,
   ]);

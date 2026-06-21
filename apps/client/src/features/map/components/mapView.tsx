@@ -166,17 +166,18 @@ function MapViewInner() {
   });
 
   const wantAzimuths = preferences.showAzimuths && zoom >= preferences.azimuthsMinZoom;
+  const effectiveMapQuery = filters.source === "internal" ? mapQuery : undefined;
 
   const {
     data: locationsResponse,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["locations", bounds, filters, preferences.mapStationsLimit, wantAzimuths, mapQuery],
+    queryKey: ["locations", bounds, filters, preferences.mapStationsLimit, wantAzimuths, effectiveMapQuery],
     queryFn: () =>
       fetchLocations(bounds, filters, preferences.mapStationsLimit, {
         azimuths: wantAzimuths,
-        q: filters.source === "internal" ? mapQuery : undefined,
+        q: effectiveMapQuery,
       }),
     enabled: isLoaded && !!bounds && !isMoving,
     staleTime: 1000 * 60 * 2,
