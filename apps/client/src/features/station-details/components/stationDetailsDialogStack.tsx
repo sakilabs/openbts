@@ -56,12 +56,20 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
   const bodyContentRef = useRef<HTMLDivElement>(null);
   const interactionRef = useRef<InteractionState | null>(null);
   const userResizedHeightRef = useRef(false);
+  const dialogRectRef = useRef(dialog.rect);
+  const onRectChangeRef = useRef(onRectChange);
+
+  dialogRectRef.current = dialog.rect;
+  onRectChangeRef.current = onRectChange;
 
   useLayoutEffect(() => {
     const nextRect = clampStationDialogRect(dialog.rect);
     applyStationDialogRect(panelRef.current, nextRect);
-    if (shouldSyncStationDialogRect(dialog.rect, nextRect)) onRectChange(nextRect);
-  }, [dialog.rect, onRectChange]);
+    if (shouldSyncStationDialogRect(dialog.rect, nextRect)) {
+      dialogRectRef.current = nextRect;
+      onRectChangeRef.current(nextRect);
+    }
+  }, [dialog.rect]);
 
   useEffect(
     () => () => {
@@ -81,17 +89,19 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
     const bodyContent = bodyContentRef.current;
     if (content === null || body === null || bodyContent === null) return;
 
+    const currentRect = dialogRectRef.current;
     const naturalHeight = getNaturalStationDialogHeight(content, body, bodyContent);
     const nextRect = clampStationDialogRect({
-      ...dialog.rect,
-      y: dialog.rect.y + (dialog.rect.height - naturalHeight) / 2,
+      ...currentRect,
+      y: currentRect.y + (currentRect.height - naturalHeight) / 2,
       height: naturalHeight,
     });
 
-    if (!shouldSyncStationDialogRect(dialog.rect, nextRect)) return;
+    if (!shouldSyncStationDialogRect(currentRect, nextRect)) return;
+    dialogRectRef.current = nextRect;
     applyStationDialogRect(panelRef.current, nextRect);
-    onRectChange(nextRect);
-  }, [dialog.rect, onRectChange]);
+    onRectChangeRef.current(nextRect);
+  }, []);
 
   useLayoutEffect(() => {
     const bodyContent = bodyContentRef.current;
@@ -128,7 +138,7 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
       document.body.style.userSelect = "none";
       document.body.style.cursor = getStationDialogCursor(mode);
       if (mode === "resize-corner") userResizedHeightRef.current = true;
-      const startRect = clampStationDialogRect(dialog.rect);
+      const startRect = clampStationDialogRect(dialogRectRef.current);
       interactionRef.current = {
         pointerId: event.pointerId,
         mode,
@@ -139,7 +149,7 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
         frameId: null,
       };
     },
-    [dialog.rect, onFocus],
+    [onFocus],
   );
 
   const handlePointerMove = useCallback((event: ReactPointerEvent<HTMLElement>) => {
@@ -162,22 +172,21 @@ function FloatingStationDialogFrame({ dialog, onClose, onFocus, onRectChange }: 
     }
   }, []);
 
-  const endInteraction = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      const interaction = interactionRef.current;
-      if (interaction === null || interaction.pointerId !== event.pointerId) return;
+  const endInteraction = useCallback((event: ReactPointerEvent<HTMLElement>) => {
+    const interaction = interactionRef.current;
+    if (interaction === null || interaction.pointerId !== event.pointerId) return;
 
-      event.preventDefault();
-      event.stopPropagation();
-      if (interaction.frameId !== null) cancelAnimationFrame(interaction.frameId);
-      interactionRef.current = null;
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
-      applyStationDialogRect(panelRef.current, interaction.nextRect);
-      onRectChange(interaction.nextRect);
-    },
-    [onRectChange],
-  );
+    const nextRect = interaction.nextRect;
+    event.preventDefault();
+    event.stopPropagation();
+    if (interaction.frameId !== null) cancelAnimationFrame(interaction.frameId);
+    interactionRef.current = null;
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+    dialogRectRef.current = nextRect;
+    applyStationDialogRect(panelRef.current, nextRect);
+    onRectChangeRef.current(nextRect);
+  }, []);
 
   return (
     <div
