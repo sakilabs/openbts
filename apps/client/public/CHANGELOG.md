@@ -1,6 +1,13 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-21
+
+### 🚀 Enhancements
+
+- Map search can now filter visible map results with advanced query tokens across station, cell, location, operator, band, date and GPS fields
+- Station details can now be opened in up to two draggable, resizable dialogs on desktop
+
 # 2026-06-20
 
 ### 🚀 Enhancements
