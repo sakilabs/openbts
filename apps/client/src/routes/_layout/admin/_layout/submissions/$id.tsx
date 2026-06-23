@@ -615,7 +615,10 @@ function SubmissionDetailForm({ submission, currentStation }: { submission: Subm
               isFormDisabled={isFormDisabled}
               isDeleteSubmission={isDeleteSubmission}
             />
-            <SubmissionLocationPhotoSelectionsSection photos={submission.locationPhotoSelections} />
+            <SubmissionLocationPhotoSelectionsSection
+              photos={submission.locationPhotoSelections}
+              removalPhotos={submission.locationPhotoRemovalSelections}
+            />
             <SubmissionPhotosSection submissionId={submission.id} readOnly={isReadOnly} pendingPhotos={submission.pending_photos ?? undefined} />
           </div>
 

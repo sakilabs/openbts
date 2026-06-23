@@ -1,4 +1,5 @@
 import {
+  attachments,
   cells,
   extraIdentificators,
   locationPhotos,
@@ -11,8 +12,10 @@ import {
 } from "@openbts/drizzle";
 import db from "@openbts/drizzle/db";
 import { logger } from "better-auth";
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import type { FastifyRequest } from "fastify";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 import { ErrorResponse } from "../../errors.ts";
 import { createAuditLog } from "../../services/auditLog.service.ts";
@@ -30,6 +33,8 @@ import {
   updateRATCellDetailsReturning,
 } from "../ratCellPersistence.ts";
 import { stationStatusForCellCount, stationStatusUpdate } from "../stationStatus.ts";
+
+const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 
 async function upsertLocation(
   tx: DbTx,
@@ -1017,22 +1022,75 @@ async function applyLocationPhotoSelections(tx: DbTx, locationPhotoSels: Submiss
     .where(and(eq(stationPhotoSelections.station_id, stationId), eq(stationPhotoSelections.location_photo_id, mainSel.location_photo_id)));
 }
 
+async function deleteAttachmentFiles(attachmentUuids: string[]): Promise<void> {
+  if (attachmentUuids.length === 0) return;
+  await Promise.all(attachmentUuids.map((uuid) => fs.unlink(path.join(UPLOAD_DIR, `${uuid}.webp`)).catch(() => {})));
+}
+
+async function applyLocationPhotoRemovals(tx: DbTx, removalPhotoIds: number[], stationId: number): Promise<string[]> {
+  if (removalPhotoIds.length === 0) return [];
+
+  const [wasMain] = await tx
+    .select({ id: stationPhotoSelections.id })
+    .from(stationPhotoSelections)
+    .where(
+      and(
+        eq(stationPhotoSelections.station_id, stationId),
+        inArray(stationPhotoSelections.location_photo_id, removalPhotoIds),
+        eq(stationPhotoSelections.is_main, true),
+      ),
+    )
+    .limit(1);
+
+  await tx
+    .delete(stationPhotoSelections)
+    .where(and(eq(stationPhotoSelections.station_id, stationId), inArray(stationPhotoSelections.location_photo_id, removalPhotoIds)));
+
+  if (wasMain) {
+    const [first] = await tx
+      .select({ id: stationPhotoSelections.id })
+      .from(stationPhotoSelections)
+      .where(eq(stationPhotoSelections.station_id, stationId))
+      .limit(1);
+    if (first) await tx.update(stationPhotoSelections).set({ is_main: true }).where(eq(stationPhotoSelections.id, first.id));
+  }
+
+  const orphanedPhotos = await tx
+    .select({ id: locationPhotos.id, attachmentId: locationPhotos.attachment_id })
+    .from(locationPhotos)
+    .leftJoin(stationPhotoSelections, eq(stationPhotoSelections.location_photo_id, locationPhotos.id))
+    .where(and(inArray(locationPhotos.id, removalPhotoIds), isNull(stationPhotoSelections.id)));
+
+  if (orphanedPhotos.length === 0) return [];
+
+  const orphanIds = orphanedPhotos.map((photo) => photo.id);
+  const orphanAttachmentIds = orphanedPhotos.map((photo) => photo.attachmentId);
+  const attachmentRows = await tx.select({ uuid: attachments.uuid }).from(attachments).where(inArray(attachments.id, orphanAttachmentIds));
+
+  await tx.delete(locationPhotos).where(inArray(locationPhotos.id, orphanIds));
+  await tx.delete(attachments).where(inArray(attachments.id, orphanAttachmentIds));
+  return attachmentRows.map(({ uuid }) => uuid);
+}
+
 async function applySubmissionPhotos(
   tx: DbTx,
   submission: SubmissionRow,
   submissionId: string,
   stationId: number | null,
   resolvedLocationId: number | null,
-): Promise<void> {
-  if (!stationId || submission.type === "delete") return;
+): Promise<string[]> {
+  if (!stationId || submission.type === "delete") return [];
 
   const [photos, locationPhotoSelections] = await Promise.all([
     tx.query.submissionPhotos.findMany({ where: { submission_id: submissionId } }),
     tx.query.submissionLocationPhotoSelections.findMany({ where: { submission_id: submissionId } }),
   ]);
+  const locationPhotoAdditions = locationPhotoSelections.filter((selection) => !selection.is_removal);
+  const locationPhotoRemovalIds = locationPhotoSelections.filter((selection) => selection.is_removal).map((selection) => selection.location_photo_id);
 
   await applyUploadedSubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId, photos);
-  await applyLocationPhotoSelections(tx, locationPhotoSelections, stationId);
+  await applyLocationPhotoSelections(tx, locationPhotoAdditions, stationId);
+  return applyLocationPhotoRemovals(tx, locationPhotoRemovalIds, stationId);
 }
 
 async function finalizeApprovedSubmission(
@@ -1087,7 +1145,7 @@ async function runApprovalTransaction({
   req: FastifyRequest;
   duplicateCheckDraft: ApprovalDuplicateCheckDraft;
   stationContext: ApprovalStationContext | null;
-}): Promise<{ submission: SubmissionRow; resolvedStationId: number | null; stationStringId: string | null }> {
+}): Promise<{ submission: SubmissionRow; resolvedStationId: number | null; stationStringId: string | null; attachmentUuidsToDelete: string[] }> {
   const draft = await loadApprovalDraft(tx, submissionId, duplicateCheckDraft);
   const targetCellsPromise = loadTargetCells(tx, draft.proposedCellRows);
   let stationId = submission.station_id;
@@ -1124,12 +1182,12 @@ async function runApprovalTransaction({
 
   if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
 
-  await applySubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId);
+  const attachmentUuidsToDelete = await applySubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId);
 
   const updated = await finalizeApprovedSubmission(tx, submission, submissionId, reviewerId, reviewerNotes);
   const stationStringId = getApprovedStationStringId(submission, draft.proposedStation, stationId, stationContext);
 
-  return { submission: updated, resolvedStationId: stationId, stationStringId };
+  return { submission: updated, resolvedStationId: stationId, stationStringId, attachmentUuidsToDelete };
 }
 
 export async function approveSubmissionAction({
@@ -1165,6 +1223,9 @@ export async function approveSubmissionAction({
   );
 
   const { submission: result, stationStringId } = transactionResult;
+  void deleteAttachmentFiles(transactionResult.attachmentUuidsToDelete).catch((e) =>
+    logger.error("Failed to delete orphaned location photo files after approval", { error: e instanceof Error ? e.message : String(e) }),
+  );
 
   if (submission.type === "new") {
     void syncStationsPermitsAssociations().catch((e) =>

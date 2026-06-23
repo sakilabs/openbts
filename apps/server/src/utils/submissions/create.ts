@@ -4,6 +4,7 @@ import {
   proposedLocations,
   proposedSectors,
   proposedStations,
+  stationPhotoSelections,
   submissionLocationPhotoSelections,
   submissions,
 } from "@openbts/drizzle";
@@ -72,6 +73,7 @@ export const singleSubmissionSchema = z
     cells: z.array(proposedCellInsert).optional(),
     pending_photos: z.number().int().min(1).optional(),
     location_photo_ids: z.array(z.number().int()).max(50).optional(),
+    location_photo_ids_to_remove: z.array(z.number().int()).max(50).optional(),
     main_location_photo_id: z.number().int().optional(),
   })
   .strict()
@@ -80,6 +82,9 @@ export const singleSubmissionSchema = z
       if (!data.location_photo_ids || !data.location_photo_ids.includes(data.main_location_photo_id))
         ctx.addIssue({ code: "custom", message: "main_location_photo_id must be one of the location_photo_ids" });
     }
+    const locationPhotoIds = new Set(data.location_photo_ids ?? []);
+    if ((data.location_photo_ids_to_remove ?? []).some((id) => locationPhotoIds.has(id)))
+      ctx.addIssue({ code: "custom", message: "location_photo_ids and location_photo_ids_to_remove must not overlap" });
   });
 
 export type SingleSubmission = z.infer<typeof singleSubmissionSchema>;
@@ -214,6 +219,19 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
       throw new ErrorResponse("BAD_REQUEST", { message: "One or more location_photo_ids are invalid or do not belong to this station's location" });
   }
 
+  const locationPhotoIdsToRemove = input.location_photo_ids_to_remove ?? [];
+  if (locationPhotoIdsToRemove.length > 0) {
+    if (type !== "update")
+      throw new ErrorResponse("BAD_REQUEST", { message: "location_photo_ids_to_remove is only supported for update submissions" });
+    if (stationId === null) throw new ErrorResponse("BAD_REQUEST", { message: "Cannot validate location_photo_ids_to_remove without a station" });
+    const [countRow] = await db
+      .select({ value: count() })
+      .from(stationPhotoSelections)
+      .where(and(eq(stationPhotoSelections.station_id, stationId), inArray(stationPhotoSelections.location_photo_id, locationPhotoIdsToRemove)));
+    if ((countRow?.value ?? 0) !== locationPhotoIdsToRemove.length)
+      throw new ErrorResponse("BAD_REQUEST", { message: "One or more location_photo_ids_to_remove are not assigned to this station" });
+  }
+
   const allModifiedCellIds = input.cells?.map((c) => c.target_cell_id).filter((id): id is number => id !== null && id !== undefined) ?? [];
   const operatorId = type === "new" ? stationData?.operator_id : targetStation?.operator_id;
   if (operatorId && input.cells && input.cells.length > 0) {
@@ -262,7 +280,16 @@ export async function validateSubmission(input: SingleSubmission): Promise<void>
 
     const hasPendingPhotos = !!input.pending_photos;
     const hasLocationPhotoSelections = (input.location_photo_ids?.length ?? 0) > 0;
-    if (!hasStationChanges && !hasLocationChanges && !hasCellChanges && !hasSectorChanges && !hasPendingPhotos && !hasLocationPhotoSelections)
+    const hasLocationPhotoRemovals = (input.location_photo_ids_to_remove?.length ?? 0) > 0;
+    if (
+      !hasStationChanges &&
+      !hasLocationChanges &&
+      !hasCellChanges &&
+      !hasSectorChanges &&
+      !hasPendingPhotos &&
+      !hasLocationPhotoSelections &&
+      !hasLocationPhotoRemovals
+    )
       throw new ErrorResponse("BAD_REQUEST", { message: "No changes detected. Please modify the data before submitting." });
   }
 }
@@ -303,6 +330,18 @@ export async function processSubmission(tx: DbTx, input: SingleSubmission, userI
         submission_id: submission.id,
         location_photo_id: photoId,
         is_main: photoId === input.main_location_photo_id,
+        is_removal: false,
+      })),
+    );
+  }
+
+  if (input.location_photo_ids_to_remove && input.location_photo_ids_to_remove.length > 0) {
+    await tx.insert(submissionLocationPhotoSelections).values(
+      input.location_photo_ids_to_remove.map((photoId) => ({
+        submission_id: submission.id,
+        location_photo_id: photoId,
+        is_main: false,
+        is_removal: true,
       })),
     );
   }

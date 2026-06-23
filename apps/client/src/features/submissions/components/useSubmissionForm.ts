@@ -113,8 +113,15 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
   const [photoNotes, setPhotoNotes] = useState<string[]>([]);
   const [photoTakenAts, setPhotoTakenAts] = useState<(Date | null)[]>([]);
   const [locationPhotoIds, setLocationPhotoIds] = useState<number[]>([]);
+  const [locationPhotoIdsToRemove, setLocationPhotoIdsToRemove] = useState<number[]>([]);
   const [mainLocationPhotoId, setMainLocationPhotoId] = useState<number | null>(null);
   const submittedValuesRef = useRef<FormValues | null>(null);
+
+  const clearLocationPhotoDraft = useCallback(() => {
+    setLocationPhotoIds([]);
+    setLocationPhotoIdsToRemove([]);
+    setMainLocationPhotoId(null);
+  }, []);
 
   const isEditMode = !!editSubmissionId;
 
@@ -157,6 +164,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     ): boolean => {
       if (photos.length > 0) return true;
       if (locationPhotoIds.length > 0) return true;
+      if (locationPhotoIdsToRemove.length > 0) return true;
       if (hasFormChanges({ mode, action, newStation, location, sectors, cells, submitterNote }, originalState)) return true;
       if (mode === "existing") {
         if (networksId !== (originalState.networksId ?? null)) return true;
@@ -165,7 +173,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       }
       return false;
     },
-    [originalState, photos.length, locationPhotoIds.length],
+    [originalState, photos.length, locationPhotoIds.length, locationPhotoIdsToRemove.length],
   );
 
   const form = useForm({
@@ -222,6 +230,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         cells: isDeleteMode ? [] : cells,
         pending_photos: photos.length > 0 ? photos.length : undefined,
         location_photo_ids: !isNewStation && !isDeleteMode && locationPhotoIds.length > 0 ? locationPhotoIds : undefined,
+        location_photo_ids_to_remove: !isNewStation && !isDeleteMode && locationPhotoIdsToRemove.length > 0 ? locationPhotoIdsToRemove : undefined,
         main_location_photo_id:
           !isNewStation && !isDeleteMode && mainLocationPhotoId !== null && locationPhotoIds.includes(mainLocationPhotoId)
             ? mainLocationPhotoId
@@ -256,8 +265,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         setPhotoTakenAts([]);
       }
       toast.success(t(isEditMode ? "toast.updated" : "toast.submitted"));
-      setLocationPhotoIds([]);
-      setMainLocationPhotoId(null);
+      clearLocationPhotoDraft();
       if (isEditMode && submittedValues) {
         setOriginalState(buildOriginalState(submittedValues));
         void queryClient.invalidateQueries({ queryKey: ["submission-edit", editSubmissionId] });
@@ -290,8 +298,9 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       form.setFieldValue("sectors", []);
       form.setFieldValue("originalSectors", []);
       form.setFieldValue("selectedRats", []);
+      clearLocationPhotoDraft();
     },
-    [form],
+    [clearLocationPhotoDraft, form],
   );
 
   const handleActionChange = useCallback(
@@ -299,15 +308,17 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       form.setFieldValue("action", action);
       if (action === "delete") {
         form.setFieldValue("submitterNote", "");
+        clearLocationPhotoDraft();
       }
     },
-    [form],
+    [clearLocationPhotoDraft, form],
   );
 
   const loadStation = useCallback(
     (station: SearchStation | null) => {
       form.setFieldValue("selectedStation", station);
       form.setFieldValue("action", "update");
+      clearLocationPhotoDraft();
 
       if (station) {
         const cells = stationCellsToForm(station);
@@ -359,7 +370,7 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
         setOriginalState({});
       }
     },
-    [form],
+    [clearLocationPhotoDraft, form],
   );
 
   const handleUkeStationSelect = useCallback(
@@ -499,6 +510,9 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
 
     let ignore = false;
     const submission = editSubmission;
+    setLocationPhotoIds(submission.locationPhotoSelections.map((photo) => photo.id));
+    setLocationPhotoIdsToRemove(submission.locationPhotoRemovalSelections.map((photo) => photo.id));
+    setMainLocationPhotoId(submission.locationPhotoSelections.find((photo) => photo.is_main)?.id ?? null);
 
     const isNew = submission.type === "new";
     const proposedCells: ProposedCellForm[] = submission.cells.map((cell) => ({
@@ -700,6 +714,8 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
     setPhotoTakenAts,
     locationPhotoIds,
     setLocationPhotoIds,
+    locationPhotoIdsToRemove,
+    setLocationPhotoIdsToRemove,
     mainLocationPhotoId,
     setMainLocationPhotoId,
     handlers: {

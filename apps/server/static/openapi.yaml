@@ -4291,6 +4291,14 @@ components:
             nullable: true,
             description: "IDs of location photos the submitter wants assigned to the station",
           }
+        location_photo_ids_to_remove:
+          {
+            type: array,
+            items: { type: integer },
+            maxItems: 50,
+            nullable: true,
+            description: "IDs of currently assigned station photos the submitter wants removed from the station",
+          }
         main_location_photo_id:
           { type: integer, nullable: true, description: "ID from `location_photo_ids` to mark as the main station photo when approved" }
     ProposedStationInsert:
@@ -4384,6 +4392,7 @@ components:
             sectors: { type: array, items: { $ref: "#/components/schemas/ProposedSector" } }
             cells: { type: array, items: { $ref: "#/components/schemas/ProposedCellWithDetails" } }
             locationPhotoSelections: { type: array, items: { $ref: "#/components/schemas/LocationPhotoSelection" } }
+            locationPhotoRemovalSelections: { type: array, items: { $ref: "#/components/schemas/LocationPhoto" } }
     SubmissionWithCells:
       allOf:
         - $ref: "#/components/schemas/Submission"

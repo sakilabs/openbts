@@ -93,6 +93,7 @@ export type SubmissionDetail = SubmissionBase & {
   sectors: ProposedSector[];
   cells: ProposedCell[];
   locationPhotoSelections: SubmissionLocationPhoto[];
+  locationPhotoRemovalSelections: LocationPhoto[];
 };
 
 export type SubmissionListItem = SubmissionBase & {

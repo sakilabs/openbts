@@ -98,6 +98,7 @@ export type SubmissionFormData = {
   cells: CellPayload[];
   pending_photos?: number;
   location_photo_ids?: number[];
+  location_photo_ids_to_remove?: number[];
   main_location_photo_id?: number;
 };
 

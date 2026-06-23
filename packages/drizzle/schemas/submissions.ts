@@ -243,6 +243,10 @@ export const submissionLocationPhotoSelections = SubmissionsSchema.table(
       .notNull()
       .references(() => locationPhotos.id, { onDelete: "cascade" }),
     is_main: boolean("is_main").notNull().default(false),
+    is_removal: boolean("is_removal").notNull().default(false),
   },
-  (t) => [primaryKey({ columns: [t.submission_id, t.location_photo_id] })],
+  (t) => [
+    primaryKey({ columns: [t.submission_id, t.location_photo_id] }),
+    check("is_main_not_removal", sql`NOT (${t.is_main} = true AND ${t.is_removal} = true)`),
+  ],
 );

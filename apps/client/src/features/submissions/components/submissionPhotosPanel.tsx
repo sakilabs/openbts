@@ -12,7 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type Dispatch, type ReactNode, type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -61,7 +61,9 @@ type SubmissionPhotosPanelProps = {
   takenAts: (Date | null)[];
   onTakenAtsChange: (takenAts: (Date | null)[]) => void;
   locationPhotoIds: number[];
-  onLocationPhotoIdsChange: (ids: number[]) => void;
+  onLocationPhotoIdsChange: Dispatch<SetStateAction<number[]>>;
+  locationPhotoIdsToRemove: number[];
+  onLocationPhotoIdsToRemoveChange: Dispatch<SetStateAction<number[]>>;
   mainLocationPhotoId: number | null;
   onMainLocationPhotoIdChange: (id: number | null) => void;
   editSubmissionId?: string;
@@ -85,6 +87,8 @@ export function SubmissionPhotosPanel({
   onTakenAtsChange,
   locationPhotoIds,
   onLocationPhotoIdsChange,
+  locationPhotoIdsToRemove,
+  onLocationPhotoIdsToRemoveChange,
   mainLocationPhotoId,
   onMainLocationPhotoIdChange,
   editSubmissionId,
@@ -169,14 +173,20 @@ export function SubmissionPhotosPanel({
     onError: () => toast.error(t("photos.noteFailed")),
   });
 
-  const assignedLocationPhotoIds = new Set<number>();
-  let currentMainLocationPhotoId: number | null = null;
-  for (const photo of stationPhotos) {
-    assignedLocationPhotoIds.add(photo.id);
-    if (photo.is_main) currentMainLocationPhotoId = photo.id;
-  }
+  const assignedPhotoState = useMemo(() => {
+    const ids = new Set<number>();
+    let mainId: number | null = null;
+    for (const photo of stationPhotos) {
+      ids.add(photo.id);
+      if (photo.is_main) mainId = photo.id;
+    }
+    return { ids, mainId };
+  }, [stationPhotos]);
+  const assignedLocationPhotoIds = assignedPhotoState.ids;
+  const currentMainLocationPhotoId = assignedPhotoState.mainId;
 
-  const selectedLocationPhotoIds = new Set(locationPhotoIds);
+  const selectedLocationPhotoIds = useMemo(() => new Set(locationPhotoIds), [locationPhotoIds]);
+  const markedForRemovalIds = useMemo(() => new Set(locationPhotoIdsToRemove), [locationPhotoIdsToRemove]);
   const uploadTotalCount = submissionPhotos.length + photos.length;
   const remainingSlots = MAX_FILES - uploadTotalCount;
   const isLocationLoading = locationId !== undefined && (isLoadingLocationPhotos || isLoadingStationPhotos);
@@ -217,6 +227,28 @@ export function SubmissionPhotosPanel({
   const nextLocationLightbox = useCallback(
     () => setLocationLightboxIndex((index) => (index !== null ? (index + 1) % locationPhotos.length : null)),
     [locationPhotos.length],
+  );
+
+  const toggleRemoval = useCallback(
+    (photo: LocationPhoto) => {
+      if (markedForRemovalIds.has(photo.id)) {
+        onLocationPhotoIdsToRemoveChange((ids) => ids.filter((id) => id !== photo.id));
+        return;
+      }
+
+      onLocationPhotoIdsToRemoveChange((ids) => (ids.includes(photo.id) ? ids : [...ids, photo.id]));
+      onLocationPhotoIdsChange((ids) => ids.filter((id) => id !== photo.id));
+      if (mainLocationPhotoId === photo.id) onMainLocationPhotoIdChange(null);
+    },
+    [mainLocationPhotoId, markedForRemovalIds, onLocationPhotoIdsChange, onLocationPhotoIdsToRemoveChange, onMainLocationPhotoIdChange],
+  );
+
+  const setLocationPhotoAsMain = useCallback(
+    (photo: LocationPhoto) => {
+      if (assignedLocationPhotoIds.has(photo.id)) onLocationPhotoIdsChange((ids) => (ids.includes(photo.id) ? ids : [...ids, photo.id]));
+      onMainLocationPhotoIdChange(photo.id);
+    },
+    [assignedLocationPhotoIds, onLocationPhotoIdsChange, onMainLocationPhotoIdChange],
   );
 
   if (!shouldRender) return null;
@@ -344,7 +376,9 @@ export function SubmissionPhotosPanel({
                     isLoading: isLocationLoading,
                     locationPhotos,
                     mainLocationPhotoId,
-                    onMainLocationPhotoIdChange,
+                    markedForRemovalIds,
+                    onSetLocationPhotoAsMain: setLocationPhotoAsMain,
+                    onToggleRemoval: toggleRemoval,
                     selectedLocationPhotoIds,
                     setLocationLightboxIndex,
                     t,
@@ -469,7 +503,9 @@ function renderLocationPhotoContent({
   isLoading,
   locationPhotos,
   mainLocationPhotoId,
-  onMainLocationPhotoIdChange,
+  markedForRemovalIds,
+  onSetLocationPhotoAsMain,
+  onToggleRemoval,
   selectedLocationPhotoIds,
   setLocationLightboxIndex,
   t,
@@ -480,7 +516,9 @@ function renderLocationPhotoContent({
   isLoading: boolean;
   locationPhotos: LocationPhoto[];
   mainLocationPhotoId: number | null;
-  onMainLocationPhotoIdChange: (id: number | null) => void;
+  markedForRemovalIds: ReadonlySet<number>;
+  onSetLocationPhotoAsMain: (photo: LocationPhoto) => void;
+  onToggleRemoval: (photo: LocationPhoto) => void;
   selectedLocationPhotoIds: ReadonlySet<number>;
   setLocationLightboxIndex: (index: number) => void;
   t: (key: string, options?: Record<string, unknown>) => string;
@@ -506,8 +544,10 @@ function renderLocationPhotoContent({
           currentMainLocationPhotoId={currentMainLocationPhotoId}
           index={index}
           mainLocationPhotoId={mainLocationPhotoId}
-          onMainLocationPhotoIdChange={onMainLocationPhotoIdChange}
+          markedForRemovalIds={markedForRemovalIds}
           onOpen={setLocationLightboxIndex}
+          onSetLocationPhotoAsMain={onSetLocationPhotoAsMain}
+          onToggleRemoval={onToggleRemoval}
           photo={photo}
           selectedLocationPhotoIds={selectedLocationPhotoIds}
           toggleLocationPhoto={toggleLocationPhoto}
@@ -522,8 +562,10 @@ function LocationPhotoCard({
   currentMainLocationPhotoId,
   index,
   mainLocationPhotoId,
-  onMainLocationPhotoIdChange,
+  markedForRemovalIds,
   onOpen,
+  onSetLocationPhotoAsMain,
+  onToggleRemoval,
   photo,
   selectedLocationPhotoIds,
   toggleLocationPhoto,
@@ -532,8 +574,10 @@ function LocationPhotoCard({
   currentMainLocationPhotoId: number | null;
   index: number;
   mainLocationPhotoId: number | null;
-  onMainLocationPhotoIdChange: (id: number | null) => void;
+  markedForRemovalIds: ReadonlySet<number>;
   onOpen: (index: number) => void;
+  onSetLocationPhotoAsMain: (photo: LocationPhoto) => void;
+  onToggleRemoval: (photo: LocationPhoto) => void;
   photo: LocationPhoto;
   selectedLocationPhotoIds: ReadonlySet<number>;
   toggleLocationPhoto: (photo: LocationPhoto) => void;
@@ -541,29 +585,37 @@ function LocationPhotoCard({
   const { t, i18n } = useTranslation("submissions");
   const isSelected = selectedLocationPhotoIds.has(photo.id);
   const isAssigned = assignedLocationPhotoIds.has(photo.id);
+  const isMarkedForRemoval = markedForRemovalIds.has(photo.id);
+  const isVisuallySelected = isSelected || (isAssigned && !isMarkedForRemoval);
   const isMain = mainLocationPhotoId === photo.id;
-  const isCurrentMain = currentMainLocationPhotoId === photo.id;
-  const showStarBadge = isMain || isCurrentMain;
-  const showSetAsMain = isSelected && !isMain && !(isCurrentMain && mainLocationPhotoId === null);
+  const isCurrentMain = currentMainLocationPhotoId === photo.id && mainLocationPhotoId === null;
+  const isEffectiveMain = isMain || isCurrentMain;
+  const showStarBadge = !isMarkedForRemoval && isEffectiveMain;
+  const showSetAsMain = isVisuallySelected && !isMarkedForRemoval && !isEffectiveMain;
+  const handleToggle = () => {
+    if (isAssigned) onToggleRemoval(photo);
+    else toggleLocationPhoto(photo);
+  };
 
   return (
     <div
       role="button"
       tabIndex={0}
+      title={isAssigned ? t(isMarkedForRemoval ? "photos.cancelRemoval" : "photos.removeFromStation") : undefined}
       className={cn(
         "rounded-lg overflow-hidden border-2 transition-colors bg-muted cursor-pointer select-none focus:outline-none",
-        isSelected ? "border-primary" : "border-transparent",
+        isMarkedForRemoval ? "border-red-500" : isVisuallySelected ? "border-primary" : "border-transparent",
       )}
-      onClick={() => toggleLocationPhoto(photo)}
+      onClick={handleToggle}
       onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") toggleLocationPhoto(photo);
+        if (event.key === "Enter" || event.key === " ") handleToggle();
       }}
     >
       <PhotoImage
         src={`/uploads/${photo.attachment_uuid}.webp`}
         alt={photo.note ?? ""}
         frameClassName="h-36"
-        imageClassName={cn("transition-opacity", selectedLocationPhotoIds.size > 0 && !isSelected && "opacity-40")}
+        imageClassName={cn("transition-opacity", selectedLocationPhotoIds.size > 0 && !isVisuallySelected && !isMarkedForRemoval && "opacity-40")}
         onOpen={() => onOpen(index)}
       >
         {showStarBadge ? (
@@ -576,29 +628,21 @@ function LocationPhotoCard({
             <HugeiconsIcon icon={StarIcon} className="size-3" />
           </span>
         ) : null}
-        {isAssigned ? (
-          <span
-            className={cn(
-              "absolute rounded-sm px-1 text-[9px] font-semibold leading-4 bg-amber-500 text-white",
-              showStarBadge ? "top-1 left-7" : "top-1 left-1",
-            )}
-          >
-            {t("photos.alreadyAssigned")}
-          </span>
-        ) : null}
         {isRecentPhoto(photo.createdAt) ? (
           <span className="absolute bottom-1.5 left-1.5 bg-amber-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none pointer-events-none">
             NEW
           </span>
         ) : null}
-        <span
-          className={cn(
-            "absolute bottom-1 right-1 size-4 rounded-full border-2 flex items-center justify-center pointer-events-none transition-colors",
-            isSelected ? "bg-primary border-primary" : "bg-black/30 border-white/70",
-          )}
-        >
-          {isSelected ? <HugeiconsIcon icon={Tick02Icon} className="size-2.5 text-primary-foreground" /> : null}
-        </span>
+        {isVisuallySelected || isMarkedForRemoval ? (
+          <span
+            className={cn(
+              "absolute bottom-1 right-1 size-4 rounded-full border-2 flex items-center justify-center pointer-events-none transition-colors",
+              isMarkedForRemoval ? "bg-red-500 border-red-500" : "bg-primary border-primary",
+            )}
+          >
+            <HugeiconsIcon icon={isMarkedForRemoval ? Cancel01Icon : Tick02Icon} className="size-2.5 text-white" />
+          </span>
+        ) : null}
       </PhotoImage>
       {showSetAsMain ? (
         <div className="border-t">
@@ -607,7 +651,7 @@ function LocationPhotoCard({
             className="w-full flex items-center justify-center py-2 text-xs text-muted-foreground hover:text-amber-500 hover:bg-accent transition-colors"
             onClick={(event) => {
               event.stopPropagation();
-              onMainLocationPhotoIdChange(photo.id);
+              onSetLocationPhotoAsMain(photo);
             }}
             title={t("photos.setAsMain")}
           >

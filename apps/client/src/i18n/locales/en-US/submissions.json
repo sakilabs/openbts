@@ -144,6 +144,8 @@
     "uploadFirst": "Upload first photo",
     "remove": "Remove",
     "setAsMain": "Set as main",
+    "removeFromStation": "Remove from station",
+    "cancelRemoval": "Cancel removal",
     "currentMain": "Current main photo",
     "hint": "Up to {{max}} photos, max {{size}} each",
     "uploaded": "Photos uploaded",
@@ -168,8 +170,8 @@
     "uploadBelow": "Upload new photos below.",
     "locationPhotos": "Existing location photos",
     "uploadedPhotos": "New photos for this submission",
-    "alreadyAssigned": "Assigned",
     "selectedLocationPhotos": "Photos selected by submitter",
+    "removalSelections": "Photos to remove",
     "pendingCount_one": "{{count}} photo may still be uploading",
     "pendingCount_other": "{{count}} photos may still be uploading",
     "pendingHint": "They should appear here in a few seconds or minutes."
