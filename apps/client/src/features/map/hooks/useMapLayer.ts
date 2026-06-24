@@ -286,7 +286,7 @@ export function useMapLayer({
 
     const handleMouseMove = (e: maplibregl.MapMouseEvent) => {
       const { renderHoverTooltip } = callbackRefs.current;
-      if (!renderHoverTooltip || !tooltipRef.current) return;
+      if (!renderHoverTooltip) return;
 
       const features = map.queryRenderedFeatures(e.point, { layers: [...LAYER_IDS] });
       const data = features[0] && extractFeatureClickData(features[0]);
@@ -296,8 +296,9 @@ export function useMapLayer({
         return;
       }
 
-      if (tooltipRef.current.activeLocationId === data.locationId) {
-        tooltipRef.current.popup.setLngLat(data.coordinates);
+      const activeTooltip = tooltipRef.current;
+      if (activeTooltip !== null && activeTooltip.activeLocationId === data.locationId) {
+        activeTooltip.popup.setLngLat(data.coordinates);
         return;
       }
 
