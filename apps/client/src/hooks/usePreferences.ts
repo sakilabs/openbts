@@ -99,18 +99,37 @@ function readStorageValue(key: string): string | null {
   }
 }
 
-function writeStorageValue(key: string, value: string) {
-  if (typeof window === "undefined") return;
+function writeStorageValue(key: string, value: string): boolean {
+  if (typeof window === "undefined") return false;
 
   try {
     window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeStorageValue(key: string) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(key);
   } catch {
     return;
   }
 }
 
 function readProfileRawWithLegacyFallback(profile: PreferenceProfile): string | null {
-  return readStorageValue(getProfileStorageKey(profile)) ?? readStorageValue(LEGACY_STORAGE_KEY);
+  const profileStorageKey = getProfileStorageKey(profile);
+  const profileRaw = readStorageValue(profileStorageKey);
+  if (profileRaw !== null) return profileRaw;
+
+  const legacyRaw = readStorageValue(LEGACY_STORAGE_KEY);
+  if (legacyRaw === null) return null;
+
+  if (writeStorageValue(profileStorageKey, legacyRaw)) removeStorageValue(LEGACY_STORAGE_KEY);
+  return legacyRaw;
 }
 
 function parsePreferences(raw: string | null): UserPreferences {
