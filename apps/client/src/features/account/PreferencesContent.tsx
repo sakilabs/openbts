@@ -6,13 +6,15 @@ import { Trans, useTranslation } from "react-i18next";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type PushPreferences, fetchPushPreferences, updatePushPreferences } from "@/features/notifications/api";
 import { usePushSubscription } from "@/features/notifications/usePushSubscription";
 import { OpenStreetMapIcon, OsmAndIcon } from "@/features/station-details/components/navLinks";
 import { useCookieConsent } from "@/hooks/useCookieConsent";
-import { type UserPreferences, usePreferences } from "@/hooks/usePreferences";
+import { type PreferenceProfile, type UserPreferences, usePreferences } from "@/hooks/usePreferences";
 import { authClient } from "@/lib/authClient";
 import { cn, toggleValue } from "@/lib/utils";
 
@@ -70,6 +72,12 @@ type PreferenceGroup = {
   titleKey: string;
   cards: PreferenceCard[];
 };
+
+type CloudPreferencesControls = ReturnType<typeof usePreferences>["cloud"];
+
+function isPreferenceProfile(value: string): value is PreferenceProfile {
+  return value === "desktop" || value === "mobile";
+}
 
 const GROUPS: PreferenceGroup[] = [
   {
@@ -392,6 +400,62 @@ function PrefToggle({ checked, disabled, onChange, label }: { checked: boolean; 
   );
 }
 
+function CloudSyncSection({ cloud, t }: { cloud: CloudPreferencesControls; t: (key: string) => string }) {
+  const toggle = (
+    <PrefToggle
+      checked={cloud.syncEnabled}
+      disabled={!cloud.isAuthenticated || cloud.isLoading || cloud.isUpdating}
+      onChange={(enabled) => {
+        void (enabled ? cloud.enableSync() : cloud.disableSync());
+      }}
+      label={t("preferences.cloudSyncEnabled")}
+    />
+  );
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold">{t("preferences.cloudSync")}</h2>
+      <div className="rounded-xl border bg-card p-4 space-y-4">
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">{t("preferences.cloudSyncHint")}</p>
+        </div>
+
+        {cloud.isAuthenticated ? (
+          toggle
+        ) : (
+          <Tooltip>
+            <TooltipTrigger render={<span className="block w-fit" />}>{toggle}</TooltipTrigger>
+            <TooltipContent>{t("preferences.loginToSync")}</TooltipContent>
+          </Tooltip>
+        )}
+
+        {cloud.syncEnabled ? (
+          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{t("preferences.profile")}</p>
+              <p className="text-xs text-muted-foreground">{t("preferences.profileHint")}</p>
+            </div>
+            <Select
+              value={cloud.activeProfile}
+              onValueChange={(value) => {
+                if (isPreferenceProfile(value)) cloud.setActiveProfile(value);
+              }}
+            >
+              <SelectTrigger className="h-8 w-full sm:w-40">
+                <SelectValue>{cloud.activeProfile === "desktop" ? t("preferences.profileDesktop") : t("preferences.profileMobile")}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desktop">{t("preferences.profileDesktop")}</SelectItem>
+                <SelectItem value="mobile">{t("preferences.profileMobile")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 function NotificationsSection({ t }: { t: (key: string) => string }) {
   const { data: session } = authClient.useSession();
   const { subscription, subscriptionId, permission, isSubscribing, subscribe, unsubscribe, isSupported } = usePushSubscription();
@@ -538,10 +602,12 @@ function PrivacySection({ t }: { t: (key: string) => string }) {
 
 export function PreferencesContent() {
   const { t } = useTranslation("settings");
-  const { preferences, updatePreferences } = usePreferences();
+  const { preferences, updatePreferences, cloud } = usePreferences();
 
   return (
     <div className="space-y-10">
+      <CloudSyncSection cloud={cloud} t={t} />
+
       {GROUPS.map((group) => (
         <section key={group.titleKey} className="space-y-4">
           <h2 className="text-lg font-semibold">{t(group.titleKey)}</h2>

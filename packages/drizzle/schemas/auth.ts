@@ -7,6 +7,33 @@ import { locations, stations } from "./bts.ts";
 export const NotificationType = pgEnum("notification_type", ["submission_approved", "submission_rejected", "new_submission"]);
 export const CommentStatus = pgEnum("comment_status", ["pending", "approved"]);
 
+export type CloudUserPreferences = {
+  gpsFormat?: "decimal" | "dms";
+  navigationApps?: ("google-maps" | "apple-maps" | "waze" | "osmand" | "openstreetmap")[];
+  navLinksDisplay?: "inline" | "buttons";
+  radiolinesMinZoom?: number;
+  mapStationsLimit?: number;
+  mapRadiolinesLimit?: number;
+  showMapHoverTooltip?: boolean;
+  mapPointStyle?: "dots" | "markers";
+  mapRightClickMeasure?: boolean;
+  mapMeasureCircle?: boolean;
+  showStationPhotoPanel?: boolean;
+  showElevation?: boolean;
+  showAzimuths?: boolean;
+  hideFiltersOnMapClick?: boolean;
+  azimuthsMinZoom?: number;
+  azimuthLineLength?: number;
+  azimuthSpread?: number;
+  cartoVariant?: "auto" | "dark" | "light";
+};
+
+export type CloudPreferences = {
+  syncEnabled: boolean;
+  desktop: CloudUserPreferences | null;
+  mobile: CloudUserPreferences | null;
+};
+
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);
 export const APITokenTier = pgEnum("api_token_tier", ["basic", "pro", "unlimited"]);
 export const AuditAction = pgEnum("audit_action", [
@@ -80,6 +107,7 @@ export const users = AuthSchema.table(
     bio: varchar("bio", { length: 500 }),
     contactInfo: jsonb("contact_info").$type<{ instagram?: string; facebook?: string; email?: string }>(),
     profileVisibility: text("profile_visibility").notNull().default("private"),
+    cloudPreferences: jsonb("cloud_preferences").$type<CloudPreferences>(),
   },
   (table) => [index("users_email_idx").on(table.email)],
 );
