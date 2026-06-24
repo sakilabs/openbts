@@ -56,6 +56,7 @@ export function StationDetailHeader({
   const stationLabel = isCreateMode ? t("common:labels.newStation") : (station?.station_id ?? stationId);
   const operatorLabel = selectedOperator?.name ?? station?.operator.name ?? "-";
   const locationLabel = station?.location ? [station.location.city, station.location.address].filter(Boolean).join(", ") : "-";
+  const operatorAccentColor = selectedOperator ? getOperatorColor(selectedOperator.mnc) : "transparent";
 
   const handleDelete = () => {
     if (!station) return;
@@ -74,15 +75,21 @@ export function StationDetailHeader({
     <div
       ref={headerRef}
       className={cn(
-        "shrink-0 border-b px-4 sm:px-6 py-2 sticky top-0 z-20 transition-[background-color,border-color,box-shadow] duration-150",
-        scrolled ? "bg-background shadow-[0_1px_3px_rgba(0,0,0,0.06)]" : "bg-background border-transparent shadow-none",
+        "contents md:block md:shrink-0 md:border-b md:border-border md:px-4 md:py-2 md:sticky md:top-0 md:z-20 md:transition-[background-color,border-color,box-shadow] md:duration-150",
+        scrolled ? "md:bg-background md:shadow-[0_1px_3px_rgba(0,0,0,0.06)]" : "md:bg-background md:border-transparent md:shadow-none",
       )}
       style={{
         borderTopWidth: "3px",
-        borderTopColor: selectedOperator ? getOperatorColor(selectedOperator.mnc) : "transparent",
+        borderTopColor: operatorAccentColor,
       }}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 max-md:sticky max-md:top-0 max-md:z-30 max-md:border-b max-md:border-border max-md:border-t-[3px] max-md:bg-background max-md:px-4 max-md:py-2 max-md:transition-[background-color,border-color,box-shadow] max-md:duration-150",
+          scrolled ? "max-md:shadow-[0_1px_3px_rgba(0,0,0,0.06)]" : "max-md:border-b-transparent max-md:shadow-none",
+        )}
+        style={{ borderTopColor: operatorAccentColor }}
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -140,7 +147,7 @@ export function StationDetailHeader({
         </div>
       </div>
 
-      <div className="mt-2 border-t border-border/50 pt-2">
+      <div className="border-border/50 bg-background max-md:border-b max-md:px-4 max-md:py-2 md:mt-2 md:border-t md:pt-2">
         <div className="flex items-start gap-3 overflow-hidden">
           {selectedOperator && (
             <div className="mt-1.5 size-2.5 rounded-[2px] shrink-0" style={{ backgroundColor: getOperatorColor(selectedOperator.mnc) }} />
