@@ -2896,9 +2896,10 @@ paths:
         - name: regions
           in: query
           schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
-        - name: new
+        - name: since
           in: query
-          schema: { type: boolean, default: false }
+          description: Filter by recent date fields using `createdAt:30`, `updatedAt:30`, or `createdAt,updatedAt:30`. For UKE `createdAt`, a station is new only when all permits with the same `station_id` were created within the window.
+          schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
         - name: azimuths
           in: query
           description: When true, each permit includes its `sectors` array with azimuth data. Omitted by default

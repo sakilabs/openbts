@@ -1,3 +1,3 @@
 export function hasReliableHoverPointer() {
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches && navigator.maxTouchPoints === 0;
+  return window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
 }

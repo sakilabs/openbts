@@ -22,8 +22,8 @@ function buildFilterParams(filters: StationFilters): URLSearchParams {
   if (bands.length) params.set("bands", bands.join(","));
   if (rat.length) params.set("rat", rat.join(","));
   if (filters.source === "internal" && status.length) params.set("status", status.join(","));
-  if (recentDays !== null && filters.source === "internal") params.set("since", `${recentDateFields.join(",")}:${recentDays}`);
-  if (recentDays !== null && filters.source === "uke") params.set("since", String(recentDays));
+  if (recentDays !== null && (filters.source === "internal" || filters.source === "uke"))
+    params.set("since", `${recentDateFields.join(",")}:${recentDays}`);
 
   return params;
 }

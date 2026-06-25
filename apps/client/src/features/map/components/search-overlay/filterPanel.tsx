@@ -268,7 +268,7 @@ function RecentDaysFilter({ filters, onRecentDaysChange, onRecentDateFieldChange
           <span className="flex-1 text-left">{t("filters.newOnly")}</span>
           <KbdHint>N</KbdHint>
         </Checkbox>
-        {filters.recentDays !== null && filters.source === "internal" && (
+        {filters.recentDays !== null && (filters.source === "internal" || filters.source === "uke") && (
           <>
             <div className="w-px h-3.5 bg-border shrink-0" />
             <div className="flex gap-1 shrink-0">

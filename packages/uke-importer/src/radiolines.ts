@@ -1,7 +1,6 @@
 import { deletedEntries, radioLinesManufacturers, radiolinesAntennaTypes, radiolinesTransmitterTypes, ukeRadiolines } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
-import { sql } from "drizzle-orm";
-import { lt } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 /* eslint-disable no-await-in-loop */
 import path from "node:path";
 import url from "node:url";
@@ -12,8 +11,136 @@ import { scrapeXlsxLinks } from "./scrape.js";
 import type { RawRadioLineData } from "./types.js";
 import { upsertUkeOperators } from "./upserts.js";
 import { chunk, convertDMSToDD, downloadFile, ensureDownloadDir, parseExcelDate, readSheetAsJson, stripCompanySuffixForName } from "./utils.js";
+
+type UkeRadiolineInsert = typeof ukeRadiolines.$inferInsert;
+type UkeRadiolineSelect = typeof ukeRadiolines.$inferSelect;
+
+const radiolineComparisonFields = [
+  "tx_longitude",
+  "tx_latitude",
+  "tx_height",
+  "tx_city",
+  "tx_province",
+  "tx_street",
+  "tx_location_description",
+  "rx_longitude",
+  "rx_latitude",
+  "rx_height",
+  "rx_city",
+  "rx_province",
+  "rx_street",
+  "rx_location_description",
+  "freq",
+  "ch_num",
+  "plan_symbol",
+  "ch_width",
+  "polarization",
+  "modulation_type",
+  "bandwidth",
+  "tx_eirp",
+  "tx_antenna_attenuation",
+  "tx_transmitter_type_id",
+  "tx_antenna_type_id",
+  "tx_antenna_gain",
+  "tx_antenna_height",
+  "rx_antenna_type_id",
+  "rx_antenna_gain",
+  "rx_antenna_height",
+  "rx_noise_figure",
+  "rx_atpc_attenuation",
+  "operator_id",
+  "physical_key",
+  "permit_number",
+  "decision_type",
+  "issue_date",
+  "expiry_date",
+] as const satisfies readonly (keyof UkeRadiolineInsert & keyof UkeRadiolineSelect)[];
+
 function isNonEmptyName<T extends { name: string | undefined }>(v: T): v is T & { name: string } {
   return typeof v.name === "string" && v.name.length > 0;
+}
+
+function identityPart(value: number | string | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
+}
+
+function buildPhysicalKey(
+  value: Pick<
+    UkeRadiolineInsert,
+    "operator_id" | "tx_longitude" | "tx_latitude" | "rx_longitude" | "rx_latitude" | "freq" | "polarization" | "ch_num"
+  >,
+): string {
+  return [
+    value.operator_id,
+    value.tx_longitude,
+    value.tx_latitude,
+    value.rx_longitude,
+    value.rx_latitude,
+    value.freq,
+    value.polarization,
+    value.ch_num,
+  ]
+    .map(identityPart)
+    .join("|");
+}
+
+function buildAuthorizationKey(value: Pick<UkeRadiolineInsert, "permit_number" | "physical_key">): string {
+  return `${value.permit_number}|${value.physical_key}`;
+}
+
+function compareValue(value: unknown): unknown {
+  if (value instanceof Date) return value.getTime();
+  if (value === undefined) return null;
+  return value;
+}
+
+function hasRadiolineChanges(existing: UkeRadiolineSelect, next: UkeRadiolineInsert): boolean {
+  return radiolineComparisonFields.some((field) => compareValue(existing[field]) !== compareValue(next[field]));
+}
+
+function toRadiolineUpdate(value: UkeRadiolineInsert): Partial<UkeRadiolineInsert> {
+  return {
+    tx_longitude: value.tx_longitude,
+    tx_latitude: value.tx_latitude,
+    tx_height: value.tx_height,
+    tx_city: value.tx_city,
+    tx_province: value.tx_province,
+    tx_street: value.tx_street,
+    tx_location_description: value.tx_location_description,
+    rx_longitude: value.rx_longitude,
+    rx_latitude: value.rx_latitude,
+    rx_height: value.rx_height,
+    rx_city: value.rx_city,
+    rx_province: value.rx_province,
+    rx_street: value.rx_street,
+    rx_location_description: value.rx_location_description,
+    freq: value.freq,
+    ch_num: value.ch_num,
+    plan_symbol: value.plan_symbol,
+    ch_width: value.ch_width,
+    polarization: value.polarization,
+    modulation_type: value.modulation_type,
+    bandwidth: value.bandwidth,
+    tx_eirp: value.tx_eirp,
+    tx_antenna_attenuation: value.tx_antenna_attenuation,
+    tx_transmitter_type_id: value.tx_transmitter_type_id,
+    tx_antenna_type_id: value.tx_antenna_type_id,
+    tx_antenna_gain: value.tx_antenna_gain,
+    tx_antenna_height: value.tx_antenna_height,
+    rx_antenna_type_id: value.rx_antenna_type_id,
+    rx_antenna_gain: value.rx_antenna_gain,
+    rx_antenna_height: value.rx_antenna_height,
+    rx_noise_figure: value.rx_noise_figure,
+    rx_atpc_attenuation: value.rx_atpc_attenuation,
+    operator_id: value.operator_id,
+    physical_key: value.physical_key,
+    permit_number: value.permit_number,
+    decision_type: value.decision_type,
+    issue_date: value.issue_date,
+    expiry_date: value.expiry_date,
+    updatedAt: value.updatedAt,
+  };
 }
 
 export async function importRadiolines(): Promise<boolean> {
@@ -164,6 +291,19 @@ export async function importRadiolines(): Promise<boolean> {
     const ghzStr = String(r["f [GHz]"] || "");
     const ghz = Number.parseFloat(ghzStr);
     const freq = Math.round((Number.isFinite(ghz) ? ghz : 0) * 1000);
+    const ch_num = Number(r.Nr_kan) || null;
+    const polarization = String(r.Polaryzacja || "").trim() || null;
+    const operator_id = radioOpsIdByName.get(stripCompanySuffixForName(String(r.Operator || "").trim())) ?? null;
+    const physical_key = buildPhysicalKey({
+      operator_id,
+      tx_longitude: tx_lon,
+      tx_latitude: tx_lat,
+      rx_longitude: rx_lon,
+      rx_latitude: rx_lat,
+      freq,
+      polarization,
+      ch_num,
+    });
 
     return {
       tx_longitude: tx_lon,
@@ -183,12 +323,12 @@ export async function importRadiolines(): Promise<boolean> {
       rx_location_description: String(r["Opis położenia Rx"] || "").trim() || null,
 
       freq,
-      ch_num: Number(r.Nr_kan) || null,
+      ch_num,
       plan_symbol: String(r.Symbol_planu || "").trim() || null,
       ch_width: Number(String(r["Szer_kan [MHz]"] || "")) || null,
-      polarization: String(r.Polaryzacja || "").trim() || null,
+      polarization,
       modulation_type: String(r["Rodz_modu-lacji"] || "").trim() || null,
-      bandwidth: r["Przepływność [Mb/s]"] == null ? null : String(r["Przepływność [Mb/s]"]),
+      bandwidth: r["Przepływność [Mb/s]"] === null || r["Przepływność [Mb/s]"] === undefined ? null : String(r["Przepływność [Mb/s]"]),
 
       tx_eirp: Number(String(r["EIRP [dBm]"] || "")) || null,
       tx_antenna_attenuation: Number(String(r["Tłum_ant_odb_Rx [dB]"] || "")) || null,
@@ -203,7 +343,8 @@ export async function importRadiolines(): Promise<boolean> {
       rx_noise_figure: Number(String(r["Liczba_szum_Rx [dB]"] || "")) || null,
       rx_atpc_attenuation: Number(String(r["Tłum_ATPC [dB]"] || "")) || null,
 
-      operator_id: radioOpsIdByName.get(stripCompanySuffixForName(String(r.Operator || "").trim())) ?? null,
+      operator_id,
+      physical_key,
       permit_number: String(r["Nr_pozw/dec"] || "").trim(),
       decision_type: (r.Rodz_dec === "zmP" ? "zmP" : "P") as "zmP" | "P",
       issue_date: parseExcelDate(r.Data_wydania),
@@ -213,39 +354,45 @@ export async function importRadiolines(): Promise<boolean> {
     };
   });
 
-  console.log(`[radiolines] Upserting ${values.length} radiolines...`);
-  for (const group of chunk(values, BATCH_SIZE)) {
-    if (group.length) {
-      await db
-        .insert(ukeRadiolines)
-        .values(group)
-        .onConflictDoUpdate({
-          target: [
-            ukeRadiolines.permit_number,
-            ukeRadiolines.operator_id,
-            ukeRadiolines.freq,
-            ukeRadiolines.tx_longitude,
-            ukeRadiolines.tx_latitude,
-            ukeRadiolines.rx_longitude,
-            ukeRadiolines.rx_latitude,
-            ukeRadiolines.polarization,
-            ukeRadiolines.ch_num,
-          ],
-          set: {
-            updatedAt: fileDate,
-            decision_type: sql.raw("excluded.decision_type"),
-            issue_date: sql.raw("excluded.issue_date"),
-            expiry_date: sql.raw("excluded.expiry_date"),
-          },
-        });
+  console.log("[radiolines] Loading existing radiolines...");
+  const existingRadiolines = await db.select().from(ukeRadiolines);
+  const existingByKey = new Map<string, UkeRadiolineSelect>();
+
+  for (const row of existingRadiolines) {
+    const key = buildAuthorizationKey(row);
+    if (!existingByKey.has(key)) existingByKey.set(key, row);
+  }
+
+  const seenExistingIds = new Set<number>();
+  const toInsert: UkeRadiolineInsert[] = [];
+  const toUpdate: { id: number; value: UkeRadiolineInsert }[] = [];
+
+  for (const value of values) {
+    const existing = existingByKey.get(buildAuthorizationKey(value));
+    if (!existing) {
+      toInsert.push(value);
+      continue;
     }
+
+    seenExistingIds.add(existing.id);
+    if (hasRadiolineChanges(existing, value)) toUpdate.push({ id: existing.id, value });
+  }
+
+  const staleRadiolines = existingRadiolines.filter((row) => !seenExistingIds.has(row.id));
+
+  console.log(`[radiolines] Inserting ${toInsert.length} new radiolines...`);
+  for (const group of chunk(toInsert, BATCH_SIZE)) {
+    if (group.length) await db.insert(ukeRadiolines).values(group);
+  }
+
+  console.log(`[radiolines] Updating ${toUpdate.length} changed radiolines...`);
+  for (const item of toUpdate) {
+    await db.update(ukeRadiolines).set(toRadiolineUpdate(item.value)).where(eq(ukeRadiolines.id, item.id));
   }
 
   const importMetadataId = await recordImportMetadata("radiolines", links, "success");
 
   console.log("[radiolines] Archiving and deleting stale radiolines...");
-  const staleRadiolines = await db.select().from(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, fileDate));
-
   if (staleRadiolines.length > 0) {
     for (const group of chunk(staleRadiolines, BATCH_SIZE)) {
       await db.insert(deletedEntries).values(
@@ -259,7 +406,14 @@ export async function importRadiolines(): Promise<boolean> {
       );
     }
 
-    await db.delete(ukeRadiolines).where(lt(ukeRadiolines.updatedAt, fileDate));
+    for (const group of chunk(staleRadiolines, BATCH_SIZE)) {
+      await db.delete(ukeRadiolines).where(
+        inArray(
+          ukeRadiolines.id,
+          group.map((row) => row.id),
+        ),
+      );
+    }
   }
 
   console.log(`[radiolines] Deleted ${staleRadiolines.length} stale radiolines`);

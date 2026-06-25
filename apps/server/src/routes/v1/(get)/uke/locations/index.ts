@@ -85,11 +85,15 @@ const schemaRoute = {
       .transform((val): string[] | undefined => (val ? val.split(",").filter(Boolean) : undefined)),
     since: z
       .string()
+      .regex(/^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\d+$/)
       .optional()
-      .transform((val): number | null => {
-        if (!val || val === "false" || val === "0") return null;
-        const n = Number(val);
-        return n >= 1 && n <= 30 ? n : null;
+      .transform((val) => {
+        if (!val) return null;
+        const lastIndex = val.lastIndexOf(":");
+        const fields = val.slice(0, lastIndex).split(",") as ("createdAt" | "updatedAt")[];
+        const days = Number(val.slice(lastIndex + 1));
+        const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        return { fields, cutoff };
       }),
     azimuths: z
       .string()
@@ -114,7 +118,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   if (cached) return res.send(JSON.parse(cached));
 
-  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, since: recentDays, azimuths } = req.query;
+  const { bounds, limit, page, rat, operators: operatorMncs, bands: bandValues, regions: regionNames, since, azimuths } = req.query;
   const offset = (page - 1) * limit;
   const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
 
@@ -176,40 +180,56 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   const hasPermitFilters = operatorIds.length > 0 || eligibleBandIds.length > 0;
 
+  const buildCreatedSinceCondition = (cutoff: Date): SQL<unknown> => sql`NOT EXISTS (
+    SELECT 1
+    FROM ${ukePermits} AS older_permits
+    WHERE older_permits."station_id" = ${ukePermits.station_id}
+      AND older_permits."createdAt" < ${cutoff.toISOString()}
+  )`;
+
+  const buildUpdatedSinceCondition = (cutoff: Date): SQL<unknown> => sql`EXISTS (
+    SELECT 1
+    FROM ${ukePermits} AS updated_permits
+    WHERE updated_permits."station_id" = ${ukePermits.station_id}
+      AND updated_permits."updatedAt" >= ${cutoff.toISOString()}
+  )`;
+
+  const buildSinceCondition = (): SQL<unknown> | null => {
+    if (since === null) return null;
+    const parts = since.fields.map((field) => {
+      if (field === "createdAt") return buildCreatedSinceCondition(since.cutoff);
+      return buildUpdatedSinceCondition(since.cutoff);
+    });
+    return parts.length > 1 ? sql`(${sql.join(parts, sql` OR `)})` : parts[0]!;
+  };
+
+  const buildPermitFilterCondition = (locationIdCol: typeof ukeLocations.id): SQL<unknown> => {
+    const locationCondition = eq(ukePermits.location_id, locationIdCol);
+    const conditions: SQL<unknown>[] = [locationCondition];
+    const sinceCondition = buildSinceCondition();
+    if (operatorIds.length) conditions.push(inArray(ukePermits.operator_id, operatorIds));
+    if (eligibleBandIds.length) conditions.push(inArray(ukePermits.band_id, eligibleBandIds));
+    if (sinceCondition !== null) conditions.push(sinceCondition);
+    return and(...conditions) ?? locationCondition;
+  };
+
   const buildLocationOnlyConditions = (locFields: typeof ukeLocations): SQL<unknown>[] => {
     const conditions: SQL<unknown>[] = [];
     if (envelope) conditions.push(sql`${locFields.point} && ${envelope}`);
     if (regionIds.length) conditions.push(inArray(locFields.region_id, regionIds));
-    if (recentDays) {
-      const cutoff = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
-      conditions.push(sql`${locFields.id} IN (
-        SELECT DISTINCT ${ukePermits.location_id}
-        FROM ${ukePermits}
-        WHERE ${ukePermits.createdAt} >= ${cutoff.toISOString()}
-      )`);
-    }
     return conditions;
   };
 
   const buildPermitExistsCondition = (locationIdCol: typeof ukeLocations.id): SQL => {
-    const conditions: SQL<unknown>[] = [sql`${ukePermits.location_id} = ${locationIdCol}`];
-    if (operatorIds.length) conditions.push(inArray(ukePermits.operator_id, operatorIds));
-    if (eligibleBandIds.length) conditions.push(inArray(ukePermits.band_id, eligibleBandIds));
-    return sql`EXISTS (SELECT 1 FROM ${ukePermits} WHERE ${and(...conditions)})`;
+    return sql`EXISTS (SELECT 1 FROM ${ukePermits} WHERE ${buildPermitFilterCondition(locationIdCol)})`;
   };
 
   try {
     const locationConditions = buildLocationOnlyConditions(ukeLocations);
-    if (hasPermitFilters) locationConditions.push(buildPermitExistsCondition(ukeLocations.id));
+    if (hasPermitFilters || since !== null) locationConditions.push(buildPermitExistsCondition(ukeLocations.id));
     const locationWhereClause = locationConditions.length ? and(...locationConditions) : undefined;
 
-    const permitJoinCondition = hasPermitFilters
-      ? and(
-          eq(ukePermits.location_id, ukeLocations.id),
-          ...(operatorIds.length ? [inArray(ukePermits.operator_id, operatorIds)] : []),
-          ...(eligibleBandIds.length ? [inArray(ukePermits.band_id, eligibleBandIds)] : []),
-        )
-      : eq(ukePermits.location_id, ukeLocations.id);
+    const permitJoinCondition = buildPermitFilterCondition(ukeLocations.id);
 
     const sectorsSubquery = azimuths
       ? sql`(SELECT COALESCE(json_agg(json_build_object(
