@@ -417,8 +417,16 @@ function MapViewInner() {
 
 export default function MapView() {
   const [saved] = useState(() => loadMapPosition());
+  const { preferences } = usePreferences();
+
   return (
-    <LibreMap center={saved?.center ?? POLAND_CENTER} zoom={saved?.zoom ?? 7} maxBounds={POLAND_BOUNDS} minZoom={5}>
+    <LibreMap
+      center={saved?.center ?? POLAND_CENTER}
+      zoom={saved?.zoom ?? 7}
+      maxBounds={POLAND_BOUNDS}
+      minZoom={5}
+      className={preferences.navMode === "floating" ? "[--floating-nav-map-offset:1.25rem]" : undefined}
+    >
       <MapViewInner />
     </LibreMap>
   );

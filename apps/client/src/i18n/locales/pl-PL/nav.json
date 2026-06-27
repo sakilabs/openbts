@@ -54,6 +54,15 @@
     "logout": "Wyloguj się",
     "login": "Zaloguj się"
   },
+  "floating": {
+    "label": "Pływająca nawigacja",
+    "actions": "Akcje strony",
+    "hide": "Ukryj nawigację",
+    "show": "Pokaż nawigację",
+    "openSection": "Otwórz nawigację: {{section}}",
+    "mobileTitle": "Nawigacja",
+    "account": "Menu konta"
+  },
   "auth": {
     "signIn": "Zaloguj się",
     "signInHint": "Zaloguj się, by zgłaszać i śledzić stacje"

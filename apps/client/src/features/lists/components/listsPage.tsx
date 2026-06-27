@@ -37,6 +37,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useNavActionTarget } from "@/contexts/navActions";
 import type { UserListSummary } from "@/features/lists/api";
 import { deleteList, updateList } from "@/features/lists/api";
 import { useUserLists } from "@/features/lists/hooks/useUserLists";
@@ -135,17 +136,17 @@ export function ListsPageContent() {
     void navigator.clipboard.writeText(url).then(() => toast.success(t("lists:copied")));
   }
 
-  const [headerActions] = useState(() => document.getElementById("header-actions"));
+  const navActionTarget = useNavActionTarget();
 
   return (
     <div className="max-w-4xl flex flex-col h-full">
-      {headerActions &&
+      {navActionTarget &&
         createPortal(
           <Button onClick={() => setCreateOpen(true)}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
             {t("lists:create")}
           </Button>,
-          headerActions,
+          navActionTarget,
         )}
 
       {isLoading ? (

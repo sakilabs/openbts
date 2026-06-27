@@ -87,6 +87,20 @@ const GROUPS: PreferenceGroup[] = [
         items: [
           {
             type: "radio",
+            key: "navMode",
+            labelKey: "preferences.navMode",
+            hintKey: "preferences.navModeHint",
+            options: [
+              { value: "sidebar", labelKey: "preferences.navModeSidebar", descKey: "preferences.navModeSidebarDesc" },
+              { value: "floating", labelKey: "preferences.navModeFloating", descKey: "preferences.navModeFloatingDesc" },
+            ],
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "radio",
             key: "gpsFormat",
             labelKey: "preferences.gpsFormat",
             hintKey: "preferences.gpsFormatHint",

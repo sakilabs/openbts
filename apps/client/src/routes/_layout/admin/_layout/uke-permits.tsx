@@ -1,11 +1,12 @@
 import { FilterIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { useNavActionTarget } from "@/contexts/navActions";
 import { UnassignedPermitsDataTable } from "@/features/admin/uke-permits/components/dataTable";
 import { UnassignedPermitsResponsiveFilters } from "@/features/admin/uke-permits/components/responsiveFilters";
 import { useUnassignedPermitsData } from "@/features/admin/uke-permits/hooks/useUnassignedPermitsData";
@@ -15,20 +16,11 @@ import type { UkeStation } from "@/types/station";
 
 const TABLE_PAGINATION_CONFIG = { rowHeight: 64, headerHeight: 40, paginationHeight: 45 };
 
-function subscribeToHeaderActions(callback: () => void) {
-  const id = requestAnimationFrame(callback);
-  return () => cancelAnimationFrame(id);
-}
-
 function AdminUkePermitsPage() {
   const { t } = useTranslation("admin");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<UkeStation | null>(null);
-  const headerActionsEl = useSyncExternalStore(
-    subscribeToHeaderActions,
-    () => document.getElementById("header-actions"),
-    () => null,
-  );
+  const navActionTarget = useNavActionTarget();
 
   const { containerRef, pagination, setPagination, pageSizeOptions } = useTablePagination(TABLE_PAGINATION_CONFIG);
 
@@ -95,7 +87,7 @@ function AdminUkePermitsPage() {
 
       <UkePermitDetailsDialog station={selectedStation} onClose={() => setSelectedStation(null)} />
 
-      {headerActionsEl &&
+      {navActionTarget &&
         createPortal(
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="relative md:hidden" onClick={() => setMobileFiltersOpen(true)}>
@@ -108,7 +100,7 @@ function AdminUkePermitsPage() {
               )}
             </Button>
           </div>,
-          headerActionsEl,
+          navActionTarget,
         )}
     </>
   );

@@ -1,35 +1,5 @@
-import {
-  AddCircleIcon,
-  AirportTowerIcon,
-  AnalyticsUpIcon,
-  DashboardSquare01Icon,
-  DatabaseIcon,
-  Delete02Icon,
-  DiscordIcon,
-  Download04Icon,
-  FileAttachmentIcon,
-  FileBracesIcon,
-  FileSearchIcon,
-  FullSignalIcon,
-  GitBranchIcon,
-  InformationCircleIcon,
-  LegalDocument01Icon,
-  Location01Icon,
-  Login01Icon,
-  Mail01Icon,
-  MapsIcon,
-  Message01Icon,
-  NewsIcon,
-  Note01Icon,
-  Radar01Icon,
-  SecurityLockIcon,
-  SentIcon,
-  Settings02Icon,
-  TaskDaily01Icon,
-  Upload04Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { AirportTowerIcon, GitBranchIcon, Login01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useLocation } from "@tanstack/react-router";
 import React, { type ComponentProps, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -43,101 +13,12 @@ import { useSettings } from "@/hooks/useSettings";
 import { useWindowControlsOverlay } from "@/hooks/useWindowControlsOverlay";
 import { APP_NAME } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
+import { adminNavConfig, authNavConfig, infoNavConfig, navMainConfig, translateAdminNav, translateNav } from "@/lib/navConfig";
 import { cn } from "@/lib/utils";
 
 import { NavLists } from "./nav-lists";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-
-const navMainConfig = [
-  {
-    titleKey: "sections.stations",
-    key: "stations",
-    url: "#",
-    icon: AirportTowerIcon,
-    items: [
-      { titleKey: "items.mapView", url: "/", icon: MapsIcon },
-      { titleKey: "items.database", url: "/stations", icon: DatabaseIcon },
-      { titleKey: "items.statistics", url: "/statistics", icon: AnalyticsUpIcon },
-      { titleKey: "items.deletedEntries", url: "/deleted-entries", icon: Delete02Icon },
-      { titleKey: "items.clfExport", url: "/clf-export", icon: Download04Icon },
-      { titleKey: "items.analyzer", url: "/analyzer", icon: FileSearchIcon },
-      { titleKey: "items.spectrum", url: "/spectrum", icon: FullSignalIcon },
-      { titleKey: "items.pem", url: "/pem-measurements", icon: Radar01Icon },
-      { titleKey: "items.hunters", url: "/hunters", icon: UserGroupIcon },
-    ],
-  },
-];
-
-const authNavConfig = [
-  {
-    titleKey: "sections.contribute",
-    key: "contribute",
-    url: "#",
-    icon: AddCircleIcon,
-    items: [
-      { titleKey: "items.submitStation", url: "/submission", icon: AddCircleIcon },
-      { titleKey: "items.mySubmissions", url: "/account/submissions", icon: SentIcon },
-    ],
-  },
-];
-
-const infoNavConfig = [
-  {
-    titleKey: "sections.info",
-    key: "info",
-    url: "#",
-    icon: InformationCircleIcon,
-    items: [
-      { titleKey: "items.releasenotes", url: "/release-v3", icon: NewsIcon },
-      { titleKey: "items.about", url: "/about", icon: InformationCircleIcon },
-      { titleKey: "items.contact", url: "/contact", icon: Mail01Icon },
-      { titleKey: "items.tos", url: "/tos", icon: LegalDocument01Icon },
-      { titleKey: "items.apiDocs", url: "#", href: "/api/v1/docs", icon: FileBracesIcon },
-      { titleKey: "items.discord", url: "#", href: "https://discord.gg/SZETJPeayg", icon: DiscordIcon },
-    ],
-  },
-];
-
-const adminNavConfig = [
-  {
-    titleKey: "sections.admin",
-    key: "admin",
-    url: "#",
-    icon: SecurityLockIcon,
-    items: [
-      { titleKey: "items.dashboard", url: "/admin", allowedRoles: ["admin", "editor"], icon: DashboardSquare01Icon },
-      { titleKey: "items.users", url: "/admin/users", allowedRoles: ["admin"], icon: UserGroupIcon },
-      { titleKey: "items.stations", url: "/admin/stations", allowedRoles: ["admin", "editor"], icon: AirportTowerIcon },
-      { titleKey: "items.locations", url: "/admin/locations", allowedRoles: ["admin", "editor"], icon: Location01Icon },
-      { titleKey: "items.submissions", url: "/admin/submissions", allowedRoles: ["admin", "editor"], icon: SentIcon },
-      { titleKey: "items.ukePermits", url: "/admin/uke-permits", allowedRoles: ["admin", "editor"], icon: FileAttachmentIcon },
-      { titleKey: "items.ukeImport", url: "/admin/uke-import", allowedRoles: ["admin"], icon: Upload04Icon },
-      { titleKey: "items.lists", url: "/admin/lists", allowedRoles: ["admin"], icon: TaskDaily01Icon, requiresSetting: "enableUserLists" as const },
-      { titleKey: "items.comments", url: "/admin/comments", allowedRoles: ["admin", "editor"], icon: Message01Icon },
-      { titleKey: "items.auditLogs", url: "/admin/audit-logs", allowedRoles: ["admin"], icon: Note01Icon },
-      { titleKey: "items.settings", url: "/admin/settings", allowedRoles: ["admin"], icon: Settings02Icon },
-    ],
-  },
-];
-
-type NavConfigItem = { titleKey: string; url: string; href?: string; icon: IconSvgElement };
-type NavConfigSection = { titleKey: string; key: string; url: string; icon: IconSvgElement; items: NavConfigItem[] };
-
-function translateNav(config: NavConfigSection[], t: (key: string) => string) {
-  return config.map((section) => ({
-    title: t(section.titleKey),
-    key: section.key,
-    url: section.url,
-    icon: section.icon,
-    items: section.items.map((item) => ({
-      title: t(item.titleKey),
-      url: item.url,
-      href: item.href,
-      icon: item.icon,
-    })),
-  }));
-}
 
 export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation("nav");
@@ -152,22 +33,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const showAuth = !!(session?.user && settings?.submissionsEnabled);
   const authNavItems = useMemo(() => (showAuth ? translateNav(authNavConfig, t) : []), [t, showAuth]);
   const userRole = session?.user?.role as string | undefined;
-  const isAdmin = userRole === "admin" || userRole === "editor";
-  const adminNavItems = useMemo(() => {
-    if (!isAdmin || !userRole) return [];
-    return adminNavConfig
-      .map((section) => ({
-        title: t(section.titleKey),
-        key: section.key,
-        url: section.url,
-        icon: section.icon,
-        items: section.items
-          .filter((item) => item.allowedRoles.includes(userRole))
-          .filter((item) => !item.requiresSetting || !!settings?.[item.requiresSetting])
-          .map((item) => ({ title: t(item.titleKey), url: item.url, icon: item.icon })),
-      }))
-      .filter((section) => section.items.length > 0);
-  }, [isAdmin, userRole, t, settings]);
+  const adminNavItems = useMemo(() => translateAdminNav(adminNavConfig, t, userRole, settings), [userRole, t, settings]);
 
   const location = useLocation();
 

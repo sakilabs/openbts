@@ -8,6 +8,7 @@ export const NotificationType = pgEnum("notification_type", ["submission_approve
 export const CommentStatus = pgEnum("comment_status", ["pending", "approved"]);
 
 export type CloudUserPreferences = {
+  navMode?: "sidebar" | "floating";
   gpsFormat?: "decimal" | "dms";
   navigationApps?: ("google-maps" | "apple-maps" | "waze" | "osmand" | "openstreetmap")[];
   navLinksDisplay?: "inline" | "buttons";

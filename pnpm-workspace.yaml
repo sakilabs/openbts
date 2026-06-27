@@ -13,4 +13,6 @@ allowBuilds:
   protobufjs: true
   sharp: true
 
+resolutionMode: "highest"
 minimumReleaseAge: 1440
+minimumReleaseAgeIgnoreMissingTime: true

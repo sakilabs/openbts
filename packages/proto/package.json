@@ -16,13 +16,12 @@
     "build": "tsgo"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "2.12.0"
+    "@bufbuild/protobuf": "2.12.1"
   },
   "devDependencies": {
-    "@bufbuild/buf": "1.70.0",
-    "@bufbuild/protoc-gen-es": "2.12.0",
+    "@bufbuild/buf": "1.71.0",
+    "@bufbuild/protoc-gen-es": "2.12.1",
     "@openbts/typescript-configs": "workspace:*",
     "@types/node": "25.9.3"
-  },
-  "packageManager": "pnpm@11.0.6"
+  }
 }

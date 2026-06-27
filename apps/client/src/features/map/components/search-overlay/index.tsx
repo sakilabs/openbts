@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { FLOATING_NAV_ACTION_TARGET_ID } from "@/components/layout/floating-nav.js";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.js";
+import { useNavActionTarget } from "@/contexts/navActions.js";
 import { bandsQueryOptions, operatorsQueryOptions } from "@/features/shared/queries.js";
 import { useIsMobile } from "@/hooks/useMobile.js";
 import { usePreferences } from "@/hooks/usePreferences.js";
@@ -92,6 +94,7 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   const [mobileExpanded, setMobileExpanded] = useState(false);
   const filterPanelRef = useRef<HTMLFieldSetElement>(null);
   const isMobile = useIsMobile();
+  const navActionTarget = useNavActionTarget();
 
   const { preferences, updatePreferences } = usePreferences();
   const [affectMap, setAffectMap] = useState<boolean>(() => {
@@ -341,7 +344,23 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
   ]);
 
   const handleSourceChange = useCallback((source: StationSource) => onFiltersChange({ ...filters, source }), [filters, onFiltersChange]);
-
+  const showFloatingMobileMapControls = isMobile && navActionTarget?.id === FLOATING_NAV_ACTION_TARGET_ID;
+  const mobileStatsPanel = (
+    <MobileStatsPanel
+      locationCount={locationCount}
+      totalCount={totalCount}
+      radioLineCount={radioLineCount}
+      radioLineTotalCount={radioLineTotalCount}
+      isRadioLinesFetching={isRadioLinesFetching}
+      isLoading={isLoading}
+      isFetching={isFetching}
+      showStations={filters.showStations}
+      searchMode={searchMode as "bounds" | "search"}
+      zoom={zoom}
+      source={filters.source}
+      onSourceChange={handleSourceChange}
+    />
+  );
   return (
     <>
       <div
@@ -379,6 +398,14 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
             </>
           }
         />
+
+        {isMobile ? (
+          <div className="mt-2 flex justify-end md:hidden">
+            <div className="pointer-events-auto relative shrink-0">
+              <MapStyleSwitcher position="search" />
+            </div>
+          </div>
+        ) : null}
 
         {showAutocomplete && <AutocompleteDropdown options={autocompleteOptions} onSelect={applyAutocomplete} />}
 
@@ -504,26 +531,16 @@ export const MapSearchOverlay = memo(function MapSearchOverlay({
         </div>
       </div>
 
-      <div className="md:hidden absolute bottom-4 left-4 z-5 flex flex-col items-start gap-1">
-        <div className="relative">
-          <MapStyleSwitcher position="mobile" />
+      {isMobile ? (
+        <div
+          className={cn(
+            "absolute left-4 z-5 flex flex-col items-start gap-1",
+            showFloatingMobileMapControls ? "bottom-[calc(2.5rem+var(--floating-nav-map-offset,0rem))]" : "bottom-4",
+          )}
+        >
+          {mobileStatsPanel}
         </div>
-
-        <MobileStatsPanel
-          locationCount={locationCount}
-          totalCount={totalCount}
-          radioLineCount={radioLineCount}
-          radioLineTotalCount={radioLineTotalCount}
-          isRadioLinesFetching={isRadioLinesFetching}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          showStations={filters.showStations}
-          searchMode={searchMode as "bounds" | "search"}
-          zoom={zoom}
-          source={filters.source}
-          onSourceChange={handleSourceChange}
-        />
-      </div>
+      ) : null}
     </>
   );
 });

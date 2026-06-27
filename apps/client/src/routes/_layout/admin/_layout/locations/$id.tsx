@@ -1,12 +1,22 @@
-import { AirportTowerIcon, ArrowLeft01Icon, ArrowRight01Icon, Location01Icon } from "@hugeicons/core-free-icons";
+import {
+  AirportTowerIcon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Cancel01Icon,
+  Delete02Icon,
+  Location01Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { hasGenericAddressMarker } from "@openbts/shared/addressValidation";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { FLOATING_NAV_ACTION_TARGET_ID } from "@/components/layout/floating-nav";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,11 +33,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavActionTarget } from "@/contexts/navActions";
 import { fetchLocationDetail } from "@/features/admin/locations/api";
 import { LocationPhotosSection } from "@/features/admin/locations/components/LocationPhotosSection";
 import { useDeleteLocationMutation, usePatchLocationMutation } from "@/features/admin/locations/mutations";
 import { LocationPicker } from "@/features/submissions/components/locationPicker";
 import type { ProposedLocationForm } from "@/features/submissions/types";
+import { useIsMobile } from "@/hooks/useMobile";
 import { useSaveShortcut } from "@/hooks/useSaveShortcut";
 import { useScrolled } from "@/hooks/useScrolled";
 import { showApiError } from "@/lib/api";
@@ -89,6 +101,10 @@ function AdminLocationDetailPage() {
 function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typeof fetchLocationDetail> extends Promise<infer T> ? T : never> }) {
   const { t } = useTranslation("stations");
   const navigate = useNavigate();
+  const navActionTarget = useNavActionTarget();
+  const isMobile = useIsMobile();
+  const isFloatingActionTarget = navActionTarget?.id === FLOATING_NAV_ACTION_TARGET_ID;
+  const isFloatingDesktopActionTarget = isFloatingActionTarget && !isMobile;
 
   const [locationForm, setLocationForm] = useState<ProposedLocationForm>(() => ({
     region_id: location.region?.id ?? null,
@@ -189,6 +205,70 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
     return { background: `linear-gradient(to right, ${stops.join(", ")})` };
   }, [operatorColors]);
 
+  const canDeleteLocation = stations.length === 0;
+  const showChangeActions = !isFloatingActionTarget || isFloatingDesktopActionTarget || hasChanges || patchMutation.isPending;
+  const hasFloatingActions = canDeleteLocation || showChangeActions || deleteMutation.isPending;
+
+  const actionBar = (
+    <div className="flex items-center gap-1">
+      {canDeleteLocation && (
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={<Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" />}
+          >
+            <HugeiconsIcon icon={Delete02Icon} className="size-3.5" />
+            {t("header.deleteLocation")}
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("header.confirmDeleteLocation")}</AlertDialogTitle>
+              <AlertDialogDescription>{t("header.confirmDeleteLocationDesc")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? <Spinner /> : t("header.deleteLocation")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      {showChangeActions ? (
+        <>
+          <Tooltip>
+            <TooltipTrigger render={<span />}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRevert}
+                disabled={!hasChanges}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+                {t("common:actions.revert")}
+              </Button>
+            </TooltipTrigger>
+            {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger render={<span />}>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!hasChanges || patchMutation.isPending}
+                className={cn("shadow-sm font-medium", !isFloatingActionTarget && "min-w-25 px-4")}
+              >
+                {patchMutation.isPending ? <Spinner /> : <HugeiconsIcon icon={Tick02Icon} className="size-3.5" />}
+                {t("common:actions.saveChanges")}
+              </Button>
+            </TooltipTrigger>
+            {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
+          </Tooltip>
+        </>
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {headerTopStyle && <div className="shrink-0 h-0.75" style={headerTopStyle} />}
@@ -217,58 +297,10 @@ function LocationDetailForm({ location }: { location: NonNullable<ReturnType<typ
             {location.id}
           </span>
         </div>
-
-        <div className="flex items-center gap-2">
-          {stations.length === 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={<Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" />}
-              >
-                {t("header.deleteLocation")}
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t("header.confirmDeleteLocation")}</AlertDialogTitle>
-                  <AlertDialogDescription>{t("header.confirmDeleteLocationDesc")}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
-                  <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
-                    {deleteMutation.isPending ? <Spinner /> : t("header.deleteLocation")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <Tooltip>
-            <TooltipTrigger render={<span />}>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRevert}
-                disabled={!hasChanges}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              >
-                {t("common:actions.revert")}
-              </Button>
-            </TooltipTrigger>
-            {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger render={<span />}>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={!hasChanges || patchMutation.isPending}
-                className="shadow-sm font-medium px-4 min-w-25"
-              >
-                {patchMutation.isPending ? <Spinner /> : t("common:actions.saveChanges")}
-              </Button>
-            </TooltipTrigger>
-            {!hasChanges && <TooltipContent>{t("common:actions.noChanges")}</TooltipContent>}
-          </Tooltip>
-        </div>
+        {!navActionTarget && actionBar}
       </div>
+
+      {navActionTarget && hasFloatingActions ? createPortal(actionBar, navActionTarget) : null}
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col lg:flex-row gap-3 p-3">

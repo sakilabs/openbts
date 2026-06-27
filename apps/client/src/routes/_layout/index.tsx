@@ -4,7 +4,7 @@ import MapView from "@/features/map/components/mapView";
 
 function Page() {
   return (
-    <div className="flex-1">
+    <div className="h-full min-h-0 flex-1">
       <MapView />
     </div>
   );
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_layout/")({
   staticData: {
     titleKey: "items.mapView",
     i18nNamespace: "nav",
+    mainClassName: "overflow-hidden",
     breadcrumbs: [{ titleKey: "sections.stations", i18nNamespace: "nav", path: "/" }],
   },
 });

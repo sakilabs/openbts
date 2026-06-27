@@ -1106,7 +1106,7 @@ const positionClasses = {
   "top-left": "top-2 left-2",
   "top-right": "top-2 right-2",
   "bottom-left": "bottom-2 left-2",
-  "bottom-right": "bottom-10 right-2",
+  "bottom-right": "bottom-[calc(2.5rem+var(--floating-nav-map-offset,0rem))] right-2",
 };
 
 function ControlGroup({ children }: { children: React.ReactNode }) {

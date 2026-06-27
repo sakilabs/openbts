@@ -10,7 +10,7 @@ function SharedListPage() {
   if (!isLoading && !settings?.enableUserLists) return <Navigate to="/" replace />;
 
   return (
-    <div className="flex-1">
+    <div className="h-full min-h-0 flex-1">
       <ListMapView uuid={uuid} />
     </div>
   );
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_layout/lists/$uuid")({
   staticData: {
     titleKey: "items.sharedList",
     i18nNamespace: "nav",
+    mainClassName: "overflow-hidden",
     breadcrumbs: [{ titleKey: "sections.lists", i18nNamespace: "nav" }],
   },
 });

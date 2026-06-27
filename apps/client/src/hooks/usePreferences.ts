@@ -12,8 +12,10 @@ export type NavLinksDisplay = "inline" | "buttons";
 export type MapPointStyle = "dots" | "markers";
 export type CartoVariant = "auto" | "dark" | "light";
 export type PreferenceProfile = "desktop" | "mobile";
+export type NavMode = "sidebar" | "floating";
 
 export interface UserPreferences {
+  navMode: NavMode;
   gpsFormat: GpsFormat;
   navigationApps: NavigationApp[];
   navLinksDisplay: NavLinksDisplay;
@@ -57,6 +59,7 @@ const DEFAULT_PROFILE: PreferenceProfile = "desktop";
 const STORAGE_KEYS_THAT_INVALIDATE_SNAPSHOT = new Set([LEGACY_STORAGE_KEY, DESKTOP_STORAGE_KEY, MOBILE_STORAGE_KEY, PROFILE_OVERRIDE_KEY]);
 
 const DEFAULT_PREFERENCES: UserPreferences = {
+  navMode: "sidebar",
   gpsFormat: "decimal",
   navigationApps: ["google-maps"],
   navLinksDisplay: "inline",
@@ -77,7 +80,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   cartoVariant: "light",
 };
 
-let listeners: Array<() => void> = [];
+const listeners = new Set<() => void>();
 let cachedSnapshot: UserPreferences | null = null;
 let cachedRaw: string | null = null;
 let cachedProfile: PreferenceProfile | null = null;
@@ -188,7 +191,7 @@ function getSnapshot(): UserPreferences {
 }
 
 function subscribe(listener: () => void) {
-  listeners = [...listeners, listener];
+  listeners.add(listener);
   if (!isStorageListenerActive && typeof window !== "undefined") {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("resize", handleResize);
@@ -196,8 +199,8 @@ function subscribe(listener: () => void) {
   }
 
   return () => {
-    listeners = listeners.filter((l) => l !== listener);
-    if (listeners.length === 0 && isStorageListenerActive && typeof window !== "undefined") {
+    listeners.delete(listener);
+    if (listeners.size === 0 && isStorageListenerActive && typeof window !== "undefined") {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("resize", handleResize);
       isStorageListenerActive = false;

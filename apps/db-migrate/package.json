@@ -16,8 +16,8 @@
     "dotenv": "17.4.2",
     "drizzle-orm": "1.0.0-rc.3",
     "node-sql-parser": "5.4.0",
-    "ora": "9.4.0",
-    "papaparse": "5.5.3",
+    "ora": "9.4.1",
+    "papaparse": "5.5.4",
     "postgres": "3.4.9"
   },
   "devDependencies": {

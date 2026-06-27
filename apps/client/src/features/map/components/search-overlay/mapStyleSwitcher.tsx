@@ -1,4 +1,9 @@
 import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useState } from "react";
+
+function stopPropagation(e: MouseEvent | KeyboardEvent) {
+  e.stopPropagation();
+}
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import { CARTO_STYLE_URLS, type MapStyle, useMap, useResolvedTheme } from "@/components/ui/map";
@@ -44,7 +49,7 @@ const MAP_STYLE_OPTIONS: Record<MapStyle, { label: string; thumbnail: string }> 
 };
 
 type MapStyleSwitcherProps = {
-  position?: "default" | "mobile";
+  position?: "default" | "mobile" | "nav" | "search";
 };
 
 export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps) {
@@ -73,24 +78,63 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
     [setMapStyle],
   );
 
-  const handleStopPropagation = useCallback((e: MouseEvent | KeyboardEvent) => {
-    e.stopPropagation();
-  }, []);
-
-  const isMobile = position === "mobile";
+  const isMobile = position === "mobile" || position === "nav" || position === "search";
+  const isNav = position === "nav";
+  const isSearch = position === "search";
+  const activeThumbnail = mapStyle === "carto" ? cartoThumbnail : MAP_STYLE_OPTIONS[mapStyle].thumbnail;
+  const trigger = (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (mapStyle === "carto") {
+          fetch(CARTO_STYLE_URLS.dark, { priority: "low" }).catch(() => {});
+          fetch(CARTO_STYLE_URLS.light, { priority: "low" }).catch(() => {});
+        }
+        setShowPicker(true);
+      }}
+      className={cn(
+        "group flex items-center gap-2 border transition-all text-left",
+        isNav ? "h-8 rounded-full border-transparent bg-transparent p-0.5 hover:bg-muted" : "rounded-lg bg-background p-1",
+        isNav ? "shadow-none" : isMobile ? "shadow-md" : "pr-3 shadow-lg",
+      )}
+      aria-label="Change map style"
+    >
+      <div
+        className={cn(
+          "overflow-hidden border border-border/50 group-hover:border-border transition-colors",
+          isNav ? "size-7 rounded-full" : "h-8 w-8 rounded-md",
+        )}
+      >
+        <img src={activeThumbnail} alt={MAP_STYLE_OPTIONS[mapStyle].label} className="w-full h-full object-cover" />
+      </div>
+      {!isMobile && (
+        <div className="flex flex-col">
+          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider leading-none mb-0.5">{t("overlay.mapStyle")}</span>
+          <span className="text-xs font-semibold text-foreground leading-none">{MAP_STYLE_OPTIONS[mapStyle].label}</span>
+        </div>
+      )}
+    </button>
+  );
 
   if (showPicker) {
-    return (
+    const picker = (
       <div
-        onClick={handleStopPropagation}
-        onKeyDown={handleStopPropagation}
+        onClick={stopPropagation}
+        onKeyDown={stopPropagation}
         role="listbox"
         className={cn(
           "flex p-1.5 rounded-lg bg-background border shadow-lg",
-          isMobile ? "absolute bottom-0 left-0 flex-col-reverse gap-1" : "flex-col gap-1.5",
+          isNav
+            ? "fixed bottom-[calc(6.25rem+env(safe-area-inset-bottom))] left-2 z-[60] flex-col-reverse gap-1"
+            : isSearch
+              ? "absolute top-full right-0 mt-1 flex-col gap-1"
+              : isMobile
+                ? "absolute bottom-0 left-0 flex-col-reverse gap-1"
+                : "flex-col gap-1.5",
         )}
       >
-        <div className={cn("flex", isMobile ? "flex-col-reverse gap-1" : "flex-row gap-1.5")}>
+        <div className={cn("flex", isMobile ? (isSearch ? "flex-col gap-1" : "flex-col-reverse gap-1") : "flex-row gap-1.5")}>
           {(Object.keys(MAP_STYLE_OPTIONS) as MapStyle[]).map((key) => {
             const style = MAP_STYLE_OPTIONS[key];
             const isSelected = mapStyle === key;
@@ -123,7 +167,7 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
         </div>
 
         {mapStyle === "carto" && (
-          <div className={cn("flex items-center gap-1", isMobile ? "border-b pb-1.5" : "border-t pt-1.5")}>
+          <div className={cn("flex items-center gap-1", isMobile ? (isSearch ? "border-t pt-1.5" : "border-b pb-1.5") : "border-t pt-1.5")}>
             {!isMobile && (
               <span className="text-[9px] font-semibold uppercase tracking-wider text-foreground/70 mr-0.5">{t("overlay.mapVariant")}</span>
             )}
@@ -147,36 +191,27 @@ export function MapStyleSwitcher({ position = "default" }: MapStyleSwitcherProps
         )}
       </div>
     );
+
+    if (isNav) {
+      return (
+        <>
+          {trigger}
+          {typeof document === "undefined" ? null : createPortal(picker, document.body)}
+        </>
+      );
+    }
+
+    if (isSearch) {
+      return (
+        <>
+          {trigger}
+          {picker}
+        </>
+      );
+    }
+
+    return picker;
   }
 
-  const activeThumbnail = mapStyle === "carto" ? cartoThumbnail : MAP_STYLE_OPTIONS[mapStyle].thumbnail;
-
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (mapStyle === "carto") {
-          fetch(CARTO_STYLE_URLS.dark, { priority: "low" }).catch(() => {});
-          fetch(CARTO_STYLE_URLS.light, { priority: "low" }).catch(() => {});
-        }
-        setShowPicker(true);
-      }}
-      className={cn(
-        "group flex items-center gap-2 p-1 rounded-lg bg-background border transition-all text-left",
-        isMobile ? "shadow-md" : "pr-3 shadow-lg",
-      )}
-      aria-label="Change map style"
-    >
-      <div className="w-8 h-8 rounded-md overflow-hidden border border-border/50 group-hover:border-border transition-colors">
-        <img src={activeThumbnail} alt={MAP_STYLE_OPTIONS[mapStyle].label} className="w-full h-full object-cover" />
-      </div>
-      {!isMobile && (
-        <div className="flex flex-col">
-          <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider leading-none mb-0.5">{t("overlay.mapStyle")}</span>
-          <span className="text-xs font-semibold text-foreground leading-none">{MAP_STYLE_OPTIONS[mapStyle].label}</span>
-        </div>
-      )}
-    </button>
-  );
+  return trigger;
 }

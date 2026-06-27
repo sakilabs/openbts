@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 export const userPreferencesSchema = z
   .object({
+    navMode: z.enum(["sidebar", "floating"]),
     gpsFormat: z.enum(["decimal", "dms"]),
     navigationApps: z.array(z.enum(["google-maps", "apple-maps", "waze", "osmand", "openstreetmap"])),
     navLinksDisplay: z.enum(["inline", "buttons"]),

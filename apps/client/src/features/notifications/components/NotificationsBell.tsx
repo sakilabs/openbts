@@ -54,7 +54,7 @@ function NotificationItem({ notification, onRead }: { notification: Notification
   );
 }
 
-export function NotificationsBell() {
+export function NotificationsBell({ className }: { className?: string } = {}) {
   const { t } = useTranslation("notifications");
   const { data: session } = authClient.useSession();
   const { notifications, totalUnread, markAllRead, markRead } = useNotifications();
@@ -72,7 +72,10 @@ export function NotificationsBell() {
         render={
           <button
             type="button"
-            className="relative inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={cn(
+              "relative inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              className,
+            )}
             aria-label={t("title")}
           />
         }
