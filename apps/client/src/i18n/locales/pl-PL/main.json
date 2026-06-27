@@ -122,6 +122,22 @@
     "photosSoon": "Wkrótce",
     "privateOwnerNotice": "Twój profil jest ustawiony jako prywatny. Tylko Ty możesz zobaczyć tę stronę."
   },
+  "hunters": {
+    "breadcrumb": "Łowcy BTS",
+    "title": "Łowcy BTS",
+    "subtitle": "Znajdź łowców BTS w swoim województwie",
+    "searchPlaceholder": "Szukaj po nazwie lub nicku...",
+    "allRegions": "Wszyscy",
+    "emptyTitle": "Brak łowców w tym regionie",
+    "emptySubtitle": "Dołącz do katalogu, żeby inni mogli Cię znaleźć.",
+    "joinCta": "Dołącz do katalogu",
+    "errorTitle": "Nie udało się wczytać łowców",
+    "errorSubtitle": "Odśwież stronę albo spróbuj ponownie za chwilę.",
+    "count_one": "{{count}} łowca",
+    "count_few": "{{count}} łowców",
+    "count_many": "{{count}} łowców",
+    "count_other": "{{count}} łowców"
+  },
   "webgl": {
     "title": "Mapa niedostępna",
     "description": "Twoje urządzenie nie obsługuje WebGL2 lub ma go wyłączonego. Włącz go w ustawieniach przeglądarki, aby korzystać z mapy."

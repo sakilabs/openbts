@@ -75,9 +75,7 @@ export function ukeLocationsToGeoJSON(locations: UkeLocationWithPermits[], sourc
     if (location.latitude === null || location.latitude === undefined || location.longitude === null || location.longitude === undefined) continue;
     if (!location.permits?.length) continue;
 
-    const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(
-      location.permits.map((p) => p.station.operator?.mnc),
-    );
+    const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(location.permits.map((p) => p.station.operator?.mnc));
 
     features.push(
       createPointFeature(location.longitude, location.latitude, {

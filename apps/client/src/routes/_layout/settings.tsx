@@ -38,6 +38,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { PreferencesContent } from "@/features/account/PreferencesContent";
+import { fetchRegions } from "@/features/shared/api";
 import { API_BASE, fetchJson } from "@/lib/api";
 import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
@@ -179,6 +180,8 @@ type ProfileData = {
   bio: string | null;
   contactInfo: { instagram?: string; facebook?: string; email?: string } | null;
   profileVisibility: string;
+  hunterListing: boolean;
+  hunterRegions: number[];
 };
 
 function ProfileTab({ username }: { username: string | undefined }) {
@@ -189,12 +192,18 @@ function ProfileTab({ username }: { username: string | undefined }) {
     queryKey: ["account", "profile"],
     queryFn: () => fetchJson<{ data: ProfileData }>(`${API_BASE}/account/profile`).then((r) => r.data),
   });
+  const { data: regions = [], isLoading: regionsLoading } = useQuery({
+    queryKey: ["regions"],
+    queryFn: fetchRegions,
+  });
 
   const [bio, setBio] = useState<string>("");
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [isPublic, setIsPublic] = useState<boolean | undefined>(undefined);
+  const [hunterListing, setHunterListing] = useState(false);
+  const [hunterRegions, setHunterRegions] = useState<number[]>([]);
 
   useEffect(() => {
     if (!profileData) return;
@@ -203,7 +212,13 @@ function ProfileTab({ username }: { username: string | undefined }) {
     setFacebook(profileData.contactInfo?.facebook ?? "");
     setContactEmail(profileData.contactInfo?.email ?? "");
     setIsPublic(profileData.profileVisibility !== "private");
+    setHunterListing(profileData.hunterListing ?? false);
+    setHunterRegions(profileData.hunterRegions ?? []);
   }, [profileData]);
+
+  const toggleHunterRegion = (regionId: number) => {
+    setHunterRegions((current) => (current.includes(regionId) ? current.filter((id) => id !== regionId) : [...current, regionId]));
+  };
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -218,6 +233,8 @@ function ProfileTab({ username }: { username: string | undefined }) {
             email: contactEmail || undefined,
           },
           profileVisibility: isPublic !== false ? "public" : "private",
+          hunterListing,
+          hunterRegions,
         }),
       }),
     onSuccess: () => {
@@ -329,6 +346,55 @@ function ProfileTab({ username }: { username: string | undefined }) {
             {emailInvalid && <p className="text-xs text-destructive">{t("profile.contact.emailError")}</p>}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-xl border bg-card p-4 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold leading-none">{t("profile.hunters.title")}</p>
+            <p className="text-xs text-muted-foreground mt-1.5 max-w-prose">{t("profile.hunters.description")}</p>
+            <p className="text-xs text-muted-foreground mt-2">{hunterListing ? t("profile.hunters.enabled") : t("profile.hunters.disabled")}</p>
+          </div>
+          <Switch checked={hunterListing} onCheckedChange={setHunterListing} />
+        </div>
+
+        {hunterListing ? (
+          <div className="space-y-2.5 border-t pt-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-foreground">{t("profile.hunters.regions")}</p>
+              <p className="text-xs text-muted-foreground">{t("profile.hunters.regionsHint")}</p>
+            </div>
+            {regionsLoading ? (
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-7 w-24 rounded-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {regions.map((region) => {
+                  const selected = hunterRegions.includes(region.id);
+                  return (
+                    <button
+                      key={region.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => toggleHunterRegion(region.id)}
+                      className={cn(
+                        "h-7 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                      )}
+                    >
+                      {region.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex justify-end pt-2">

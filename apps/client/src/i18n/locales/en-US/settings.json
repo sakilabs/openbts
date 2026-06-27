@@ -277,6 +277,14 @@
       "emailPlaceholder": "e.g. contact@example.com",
       "emailError": "Must be a valid email address",
       "instagramError": "Handle can only contain letters, numbers, dots and underscores (max 30 chars)"
+    },
+    "hunters": {
+      "title": "BTS Hunters Directory",
+      "description": "Show yourself to other hunters. Choose the regions where you are active.",
+      "enabled": "Visible in the directory",
+      "disabled": "Hidden from the directory",
+      "regions": "Your regions",
+      "regionsHint": "Choose at least one region"
     }
   },
   "twoFactor": {

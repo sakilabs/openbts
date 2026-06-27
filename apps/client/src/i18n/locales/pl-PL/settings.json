@@ -277,6 +277,14 @@
       "emailPlaceholder": "np. kontakt@przyklad.pl",
       "emailError": "Musi być poprawnym adresem e-mail",
       "instagramError": "Nazwa użytkownika może zawierać tylko litery, cyfry, kropki i podkreślenia (maks. 30 znaków)"
+    },
+    "hunters": {
+      "title": "Katalog Łowców BTS",
+      "description": "Pokaż się innym łowcom. Wybierz województwa, w których działasz.",
+      "enabled": "Widoczny w katalogu",
+      "disabled": "Ukryty w katalogu",
+      "regions": "Twoje województwa",
+      "regionsHint": "Wybierz co najmniej jedno województwo"
     }
   },
   "twoFactor": {

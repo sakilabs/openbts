@@ -118,6 +118,20 @@
     "photosSoon": "Coming soon",
     "privateOwnerNotice": "Your profile is set to private. Only you can see this page."
   },
+  "hunters": {
+    "breadcrumb": "BTS Hunters",
+    "title": "BTS Hunters",
+    "subtitle": "Find BTS hunters in your region",
+    "searchPlaceholder": "Search by name or handle...",
+    "allRegions": "All",
+    "emptyTitle": "No hunters in this region",
+    "emptySubtitle": "Join the directory so other hunters can find you.",
+    "joinCta": "Join the directory",
+    "errorTitle": "Could not load hunters",
+    "errorSubtitle": "Refresh the page or try again in a moment.",
+    "count_one": "{{count}} hunter",
+    "count_other": "{{count}} hunters"
+  },
   "webgl": {
     "title": "Map unavailable",
     "description": "Your device does not support WebGL2 or has it disabled. Enable it in your browser settings to use the map."

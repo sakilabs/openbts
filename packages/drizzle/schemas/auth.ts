@@ -108,6 +108,8 @@ export const users = AuthSchema.table(
     bio: varchar("bio", { length: 500 }),
     contactInfo: jsonb("contact_info").$type<{ instagram?: string; facebook?: string; email?: string }>(),
     profileVisibility: text("profile_visibility").notNull().default("private"),
+    hunterListing: boolean("hunter_listing").notNull().default(false),
+    hunterRegions: jsonb("hunter_regions").$type<number[]>().default([]),
     cloudPreferences: jsonb("cloud_preferences").$type<CloudPreferences>(),
   },
   (table) => [index("users_email_idx").on(table.email)],

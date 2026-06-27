@@ -37,6 +37,8 @@ const schemaRoute = {
       .nullable()
       .optional(),
     profileVisibility: z.enum(["public", "private"]).optional(),
+    hunterListing: z.boolean().optional(),
+    hunterRegions: z.array(z.number().int().positive()).max(20).optional(),
   }),
   response: {
     200: z.object({
@@ -50,6 +52,8 @@ const schemaRoute = {
           })
           .nullable(),
         profileVisibility: z.string(),
+        hunterListing: z.boolean(),
+        hunterRegions: z.array(z.number().int().positive()),
       }),
     }),
   },
@@ -60,28 +64,40 @@ type ResponseBody = {
   bio: string | null;
   contactInfo: { instagram?: string; facebook?: string; email?: string } | null;
   profileVisibility: string;
+  hunterListing: boolean;
+  hunterRegions: number[];
 };
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<ResponseBody>>) {
   const session = req.userSession;
   if (!session?.user) throw new ErrorResponse("UNAUTHORIZED");
 
-  const { bio, contactInfo, profileVisibility } = req.body;
+  const { bio, contactInfo, profileVisibility, hunterListing, hunterRegions } = req.body;
+
+  if (hunterRegions !== undefined && hunterRegions.length > 0) {
+    const valid = await db.query.regions.findMany({ columns: { id: true } });
+    const validIds = new Set(valid.map((r) => r.id));
+    if (!hunterRegions.every((id) => validIds.has(id))) throw new ErrorResponse("BAD_REQUEST", { message: "Invalid region IDs" });
+  }
 
   const patch: Partial<typeof users.$inferInsert> = {};
   if (bio !== undefined) patch.bio = bio;
   if (contactInfo !== undefined) patch.contactInfo = contactInfo;
   if (profileVisibility !== undefined) patch.profileVisibility = profileVisibility;
+  if (hunterListing !== undefined) patch.hunterListing = hunterListing;
+  if (hunterRegions !== undefined) patch.hunterRegions = hunterRegions;
 
-  const [updated] = await db
-    .update(users)
-    .set(patch)
-    .where(eq(users.id, session.user.id))
-    .returning({ bio: users.bio, contactInfo: users.contactInfo, profileVisibility: users.profileVisibility });
+  const [updated] = await db.update(users).set(patch).where(eq(users.id, session.user.id)).returning({
+    bio: users.bio,
+    contactInfo: users.contactInfo,
+    profileVisibility: users.profileVisibility,
+    hunterListing: users.hunterListing,
+    hunterRegions: users.hunterRegions,
+  });
 
   if (!updated) throw new ErrorResponse("NOT_FOUND");
 
-  return res.send({ data: updated });
+  return res.send({ data: { ...updated, hunterRegions: updated.hunterRegions ?? [] } });
 }
 
 const patchAccountProfile: Route<ReqBody, ResponseBody> = {

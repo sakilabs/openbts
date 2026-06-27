@@ -64,6 +64,7 @@ const navMainConfig = [
       { titleKey: "items.analyzer", url: "/analyzer", icon: FileSearchIcon },
       { titleKey: "items.spectrum", url: "/spectrum", icon: FullSignalIcon },
       { titleKey: "items.pem", url: "/pem-measurements", icon: Radar01Icon },
+      { titleKey: "items.hunters", url: "/hunters", icon: UserGroupIcon },
     ],
   },
 ];

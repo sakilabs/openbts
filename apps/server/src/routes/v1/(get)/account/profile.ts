@@ -19,6 +19,8 @@ const schemaRoute = {
           })
           .nullable(),
         profileVisibility: z.enum(["public", "private"]),
+        hunterListing: z.boolean(),
+        hunterRegions: z.array(z.number().int().positive()),
       }),
     }),
   },
@@ -28,6 +30,8 @@ type ResponseBody = {
   bio: string | null;
   contactInfo: { instagram?: string; facebook?: string; email?: string } | null;
   profileVisibility: string;
+  hunterListing: boolean;
+  hunterRegions: number[];
 };
 
 async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseBody>>) {
@@ -37,7 +41,7 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
 
   const user = await db.query.users.findFirst({
     where: { id: userId },
-    columns: { bio: true, contactInfo: true, profileVisibility: true },
+    columns: { bio: true, contactInfo: true, profileVisibility: true, hunterListing: true, hunterRegions: true },
   });
 
   if (!user) throw new ErrorResponse("NOT_FOUND");
@@ -47,6 +51,8 @@ async function handler(req: FastifyRequest, res: ReplyPayload<JSONBody<ResponseB
       bio: user.bio,
       contactInfo: user.contactInfo,
       profileVisibility: user.profileVisibility as "public" | "private",
+      hunterListing: user.hunterListing,
+      hunterRegions: user.hunterRegions ?? [],
     },
   });
 }
