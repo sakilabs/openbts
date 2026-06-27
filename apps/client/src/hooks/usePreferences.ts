@@ -38,12 +38,14 @@ export type CloudPreferences = {
   syncEnabled: boolean;
   desktop: Partial<UserPreferences> | null;
   mobile: Partial<UserPreferences> | null;
+  favoriteLists?: string[];
 };
 
-type CloudPreferencesPatch = {
+export type CloudPreferencesPatch = {
   syncEnabled?: boolean;
   desktop?: Partial<UserPreferences> | null;
   mobile?: Partial<UserPreferences> | null;
+  favoriteLists?: string[];
 };
 
 const LEGACY_STORAGE_KEY = "user-preferences";
@@ -81,7 +83,7 @@ let cachedRaw: string | null = null;
 let cachedProfile: PreferenceProfile | null = null;
 let isStorageListenerActive = false;
 
-function getCloudPreferencesQueryKey(userId: string) {
+export function getCloudPreferencesQueryKey(userId: string) {
   return ["account-preferences", userId] as const;
 }
 
@@ -240,7 +242,7 @@ function setProfileOverride(profile: PreferenceProfile) {
   invalidateSnapshot();
 }
 
-async function patchCloudPreferences(patch: CloudPreferencesPatch): Promise<CloudPreferences> {
+export async function patchCloudPreferences(patch: CloudPreferencesPatch): Promise<CloudPreferences> {
   const response = await fetchJson<{ data: CloudPreferences }>(`${API_BASE}/account/preferences`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

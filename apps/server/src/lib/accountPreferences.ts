@@ -29,6 +29,7 @@ export const cloudPreferencesSchema = z.object({
   syncEnabled: z.boolean(),
   desktop: userPreferencesSchema.nullable(),
   mobile: userPreferencesSchema.nullable(),
+  favoriteLists: z.array(z.string()).optional(),
 });
 
 export const cloudPreferencesPatchSchema = z
@@ -36,6 +37,7 @@ export const cloudPreferencesPatchSchema = z
     syncEnabled: z.boolean().optional(),
     desktop: userPreferencesSchema.nullable().optional(),
     mobile: userPreferencesSchema.nullable().optional(),
+    favoriteLists: z.array(z.string()).optional(),
   })
   .strict();
 
@@ -43,14 +45,18 @@ export const DEFAULT_CLOUD_PREFERENCES: CloudPreferences = {
   syncEnabled: false,
   desktop: null,
   mobile: null,
+  favoriteLists: [],
 };
 
 export function normalizeCloudPreferences(value: CloudPreferences | null | undefined): CloudPreferences {
   if (value === undefined || value === null) return DEFAULT_CLOUD_PREFERENCES;
 
+  const favoriteLists = Array.isArray(value.favoriteLists) ? value.favoriteLists.filter((id) => typeof id === "string") : [];
+
   return {
     syncEnabled: value.syncEnabled === true,
     desktop: value.desktop ?? null,
     mobile: value.mobile ?? null,
+    favoriteLists,
   };
 }

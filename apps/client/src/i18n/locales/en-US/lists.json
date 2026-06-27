@@ -20,6 +20,8 @@
   "updated": "List updated",
   "addToList": "Add to list",
   "createNew": "Create new list",
+  "addFavorite": "Add to favorites",
+  "removeFavorite": "Remove from favorites",
   "togglePublic": "Make public",
   "togglePrivate": "Make private",
   "rename": "Rename",

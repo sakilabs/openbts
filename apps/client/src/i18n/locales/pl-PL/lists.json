@@ -23,6 +23,8 @@
   "updated": "Lista zaktualizowana",
   "addToList": "Dodaj do listy",
   "createNew": "Utwórz nową listę",
+  "addFavorite": "Dodaj do ulubionych",
+  "removeFavorite": "Usuń z ulubionych",
   "togglePublic": "Ustaw jako publiczną",
   "togglePrivate": "Ustaw jako prywatną",
   "rename": "Zmień nazwę",

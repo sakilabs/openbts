@@ -32,6 +32,7 @@ export type CloudPreferences = {
   syncEnabled: boolean;
   desktop: CloudUserPreferences | null;
   mobile: CloudUserPreferences | null;
+  favoriteLists?: string[];
 };
 
 export const Role = pgEnum("role", ["user", "moderator", "admin"]);

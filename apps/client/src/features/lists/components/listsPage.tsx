@@ -9,6 +9,7 @@ import {
   SecurityLockIcon,
   Share08Icon,
   SignalFull02Icon,
+  StarIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,6 +40,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { UserListSummary } from "@/features/lists/api";
 import { deleteList, updateList } from "@/features/lists/api";
 import { useUserLists } from "@/features/lists/hooks/useUserLists";
+import { useFavoriteLists } from "@/hooks/useFavoriteLists";
 import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +53,7 @@ export function ListsPageContent() {
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useUserLists();
+  const { canFavorite, isFavorite, toggleFavorite } = useFavoriteLists();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [editState, setEditState] = useState<{ target: UserListSummary; name: string; description: string } | null>(null);
@@ -160,6 +163,9 @@ export function ListsPageContent() {
           <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
             {items.map((virtualItem) => {
               const list = lists[virtualItem.index];
+              const favorite = isFavorite(list.uuid);
+              const favoriteLabel = favorite ? t("lists:removeFavorite") : t("lists:addFavorite");
+
               return (
                 <div
                   key={virtualItem.key}
@@ -177,30 +183,46 @@ export function ListsPageContent() {
                           {list.description && <p className="text-muted-foreground text-xs line-clamp-2">{list.description}</p>}
                         </div>
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" />}>
-                            <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEdit(list)}>
-                              <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-                              {t("lists:rename")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleShare(list)}>
-                              <HugeiconsIcon icon={Share08Icon} strokeWidth={2} />
-                              {t("common:actions.share")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => togglePublicMutation.mutate({ uuid: list.uuid, is_public: !list.is_public })}>
-                              <HugeiconsIcon icon={list.is_public ? SecurityLockIcon : Globe02Icon} strokeWidth={2} />
-                              {list.is_public ? t("lists:togglePrivate") : t("lists:togglePublic")}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(list.uuid)}>
-                              <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-                              {t("common:actions.delete")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex shrink-0 items-center gap-1">
+                          {canFavorite ? (
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              aria-label={favoriteLabel}
+                              aria-pressed={favorite}
+                              title={favoriteLabel}
+                              className={cn(favorite && "text-amber-500 hover:text-amber-500 [&_*]:fill-current")}
+                              onClick={() => toggleFavorite(list.uuid)}
+                            >
+                              <HugeiconsIcon icon={StarIcon} strokeWidth={2} />
+                            </Button>
+                          ) : null}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" />}>
+                              <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openEdit(list)}>
+                                <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
+                                {t("lists:rename")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShare(list)}>
+                                <HugeiconsIcon icon={Share08Icon} strokeWidth={2} />
+                                {t("common:actions.share")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => togglePublicMutation.mutate({ uuid: list.uuid, is_public: !list.is_public })}>
+                                <HugeiconsIcon icon={list.is_public ? SecurityLockIcon : Globe02Icon} strokeWidth={2} />
+                                {list.is_public ? t("lists:togglePrivate") : t("lists:togglePublic")}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(list.uuid)}>
+                                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+                                {t("common:actions.delete")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
