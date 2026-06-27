@@ -12,7 +12,7 @@ const importStepSchema = z.object({
     "device_registry",
     "prune_deleted_entries",
     "prune_associations",
-    "cleanup_orphaned_uke_locations",
+    "cleanup_orphaned_uke_entities",
     "associate",
     "snapshot",
     "cleanup",

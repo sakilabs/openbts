@@ -3,8 +3,8 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-06-13
-  version: 1.0.3
+    Last updated: 2026-06-27
+  version: 1.1.0
 
 servers:
   - url: https://openbts.sakilabs.com/api/v1
@@ -1102,7 +1102,7 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBandOperator" } }
+                  data: { type: array, items: { $ref: "#/components/schemas/UkeStationPermitAssociation" } }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -1126,7 +1126,7 @@ paths:
                 type: object
                 required: [data]
                 properties:
-                  data: { $ref: "#/components/schemas/UkePermitWithBandOperator" }
+                  data: { $ref: "#/components/schemas/UkeStationPermitAssociation" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -2898,7 +2898,7 @@ paths:
           schema: { type: string, pattern: "^[A-Z]{3}(,[A-Z]{3})*$" }
         - name: since
           in: query
-          description: Filter by recent date fields using `createdAt:30`, `updatedAt:30`, or `createdAt,updatedAt:30`. For UKE `createdAt`, a station is new only when all permits with the same `station_id` were created within the window.
+          description: Filter by recent date fields using `createdAt:30`, `updatedAt:30`, or `createdAt,updatedAt:30`. For UKE `createdAt`, a station is new only when all permits for the same UKE station were created within the window.
           schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
         - name: azimuths
           in: query
@@ -2937,7 +2937,8 @@ paths:
           schema: { type: string }
         - name: operators
           in: query
-          schema: { type: string }
+          description: Filter by comma-separated operator MNC codes. Passing `26034` also includes Orange and T-Mobile NetWorks operators
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
         - name: bands
           in: query
           schema: { type: string }
@@ -3022,6 +3023,51 @@ paths:
                   totalCount: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /uke/stations:
+    get:
+      tags: [UKE]
+      summary: List UKE stations with permits
+      parameters:
+        - name: bounds
+          in: query
+          schema: { type: string, pattern: "^-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*,-?\\d+\\.?\\d*$" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 500 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: rat
+          in: query
+          schema: { type: string, pattern: "^(?:cdma|umts|gsm|gsm-r|lte|nr|iot)(?:,(?:cdma|umts|gsm|gsm-r|lte|nr|iot))*$" }
+        - name: operators
+          in: query
+          description: Filter by comma-separated operator MNC codes. Passing `26034` also includes Orange and T-Mobile NetWorks operators
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: bands
+          in: query
+          schema: { type: string, pattern: "^\\d+(,\\d+)*$" }
+        - name: since
+          in: query
+          description: Filter by recent station date fields using `createdAt:30`, `updatedAt:30`, or `createdAt,updatedAt:30`
+          schema: { type: string, pattern: "^(createdAt|updatedAt)(?:,(createdAt|updatedAt))?:\\d+$" }
+        - name: station_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/UkeStationWithPermits" } }
+                  totalCount: { type: integer }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
@@ -4571,10 +4617,7 @@ components:
               allOf:
                 - $ref: "#/components/schemas/Band"
               nullable: true
-            operator:
-              allOf:
-                - $ref: "#/components/schemas/Operator"
-              nullable: true
+            station: { $ref: "#/components/schemas/UkeStationWithOperator" }
             sectors:
               type: array
               description: Included only when `?azimuths=true` is passed to `/uke/locations` endpoint
@@ -4585,20 +4628,34 @@ components:
         - type: object
           properties:
             band: { $ref: "#/components/schemas/Band" }
-            operator: { $ref: "#/components/schemas/Operator" }
-            location: { $ref: "#/components/schemas/UkeLocation" }
+            station: { $ref: "#/components/schemas/UkeStationWithOperatorLocation" }
+            sectors: { type: array, items: { $ref: "#/components/schemas/UkePermitSector" } }
+    UkePermitWithBand:
+      allOf:
+        - $ref: "#/components/schemas/UkePermitBase"
+        - type: object
+          properties:
+            band:
+              allOf:
+                - $ref: "#/components/schemas/Band"
+              nullable: true
             sectors: { type: array, items: { $ref: "#/components/schemas/UkePermitSector" } }
     UkePermitBase:
       type: object
       properties:
         id: { type: integer }
-        station_id: { type: string }
         decision_number: { type: string }
         decision_type: { type: string, enum: [zmP, P] }
         expiry_date: { type: string, format: date-time }
         source: { type: string, enum: [permits, device_registry] }
         updatedAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
+    UkeSearchPermit:
+      allOf:
+        - $ref: "#/components/schemas/UkePermitBase"
+        - type: object
+          properties:
+            band_id: { type: integer }
     UkePermitSector:
       type: object
       properties:
@@ -4630,9 +4687,65 @@ components:
         id: { type: integer }
         name: { type: string }
         full_name: { type: string }
+    UkeStation:
+      type: object
+      properties:
+        id: { type: integer }
+        station_id: { type: string }
+        updatedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    UkeStationWithOperator:
+      allOf:
+        - $ref: "#/components/schemas/UkeStation"
+        - type: object
+          properties:
+            operator:
+              allOf:
+                - $ref: "#/components/schemas/Operator"
+              nullable: true
+    UkeStationWithOperatorLocation:
+      allOf:
+        - $ref: "#/components/schemas/UkeStation"
+        - type: object
+          properties:
+            operator: { $ref: "#/components/schemas/Operator" }
+            location: { $ref: "#/components/schemas/UkeLocation" }
+    UkeStationWithOptionalOperatorLocation:
+      allOf:
+        - $ref: "#/components/schemas/UkeStation"
+        - type: object
+          properties:
+            operator:
+              allOf:
+                - $ref: "#/components/schemas/Operator"
+              nullable: true
+            location:
+              allOf:
+                - $ref: "#/components/schemas/UkeLocation"
+              nullable: true
+    UkeStationWithPermits:
+      allOf:
+        - $ref: "#/components/schemas/UkeStation"
+        - type: object
+          properties:
+            operator: { $ref: "#/components/schemas/Operator" }
+            location: { $ref: "#/components/schemas/UkeLocation" }
+            permits: { type: array, items: { $ref: "#/components/schemas/UkePermitWithBand" } }
+    UkeStationPermitAssociation:
+      allOf:
+        - $ref: "#/components/schemas/UkePermitBase"
+        - type: object
+          properties:
+            band: { $ref: "#/components/schemas/Band" }
+            station:
+              allOf:
+                - $ref: "#/components/schemas/UkeStationWithOperatorLocation"
+              nullable: true
+            sectors: { type: array, items: { $ref: "#/components/schemas/UkePermitSector" } }
     UkeSearchStation:
       type: object
       properties:
+        id: { type: integer }
         station_id: { type: string }
         operator:
           allOf:
@@ -4644,7 +4757,7 @@ components:
           nullable: true
         permits:
           type: array
-          items: { $ref: "#/components/schemas/UkePermitBase" }
+          items: { $ref: "#/components/schemas/UkeSearchPermit" }
     UkeRadiolineEndpoint:
       type: object
       properties:
@@ -4874,26 +4987,21 @@ components:
     UnassignedPermitStation:
       type: object
       properties:
+        id: { type: integer }
         station_id: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
         operator:
           allOf:
-            - $ref: "#/components/schemas/UkeOperator"
+            - $ref: "#/components/schemas/Operator"
           nullable: true
         location:
-          type: object
-          properties:
-            id: { type: integer }
-            city: { type: string, nullable: true }
-            address: { type: string, nullable: true }
-            longitude: { type: number }
-            latitude: { type: number }
-            createdAt: { type: string, format: date-time }
-            updatedAt: { type: string, format: date-time }
-            region: { $ref: "#/components/schemas/Region" }
+          allOf:
+            - $ref: "#/components/schemas/UkeLocation"
           nullable: true
         permits:
           type: array
-          items: { $ref: "#/components/schemas/UkePermitWithBandOperator" }
+          items: { $ref: "#/components/schemas/UkePermitWithBand" }
 
     # Cell update schema
     CellUpdateWithId:
@@ -4939,7 +5047,21 @@ components:
             type: object
             properties:
               key:
-                { type: string, enum: [permits, radiolines, device_registry, prune_associations, cleanup_orphaned_uke_locations, associate, cleanup] }
+                {
+                  type: string,
+                  enum:
+                    [
+                      permits,
+                      radiolines,
+                      device_registry,
+                      prune_deleted_entries,
+                      prune_associations,
+                      cleanup_orphaned_uke_entities,
+                      associate,
+                      snapshot,
+                      cleanup,
+                    ],
+                }
               status: { type: string, enum: [pending, running, success, skipped, error] }
               startedAt: { type: string, nullable: true }
               finishedAt: { type: string, nullable: true }

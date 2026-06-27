@@ -1,4 +1,4 @@
-import { bands, operators, regions, ukeLocations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { bands, operators, regions, ukeLocations, ukePermitSectors, ukePermits, ukeStations } from "@openbts/drizzle";
 import { ukePermitsResponseType } from "@openbts/proto/server";
 import { type SQL, and, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
@@ -10,8 +10,9 @@ import { ErrorResponse } from "../../../../../errors.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
 
-const ukePermitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, operator_id: true, location_id: true });
+const ukePermitsSchema = createSelectSchema(ukePermits).omit({ band_id: true, uke_station_id: true });
 const ukeLocationsSchema = createSelectSchema(ukeLocations).omit({ point: true, region_id: true });
+const ukeStationsSchema = createSelectSchema(ukeStations).omit({ operator_id: true, location_id: true });
 const bandsSchema = createSelectSchema(bands);
 const operatorsSchema = createSelectSchema(operators);
 const regionsSchema = createSelectSchema(regions);
@@ -64,8 +65,10 @@ const schemaRoute = {
       data: z.array(
         ukePermitsSchema.extend({
           band: bandsSchema,
-          operator: operatorsSchema,
-          location: ukeLocationsSchema.extend({ region: regionsSchema }),
+          station: ukeStationsSchema.extend({
+            operator: operatorsSchema,
+            location: ukeLocationsSchema.extend({ region: regionsSchema }),
+          }),
           sectors: z.array(sectorsSchema).optional(),
         }),
       ),
@@ -77,16 +80,29 @@ type ReqQuery = {
 };
 type Permit = z.infer<typeof ukePermitsSchema> & {
   band?: z.infer<typeof bandsSchema>;
-  operator?: z.infer<typeof operatorsSchema>;
-  location?: z.infer<typeof ukeLocationsSchema> & { region: z.infer<typeof regionsSchema> };
+  station?: z.infer<typeof ukeStationsSchema> & {
+    operator: z.infer<typeof operatorsSchema>;
+    location: z.infer<typeof ukeLocationsSchema> & { region: z.infer<typeof regionsSchema> };
+  };
   sectors?: z.infer<typeof sectorsSchema>[];
 };
 
 const SIMILARITY_THRESHOLD = 0.6;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Permit[]>>) {
-  const { limit, page, bounds, rat, bands: bandValues, decisionType, decision_number, station_id, operator: operatorMnc } = req.query;
-  const offset = limit ? (page - 1) * limit : undefined;
+  const {
+    limit,
+    page,
+    bounds,
+    rat,
+    bands: bandValues,
+    decisionType,
+    decision_number,
+    station_id,
+    operator: operatorMnc,
+    operators: operatorMncs,
+  } = req.query;
+  const offset = (page - 1) * limit;
 
   try {
     let envelope: ReturnType<typeof sql> | undefined;
@@ -97,7 +113,9 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       envelope = sql`ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 4326)`;
     }
 
-    const [bandRows, boundaryLocations, operatorRow] = await Promise.all([
+    const expandedOperatorMncs = operatorMncs?.includes(26034) ? [...new Set([...operatorMncs, 26002, 26003])] : operatorMncs;
+
+    const [bandRows, boundaryLocations, operatorRow, operatorRows] = await Promise.all([
       bandValues
         ? db.query.bands.findMany({
             columns: { id: true },
@@ -111,6 +129,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
             .where(sql`ST_Intersects(${ukeLocations.point}, ${envelope})`)
         : undefined,
       operatorMnc !== undefined ? db.query.operators.findFirst({ columns: { id: true }, where: { mnc: operatorMnc } }) : undefined,
+      expandedOperatorMncs?.length ? db.query.operators.findMany({ columns: { id: true }, where: { mnc: { in: expandedOperatorMncs } } }) : [],
     ]);
 
     const bandIds = bandRows.length ? bandRows.map((band) => band.id) : undefined;
@@ -121,23 +140,32 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
     const operatorId = operatorRow?.id;
     if (operatorMnc !== undefined && !operatorId) return res.send({ data: [] });
+    const operatorIds = [...new Set([...(operatorId ? [operatorId] : []), ...operatorRows.map((row) => row.id)])];
+    if (operatorMncs?.length && !operatorIds.length) return res.send({ data: [] });
 
     const ukePermitsRes = await db.query.ukePermits.findMany({
       columns: {
         band_id: false,
-        location_id: false,
-        operator_id: false,
+        uke_station_id: false,
       },
       with: {
         band: true,
-        operator: true,
-        location: {
+        station: {
           columns: {
-            point: false,
-            region_id: false,
+            operator_id: false,
+            location_id: false,
           },
           with: {
-            region: true,
+            operator: true,
+            location: {
+              columns: {
+                point: false,
+                region_id: false,
+              },
+              with: {
+                region: true,
+              },
+            },
           },
         },
         sectors: {
@@ -150,7 +178,6 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         RAW: (fields) => {
           const conditions: (SQL<unknown> | undefined)[] = [];
           if (bandIds && bandIds.length > 0) conditions.push(inArray(fields.band_id, bandIds));
-          if (locationIds) conditions.push(inArray(fields.location_id, locationIds));
           if (decisionType) conditions.push(eq(fields.decision_type, decisionType));
           if (decision_number) {
             const like = `%${decision_number}%`;
@@ -158,8 +185,15 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
               or(ilike(fields.decision_number, like), sql`similarity(${fields.decision_number}, ${decision_number}) > ${SIMILARITY_THRESHOLD}`),
             );
           }
-          if (station_id) conditions.push(eq(fields.station_id, station_id));
-          if (operatorId) conditions.push(eq(fields.operator_id, operatorId));
+          const stationConditions: SQL<unknown>[] = [];
+          if (locationIds) stationConditions.push(inArray(ukeStations.location_id, locationIds));
+          if (station_id) stationConditions.push(eq(ukeStations.station_id, station_id));
+          if (operatorIds.length) stationConditions.push(inArray(ukeStations.operator_id, operatorIds));
+          if (stationConditions.length) {
+            conditions.push(
+              sql`EXISTS (SELECT 1 FROM ${ukeStations} WHERE ${ukeStations.id} = ${fields.uke_station_id} AND ${and(...stationConditions)})`,
+            );
+          }
           if (rat) {
             const ratMap: Record<string, string> = { gsm: "GSM", "gsm-r": "GSM", umts: "UMTS", lte: "LTE", nr: "NR", cdma: "CDMA", iot: "IOT" };
             const wantsGsmR = rat.includes("gsm-r");
@@ -187,7 +221,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         },
       },
       limit,
-      offset: offset,
+      offset,
     });
 
     res.send({ data: ukePermitsRes });

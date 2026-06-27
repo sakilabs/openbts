@@ -10,7 +10,7 @@ import { db } from "../database/psql.js";
 import redis from "../database/redis.js";
 import { logger } from "../utils/logger.js";
 import { notifyUkeUpdate } from "./notification.service.js";
-import { cleanupOrphanedUkeLocations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
+import { cleanupOrphanedUkeLocations, cleanupOrphanedUkeStations, pruneStationsPermits } from "./stationsPermitsAssociation.service.js";
 import { getSnapshotDelta, takeStatsSnapshot } from "./statsSnapshot.service.js";
 
 type ImportStepKey =
@@ -19,7 +19,7 @@ type ImportStepKey =
   | "device_registry"
   | "prune_deleted_entries"
   | "prune_associations"
-  | "cleanup_orphaned_uke_locations"
+  | "cleanup_orphaned_uke_entities"
   | "associate"
   | "snapshot"
   | "cleanup";
@@ -93,7 +93,7 @@ const STEP_KEYS: ImportStepKey[] = [
   "device_registry",
   "prune_deleted_entries",
   "prune_associations",
-  "cleanup_orphaned_uke_locations",
+  "cleanup_orphaned_uke_entities",
   "associate",
   "snapshot",
   "cleanup",
@@ -272,14 +272,15 @@ async function runJob(
     }
 
     if (permitsChanged || deviceRegistryChanged) {
-      markRunning(job, "cleanup_orphaned_uke_locations");
+      markRunning(job, "cleanup_orphaned_uke_entities");
       await saveJob(job);
       try {
+        await cleanupOrphanedUkeStations();
         await cleanupOrphanedUkeLocations();
-        markSuccess(job, "cleanup_orphaned_uke_locations");
+        markSuccess(job, "cleanup_orphaned_uke_entities");
         await saveJob(job);
       } catch (e) {
-        markError(job, "cleanup_orphaned_uke_locations");
+        markError(job, "cleanup_orphaned_uke_entities");
         await saveJob(job);
         throw e;
       }
@@ -308,7 +309,7 @@ async function runJob(
         throw e;
       }
     } else {
-      markSkipped(job, "cleanup_orphaned_uke_locations");
+      markSkipped(job, "cleanup_orphaned_uke_entities");
       markSkipped(job, "prune_associations");
       markSkipped(job, "associate");
       await saveJob(job);

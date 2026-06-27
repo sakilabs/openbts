@@ -314,7 +314,7 @@ function MapViewInner() {
         latitude: lat,
         longitude: lng,
       };
-      showPopup([lng, lat], location, null, [station as unknown as UkeStation], "uke");
+      showPopup([lng, lat], location, null, [station], "uke");
       setActivePopupLocation({ locationId: station.location.id, source: "uke" });
     },
     [map, showPopup],

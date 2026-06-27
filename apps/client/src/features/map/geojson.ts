@@ -43,7 +43,8 @@ export function locationsToGeoJSON(locations: LocationWithStations[], source: St
   const features: GeoJSON.Feature[] = [];
 
   for (const location of locations) {
-    if (location.latitude == null || location.longitude == null || !location.stations?.length) continue;
+    if (location.latitude === null || location.latitude === undefined || location.longitude === null || location.longitude === undefined) continue;
+    if (!location.stations?.length) continue;
 
     const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(location.stations.map((s) => s.operator?.mnc));
 
@@ -71,9 +72,12 @@ export function ukeLocationsToGeoJSON(locations: UkeLocationWithPermits[], sourc
   const features: GeoJSON.Feature[] = [];
 
   for (const location of locations) {
-    if (location.latitude == null || location.longitude == null || !location.permits?.length) continue;
+    if (location.latitude === null || location.latitude === undefined || location.longitude === null || location.longitude === undefined) continue;
+    if (!location.permits?.length) continue;
 
-    const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(location.permits.map((p) => p.operator?.mnc));
+    const { operators, hasNullOperator, isMultiOperator, pieImageId, color } = getOperatorData(
+      location.permits.map((p) => p.station.operator?.mnc),
+    );
 
     features.push(
       createPointFeature(location.longitude, location.latitude, {

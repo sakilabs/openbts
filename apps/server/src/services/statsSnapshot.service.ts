@@ -1,4 +1,4 @@
-import { bands, operators, statsSnapshots, ukePermits } from "@openbts/drizzle";
+import { bands, operators, statsSnapshots, ukePermits, ukeStations } from "@openbts/drizzle";
 import { and, count, countDistinct, desc, eq, isNotNull, sql } from "drizzle-orm";
 
 import { db } from "../database/psql.js";
@@ -11,20 +11,22 @@ export async function takeStatsSnapshot(): Promise<void> {
   const [bandRows, operatorRows] = await Promise.all([
     db
       .select({
-        operator_id: ukePermits.operator_id,
+        operator_id: ukeStations.operator_id,
         band_id: ukePermits.band_id,
-        unique_stations_count: countDistinct(ukePermits.station_id),
+        unique_stations_count: countDistinct(ukePermits.uke_station_id),
         permits_count: count(),
       })
       .from(ukePermits)
-      .groupBy(ukePermits.operator_id, ukePermits.band_id),
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
+      .groupBy(ukeStations.operator_id, ukePermits.band_id),
     db
       .select({
-        operator_id: ukePermits.operator_id,
-        unique_stations_count: countDistinct(ukePermits.station_id),
+        operator_id: ukeStations.operator_id,
+        unique_stations_count: countDistinct(ukePermits.uke_station_id),
       })
       .from(ukePermits)
-      .groupBy(ukePermits.operator_id),
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
+      .groupBy(ukeStations.operator_id),
   ]);
 
   if (bandRows.length === 0) {

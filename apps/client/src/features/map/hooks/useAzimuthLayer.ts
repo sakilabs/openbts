@@ -185,7 +185,7 @@ function ukeLocationsToAzimuthPoints(locations: UkeLocationWithPermits[]): Azimu
     latitude: loc.latitude,
     longitude: loc.longitude,
     entries: (loc.permits ?? []).flatMap((permit) => {
-      const color = permit?.operator?.mnc ? getOperatorColor(permit.operator.mnc) : DEFAULT_COLOR;
+      const color = permit.station.operator?.mnc ? getOperatorColor(permit.station.operator.mnc) : DEFAULT_COLOR;
       return (permit.sectors ?? []).filter(hasAzimuth).map((sector) => ({ azimuth: sector.azimuth, color }));
     }),
   }));

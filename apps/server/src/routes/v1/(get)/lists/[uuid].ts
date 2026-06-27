@@ -10,6 +10,7 @@ import {
   ukeLocations,
   ukePermitSectors,
   ukePermits,
+  ukeStations,
   userLists,
 } from "@openbts/drizzle";
 import { createSelectSchema } from "drizzle-orm/zod";
@@ -26,10 +27,14 @@ import { getRuntimeSettings } from "../../../../services/settings.service.js";
 const ukePermitSectorResponseSchema = createSelectSchema(ukePermitSectors).omit({ permit_id: true });
 
 const ukePermitResponseSchema = createSelectSchema(ukePermits)
-  .omit({ operator_id: true, location_id: true, band_id: true })
+  .omit({ uke_station_id: true, band_id: true })
   .extend({
     band: createSelectSchema(bands).nullable(),
-    operator: createSelectSchema(operators).nullable(),
+    station: createSelectSchema(ukeStations)
+      .omit({ operator_id: true, location_id: true })
+      .extend({
+        operator: createSelectSchema(operators).nullable(),
+      }),
     sectors: z.array(ukePermitSectorResponseSchema).optional(),
   });
 const ukeLocationResponseSchema = createSelectSchema(ukeLocations)
@@ -167,7 +172,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
   const ukeLocationIds = stationsObj.uke ?? [];
   const radiolineIds = (list.radiolines as number[]) ?? [];
 
-  const [stationsData, radiolinesData, ukeLocationsData] = await Promise.all([
+  const [stationsData, radiolinesData, ukeLocationsDataRaw] = await Promise.all([
     stationIds.length
       ? db.query.stations.findMany({
           columns: {
@@ -209,12 +214,17 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
           columns: { point: false, region_id: false },
           with: {
             region: true,
-            permits: {
-              columns: { location_id: false },
+            stations: {
+              columns: { operator_id: false, location_id: false },
               with: {
-                band: true,
                 operator: true,
-                ...(azimuths ? { sectors: { columns: { permit_id: false } } } : {}),
+                permits: {
+                  columns: { uke_station_id: false, band_id: false },
+                  with: {
+                    band: true,
+                    ...(azimuths ? { sectors: { columns: { permit_id: false } } } : {}),
+                  },
+                },
               },
             },
           },
@@ -222,6 +232,20 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
         })
       : [],
   ]);
+
+  const ukeLocationsData = ukeLocationsDataRaw.map(({ stations: ukeStationRows, ...location }) => ({
+    ...location,
+    permits: ukeStationRows.flatMap((station) => {
+      const { permits, operator, ...stationData } = station;
+      return permits.map((permit) => ({
+        ...permit,
+        station: {
+          ...stationData,
+          operator,
+        },
+      }));
+    }),
+  }));
 
   const mappedRadiolines: RadioLineResponse[] = radiolinesData.map((radioLine) => ({
     id: radioLine.id,

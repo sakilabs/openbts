@@ -1,4 +1,4 @@
-import { cells, locations, operators, regions, stations, ukeLocations, ukePermits } from "@openbts/drizzle";
+import { cells, locations, operators, regions, stations, ukeLocations, ukePermits, ukeStations } from "@openbts/drizzle";
 import { count, countDistinct, eq } from "drizzle-orm";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -52,7 +52,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
 
-  const ukeWhere = operator_id ? eq(ukePermits.operator_id, operator_id) : undefined;
+  const ukeWhere = operator_id ? eq(ukeStations.operator_id, operator_id) : undefined;
   const stationWhere = operator_id ? eq(stations.operator_id, operator_id) : undefined;
 
   const [ukeRows, internalRows] = await Promise.all([
@@ -62,13 +62,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         region_name: regions.name,
         operator_id: operators.id,
         operator_name: operators.name,
-        unique_stations: countDistinct(ukePermits.station_id),
+        unique_stations: countDistinct(ukePermits.uke_station_id),
         permits: count(),
       })
       .from(ukePermits)
-      .innerJoin(ukeLocations, eq(ukePermits.location_id, ukeLocations.id))
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
+      .innerJoin(ukeLocations, eq(ukeStations.location_id, ukeLocations.id))
       .innerJoin(regions, eq(ukeLocations.region_id, regions.id))
-      .innerJoin(operators, eq(ukePermits.operator_id, operators.id))
+      .innerJoin(operators, eq(ukeStations.operator_id, operators.id))
       .where(ukeWhere)
       .groupBy(regions.id, regions.name, operators.id, operators.name)
       .orderBy(regions.name),

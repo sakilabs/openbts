@@ -67,7 +67,7 @@ function ukeLocationsToPickerGeoJSON(locations: UkeLocationWithPermits[]): GeoJS
   for (const loc of locations) {
     if (!loc.latitude || !loc.longitude || !loc.permits?.length) continue;
 
-    const { operators, isMultiOperator, color } = getOperatorData(loc.permits.map((p) => p.operator?.mnc));
+    const { operators, isMultiOperator, color } = getOperatorData(loc.permits.map((p) => p.station.operator?.mnc));
     const pieImageId = isMultiOperator ? `picker-uke-pie-${operators.join("-")}` : undefined;
 
     features.push({
@@ -105,14 +105,12 @@ function applyGeocodeResult(result: GeocodingResult, regions: Region[], onLocati
 }
 
 function computeNearby(coords: { lat: number; lng: number }, locations: LocationWithStations[]): (LocationWithStations & { distance: number })[] {
-  return locations
-    .map((loc) => ({
-      ...loc,
-      distance: calculateDistance(coords.lat, coords.lng, loc.latitude, loc.longitude),
-    }))
-    .filter((loc) => loc.distance <= PICKER_NEARBY_RADIUS_METERS)
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, 5);
+  const nearby: (LocationWithStations & { distance: number })[] = [];
+  for (const loc of locations) {
+    const distance = calculateDistance(coords.lat, coords.lng, loc.latitude, loc.longitude);
+    if (distance <= PICKER_NEARBY_RADIUS_METERS) nearby.push({ ...loc, distance });
+  }
+  return nearby.sort((a, b) => a.distance - b.distance).slice(0, 5);
 }
 
 type LocationPickerProps = {

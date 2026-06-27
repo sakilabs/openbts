@@ -71,15 +71,19 @@ export function groupPermitsByStation(permits: UkePermit[], ukeLocation?: UkeLoc
     : null;
 
   for (const permit of permits) {
-    const existing = stationMap.get(permit.station_id);
+    const station = permit.station;
+    const existing = stationMap.get(String(station.id));
     if (existing) {
       existing.permits.push(permit);
     } else {
-      stationMap.set(permit.station_id, {
-        station_id: permit.station_id,
-        operator: permit.operator ?? null,
+      stationMap.set(String(station.id), {
+        id: station.id,
+        station_id: station.station_id,
+        createdAt: station.createdAt,
+        updatedAt: station.updatedAt,
+        operator: station.operator ?? null,
         permits: [permit],
-        location: overrideLocation ?? permit.location ?? null,
+        location: overrideLocation ?? station.location ?? null,
       });
     }
   }
@@ -95,7 +99,7 @@ function ratOrder(rat: string): number {
 const BAND_REGEX = /^([A-Za-z]+(?:-[A-Za-z]+)?)(\d+)$/;
 
 function sortBands(bands: string[]): string[] {
-  return bands.sort((a, b) => {
+  return [...bands].sort((a, b) => {
     const matchA = a.match(BAND_REGEX);
     const matchB = b.match(BAND_REGEX);
 
@@ -222,7 +226,7 @@ export function groupRadioLinesIntoLinks(radioLines: RadioLine[]): DuplexRadioLi
     const aKey = `${a.latitude},${a.longitude}`;
 
     const pairSortKey = (e: RadioLine) => `${e.link.polarization ?? ""}:${e.link.freq}`;
-    const sorted = (lines: RadioLine[]) => lines.sort((x, y) => pairSortKey(x).localeCompare(pairSortKey(y)));
+    const sorted = (lines: RadioLine[]) => [...lines].sort((x, y) => pairSortKey(x).localeCompare(pairSortKey(y)));
 
     const forward = sorted(entries.filter((e) => `${e.tx.latitude},${e.tx.longitude}` === aKey));
     const reverse = sorted(entries.filter((e) => `${e.tx.latitude},${e.tx.longitude}` !== aKey));

@@ -1,6 +1,20 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-27
+
+### 🚀 Enhancements
+
+- UKE data now uses first-class station records to group permits by station, operator and location more reliably
+- Added station-level UKE API support with bounds, operator, RAT, band, date and station ID filtering
+- UKE maps, search results, lists and statistics now use station-level data for more accurate grouping, coloring, counts and filters
+- UKE imports now create and refresh station records, remove orphaned station data and improve automatic OpenBTS station-permit associations
+
+### 🩹 Fixes
+
+- Submission prefill from UKE permits now uses the same station grouping model as map and search results
+- Sidebar list collapse preferences now migrate to a versioned local storage key while preserving saved state
+
 # 2026-06-23
 
 ### 🚀 Enhancements

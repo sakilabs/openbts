@@ -1,9 +1,12 @@
 import { AirdropIcon, FlashIcon, RadioIcon, SignalFull02Icon, SmartPhone01Icon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 
+import type { CellDetails } from "@/types/station";
+
 export const RAT_ORDER = ["NR", "LTE", "UMTS", "GSM"] as const;
 
 export type RatType = (typeof RAT_ORDER)[number];
+type CellDetailKey = keyof NonNullable<CellDetails>;
 
 type RatIdentityDuplicateRule = {
   fields: readonly string[];
@@ -20,7 +23,7 @@ type RatCellSpec = {
   sharedDetailFields?: readonly string[];
   identityDuplicateRules?: readonly RatIdentityDuplicateRule[];
   channelField?: string;
-  sortDetailField?: string;
+  sortDetailField?: CellDetailKey;
   defaultBandDuplex?: string;
   defaultBandDuplexByValue?: Partial<Record<number, string>>;
   siblingSyncField?: string;
@@ -145,7 +148,7 @@ export function getRatChannelField(rat: string): string | undefined {
   return getRatCellSpec(rat)?.channelField;
 }
 
-export function getRatSortDetailField(rat: string): string | undefined {
+export function getRatSortDetailField(rat: string): CellDetailKey | undefined {
   return getRatCellSpec(rat)?.sortDetailField;
 }
 

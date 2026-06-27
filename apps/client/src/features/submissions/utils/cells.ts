@@ -122,7 +122,6 @@ export function getCellDiffStatus(cell: ProposedCellForm, originalsMap: Map<numb
 }
 
 type UkePermitForCells = {
-  band_id: number;
   band?: { rat: string; id: number } | null;
   source?: "permits" | "device_registry";
   sectors?: unknown[];

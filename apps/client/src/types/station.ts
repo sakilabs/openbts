@@ -218,20 +218,15 @@ export type UkePermitSector = {
 
 export type UkePermit = {
   id: number;
-  station_id: string;
-  operator_id: number;
-  location_id?: number;
   decision_number: string;
   decision_type: "zmP" | "P";
   expiry_date: string;
-  band_id: number;
   source?: "permits" | "device_registry";
   sectors?: UkePermitSector[];
   updatedAt: string;
   createdAt: string;
   band?: Band | null;
-  operator?: UkeOperator | null;
-  location?: UkeLocation;
+  station: Omit<UkeStation, "permits">;
 };
 
 export type UkeLocationWithPermits = {
@@ -247,17 +242,18 @@ export type UkeLocationWithPermits = {
 };
 
 export type UkeStation = {
+  id: number;
   station_id: string;
+  createdAt?: string;
+  updatedAt?: string;
   operator: UkeOperator | null;
   permits: UkePermit[];
-  location: {
-    id: number;
-    city: string | null;
-    address: string | null;
-    latitude: number;
-    longitude: number;
-    region: Region;
-  } | null;
+  location:
+    | (Omit<UkeLocation, "createdAt" | "updatedAt"> & {
+        createdAt?: string;
+        updatedAt?: string;
+      })
+    | null;
 };
 
 export type CommentAttachment = {

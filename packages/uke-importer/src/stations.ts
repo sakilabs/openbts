@@ -22,6 +22,7 @@ import { db } from "@openbts/drizzle/db";
 import { getLastImportedFileNames, recordImportMetadata } from "./import-check.js";
 import { scrapeXlsxLinks } from "./scrape.js";
 import type { RawUkeData } from "./types.js";
+import { cleanupOrphanedUkeStations, getUkeStationKey, refreshUkeStationActivity, resolveUkeStationIds } from "./uke-stations.js";
 import { upsertBands, getOperators, upsertRegions, upsertUkeLocations } from "./upserts.js";
 
 function parseBandFromLabel(
@@ -106,38 +107,50 @@ async function insertUkePermits(
         return null;
       }
       return {
-        station_id: String(r.IdStacji || "").trim(),
-        operator_id,
-        location_id,
-        decision_number: String(r["Nr Decyzji"] || "").trim(),
-        decision_type: (r["Rodzaj decyzji"] ?? "P") as "zmP" | "P",
-        expiry_date: permitDate,
-        band_id: bandId,
-        source: "permits" as const,
-        createdAt: fileDate,
-        updatedAt: fileDate,
+        station: {
+          station_id: String(r.IdStacji || "").trim(),
+          operator_id,
+          location_id,
+          createdAt: fileDate,
+          updatedAt: fileDate,
+        },
+        permit: {
+          decision_number: String(r["Nr Decyzji"] || "").trim(),
+          decision_type: (r["Rodzaj decyzji"] ?? "P") as "zmP" | "P",
+          expiry_date: permitDate,
+          band_id: bandId,
+          source: "permits" as const,
+          createdAt: fileDate,
+          updatedAt: fileDate,
+        },
       };
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
-  for (const group of chunk(values, BATCH_SIZE)) {
+
+  const stationIdByKey = await resolveUkeStationIds(values.map((v) => v.station));
+  const permitValues = values
+    .map((value) => {
+      const ukeStationId = stationIdByKey.get(getUkeStationKey(value.station));
+      if (ukeStationId === undefined) {
+        logger.warn(`Warning: Could not resolve UKE station ID for station ${value.station.station_id}`);
+        return null;
+      }
+      return { ...value.permit, uke_station_id: ukeStationId };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
+
+  for (const group of chunk(permitValues, BATCH_SIZE)) {
     if (group.length) {
       await db
         .insert(ukePermits)
         .values(group)
         .onConflictDoUpdate({
-          target: [
-            ukePermits.station_id,
-            ukePermits.operator_id,
-            ukePermits.location_id,
-            ukePermits.band_id,
-            ukePermits.decision_number,
-            ukePermits.decision_type,
-            ukePermits.expiry_date,
-          ],
+          target: [ukePermits.uke_station_id, ukePermits.band_id, ukePermits.decision_number, ukePermits.decision_type, ukePermits.expiry_date],
           set: { updatedAt: fileDate, source: "permits" },
         });
     }
   }
+  await refreshUkeStationActivity(stationIdByKey.values());
 }
 
 export async function importPermits(): Promise<boolean> {
@@ -238,6 +251,7 @@ export async function importPermits(): Promise<boolean> {
       .where(and(eq(ukePermits.source, "permits"), eq(ukePermits.band_id, bandId), lt(ukePermits.updatedAt, fr.fileDate)));
 
     if (stale.length > 0) {
+      const affectedStationIds = stale.map((row) => row.uke_station_id);
       for (const group of chunk(stale, BATCH_SIZE)) {
         await db.insert(deletedEntries).values(
           group.map((row) => ({
@@ -250,9 +264,12 @@ export async function importPermits(): Promise<boolean> {
         );
       }
       await db.delete(ukePermits).where(and(eq(ukePermits.source, "permits"), eq(ukePermits.band_id, bandId), lt(ukePermits.updatedAt, fr.fileDate)));
+      await refreshUkeStationActivity(affectedStationIds);
       staleCount += stale.length;
     }
   }
+  const orphanedStations = await cleanupOrphanedUkeStations();
+  if (orphanedStations > 0) logger.log(`Deleted ${orphanedStations} orphaned UKE stations`);
   logger.log(`Deleted ${staleCount} stale station permits`);
 
   logger.log("Import completed successfully");
@@ -262,7 +279,17 @@ export async function importPermits(): Promise<boolean> {
 export async function associateStationsWithPermits(): Promise<boolean> {
   logger.log("Associating stations with permits...");
   const permits = await db.query.ukePermits.findMany({
-    columns: { id: true, station_id: true, operator_id: true },
+    columns: { id: true },
+    with: {
+      station: {
+        columns: { id: true, station_id: true, operator_id: true },
+        with: {
+          location: {
+            columns: { longitude: true, latitude: true },
+          },
+        },
+      },
+    },
   });
   logger.log(`Found ${permits.length} permits`);
   if (!permits.length) {
@@ -271,12 +298,17 @@ export async function associateStationsWithPermits(): Promise<boolean> {
     return false;
   }
 
-  const permitStationIds = [...new Set(permits.map((p) => p.station_id))];
-  const permitOperatorIds = [...new Set(permits.map((p) => p.operator_id))];
+  const permitStationIds = [...new Set(permits.map((p) => p.station.station_id))];
+  const permitOperatorIds = [...new Set(permits.map((p) => p.station.operator_id))];
   logger.log(`Looking for ${permitStationIds.length} unique station IDs across ${permitOperatorIds.length} operators`);
   const matchingStations = await db.query.stations.findMany({
     where: { station_id: { in: permitStationIds }, operator_id: { in: permitOperatorIds } },
     columns: { id: true, station_id: true, operator_id: true },
+    with: {
+      location: {
+        columns: { longitude: true, latitude: true },
+      },
+    },
   });
   logger.log(`Found ${matchingStations.length} matching stations`);
   if (!matchingStations.length) {
@@ -285,33 +317,46 @@ export async function associateStationsWithPermits(): Promise<boolean> {
     return false;
   }
 
-  const stationsByKey = new Map<string, number>();
+  const stationsByPairKey = new Map<string, number>();
+  const stationsByLocationKey = new Map<string, number>();
   for (const s of matchingStations) {
-    if (s.operator_id !== null) stationsByKey.set(`${s.station_id}:${s.operator_id}`, s.id);
+    if (s.operator_id === null) continue;
+    const pairKey = `${s.station_id}:${s.operator_id}`;
+    stationsByPairKey.set(pairKey, s.id);
+    if (s.location) stationsByLocationKey.set(`${pairKey}:${s.location.longitude}:${s.location.latitude}`, s.id);
+  }
+
+  const ukeStationsByPair = new Map<string, Set<number>>();
+  for (const permit of permits) {
+    const pairKey = `${permit.station.station_id}:${permit.station.operator_id}`;
+    const stationIds = ukeStationsByPair.get(pairKey) ?? new Set<number>();
+    stationIds.add(permit.station.id);
+    ukeStationsByPair.set(pairKey, stationIds);
   }
 
   const allAssociations: Array<{ permit_id: number; station_id: number }> = [];
-  let skippedOperatorMismatch = 0;
+  let skippedMissingMatch = 0;
+  let skippedAmbiguous = 0;
   for (const permit of permits) {
-    const key = `${permit.station_id}:${permit.operator_id}`;
-    const internalStationId = stationsByKey.get(key);
+    const pairKey = `${permit.station.station_id}:${permit.station.operator_id}`;
+    const locationKey = `${pairKey}:${permit.station.location.longitude}:${permit.station.location.latitude}`;
+    const pairStationCount = ukeStationsByPair.get(pairKey)?.size ?? 0;
+    const internalStationId = stationsByLocationKey.get(locationKey) ?? (pairStationCount === 1 ? stationsByPairKey.get(pairKey) : undefined);
     if (internalStationId !== undefined) allAssociations.push({ permit_id: permit.id, station_id: internalStationId });
-    else skippedOperatorMismatch++;
+    else if (pairStationCount > 1) skippedAmbiguous++;
+    else skippedMissingMatch++;
   }
-  if (skippedOperatorMismatch > 0) logger.warn(`Skipped ${skippedOperatorMismatch} permits (no station with matching station_id + operator)`);
+  if (skippedMissingMatch > 0) logger.warn(`Skipped ${skippedMissingMatch} permits (no station with matching station_id + operator)`);
+  if (skippedAmbiguous > 0) logger.warn(`Skipped ${skippedAmbiguous} permits (ambiguous station_id + operator across UKE locations)`);
   if (!allAssociations.length) {
     logger.log("No associations to create");
     await recordImportMetadata("stations_permits", [], "success");
     return false;
   }
 
-  const existingAssociations = await db.query.stationsPermits.findMany({
-    columns: { permit_id: true, station_id: true },
-  });
-  const existingKeys = new Set(existingAssociations.map((a) => `${a.permit_id}:${a.station_id}`));
-  const associations = allAssociations.filter((a) => !existingKeys.has(`${a.permit_id}:${a.station_id}`));
+  const associations = Array.from(new Map(allAssociations.map((a) => [`${a.permit_id}:${a.station_id}`, a])).values());
 
-  logger.log(`Creating ${associations.length} new associations (${allAssociations.length - associations.length} already exist)`);
+  logger.log(`Creating up to ${associations.length} associations`);
   if (!associations.length) {
     logger.log("All associations already exist, skipping");
     await recordImportMetadata("stations_permits", [], "success");
@@ -319,7 +364,10 @@ export async function associateStationsWithPermits(): Promise<boolean> {
   }
 
   for (const group of chunk(associations, BATCH_SIZE)) {
-    await db.insert(stationsPermits).values(group);
+    await db
+      .insert(stationsPermits)
+      .values(group)
+      .onConflictDoNothing({ target: [stationsPermits.station_id, stationsPermits.permit_id] });
   }
 
   await recordImportMetadata("stations_permits", [], "success");

@@ -36,20 +36,28 @@ message Sector {
   AntennaType antenna_type = 5;
 }
 
-message Permit {
+message UKEStation {
   int32 id = 1;
   string station_id = 2;
-  string decision_number = 3;
-  DecisionType decision_type = 4;
-  string expiry_date = 5;
-  PermitSource source = 6;
-  openbts.locations.Location location = 7;
-  Operator operator = 8;
-  Band band = 9;
-  repeated Sector sectors = 10;
+  openbts.locations.Location location = 3;
+  Operator operator = 4;
 
-  string updatedAt = 11;
-  string createdAt = 12;
+  string updatedAt = 5;
+  string createdAt = 6;
+}
+
+message Permit {
+  int32 id = 1;
+  string decision_number = 2;
+  DecisionType decision_type = 3;
+  string expiry_date = 4;
+  PermitSource source = 5;
+  UKEStation station = 6;
+  Band band = 7;
+  repeated Sector sectors = 8;
+
+  string updatedAt = 9;
+  string createdAt = 10;
 }
 
 message UKELocation {

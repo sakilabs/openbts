@@ -1,6 +1,6 @@
 import { postApiData } from "@/lib/api";
 import { forwardGeocode } from "@/lib/mapboxGeocoding";
-import type { Operator, Station, UkeLocation, UkePermit } from "@/types/station";
+import type { Station, UkeStation } from "@/types/station";
 
 import { POLAND_BOUNDS } from "./constants";
 import type { OSMResult } from "./types";
@@ -19,12 +19,7 @@ export function parseGpsCoordinates(query: string): { lat: number; lng: number }
 
 export const searchStations = (query: string) => postApiData<Station[], { query: string }>("search", { query });
 
-export type UkeSearchPermitStation = {
-  station_id: string;
-  operator: Operator | null;
-  location: UkeLocation | null;
-  permits: UkePermit[];
-};
+export type UkeSearchPermitStation = UkeStation;
 
 export type UkeSearchRadioline = {
   id: number;

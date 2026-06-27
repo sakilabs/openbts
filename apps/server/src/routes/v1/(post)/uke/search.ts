@@ -1,4 +1,4 @@
-import { operators, ukeLocations, ukeOperators, ukePermits, ukeRadiolines } from "@openbts/drizzle";
+import { operators, ukeLocations, ukeOperators, ukePermits, ukeRadiolines, ukeStations } from "@openbts/drizzle";
 import { eq, ilike, or } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -11,10 +11,11 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 
 const operatorSchema = createSelectSchema(operators);
 const ukeLocationSchema = createSelectSchema(ukeLocations).omit({ point: true });
-const ukePermitSchema = createSelectSchema(ukePermits).omit({ operator_id: true, location_id: true });
+const ukePermitSchema = createSelectSchema(ukePermits).omit({ uke_station_id: true });
 const ukeOperatorSchema = createSelectSchema(ukeOperators);
 
 const permitStationSchema = z.object({
+  id: z.number(),
   station_id: z.string(),
   operator: operatorSchema.nullable(),
   location: ukeLocationSchema.nullable(),
@@ -63,13 +64,14 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const [matchingStationIds, radiolinesRes] = await Promise.all([
     db
-      .selectDistinct({ station_id: ukePermits.station_id })
-      .from(ukePermits)
-      .leftJoin(ukeLocations, eq(ukePermits.location_id, ukeLocations.id))
+      .selectDistinct({ id: ukeStations.id })
+      .from(ukeStations)
+      .innerJoin(ukePermits, eq(ukePermits.uke_station_id, ukeStations.id))
+      .leftJoin(ukeLocations, eq(ukeStations.location_id, ukeLocations.id))
       .where(
         or(
           ilike(ukePermits.decision_number, like),
-          ilike(ukePermits.station_id, like),
+          ilike(ukeStations.station_id, like),
           ilike(ukeLocations.address, like),
           ilike(ukeLocations.city, like),
         ),
@@ -93,16 +95,21 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       .limit(LIMIT),
   ]);
 
-  const stationIds = matchingStationIds.map((r) => r.station_id);
+  const stationIds = matchingStationIds.map((r) => r.id);
 
   const [allPermits, ukeOperatorRows] = await Promise.all([
     stationIds.length > 0
       ? db.query.ukePermits.findMany({
-          where: { station_id: { in: stationIds } },
-          columns: { operator_id: false, location_id: false },
+          where: { uke_station_id: { in: stationIds } },
+          columns: { uke_station_id: false },
           with: {
-            operator: true,
-            location: { columns: { point: false } },
+            station: {
+              columns: { operator_id: false, location_id: false },
+              with: {
+                operator: true,
+                location: { columns: { point: false } },
+              },
+            },
           },
         })
       : [],
@@ -115,18 +122,21 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
 
   const ukeOperatorMap = new Map(ukeOperatorRows.map((o) => [o.id, o]));
 
-  const stationMap = new Map<string, z.infer<typeof permitStationSchema>>();
+  const stationMap = new Map<number, z.infer<typeof permitStationSchema>>();
   for (const permit of allPermits) {
-    const { operator, location, ...permitData } = permit;
-    if (!stationMap.has(permit.station_id)) {
-      stationMap.set(permit.station_id, {
-        station_id: permit.station_id,
-        operator: operator ?? null,
-        location: location ?? null,
+    const { station: permitStation, ...permitData } = permit;
+    let station = stationMap.get(permitStation.id);
+    if (station === undefined) {
+      station = {
+        id: permitStation.id,
+        station_id: permitStation.station_id,
+        operator: permitStation.operator ?? null,
+        location: permitStation.location ?? null,
         permits: [],
-      });
+      };
+      stationMap.set(permitStation.id, station);
     }
-    stationMap.get(permit.station_id)!.permits.push(permitData);
+    station.permits.push(permitData);
   }
 
   const permits = stationIds.map((id) => stationMap.get(id)).filter((s): s is z.infer<typeof permitStationSchema> => s !== undefined);

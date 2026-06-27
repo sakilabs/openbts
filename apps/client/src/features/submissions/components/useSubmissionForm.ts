@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import type { SubmissionDetail } from "@/features/admin/submissions/types";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { groupPermitsByStation } from "@/features/map/utils";
 import { bandsQueryOptions } from "@/features/shared/queries";
 import { useBeforeUnloadGuard } from "@/hooks/useBeforeUnloadGuard";
 import { showApiError } from "@/lib/api";
@@ -472,14 +473,11 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
 
   useEffect(() => {
     if (!preloadUkePermits?.length || hasAppliedUkePreload.current) return;
-    hasAppliedUkePreload.current = true;
-    const first = preloadUkePermits[0];
-    handleUkeStationSelect({
-      station_id: preloadUkeStationId!,
-      operator: first.operator ?? null,
-      location: first.location ?? null,
-      permits: preloadUkePermits,
-    });
+    const station = groupPermitsByStation(preloadUkePermits)[0];
+    if (station) {
+      hasAppliedUkePreload.current = true;
+      handleUkeStationSelect(station);
+    }
   }, [preloadUkePermits, preloadUkeStationId, handleUkeStationSelect]);
 
   const lastAppliedStationId = useRef<number | null>(null);
@@ -526,12 +524,13 @@ export function useSubmissionForm({ preloadStationId, editSubmissionId, preloadU
       details: cell.details ?? {},
     }));
 
-    const deletedTargetIds = new Set(
-      submission.cells.filter((c) => c.operation === "delete" && c.target_cell_id !== null).map((c) => c.target_cell_id),
-    );
-    const updatedTargetIds = new Set(
-      submission.cells.filter((c) => c.operation === "update" && c.target_cell_id !== null).map((c) => c.target_cell_id),
-    );
+    const deletedTargetIds = new Set<number>();
+    const updatedTargetIds = new Set<number>();
+    for (const cell of submission.cells) {
+      if (cell.target_cell_id === null) continue;
+      if (cell.operation === "delete") deletedTargetIds.add(cell.target_cell_id);
+      else if (cell.operation === "update") updatedTargetIds.add(cell.target_cell_id);
+    }
 
     queueMicrotask(() => {
       form.setFieldValue("mode", isNew ? "new" : "existing");

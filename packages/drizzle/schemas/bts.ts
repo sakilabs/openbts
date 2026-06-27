@@ -10,6 +10,7 @@ import {
   integer,
   jsonb,
   pgEnum,
+  pgSchema,
   pgTable,
   text,
   timestamp,
@@ -25,6 +26,7 @@ export const BandVariant = pgEnum("band_variant", ["commercial", "railway"]);
 export const StationStatus = pgEnum("station_status", ["published", "inactive", "pending"]);
 export const PermitsSource = pgEnum("permits_source", ["permits", "device_registry"]);
 export const NRType = pgEnum("nr_type", ["nsa", "sa"]);
+export const UkeSchema = pgSchema("uke");
 
 /**
  * Operator table
@@ -95,7 +97,7 @@ export const locations = pgTable(
  * @example
  * { id: 1, region_id: 1, city: "Warsaw", address: "ul. Marszałkowska 1", longitude: 52.2297, latitude: 21.0122 }
  */
-export const ukeLocations = pgTable(
+export const ukeLocations = UkeSchema.table(
   "uke_locations",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
@@ -224,20 +226,46 @@ export const extraIdentificators = pgTable(
 );
 
 /**
- * UKE permits table
+ * UKE stations table
  * @example
- * { id: 1, station_id: "1234567890123456", operator_id: 1, location_id: 1, decision_number: "123456", decision_type: "zmP", expiry_date: new Date(), band_id: 1, updatedAt: new Date(), createdAt: new Date() }
+ * { id: 1, station_id: "1234567890123456", location_id: 1, operator_id: 1, updatedAt: new Date(), createdAt: new Date() }
  */
-export const ukePermits = pgTable(
-  "uke_permits",
+export const ukeStations = UkeSchema.table(
+  "uke_stations",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
     station_id: varchar("station_id", { length: 16 }).notNull(),
     operator_id: integer("operator_id")
-      .references(() => operators.id, { onDelete: "set null", onUpdate: "cascade" })
+      .references(() => operators.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),
     location_id: integer("location_id")
-      .references(() => ukeLocations.id, { onDelete: "set null", onUpdate: "cascade" })
+      .references(() => ukeLocations.id, { onDelete: "cascade", onUpdate: "cascade" })
+      .notNull(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("uke_stations_station_operator_location_unique").on(t.station_id, t.operator_id, t.location_id),
+    index("uke_stations_station_id_idx").on(t.station_id),
+    index("uke_stations_station_id_trgm_idx").using("gin", sql`(${t.station_id}) gin_trgm_ops`),
+    index("uke_stations_operator_id_idx").on(t.operator_id),
+    index("uke_stations_location_id_idx").on(t.location_id),
+    index("uke_stations_location_operator_id_idx").on(t.location_id, t.operator_id, t.id),
+    index("uke_stations_updated_at_idx").on(t.updatedAt),
+    index("uke_stations_created_at_idx").on(t.createdAt),
+    check("uke_stations_station_id_16_length", sql`${t.station_id} ~ '(^.{1,16}$)'`),
+  ],
+);
+
+/**
+ * UKE permits table
+ */
+export const ukePermits = UkeSchema.table(
+  "uke_permits",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    uke_station_id: integer("uke_station_id")
+      .references(() => ukeStations.id, { onDelete: "cascade", onUpdate: "cascade" })
       .notNull(),
     decision_number: varchar("decision_number", { length: 100 }).notNull(),
     decision_type: UKEPermissionType("decision_type").notNull(),
@@ -250,30 +278,23 @@ export const ukePermits = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique("uke_permits_unique_permit").on(t.station_id, t.operator_id, t.location_id, t.band_id, t.decision_number, t.decision_type, t.expiry_date),
-    index("uke_permits_station_id_idx").on(t.station_id),
-    index("uke_permits_location_id_idx").on(t.location_id),
-    index("uke_permits_operator_id_idx").on(t.operator_id),
+    unique("uke_permits_unique_permit").on(t.uke_station_id, t.band_id, t.decision_number, t.decision_type, t.expiry_date),
+    index("uke_permits_uke_station_id_idx").on(t.uke_station_id),
     index("uke_permits_band_id_idx").on(t.band_id),
     index("uke_permits_decision_type_idx").on(t.decision_type),
     index("uke_permits_decision_number_trgm_idx").using("gin", sql`(${t.decision_number}) gin_trgm_ops`),
-    index("uke_permits_station_id_trgm_idx").using("gin", sql`(${t.station_id}) gin_trgm_ops`),
-    index("uke_permits_operator_band_idx").on(t.operator_id, t.band_id),
-    index("uke_permits_operator_location_idx").on(t.operator_id, t.location_id),
+    index("uke_permits_uke_station_band_id_idx").on(t.uke_station_id, t.band_id, t.id),
     index("uke_permits_source_idx").on(t.source),
-    index("uke_permits_location_id_id_idx").on(t.location_id, t.id),
-    index("uke_permits_location_created_at_idx").on(t.location_id, t.createdAt),
-    index("uke_permits_created_at_location_idx").on(t.createdAt, t.location_id),
-    index("uke_permits_location_operator_band_idx").on(t.location_id, t.operator_id, t.band_id),
-    index("uke_permits_location_operator_band_id_idx").on(t.location_id, t.operator_id, t.band_id, t.id),
-    index("uke_permits_location_band_idx").on(t.location_id, t.band_id),
-    index("uke_permits_operator_band_location_idx").on(t.operator_id, t.band_id, t.location_id),
+    index("uke_permits_uke_station_id_id_idx").on(t.uke_station_id, t.id),
+    index("uke_permits_uke_station_created_at_idx").on(t.uke_station_id, t.createdAt),
+    index("uke_permits_created_at_uke_station_idx").on(t.createdAt, t.uke_station_id),
+    index("uke_permits_updated_at_uke_station_idx").on(t.updatedAt, t.uke_station_id),
   ],
 );
 
 export const AntennaType = pgEnum("antenna_type", ["indoor", "outdoor"]);
 
-export const ukePermitSectors = pgTable(
+export const ukePermitSectors = UkeSchema.table(
   "uke_permit_sectors",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
@@ -464,7 +485,7 @@ export const bands = pgTable(
  * @example
  * { id: 1, name: "Ericsson" }
  */
-export const radioLinesManufacturers = pgTable("radiolines_manufacturers", {
+export const radioLinesManufacturers = UkeSchema.table("radiolines_manufacturers", {
   id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
 });
@@ -474,7 +495,7 @@ export const radioLinesManufacturers = pgTable("radiolines_manufacturers", {
  * @example
  * { id: 1, name: "Antenna Type 1", manufacturer_id: 1 }
  */
-export const radiolinesAntennaTypes = pgTable("radiolines_antenna_types", {
+export const radiolinesAntennaTypes = UkeSchema.table("radiolines_antenna_types", {
   id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
@@ -485,13 +506,13 @@ export const radiolinesAntennaTypes = pgTable("radiolines_antenna_types", {
  * @example
  * { id: 1, name: "Transmitter Type 1", manufacturer_id: 1 }
  */
-export const radiolinesTransmitterTypes = pgTable("radiolines_transmitter_types", {
+export const radiolinesTransmitterTypes = UkeSchema.table("radiolines_transmitter_types", {
   id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   manufacturer_id: integer("manufacturer_id").references(() => radioLinesManufacturers.id, { onDelete: "set null", onUpdate: "cascade" }),
 });
 
-export const ukeOperators = pgTable("uke_operators", {
+export const ukeOperators = UkeSchema.table("uke_operators", {
   id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
   name: varchar("full_name", { length: 150 }).notNull(),
   full_name: varchar("name", { length: 250 }).notNull().unique(),
@@ -500,7 +521,7 @@ export const ukeOperators = pgTable("uke_operators", {
 /**
  * UKE radiolines table
  */
-export const ukeRadiolines = pgTable(
+export const ukeRadiolines = UkeSchema.table(
   "uke_radiolines",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
@@ -566,7 +587,7 @@ export const ukeRadiolines = pgTable(
  * @example
  * { id: 1, import_type: "stations", file_list: ["https://uke.gov.pl/file1.xlsx", "https://uke.gov.pl/file2.xlsx"], last_import_date: new Date(), status: "success" }
  */
-export const ukeImportMetadata = pgTable("uke_import_metadata", {
+export const ukeImportMetadata = UkeSchema.table("uke_import_metadata", {
   id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
   import_type: varchar("import_type", { length: 20 }).notNull(),
   file_list: text("file_list").notNull(),

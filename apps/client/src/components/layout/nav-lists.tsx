@@ -16,18 +16,19 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { fetchUserLists, type UserListSummary } from "@/features/lists/api";
+import { type UserListSummary, fetchUserLists } from "@/features/lists/api";
 import { useFavoriteLists } from "@/hooks/useFavoriteLists";
 import { authClient } from "@/lib/authClient";
 import { cn } from "@/lib/utils";
 
-const NAV_STORAGE_KEY = "nav-collapsed-state";
+const LEGACY_NAV_STORAGE_KEY = "nav-collapsed-state";
+const NAV_STORAGE_KEY = "nav-collapsed-state:v1";
 const SIDEBAR_LIST_FETCH_LIMIT = 10;
 const SIDEBAR_RECENT_LIST_LIMIT = 5;
 
 function readNavState(): boolean {
   try {
-    const stored = localStorage.getItem(NAV_STORAGE_KEY);
+    const stored = localStorage.getItem(NAV_STORAGE_KEY) ?? localStorage.getItem(LEGACY_NAV_STORAGE_KEY);
     if (!stored) return false;
     return (JSON.parse(stored) as Record<string, boolean>)["lists"] ?? false;
   } catch {
@@ -40,6 +41,7 @@ function saveNavState(open: boolean) {
     const stored = localStorage.getItem(NAV_STORAGE_KEY);
     const parsed = stored ? (JSON.parse(stored) as Record<string, boolean>) : {};
     localStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ ...parsed, lists: open }));
+    localStorage.removeItem(LEGACY_NAV_STORAGE_KEY);
   } catch {}
 }
 
@@ -73,7 +75,9 @@ export const NavLists = memo(function NavLists() {
       if (list !== undefined) acc.push(list);
       return acc;
     }, []);
-    const recentLists = ownedLists.filter((list) => !favoriteSet.has(list.uuid)).slice(0, Math.max(0, SIDEBAR_RECENT_LIST_LIMIT - favoriteLists.length));
+    const recentLists = ownedLists
+      .filter((list) => !favoriteSet.has(list.uuid))
+      .slice(0, Math.max(0, SIDEBAR_RECENT_LIST_LIMIT - favoriteLists.length));
 
     return [...favoriteLists, ...recentLists];
   }, [data?.data, favoriteSet, favoriteUuids, session?.user?.id]);
@@ -121,7 +125,7 @@ export const NavLists = memo(function NavLists() {
                           title={favoriteLabel}
                           className={cn(
                             "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-1 right-1 flex size-5 items-center justify-center rounded-md p-0 opacity-0 outline-hidden transition group-focus-within/menu-sub-item:opacity-100 group-hover/menu-sub-item:opacity-100 focus-visible:ring-2 [&>svg]:size-3.5",
-                            favorite && "text-amber-500 opacity-100 hover:text-amber-500 [&_*]:fill-current",
+                            favorite && "text-amber-500 opacity-100 hover:text-amber-500 **:fill-current",
                           )}
                           onClick={(event) => {
                             event.preventDefault();

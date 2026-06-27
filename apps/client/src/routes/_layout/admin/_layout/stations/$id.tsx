@@ -20,6 +20,7 @@ import { StationInfoForm } from "@/features/admin/stations/components/stationInf
 import { StationPhotoSelector } from "@/features/admin/stations/components/StationPhotoSelector";
 import { type LocalCell, isCellModified, useSaveStationMutation } from "@/features/admin/stations/mutations";
 import { fetchUkePermitsByStationId } from "@/features/map/api";
+import { groupPermitsByStation } from "@/features/map/utils";
 import { uploadAndAssignStationPhotos } from "@/features/station-details/api";
 import { PhotoUploadSection } from "@/features/submissions/components/photoUploadSection";
 import type { ProposedLocationForm } from "@/features/submissions/types";
@@ -406,14 +407,11 @@ function StationDetailForm({
 
   useEffect(() => {
     if (!preloadUkePermits?.length || hasAppliedUkePreload.current) return;
-    hasAppliedUkePreload.current = true;
-    const first = preloadUkePermits[0];
-    handleUkeStationSelect({
-      station_id: preloadUkeStationId!,
-      operator: first.operator ?? null,
-      location: first.location ?? null,
-      permits: preloadUkePermits,
-    });
+    const station = groupPermitsByStation(preloadUkePermits)[0];
+    if (station) {
+      hasAppliedUkePreload.current = true;
+      handleUkeStationSelect(station);
+    }
   }, [preloadUkePermits, preloadUkeStationId, handleUkeStationSelect]);
 
   const handleSaveStation = () => {
@@ -531,6 +529,8 @@ function StationDetailForm({
   const selectedOperator = useMemo(() => operators.find((o) => o.id === operatorId), [operators, operatorId]);
 
   const originalCells = useMemo(() => station?.cells ?? [], [station]);
+  const originalCellsById = useMemo(() => new Map(originalCells.map((cell) => [cell.id, cell])), [originalCells]);
+  const deletedServerCellIdSet = useMemo(() => new Set(deletedServerCellIds), [deletedServerCellIds]);
 
   const hasChanges = useMemo(() => {
     if (isCreateMode) return true;
@@ -587,10 +587,13 @@ function StationDetailForm({
         if (status === "added") added++;
         else if (status === "modified") modified++;
       }
-      const deleted = originalCells.filter((c) => c.rat === rat && deletedServerCellIds.includes(c.id)).length;
+      let deleted = 0;
+      for (const cell of originalCells) {
+        if (cell.rat === rat && deletedServerCellIdSet.has(cell.id)) deleted++;
+      }
       return { added, modified, deleted };
     },
-    [originalCells, deletedServerCellIds],
+    [originalCells, deletedServerCellIdSet],
   );
 
   const getStationCellProps = useCallback(
@@ -598,7 +601,7 @@ function StationDetailForm({
       const diffStatus = getLocalCellDiffStatus(cell, originalCells);
       let rowClassName: string | undefined;
       if (diffStatus === "unchanged" && cell._serverId) {
-        const original = originalCells.find((c) => c.id === cell._serverId);
+        const original = originalCellsById.get(cell._serverId);
         if (original) {
           const isNew = isRecent(original.createdAt);
           if (isNew) rowClassName = "bg-green-500/5";
@@ -612,7 +615,7 @@ function StationDetailForm({
         showDelete: !areCellActionsLocked,
       };
     },
-    [areCellActionsLocked, originalCells],
+    [areCellActionsLocked, originalCells, originalCellsById],
   );
 
   return (

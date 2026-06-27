@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file uke.proto.
  */
 export const file_uke: GenFile = /*@__PURE__*/
-  fileDesc("Cgl1a2UucHJvdG8SC29wZW5idHMudWtlIjoKC1VLRU9wZXJhdG9yEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJItcBCgZTZWN0b3ISCgoCaWQYASABKAUSLAoHYXppbXV0aBgCIAEoCzIbLmdvb2dsZS5wcm90b2J1Zi5JbnQzMlZhbHVlEi4KCWVsZXZhdGlvbhgDIAEoCzIbLmdvb2dsZS5wcm90b2J1Zi5JbnQzMlZhbHVlEjMKDmFudGVubmFfaGVpZ2h0GAQgASgLMhsuZ29vZ2xlLnByb3RvYnVmLkludDMyVmFsdWUSLgoMYW50ZW5uYV90eXBlGAUgASgOMhgub3BlbmJ0cy51a2UuQW50ZW5uYVR5cGUi8AIKBlBlcm1pdBIKCgJpZBgBIAEoBRISCgpzdGF0aW9uX2lkGAIgASgJEhcKD2RlY2lzaW9uX251bWJlchgDIAEoCRIwCg1kZWNpc2lvbl90eXBlGAQgASgOMhkub3BlbmJ0cy51a2UuRGVjaXNpb25UeXBlEhMKC2V4cGlyeV9kYXRlGAUgASgJEikKBnNvdXJjZRgGIAEoDjIZLm9wZW5idHMudWtlLlBlcm1pdFNvdXJjZRItCghsb2NhdGlvbhgHIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAggASgLMhEub3BlbmJ0cy5PcGVyYXRvchIbCgRiYW5kGAkgASgLMg0ub3BlbmJ0cy5CYW5kEiQKB3NlY3RvcnMYCiADKAsyEy5vcGVuYnRzLnVrZS5TZWN0b3ISEQoJdXBkYXRlZEF0GAsgASgJEhEKCWNyZWF0ZWRBdBgMIAEoCSLKAQoLVUtFTG9jYXRpb24SCgoCaWQYASABKAUSDAoEY2l0eRgCIAEoCRIPCgdhZGRyZXNzGAMgASgJEhAKCGxhdGl0dWRlGAQgASgBEhEKCWxvbmdpdHVkZRgFIAEoARIfCgZyZWdpb24YBiABKAsyDy5vcGVuYnRzLlJlZ2lvbhIkCgdwZXJtaXRzGAcgAygLMhMub3BlbmJ0cy51a2UuUGVybWl0EhEKCXVwZGF0ZWRBdBgIIAEoCRIRCgljcmVhdGVkQXQYCSABKAkiMQoVUmFkaW9saW5lTWFudWZhY3R1cmVyEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkiYwoNRXF1aXBtZW50VHlwZRIKCgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJEjgKDG1hbnVmYWN0dXJlchgDIAEoCzIiLm9wZW5idHMudWtlLlJhZGlvbGluZU1hbnVmYWN0dXJlciJZCg9SYWRpb2xpbmVBdGVubmESKAoEdHlwZRgBIAEoCzIaLm9wZW5idHMudWtlLkVxdWlwbWVudFR5cGUSDAoEZ2FpbhgCIAEoARIOCgZoZWlnaHQYAyABKAEiQgoWUmFkaW9saW5lVHhUcmFuc21pdHRlchIoCgR0eXBlGAEgASgLMhoub3BlbmJ0cy51a2UuRXF1aXBtZW50VHlwZSLWAQoLUmFkaW9saW5lVHgSEQoJbG9uZ2l0dWRlGAEgASgBEhAKCGxhdGl0dWRlGAIgASgBEg4KBmhlaWdodBgDIAEoARIMCgRlaXJwGAQgASgBEhsKE2FudGVubmFfYXR0ZW51YXRpb24YBSABKAESOAoLdHJhbnNtaXR0ZXIYBiABKAsyIy5vcGVuYnRzLnVrZS5SYWRpb2xpbmVUeFRyYW5zbWl0dGVyEi0KB2FudGVubmEYByABKAsyHC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVBdGVubmEiwgEKC1JhZGlvbGluZVJ4EhEKCWxvbmdpdHVkZRgBIAEoARIQCghsYXRpdHVkZRgCIAEoARIOCgZoZWlnaHQYAyABKAESKAoEdHlwZRgEIAEoCzIaLm9wZW5idHMudWtlLkVxdWlwbWVudFR5cGUSDAoEZ2FpbhgFIAEoARIWCg5oZWlnaHRfYW50ZW5uYRgGIAEoARIUCgxub2lzZV9maWd1cmUYByABKAESGAoQYXRwY19hdHRlbnVhdGlvbhgIIAEoASLIAQoNUmFkaW9saW5lTGluaxIMCgRmcmVxGAEgASgBEisKBmNoX251bRgCIAEoCzIbLmdvb2dsZS5wcm90b2J1Zi5JbnQzMlZhbHVlEhMKC3BsYW5fc3luYm9sGAMgASgJEhAKCGNoX3dpZHRoGAQgASgBEhQKDHBvbGFyaXphdGlvbhgFIAEoCRITCgtwbGFuX3N5bWJvbBgGIAEoCRIXCg9tb2R1bGF0aW9uX3R5cGUYByABKAkSEQoJYmFuZHdpZHRoGAggASgJIk0KD1JhZGlvbGluZVBlcm1pdBIOCgZudW1iZXIYASABKAkSFQoNZGVjaXNpb25fdHlwZRgCIAEoCRITCgtleHBpcnlfZGF0ZRgDIAEoCSKNAgoJUmFkaW9saW5lEgoKAmlkGAEgASgFEiQKAnR4GAIgASgLMhgub3BlbmJ0cy51a2UuUmFkaW9saW5lVHgSJAoCcngYAyABKAsyGC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVSeBIoCgRsaW5rGAQgASgLMhoub3BlbmJ0cy51a2UuUmFkaW9saW5lTGluaxIqCghvcGVyYXRvchgFIAEoCzIYLm9wZW5idHMudWtlLlVLRU9wZXJhdG9yEiwKBnBlcm1pdBgGIAEoCzIcLm9wZW5idHMudWtlLlJhZGlvbGluZVBlcm1pdBIRCgl1cGRhdGVkQXQYByABKAkSEQoJY3JlYXRlZEF0GAggASgJIjQKD1Blcm1pdHNSZXNwb25zZRIhCgRkYXRhGAEgAygLMhMub3BlbmJ0cy51a2UuUGVybWl0IjMKDlBlcm1pdFJlc3BvbnNlEiEKBGRhdGEYASABKAsyEy5vcGVuYnRzLnVrZS5QZXJtaXQiTwoRTG9jYXRpb25zUmVzcG9uc2USJgoEZGF0YRgBIAMoCzIYLm9wZW5idHMudWtlLlVLRUxvY2F0aW9uEhIKCnRvdGFsQ291bnQYAiABKAUiTgoSUmFkaW9saW5lc1Jlc3BvbnNlEiQKBGRhdGEYASADKAsyFi5vcGVuYnRzLnVrZS5SYWRpb2xpbmUSEgoKdG90YWxDb3VudBgDIAEoBSI5ChFSYWRpb2xpbmVSZXNwb25zZRIkCgRkYXRhGAEgASgLMhYub3BlbmJ0cy51a2UuUmFkaW9saW5lKjkKDERlY2lzaW9uVHlwZRIZChVERUNJU0lPTl9UWVBFX1VOS05PV04QABIFCgFQEAESBwoDem1QEAIqSwoMUGVybWl0U291cmNlEhkKFVBFUk1JVF9TT1VSQ0VfVU5LTk9XThAAEgsKB3Blcm1pdHMQARITCg9kZXZpY2VfcmVnaXN0cnkQAipACgtBbnRlbm5hVHlwZRIYChRBTlRFTk5BX1RZUEVfVU5LTk9XThAAEgoKBmluZG9vchABEgsKB291dGRvb3IQAmIGcHJvdG8z", [file_common, file_locations, file_google_protobuf_wrappers]);
+  fileDesc("Cgl1a2UucHJvdG8SC29wZW5idHMudWtlIjoKC1VLRU9wZXJhdG9yEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJItcBCgZTZWN0b3ISCgoCaWQYASABKAUSLAoHYXppbXV0aBgCIAEoCzIbLmdvb2dsZS5wcm90b2J1Zi5JbnQzMlZhbHVlEi4KCWVsZXZhdGlvbhgDIAEoCzIbLmdvb2dsZS5wcm90b2J1Zi5JbnQzMlZhbHVlEjMKDmFudGVubmFfaGVpZ2h0GAQgASgLMhsuZ29vZ2xlLnByb3RvYnVmLkludDMyVmFsdWUSLgoMYW50ZW5uYV90eXBlGAUgASgOMhgub3BlbmJ0cy51a2UuQW50ZW5uYVR5cGUipgEKClVLRVN0YXRpb24SCgoCaWQYASABKAUSEgoKc3RhdGlvbl9pZBgCIAEoCRItCghsb2NhdGlvbhgDIAEoCzIbLm9wZW5idHMubG9jYXRpb25zLkxvY2F0aW9uEiMKCG9wZXJhdG9yGAQgASgLMhEub3BlbmJ0cy5PcGVyYXRvchIRCgl1cGRhdGVkQXQYBSABKAkSEQoJY3JlYXRlZEF0GAYgASgJIrICCgZQZXJtaXQSCgoCaWQYASABKAUSFwoPZGVjaXNpb25fbnVtYmVyGAIgASgJEjAKDWRlY2lzaW9uX3R5cGUYAyABKA4yGS5vcGVuYnRzLnVrZS5EZWNpc2lvblR5cGUSEwoLZXhwaXJ5X2RhdGUYBCABKAkSKQoGc291cmNlGAUgASgOMhkub3BlbmJ0cy51a2UuUGVybWl0U291cmNlEigKB3N0YXRpb24YBiABKAsyFy5vcGVuYnRzLnVrZS5VS0VTdGF0aW9uEhsKBGJhbmQYByABKAsyDS5vcGVuYnRzLkJhbmQSJAoHc2VjdG9ycxgIIAMoCzITLm9wZW5idHMudWtlLlNlY3RvchIRCgl1cGRhdGVkQXQYCSABKAkSEQoJY3JlYXRlZEF0GAogASgJIsoBCgtVS0VMb2NhdGlvbhIKCgJpZBgBIAEoBRIMCgRjaXR5GAIgASgJEg8KB2FkZHJlc3MYAyABKAkSEAoIbGF0aXR1ZGUYBCABKAESEQoJbG9uZ2l0dWRlGAUgASgBEh8KBnJlZ2lvbhgGIAEoCzIPLm9wZW5idHMuUmVnaW9uEiQKB3Blcm1pdHMYByADKAsyEy5vcGVuYnRzLnVrZS5QZXJtaXQSEQoJdXBkYXRlZEF0GAggASgJEhEKCWNyZWF0ZWRBdBgJIAEoCSIxChVSYWRpb2xpbmVNYW51ZmFjdHVyZXISCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCSJjCg1FcXVpcG1lbnRUeXBlEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSOAoMbWFudWZhY3R1cmVyGAMgASgLMiIub3BlbmJ0cy51a2UuUmFkaW9saW5lTWFudWZhY3R1cmVyIlkKD1JhZGlvbGluZUF0ZW5uYRIoCgR0eXBlGAEgASgLMhoub3BlbmJ0cy51a2UuRXF1aXBtZW50VHlwZRIMCgRnYWluGAIgASgBEg4KBmhlaWdodBgDIAEoASJCChZSYWRpb2xpbmVUeFRyYW5zbWl0dGVyEigKBHR5cGUYASABKAsyGi5vcGVuYnRzLnVrZS5FcXVpcG1lbnRUeXBlItYBCgtSYWRpb2xpbmVUeBIRCglsb25naXR1ZGUYASABKAESEAoIbGF0aXR1ZGUYAiABKAESDgoGaGVpZ2h0GAMgASgBEgwKBGVpcnAYBCABKAESGwoTYW50ZW5uYV9hdHRlbnVhdGlvbhgFIAEoARI4Cgt0cmFuc21pdHRlchgGIAEoCzIjLm9wZW5idHMudWtlLlJhZGlvbGluZVR4VHJhbnNtaXR0ZXISLQoHYW50ZW5uYRgHIAEoCzIcLm9wZW5idHMudWtlLlJhZGlvbGluZUF0ZW5uYSLCAQoLUmFkaW9saW5lUngSEQoJbG9uZ2l0dWRlGAEgASgBEhAKCGxhdGl0dWRlGAIgASgBEg4KBmhlaWdodBgDIAEoARIoCgR0eXBlGAQgASgLMhoub3BlbmJ0cy51a2UuRXF1aXBtZW50VHlwZRIMCgRnYWluGAUgASgBEhYKDmhlaWdodF9hbnRlbm5hGAYgASgBEhQKDG5vaXNlX2ZpZ3VyZRgHIAEoARIYChBhdHBjX2F0dGVudWF0aW9uGAggASgBIsgBCg1SYWRpb2xpbmVMaW5rEgwKBGZyZXEYASABKAESKwoGY2hfbnVtGAIgASgLMhsuZ29vZ2xlLnByb3RvYnVmLkludDMyVmFsdWUSEwoLcGxhbl9zeW5ib2wYAyABKAkSEAoIY2hfd2lkdGgYBCABKAESFAoMcG9sYXJpemF0aW9uGAUgASgJEhMKC3BsYW5fc3ltYm9sGAYgASgJEhcKD21vZHVsYXRpb25fdHlwZRgHIAEoCRIRCgliYW5kd2lkdGgYCCABKAkiTQoPUmFkaW9saW5lUGVybWl0Eg4KBm51bWJlchgBIAEoCRIVCg1kZWNpc2lvbl90eXBlGAIgASgJEhMKC2V4cGlyeV9kYXRlGAMgASgJIo0CCglSYWRpb2xpbmUSCgoCaWQYASABKAUSJAoCdHgYAiABKAsyGC5vcGVuYnRzLnVrZS5SYWRpb2xpbmVUeBIkCgJyeBgDIAEoCzIYLm9wZW5idHMudWtlLlJhZGlvbGluZVJ4EigKBGxpbmsYBCABKAsyGi5vcGVuYnRzLnVrZS5SYWRpb2xpbmVMaW5rEioKCG9wZXJhdG9yGAUgASgLMhgub3BlbmJ0cy51a2UuVUtFT3BlcmF0b3ISLAoGcGVybWl0GAYgASgLMhwub3BlbmJ0cy51a2UuUmFkaW9saW5lUGVybWl0EhEKCXVwZGF0ZWRBdBgHIAEoCRIRCgljcmVhdGVkQXQYCCABKAkiNAoPUGVybWl0c1Jlc3BvbnNlEiEKBGRhdGEYASADKAsyEy5vcGVuYnRzLnVrZS5QZXJtaXQiMwoOUGVybWl0UmVzcG9uc2USIQoEZGF0YRgBIAEoCzITLm9wZW5idHMudWtlLlBlcm1pdCJPChFMb2NhdGlvbnNSZXNwb25zZRImCgRkYXRhGAEgAygLMhgub3BlbmJ0cy51a2UuVUtFTG9jYXRpb24SEgoKdG90YWxDb3VudBgCIAEoBSJOChJSYWRpb2xpbmVzUmVzcG9uc2USJAoEZGF0YRgBIAMoCzIWLm9wZW5idHMudWtlLlJhZGlvbGluZRISCgp0b3RhbENvdW50GAMgASgFIjkKEVJhZGlvbGluZVJlc3BvbnNlEiQKBGRhdGEYASABKAsyFi5vcGVuYnRzLnVrZS5SYWRpb2xpbmUqOQoMRGVjaXNpb25UeXBlEhkKFURFQ0lTSU9OX1RZUEVfVU5LTk9XThAAEgUKAVAQARIHCgN6bVAQAipLCgxQZXJtaXRTb3VyY2USGQoVUEVSTUlUX1NPVVJDRV9VTktOT1dOEAASCwoHcGVybWl0cxABEhMKD2RldmljZV9yZWdpc3RyeRACKkAKC0FudGVubmFUeXBlEhgKFEFOVEVOTkFfVFlQRV9VTktOT1dOEAASCgoGaW5kb29yEAESCwoHb3V0ZG9vchACYgZwcm90bzM", [file_common, file_locations, file_google_protobuf_wrappers]);
 
 /**
  * @generated from message openbts.uke.UKEOperator
@@ -82,9 +82,9 @@ export const SectorSchema: GenMessage<Sector> = /*@__PURE__*/
   messageDesc(file_uke, 1);
 
 /**
- * @generated from message openbts.uke.Permit
+ * @generated from message openbts.uke.UKEStation
  */
-export type Permit = Message<"openbts.uke.Permit"> & {
+export type UKEStation = Message<"openbts.uke.UKEStation"> & {
   /**
    * @generated from field: int32 id = 1;
    */
@@ -96,52 +96,84 @@ export type Permit = Message<"openbts.uke.Permit"> & {
   stationId: string;
 
   /**
-   * @generated from field: string decision_number = 3;
-   */
-  decisionNumber: string;
-
-  /**
-   * @generated from field: openbts.uke.DecisionType decision_type = 4;
-   */
-  decisionType: DecisionType;
-
-  /**
-   * @generated from field: string expiry_date = 5;
-   */
-  expiryDate: string;
-
-  /**
-   * @generated from field: openbts.uke.PermitSource source = 6;
-   */
-  source: PermitSource;
-
-  /**
-   * @generated from field: openbts.locations.Location location = 7;
+   * @generated from field: openbts.locations.Location location = 3;
    */
   location?: Location | undefined;
 
   /**
-   * @generated from field: openbts.Operator operator = 8;
+   * @generated from field: openbts.Operator operator = 4;
    */
   operator?: Operator | undefined;
 
   /**
-   * @generated from field: openbts.Band band = 9;
-   */
-  band?: Band | undefined;
-
-  /**
-   * @generated from field: repeated openbts.uke.Sector sectors = 10;
-   */
-  sectors: Sector[];
-
-  /**
-   * @generated from field: string updatedAt = 11;
+   * @generated from field: string updatedAt = 5;
    */
   updatedAt: string;
 
   /**
-   * @generated from field: string createdAt = 12;
+   * @generated from field: string createdAt = 6;
+   */
+  createdAt: string;
+};
+
+/**
+ * Describes the message openbts.uke.UKEStation.
+ * Use `create(UKEStationSchema)` to create a new message.
+ */
+export const UKEStationSchema: GenMessage<UKEStation> = /*@__PURE__*/
+  messageDesc(file_uke, 2);
+
+/**
+ * @generated from message openbts.uke.Permit
+ */
+export type Permit = Message<"openbts.uke.Permit"> & {
+  /**
+   * @generated from field: int32 id = 1;
+   */
+  id: number;
+
+  /**
+   * @generated from field: string decision_number = 2;
+   */
+  decisionNumber: string;
+
+  /**
+   * @generated from field: openbts.uke.DecisionType decision_type = 3;
+   */
+  decisionType: DecisionType;
+
+  /**
+   * @generated from field: string expiry_date = 4;
+   */
+  expiryDate: string;
+
+  /**
+   * @generated from field: openbts.uke.PermitSource source = 5;
+   */
+  source: PermitSource;
+
+  /**
+   * @generated from field: openbts.uke.UKEStation station = 6;
+   */
+  station?: UKEStation | undefined;
+
+  /**
+   * @generated from field: openbts.Band band = 7;
+   */
+  band?: Band | undefined;
+
+  /**
+   * @generated from field: repeated openbts.uke.Sector sectors = 8;
+   */
+  sectors: Sector[];
+
+  /**
+   * @generated from field: string updatedAt = 9;
+   */
+  updatedAt: string;
+
+  /**
+   * @generated from field: string createdAt = 10;
    */
   createdAt: string;
 };
@@ -151,7 +183,7 @@ export type Permit = Message<"openbts.uke.Permit"> & {
  * Use `create(PermitSchema)` to create a new message.
  */
 export const PermitSchema: GenMessage<Permit> = /*@__PURE__*/
-  messageDesc(file_uke, 2);
+  messageDesc(file_uke, 3);
 
 /**
  * @generated from message openbts.uke.UKELocation
@@ -208,7 +240,7 @@ export type UKELocation = Message<"openbts.uke.UKELocation"> & {
  * Use `create(UKELocationSchema)` to create a new message.
  */
 export const UKELocationSchema: GenMessage<UKELocation> = /*@__PURE__*/
-  messageDesc(file_uke, 3);
+  messageDesc(file_uke, 4);
 
 /**
  * @generated from message openbts.uke.RadiolineManufacturer
@@ -230,7 +262,7 @@ export type RadiolineManufacturer = Message<"openbts.uke.RadiolineManufacturer">
  * Use `create(RadiolineManufacturerSchema)` to create a new message.
  */
 export const RadiolineManufacturerSchema: GenMessage<RadiolineManufacturer> = /*@__PURE__*/
-  messageDesc(file_uke, 4);
+  messageDesc(file_uke, 5);
 
 /**
  * @generated from message openbts.uke.EquipmentType
@@ -257,7 +289,7 @@ export type EquipmentType = Message<"openbts.uke.EquipmentType"> & {
  * Use `create(EquipmentTypeSchema)` to create a new message.
  */
 export const EquipmentTypeSchema: GenMessage<EquipmentType> = /*@__PURE__*/
-  messageDesc(file_uke, 5);
+  messageDesc(file_uke, 6);
 
 /**
  * @generated from message openbts.uke.RadiolineAtenna
@@ -284,7 +316,7 @@ export type RadiolineAtenna = Message<"openbts.uke.RadiolineAtenna"> & {
  * Use `create(RadiolineAtennaSchema)` to create a new message.
  */
 export const RadiolineAtennaSchema: GenMessage<RadiolineAtenna> = /*@__PURE__*/
-  messageDesc(file_uke, 6);
+  messageDesc(file_uke, 7);
 
 /**
  * @generated from message openbts.uke.RadiolineTxTransmitter
@@ -301,7 +333,7 @@ export type RadiolineTxTransmitter = Message<"openbts.uke.RadiolineTxTransmitter
  * Use `create(RadiolineTxTransmitterSchema)` to create a new message.
  */
 export const RadiolineTxTransmitterSchema: GenMessage<RadiolineTxTransmitter> = /*@__PURE__*/
-  messageDesc(file_uke, 7);
+  messageDesc(file_uke, 8);
 
 /**
  * @generated from message openbts.uke.RadiolineTx
@@ -348,7 +380,7 @@ export type RadiolineTx = Message<"openbts.uke.RadiolineTx"> & {
  * Use `create(RadiolineTxSchema)` to create a new message.
  */
 export const RadiolineTxSchema: GenMessage<RadiolineTx> = /*@__PURE__*/
-  messageDesc(file_uke, 8);
+  messageDesc(file_uke, 9);
 
 /**
  * @generated from message openbts.uke.RadiolineRx
@@ -400,7 +432,7 @@ export type RadiolineRx = Message<"openbts.uke.RadiolineRx"> & {
  * Use `create(RadiolineRxSchema)` to create a new message.
  */
 export const RadiolineRxSchema: GenMessage<RadiolineRx> = /*@__PURE__*/
-  messageDesc(file_uke, 9);
+  messageDesc(file_uke, 10);
 
 /**
  * @generated from message openbts.uke.RadiolineLink
@@ -452,7 +484,7 @@ export type RadiolineLink = Message<"openbts.uke.RadiolineLink"> & {
  * Use `create(RadiolineLinkSchema)` to create a new message.
  */
 export const RadiolineLinkSchema: GenMessage<RadiolineLink> = /*@__PURE__*/
-  messageDesc(file_uke, 10);
+  messageDesc(file_uke, 11);
 
 /**
  * @generated from message openbts.uke.RadiolinePermit
@@ -479,7 +511,7 @@ export type RadiolinePermit = Message<"openbts.uke.RadiolinePermit"> & {
  * Use `create(RadiolinePermitSchema)` to create a new message.
  */
 export const RadiolinePermitSchema: GenMessage<RadiolinePermit> = /*@__PURE__*/
-  messageDesc(file_uke, 11);
+  messageDesc(file_uke, 12);
 
 /**
  * @generated from message openbts.uke.Radioline
@@ -531,7 +563,7 @@ export type Radioline = Message<"openbts.uke.Radioline"> & {
  * Use `create(RadiolineSchema)` to create a new message.
  */
 export const RadiolineSchema: GenMessage<Radioline> = /*@__PURE__*/
-  messageDesc(file_uke, 12);
+  messageDesc(file_uke, 13);
 
 /**
  * @generated from message openbts.uke.PermitsResponse
@@ -548,7 +580,7 @@ export type PermitsResponse = Message<"openbts.uke.PermitsResponse"> & {
  * Use `create(PermitsResponseSchema)` to create a new message.
  */
 export const PermitsResponseSchema: GenMessage<PermitsResponse> = /*@__PURE__*/
-  messageDesc(file_uke, 13);
+  messageDesc(file_uke, 14);
 
 /**
  * @generated from message openbts.uke.PermitResponse
@@ -565,7 +597,7 @@ export type PermitResponse = Message<"openbts.uke.PermitResponse"> & {
  * Use `create(PermitResponseSchema)` to create a new message.
  */
 export const PermitResponseSchema: GenMessage<PermitResponse> = /*@__PURE__*/
-  messageDesc(file_uke, 14);
+  messageDesc(file_uke, 15);
 
 /**
  * @generated from message openbts.uke.LocationsResponse
@@ -587,7 +619,7 @@ export type LocationsResponse = Message<"openbts.uke.LocationsResponse"> & {
  * Use `create(LocationsResponseSchema)` to create a new message.
  */
 export const LocationsResponseSchema: GenMessage<LocationsResponse> = /*@__PURE__*/
-  messageDesc(file_uke, 15);
+  messageDesc(file_uke, 16);
 
 /**
  * @generated from message openbts.uke.RadiolinesResponse
@@ -609,7 +641,7 @@ export type RadiolinesResponse = Message<"openbts.uke.RadiolinesResponse"> & {
  * Use `create(RadiolinesResponseSchema)` to create a new message.
  */
 export const RadiolinesResponseSchema: GenMessage<RadiolinesResponse> = /*@__PURE__*/
-  messageDesc(file_uke, 16);
+  messageDesc(file_uke, 17);
 
 /**
  * @generated from message openbts.uke.RadiolineResponse
@@ -626,7 +658,7 @@ export type RadiolineResponse = Message<"openbts.uke.RadiolineResponse"> & {
  * Use `create(RadiolineResponseSchema)` to create a new message.
  */
 export const RadiolineResponseSchema: GenMessage<RadiolineResponse> = /*@__PURE__*/
-  messageDesc(file_uke, 17);
+  messageDesc(file_uke, 18);
 
 /**
  * @generated from enum openbts.uke.DecisionType

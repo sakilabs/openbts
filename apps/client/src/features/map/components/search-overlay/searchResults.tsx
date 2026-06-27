@@ -211,7 +211,7 @@ export function SearchResults({
               {permitResults.map((permit) => (
                 <button
                   type="button"
-                  key={permit.station_id}
+                  key={permit.id}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     onUkeStationSelect?.(permit);

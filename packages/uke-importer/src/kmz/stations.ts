@@ -16,19 +16,22 @@ const AZIMUTH_LINE_LENGTH_M = 300;
 
 type PermitRow = {
   id: number;
-  station_id: string;
   decision_number: string;
   decision_type: string;
   expiry_date: Date;
   source: string;
-  operator: { name: string; full_name: string } | null;
-  location: {
-    longitude: number;
-    latitude: number;
-    city: string | null;
-    address: string | null;
-    region: { name: string; code: string } | null;
-  } | null;
+  station: {
+    id: number;
+    station_id: string;
+    operator: { name: string; full_name: string; mnc: number | null } | null;
+    location: {
+      longitude: number;
+      latitude: number;
+      city: string | null;
+      address: string | null;
+      region: { name: string; code: string } | null;
+    } | null;
+  };
   band: { name: string; rat: string; value: number | null; duplex: string | null } | null;
   sectors: { azimuth: number | null; elevation: number | null; antenna_height: number | null; antenna_type: string | null }[];
 };
@@ -43,8 +46,12 @@ async function fetchLatestDayPermits(): Promise<{ rows: PermitRow[]; day: Date |
 
   const rows = await db.query.ukePermits.findMany({
     with: {
-      operator: true,
-      location: { with: { region: true } },
+      station: {
+        with: {
+          operator: true,
+          location: { with: { region: true } },
+        },
+      },
       band: true,
       sectors: true,
     },
@@ -63,8 +70,12 @@ async function fetchAllPermits(): Promise<PermitRow[]> {
     Array.from({ length: pageCount }, (_, i) =>
       db.query.ukePermits.findMany({
         with: {
-          operator: true,
-          location: { with: { region: true } },
+          station: {
+            with: {
+              operator: true,
+              location: { with: { region: true } },
+            },
+          },
           band: true,
           sectors: true,
         },
@@ -81,8 +92,8 @@ function buildStationDescription(station: StationGroup): string {
   const first = station.permits[0];
   const lines: string[] = [];
 
-  if (first?.location) {
-    const loc = first.location;
+  if (first?.station.location) {
+    const loc = first.station.location;
     if (loc.city) lines.push(`<b>City:</b> ${escapeXml(loc.city)}`);
     if (loc.address) lines.push(`<b>Address:</b> ${escapeXml(loc.address)}`);
     if (loc.region) lines.push(`<b>Region:</b> ${escapeXml(loc.region.name)}`);
@@ -123,18 +134,20 @@ function groupByStation(permits: PermitRow[]): StationGroup[] {
   const map = new Map<string, StationGroup>();
 
   for (const permit of permits) {
-    if (!permit.location) continue;
+    const station = permit.station;
+    const location = station.location;
+    if (!location) continue;
 
-    const key = `${permit.station_id}|${permit.location.longitude}|${permit.location.latitude}`;
+    const key = String(station.id);
     let group = map.get(key);
     if (!group) {
       group = {
-        station_id: permit.station_id,
-        operator_name: permit.operator?.name ?? "Unknown",
-        operator_mnc: resolveOperatorMnc(null, permit.operator?.name ?? null),
-        longitude: permit.location.longitude,
-        latitude: permit.location.latitude,
-        region_code: permit.location.region?.code ?? "UNKNOWN",
+        station_id: station.station_id,
+        operator_name: station.operator?.name ?? "Unknown",
+        operator_mnc: resolveOperatorMnc(station.operator?.mnc ?? null, station.operator?.name ?? null),
+        longitude: location.longitude,
+        latitude: location.latitude,
+        region_code: location.region?.code ?? "UNKNOWN",
         permits: [],
         azimuths: new Set(),
       };

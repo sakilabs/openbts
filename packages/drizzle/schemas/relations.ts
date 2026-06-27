@@ -39,6 +39,7 @@ import {
   ukePermitSectors,
   ukePermits,
   ukeRadiolines,
+  ukeStations,
   umtsCells,
 } from "./bts.ts";
 import {
@@ -64,6 +65,7 @@ export const relations = defineRelations(
     regions,
     stations,
     stationSectors,
+    ukeStations,
     ukePermits,
     ukePermitSectors,
     radioLinesManufacturers,
@@ -114,6 +116,7 @@ export const relations = defineRelations(
       }),
       children: helpers.many.operators(),
       stations: helpers.many.stations(),
+      ukeStations: helpers.many.ukeStations(),
     },
     regions: {
       locations: helpers.many.locations(),
@@ -344,17 +347,13 @@ export const relations = defineRelations(
         to: helpers.bands.id,
         optional: false,
       }),
-      operator: helpers.one.operators({
-        from: helpers.ukePermits.operator_id,
-        to: helpers.operators.id,
-        optional: false,
-      }),
-      location: helpers.one.ukeLocations({
-        from: helpers.ukePermits.location_id,
-        to: helpers.ukeLocations.id,
+      station: helpers.one.ukeStations({
+        from: helpers.ukePermits.uke_station_id,
+        to: helpers.ukeStations.id,
         optional: false,
       }),
       sectors: helpers.many.ukePermitSectors(),
+      stationsPermits: helpers.many.stationsPermits(),
     },
     ukePermitSectors: {
       permit: helpers.one.ukePermits({
@@ -367,6 +366,19 @@ export const relations = defineRelations(
       region: helpers.one.regions({
         from: helpers.ukeLocations.region_id,
         to: helpers.regions.id,
+        optional: false,
+      }),
+      stations: helpers.many.ukeStations(),
+    },
+    ukeStations: {
+      operator: helpers.one.operators({
+        from: helpers.ukeStations.operator_id,
+        to: helpers.operators.id,
+        optional: false,
+      }),
+      location: helpers.one.ukeLocations({
+        from: helpers.ukeStations.location_id,
+        to: helpers.ukeLocations.id,
         optional: false,
       }),
       permits: helpers.many.ukePermits(),

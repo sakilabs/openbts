@@ -1,4 +1,4 @@
-import { deletedEntries, extraIdentificators, type ratEnum, stations, ukePermitSectors, ukePermits } from "@openbts/drizzle";
+import { deletedEntries, extraIdentificators, type ratEnum, stations, ukePermitSectors, ukePermits, ukeStations } from "@openbts/drizzle";
 import { unlinkSync } from "node:fs";
 /* eslint-disable no-await-in-loop */
 import path from "node:path";
@@ -15,6 +15,7 @@ import { and, eq, inArray, lt } from "drizzle-orm/sql/expressions/conditions";
 
 import { getLastImportedFileNames, recordImportMetadata } from "./import-check.ts";
 import { scrapePermitDeviceLinks } from "./scrape.ts";
+import { cleanupOrphanedUkeStations, getUkeStationKey, refreshUkeStationActivity, resolveUkeStationIds } from "./uke-stations.ts";
 import { upsertBands, upsertRegions, upsertUkeLocations } from "./upserts.ts";
 import { findVoivodeshipByTeryt } from "./voivodeship-lookup.ts";
 
@@ -448,10 +449,14 @@ async function processChunk(
       }
 
       return {
-        permit: {
+        station: {
           station_id: r.stationId,
           operator_id: operatorId,
           location_id,
+          createdAt: fileDate,
+          updatedAt: fileDate,
+        },
+        permit: {
           decision_number: r.decisionNumber,
           decision_type: r.decisionType,
           expiry_date: new Date("2099-12-31T23:59:59Z"),
@@ -470,10 +475,22 @@ async function processChunk(
     })
     .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
 
-  const deduplicatedPermitsMap = new Map<string, (typeof values)[number]["permit"]>();
+  const stationIdByKey = await resolveUkeStationIds(values.map((v) => v.station));
+  const permitValues = values
+    .map((value) => {
+      const ukeStationId = stationIdByKey.get(getUkeStationKey(value.station));
+      if (ukeStationId === undefined) {
+        logger.warn(`Could not resolve UKE station ID for station ${value.station.station_id}`);
+        return null;
+      }
+      return { ...value, permit: { ...value.permit, uke_station_id: ukeStationId } };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined);
+
+  const deduplicatedPermitsMap = new Map<string, (typeof permitValues)[number]["permit"]>();
   const sectorsByPermitKey = new Map<string, Array<(typeof values)[number]["sector"]>>();
-  for (const row of values) {
-    const uniqueKey = `${row.permit.station_id}|${row.permit.operator_id}|${row.permit.location_id}|${row.permit.band_id}|${row.permit.decision_number}|${row.permit.decision_type}|${row.permit.expiry_date.toISOString()}`;
+  for (const row of permitValues) {
+    const uniqueKey = `${row.permit.uke_station_id}|${row.permit.band_id}|${row.permit.decision_number}|${row.permit.decision_type}|${row.permit.expiry_date.toISOString()}`;
     deduplicatedPermitsMap.set(uniqueKey, row.permit);
     const sectors = sectorsByPermitKey.get(uniqueKey) ?? [];
     sectors.push(row.sector);
@@ -490,32 +507,27 @@ async function processChunk(
         .insert(ukePermits)
         .values(permitRows)
         .onConflictDoUpdate({
-          target: [
-            ukePermits.station_id,
-            ukePermits.operator_id,
-            ukePermits.location_id,
-            ukePermits.band_id,
-            ukePermits.decision_number,
-            ukePermits.decision_type,
-            ukePermits.expiry_date,
-          ],
+          target: [ukePermits.uke_station_id, ukePermits.band_id, ukePermits.decision_number, ukePermits.decision_type, ukePermits.expiry_date],
           set: { updatedAt: fileDate, source: "device_registry" },
         })
         .returning({
           id: ukePermits.id,
-          station_id: ukePermits.station_id,
-          operator_id: ukePermits.operator_id,
-          location_id: ukePermits.location_id,
+          uke_station_id: ukePermits.uke_station_id,
           band_id: ukePermits.band_id,
           decision_number: ukePermits.decision_number,
           decision_type: ukePermits.decision_type,
           expiry_date: ukePermits.expiry_date,
         });
 
-      const sectorValues: Array<{ permit_id: number; azimuth: number | null; elevation: number | null; antenna_type: "indoor" | "outdoor" | null }> =
-        [];
+      const sectorValues: Array<{
+        permit_id: number;
+        azimuth: number | null;
+        elevation: number | null;
+        antenna_height: number | null;
+        antenna_type: "indoor" | "outdoor" | null;
+      }> = [];
       for (const permit of inserted) {
-        const key = `${permit.station_id}|${permit.operator_id}|${permit.location_id}|${permit.band_id}|${permit.decision_number}|${permit.decision_type}|${permit.expiry_date.toISOString()}`;
+        const key = `${permit.uke_station_id}|${permit.band_id}|${permit.decision_number}|${permit.decision_type}|${permit.expiry_date.toISOString()}`;
         const sectors = sectorsByPermitKey.get(key) ?? [];
         for (const sector of sectors) {
           sectorValues.push({ permit_id: permit.id, ...sector });
@@ -532,6 +544,7 @@ async function processChunk(
     }
   }
 
+  await refreshUkeStationActivity(stationIdByKey.values());
   return insertedCount;
 }
 
@@ -633,12 +646,15 @@ export async function importDeviceRegistry(): Promise<boolean> {
   logger.log("Deleting stale device registry permits...");
   let staleCount = 0;
   for (const { operatorId, fileDate } of downloadedFiles) {
-    const stale = await db
-      .select()
+    const staleRows = await db
+      .select({ permit: ukePermits })
       .from(ukePermits)
-      .where(and(eq(ukePermits.source, "device_registry"), eq(ukePermits.operator_id, operatorId), lt(ukePermits.updatedAt, fileDate)));
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
+      .where(and(eq(ukePermits.source, "device_registry"), eq(ukeStations.operator_id, operatorId), lt(ukePermits.updatedAt, fileDate)));
+    const stale = staleRows.map((row) => row.permit);
 
     if (stale.length > 0) {
+      const affectedStationIds = stale.map((row) => row.uke_station_id);
       for (const group of chunk(stale, BATCH_SIZE)) {
         await db.insert(deletedEntries).values(
           group.map((row) => ({
@@ -650,12 +666,18 @@ export async function importDeviceRegistry(): Promise<boolean> {
           })),
         );
       }
-      await db
-        .delete(ukePermits)
-        .where(and(eq(ukePermits.source, "device_registry"), eq(ukePermits.operator_id, operatorId), lt(ukePermits.updatedAt, fileDate)));
+      await db.delete(ukePermits).where(
+        inArray(
+          ukePermits.id,
+          stale.map((row) => row.id),
+        ),
+      );
+      await refreshUkeStationActivity(affectedStationIds);
       staleCount += stale.length;
     }
   }
+  const orphanedStations = await cleanupOrphanedUkeStations();
+  if (orphanedStations > 0) logger.log(`Deleted ${orphanedStations} orphaned UKE stations`);
   logger.log(`Deleted ${staleCount} stale device registry permits`);
 
   logger.log("Import completed successfully");

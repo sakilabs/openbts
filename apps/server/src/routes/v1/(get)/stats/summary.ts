@@ -1,4 +1,4 @@
-import { bands, cells, operators, stations, ukePermits } from "@openbts/drizzle";
+import { bands, cells, operators, stations, ukePermits, ukeStations } from "@openbts/drizzle";
 import { count, countDistinct, eq } from "drizzle-orm";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
@@ -84,17 +84,18 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
 
-  const ukeWhere = operator_id ? eq(ukePermits.operator_id, operator_id) : undefined;
+  const ukeWhere = operator_id ? eq(ukeStations.operator_id, operator_id) : undefined;
   const stationWhere = operator_id ? eq(stations.operator_id, operator_id) : undefined;
 
   const [byRatRows, byOperatorRows, ukeTotals, internalByRat, internalByOperator, internalTotals] = await Promise.all([
     db
       .select({
         rat: bands.rat,
-        unique_stations: countDistinct(ukePermits.station_id),
+        unique_stations: countDistinct(ukePermits.uke_station_id),
         permits: count(),
       })
       .from(ukePermits)
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
       .innerJoin(bands, eq(ukePermits.band_id, bands.id))
       .where(ukeWhere)
       .groupBy(bands.rat),
@@ -103,20 +104,22 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .select({
         operator_id: operators.id,
         operator_name: operators.name,
-        unique_stations: countDistinct(ukePermits.station_id),
+        unique_stations: countDistinct(ukePermits.uke_station_id),
         permits: count(),
       })
       .from(ukePermits)
-      .innerJoin(operators, eq(ukePermits.operator_id, operators.id))
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
+      .innerJoin(operators, eq(ukeStations.operator_id, operators.id))
       .where(ukeWhere)
       .groupBy(operators.id, operators.name),
 
     db
       .select({
-        total_unique_stations: countDistinct(ukePermits.station_id),
+        total_unique_stations: countDistinct(ukePermits.uke_station_id),
         total_permits: count(),
       })
       .from(ukePermits)
+      .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
       .where(ukeWhere),
 
     db
