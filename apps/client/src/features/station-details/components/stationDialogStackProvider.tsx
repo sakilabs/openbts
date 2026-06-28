@@ -24,7 +24,6 @@ export function StationDialogStackProvider({ children }: { children: ReactNode }
           <StationDetailsDialogStack
             dialogs={stack.dialogs}
             onClose={stack.closeStationDialog}
-            onCloseTop={stack.closeTopStationDialog}
             onFocus={stack.focusStationDialog}
             onRectChange={stack.updateStationDialogRect}
           />

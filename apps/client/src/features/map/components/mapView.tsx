@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Map as LibreMap, MapControls, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
 import ZabkaIcon from "@/features/station-details/components/logos/zabka.svg?react";
 import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
+import { useUkePermitDialogStack } from "@/features/station-details/components/ukePermitDialogStackProvider";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { showApiError } from "@/lib/api";
@@ -21,10 +22,6 @@ import { MapSearchOverlay } from "./search-overlay";
 import { DEFAULT_FILTERS, StationsLayer, loadMapFilters, locationQueryKey, saveMapFilters } from "./stationsLayer";
 
 const RadioLinesLayer = lazy(() => import("./radioLinesLayer"));
-
-const UkePermitDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
-);
 
 const MAP_POSITION_KEY = "map:position";
 const ZABKA_EASTER_EGG_SEQUENCE = "ZABKA";
@@ -47,34 +44,6 @@ function saveMapPosition(center: [number, number], zoom: number) {
   try {
     localStorage.setItem(MAP_POSITION_KEY, JSON.stringify({ center, zoom }));
   } catch {}
-}
-
-type DetailState = {
-  selectedUkeStation: UkeStation | null;
-  pendingRadiolineId: number | null;
-};
-
-type DetailAction =
-  | { type: "OPEN_UKE_STATION"; station: UkeStation }
-  | { type: "CLOSE_UKE_STATION" }
-  | { type: "SET_PENDING_RADIOLINE"; id: number | null };
-
-const initialDetailState: DetailState = {
-  selectedUkeStation: null,
-  pendingRadiolineId: null,
-};
-
-function detailReducer(state: DetailState, action: DetailAction): DetailState {
-  switch (action.type) {
-    case "OPEN_UKE_STATION":
-      return { ...state, selectedUkeStation: action.station };
-    case "CLOSE_UKE_STATION":
-      return { ...state, selectedUkeStation: null };
-    case "SET_PENDING_RADIOLINE":
-      return { ...state, pendingRadiolineId: action.id };
-    default:
-      return state;
-  }
 }
 
 function MapViewInner() {
@@ -146,12 +115,12 @@ function MapViewInner() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const [detailState, dispatchDetail] = useReducer(detailReducer, initialDetailState);
-  const { selectedUkeStation, pendingRadiolineId } = detailState;
+  const [pendingRadiolineId, setPendingRadiolineId] = useState<number | null>(null);
   const { openStationDialog } = useStationDialogStack();
+  const { openUkePermitDialog } = useUkePermitDialogStack();
 
   const handleOpenStationDetails = useCallback((id: number, source: StationSource) => openStationDialog(id, source), [openStationDialog]);
-  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => dispatchDetail({ type: "OPEN_UKE_STATION", station }), []);
+  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => openUkePermitDialog(station), [openUkePermitDialog]);
 
   const {
     showPopup,
@@ -298,9 +267,6 @@ function MapViewInner() {
     () => setFilters((prev) => ({ ...prev, showPlannedMeasurements: !prev.showPlannedMeasurements })),
     [setFilters],
   );
-  const handleCloseUkeDetails = useCallback(() => dispatchDetail({ type: "CLOSE_UKE_STATION" }), []);
-  const handlePendingRadiolineId = useCallback((id: number | null) => dispatchDetail({ type: "SET_PENDING_RADIOLINE", id }), []);
-
   const handleUkeStationSelectFromSearch = useCallback(
     async (station: UkeSearchPermitStation) => {
       if (!map || !station.location) return;
@@ -323,9 +289,9 @@ function MapViewInner() {
   const handleRadiolineSelectFromSearch = useCallback(
     (radioline: UkeSearchRadioline) => {
       handleLocationSelect(radioline.tx.latitude, radioline.tx.longitude);
-      handlePendingRadiolineId(radioline.id);
+      setPendingRadiolineId(radioline.id);
     },
-    [handleLocationSelect, handlePendingRadiolineId],
+    [handleLocationSelect],
   );
 
   const popupActions = useMemo(
@@ -393,7 +359,7 @@ function MapViewInner() {
         onActiveMarkerChange={setActiveMarker}
         stationActions={stationActions}
         popupActions={popupActions}
-        onRadiolineIdFromUrl={handlePendingRadiolineId}
+        onRadiolineIdFromUrl={setPendingRadiolineId}
         activePopupLocationId={activePopupLocation?.locationId}
         useZabkaMarkers={useZabkaMarkers}
       />
@@ -403,14 +369,11 @@ function MapViewInner() {
             radioLines={radioLines}
             pendingRadiolineId={pendingRadiolineId}
             showAddToList={showAddToList}
-            onPendingRadiolineConsumed={handlePendingRadiolineId}
+            onPendingRadiolineConsumed={setPendingRadiolineId}
           />
         </Suspense>
       ) : null}
       <MapControls showLocate showCompass showScale showFullscreen />
-      <Suspense fallback={null}>
-        {selectedUkeStation ? <UkePermitDetailsDialog station={selectedUkeStation} onClose={handleCloseUkeDetails} /> : null}
-      </Suspense>
     </>
   );
 }

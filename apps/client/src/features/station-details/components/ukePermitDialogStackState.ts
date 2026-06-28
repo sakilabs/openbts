@@ -2,34 +2,31 @@ import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { StationSource } from "@/types/station";
+import type { UkeStation } from "@/types/station";
 
 import { useFloatingDialogCoordinator } from "./floatingDialogCoordinator";
 import { type StationDialogRect, areStationDialogRectsEqual, createInitialStationDialogRect } from "./stationDialogGeometry";
 
-export type { StationDialogRect } from "./stationDialogGeometry";
-
-export type StationDialogItem = {
+export type UkePermitDialogItem = {
   key: string;
-  id: number;
-  source: StationSource;
+  station: UkeStation;
   rect: StationDialogRect;
   zIndex: number;
 };
 
-const MAX_STATION_DIALOGS = 2;
+const MAX_UKE_PERMIT_DIALOGS = 2;
 
-function getDialogKey(id: number, source: StationSource) {
-  return `${source}:${id}`;
+function getUkePermitDialogKey(station: UkeStation) {
+  return `uke:${station.station_id}:${station.operator?.mnc ?? "unknown"}`;
 }
 
-export function useStationDialogStackState() {
+export function useUkePermitDialogStackState() {
   const { t } = useTranslation("common");
   const { getNextZIndex, isTopZIndex } = useFloatingDialogCoordinator();
-  const [dialogs, setDialogs] = useState<StationDialogItem[]>([]);
-  const dialogsRef = useRef<StationDialogItem[]>([]);
+  const [dialogs, setDialogs] = useState<UkePermitDialogItem[]>([]);
+  const dialogsRef = useRef<UkePermitDialogItem[]>([]);
 
-  const setDialogsSynced = useCallback((updater: (current: StationDialogItem[]) => StationDialogItem[]) => {
+  const setDialogsSynced = useCallback((updater: (current: UkePermitDialogItem[]) => UkePermitDialogItem[]) => {
     const current = dialogsRef.current;
     const next = updater(current);
     if (next === current) return;
@@ -37,7 +34,7 @@ export function useStationDialogStackState() {
     setDialogs(next);
   }, []);
 
-  const focusStationDialog = useCallback(
+  const focusUkePermitDialog = useCallback(
     (key: string) => {
       setDialogsSynced((current) => {
         const dialog = current.find((item) => item.key === key);
@@ -52,41 +49,40 @@ export function useStationDialogStackState() {
     [getNextZIndex, isTopZIndex, setDialogsSynced],
   );
 
-  const openStationDialog = useCallback(
-    (id: number, source: StationSource) => {
-      const key = getDialogKey(id, source);
+  const openUkePermitDialog = useCallback(
+    (station: UkeStation) => {
+      const key = getUkePermitDialogKey(station);
       const current = dialogsRef.current;
       if (current.some((dialog) => dialog.key === key)) {
-        focusStationDialog(key);
+        focusUkePermitDialog(key);
         return true;
       }
 
-      if (current.length >= MAX_STATION_DIALOGS) {
+      if (current.length >= MAX_UKE_PERMIT_DIALOGS) {
         toast.info(t("toast.closeStationDialogFirst"));
         return false;
       }
 
-      const dialog: StationDialogItem = {
+      const dialog: UkePermitDialogItem = {
         key,
-        id,
-        source,
+        station,
         rect: createInitialStationDialogRect(current.length),
         zIndex: getNextZIndex(),
       };
       setDialogsSynced((previous) => [...previous, dialog]);
       return true;
     },
-    [focusStationDialog, getNextZIndex, setDialogsSynced, t],
+    [focusUkePermitDialog, getNextZIndex, setDialogsSynced, t],
   );
 
-  const closeStationDialog = useCallback(
+  const closeUkePermitDialog = useCallback(
     (key: string) => {
       setDialogsSynced((current) => current.filter((dialog) => dialog.key !== key));
     },
     [setDialogsSynced],
   );
 
-  const updateStationDialogRect = useCallback(
+  const updateUkePermitDialogRect = useCallback(
     (key: string, rect: StationDialogRect) => {
       setDialogsSynced((current) => {
         const dialog = current.find((item) => item.key === key);
@@ -100,9 +96,9 @@ export function useStationDialogStackState() {
 
   return {
     dialogs,
-    openStationDialog,
-    closeStationDialog,
-    focusStationDialog,
-    updateStationDialogRect,
+    openUkePermitDialog,
+    closeUkePermitDialog,
+    focusUkePermitDialog,
+    updateUkePermitDialogRect,
   };
 }

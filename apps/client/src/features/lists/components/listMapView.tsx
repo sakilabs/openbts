@@ -14,15 +14,13 @@ import { useMapBounds } from "@/features/map/hooks/useMapBounds";
 import { useMapPopup } from "@/features/map/hooks/useMapPopup";
 import { toLocationInfo } from "@/features/map/utils";
 import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
+import { useUkePermitDialogStack } from "@/features/station-details/components/ukePermitDialogStackProvider";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSettings } from "@/hooks/useSettings";
 import { authClient } from "@/lib/authClient";
 import type { LocationWithStations, RadioLine, Station, StationFilters, StationSource, StationWithoutCells, UkeStation } from "@/types/station";
 
 const RadioLinesLayer = lazy(() => import("@/features/map/components/radioLinesLayer"));
-const UkePermitDetailsDialog = lazy(() =>
-  import("@/features/station-details/components/ukePermitDetailsDialog").then((m) => ({ default: m.UkePermitDetailsDialog })),
-);
 
 type ListInfoBannerProps = { name: string; description?: string };
 
@@ -72,7 +70,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   const { data: listData, isLoading, isError } = useListDetail(uuid, wantAzimuths);
 
   const { openStationDialog } = useStationDialogStack();
-  const [selectedUkeStation, setSelectedUkeStation] = useState<UkeStation | null>(null);
+  const { openUkePermitDialog } = useUkePermitDialogStack();
   const [activeMarker, setActiveMarker] = useState<{ latitude: number; longitude: number } | null>(null);
   const [popupLocationState, setPopupLocationState] = useState<{
     location: { locationId: number; source: StationSource } | null;
@@ -138,7 +136,7 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
   }, [map, isLoaded, listStations, listRadiolines, ukeLocations]);
 
   const handleOpenStationDetails = useCallback((id: number, source: StationSource) => openStationDialog(id, source), [openStationDialog]);
-  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => setSelectedUkeStation(station), []);
+  const handleOpenUkeStationDetails = useCallback((station: UkeStation) => openUkePermitDialog(station), [openUkePermitDialog]);
   const handlePopupClose = useCallback(() => {
     setPopupLocationState({ location: null, tempLocations: [] });
   }, []);
@@ -300,10 +298,6 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
       ) : null}
 
       <MapControls showLocate showCompass showScale showFullscreen />
-
-      <Suspense fallback={null}>
-        {selectedUkeStation ? <UkePermitDetailsDialog station={selectedUkeStation} onClose={() => setSelectedUkeStation(null)} /> : null}
-      </Suspense>
     </>
   );
 }
