@@ -127,13 +127,20 @@ type UkePermitForCells = {
   sectors?: unknown[];
 };
 
+const EDITABLE_RATS = new Set<string>(RAT_ORDER);
+
+function isEditableRat(rat: string): rat is ProposedCellForm["rat"] {
+  return EDITABLE_RATS.has(rat);
+}
+
 export function computeUkeBandCounts(permits: UkePermitForCells[]): Map<string, number> {
   const drCountsByBand = new Map<string, number>();
   let minDrCount = Infinity;
   for (const permit of permits) {
-    if (!permit.band || permit.band.rat === "IOT") continue;
+    const band = permit.band;
+    if (!band || !isEditableRat(band.rat)) continue;
     if (permit.source !== "device_registry") continue;
-    const key = `${permit.band.rat}-${permit.band.id}`;
+    const key = `${band.rat}-${band.id}`;
     if (!drCountsByBand.has(key)) {
       const count = permit.sectors?.length ?? 0;
       drCountsByBand.set(key, count);
@@ -146,8 +153,9 @@ export function computeUkeBandCounts(permits: UkePermitForCells[]): Map<string, 
   const result = new Map<string, number>();
   const seen = new Set<string>();
   for (const permit of permits) {
-    if (!permit.band || permit.band.rat === "IOT") continue;
-    const key = `${permit.band.rat}-${permit.band.id}`;
+    const band = permit.band;
+    if (!band || !isEditableRat(band.rat)) continue;
+    const key = `${band.rat}-${band.id}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
@@ -164,8 +172,9 @@ export function ukePermitsToCells(permits: UkePermitForCells[]): ProposedCellFor
   const cells: ProposedCellForm[] = [];
 
   for (const permit of permits) {
-    if (!permit.band || permit.band.rat === "IOT") continue;
-    const key = `${permit.band.rat}-${permit.band.id}`;
+    const band = permit.band;
+    if (!band || !isEditableRat(band.rat)) continue;
+    const key = `${band.rat}-${band.id}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
@@ -173,8 +182,8 @@ export function ukePermitsToCells(permits: UkePermitForCells[]): ProposedCellFor
     for (let i = 0; i < count; i++) {
       cells.push({
         id: generateCellId(),
-        rat: permit.band.rat as ProposedCellForm["rat"],
-        band_id: permit.band.id,
+        rat: band.rat,
+        band_id: band.id,
         details: {},
       });
     }
