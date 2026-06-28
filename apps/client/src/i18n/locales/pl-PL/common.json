@@ -48,6 +48,7 @@
     "id": "ID",
     "stationId": "ID Stacji",
     "operator": "Operator",
+    "allOperators": "Wszyscy operatorzy",
     "region": "Województwo",
     "filters": "Filtry",
     "latitude": "Szerokość geograficzna",

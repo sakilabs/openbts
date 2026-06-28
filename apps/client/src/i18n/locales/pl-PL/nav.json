@@ -10,6 +10,7 @@
   "items": {
     "mapView": "Widok mapy",
     "database": "Baza danych",
+    "photos": "Galeria zdjęć",
     "clfExport": "Eksport CLF",
     "submitStation": "Nowe zgłoszenie",
     "preferences": "Preferencje",

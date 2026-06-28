@@ -84,6 +84,45 @@
     }
   },
   "unknownOperator": "Nieznany operator",
+  "photos": {
+    "title": "Zdjęcia stacji",
+    "subtitle": "Aktualna galeria zdjęć wybranych dla opublikowanych stacji bazowych.",
+    "loadedCount": "Pokazano {{count, number}} z {{total, number}} zdjęć",
+    "loadingMore": "Ładowanie kolejnych zdjęć...",
+    "emptyTitle": "Brak zdjęć stacji",
+    "emptySubtitle": "Wybrane zdjęcia stacji pojawią się tutaj.",
+    "filteredEmptyTitle": "Brak zdjęć dla tych filtrów",
+    "filteredEmptySubtitle": "Wyczyść filtry albo rozszerz wyszukiwanie, aby zobaczyć więcej zdjęć stacji.",
+    "errorTitle": "Nie udało się wczytać zdjęć",
+    "errorSubtitle": "Odśwież galerię albo spróbuj ponownie za chwilę.",
+    "retry": "Spróbuj ponownie",
+    "searchPlaceholder": "Szukaj stacji, miasta, adresu, notatki...",
+    "sort": {
+      "station": "ID stacji",
+      "uploaded": "Dodano",
+      "taken": "Wykonano"
+    },
+    "order": {
+      "asc": "Rosnąco",
+      "desc": "Malejąco"
+    },
+    "mainOnly": "Tylko główne",
+    "recentOnly": "Ostatnie",
+    "allLoaded": "Załadowano wszystkie pasujące zdjęcia",
+    "stationPhotoCount_one": "{{count}} zdjęcie",
+    "stationPhotoCount_few": "{{count}} zdjęcia",
+    "stationPhotoCount_many": "{{count}} zdjęć",
+    "stationPhotoCount_other": "{{count}} zdjęć",
+    "openPhoto": "Otwórz zdjęcie",
+    "viewStation": "Zobacz stację",
+    "scrollTop": "Przewiń do góry",
+    "unknownUser": "nieznany",
+    "uploaded": "Dodano",
+    "taken": "Wykonano",
+    "recent": "Nowe",
+    "mainPhoto": "Główne zdjęcie stacji",
+    "imageUnavailable": "Zdjęcie niedostępne"
+  },
   "radiolines": {
     "title": "Radiolinia #{{id}}",
     "viewDetails": "Zobacz szczegóły",

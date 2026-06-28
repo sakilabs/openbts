@@ -5,6 +5,7 @@ If you found some bugs or want us to add new feature, please do so via [our GitH
 
 ### 🚀 Enhancements
 
+- Added a photos page for browsing station photos in one place with operator filtering and more...
 - Added an optional floating bottom navigation mode with compact page actions, mobile filter chips, account controls and map-style access
 - UKE station permit details can now open in draggable, resizable floating dialogs on desktop, including from the map and admin UKE permit views
 - Users can now watch internal and UKE stations, enable list notifications and receive richer notifications for station cell, photo, comment and UKE permit changes

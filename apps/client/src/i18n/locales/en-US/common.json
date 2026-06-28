@@ -48,6 +48,7 @@
     "id": "ID",
     "stationId": "Station ID",
     "operator": "Operator",
+    "allOperators": "All operators",
     "region": "Region",
     "filters": "Filters",
     "latitude": "Latitude",

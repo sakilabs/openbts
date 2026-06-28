@@ -23,7 +23,6 @@
   },
   "filters": {
     "stationIdPlaceholder": "Station ID...",
-    "allOperators": "All operators",
     "allRegions": "All regions"
   }
 }

@@ -26,7 +26,6 @@
     "noHistoryData": "Brak danych historycznych. Trendy pojawią się, gdy dane zostaną zebrane."
   },
   "filters": {
-    "allOperators": "Wszyscy operatorzy",
     "allBands": "Wszystkie pasma",
     "granularity": "Okres",
     "monthly": "Miesięczne",

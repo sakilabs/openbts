@@ -2,6 +2,7 @@ import {
   AddCircleIcon,
   AirportTowerIcon,
   AnalyticsUpIcon,
+  Camera01Icon,
   DashboardSquare01Icon,
   DatabaseIcon,
   Delete02Icon,
@@ -74,6 +75,7 @@ export const navMainConfig: NavConfigSection[] = [
     items: [
       { titleKey: "items.mapView", url: "/", icon: MapsIcon },
       { titleKey: "items.database", url: "/stations", icon: DatabaseIcon },
+      { titleKey: "items.photos", url: "/photos", icon: Camera01Icon },
       { titleKey: "items.statistics", url: "/statistics", icon: AnalyticsUpIcon },
       { titleKey: "items.deletedEntries", url: "/deleted-entries", icon: Delete02Icon },
       { titleKey: "items.clfExport", url: "/clf-export", icon: Download04Icon },

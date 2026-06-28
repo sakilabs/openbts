@@ -135,12 +135,12 @@ function PEMMeasurementsPage() {
                     <span className="truncate">{selectedOperatorObj.name}</span>
                   </div>
                 ) : (
-                  t("filters.allOperators")
+                  tCommon("labels.allOperators")
                 )}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">{t("filters.allOperators")}</SelectItem>
+              <SelectItem value="__all__">{tCommon("labels.allOperators")}</SelectItem>
               {pemOperators.map((op) => (
                 <SelectItem key={op.id} value={PEM_MNC_TO_ENTITY[op.mnc] ?? op.name}>
                   <div className="flex items-center gap-2">

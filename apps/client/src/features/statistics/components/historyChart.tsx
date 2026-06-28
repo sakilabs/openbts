@@ -201,6 +201,7 @@ function OperatorHistoryCard({
 
 export function HistoryChart({ operators }: { operators?: Operator[] }) {
   const { t, i18n } = useTranslation("statistics");
+  const { t: tCommon } = useTranslation("common");
   const [operatorId, setOperatorId] = useState<number | undefined>();
   const [granularity, setGranularity] = useState<"monthly" | "daily">("monthly");
   const [viewMode, setViewMode] = useState<ViewMode>("by-band");
@@ -212,8 +213,8 @@ export function HistoryChart({ operators }: { operators?: Operator[] }) {
   const operatorChart = useOperatorChart(stationsData);
 
   const operatorItems = useMemo(
-    () => [{ value: "all", label: t("filters.allOperators") }, ...(operators?.map((op) => ({ value: String(op.id), label: op.name })) ?? [])],
-    [operators, t],
+    () => [{ value: "all", label: tCommon("labels.allOperators") }, ...(operators?.map((op) => ({ value: String(op.id), label: op.name })) ?? [])],
+    [operators, tCommon],
   );
 
   const granularityItems = useMemo(
@@ -310,7 +311,7 @@ export function HistoryChart({ operators }: { operators?: Operator[] }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t("filters.allOperators")}</SelectItem>
+                  <SelectItem value="all">{tCommon("labels.allOperators")}</SelectItem>
                   {operators?.map((op) => (
                     <SelectItem key={op.id} value={String(op.id)}>
                       {op.name}

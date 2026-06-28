@@ -23,7 +23,6 @@
   },
   "filters": {
     "stationIdPlaceholder": "Nr stacji...",
-    "allOperators": "Wszyscy operatorzy",
     "allRegions": "Wszystkie województwa"
   }
 }

@@ -26,7 +26,6 @@
     "noHistoryData": "No historical data yet. Trends will appear once data has been collected."
   },
   "filters": {
-    "allOperators": "All Operators",
     "allBands": "All Bands",
     "granularity": "Period",
     "monthly": "Monthly",

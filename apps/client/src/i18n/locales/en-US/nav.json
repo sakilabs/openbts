@@ -10,6 +10,7 @@
   "items": {
     "mapView": "Map View",
     "database": "Database",
+    "photos": "Photo Gallery",
     "clfExport": "CLF Export",
     "submitStation": "New Submission",
     "preferences": "Preferences",

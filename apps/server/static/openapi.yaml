@@ -1847,6 +1847,99 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /photos:
+    get:
+      tags: [Photos]
+      summary: List station photos
+      description: Returns photos selected for published base stations, sorted by station ID ascending by default.
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: q
+          in: query
+          description: Search station ID, city, address, or photo note
+          schema: { type: string }
+        - name: operator
+          in: query
+          description: Internal operator ID
+          schema: { type: integer }
+        - name: mainOnly
+          in: query
+          schema: { type: boolean, default: false }
+        - name: recentDays
+          in: query
+          description: Limit to photos uploaded within the last N days
+          schema: { type: integer, minimum: 1, maximum: 365 }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [uploaded, taken, station], default: station }
+        - name: order
+          in: query
+          schema: { type: string, enum: [asc, desc], default: asc }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, totalCount]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        [id, location_photo_id, attachment_uuid, mime_type, is_main, note, taken_at, createdAt, author, station, location]
+                      properties:
+                        id: { type: integer }
+                        location_photo_id: { type: integer }
+                        attachment_uuid: { type: string, format: uuid }
+                        mime_type: { type: string }
+                        is_main: { type: boolean }
+                        note: { type: string, nullable: true }
+                        taken_at: { type: string, format: date-time, nullable: true }
+                        createdAt: { type: string, format: date-time }
+                        author:
+                          nullable: true
+                          type: object
+                          required: [uuid, username, name]
+                          properties:
+                            uuid: { type: string, format: uuid }
+                            username: { type: string }
+                            name: { type: string }
+                        station:
+                          type: object
+                          required: [id, station_id, operator]
+                          properties:
+                            id: { type: integer }
+                            station_id: { type: string }
+                            operator:
+                              nullable: true
+                              type: object
+                              required: [id, name, mnc]
+                              properties:
+                                id: { type: integer }
+                                name: { type: string }
+                                mnc: { type: integer, nullable: true }
+                        location:
+                          type: object
+                          required: [id, city, address, label, latitude, longitude]
+                          properties:
+                            id: { type: integer }
+                            city: { type: string, nullable: true }
+                            address: { type: string, nullable: true }
+                            label: { type: string }
+                            latitude: { type: number }
+                            longitude: { type: number }
+                  totalCount: { type: integer }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /submissions:
     get:
       tags: [Submissions]

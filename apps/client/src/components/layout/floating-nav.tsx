@@ -532,7 +532,11 @@ function FloatingAccountCluster() {
                           {gitCommit}
                         </a>
                       ) : null}
-                      {appVersion ? <span>{gitCommit ? " " : ""}(v{appVersion})</span> : null}
+                      {appVersion ? (
+                        <span>
+                          {gitCommit ? " " : ""}(v{appVersion})
+                        </span>
+                      ) : null}
                     </span>
                   </div>
                 </>
