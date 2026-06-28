@@ -78,10 +78,11 @@ type AnalyzerStation = {
 };
 
 type MatchedCell =
-  | { rat: "GSM"; cell_id: number; band_id: number; lac: number; cid: number; is_confirmed: boolean | undefined }
+  | { rat: "GSM"; cell_id: number; sector_id: number | null; band_id: number; lac: number; cid: number; is_confirmed: boolean | undefined }
   | {
       rat: "UMTS";
       cell_id: number;
+      sector_id: number | null;
       band_id: number;
       rnc: number;
       cid: number;
@@ -92,6 +93,7 @@ type MatchedCell =
   | {
       rat: "LTE";
       cell_id: number;
+      sector_id: number | null;
       band_id: number;
       enbid: number;
       clid: number | null;

@@ -67,6 +67,7 @@ const matchedCellSchema = z.union([
   z.object({
     rat: z.literal("GSM"),
     cell_id: z.number(),
+    sector_id: z.number().nullable(),
     band_id: z.number().nullable(),
     lac: z.number(),
     cid: z.number(),
@@ -75,6 +76,7 @@ const matchedCellSchema = z.union([
   z.object({
     rat: z.literal("UMTS"),
     cell_id: z.number(),
+    sector_id: z.number().nullable(),
     band_id: z.number().nullable(),
     rnc: z.number(),
     cid: z.number(),
@@ -85,6 +87,7 @@ const matchedCellSchema = z.union([
   z.object({
     rat: z.literal("LTE"),
     cell_id: z.number(),
+    sector_id: z.number().nullable(),
     band_id: z.number().nullable(),
     enbid: z.number(),
     clid: z.number().nullable(),
@@ -205,6 +208,7 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
         maps.gsmMap.set(pairKey(mnc, row.lac, row.cid), {
           station: row.cell.station as unknown as AnalyzerStation,
           cell_id: row.cell_id,
+          sector_id: row.cell.sector_id,
           band_id: row.cell.band_id,
           lac: row.lac,
           cid: row.cid,
@@ -227,6 +231,7 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
         maps.umtsRncMap.set(pairKey(mnc, row.rnc, row.cid), {
           station: row.cell.station as unknown as AnalyzerStation,
           cell_id: row.cell_id,
+          sector_id: row.cell.sector_id,
           band_id: row.cell.band_id,
           rnc: row.rnc,
           cid: row.cid,
@@ -251,6 +256,7 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
         maps.lteMap.set(pairKey(mnc, row.enbid, row.clid), {
           station: row.cell.station as unknown as AnalyzerStation,
           cell_id: row.cell_id,
+          sector_id: row.cell.sector_id,
           band_id: row.cell.band_id,
           enbid: row.enbid,
           clid: row.clid,
@@ -282,6 +288,7 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
           maps.umtsLacMap.set(pairKey(mnc, row.lac, row.cid), {
             station: row.cell.station as unknown as AnalyzerStation,
             cell_id: row.cell_id,
+            sector_id: row.cell.sector_id,
             band_id: row.cell.band_id,
             rnc: row.rnc,
             cid: row.cid,
@@ -309,6 +316,7 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
           maps.lteEnbidMap.set(key, {
             station: row.cell.station as unknown as AnalyzerStation,
             cell_id: row.cell_id,
+            sector_id: row.cell.sector_id,
             band_id: row.cell.band_id,
             enbid: row.enbid,
             is_confirmed: row.cell.is_confirmed,

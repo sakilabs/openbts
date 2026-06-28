@@ -18,6 +18,7 @@ export interface DraftCell {
   operation: "add" | "update";
   rat: AnalyzerRat;
   target_cell_id: number | undefined;
+  target_sector_id: number | undefined;
   band_id: number | null;
   duplexChoices: AnalyzerBandChoice[];
   details: MismatchDetails;
@@ -64,12 +65,14 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []
     let baseDetails: MismatchDetails | undefined;
     let operation: "add" | "update" = "update";
     let target_cell_id: number | undefined;
+    let target_sector_id: number | undefined;
     let band_id: number | null = null;
     let duplexChoices: AnalyzerBandChoice[] = [];
 
     if (result.status === "found" && result.cell) {
       const cell = result.cell;
       target_cell_id = result.cell.cell_id;
+      target_sector_id = cell.rat !== "NR" ? (cell.sector_id ?? undefined) : undefined;
       band_id = result.cell.band_id ?? null;
 
       if (cell.rat === row.rat) {
@@ -86,6 +89,7 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []
     } else if (result.status === "probable" && warnings.includes("rnc_mismatch") && result.cell?.rat === "UMTS" && row.rat === "UMTS") {
       const cell = result.cell;
       target_cell_id = cell?.cell_id;
+      target_sector_id = cell?.sector_id ?? undefined;
       band_id = cell?.band_id ?? null;
       baseDetails = buildAnalyzerBaseDetails(cell.rat, cell);
       Object.assign(details, buildAnalyzerWarningDetails(row.rat, row, warnings));
@@ -105,6 +109,7 @@ export function buildAnalyzerBatchDraft(draft: AnalyzerDraft, bands: Band[] = []
       operation,
       rat: row.rat,
       target_cell_id,
+      target_sector_id,
       band_id,
       duplexChoices,
       details,
@@ -146,6 +151,7 @@ export function buildSubmissionPayloads(draft: AnalyzerBatchDraft): SubmissionFo
     cells: station.cells.map((cell) => ({
       operation: cell.operation,
       target_cell_id: cell.target_cell_id,
+      target_sector_id: cell.target_sector_id,
       band_id: cell.band_id,
       rat: cell.rat,
       details: {

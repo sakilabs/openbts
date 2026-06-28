@@ -7,10 +7,11 @@ export type CellInput =
   | { rat: "NR"; mnc: number };
 
 export type MatchedCell =
-  | { rat: "GSM"; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }
+  | { rat: "GSM"; cell_id: number; sector_id: number | null; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }
   | {
       rat: "UMTS";
       cell_id: number;
+      sector_id: number | null;
       band_id: number | null;
       rnc: number;
       cid: number;
@@ -21,6 +22,7 @@ export type MatchedCell =
   | {
       rat: "LTE";
       cell_id: number;
+      sector_id: number | null;
       band_id: number | null;
       enbid: number;
       clid: number | null;
@@ -43,12 +45,24 @@ type PairMap = Map<number, Map<string, Pair>>;
 const NETWORKS_MNCS = new Set([26002, 26003]);
 
 export type LookupMaps<TStation> = {
-  gsmMap: Map<string, { station: TStation; cell_id: number; band_id: number | null; lac: number; cid: number; is_confirmed: boolean | undefined }>;
+  gsmMap: Map<
+    string,
+    {
+      station: TStation;
+      cell_id: number;
+      sector_id: number | null;
+      band_id: number | null;
+      lac: number;
+      cid: number;
+      is_confirmed: boolean | undefined;
+    }
+  >;
   umtsRncMap: Map<
     string,
     {
       station: TStation;
       cell_id: number;
+      sector_id: number | null;
       band_id: number | null;
       rnc: number;
       cid: number;
@@ -62,6 +76,7 @@ export type LookupMaps<TStation> = {
     {
       station: TStation;
       cell_id: number;
+      sector_id: number | null;
       band_id: number | null;
       rnc: number;
       cid: number;
@@ -75,6 +90,7 @@ export type LookupMaps<TStation> = {
     {
       station: TStation;
       cell_id: number;
+      sector_id: number | null;
       band_id: number | null;
       enbid: number;
       clid: number;
@@ -84,7 +100,10 @@ export type LookupMaps<TStation> = {
       is_confirmed: boolean | undefined;
     }
   >;
-  lteEnbidMap: Map<string, { station: TStation; cell_id: number; band_id: number | null; enbid: number; is_confirmed: boolean | undefined }>;
+  lteEnbidMap: Map<
+    string,
+    { station: TStation; cell_id: number; sector_id: number | null; band_id: number | null; enbid: number; is_confirmed: boolean | undefined }
+  >;
 };
 
 export type CellGroups = {
@@ -176,7 +195,15 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
       return {
         status: "found",
         station: entry.station,
-        cell: { rat: "GSM", cell_id: entry.cell_id, band_id: entry.band_id, lac: entry.lac, cid: entry.cid, is_confirmed: entry.is_confirmed },
+        cell: {
+          rat: "GSM",
+          cell_id: entry.cell_id,
+          sector_id: entry.sector_id,
+          band_id: entry.band_id,
+          lac: entry.lac,
+          cid: entry.cid,
+          is_confirmed: entry.is_confirmed,
+        },
         warnings: [],
       };
     }
@@ -193,6 +220,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
           cell: {
             rat: "UMTS",
             cell_id: primary.cell_id,
+            sector_id: primary.sector_id,
             band_id: primary.band_id,
             rnc: primary.rnc,
             cid: primary.cid,
@@ -211,6 +239,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
         cell: {
           rat: "UMTS",
           cell_id: fallback.cell_id,
+          sector_id: fallback.sector_id,
           band_id: fallback.band_id,
           rnc: fallback.rnc,
           cid: fallback.cid,
@@ -236,6 +265,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
           cell: {
             rat: "LTE",
             cell_id: primary.cell_id,
+            sector_id: primary.sector_id,
             band_id: primary.band_id,
             enbid: primary.enbid,
             clid: primary.clid,
@@ -255,6 +285,7 @@ export function resolveCell<TStation>(cell: CellInput, maps: LookupMaps<TStation
         cell: {
           rat: "LTE",
           cell_id: fallback.cell_id,
+          sector_id: fallback.sector_id,
           band_id: fallback.band_id,
           enbid: fallback.enbid,
           clid: null,
