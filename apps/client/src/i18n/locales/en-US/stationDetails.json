@@ -6,6 +6,8 @@
     "comments": "Comments",
     "photos": "Photos"
   },
+  "watchStation": "Watch station",
+  "unwatchStation": "Stop watching",
   "specs": {
     "basicInfo": "Basic Information",
     "cellDetails": "Cell Details",

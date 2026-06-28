@@ -276,7 +276,7 @@ export async function importPermits(): Promise<boolean> {
   return true;
 }
 
-export async function associateStationsWithPermits(): Promise<boolean> {
+export async function associateStationsWithPermits(): Promise<Array<{ permitId: number; stationId: number }>> {
   logger.log("Associating stations with permits...");
   const permits = await db.query.ukePermits.findMany({
     columns: { id: true },
@@ -295,7 +295,7 @@ export async function associateStationsWithPermits(): Promise<boolean> {
   if (!permits.length) {
     logger.log("No permits found, skipping association");
     await recordImportMetadata("stations_permits", [], "success");
-    return false;
+    return [];
   }
 
   const permitStationIds = [...new Set(permits.map((p) => p.station.station_id))];
@@ -314,7 +314,7 @@ export async function associateStationsWithPermits(): Promise<boolean> {
   if (!matchingStations.length) {
     logger.log("No matching stations found, skipping association");
     await recordImportMetadata("stations_permits", [], "success");
-    return false;
+    return [];
   }
 
   const stationsByPairKey = new Map<string, number>();
@@ -351,7 +351,7 @@ export async function associateStationsWithPermits(): Promise<boolean> {
   if (!allAssociations.length) {
     logger.log("No associations to create");
     await recordImportMetadata("stations_permits", [], "success");
-    return false;
+    return [];
   }
 
   const associations = Array.from(new Map(allAssociations.map((a) => [`${a.permit_id}:${a.station_id}`, a])).values());
@@ -360,17 +360,24 @@ export async function associateStationsWithPermits(): Promise<boolean> {
   if (!associations.length) {
     logger.log("All associations already exist, skipping");
     await recordImportMetadata("stations_permits", [], "success");
-    return false;
+    return [];
   }
 
+  const insertedAssociations: Array<{ permitId: number; stationId: number }> = [];
   for (const group of chunk(associations, BATCH_SIZE)) {
-    await db
+    const inserted = await db
       .insert(stationsPermits)
       .values(group)
-      .onConflictDoNothing({ target: [stationsPermits.station_id, stationsPermits.permit_id] });
+      .onConflictDoNothing({ target: [stationsPermits.station_id, stationsPermits.permit_id] })
+      .returning({ permitId: stationsPermits.permit_id, stationId: stationsPermits.station_id });
+    insertedAssociations.push(
+      ...inserted.filter(
+        (association): association is { permitId: number; stationId: number } => association.permitId !== null && association.stationId !== null,
+      ),
+    );
   }
 
   await recordImportMetadata("stations_permits", [], "success");
-  logger.log("Association completed successfully");
-  return true;
+  logger.log(`Association completed successfully (${insertedAssociations.length} inserted)`);
+  return insertedAssociations;
 }

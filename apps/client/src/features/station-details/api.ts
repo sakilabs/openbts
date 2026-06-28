@@ -6,6 +6,8 @@ import type { Station, UkePermit } from "@/types/station";
 
 export const fetchStation = (id: number) => fetchApiData<Station>(`stations/${id}`, { proto: StationResponseSchema });
 export const fetchUkePermit = (id: string) => fetchApiData<UkePermit[]>(`uke/permits?station_id=${id}`, { proto: UKEPermitsResponseSchema });
+export const fetchStationWatch = (stationId: number, source: "internal" | "uke" = "internal") =>
+  fetchApiData<{ watched: boolean }>(source === "uke" ? `uke/stations/${stationId}/watch` : `stations/${stationId}/watch`);
 
 type PemReportDetails =
   | {
@@ -87,6 +89,16 @@ export async function updateLocationPhotoTakenAt(locationId: number, photoId: nu
 
 export async function deleteLocationPhoto(locationId: number, photoId: number): Promise<void> {
   await fetchJson(`${API_BASE}/locations/${locationId}/photos/${photoId}`, { method: "DELETE" });
+}
+
+export async function watchStation(stationId: number, source: "internal" | "uke" = "internal"): Promise<void> {
+  const path = source === "uke" ? `uke/stations/${stationId}/watch` : `stations/${stationId}/watch`;
+  await fetchJson(`${API_BASE}/${path}`, { method: "POST" });
+}
+
+export async function unwatchStation(stationId: number, source: "internal" | "uke" = "internal"): Promise<void> {
+  const path = source === "uke" ? `uke/stations/${stationId}/watch` : `stations/${stationId}/watch`;
+  await fetchJson(`${API_BASE}/${path}`, { method: "DELETE" });
 }
 
 export async function uploadAndAssignStationPhotos({

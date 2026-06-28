@@ -22,6 +22,7 @@ import type { TabId } from "../tabs";
 import { StationDetailsBody } from "./dialogBody";
 import { MainPhotoPanel } from "./mainPhotoPanel";
 import { ShareButton } from "./shareButton";
+import { WatchButton } from "./watchButton";
 
 type StationDetailsDialogProps = {
   stationId: number | null;
@@ -173,6 +174,7 @@ export function StationDetailsDialogPanel({
               {station && (
                 <>
                   <AddToListPopover stationId={station.id} size="md" />
+                  <WatchButton stationId={station.id} size="md" />
                   <ShareButton
                     title={`${station.operator.name} - ${station.station_id}`}
                     text={`${station.operator.name} ${station.station_id} - ${station.location.city}`}

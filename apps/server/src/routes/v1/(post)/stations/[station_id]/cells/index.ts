@@ -12,6 +12,7 @@ import type { JSONBody, Route } from "../../../../../../interfaces/routes.interf
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
 import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../../../services/cellDuplicateCheck.service.js";
 import { validateCellARFCNsForBands } from "../../../../../../utils/cellARFCNValidation.js";
+import { queueStationCellsChangedNotification } from "../../../../../../utils/notifications/stationCellChanges.js";
 import { type RATInsertDetails, insertRATCellDetails, isNormalRat } from "../../../../../../utils/ratCellPersistence.js";
 import { INSERT_OMIT, gsmInsertSchema, lteNullableFields, nrInsertSchema, umtsInsertSchema } from "../../../../../../utils/ratCellSchemas.js";
 import { assertCanMutateStationCells } from "../../../../../../utils/stationStatus.js";
@@ -165,6 +166,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
       },
       req,
     );
+
+    queueStationCellsChangedNotification({ stationId: station_id, counts: { added: response.length } });
 
     return res.send({ data: response });
   } catch (error) {

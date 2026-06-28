@@ -11,6 +11,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js
 import { createAuditLog } from "../../../../services/auditLog.service.js";
 import { checkCellDuplicate, checkPciDuplicate, getOperatorIdForStation } from "../../../../services/cellDuplicateCheck.service.js";
 import { validateCellARFCNsForBands } from "../../../../utils/cellARFCNValidation.js";
+import { queueStationCellsChangedNotification } from "../../../../utils/notifications/stationCellChanges.js";
 import { type RATInsertDetails, insertRATCellDetailsReturning, isNormalRat } from "../../../../utils/ratCellPersistence.js";
 import { normalRatInsertSchemaMap } from "../../../../utils/ratCellSchemas.js";
 import { assertCanMutateStationCells } from "../../../../utils/stationStatus.js";
@@ -96,6 +97,8 @@ async function handler(req: FastifyRequest<ReqWithDetails>, res: ReplyPayload<JS
       },
       req,
     );
+
+    queueStationCellsChangedNotification({ stationId: inserted.station_id, counts: { added: 1 } });
 
     return res.send({ data: { ...inserted, details } as ResponseData });
   } catch (error) {

@@ -28,5 +28,7 @@
   "togglePublic": "Ustaw jako publiczną",
   "togglePrivate": "Ustaw jako prywatną",
   "rename": "Zmień nazwę",
-  "editList": "Edytuj listę"
+  "editList": "Edytuj listę",
+  "notificationsEnabled": "Powiadamiaj mnie o zmianach stacji",
+  "notificationsEnabledHint": "Obejmuje komórki, zdjęcia, komentarze i pozwolenia UKE dla stacji z tej listy."
 }

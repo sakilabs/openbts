@@ -11,7 +11,9 @@ import {
   pushSubscriptions,
   stationComments,
   stationPhotoSelections,
+  stationWatches,
   twoFactors,
+  ukeStationWatches,
   userLists,
   users,
 } from "./auth.ts";
@@ -90,6 +92,8 @@ export const relations = defineRelations(
     locationPhotos,
     stationComments,
     stationPhotoSelections,
+    stationWatches,
+    ukeStationWatches,
     twoFactors,
     userLists,
     users,
@@ -147,6 +151,7 @@ export const relations = defineRelations(
         to: helpers.extraIdentificators.station_id,
       }),
       sectors: helpers.many.stationSectors(),
+      stationWatches: helpers.many.stationWatches(),
     },
     stationSectors: {
       station: helpers.one.stations({
@@ -224,6 +229,26 @@ export const relations = defineRelations(
         to: helpers.users.id,
       }),
     },
+    stationWatches: {
+      user: helpers.one.users({
+        from: helpers.stationWatches.userId,
+        to: helpers.users.id,
+      }),
+      station: helpers.one.stations({
+        from: helpers.stationWatches.stationId,
+        to: helpers.stations.id,
+      }),
+    },
+    ukeStationWatches: {
+      user: helpers.one.users({
+        from: helpers.ukeStationWatches.userId,
+        to: helpers.users.id,
+      }),
+      station: helpers.one.ukeStations({
+        from: helpers.ukeStationWatches.ukeStationId,
+        to: helpers.ukeStations.id,
+      }),
+    },
     stationComments: {
       author: helpers.one.users({
         from: helpers.stationComments.user_id,
@@ -265,11 +290,21 @@ export const relations = defineRelations(
       }),
       notifications: helpers.many.notifications(),
       pushSubscriptions: helpers.many.pushSubscriptions(),
+      stationWatches: helpers.many.stationWatches(),
+      ukeStationWatches: helpers.many.ukeStationWatches(),
     },
     notifications: {
       user: helpers.one.users({
         from: helpers.notifications.userId,
         to: helpers.users.id,
+      }),
+      station: helpers.one.stations({
+        from: helpers.notifications.stationId,
+        to: helpers.stations.id,
+      }),
+      ukeStation: helpers.one.ukeStations({
+        from: helpers.notifications.ukeStationId,
+        to: helpers.ukeStations.id,
       }),
     },
     pushSubscriptions: {
@@ -382,6 +417,7 @@ export const relations = defineRelations(
         optional: false,
       }),
       permits: helpers.many.ukePermits(),
+      ukeStationWatches: helpers.many.ukeStationWatches(),
     },
     stationsPermits: {
       permit: helpers.one.ukePermits({

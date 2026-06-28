@@ -10,6 +10,9 @@ import type { ReplyPayload } from "../../../../../../interfaces/fastify.interfac
 import type { JSONBody, Route } from "../../../../../../interfaces/routes.interface.js";
 import { verifyPermissions } from "../../../../../../plugins/auth/utils.js";
 import { createAuditLog } from "../../../../../../services/auditLog.service.js";
+import { notifyStationWatchers } from "../../../../../../services/notification.service.js";
+import { logger } from "../../../../../../utils/logger.js";
+import { buildInternalStationActionUrl } from "../../../../../../utils/notifications/actionUrls.js";
 
 const stationCommentSelectSchema = createSelectSchema(stationComments);
 
@@ -77,6 +80,20 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
     },
     req,
   );
+
+  if (approve === true && comment.status !== "approved") {
+    const station = await db.query.stations.findFirst({
+      where: { id: station_id },
+      columns: { id: true, station_id: true },
+      with: { location: { columns: { latitude: true, longitude: true } } },
+    });
+    void notifyStationWatchers({
+      stationId: station_id,
+      stationStringId: station?.station_id ?? null,
+      type: "station_comment_approved",
+      actionUrl: station ? buildInternalStationActionUrl(station) : undefined,
+    }).catch((e) => logger.error("Failed to notify station watchers about approved comment", { error: e }));
+  }
 
   return res.send({ data: updated });
 }

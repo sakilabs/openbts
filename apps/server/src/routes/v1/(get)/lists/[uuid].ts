@@ -298,6 +298,7 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       name: list.name,
       description: list.description,
       is_public: list.is_public,
+      notificationsEnabled: list.notificationsEnabled,
       stations: stationsData,
       radiolines: mappedRadiolines,
       ukeLocations: ukeLocationsData,

@@ -8,6 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { queueStationCellsChangedNotification } from "../../../../utils/notifications/stationCellChanges.js";
 import { assertCanDeleteCells } from "../../../../utils/stationStatus.js";
 
 const schemaRoute = {
@@ -30,6 +31,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<EmptyResp
   const uniqueStationIds = [...new Set(foundCells.map((c) => c.station_id))];
   const stationRows = await db.query.stations.findMany({ where: { id: { in: uniqueStationIds } } });
   if (stationRows.length !== uniqueStationIds.length) throw new ErrorResponse("NOT_FOUND");
+  const deletedCountByStationId = new Map<number, number>();
+  for (const cell of foundCells) deletedCountByStationId.set(cell.station_id, (deletedCountByStationId.get(cell.station_id) ?? 0) + 1);
 
   try {
     await db.transaction(async (tx) => {
@@ -77,6 +80,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<EmptyResp
       }
       /* eslint-enable no-await-in-loop */
     });
+
+    for (const [stationId, removed] of deletedCountByStationId) queueStationCellsChangedNotification({ stationId, counts: { removed } });
 
     return res.status(204).send();
   } catch (error) {

@@ -1,4 +1,5 @@
 import { pushSubscriptions } from "@openbts/drizzle";
+import { eq } from "drizzle-orm";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";
 
@@ -39,7 +40,8 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
     })
     .onConflictDoUpdate({
       target: [pushSubscriptions.endpoint],
-      set: { userId: session.user.id },
+      set: { userId: session.user.id, p256dh: keys.p256dh, auth: keys.auth },
+      where: eq(pushSubscriptions.userId, session.user.id),
     })
     .returning({ id: pushSubscriptions.id });
   if (!sub) throw new ErrorResponse("INTERNAL_SERVER_ERROR", { message: "Failed to create or update push subscription" });

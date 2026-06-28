@@ -7,6 +7,7 @@ export type UserListSummary = {
   name: string;
   description: string | null;
   is_public: boolean | null;
+  notificationsEnabled: boolean;
   stations: { internal: number[]; uke: number[] };
   radiolines: number[];
   stationCount: number;
@@ -22,6 +23,7 @@ export type UserListDetail = {
   name: string;
   description: string | null;
   is_public: boolean | null;
+  notificationsEnabled: boolean;
   stations: Station[];
   radiolines: RadioLine[];
   ukeLocations: UkeLocationWithPermits[];
@@ -42,6 +44,7 @@ type UpdateListBody = Partial<{
   name: string;
   description: string;
   is_public: boolean;
+  notificationsEnabled: boolean;
   stations: { internal: number[]; uke: number[] };
   radiolines: number[];
 }>;

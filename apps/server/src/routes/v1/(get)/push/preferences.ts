@@ -14,13 +14,14 @@ const schemaRoute = {
         ukeUpdates: z.boolean(),
         submissionUpdates: z.boolean(),
         newSubmission: z.boolean(),
+        stationWatches: z.boolean(),
       }),
     }),
   },
 };
 
 type ReqQuery = { Querystring: { id: string } };
-type ResponseData = { data: { ukeUpdates: boolean; submissionUpdates: boolean; newSubmission: boolean } };
+type ResponseData = { data: { ukeUpdates: boolean; submissionUpdates: boolean; newSubmission: boolean; stationWatches: boolean } };
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseData>>) {
   const session = req.userSession;
@@ -38,6 +39,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       ukeUpdates: prefs.ukeUpdates === true,
       submissionUpdates: prefs.submissionUpdates !== false,
       newSubmission: prefs.newSubmission !== false,
+      stationWatches: prefs.stationWatches !== false,
     },
   });
 }

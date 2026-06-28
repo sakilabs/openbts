@@ -20,9 +20,10 @@ import path from "node:path";
 import { ErrorResponse } from "../../errors.ts";
 import { createAuditLog } from "../../services/auditLog.service.ts";
 import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../services/cellDuplicateCheck.service.ts";
-import { createAndDeliverNotification } from "../../services/notification.service.ts";
+import { createAndDeliverNotification, notifyStationWatchers } from "../../services/notification.service.ts";
 import { syncStationsPermitsAssociations } from "../../services/stationsPermitsAssociation.service.ts";
 import type { DbTx } from "../../types/global.ts";
+import { buildInternalStationActionUrl } from "../notifications/actionUrls.ts";
 import {
   type NormalRat,
   type RATCellDetailsRow,
@@ -1078,8 +1079,8 @@ async function applySubmissionPhotos(
   submissionId: string,
   stationId: number | null,
   resolvedLocationId: number | null,
-): Promise<string[]> {
-  if (!stationId || submission.type === "delete") return [];
+): Promise<{ attachmentUuidsToDelete: string[]; photosAdded: boolean }> {
+  if (!stationId || submission.type === "delete") return { attachmentUuidsToDelete: [], photosAdded: false };
 
   const [photos, locationPhotoSelections] = await Promise.all([
     tx.query.submissionPhotos.findMany({ where: { submission_id: submissionId } }),
@@ -1090,7 +1091,8 @@ async function applySubmissionPhotos(
 
   await applyUploadedSubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId, photos);
   await applyLocationPhotoSelections(tx, locationPhotoAdditions, stationId);
-  return applyLocationPhotoRemovals(tx, locationPhotoRemovalIds, stationId);
+  const attachmentUuidsToDelete = await applyLocationPhotoRemovals(tx, locationPhotoRemovalIds, stationId);
+  return { attachmentUuidsToDelete, photosAdded: photos.length > 0 || locationPhotoAdditions.length > 0 };
 }
 
 async function finalizeApprovedSubmission(
@@ -1145,7 +1147,14 @@ async function runApprovalTransaction({
   req: FastifyRequest;
   duplicateCheckDraft: ApprovalDuplicateCheckDraft;
   stationContext: ApprovalStationContext | null;
-}): Promise<{ submission: SubmissionRow; resolvedStationId: number | null; stationStringId: string | null; attachmentUuidsToDelete: string[] }> {
+}): Promise<{
+  submission: SubmissionRow;
+  resolvedStationId: number | null;
+  stationStringId: string | null;
+  attachmentUuidsToDelete: string[];
+  cellChanges: CellAuditChanges;
+  photosAdded: boolean;
+}> {
   const draft = await loadApprovalDraft(tx, submissionId, duplicateCheckDraft);
   const targetCellsPromise = loadTargetCells(tx, draft.proposedCellRows);
   let stationId = submission.station_id;
@@ -1182,12 +1191,12 @@ async function runApprovalTransaction({
 
   if (submission.type === "update" && stationId) await tx.update(stations).set({ updatedAt: new Date() }).where(eq(stations.id, stationId));
 
-  const attachmentUuidsToDelete = await applySubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId);
+  const { attachmentUuidsToDelete, photosAdded } = await applySubmissionPhotos(tx, submission, submissionId, stationId, resolvedLocationId);
 
   const updated = await finalizeApprovedSubmission(tx, submission, submissionId, reviewerId, reviewerNotes);
   const stationStringId = getApprovedStationStringId(submission, draft.proposedStation, stationId, stationContext);
 
-  return { submission: updated, resolvedStationId: stationId, stationStringId, attachmentUuidsToDelete };
+  return { submission: updated, resolvedStationId: stationId, stationStringId, attachmentUuidsToDelete, cellChanges, photosAdded };
 }
 
 export async function approveSubmissionAction({
@@ -1245,16 +1254,52 @@ export async function approveSubmissionAction({
     req,
   );
 
+  const [reviewer, actionStation] = await Promise.all([
+    db.query.users.findFirst({ where: { id: reviewerId }, columns: { name: true } }),
+    transactionResult.resolvedStationId
+      ? db.query.stations.findFirst({
+          where: { id: transactionResult.resolvedStationId },
+          columns: { id: true },
+          with: { location: { columns: { latitude: true, longitude: true } } },
+        })
+      : Promise.resolve(null),
+  ]);
+
   void createAndDeliverNotification({
     userId: submission.submitter_id,
     type: "submission_approved",
     submissionId: submissionId,
+    stationId: transactionResult.resolvedStationId ?? undefined,
     metadata: {
       ...(stationStringId ? { station_id: stationStringId } : {}),
+      ...(reviewer?.name ? { reviewer_name: reviewer.name } : {}),
       ...(result.review_notes ? { reviewer_note: result.review_notes.slice(0, 200) } : {}),
+      ...(submission.submitter_note ? { submitter_note: submission.submitter_note.slice(0, 150) } : {}),
     },
     actionUrl: "/account/submissions",
   }).catch((e) => logger.error("Failed to send notification", { error: e }));
+
+  if (transactionResult.resolvedStationId) {
+    const actionUrl = actionStation ? buildInternalStationActionUrl(actionStation) : undefined;
+    const addedCells = transactionResult.cellChanges.added.length;
+    const removedCells = transactionResult.cellChanges.deleted.length;
+    const updatedCells = transactionResult.cellChanges.updated.length;
+    if (addedCells > 0 || removedCells > 0 || updatedCells > 0)
+      void notifyStationWatchers({
+        stationId: transactionResult.resolvedStationId,
+        stationStringId,
+        type: "station_cells_changed",
+        metadata: { added: addedCells, removed: removedCells, updated: updatedCells },
+        actionUrl,
+      }).catch((e) => logger.error("Failed to notify station watchers about cell changes", { error: e }));
+    if (transactionResult.photosAdded)
+      void notifyStationWatchers({
+        stationId: transactionResult.resolvedStationId,
+        stationStringId,
+        type: "station_photos_added",
+        actionUrl,
+      }).catch((e) => logger.error("Failed to notify station watchers about photos", { error: e }));
+  }
 
   return { submission: result, station_id: stationStringId };
 }
@@ -1299,17 +1344,24 @@ export async function rejectSubmissionAction({
     req,
   );
 
-  const stationStringId = submission.station_id
-    ? ((await db.query.stations.findFirst({ where: { id: submission.station_id }, columns: { station_id: true } }))?.station_id ?? null)
-    : null;
+  const [reviewer, station] = await Promise.all([
+    db.query.users.findFirst({ where: { id: reviewerId }, columns: { name: true } }),
+    submission.station_id
+      ? db.query.stations.findFirst({ where: { id: submission.station_id }, columns: { station_id: true } })
+      : Promise.resolve(null),
+  ]);
+  const stationStringId = station?.station_id ?? null;
 
   void createAndDeliverNotification({
     userId: submission.submitter_id,
     type: "submission_rejected",
     submissionId: submissionId,
+    stationId: submission.station_id ?? undefined,
     metadata: {
       ...(stationStringId ? { station_id: stationStringId } : {}),
+      ...(reviewer?.name ? { reviewer_name: reviewer.name } : {}),
       ...(result.review_notes ? { reviewer_note: result.review_notes.slice(0, 200) } : {}),
+      ...(submission.submitter_note ? { submitter_note: submission.submitter_note.slice(0, 150) } : {}),
     },
     actionUrl: "/account/submissions",
   }).catch((e) => logger.error("Failed to send notification", { error: e }));

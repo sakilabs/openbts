@@ -1,10 +1,33 @@
-import { boolean, check, index, integer, jsonb, pgEnum, pgSchema, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgSchema,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm/sql";
 import { nanoid } from "nanoid";
 
-import { locations, stations } from "./bts.ts";
+import { UkeSchema, locations, stations, ukeStations } from "./bts.ts";
 
-export const NotificationType = pgEnum("notification_type", ["submission_approved", "submission_rejected", "new_submission"]);
+export const NotificationType = pgEnum("notification_type", [
+  "submission_approved",
+  "submission_rejected",
+  "new_submission",
+  "station_cells_changed",
+  "station_photos_added",
+  "station_comment_approved",
+  "station_uke_permit_added",
+]);
 export const CommentStatus = pgEnum("comment_status", ["pending", "approved"]);
 
 export type CloudUserPreferences = {
@@ -289,6 +312,7 @@ export const userLists = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
     stations: jsonb("stations").$type<{ internal: number[]; uke: number[] }>().notNull(),
+    notificationsEnabled: boolean("notifications_enabled").notNull().default(false),
     radiolines: jsonb("radiolines")
       .$type<number[]>()
       .notNull()
@@ -302,6 +326,50 @@ export const userLists = pgTable(
     check("user_lists_stations_is_object", sql`jsonb_typeof(${t.stations}) = 'object'`),
     index("user_lists_radiolines_gin").using("gin", t.radiolines),
     check("user_lists_radiolines_is_array", sql`jsonb_typeof(${t.radiolines}) = 'array'`),
+  ],
+);
+
+export const stationWatches = pgTable(
+  "station_watches",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`)
+      .notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stationId: integer("station_id")
+      .notNull()
+      .references(() => stations.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("station_watches_user_id_idx").on(t.userId),
+    index("station_watches_station_id_idx").on(t.stationId),
+    unique("station_watches_user_station_unique").on(t.userId, t.stationId),
+  ],
+);
+
+export const ukeStationWatches = UkeSchema.table(
+  "uke_station_watches",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`)
+      .notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    ukeStationId: integer("uke_station_id")
+      .notNull()
+      .references(() => ukeStations.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("uke_station_watches_user_id_idx").on(t.userId),
+    index("uke_station_watches_uke_station_id_idx").on(t.ukeStationId),
+    unique("uke_station_watches_user_station_unique").on(t.userId, t.ukeStationId),
   ],
 );
 
@@ -383,15 +451,29 @@ export const notifications = pgTable(
     type: NotificationType("type").notNull(),
     title: text("title").notNull(),
     submissionId: uuid("submission_id"),
+    stationId: integer("station_id").references(() => stations.id, { onDelete: "cascade" }),
+    ukeStationId: integer("uke_station_id").references(() => ukeStations.id, { onDelete: "cascade" }),
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
     actionUrl: text("action_url"),
     readAt: timestamp({ withTimezone: true }),
+    pushQueuedAt: timestamp("push_queued_at", { withTimezone: true }),
+    pushSentAt: timestamp("push_sent_at", { withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("notifications_user_id_idx").on(t.userId),
     index("notifications_created_at_idx").on(t.createdAt),
     index("notifications_user_read_idx").on(t.userId, t.readAt),
+    uniqueIndex("notifications_user_station_type_unread_unique")
+      .on(t.userId, t.stationId, t.type)
+      .where(sql`${t.readAt} IS NULL AND ${t.stationId} IS NOT NULL`),
+    uniqueIndex("notifications_user_uke_station_type_unread_unique")
+      .on(t.userId, t.ukeStationId, t.type)
+      .where(sql`${t.readAt} IS NULL AND ${t.ukeStationId} IS NOT NULL`),
+    index("notifications_station_watch_push_queue_idx")
+      .on(t.pushQueuedAt)
+      .where(sql`${t.pushQueuedAt} IS NOT NULL AND ${t.pushSentAt} IS NULL`),
   ],
 );
 
@@ -408,7 +490,10 @@ export const pushSubscriptions = pgTable(
     endpoint: text("endpoint").notNull().unique(),
     p256dh: text("p256dh").notNull(),
     auth: text("auth").notNull(),
-    preferences: jsonb("preferences").$type<{ ukeUpdates?: boolean; submissionUpdates?: boolean; newSubmission?: boolean }>().notNull().default({}),
+    preferences: jsonb("preferences")
+      .$type<{ ukeUpdates?: boolean; submissionUpdates?: boolean; newSubmission?: boolean; stationWatches?: boolean }>()
+      .notNull()
+      .default({}),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("push_subscriptions_user_id_idx").on(t.userId)],

@@ -25,5 +25,7 @@
   "togglePublic": "Make public",
   "togglePrivate": "Make private",
   "rename": "Rename",
-  "editList": "Edit list"
+  "editList": "Edit list",
+  "notificationsEnabled": "Notify me about station changes",
+  "notificationsEnabledHint": "Includes cells, photos, comments, and UKE permits for stations in this list."
 }

@@ -13,6 +13,7 @@ const prefsSchema = z.object({
   ukeUpdates: z.boolean().optional(),
   submissionUpdates: z.boolean().optional(),
   newSubmission: z.boolean().optional(),
+  stationWatches: z.boolean().optional(),
 });
 
 const schemaRoute = {
@@ -33,6 +34,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   if (req.body.ukeUpdates !== undefined) patch.ukeUpdates = req.body.ukeUpdates;
   if (req.body.submissionUpdates !== undefined) patch.submissionUpdates = req.body.submissionUpdates;
   if (req.body.newSubmission !== undefined) patch.newSubmission = req.body.newSubmission;
+  if (req.body.stationWatches !== undefined) patch.stationWatches = req.body.stationWatches;
 
   if (Object.keys(patch).length > 0)
     await db

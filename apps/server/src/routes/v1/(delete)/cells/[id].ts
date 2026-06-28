@@ -8,6 +8,7 @@ import { ErrorResponse } from "../../../../errors.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { EmptyResponse, IdParams, Route } from "../../../../interfaces/routes.interface.js";
 import { createAuditLog } from "../../../../services/auditLog.service.js";
+import { queueStationCellsChangedNotification } from "../../../../utils/notifications/stationCellChanges.js";
 import { assertCanDeleteCells } from "../../../../utils/stationStatus.js";
 
 const schemaRoute = {
@@ -75,6 +76,8 @@ async function handler(req: FastifyRequest<IdParams>, res: ReplyPayload<EmptyRes
         tx,
       );
     });
+
+    queueStationCellsChangedNotification({ stationId: cell.station_id, counts: { removed: 1 } });
 
     return res.status(204).send();
   } catch (error) {

@@ -6,6 +6,8 @@
     "comments": "Komentarze",
     "photos": "Zdjęcia"
   },
+  "watchStation": "Obserwuj stację",
+  "unwatchStation": "Przestań obserwować",
   "specs": {
     "basicInfo": "Podstawowe informacje",
     "cellDetails": "Szczegóły komórek",

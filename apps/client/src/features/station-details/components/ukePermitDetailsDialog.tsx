@@ -33,6 +33,7 @@ import { CopyButton } from "./copyButton";
 import { NavigationLinks } from "./navLinks";
 import { PermitsList } from "./permitsList";
 import { ShareButton } from "./shareButton";
+import { WatchButton } from "./watchButton";
 
 type UkePermitDetailsDialogPanelProps = {
   station: UkeStation;
@@ -152,12 +153,15 @@ export function UkePermitDetailsDialogPanel({
             </div>
             <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
               {stationLocation && (
-                <ShareButton
-                  title={`${operator?.name ?? "UKE"} - ${station_id}`}
-                  text={`${operator?.name ?? "UKE"} ${station_id} - ${stationLocation.city}`}
-                  url={`${window.location.origin}/#map=16/${stationLocation.latitude}/${stationLocation.longitude}~fu~S${station_id}`}
-                  size="md"
-                />
+                <>
+                  <WatchButton stationId={station.id} source="uke" size="md" />
+                  <ShareButton
+                    title={`${operator?.name ?? "UKE"} - ${station_id}`}
+                    text={`${operator?.name ?? "UKE"} ${station_id} - ${stationLocation.city}`}
+                    url={`${window.location.origin}/#map=16/${stationLocation.latitude}/${stationLocation.longitude}~fu~S${station_id}`}
+                    size="md"
+                  />
+                </>
               )}
               {isAdmin ? (
                 <Link

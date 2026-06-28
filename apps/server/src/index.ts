@@ -6,6 +6,7 @@ import App from "./app.js";
 import { port } from "./config.js";
 import redis from "./database/redis.js";
 import { cleanupExpiredInactiveStations } from "./services/inactiveStationCleanup.service.js";
+import { deliverQueuedStationWatchNotifications } from "./services/notification.service.js";
 import { cleanupOrphanedSubmissions } from "./services/submissionCleanup.service.js";
 import { startImportJob } from "./services/ukeImportJob.service.js";
 import { installProcessErrorHandlers, logger } from "./utils/logger.js";
@@ -18,6 +19,7 @@ const UKE_IMPORT_INTERVAL_HOURS = 6;
 const UKE_IMPORT_INTERVAL_MS = UKE_IMPORT_INTERVAL_HOURS * 60 * 60 * 1000;
 const UKE_IMPORT_SLOT_TTL_SECONDS = UKE_IMPORT_INTERVAL_HOURS * 2 * 60 * 60;
 const UKE_IMPORT_SLOT_KEY_PREFIX = "uke:import:schedule:";
+const NOTIFICATION_DIGEST_INTERVAL_MS = Math.max(10_000, Number(process.env.NOTIFICATION_DIGEST_INTERVAL_MS) || 60_000);
 
 function getSchedulerIdentity(): string {
   return process.env.HOSTNAME ?? process.pid.toString();
@@ -54,6 +56,7 @@ async function runAsScheduler() {
   scheduleUkeImport();
   scheduleSubmissionCleanup();
   scheduleInactiveStationCleanup();
+  scheduleStationWatchNotifications();
 }
 
 async function tryBecomeScheduler() {
@@ -136,6 +139,20 @@ function scheduleInactiveStationCleanup() {
     await cleanupExpiredInactiveStations().catch((e) => logger.error("Failed to cleanup inactive stations", { error: e }));
     setTimeout(run, 24 * 60 * 60 * 1000);
   }, 60 * 1000);
+}
+
+function scheduleStationWatchNotifications() {
+  setTimeout(async function run() {
+    const isLeader = await renewSchedulerLock().catch(() => false);
+    if (isLeader) {
+      const delivered = await deliverQueuedStationWatchNotifications().catch((e) => {
+        logger.error("Failed to deliver station watch notification batch", { error: e instanceof Error ? e.message : String(e) });
+        return 0;
+      });
+      if (delivered > 0) logger.info("station_watch_notifications_delivered", { count: delivered });
+    }
+    setTimeout(run, NOTIFICATION_DIGEST_INTERVAL_MS);
+  }, NOTIFICATION_DIGEST_INTERVAL_MS);
 }
 if (cluster.isPrimary) {
   console.log(await figlet("sora"));

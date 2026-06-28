@@ -3,13 +3,23 @@ import { API_BASE, fetchApiData, fetchJson, postApiData } from "@/lib/api";
 export type Notification = {
   id: string;
   userId: string;
-  type: "submission_approved" | "submission_rejected" | "new_submission";
+  type:
+    | "submission_approved"
+    | "submission_rejected"
+    | "new_submission"
+    | "station_cells_changed"
+    | "station_photos_added"
+    | "station_comment_approved"
+    | "station_uke_permit_added";
   title: string;
   submissionId: string | null;
+  stationId: number | null;
+  ukeStationId: number | null;
   metadata: Record<string, unknown> | null;
   actionUrl: string | null;
   readAt: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type NotificationsResponse = {
@@ -38,9 +48,13 @@ export async function markRead(id: string): Promise<Notification> {
 
 export async function subscribeToPush(sub: PushSubscription): Promise<string> {
   const json = sub.toJSON();
+  const p256dh = json.keys?.p256dh;
+  const auth = json.keys?.auth;
+  if (!p256dh || !auth) throw new Error("Browser did not return push subscription keys");
+
   const { id } = await postApiData<{ id: string }>("push/subscribe", {
     endpoint: sub.endpoint,
-    keys: { p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "" },
+    keys: { p256dh, auth },
   });
   return id;
 }
@@ -57,6 +71,7 @@ export type PushPreferences = {
   ukeUpdates: boolean;
   submissionUpdates: boolean;
   newSubmission: boolean;
+  stationWatches: boolean;
 };
 
 export async function fetchPushPreferences(id: string): Promise<PushPreferences> {

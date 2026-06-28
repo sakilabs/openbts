@@ -10,6 +10,7 @@ import type { JSONBody, Route } from "../../../../interfaces/routes.interface.ts
 import { createAuditLog } from "../../../../services/auditLog.service.ts";
 import { checkCellDuplicatesBatch, checkPciDuplicates } from "../../../../services/cellDuplicateCheck.service.ts";
 import { validateCellARFCNsAgainstBands } from "../../../../utils/cellARFCNValidation.ts";
+import { queueStationCellsChangedNotification } from "../../../../utils/notifications/stationCellChanges.ts";
 import {
   type LTEInsertDetails,
   type LTEUpdateDetails,
@@ -302,6 +303,12 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
       );
     }),
   );
+
+  for (const record of updateRecords)
+    queueStationCellsChangedNotification({
+      stationId: record.station_id,
+      counts: { added: record.addedCellIds.length, updated: record.updatedCellIds.length },
+    });
 
   return res.send({ data: updateRecords.map((record) => ({ station_id: record.station_id, applied: record.applied })) });
 }

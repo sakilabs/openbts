@@ -452,7 +452,7 @@ function CloudSyncSection({ cloud, t }: { cloud: CloudPreferencesControls; t: (k
             <Select
               value={cloud.activeProfile}
               onValueChange={(value) => {
-                if (isPreferenceProfile(value)) cloud.setActiveProfile(value);
+                if (value !== null && isPreferenceProfile(value)) cloud.setActiveProfile(value);
               }}
             >
               <SelectTrigger className="h-8 w-full sm:w-40">
@@ -533,6 +533,19 @@ function NotificationsSection({ t }: { t: (key: string) => string }) {
                 disabled={isUpdatingPrefs}
                 onChange={(v) => updatePrefs({ ukeUpdates: v })}
                 label={t("preferences.ukeUpdatesLabel")}
+              />
+            </div>
+
+            <div className="rounded-xl border bg-card p-4 space-y-3">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{t("preferences.stationWatches")}</p>
+                <p className="text-sm text-muted-foreground">{t("preferences.stationWatchesHint")}</p>
+              </div>
+              <PrefToggle
+                checked={pushPrefs?.stationWatches ?? true}
+                disabled={isUpdatingPrefs}
+                onChange={(v) => updatePrefs({ stationWatches: v })}
+                label={t("preferences.stationWatchesLabel")}
               />
             </div>
 

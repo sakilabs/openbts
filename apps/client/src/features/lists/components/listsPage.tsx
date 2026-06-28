@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -57,7 +58,9 @@ export function ListsPageContent() {
   const { canFavorite, isFavorite, toggleFavorite } = useFavoriteLists();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [editState, setEditState] = useState<{ target: UserListSummary; name: string; description: string } | null>(null);
+  const [editState, setEditState] = useState<{ target: UserListSummary; name: string; description: string; notificationsEnabled: boolean } | null>(
+    null,
+  );
 
   const lists = useMemo<UserListSummary[]>(
     () => data?.pages.flatMap((p) => p.data).filter((l) => l.createdBy.uuid === session?.user?.id) ?? [],
@@ -110,7 +113,17 @@ export function ListsPageContent() {
   });
 
   const renameMutation = useMutation({
-    mutationFn: ({ uuid, name, description }: { uuid: string; name: string; description?: string }) => updateList(uuid, { name, description }),
+    mutationFn: ({
+      uuid,
+      name,
+      description,
+      notificationsEnabled,
+    }: {
+      uuid: string;
+      name: string;
+      description?: string;
+      notificationsEnabled: boolean;
+    }) => updateList(uuid, { name, description, notificationsEnabled }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["user-lists"] });
       toast.success(t("lists:updated"));
@@ -119,7 +132,7 @@ export function ListsPageContent() {
   });
 
   function openEdit(list: UserListSummary) {
-    setEditState({ target: list, name: list.name, description: list.description ?? "" });
+    setEditState({ target: list, name: list.name, description: list.description ?? "", notificationsEnabled: list.notificationsEnabled });
   }
 
   function handleRename() {
@@ -128,6 +141,7 @@ export function ListsPageContent() {
       uuid: editState.target.uuid,
       name: editState.name.trim(),
       description: editState.description.trim() || undefined,
+      notificationsEnabled: editState.notificationsEnabled,
     });
   }
 
@@ -297,6 +311,25 @@ export function ListsPageContent() {
                 placeholder={t("common:placeholder.optional")}
               />
             </div>
+            <label
+              htmlFor="edit-list-notifications"
+              className={cn(
+                "flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 transition-colors",
+                editState?.notificationsEnabled ? "bg-primary/10" : "hover:bg-muted",
+              )}
+            >
+              <Checkbox
+                id="edit-list-notifications"
+                checked={editState?.notificationsEnabled ?? false}
+                onCheckedChange={(checked) => {
+                  setEditState((prev) => (prev ? { ...prev, notificationsEnabled: !!checked } : prev));
+                }}
+              />
+              <span className="space-y-0.5">
+                <span className="block text-sm font-medium">{t("lists:notificationsEnabled")}</span>
+                <span className="block text-xs text-muted-foreground">{t("lists:notificationsEnabledHint")}</span>
+              </span>
+            </label>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditState(null)}>
