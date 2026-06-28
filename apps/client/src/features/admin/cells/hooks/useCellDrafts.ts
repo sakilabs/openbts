@@ -6,7 +6,7 @@ import { buildRemainingLteCells, createRemainingLteDetails } from "@/lib/remaini
 import type { Band } from "@/types/station";
 
 import type { CellDraftBase } from "../cellEditRow";
-import { RAT_ORDER, findPreferredRatBand, getRatSortDetailField, getSharedDetailFields } from "../rat";
+import { RAT_ORDER, compareRatCellDetails, findPreferredRatBand, getSharedDetailFields } from "../rat";
 import { applyMissingSectorPCISync } from "../sectorAssignmentSync";
 
 type UseCellDraftsOptions<T extends CellDraftBase> = {
@@ -72,10 +72,7 @@ export function useCellDrafts<T extends CellDraftBase>({
         const bandA = bandValueMap.get(a.band_id) ?? 0;
         const bandB = bandValueMap.get(b.band_id) ?? 0;
         if (bandA !== bandB) return bandA - bandB;
-        const sortField = getRatSortDetailField(a.rat);
-        const clidA = sortField ? ((a.details[sortField] as number) ?? 0) : 0;
-        const clidB = sortField ? ((b.details[sortField] as number) ?? 0) : 0;
-        return clidA - clidB;
+        return compareRatCellDetails(a.rat, a.details, b.details);
       }),
     );
   }, [bandValueMap, sortCellsByRat]);

@@ -152,6 +152,22 @@ export function getRatSortDetailField(rat: string): CellDetailKey | undefined {
   return getRatCellSpec(rat)?.sortDetailField;
 }
 
+type SortableCellDetails = Partial<Record<CellDetailKey, unknown>> | null | undefined;
+
+function getNumericDetailValue(details: SortableCellDetails, field: CellDetailKey | undefined): number {
+  if (!field || !details) return 0;
+  const value = Number(details[field] ?? 0);
+  return Number.isFinite(value) ? value : 0;
+}
+
+export function compareRatCellDetails(rat: string, detailsA: SortableCellDetails, detailsB: SortableCellDetails): number {
+  if (rat === "NR" && detailsA?.type === "nsa" && detailsB?.type === "nsa")
+    return getNumericDetailValue(detailsA, "pci") - getNumericDetailValue(detailsB, "pci");
+
+  const sortField = getRatSortDetailField(rat);
+  return getNumericDetailValue(detailsA, sortField) - getNumericDetailValue(detailsB, sortField);
+}
+
 export function getRatDefaultBandDuplex(rat: string, bandValue?: number | null): string | undefined {
   const spec = getRatCellSpec(rat);
   if (bandValue !== undefined && bandValue !== null) return spec?.defaultBandDuplexByValue?.[bandValue] ?? spec?.defaultBandDuplex;

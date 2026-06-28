@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { DiffBadges } from "@/features/admin/cells/cellsEditor";
 import { CellsEditor } from "@/features/admin/cells/cellsEditor";
 import { useCellDrafts } from "@/features/admin/cells/hooks/useCellDrafts";
-import { RAT_ORDER, getRatSortDetailField } from "@/features/admin/cells/rat";
+import { RAT_ORDER, compareRatCellDetails } from "@/features/admin/cells/rat";
 import { bandsQueryOptions, operatorsQueryOptions } from "@/features/admin/queries";
 import { StationCommentsSection } from "@/features/admin/stations/components/stationCommentsSection";
 import { StationDetailHeader } from "@/features/admin/stations/components/stationDetailHeader";
@@ -51,9 +51,7 @@ function sortAndMapCells(cells: Cell[]): LocalCell[] {
   return [...cells]
     .sort((a, b) => {
       if (a.band.value !== b.band.value) return a.band.value - b.band.value;
-      const sortField = getRatSortDetailField(a.rat);
-      if (!sortField) return 0;
-      return ((a.details?.[sortField] as number) ?? 0) - ((b.details?.[sortField] as number) ?? 0);
+      return compareRatCellDetails(a.rat, a.details, b.details);
     })
     .map(cellToLocal);
 }
