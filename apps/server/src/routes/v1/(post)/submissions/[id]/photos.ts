@@ -5,7 +5,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import { fileTypeFromBuffer } from "file-type";
 import fs from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import sharp, { type SharpInput, type SharpOptions } from "sharp";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
@@ -116,8 +116,8 @@ async function handler(
 
       const exifDate = extractExifDate(inputBuffer);
 
-      let sharpInput: sharp.SharpInput;
-      let sharpOptions: sharp.SharpOptions | undefined;
+      let sharpInput: SharpInput;
+      let sharpOptions: SharpOptions | undefined;
       if (isHeic(detected.mime)) {
         const { data, width, height } = await decodeHeicToRaw(inputBuffer);
         sharpInput = data;

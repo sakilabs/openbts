@@ -28,7 +28,7 @@
     "@openbts/shared": "workspace:*",
     "@openbts/uke-importer": "workspace:*",
     "@scalar/fastify-api-reference": "1.62.0",
-    "better-auth": "1.6.22",
+    "better-auth": "1.7.0-rc.0",
     "debug": "4.4.3",
     "dotenv": "17.4.2",
     "drizzle-orm": "1.0.0-rc.3",

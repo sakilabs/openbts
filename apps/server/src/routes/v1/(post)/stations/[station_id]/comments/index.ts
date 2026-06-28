@@ -4,7 +4,7 @@ import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import fs from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import sharp, { type SharpInput, type SharpOptions } from "sharp";
 import { z } from "zod/v4";
 
 import db from "../../../../../../database/psql.js";
@@ -82,8 +82,8 @@ async function handler(req: FastifyRequest<RequestData>, res: ReplyPayload<JSONB
           if (filePart.file.truncated) throw new ErrorResponse("BAD_REQUEST", { message: "File too large (max 5 MB)" });
           const inputBuffer = Buffer.concat(chunks);
 
-          let sharpInput: sharp.SharpInput;
-          let sharpOptions: sharp.SharpOptions | undefined;
+          let sharpInput: SharpInput;
+          let sharpOptions: SharpOptions | undefined;
           if (isHeic(mimetype)) {
             const { data, width, height } = await decodeHeicToRaw(inputBuffer);
             sharpInput = data;

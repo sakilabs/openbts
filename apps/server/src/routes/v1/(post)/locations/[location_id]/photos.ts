@@ -5,7 +5,7 @@ import type { FastifyRequest } from "fastify/types/request.js";
 import { fileTypeFromBuffer } from "file-type";
 import fs from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import sharp, { type SharpInput, type SharpOptions } from "sharp";
 import { z } from "zod/v4";
 
 import db from "../../../../../database/psql.js";
@@ -81,8 +81,8 @@ async function handler(req: FastifyRequest<ReqParams>, res: ReplyPayload<JSONBod
       const detected = await fileTypeFromBuffer(inputBuffer);
       if (!detected || !detected.mime.startsWith("image/")) throw new ErrorResponse("BAD_REQUEST", { message: "Only image files are allowed" });
 
-      let sharpInput: sharp.SharpInput;
-      let sharpOptions: sharp.SharpOptions | undefined;
+      let sharpInput: SharpInput;
+      let sharpOptions: SharpOptions | undefined;
       if (isHeic(filePart.mimetype)) {
         const { data, width, height } = await decodeHeicToRaw(inputBuffer);
         sharpInput = data;

@@ -5,7 +5,6 @@ import {
   Login01Icon,
   Logout02Icon,
   Moon02Icon,
-  MoreHorizontalCircle01Icon,
   Settings02Icon,
   Sun03Icon,
   UserIcon,
@@ -451,6 +450,21 @@ function FloatingAccountCluster() {
           <NotificationsBell className="rounded-full" />
           <FloatingThemeControl />
           <FloatingLanguageControl />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  to="/settings"
+                  search={{ tab: "preferences" }}
+                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none"
+                  aria-label={t("items.preferences")}
+                />
+              }
+            >
+              <HugeiconsIcon icon={Settings02Icon} className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>{t("items.preferences")}</TooltipContent>
+          </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" aria-label={t("floating.account")} />}>
               <Avatar className="size-6 rounded-full">
@@ -480,10 +494,6 @@ function FloatingAccountCluster() {
                 <DropdownMenuItem render={<Link to="/settings" search={{ tab: "account" }} />}>
                   <HugeiconsIcon icon={Settings02Icon} className="size-4" />
                   {t("items.accountSettings")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<Link to="/settings" search={{ tab: "preferences" }} />}>
-                  <HugeiconsIcon icon={MoreHorizontalCircle01Icon} className="size-4" />
-                  {t("items.preferences")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

@@ -240,6 +240,16 @@ export const auth = betterAuth({
       const value = await redis.get(`auth:${key}`);
       return value ? value : null;
     },
+    getAndDelete: async (key) => {
+      const value = await redis.getDel(`auth:${key}`);
+      return value ? value : null;
+    },
+    increment: async (key, ttl) => {
+      const redisKey = `auth:${key}`;
+      const count = await redis.incr(redisKey);
+      if (count === 1) await redis.expire(redisKey, ttl);
+      return count;
+    },
     set: async (key, value, ttl) => {
       if (ttl) await redis.setEx(`auth:${key}`, ttl, value);
       else await redis.set(`auth:${key}`, value);

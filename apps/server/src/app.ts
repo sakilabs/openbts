@@ -3,7 +3,13 @@ import staticServe from "@fastify/static";
 import scalarReference from "@scalar/fastify-api-reference";
 import debug from "debug";
 import Fastify from "fastify";
-import { type ZodTypeProvider, hasZodFastifySchemaValidationErrors, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import {
+  type ZodFastifySchemaValidationError,
+  type ZodTypeProvider,
+  hasZodFastifySchemaValidationErrors,
+  serializerCompiler,
+  validatorCompiler,
+} from "fastify-type-provider-zod";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import type { $ZodIssue } from "zod/v4/core";
@@ -30,6 +36,13 @@ function flattenZodIssues(issues: $ZodIssue[], pathPrefix: string[] = []): { fie
     }
     return [{ field: path.join("/") || "unknown", validationMessage: issue.message }];
   });
+}
+
+function getUnionBranchIssues(params: unknown): $ZodIssue[][] | undefined {
+  if (typeof params !== "object" || params === null || !("errors" in params)) return undefined;
+  const errors = (params as { errors?: unknown }).errors;
+  if (!Array.isArray(errors) || !errors.every(Array.isArray)) return undefined;
+  return errors as unknown as $ZodIssue[][];
 }
 
 export default class App {
@@ -77,21 +90,17 @@ export default class App {
     registerRateLimit(this.fastify);
     this.fastify.setErrorHandler((error, req, res) => {
       if (hasZodFastifySchemaValidationErrors(error)) {
-        const details = error.validation.flatMap(
-          (issue: { instancePath: string; message: string; keyword: string; params?: { errors?: $ZodIssue[][] } }) => {
-            const field = issue.instancePath.replace(/^\//, "") || "unknown";
-            if (issue.keyword === "invalid_union" && issue.params?.errors?.length) {
-              const prefix = field.split("/").filter(Boolean);
-              const branches = issue.params.errors.map((branchIssues) => flattenZodIssues(branchIssues, prefix));
-              const best = branches.reduce<{ field: string; validationMessage: string }[]>(
-                (a, b) => (a.length <= b.length ? a : b),
-                branches[0] ?? [],
-              );
-              return best.length > 0 ? best : [{ field, validationMessage: "Invalid input" }];
-            }
-            return [{ field, validationMessage: issue.message }];
-          },
-        );
+        const details = error.validation.flatMap((issue: ZodFastifySchemaValidationError) => {
+          const field = issue.instancePath.replace(/^\//, "") || "unknown";
+          const unionBranches = getUnionBranchIssues(issue.params);
+          if (issue.keyword === "invalid_union" && unionBranches?.length) {
+            const prefix = field.split("/").filter(Boolean);
+            const branches = unionBranches.map((branchIssues) => flattenZodIssues(branchIssues, prefix));
+            const best = branches.reduce<{ field: string; validationMessage: string }[]>((a, b) => (a.length <= b.length ? a : b), branches[0] ?? []);
+            return best.length > 0 ? best : [{ field, validationMessage: "Invalid input" }];
+          }
+          return [{ field, validationMessage: issue.message ?? "Invalid input" }];
+        });
         return res.status(400).send({
           errors: [{ code: "VALIDATION_ERROR", message: "Validation error", details }],
         });
