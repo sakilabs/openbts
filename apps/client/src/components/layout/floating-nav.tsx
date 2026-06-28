@@ -2,9 +2,11 @@ import {
   ArrowDown01Icon,
   ArrowUp01Icon,
   ComputerIcon,
+  GitBranchIcon,
   Login01Icon,
   Logout02Icon,
   Moon02Icon,
+  Note01Icon,
   Settings02Icon,
   Sun03Icon,
   UserIcon,
@@ -442,6 +444,9 @@ function FloatingAccountCluster() {
   const { data: session } = authClient.useSession();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const user = session?.user;
+  const gitCommit = import.meta.env.VITE_GIT_COMMIT as string | undefined;
+  const appVersion = import.meta.env.VITE_APP_VERSION as string | undefined;
+  const buildMetadataTitle = [gitCommit, appVersion ? `v${appVersion}` : undefined].filter(Boolean).join(" · ");
 
   return (
     <div className="relative z-10 flex shrink-0 items-center gap-0.5">
@@ -511,6 +516,27 @@ function FloatingAccountCluster() {
                   {t("user.logout")}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
+              {buildMetadataTitle ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-muted-foreground" title={buildMetadataTitle}>
+                    <HugeiconsIcon icon={GitBranchIcon} className="size-3 shrink-0" />
+                    <span className="min-w-0 truncate">
+                      {gitCommit ? (
+                        <a
+                          href={`https://github.com/sakilabs/openbts/commit/${gitCommit}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-chart-1 hover:underline"
+                        >
+                          {gitCommit}
+                        </a>
+                      ) : null}
+                      {appVersion ? <span>{gitCommit ? " " : ""}(v{appVersion})</span> : null}
+                    </span>
+                  </div>
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         </>
@@ -630,16 +656,24 @@ export function FloatingNav() {
     setCollapsedActiveKey(null);
   }, [location.pathname]);
 
-  const sections = useMemo(
-    () => [
+  const sections = useMemo(() => {
+    const infoSections = translateNav(infoNavConfig, t).map((section) =>
+      section.key === "info"
+        ? {
+            ...section,
+            items: [...section.items, { title: t("items.changelog"), url: "/changelog", icon: Note01Icon }],
+          }
+        : section,
+    );
+
+    return [
       ...translateNav(navMainConfig, t),
       ...(showAuth ? translateNav(authNavConfig, t) : []),
       ...(showLists ? translateNav(listsNavConfig, t) : []),
       ...translateAdminNav(adminNavConfig, t, userRole, settings),
-      ...translateNav(infoNavConfig, t),
-    ],
-    [settings, showAuth, showLists, t, userRole],
-  );
+      ...infoSections,
+    ];
+  }, [settings, showAuth, showLists, t, userRole]);
   const activeSection = useMemo(() => getActiveNavSection(sections, location.pathname), [sections, location.pathname]);
   const expandedSection = sections.find((section) => section.key === expandedKey) ?? null;
   const displayedSection = expandedSection ?? (activeSection?.key === collapsedActiveKey ? null : activeSection);

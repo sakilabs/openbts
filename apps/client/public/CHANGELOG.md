@@ -1,6 +1,21 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-28
+
+### 🚀 Enhancements
+
+- Added an optional floating bottom navigation mode with compact page actions, mobile filter chips, account controls and map-style access
+- UKE station permit details can now open in draggable, resizable floating dialogs on desktop, including from the map and admin UKE permit views
+- Users can now watch internal and UKE stations, enable list notifications and receive richer notifications for station cell, photo, comment and UKE permit changes
+
+### 🩹 Fixes
+
+- Analyzer-created submission drafts now preserve matched sector IDs for existing GSM, UMTS and LTE cells
+- NR NSA cells now sort by PCI consistently in station details and admin cell editing
+- New-station prefill from UKE permits now skips non-editable RATs such as CDMA instead of creating unsupported cells
+- Mobile station details tabs and loading skeleton icons now size correctly in the station dialog
+
 # 2026-06-27
 
 ### 🚀 Enhancements

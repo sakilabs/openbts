@@ -22,17 +22,21 @@ import type { Notification } from "../api";
 import { useNotifications } from "../useNotifications";
 import { usePushSubscription } from "../usePushSubscription";
 
-function metadataString(metadata: Record<string, unknown> | null, key: string): string | undefined {
-  const value = metadata?.[key];
-  if (typeof value === "string") return value;
-  return undefined;
-}
-
-function metadataNumber(metadata: Record<string, unknown> | null, key: string): number | undefined {
-  const value = metadata?.[key];
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  return undefined;
-}
+type NotificationMetadata = {
+  added?: number;
+  count?: number;
+  permits_added?: number;
+  permits_updated?: number;
+  reviewer_name?: string;
+  reviewer_note?: string;
+  station_id?: string;
+  station_operator_name?: string;
+  submitter_name?: string;
+  submitter_note?: string;
+  uke_stations_added?: number;
+  removed?: number;
+  updated?: number;
+};
 
 function formatStationLabel(stationId: string | undefined, operatorName: string | undefined): string | undefined {
   if (stationId === undefined) return undefined;
@@ -62,20 +66,21 @@ function NotificationItem({ notification, onRead }: { notification: Notification
   const { t } = useTranslation("notifications");
   const { t: tCommon } = useTranslation("common");
   const { icon, iconClassName } = getNotificationVisual(notification.type);
-  const stationId = metadataString(notification.metadata, "station_id");
-  const stationOperatorName = metadataString(notification.metadata, "station_operator_name");
+  const metadata = notification.metadata as unknown as NotificationMetadata | null;
+  const stationId = metadata?.station_id;
+  const stationOperatorName = metadata?.station_operator_name;
   const stationLabel = formatStationLabel(stationId, stationOperatorName);
-  const reviewerNote = metadataString(notification.metadata, "reviewer_note");
-  const reviewerName = metadataString(notification.metadata, "reviewer_name");
-  const submitterNote = metadataString(notification.metadata, "submitter_note");
-  const submitterName = metadataString(notification.metadata, "submitter_name");
-  const cellsAdded = metadataNumber(notification.metadata, "added");
-  const cellsRemoved = metadataNumber(notification.metadata, "removed");
-  const cellsUpdated = metadataNumber(notification.metadata, "updated");
-  const permitsAdded = metadataNumber(notification.metadata, "permits_added");
-  const permitsUpdated = metadataNumber(notification.metadata, "permits_updated");
-  const ukeStationsAdded = metadataNumber(notification.metadata, "uke_stations_added");
-  const count = metadataNumber(notification.metadata, "count");
+  const reviewerNote = metadata?.reviewer_note;
+  const reviewerName = metadata?.reviewer_name;
+  const submitterNote = metadata?.submitter_note;
+  const submitterName = metadata?.submitter_name;
+  const cellsAdded = metadata?.added;
+  const cellsRemoved = metadata?.removed;
+  const cellsUpdated = metadata?.updated;
+  const permitsAdded = metadata?.permits_added;
+  const permitsUpdated = metadata?.permits_updated;
+  const ukeStationsAdded = metadata?.uke_stations_added;
+  const count = metadata?.count;
   const updatedAt = notification.updatedAt ?? notification.createdAt;
 
   const handleRead = () => {
