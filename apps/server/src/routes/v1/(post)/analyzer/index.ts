@@ -26,7 +26,7 @@ const BATCH_SIZE = 200;
 const LOOKUP_CONCURRENCY = 4;
 const CACHE_TTL_S = 5 * 60;
 
-const dateTime = z.union([z.date().transform((d) => d.toISOString()), z.iso.datetime()]);
+const dateTime = z.iso.datetime({ offset: true });
 
 const stationSchema = createSelectSchema(stations)
   .omit({ operator_id: true, location_id: true, status: true })
