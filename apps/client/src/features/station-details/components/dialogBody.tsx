@@ -232,11 +232,11 @@ export function StationDetailsBody({
     <div ref={bodyRef} className="flex-1 overflow-y-auto custom-scrollbar scrollbar-gutter-stable">
       <div ref={bodyContentRef}>
         {isLoading ? (
-          <div className="p-6 space-y-8">
+          <div className="px-3 py-4 space-y-6 sm:p-6 sm:space-y-8">
             <div className="flex p-1 bg-muted/50 rounded-xl gap-1">
               {[1, 2, 3].map((i) => (
-                <div key={`skeleton-tab-${i}`} className="flex-1 flex items-center justify-center gap-2 py-2 px-3">
-                  <Skeleton className="size-4 rounded" />
+                <div key={`skeleton-tab-${i}`} className="flex-1 flex items-center justify-center gap-2 py-2 px-2 sm:px-3">
+                  <Skeleton className="size-5 rounded sm:size-4" />
                   <Skeleton className="h-4 w-16 rounded hidden sm:block" />
                 </div>
               ))}
@@ -284,7 +284,7 @@ export function StationDetailsBody({
             <p className="text-muted-foreground max-w-xs">{error instanceof Error ? error.message : t("common:placeholder.errorFetching")}</p>
           </div>
         ) : station ? (
-          <div className="p-6 space-y-8">
+          <div className="px-3 py-4 space-y-6 sm:p-6 sm:space-y-8">
             <div className="relative grid p-1 bg-muted/50 rounded-xl gap-1" style={{ gridTemplateColumns: `repeat(${tabCount}, minmax(0, 1fr))` }}>
               {visibleTabs.length > 0 && (
                 <div
@@ -302,11 +302,11 @@ export function StationDetailsBody({
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    "relative min-w-0 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition-colors duration-200",
+                    "relative min-w-0 flex items-center justify-center gap-2 py-2 px-2 sm:px-3 rounded-lg text-sm font-semibold transition-colors duration-200",
                     displayedTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <HugeiconsIcon icon={tab.icon} className="size-4" />
+                  <HugeiconsIcon icon={tab.icon} className="size-5 sm:size-4" />
                   <span className="hidden sm:inline">{t(`tabs.${tab.id}`)}</span>
                   {tabCounts[tab.id] !== undefined && tabCounts[tab.id]! > 0 && (
                     <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-xs font-bold bg-primary text-primary-foreground leading-none animate-in fade-in zoom-in-50 duration-200">
