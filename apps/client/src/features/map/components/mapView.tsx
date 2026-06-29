@@ -12,7 +12,7 @@ import { authClient } from "@/lib/authClient";
 import type { LocationInfo, Station, StationFilters, StationSource, StationWithoutCells, UkeLocationWithPermits, UkeStation } from "@/types/station";
 
 import { fetchLocationWithStations, fetchLocations, fetchRadioLines } from "../api";
-import { POLAND_BOUNDS, POLAND_CENTER } from "../constants";
+import { FLOATING_NAV_MAP_OFFSET_CLASS, POLAND_BOUNDS, POLAND_CENTER } from "../constants";
 import { useMapBounds } from "../hooks/useMapBounds";
 import { useMapPopup } from "../hooks/useMapPopup";
 import { useWakeLock } from "../hooks/useWakeLock";
@@ -388,7 +388,7 @@ export default function MapView() {
       zoom={saved?.zoom ?? 7}
       maxBounds={POLAND_BOUNDS}
       minZoom={5}
-      className={preferences.navMode === "floating" ? "[--floating-nav-map-offset:calc(1.25rem+var(--floating-nav-pwa-bottom-offset,0rem))]" : undefined}
+      className={preferences.navMode === "floating" ? FLOATING_NAV_MAP_OFFSET_CLASS : undefined}
     >
       <MapViewInner />
     </LibreMap>

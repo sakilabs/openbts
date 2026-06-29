@@ -9,7 +9,7 @@ import type { LocationsResponse } from "@/features/map/api";
 import { fetchLocationWithStations } from "@/features/map/api";
 import { MapSearchOverlay } from "@/features/map/components/search-overlay";
 import { DEFAULT_FILTERS, StationsLayer, loadMapFilters, locationQueryKey, saveMapFilters } from "@/features/map/components/stationsLayer";
-import { POLAND_BOUNDS, POLAND_CENTER } from "@/features/map/constants";
+import { FLOATING_NAV_MAP_OFFSET_CLASS, POLAND_BOUNDS, POLAND_CENTER } from "@/features/map/constants";
 import { useMapBounds } from "@/features/map/hooks/useMapBounds";
 import { useMapPopup } from "@/features/map/hooks/useMapPopup";
 import { toLocationInfo } from "@/features/map/utils";
@@ -303,8 +303,16 @@ function ListMapInner({ uuid }: { uuid: string }): JSX.Element {
 }
 
 export function ListMapView({ uuid }: { uuid: string }): JSX.Element {
+  const { preferences } = usePreferences();
+
   return (
-    <LibreMap center={POLAND_CENTER} zoom={6} maxBounds={POLAND_BOUNDS} minZoom={5}>
+    <LibreMap
+      center={POLAND_CENTER}
+      zoom={6}
+      maxBounds={POLAND_BOUNDS}
+      minZoom={5}
+      className={preferences.navMode === "floating" ? FLOATING_NAV_MAP_OFFSET_CLASS : undefined}
+    >
       <ListMapInner uuid={uuid} />
     </LibreMap>
   );
