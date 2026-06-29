@@ -36,6 +36,7 @@ export type PhotosGalleryOrder = "asc" | "desc";
 export type PhotosGalleryFilters = {
   q: string;
   operator: number | null;
+  region: string | null;
   sortBy: PhotosGallerySortBy;
   order: PhotosGalleryOrder;
   mainOnly: boolean;
@@ -53,6 +54,7 @@ export function fetchPhotosGallery(limit: number, page: number, filters: PhotosG
   const query = filters.q.trim();
   if (query.length > 0) params.set("q", query);
   if (filters.operator !== null) params.set("operator", String(filters.operator));
+  if (filters.region !== null) params.set("region", filters.region);
   if (filters.mainOnly) params.set("mainOnly", "true");
   if (filters.recentOnly) params.set("recentDays", "7");
 

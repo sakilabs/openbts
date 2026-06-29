@@ -96,7 +96,9 @@
     "errorTitle": "Nie udało się wczytać zdjęć",
     "errorSubtitle": "Odśwież galerię albo spróbuj ponownie za chwilę.",
     "retry": "Spróbuj ponownie",
-    "searchPlaceholder": "Szukaj stacji, miasta, adresu, notatki...",
+    "searchPlaceholder": "Szukaj stacji, miasta, adresu, województwa, notatki...",
+    "allRegions": "Wszystkie województwa",
+    "sortLabel": "Sortowanie",
     "sort": {
       "station": "ID stacji",
       "uploaded": "Dodano",

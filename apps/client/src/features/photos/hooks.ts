@@ -10,6 +10,7 @@ type PhotosGalleryQueryKey = readonly [
   "photos-gallery",
   string,
   number | null,
+  string | null,
   PhotosGalleryFilters["sortBy"],
   PhotosGalleryFilters["order"],
   boolean,
@@ -18,7 +19,16 @@ type PhotosGalleryQueryKey = readonly [
 
 export function usePhotosGallery(filters: PhotosGalleryFilters): UseInfiniteQueryResult<InfiniteData<PhotosGalleryPage>> {
   return useInfiniteQuery<PhotosGalleryPage, Error, InfiniteData<PhotosGalleryPage>, PhotosGalleryQueryKey, number>({
-    queryKey: ["photos-gallery", filters.q.trim(), filters.operator, filters.sortBy, filters.order, filters.mainOnly, filters.recentOnly],
+    queryKey: [
+      "photos-gallery",
+      filters.q.trim(),
+      filters.operator,
+      filters.region,
+      filters.sortBy,
+      filters.order,
+      filters.mainOnly,
+      filters.recentOnly,
+    ],
     queryFn: ({ pageParam }) => fetchPhotosGallery(PHOTOS_LIMIT, pageParam, filters),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {

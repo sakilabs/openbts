@@ -1,6 +1,17 @@
 Changelog is only provided in English language.
 If you found some bugs or want us to add new feature, please do so via [our GitHub Tracker](https://github.com/sakilabs/openbts/issues/new) or send me an email [ririxi@sakilabs.com](mailto:ririxi@sakilabs.com)
 
+# 2026-06-29
+
+### 🚀 Enhancements
+
+- Added region filter on photos page
+- Filters are now shown as pills when floating navbar is used on photos page
+
+### 🩹 Fixes
+
+- Floating navbar: Applied offsets for the navbar on user lists
+
 # 2026-06-28
 
 ### 🚀 Enhancements

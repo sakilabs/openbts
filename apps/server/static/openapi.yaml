@@ -1851,7 +1851,7 @@ paths:
     get:
       tags: [Photos]
       summary: List station photos
-      description: Returns photos selected for published base stations, sorted by station ID ascending by default.
+      description: Returns photos selected for published base stations, sorted by upload date descending by default.
       parameters:
         - name: limit
           in: query
@@ -1861,12 +1861,16 @@ paths:
           schema: { type: integer, minimum: 1, default: 1 }
         - name: q
           in: query
-          description: Search station ID, city, address, or photo note
+          description: Search station ID, city, address, region name, region code, or photo note
           schema: { type: string }
         - name: operator
           in: query
           description: Internal operator ID
           schema: { type: integer }
+        - name: region
+          in: query
+          description: Three-letter region code
+          schema: { type: string, minLength: 3, maxLength: 3 }
         - name: mainOnly
           in: query
           schema: { type: boolean, default: false }
@@ -1876,10 +1880,10 @@ paths:
           schema: { type: integer, minimum: 1, maximum: 365 }
         - name: sortBy
           in: query
-          schema: { type: string, enum: [uploaded, taken, station], default: station }
+          schema: { type: string, enum: [uploaded, taken, station], default: uploaded }
         - name: order
           in: query
-          schema: { type: string, enum: [asc, desc], default: asc }
+          schema: { type: string, enum: [asc, desc], default: desc }
       responses:
         "200":
           description: OK

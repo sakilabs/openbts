@@ -1,4 +1,4 @@
-import { attachments, locationPhotos, locations, operators, stationPhotoSelections, stations, users } from "@openbts/drizzle";
+import { attachments, locationPhotos, locations, operators, regions, stationPhotoSelections, stations, users } from "@openbts/drizzle";
 import { and, asc, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import type { FastifyRequest } from "fastify/types/request.js";
@@ -42,10 +42,11 @@ const schemaRoute = {
     page: z.coerce.number().int().min(1).default(1),
     q: z.string().trim().optional(),
     operator: z.coerce.number().int().optional(),
+    region: z.string().trim().length(3).optional(),
     mainOnly: z.coerce.boolean().optional().default(false),
     recentDays: z.coerce.number().int().min(1).max(365).optional(),
-    sortBy: z.enum(["uploaded", "taken", "station"]).optional().default("station"),
-    order: z.enum(["asc", "desc"]).optional().default("asc"),
+    sortBy: z.enum(["uploaded", "taken", "station"]).optional().default("uploaded"),
+    order: z.enum(["asc", "desc"]).optional().default("desc"),
   }),
   response: {
     200: z.object({
@@ -64,8 +65,8 @@ function getLocationLabel(city: string | null, address: string | null, locationI
   return parts.length > 0 ? parts.join(", ") : `Location #${locationId}`;
 }
 
-function getRecentDate(days: number) {
-  return new Date(Date.now() - days * 86_400_000);
+function getRecentDateIso(days: number) {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
 }
 
 function getOrderBy(sortBy: ReqQuery["Querystring"]["sortBy"], order: ReqQuery["Querystring"]["order"]) {
@@ -78,7 +79,7 @@ function getOrderBy(sortBy: ReqQuery["Querystring"]["sortBy"], order: ReqQuery["
 }
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResponseBody>>) {
-  const { limit, page, q, operator, mainOnly, recentDays, sortBy, order } = req.query;
+  const { limit, page, q, operator, region, mainOnly, recentDays, sortBy, order } = req.query;
   const offset = (page - 1) * limit;
   const filters: SQL[] = [eq(stations.status, "published")];
 
@@ -88,14 +89,18 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       ilike(stations.station_id, query),
       ilike(locations.city, query),
       ilike(locations.address, query),
+      ilike(regions.name, query),
+      ilike(regions.code, query),
       ilike(locationPhotos.note, query),
     );
     if (searchClause) filters.push(searchClause);
   }
 
   if (operator !== undefined) filters.push(eq(stations.operator_id, operator));
+  if (region !== undefined) filters.push(eq(regions.code, region.toUpperCase()));
   if (mainOnly) filters.push(eq(stationPhotoSelections.is_main, true));
-  if (recentDays !== undefined) filters.push(gte(sql`coalesce(${locationPhotos.taken_at}, ${locationPhotos.createdAt})`, getRecentDate(recentDays)));
+  if (recentDays !== undefined)
+    filters.push(gte(sql`coalesce(${locationPhotos.taken_at}, ${locationPhotos.createdAt})`, getRecentDateIso(recentDays)));
 
   const whereClause = and(...filters);
   const orderBy = getOrderBy(sortBy, order);
@@ -107,6 +112,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     .innerJoin(locationPhotos, eq(stationPhotoSelections.location_photo_id, locationPhotos.id))
     .innerJoin(attachments, eq(locationPhotos.attachment_id, attachments.id))
     .innerJoin(locations, eq(locationPhotos.location_id, locations.id))
+    .leftJoin(regions, eq(locations.region_id, regions.id))
     .where(whereClause);
 
   const [countResult, rows] = await Promise.all([
@@ -140,6 +146,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .innerJoin(locationPhotos, eq(stationPhotoSelections.location_photo_id, locationPhotos.id))
       .innerJoin(attachments, eq(locationPhotos.attachment_id, attachments.id))
       .innerJoin(locations, eq(locationPhotos.location_id, locations.id))
+      .leftJoin(regions, eq(locations.region_id, regions.id))
       .leftJoin(operators, eq(stations.operator_id, operators.id))
       .leftJoin(users, eq(locationPhotos.uploaded_by, users.id))
       .where(whereClause)

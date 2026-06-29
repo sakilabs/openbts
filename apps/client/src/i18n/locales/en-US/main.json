@@ -92,7 +92,9 @@
     "errorTitle": "Could not load photos",
     "errorSubtitle": "Refresh the gallery or try again in a moment.",
     "retry": "Retry",
-    "searchPlaceholder": "Search station, city, address, note...",
+    "searchPlaceholder": "Search station, city, address, region, note...",
+    "allRegions": "All regions",
+    "sortLabel": "Sort",
     "sort": {
       "station": "Station ID",
       "uploaded": "Uploaded",

@@ -1,21 +1,36 @@
-import { ArrowDown01Icon, ArrowUp01Icon, Camera01Icon, Cancel01Icon, RefreshIcon, Search01Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowDown01Icon,
+  ArrowUp01Icon,
+  Camera01Icon,
+  Cancel01Icon,
+  FilterIcon,
+  Location01Icon,
+  RefreshIcon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
+import { FLOATING_NAV_ACTION_TARGET_ID } from "@/components/layout/floating-nav";
 import { Lightbox } from "@/components/lightbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MobileFilterChip, MobileFilterPanelTitle } from "@/components/ui/mobile-filter-chip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { operatorsQueryOptions } from "@/features/shared/queries";
+import { useNavActionTarget } from "@/contexts/navActions";
+import { operatorsQueryOptions, regionsQueryOptions } from "@/features/shared/queries";
 import { useStationDialogStack } from "@/features/station-details/components/stationDialogStackProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useIsMobile } from "@/hooks/useMobile";
 import { getOperatorColor } from "@/lib/operatorUtils";
 import { cn } from "@/lib/utils";
+import type { Operator, Region } from "@/types/station";
 
 import type { GalleryPhoto, PhotosGalleryFilters, PhotosGalleryOrder, PhotosGallerySortBy } from "../api";
 import { usePhotosGallery } from "../hooks";
@@ -23,6 +38,8 @@ import { GallerySkeleton } from "./GallerySkeleton";
 import { PhotoTile } from "./PhotoTile";
 
 const ALL_FILTER_VALUE = "__all__";
+const STORAGE_KEY = "photos:filters";
+const STORAGE_VERSION = 1;
 
 function ClearFiltersButton({ count, onClick, className }: { count: number; onClick: () => void; className?: string }) {
   const { t } = useTranslation("common");
@@ -46,11 +63,68 @@ type StationPhotoGroup = {
 const DEFAULT_FILTERS: PhotosGalleryFilters = {
   q: "",
   operator: null,
-  sortBy: "station",
-  order: "asc",
+  region: null,
+  sortBy: "uploaded",
+  order: "desc",
   mainOnly: false,
   recentOnly: false,
 };
+
+type PersistedFilters = {
+  version?: unknown;
+  q?: unknown;
+  operator?: unknown;
+  region?: unknown;
+  sortBy?: unknown;
+  order?: unknown;
+  mainOnly?: unknown;
+  recentOnly?: unknown;
+};
+
+function isPersistedFilters(value: unknown): value is PersistedFilters {
+  return typeof value === "object" && value !== null;
+}
+
+function isSortBy(value: unknown): value is PhotosGallerySortBy {
+  return value === "station" || value === "uploaded" || value === "taken";
+}
+
+function isOrder(value: unknown): value is PhotosGalleryOrder {
+  return value === "asc" || value === "desc";
+}
+
+function readStoredFilters(): PhotosGalleryFilters {
+  if (typeof window === "undefined") return DEFAULT_FILTERS;
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return DEFAULT_FILTERS;
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isPersistedFilters(parsed)) return DEFAULT_FILTERS;
+    if (parsed.version !== STORAGE_VERSION) return DEFAULT_FILTERS;
+
+    return {
+      q: typeof parsed.q === "string" ? parsed.q : DEFAULT_FILTERS.q,
+      operator: typeof parsed.operator === "number" ? parsed.operator : DEFAULT_FILTERS.operator,
+      region: typeof parsed.region === "string" ? parsed.region : DEFAULT_FILTERS.region,
+      sortBy: isSortBy(parsed.sortBy) ? parsed.sortBy : DEFAULT_FILTERS.sortBy,
+      order: isOrder(parsed.order) ? parsed.order : DEFAULT_FILTERS.order,
+      mainOnly: typeof parsed.mainOnly === "boolean" ? parsed.mainOnly : DEFAULT_FILTERS.mainOnly,
+      recentOnly: typeof parsed.recentOnly === "boolean" ? parsed.recentOnly : DEFAULT_FILTERS.recentOnly,
+    };
+  } catch {
+    return DEFAULT_FILTERS;
+  }
+}
+
+function writeStoredFilters(filters: PhotosGalleryFilters) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ...filters }));
+  } catch {
+    return;
+  }
+}
 
 function groupPhotosByStation(photos: GalleryPhoto[]): StationPhotoGroup[] {
   const groups = new Map<number, StationPhotoGroup>();
@@ -79,6 +153,7 @@ function getActiveFilterCount(filters: PhotosGalleryFilters) {
   return [
     filters.q.trim().length > 0,
     filters.operator !== null,
+    filters.region !== null,
     filters.sortBy !== DEFAULT_FILTERS.sortBy,
     filters.order !== DEFAULT_FILTERS.order,
     filters.mainOnly,
@@ -86,28 +161,274 @@ function getActiveFilterCount(filters: PhotosGalleryFilters) {
   ].filter(Boolean).length;
 }
 
+type PhotosMobileFilterRailProps = {
+  activeFilterCount: number;
+  filters: PhotosGalleryFilters;
+  order: PhotosGalleryOrder;
+  operators: Operator[];
+  regions: Region[];
+  search: string;
+  selectedOperator: Operator | null;
+  selectedRegion: Region | null;
+  sortBy: PhotosGallerySortBy;
+  sortLabels: Record<PhotosGallerySortBy, string>;
+  loadedCount: number;
+  totalCount: number;
+  onClearFilters: () => void;
+  onMainOnlyToggle: () => void;
+  onOperatorChange: (operatorId: number | null) => void;
+  onOrderChange: (order: PhotosGalleryOrder) => void;
+  onRecentOnlyToggle: () => void;
+  onRegionChange: (regionCode: string | null) => void;
+  onSearchChange: (value: string) => void;
+  onSortByChange: (sortBy: PhotosGallerySortBy) => void;
+};
+
+function PhotosMobileFilterRail({
+  activeFilterCount,
+  filters,
+  order,
+  operators,
+  regions,
+  search,
+  selectedOperator,
+  selectedRegion,
+  sortBy,
+  sortLabels,
+  loadedCount,
+  totalCount,
+  onClearFilters,
+  onMainOnlyToggle,
+  onOperatorChange,
+  onOrderChange,
+  onRecentOnlyToggle,
+  onRegionChange,
+  onSearchChange,
+  onSortByChange,
+}: PhotosMobileFilterRailProps) {
+  const { t } = useTranslation(["main", "common"]);
+  const hasSearch = search.trim().length > 0;
+  const sortActive = sortBy !== DEFAULT_FILTERS.sortBy || order !== DEFAULT_FILTERS.order;
+  const photoFilterCount = [filters.mainOnly, filters.recentOnly].filter(Boolean).length;
+  const hasActiveFilters = activeFilterCount > 0 || hasSearch;
+
+  return (
+    <div className="flex items-center gap-1">
+      <MobileFilterChip active={hasSearch} icon={Search01Icon} label={t("common:labels.search")}>
+        <MobileFilterPanelTitle>{t("common:labels.search")}</MobileFilterPanelTitle>
+        <div className="relative">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            value={search}
+            onChange={(event) => onSearchChange(event.currentTarget.value)}
+            placeholder={t("photos.searchPlaceholder")}
+            className="h-9 w-full rounded-md border bg-background py-2 pl-8 pr-8 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {hasSearch ? (
+            <button
+              type="button"
+              onClick={() => onSearchChange("")}
+              className="absolute right-1.5 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label={t("common:actions.clear")}
+            >
+              <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+            </button>
+          ) : null}
+        </div>
+      </MobileFilterChip>
+
+      <MobileFilterChip
+        active={selectedOperator !== null}
+        count={selectedOperator === null ? 0 : 1}
+        icon={FilterIcon}
+        label={t("common:labels.operator")}
+      >
+        <MobileFilterPanelTitle>{t("common:labels.operator")}</MobileFilterPanelTitle>
+        <div className="grid gap-1">
+          <button
+            type="button"
+            onClick={() => onOperatorChange(null)}
+            className={cn(
+              "flex h-8 items-center rounded-md px-2 text-left text-sm transition-colors",
+              selectedOperator === null ? "bg-primary/10 text-primary" : "hover:bg-muted",
+            )}
+          >
+            <span className="min-w-0 flex-1 truncate">{t("common:labels.allOperators")}</span>
+          </button>
+          {operators.map((operator) => {
+            const selected = selectedOperator?.id === operator.id;
+            return (
+              <button
+                key={operator.id}
+                type="button"
+                onClick={() => onOperatorChange(operator.id)}
+                className={cn(
+                  "flex h-8 items-center gap-2 rounded-md px-2 text-left text-sm transition-colors",
+                  selected ? "bg-primary/10 text-primary" : "hover:bg-muted",
+                )}
+              >
+                <span className="size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: getOperatorColor(operator.mnc) }} />
+                <span className="min-w-0 flex-1 truncate">{operator.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </MobileFilterChip>
+
+      <MobileFilterChip
+        active={selectedRegion !== null}
+        count={selectedRegion === null ? 0 : 1}
+        icon={Location01Icon}
+        label={t("common:labels.region")}
+      >
+        <MobileFilterPanelTitle>{t("common:labels.region")}</MobileFilterPanelTitle>
+        <div className="grid max-h-64 gap-1 overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => onRegionChange(null)}
+            className={cn(
+              "flex h-8 items-center rounded-md px-2 text-left text-sm transition-colors",
+              selectedRegion === null ? "bg-primary/10 text-primary" : "hover:bg-muted",
+            )}
+          >
+            <span className="min-w-0 flex-1 truncate">{t("photos.allRegions")}</span>
+          </button>
+          {regions.map((region) => {
+            const selected = selectedRegion?.code === region.code;
+            return (
+              <button
+                key={region.id}
+                type="button"
+                onClick={() => onRegionChange(region.code)}
+                className={cn(
+                  "flex h-8 items-center rounded-md px-2 text-left text-sm transition-colors",
+                  selected ? "bg-primary/10 text-primary" : "hover:bg-muted",
+                )}
+              >
+                <span className="min-w-0 flex-1 truncate">{region.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </MobileFilterChip>
+
+      <MobileFilterChip active={sortActive} count={sortActive ? 1 : 0} icon={ArrowDown01Icon} label={t("photos.sortLabel")}>
+        <MobileFilterPanelTitle>{t("photos.sortLabel")}</MobileFilterPanelTitle>
+        <div className="grid gap-3">
+          <div className="grid gap-1">
+            {(["uploaded", "taken", "station"] as const).map((value) => {
+              const selected = sortBy === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onSortByChange(value)}
+                  className={cn(
+                    "flex h-8 items-center rounded-md px-2 text-left text-sm transition-colors",
+                    selected ? "bg-primary/10 text-primary" : "hover:bg-muted",
+                  )}
+                >
+                  <span className="min-w-0 flex-1 truncate">{sortLabels[value]}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            {(["asc", "desc"] as const).map((value) => {
+              const selected = order === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => onOrderChange(value)}
+                  className={cn(
+                    "flex h-8 items-center justify-center rounded-md px-2 text-sm transition-colors",
+                    selected ? "bg-primary/10 text-primary" : "hover:bg-muted",
+                  )}
+                >
+                  {value === "asc" ? t("photos.order.asc") : t("photos.order.desc")}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </MobileFilterChip>
+
+      <MobileFilterChip active={photoFilterCount > 0} count={photoFilterCount} icon={Camera01Icon} label={t("photos.title")}>
+        <MobileFilterPanelTitle>{t("photos.title")}</MobileFilterPanelTitle>
+        <div className="grid gap-1">
+          <button
+            type="button"
+            onClick={onMainOnlyToggle}
+            className={cn(
+              "flex h-8 items-center rounded-md px-2 text-left text-sm transition-colors",
+              filters.mainOnly ? "bg-primary/10 text-primary" : "hover:bg-muted",
+            )}
+          >
+            <span className="min-w-0 flex-1 truncate">{t("photos.mainOnly")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onRecentOnlyToggle}
+            className={cn(
+              "flex h-8 items-center rounded-md px-2 text-left text-sm transition-colors",
+              filters.recentOnly ? "bg-primary/10 text-primary" : "hover:bg-muted",
+            )}
+          >
+            <span className="min-w-0 flex-1 truncate">{t("photos.recentOnly")}</span>
+          </button>
+        </div>
+      </MobileFilterChip>
+
+      {hasActiveFilters ? (
+        <button
+          type="button"
+          onClick={onClearFilters}
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+          {t("common:actions.clearAll")}
+        </button>
+      ) : null}
+
+      <div className="inline-flex h-8 max-w-44 shrink-0 items-center rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground">
+        <HugeiconsIcon icon={Camera01Icon} className="mr-1.5 size-3.5 shrink-0" />
+        <span className="truncate">{t("photos.loadedCount", { count: loadedCount, total: totalCount })}</span>
+      </div>
+    </div>
+  );
+}
+
 export function PhotosGallery() {
   const { t, i18n } = useTranslation(["main", "common"]);
   const reduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
   const { openStationDialog } = useStationDialogStack();
+  const navActionTarget = useNavActionTarget();
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const [search, setSearch] = useState("");
+  const [initialFilters] = useState(readStoredFilters);
+  const [search, setSearch] = useState(initialFilters.q);
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [operator, setOperator] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<PhotosGallerySortBy>("station");
-  const [order, setOrder] = useState<PhotosGalleryOrder>("asc");
-  const [mainOnly, setMainOnly] = useState(false);
-  const [recentOnly, setRecentOnly] = useState(false);
+  const [operator, setOperator] = useState<number | null>(initialFilters.operator);
+  const [region, setRegion] = useState<string | null>(initialFilters.region);
+  const [sortBy, setSortBy] = useState<PhotosGallerySortBy>(initialFilters.sortBy);
+  const [order, setOrder] = useState<PhotosGalleryOrder>(initialFilters.order);
+  const [mainOnly, setMainOnly] = useState(initialFilters.mainOnly);
+  const [recentOnly, setRecentOnly] = useState(initialFilters.recentOnly);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const filters = useMemo<PhotosGalleryFilters>(
-    () => ({ q: debouncedSearch, operator, sortBy, order, mainOnly, recentOnly }),
-    [debouncedSearch, mainOnly, operator, order, recentOnly, sortBy],
+    () => ({ q: debouncedSearch, operator, region, sortBy, order, mainOnly, recentOnly }),
+    [debouncedSearch, mainOnly, operator, order, recentOnly, region, sortBy],
   );
 
   const { data: operators = [] } = useQuery(operatorsQueryOptions());
+  const { data: regions = [] } = useQuery(regionsQueryOptions());
   const { data, isLoading, isError, isFetchingNextPage, hasNextPage, fetchNextPage, refetch } = usePhotosGallery(filters);
 
   const photos = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
@@ -116,6 +437,7 @@ export function PhotosGallery() {
     () => (operator === null ? null : (operators.find((item) => item.id === operator) ?? null)),
     [operator, operators],
   );
+  const selectedRegion = useMemo(() => (region === null ? null : (regions.find((item) => item.code === region) ?? null)), [region, regions]);
   const sortLabels = useMemo<Record<PhotosGallerySortBy, string>>(
     () => ({
       station: t("photos.sort.station"),
@@ -128,6 +450,7 @@ export function PhotosGallery() {
   const loadedCount = photos.length;
   const activeFilterCount = getActiveFilterCount(filters);
   const activeFilters = activeFilterCount > 0;
+  const showFloatingMobileFilters = isMobile && navActionTarget?.id === FLOATING_NAV_ACTION_TARGET_ID;
 
   const labels = useMemo(
     () => ({
@@ -172,7 +495,12 @@ export function PhotosGallery() {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, lightboxIndex]);
 
-  useEffect(() => setLightboxIndex(null), [debouncedSearch, operator, mainOnly, recentOnly]);
+  useEffect(() => {
+    const storedFilters: PhotosGalleryFilters = { q: search, operator, region, sortBy, order, mainOnly, recentOnly };
+    writeStoredFilters(storedFilters);
+  }, [mainOnly, operator, order, recentOnly, region, search, sortBy]);
+
+  useEffect(() => setLightboxIndex(null), [debouncedSearch, operator, region, sortBy, order, mainOnly, recentOnly]);
 
   const openPhoto = useCallback((index: number) => setLightboxIndex(index), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
@@ -181,6 +509,7 @@ export function PhotosGallery() {
   const clearFilters = useCallback(() => {
     setSearch("");
     setOperator(null);
+    setRegion(null);
     setSortBy(DEFAULT_FILTERS.sortBy);
     setOrder(DEFAULT_FILTERS.order);
     setMainOnly(false);
@@ -190,10 +519,16 @@ export function PhotosGallery() {
     if (value === null) return;
     setOperator(value === ALL_FILTER_VALUE ? null : Number(value));
   }, []);
+  const handleRegionChange = useCallback((value: string | null) => {
+    if (value === null) return;
+    setRegion(value === ALL_FILTER_VALUE ? null : value);
+  }, []);
   const handleSortChange = useCallback((value: PhotosGallerySortBy | null) => {
     if (value === null) return;
     setSortBy(value);
   }, []);
+  const toggleMainOnly = useCallback(() => setMainOnly((current) => !current), []);
+  const toggleRecentOnly = useCallback(() => setRecentOnly((current) => !current), []);
   const toggleOrder = useCallback(() => setOrder((current) => (current === "asc" ? "desc" : "asc")), []);
 
   const prev = useCallback(
@@ -274,7 +609,12 @@ export function PhotosGallery() {
             )}
           </header>
 
-          <div className="mb-5 flex flex-col gap-2 border-b pb-4 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className={cn(
+              "mb-5 flex flex-col gap-2 border-b pb-4 lg:flex-row lg:items-center lg:justify-between",
+              showFloatingMobileFilters && "max-md:hidden",
+            )}
+          >
             <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <div className="relative min-w-0 flex-1 sm:max-w-96">
                 <HugeiconsIcon
@@ -318,6 +658,20 @@ export function PhotosGallery() {
                         <span className="size-2.5 rounded-[2px]" style={{ backgroundColor: getOperatorColor(item.mnc ?? 0) }} />
                         {item.name}
                       </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={region ?? ALL_FILTER_VALUE} onValueChange={handleRegionChange}>
+                <SelectTrigger className="h-8 w-full sm:w-48">
+                  <SelectValue>{selectedRegion?.name ?? t("photos.allRegions")}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_FILTER_VALUE}>{t("photos.allRegions")}</SelectItem>
+                  {regions.map((item) => (
+                    <SelectItem key={item.id} value={item.code}>
+                      {item.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -390,6 +744,39 @@ export function PhotosGallery() {
       </AnimatePresence>
 
       <Lightbox photos={photos} index={lightboxIndex} onClose={closeLightbox} onPrev={prev} onNext={next} />
+
+      {showFloatingMobileFilters &&
+        createPortal(
+          <div className="flex items-center gap-1 max-md:w-[calc(100vw-1.5rem)] max-md:min-w-0 md:hidden">
+            <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden md:hidden">
+              <div className="w-max">
+                <PhotosMobileFilterRail
+                  activeFilterCount={activeFilterCount}
+                  filters={filters}
+                  order={order}
+                  operators={operators}
+                  regions={regions}
+                  search={search}
+                  selectedOperator={selectedOperator}
+                  selectedRegion={selectedRegion}
+                  sortBy={sortBy}
+                  sortLabels={sortLabels}
+                  loadedCount={loadedCount}
+                  totalCount={totalCount}
+                  onClearFilters={clearFilters}
+                  onMainOnlyToggle={toggleMainOnly}
+                  onOperatorChange={setOperator}
+                  onOrderChange={setOrder}
+                  onRecentOnlyToggle={toggleRecentOnly}
+                  onRegionChange={setRegion}
+                  onSearchChange={setSearch}
+                  onSortByChange={setSortBy}
+                />
+              </div>
+            </div>
+          </div>,
+          navActionTarget,
+        )}
     </div>
   );
 }
