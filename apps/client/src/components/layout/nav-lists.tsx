@@ -1,8 +1,7 @@
 import { Add01Icon, ArrowRight01Icon, StarIcon, TaskDaily01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Suspense, lazy, memo, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -16,16 +15,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { type UserListSummary, fetchUserLists } from "@/features/lists/api";
-import { useFavoriteLists } from "@/hooks/useFavoriteLists";
-import { authClient } from "@/lib/authClient";
+import type { UserListSummary } from "@/features/lists/api";
+import { useNavLists } from "@/hooks/useNavLists";
 import { cn } from "@/lib/utils";
 
 const LEGACY_NAV_STORAGE_KEY = "nav-collapsed-state";
 const NAV_STORAGE_KEY = "nav-collapsed-state:v1";
-const SIDEBAR_LIST_FETCH_LIMIT = 10;
-const SIDEBAR_RECENT_LIST_LIMIT = 5;
-
 function readNavState(): boolean {
   try {
     const stored = localStorage.getItem(NAV_STORAGE_KEY) ?? localStorage.getItem(LEGACY_NAV_STORAGE_KEY);
@@ -57,30 +52,7 @@ export const NavLists = memo(function NavLists() {
     saveNavState(open);
   }, [open]);
 
-  const { data: session } = authClient.useSession();
-  const { canFavorite, favoriteSet, favoriteUuids, isFavorite, toggleFavorite } = useFavoriteLists();
-
-  const { data } = useQuery({
-    queryKey: ["user-lists", { limit: SIDEBAR_LIST_FETCH_LIMIT }],
-    queryFn: () => fetchUserLists(SIDEBAR_LIST_FETCH_LIMIT, 1),
-  });
-
-  const lists = useMemo<UserListSummary[]>(() => {
-    const ownedLists = data?.data.filter((list) => list.createdBy.uuid === session?.user?.id) ?? [];
-    if (ownedLists.length === 0) return [];
-
-    const listByUuid = new Map(ownedLists.map((list) => [list.uuid, list]));
-    const favoriteLists = favoriteUuids.reduce<UserListSummary[]>((acc, uuid) => {
-      const list = listByUuid.get(uuid);
-      if (list !== undefined) acc.push(list);
-      return acc;
-    }, []);
-    const recentLists = ownedLists
-      .filter((list) => !favoriteSet.has(list.uuid))
-      .slice(0, Math.max(0, SIDEBAR_RECENT_LIST_LIMIT - favoriteLists.length));
-
-    return [...favoriteLists, ...recentLists];
-  }, [data?.data, favoriteSet, favoriteUuids, session?.user?.id]);
+  const { canFavorite, isFavorite, lists, toggleFavorite } = useNavLists();
 
   return (
     <SidebarGroup>

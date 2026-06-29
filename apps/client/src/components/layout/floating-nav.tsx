@@ -8,7 +8,9 @@ import {
   Moon02Icon,
   Note01Icon,
   Settings02Icon,
+  StarIcon,
   Sun03Icon,
+  TaskDaily01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -36,6 +38,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NotificationsBell } from "@/features/notifications/components/NotificationsBell";
 import { useIsMobile } from "@/hooks/useMobile";
+import { useNavLists } from "@/hooks/useNavLists";
 import { useSettings } from "@/hooks/useSettings";
 import { type SupportedLanguage, supportedLanguages } from "@/i18n/config";
 import { authClient } from "@/lib/authClient";
@@ -61,6 +64,8 @@ const FLUID_TRANSITION = { type: "spring", stiffness: 520, damping: 44, mass: 0.
 const PRIMARY_SURFACE_LAYOUT_ID = "floating-nav-primary-surface";
 const SUBNAV_SURFACE_LAYOUT_ID = "floating-nav-subnav-surface";
 const SUBNAV_OPEN_DELAY_MS = 120;
+const FLOATING_ICON_CONTROL_CLASS =
+  "inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring";
 const flagComponents: Record<string, ComponentType<{ className?: string }>> = { US, PL };
 type FloatingTransition = typeof FLUID_TRANSITION | { duration: number };
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -98,9 +103,14 @@ function FloatingNavLink({
   onNavigate?: () => void;
   transition: FloatingTransition;
 }) {
+  const showLabel = active || item.showFloatingLabel === true;
   const className = cn(
     "relative inline-flex h-8 min-w-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-[0.8125rem] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
-    active ? "z-10 px-2.5 text-primary-foreground" : "z-0 w-8 px-0 text-muted-foreground hover:bg-muted hover:text-foreground",
+    active
+      ? "z-10 px-2.5 text-primary-foreground"
+      : showLabel
+        ? "z-0 px-2.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+        : "z-0 w-8 px-0 text-muted-foreground hover:bg-muted hover:text-foreground",
   );
   const content = (
     <>
@@ -114,8 +124,8 @@ function FloatingNavLink({
       ) : null}
       <span className="relative z-20 inline-flex items-center justify-center gap-1.5">
         <HugeiconsIcon icon={item.icon} className="size-4 shrink-0" />
-        {active ? <span className="whitespace-nowrap">{item.title}</span> : null}
-        {!active ? <span className="sr-only">{item.title}</span> : null}
+        {showLabel ? <span className="inline-block max-w-36 truncate align-bottom">{item.title}</span> : null}
+        {!showLabel ? <span className="sr-only">{item.title}</span> : null}
       </span>
     </>
   );
@@ -372,7 +382,11 @@ function FloatingThemeControl() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="hidden sm:inline-flex" aria-label={t("theme.title")} />}>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost" size="icon" className={cn(FLOATING_ICON_CONTROL_CLASS, "hidden sm:inline-flex")} aria-label={t("theme.title")} />
+        }
+      >
         <HugeiconsIcon icon={Sun03Icon} className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <HugeiconsIcon icon={Moon02Icon} className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
       </DropdownMenuTrigger>
@@ -419,7 +433,9 @@ function FloatingLanguageControl() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="shrink-0" aria-label={currentLanguage?.nativeName} />}>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon" className={FLOATING_ICON_CONTROL_CLASS} aria-label={currentLanguage?.nativeName} />}
+      >
         {FlagComponent ? <FlagComponent className="h-4 w-5 rounded-sm" /> : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top">
@@ -452,18 +468,13 @@ function FloatingAccountCluster() {
     <div className="relative z-10 flex shrink-0 items-center gap-0.5">
       {user ? (
         <>
-          <NotificationsBell className="rounded-full" />
+          <NotificationsBell className={FLOATING_ICON_CONTROL_CLASS} />
           <FloatingThemeControl />
           <FloatingLanguageControl />
           <Tooltip>
             <TooltipTrigger
               render={
-                <Link
-                  to="/settings"
-                  search={{ tab: "preferences" }}
-                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none"
-                  aria-label={t("items.preferences")}
-                />
+                <Link to="/settings" search={{ tab: "preferences" }} className={FLOATING_ICON_CONTROL_CLASS} aria-label={t("items.preferences")} />
               }
             >
               <HugeiconsIcon icon={Settings02Icon} className="size-4" />
@@ -471,7 +482,9 @@ function FloatingAccountCluster() {
             <TooltipContent>{t("items.preferences")}</TooltipContent>
           </Tooltip>
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" aria-label={t("floating.account")} />}>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon" className={FLOATING_ICON_CONTROL_CLASS} aria-label={t("floating.account")} />}
+            >
               <Avatar className="size-6 rounded-full">
                 <AvatarImage src={resolveAvatarUrl(user.image)} />
                 <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -591,7 +604,7 @@ function FloatingCategoryButton({
               onClick={onClick}
               transition={transition}
               className={cn(
-                "relative inline-flex h-11 min-w-11 shrink-0 items-center justify-center overflow-hidden rounded-full px-3.5 text-sm font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring md:h-8 md:min-w-8 md:text-[0.8125rem]",
+                "relative inline-flex h-9 min-w-9 shrink-0 items-center justify-center overflow-hidden rounded-full px-2.5 text-xs font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring sm:h-11 sm:min-w-11 sm:px-3.5 sm:text-sm md:h-8 md:min-w-8 md:text-[0.8125rem]",
                 active
                   ? "z-10 text-primary-foreground md:px-2.5"
                   : expanded
@@ -629,6 +642,7 @@ export function FloatingNav() {
   const transition = reduceMotion ? { duration: 0 } : FLUID_TRANSITION;
   const { data: session } = authClient.useSession();
   const { data: settings } = useSettings();
+  const { favoriteSet, lists: navLists } = useNavLists();
   const [hidden, setHidden] = useState(readHiddenState);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [collapsedActiveKey, setCollapsedActiveKey] = useState<string | null>(null);
@@ -670,14 +684,29 @@ export function FloatingNav() {
         : section,
     );
 
+    const translatedListSections = showLists
+      ? translateNav(listsNavConfig, t).map((section) => ({
+          ...section,
+          items: [
+            ...navLists.map((list) => ({
+              title: list.name,
+              url: `/lists/${list.uuid}`,
+              icon: favoriteSet.has(list.uuid) ? StarIcon : TaskDaily01Icon,
+              showFloatingLabel: true,
+            })),
+            ...section.items,
+          ],
+        }))
+      : [];
+
     return [
       ...translateNav(navMainConfig, t),
       ...(showAuth ? translateNav(authNavConfig, t) : []),
-      ...(showLists ? translateNav(listsNavConfig, t) : []),
+      ...translatedListSections,
       ...translateAdminNav(adminNavConfig, t, userRole, settings),
       ...infoSections,
     ];
-  }, [settings, showAuth, showLists, t, userRole]);
+  }, [favoriteSet, navLists, settings, showAuth, showLists, t, userRole]);
   const activeSection = useMemo(() => getActiveNavSection(sections, location.pathname), [sections, location.pathname]);
   const expandedSection = sections.find((section) => section.key === expandedKey) ?? null;
   const displayedSection = expandedSection ?? (activeSection?.key === collapsedActiveKey ? null : activeSection);
@@ -688,7 +717,7 @@ export function FloatingNav() {
   return (
     <>
       <LayoutGroup id="floating-nav-shell">
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center px-2">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center px-1 md:px-2">
           <AnimatePresence initial={false} mode="popLayout">
             {hidden ? (
               <motion.button
@@ -716,7 +745,7 @@ export function FloatingNav() {
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
                 transition={transition}
                 className="flex w-full flex-col items-center gap-0 md:gap-1"
-                style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+                style={{ paddingBottom: "calc(max(0.5rem, env(safe-area-inset-bottom)) + var(--floating-nav-pwa-bottom-offset, 0rem))" }}
               >
                 {isMobile ? <FloatingActionSlot label={t("floating.actions")} placement="rail" transition={transition} /> : null}
                 <DesktopSubnavRail reduceMotion={reduceMotion} section={showDesktopSubnav ? displayedSubnavSection : null} transition={transition} />
@@ -726,7 +755,7 @@ export function FloatingNav() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={transition}
                   aria-label={t("floating.label")}
-                  className="pointer-events-auto relative isolate flex w-fit min-w-0 max-w-[calc(100vw-1rem)] items-center gap-0 rounded-full p-0.5"
+                  className="pointer-events-auto relative isolate flex w-fit min-w-0 max-w-[calc(100vw-0.5rem)] items-center gap-0 rounded-full p-0.5 md:max-w-[calc(100vw-1rem)]"
                 >
                   <FloatingPrimarySurface transition={transition} className="rounded-full" />
                   {displayedSection ? null : <FloatingSubnavAnchor transition={transition} />}
@@ -734,7 +763,7 @@ export function FloatingNav() {
                     <motion.div
                       layout
                       transition={transition}
-                      className="relative z-10 isolate flex min-w-0 w-max max-w-full items-center gap-0.5 overflow-x-auto md:flex-1"
+                      className="relative z-10 isolate flex w-max min-w-0 max-w-full items-center gap-0.5 overflow-x-auto md:flex-1"
                     >
                       {sections.map((section) => {
                         const active = activeSection?.key === section.key;
@@ -774,7 +803,7 @@ export function FloatingNav() {
                     </motion.div>
                   </LayoutGroup>
                   {!isMobile ? <FloatingActionSlot label={t("floating.actions")} placement="main" transition={transition} /> : null}
-                  <div className="relative z-10 mx-0.5 hidden h-5 w-px bg-border sm:block" />
+                  <div className="relative z-10 mx-0.5 h-5 w-px shrink-0 bg-border" />
                   <FloatingAccountCluster />
                   <button
                     type="button"
@@ -784,7 +813,7 @@ export function FloatingNav() {
                       writeHiddenState(true);
                       setHidden(true);
                     }}
-                    className="relative z-10 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    className="relative z-10 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <HugeiconsIcon icon={ArrowDown01Icon} className="size-4" />
                   </button>

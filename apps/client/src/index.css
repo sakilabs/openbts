@@ -54,6 +54,7 @@
   --chart-5: #c13b42;
   --chart-5: oklch(0.55 0.17 22);
   --radius: 0.625rem;
+  --floating-nav-pwa-bottom-offset: 0rem;
   --sidebar: #f4f7f9;
   --sidebar: oklch(0.975 0.004 225);
   --sidebar-foreground: #04080b;
@@ -70,6 +71,12 @@
   --sidebar-border: oklch(0.91 0.006 225);
   --sidebar-ring: #004f6e;
   --sidebar-ring: oklch(0.4 0.09 230);
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  :root {
+    --floating-nav-pwa-bottom-offset: 0.75rem;
+  }
 }
 
 .dark {

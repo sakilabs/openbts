@@ -1893,8 +1893,7 @@ paths:
                     type: array
                     items:
                       type: object
-                      required:
-                        [id, location_photo_id, attachment_uuid, mime_type, is_main, note, taken_at, createdAt, author, station, location]
+                      required: [id, location_photo_id, attachment_uuid, mime_type, is_main, note, taken_at, createdAt, author, station, location]
                       properties:
                         id: { type: integer }
                         location_photo_id: { type: integer }

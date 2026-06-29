@@ -84,7 +84,12 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   if (q) {
     const query = `%${q}%`;
-    const searchClause = or(ilike(stations.station_id, query), ilike(locations.city, query), ilike(locations.address, query), ilike(locationPhotos.note, query));
+    const searchClause = or(
+      ilike(stations.station_id, query),
+      ilike(locations.city, query),
+      ilike(locations.address, query),
+      ilike(locationPhotos.note, query),
+    );
     if (searchClause) filters.push(searchClause);
   }
 
@@ -161,9 +166,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       id: row.station_id,
       station_id: row.station_identifier,
       operator:
-        row.operator_id !== null && row.operator_name !== null
-          ? { id: row.operator_id, name: row.operator_name, mnc: row.operator_mnc }
-          : null,
+        row.operator_id !== null && row.operator_name !== null ? { id: row.operator_id, name: row.operator_name, mnc: row.operator_mnc } : null,
     },
     location: {
       id: row.location_id,

@@ -52,6 +52,7 @@ export type TranslatedNavItem = {
   url: string;
   href?: string;
   icon: IconSvgElement;
+  showFloatingLabel?: boolean;
 };
 
 export type TranslatedNavSection = {
