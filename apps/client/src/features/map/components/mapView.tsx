@@ -388,7 +388,7 @@ export default function MapView() {
       zoom={saved?.zoom ?? 7}
       maxBounds={POLAND_BOUNDS}
       minZoom={5}
-      className={preferences.navMode === "floating" ? "[--floating-nav-map-offset:1.25rem]" : undefined}
+      className={preferences.navMode === "floating" ? "[--floating-nav-map-offset:calc(1.25rem+var(--floating-nav-pwa-bottom-offset,0rem))]" : undefined}
     >
       <MapViewInner />
     </LibreMap>
