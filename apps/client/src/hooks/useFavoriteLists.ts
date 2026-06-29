@@ -10,6 +10,8 @@ type FavoriteListsMutationContext = {
   previous: CloudPreferences | undefined;
 };
 
+const EMPTY_FAVORITE_UUIDS: string[] = [];
+
 function withFavoriteLists(current: CloudPreferences | undefined, favoriteLists: string[]): CloudPreferences {
   return {
     syncEnabled: current?.syncEnabled ?? false,
@@ -32,7 +34,7 @@ export function useFavoriteLists() {
     enabled: userId !== undefined,
   });
 
-  const favoriteUuids = cloudPreferences?.favoriteLists ?? [];
+  const favoriteUuids = cloudPreferences?.favoriteLists ?? EMPTY_FAVORITE_UUIDS;
   const favoriteSet = useMemo(() => new Set(favoriteUuids), [favoriteUuids]);
 
   const { mutate: setFavoriteUuids } = useMutation<CloudPreferences, Error, string[], FavoriteListsMutationContext>({

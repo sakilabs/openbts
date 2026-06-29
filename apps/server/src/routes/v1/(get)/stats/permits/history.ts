@@ -7,6 +7,7 @@ import db from "../../../../../database/psql.js";
 import redis from "../../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { type StatsOperator, statsOperatorSchema } from "../schemas.js";
 
 const CACHE_TTL = 86400; // 24h
 
@@ -23,7 +24,7 @@ const schemaRoute = {
       data: z.array(
         z.object({
           date: z.string(),
-          operator: z.object({ id: z.number(), name: z.string() }),
+          operator: statsOperatorSchema,
           band: z.object({ id: z.number(), name: z.string() }),
           unique_stations: z.number(),
           permits_count: z.number(),
@@ -37,7 +38,7 @@ type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
 interface HistoryRow {
   date: string;
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   band: { id: number; name: string };
   unique_stations: number;
   permits_count: number;
@@ -45,7 +46,7 @@ interface HistoryRow {
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<HistoryRow[]>>) {
   const { operator_id, band_id, from, to, granularity } = req.query;
-  const cacheKey = `stats:permits:history:${granularity}:${operator_id ?? "all"}:${band_id ?? "all"}:${from?.toISOString() ?? ""}:${to?.toISOString() ?? ""}`;
+  const cacheKey = `stats:permits:history:v2:${granularity}:${operator_id ?? "all"}:${band_id ?? "all"}:${from?.toISOString() ?? ""}:${to?.toISOString() ?? ""}`;
 
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
@@ -63,6 +64,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       date: Date;
       operator_id: number;
       operator_name: string;
+      operator_mnc: number | null;
       band_id: number;
       band_name: string;
       unique_stations: number;
@@ -71,7 +73,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   ) =>
     rows.map((r) => ({
       date: r.date.toISOString().slice(0, 10),
-      operator: { id: r.operator_id, name: r.operator_name },
+      operator: { id: r.operator_id, name: r.operator_name, mnc: r.operator_mnc },
       band: { id: r.band_id, name: r.band_name },
       unique_stations: r.unique_stations,
       permits_count: r.permits_count,
@@ -83,6 +85,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         date: statsSnapshots.snapshot_date,
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         band_id: bands.id,
         band_name: bands.name,
         unique_stations: statsSnapshots.unique_stations_count,
@@ -105,6 +108,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         date: statsSnapshots.snapshot_date,
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         band_id: bands.id,
         band_name: bands.name,
         unique_stations: statsSnapshots.unique_stations_count,
@@ -132,13 +136,16 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const importDateByMonth = new Map(importRows.map((r) => [r.date.toISOString().slice(0, 7), r.date.toISOString().slice(0, 10)]));
 
   const response = {
-    data: rows.map((r) => ({
-      date: importDateByMonth.get(r.date.toISOString().slice(0, 7)) ?? r.date.toISOString().slice(0, 10),
-      operator: { id: r.operator_id, name: r.operator_name },
-      band: { id: r.band_id, name: r.band_name },
-      unique_stations: r.unique_stations,
-      permits_count: r.permits_count,
-    })),
+    data: rows.map((r) => {
+      const isoDate = r.date.toISOString();
+      return {
+        date: importDateByMonth.get(isoDate.slice(0, 7)) ?? isoDate.slice(0, 10),
+        operator: { id: r.operator_id, name: r.operator_name, mnc: r.operator_mnc },
+        band: { id: r.band_id, name: r.band_name },
+        unique_stations: r.unique_stations,
+        permits_count: r.permits_count,
+      };
+    }),
   };
   await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(response));
   res.send(response);

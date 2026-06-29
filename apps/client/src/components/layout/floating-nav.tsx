@@ -14,7 +14,7 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useRouterState } from "@tanstack/react-router";
 import { PL, US } from "country-flag-icons/react/3x2";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { type ComponentType, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { type PageSection, usePageSectionsActiveId, usePageSectionsList } from "@/contexts/pageSections";
 import { NotificationsBell } from "@/features/notifications/components/NotificationsBell";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useNavLists } from "@/hooks/useNavLists";
@@ -66,6 +67,8 @@ const SUBNAV_SURFACE_LAYOUT_ID = "floating-nav-subnav-surface";
 const SUBNAV_OPEN_DELAY_MS = 120;
 const FLOATING_ICON_CONTROL_CLASS =
   "inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring";
+const MOBILE_PAGE_SECTION_CHIP_CLASS =
+  "inline-flex h-8 shrink-0 items-center justify-center rounded-full border px-3 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring";
 const flagComponents: Record<string, ComponentType<{ className?: string }>> = { US, PL };
 type FloatingTransition = typeof FLUID_TRANSITION | { duration: number };
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -88,6 +91,10 @@ function writeHiddenState(hidden: boolean) {
   } catch {
     return;
   }
+}
+
+function scrollToPageSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 }
 
 function FloatingNavLink({
@@ -153,6 +160,70 @@ function FloatingNavLink({
   );
 }
 
+function FloatingPageSectionRail({
+  activeId,
+  label,
+  reduceMotion,
+  sections,
+  transition,
+}: {
+  activeId: string | null;
+  label: string;
+  reduceMotion: boolean;
+  sections: PageSection[];
+  transition: FloatingTransition;
+}) {
+  return (
+    <AnimatePresence mode="popLayout">
+      {sections.length > 0 ? (
+        <motion.div
+          key="floating-page-sections"
+          layout
+          initial={reduceMotion ? { opacity: 1 } : { filter: "blur(2px)", opacity: 0, y: 38, scale: 0.96 }}
+          animate={reduceMotion ? { opacity: 1 } : { filter: "blur(0px)", opacity: 1, y: 0, scale: 1 }}
+          exit={reduceMotion ? { opacity: 0 } : { filter: "blur(2px)", opacity: 0, y: 38, scale: 0.96 }}
+          transition={transition}
+          style={{ transformOrigin: "bottom center" }}
+          className="pointer-events-auto hidden max-w-[calc(100vw-1rem)] items-center overflow-hidden rounded-full border bg-background p-0.5 shadow-sm md:flex"
+          aria-label={label}
+        >
+          <motion.div layout transition={transition} className="flex min-w-0 items-center gap-0.5 overflow-x-auto">
+            <LayoutGroup id="floating-page-sections">
+              {sections.map((section) => {
+                const active = section.id === activeId;
+                return (
+                  <motion.button
+                    key={section.id}
+                    layout
+                    type="button"
+                    aria-current={active ? "location" : undefined}
+                    onClick={() => scrollToPageSection(section.id)}
+                    transition={transition}
+                    className={cn(
+                      "relative inline-flex h-7 max-w-44 shrink-0 items-center justify-center overflow-hidden rounded-full px-2.5 text-xs font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+                      active ? "z-10 text-primary-foreground" : "z-0 text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {active ? (
+                      <motion.span
+                        layoutId="floating-page-section-active"
+                        initial={false}
+                        transition={transition}
+                        className="pointer-events-none absolute inset-0 z-0 rounded-full bg-primary"
+                      />
+                    ) : null}
+                    <span className="relative z-20 truncate">{section.title}</span>
+                  </motion.button>
+                );
+              })}
+            </LayoutGroup>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
 function DesktopSubnavRail({
   reduceMotion,
   section,
@@ -196,6 +267,51 @@ function DesktopSubnavRail({
         </motion.div>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function MobileFloatingPageSectionRail({ activeId, sections }: { activeId: string | null; sections: PageSection[] }) {
+  const activeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!activeId) return;
+
+    activeButtonRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [activeId]);
+
+  if (sections.length === 0) return null;
+
+  return (
+    <div className="pointer-events-auto relative isolate z-20 mb-1 flex max-w-[calc(100vw-1rem)] self-center overflow-hidden rounded-full border bg-background p-1 shadow-sm md:hidden">
+      <div className="min-w-0 overflow-x-auto overflow-y-hidden">
+        <div className="flex w-max max-w-[calc(100vw-1.5rem)] items-center gap-1">
+          {sections.map((section) => {
+            const active = section.id === activeId;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                ref={active ? activeButtonRef : undefined}
+                aria-current={active ? "location" : undefined}
+                onClick={() => scrollToPageSection(section.id)}
+                className={cn(
+                  MOBILE_PAGE_SECTION_CHIP_CLASS,
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <span className="max-w-36 truncate">{section.title}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -335,14 +451,10 @@ function MobileNavSheet({ onOpenChange, section }: { onOpenChange: (open: boolea
           <SheetTitle>{section?.title ?? t("floating.mobileTitle")}</SheetTitle>
         </SheetHeader>
         <div className="grid gap-1 overflow-y-auto p-2">
-          {section?.items.map((item) => (
-            <MobileNavSheetItem
-              key={item.href ?? item.url}
-              item={item}
-              active={!item.href && item.url === activeItemUrl}
-              onNavigate={() => onOpenChange(false)}
-            />
-          ))}
+          {section?.items.map((item) => {
+            const active = !item.href && item.url === activeItemUrl;
+            return <MobileNavSheetItem key={item.href ?? item.url} item={item} active={active} onNavigate={() => onOpenChange(false)} />;
+          })}
         </div>
       </SheetContent>
     </Sheet>
@@ -376,8 +488,29 @@ function MobileNavSheetItem({ active, item, onNavigate }: { active: boolean; ite
   );
 }
 
-function FloatingThemeControl() {
+function FloatingThemeMenuItems() {
   const { setTheme, theme } = useTheme();
+  const { t } = useTranslation("common");
+
+  return (
+    <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+      <DropdownMenuRadioItem value="light">
+        <HugeiconsIcon icon={Sun03Icon} className="size-4" />
+        <span>{t("theme.light")}</span>
+      </DropdownMenuRadioItem>
+      <DropdownMenuRadioItem value="dark">
+        <HugeiconsIcon icon={Moon02Icon} className="size-4" />
+        <span>{t("theme.dark")}</span>
+      </DropdownMenuRadioItem>
+      <DropdownMenuRadioItem value="system">
+        <HugeiconsIcon icon={ComputerIcon} className="size-4" />
+        <span>{t("theme.system")}</span>
+      </DropdownMenuRadioItem>
+    </DropdownMenuRadioGroup>
+  );
+}
+
+function FloatingThemeControl() {
   const { t } = useTranslation("common");
 
   return (
@@ -391,20 +524,7 @@ function FloatingThemeControl() {
         <HugeiconsIcon icon={Moon02Icon} className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top">
-        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-          <DropdownMenuRadioItem value="light">
-            <HugeiconsIcon icon={Sun03Icon} className="size-4" />
-            <span>{t("theme.light")}</span>
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="dark">
-            <HugeiconsIcon icon={Moon02Icon} className="size-4" />
-            <span>{t("theme.dark")}</span>
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="system">
-            <HugeiconsIcon icon={ComputerIcon} className="size-4" />
-            <span>{t("theme.system")}</span>
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
+        <FloatingThemeMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -414,13 +534,11 @@ function normalizeLanguage(value: string): SupportedLanguage {
   return supportedLanguages.find((lang) => lang.code === value)?.code ?? "pl-PL";
 }
 
-function FloatingLanguageControl() {
+function FloatingLanguageMenuItems() {
   const { i18n } = useTranslation();
   const { data: session } = authClient.useSession();
   const storedLanguage = typeof window === "undefined" ? i18n.language : window.localStorage.getItem("i18nextLng") || i18n.language;
   const currentUserLang = normalizeLanguage(storedLanguage);
-  const currentLanguage = supportedLanguages.find((lang) => lang.code === currentUserLang);
-  const FlagComponent = currentLanguage ? flagComponents[currentLanguage.countryCode] : null;
 
   const handleLanguageChange = (code: SupportedLanguage) => {
     void i18n.changeLanguage(code);
@@ -432,6 +550,28 @@ function FloatingLanguageControl() {
   };
 
   return (
+    <DropdownMenuRadioGroup value={currentUserLang}>
+      {supportedLanguages.map((lang) => {
+        const Flag = flagComponents[lang.countryCode];
+        return (
+          <DropdownMenuRadioItem key={lang.code} value={lang.code} onClick={() => handleLanguageChange(lang.code)}>
+            {Flag ? <Flag className="h-4 w-5 rounded-sm" /> : null}
+            <span>{lang.nativeName}</span>
+          </DropdownMenuRadioItem>
+        );
+      })}
+    </DropdownMenuRadioGroup>
+  );
+}
+
+function FloatingLanguageControl() {
+  const { i18n } = useTranslation();
+  const storedLanguage = typeof window === "undefined" ? i18n.language : window.localStorage.getItem("i18nextLng") || i18n.language;
+  const currentUserLang = normalizeLanguage(storedLanguage);
+  const currentLanguage = supportedLanguages.find((lang) => lang.code === currentUserLang);
+  const FlagComponent = currentLanguage ? flagComponents[currentLanguage.countryCode] : null;
+
+  return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={<Button variant="ghost" size="icon" className={FLOATING_ICON_CONTROL_CLASS} aria-label={currentLanguage?.nativeName} />}
@@ -439,17 +579,7 @@ function FloatingLanguageControl() {
         {FlagComponent ? <FlagComponent className="h-4 w-5 rounded-sm" /> : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top">
-        <DropdownMenuRadioGroup value={currentUserLang}>
-          {supportedLanguages.map((lang) => {
-            const Flag = flagComponents[lang.countryCode];
-            return (
-              <DropdownMenuRadioItem key={lang.code} value={lang.code} onClick={() => handleLanguageChange(lang.code)}>
-                {Flag ? <Flag className="h-4 w-5 rounded-sm" /> : null}
-                <span>{lang.nativeName}</span>
-              </DropdownMenuRadioItem>
-            );
-          })}
-        </DropdownMenuRadioGroup>
+        <FloatingLanguageMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -469,8 +599,6 @@ function FloatingAccountCluster() {
       {user ? (
         <>
           <NotificationsBell className={FLOATING_ICON_CONTROL_CLASS} />
-          <FloatingThemeControl />
-          <FloatingLanguageControl />
           <Tooltip>
             <TooltipTrigger
               render={
@@ -513,6 +641,10 @@ function FloatingAccountCluster() {
                   <HugeiconsIcon icon={Settings02Icon} className="size-4" />
                   {t("items.accountSettings")}
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <FloatingThemeMenuItems />
+                <DropdownMenuSeparator />
+                <FloatingLanguageMenuItems />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={async () => {
@@ -637,6 +769,9 @@ function FloatingCategoryButton({
 export function FloatingNav() {
   const { t } = useTranslation("nav");
   const location = useLocation();
+  const isNavigating = useRouterState({ select: (s) => s.isLoading });
+  const pageSections = usePageSectionsList();
+  const activePageSectionId = usePageSectionsActiveId();
   const isMobile = useIsMobile();
   const reduceMotion = useReducedMotion() === true;
   const transition = reduceMotion ? { duration: 0 } : FLUID_TRANSITION;
@@ -712,6 +847,10 @@ export function FloatingNav() {
   const displayedSection = expandedSection ?? (activeSection?.key === collapsedActiveKey ? null : activeSection);
   const displayedSubnavSection = subnavReady ? displayedSection : null;
   const showDesktopSubnav = !isMobile && displayedSubnavSection !== null && displayedSubnavSection.items.length > 0;
+  const displayedActiveItemUrl = displayedSubnavSection ? getActiveNavItemUrl([displayedSubnavSection], location.pathname) : null;
+  const displayedActiveItem = displayedSubnavSection?.items.find((item) => !item.href && item.url === displayedActiveItemUrl) ?? null;
+  const showDesktopPageSections = !isMobile && !isNavigating && displayedActiveItem !== null && pageSections.length > 0;
+  const showMobilePageSections = isMobile && !isNavigating && pageSections.length > 0;
   const mobileSection = sections.find((section) => section.key === mobileSectionKey) ?? null;
 
   return (
@@ -748,6 +887,14 @@ export function FloatingNav() {
                 style={{ paddingBottom: "calc(max(0.5rem, env(safe-area-inset-bottom)) + var(--floating-nav-pwa-bottom-offset, 0rem))" }}
               >
                 {isMobile ? <FloatingActionSlot label={t("floating.actions")} placement="rail" transition={transition} /> : null}
+                <MobileFloatingPageSectionRail activeId={activePageSectionId} sections={showMobilePageSections ? pageSections : []} />
+                <FloatingPageSectionRail
+                  activeId={activePageSectionId}
+                  label={displayedActiveItem?.title ?? t("floating.label")}
+                  reduceMotion={reduceMotion}
+                  sections={showDesktopPageSections ? pageSections : []}
+                  transition={transition}
+                />
                 <DesktopSubnavRail reduceMotion={reduceMotion} section={showDesktopSubnav ? displayedSubnavSection : null} transition={transition} />
                 <motion.nav
                   layout

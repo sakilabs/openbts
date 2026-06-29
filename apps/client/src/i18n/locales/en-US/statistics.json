@@ -1,9 +1,15 @@
 {
   "title": "Statistics",
-  "description": "Permit statistics and historical trends across operators and bands. Data is updated every 24 hours",
-  "rebuildNotice": {
-    "title": "Planned rebuild",
-    "description": "We plan to rebuild this page from the ground up this month, with new features and views. You will also be able to export statistics as images, and the new design will work much better on phones."
+  "description": "Permit statistics, database coverage, contributions, and historical trends across operators and bands. Data is updated every 24 hours",
+  "sections": {
+    "quality": "Data quality",
+    "permitSnapshot": "UKE by month"
+  },
+  "chartType": {
+    "label": "Chart type",
+    "area": "Area",
+    "line": "Line",
+    "bar": "Bar"
   },
   "kpi": {
     "totalPermits": "Total Permits",
@@ -23,7 +29,43 @@
     "byVoivodeship": "Unique Stations per Voivodeship",
     "internalByVoivodeship": "Stations per Voivodeship",
     "history": "Historical Trends",
+    "noData": "No data available",
     "noHistoryData": "No historical data yet. Trends will appear once data has been collected."
+  },
+  "completeness": {
+    "stationTitle": "Station documentation coverage",
+    "stationDescription": "Published stations with sector and external identifier data.",
+    "pciTitle": "PCI documentation coverage",
+    "pciDescription": "LTE and NR cells split by documented and missing PCI.",
+    "stations": "Stations",
+    "withSectors": "With sectors",
+    "withoutSectors": "Without sectors",
+    "withExtraIds": "With extra IDs",
+    "withoutExtraIds": "Without extra IDs",
+    "documented": "Documented",
+    "missing": "Missing",
+    "analyzerUsage": "Analyzer usage"
+  },
+  "contributions": {
+    "title": "Contribution history",
+    "description": "Differences for sectors, extra identifiers, and cells with PCI.",
+    "addedSectors": "Added sectors",
+    "addedExtraIds": "Added extra IDs",
+    "addedCellsWithPCI": "Added cells with PCI"
+  },
+  "permitsByMonth": {
+    "title": "UKE stations and permits by month",
+    "description": "Select a month to inspect UKE station and permit counts.",
+    "snapshotDate": "Data from {{date}} vs {{previousDate}}",
+    "month": "Month",
+    "view": "View",
+    "views": {
+      "stations": "Stations",
+      "permits": "Permits"
+    },
+    "all": "All",
+    "new": "New",
+    "noPreviousSnapshot": "no previous data"
   },
   "filters": {
     "allBands": "All Bands",

@@ -1,12 +1,8 @@
-import { InformationCircleIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type ReactNode, Suspense, lazy, startTransition, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRegisterPageSections } from "@/contexts/pageSections";
 import { operatorsQueryOptions } from "@/features/shared/queries";
@@ -23,47 +19,55 @@ const UkeBandBarChart = lazy(() => import("@/features/statistics/components/band
 const InternalBandStationsBarChart = lazy(() =>
   import("@/features/statistics/components/bandBarChart").then((m) => ({ default: m.InternalBandStationsBarChart })),
 );
-const InternalBandBarChart = lazy(() => import("@/features/statistics/components/bandBarChart").then((m) => ({ default: m.InternalBandBarChart })));
 const UkeVoivodeshipChart = lazy(() => import("@/features/statistics/components/voivodeshipChart").then((m) => ({ default: m.UkeVoivodeshipChart })));
 const InternalVoivodeshipChart = lazy(() =>
   import("@/features/statistics/components/voivodeshipChart").then((m) => ({ default: m.InternalVoivodeshipChart })),
 );
-const InternalOperatorStationsChart = lazy(() =>
-  import("@/features/statistics/components/operatorStationsChart").then((m) => ({ default: m.InternalOperatorStationsChart })),
-);
 const HistoryChart = lazy(() => import("@/features/statistics/components/historyChart").then((m) => ({ default: m.HistoryChart })));
+const CompletenessCharts = lazy(() => import("@/features/statistics/components/completenessCharts").then((m) => ({ default: m.CompletenessCharts })));
+const ContributionsChart = lazy(() => import("@/features/statistics/components/contributionsChart").then((m) => ({ default: m.ContributionsChart })));
+const AnalyzerUsageChart = lazy(() => import("@/features/statistics/components/analyzerUsageChart").then((m) => ({ default: m.AnalyzerUsageChart })));
+const PermitsByMonthChart = lazy(() =>
+  import("@/features/statistics/components/permitsByMonthChart").then((m) => ({ default: m.PermitsByMonthChart })),
+);
 
-function ChartCardSkeleton({ contentClassName }: { contentClassName?: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-4 w-48" />
-      </CardHeader>
-      <CardContent>
+function ChartPanelSkeleton({ contentClassName, noBorder = false }: { contentClassName?: string; noBorder?: boolean }) {
+  const inner = (
+    <>
+      <div className="border-b border-border px-4 py-3">
+        <Skeleton className="h-3.5 w-40" />
+      </div>
+      <div className="px-4 py-4">
         <Skeleton className={contentClassName ?? "h-96 w-full"} />
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
+
+  if (noBorder) return <div>{inner}</div>;
+
+  return <div className="relative border border-border">{inner}</div>;
 }
 
 function DistributionSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <ChartCardSkeleton contentClassName="h-64 w-full" />
-      <ChartCardSkeleton contentClassName="h-64 w-full" />
+    <div className="relative border border-border">
+      <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
+        <ChartPanelSkeleton contentClassName="h-64 w-full" noBorder />
+        <ChartPanelSkeleton contentClassName="h-64 w-full" noBorder />
+      </div>
     </div>
   );
 }
 
-const chartSkeleton = <ChartCardSkeleton />;
-const tallChartSkeleton = <ChartCardSkeleton contentClassName="h-140 w-full" />;
+const chartSkeleton = <ChartPanelSkeleton />;
+const tallChartSkeleton = <ChartPanelSkeleton contentClassName="h-140 w-full" />;
 const distributionSkeleton = <DistributionSkeleton />;
 
 function SectionHeader({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="h-5 w-0.5 rounded-full bg-primary shrink-0" />
-      <h2 className="text-base font-semibold">{children}</h2>
+    <div className="flex items-center gap-3">
+      <h2 className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{children}</h2>
+      <div className="flex-1 border-t border-border" />
     </div>
   );
 }
@@ -79,11 +83,15 @@ function LazyChart({ children, fallback }: { children: ReactNode; fallback: Reac
       ([entry]) => {
         if (entry.isIntersecting) {
           observer.disconnect();
-          if (typeof requestIdleCallback !== "undefined") requestIdleCallback(() => startTransition(() => setVisible(true)), { timeout: 2000 });
-          else startTransition(() => setVisible(true));
+          const reveal = () => startTransition(() => setVisible(true));
+          if (typeof requestIdleCallback !== "undefined") {
+            requestIdleCallback(reveal, { timeout: 300 });
+          } else {
+            reveal();
+          }
         }
       },
-      { rootMargin: "80px" },
+      { rootMargin: "400px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -112,66 +120,72 @@ function StatisticsPage() {
   useRegisterPageSections([
     { id: "uke-permits", title: t("stationDetails:tabs.permits") },
     { id: "internal-db", title: t("main:stats.internalData") },
+    { id: "quality", title: t("sections.quality") },
+    { id: "permit-snapshot", title: t("sections.permitSnapshot") },
     { id: "history", title: t("charts.history") },
   ]);
 
   return (
-    <main className="flex-1 overflow-y-auto p-6">
-      <div className="space-y-12">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("description")}</p>
+    <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+      <div className="w-full space-y-12">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("title")}</h1>
+          <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{t("description")}</p>
         </div>
 
-        <Alert className="border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400">
-          <HugeiconsIcon icon={InformationCircleIcon} className="size-4" />
-          <AlertTitle>{t("rebuildNotice.title")}</AlertTitle>
-          <AlertDescription className="text-blue-700/80 dark:text-blue-400/80">{t("rebuildNotice.description")}</AlertDescription>
-        </Alert>
-
-        <section id="uke-permits" className="space-y-6">
-          <div className="space-y-4">
-            <SectionHeader>{t("stationDetails:tabs.permits")}</SectionHeader>
-            <UkeKpiCards data={summary} isLoading={summaryLoading} />
+        <section id="uke-permits" className="space-y-4">
+          <SectionHeader>{t("stationDetails:tabs.permits")}</SectionHeader>
+          <UkeKpiCards data={summary} isLoading={summaryLoading} />
+          <div className="space-y-4 pt-1">
+            <Suspense fallback={distributionSkeleton}>
+              <UkeDistributionCharts data={summary} isLoading={summaryLoading} />
+            </Suspense>
+            <LazyChart fallback={chartSkeleton}>
+              <UkeBandBarChart data={permits?.uke} isLoading={permitsLoading} />
+            </LazyChart>
+            <LazyChart fallback={tallChartSkeleton}>
+              <UkeVoivodeshipChart data={voivodeships?.uke} isLoading={voivodeshipsLoading} />
+            </LazyChart>
           </div>
-          <Suspense fallback={distributionSkeleton}>
-            <UkeDistributionCharts data={summary} isLoading={summaryLoading} />
-          </Suspense>
-          <LazyChart fallback={chartSkeleton}>
-            <UkeBandBarChart data={permits?.uke} isLoading={permitsLoading} />
-          </LazyChart>
-          <LazyChart fallback={tallChartSkeleton}>
-            <UkeVoivodeshipChart data={voivodeships?.uke} isLoading={voivodeshipsLoading} />
-          </LazyChart>
         </section>
 
-        <hr className="border-border" />
-
-        <section id="internal-db" className="space-y-6">
-          <div className="space-y-4">
-            <SectionHeader>{t("main:stats.internalData")}</SectionHeader>
-            <InternalKpiCards data={summary} isLoading={summaryLoading} />
+        <section id="internal-db" className="space-y-4">
+          <SectionHeader>{t("main:stats.internalData")}</SectionHeader>
+          <InternalKpiCards data={summary} isLoading={summaryLoading} />
+          <div className="space-y-4 pt-1">
+            <LazyChart fallback={chartSkeleton}>
+              <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
+            </LazyChart>
+            <LazyChart fallback={chartSkeleton}>
+              <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
+            </LazyChart>
+            <LazyChart fallback={tallChartSkeleton}>
+              <InternalVoivodeshipChart data={voivodeships?.internal} isLoading={voivodeshipsLoading} />
+            </LazyChart>
           </div>
-          <LazyChart fallback={chartSkeleton}>
-            <InternalOperatorStationsChart data={summary} isLoading={summaryLoading} />
-          </LazyChart>
+        </section>
+
+        <section id="quality" className="space-y-4">
+          <SectionHeader>{t("sections.quality")}</SectionHeader>
           <LazyChart fallback={distributionSkeleton}>
-            <InternalDistributionCharts data={summary} isLoading={summaryLoading} />
+            <CompletenessCharts />
           </LazyChart>
           <LazyChart fallback={chartSkeleton}>
-            <InternalBandStationsBarChart data={permits?.internal} isLoading={permitsLoading} />
+            <ContributionsChart />
           </LazyChart>
           <LazyChart fallback={chartSkeleton}>
-            <InternalBandBarChart data={permits?.internal} isLoading={permitsLoading} />
-          </LazyChart>
-          <LazyChart fallback={tallChartSkeleton}>
-            <InternalVoivodeshipChart data={voivodeships?.internal} isLoading={voivodeshipsLoading} />
+            <AnalyzerUsageChart />
           </LazyChart>
         </section>
 
-        <hr className="border-border" />
+        <section id="permit-snapshot" className="space-y-4">
+          <SectionHeader>{t("sections.permitSnapshot")}</SectionHeader>
+          <LazyChart fallback={chartSkeleton}>
+            <PermitsByMonthChart />
+          </LazyChart>
+        </section>
 
-        <section id="history" className="space-y-6">
+        <section id="history" className="space-y-4">
           <SectionHeader>{t("charts.history")}</SectionHeader>
           <LazyChart fallback={chartSkeleton}>
             <HistoryChart operators={operators} />

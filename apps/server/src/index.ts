@@ -5,6 +5,7 @@ import { availableParallelism } from "node:os";
 import App from "./app.js";
 import { port } from "./config.js";
 import redis from "./database/redis.js";
+import { takeContributionSnapshot } from "./services/contributionSnapshot.service.ts";
 import { cleanupExpiredInactiveStations } from "./services/inactiveStationCleanup.service.js";
 import { deliverQueuedStationWatchNotifications } from "./services/notification.service.js";
 import { cleanupOrphanedSubmissions } from "./services/submissionCleanup.service.js";
@@ -57,6 +58,7 @@ async function runAsScheduler() {
   scheduleSubmissionCleanup();
   scheduleInactiveStationCleanup();
   scheduleStationWatchNotifications();
+  scheduleContributionSnapshot();
 }
 
 async function tryBecomeScheduler() {
@@ -153,6 +155,18 @@ function scheduleStationWatchNotifications() {
     }
     setTimeout(run, NOTIFICATION_DIGEST_INTERVAL_MS);
   }, NOTIFICATION_DIGEST_INTERVAL_MS);
+}
+
+function scheduleContributionSnapshot() {
+  setTimeout(async function run() {
+    const isLeader = await renewSchedulerLock().catch(() => false);
+    if (isLeader) {
+      await takeContributionSnapshot().catch((e) =>
+        logger.error("Failed to take contribution snapshot", { error: e instanceof Error ? e.message : String(e) }),
+      );
+    }
+    setTimeout(run, 24 * 60 * 60 * 1000); // 24h
+  }, 45 * 1000); // 90 seconds
 }
 if (cluster.isPrimary) {
   console.log(await figlet("sora"));

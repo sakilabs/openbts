@@ -1,130 +1,68 @@
-import { type ComponentProps, memo, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getOperatorColor, getOperatorSortIndex, resolveOperatorMnc } from "@/lib/operatorUtils";
+import type { StatsOperator, VoivodeshipInternalRow, VoivodeshipUkeRow } from "../api";
+import { operatorDataKey, operatorSeries } from "../lib/series";
+import { StatChartCard } from "./statChartCard";
 
-import type { VoivodeshipInternalRow, VoivodeshipUkeRow } from "../api";
-
-function useRegionBarData(rows: { operator: { name: string }; region: { name: string } }[] | undefined, valueKey: string) {
+function useRegionBarData(rows: { operator: StatsOperator; region: { name: string } }[] | undefined, valueKey: string) {
   return useMemo(() => {
-    if (!rows?.length) return { chartData: [], operators: [] };
+    if (!rows?.length) return { chartData: [], series: [] };
 
-    const operatorSet = new Map<string, { name: string; color: string }>();
     const regionMap = new Map<string, Record<string, string | number>>();
 
     for (const row of rows) {
-      if (!operatorSet.has(row.operator.name)) {
-        const mnc = resolveOperatorMnc(null, row.operator.name);
-        operatorSet.set(row.operator.name, {
-          name: row.operator.name,
-          color: mnc ? getOperatorColor(mnc) : "#94a3b8",
-        });
-      }
-
       const existing = regionMap.get(row.region.name) ?? { region: row.region.name };
-      existing[row.operator.name] = (row as Record<string, unknown>)[valueKey] as number;
+      existing[operatorDataKey(row.operator)] = (row as Record<string, unknown>)[valueKey] as number;
       regionMap.set(row.region.name, existing);
     }
 
     const chartData = [...regionMap.values()]
       .map((row) => {
-        const total = Object.entries(row).reduce((sum, [k, v]) => (k !== "region" && typeof v === "number" ? sum + v : sum), 0);
-        return { ...row, _total: total };
+        const total = Object.entries(row).reduce((sum, [key, value]) => (key !== "region" && typeof value === "number" ? sum + value : sum), 0);
+        return { ...row, total };
       })
-      .sort((a, b) => (b._total as number) - (a._total as number));
+      .sort((a, b) => (b.total as number) - (a.total as number));
 
-    const operators = [...operatorSet.values()].sort(
-      (a, b) => getOperatorSortIndex(resolveOperatorMnc(null, a.name)) - getOperatorSortIndex(resolveOperatorMnc(null, b.name)),
-    );
-
-    return { chartData, operators };
+    return {
+      chartData,
+      series: operatorSeries(rows.map((row) => row.operator)),
+    };
   }, [rows, valueKey]);
 }
 
-const VoivodeshipBarCard = memo(function VoivodeshipBarCard({
-  title,
-  chartData,
-  operators,
-  locale,
-}: {
-  title: string;
-  chartData: Record<string, unknown>[];
-  operators: { name: string; color: string }[];
-  locale?: string;
-}) {
-  const config = useMemo<ChartConfig>(() => Object.fromEntries(operators.map((op) => [op.name, { label: op.name, color: op.color }])), [operators]);
-
-  if (!chartData.length) return null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} locale={locale} className="aspect-auto h-140 w-full">
-          <BarChart accessibilityLayer data={chartData} layout="vertical" margin={{ top: 5, right: 60, left: 20, bottom: 5 }}>
-            <CartesianGrid horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString(locale)} />
-            <YAxis type="category" dataKey="region" tick={{ fontSize: 12 }} width={120} />
-            <ChartTooltip content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
-            <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} />} />
-            {operators.map((op, i) => (
-              <Bar
-                key={op.name}
-                dataKey={op.name}
-                fill={op.color}
-                stackId="stack"
-                radius={i === operators.length - 1 ? [0, 4, 4, 0] : 0}
-                isAnimationActive={false}
-              >
-                {i === operators.length - 1 && (
-                  <LabelList
-                    dataKey="_total"
-                    position="right"
-                    fontSize={11}
-                    className="fill-foreground"
-                    formatter={(v: number) => v.toLocaleString(locale)}
-                  />
-                )}
-              </Bar>
-            ))}
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  );
-});
-
-export function VoivodeshipChartSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-4 w-48" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-140 w-full" />
-      </CardContent>
-    </Card>
-  );
-}
-
 export function UkeVoivodeshipChart({ data, isLoading }: { data?: VoivodeshipUkeRow[]; isLoading: boolean }) {
-  const { t, i18n } = useTranslation("statistics");
-  const { chartData, operators } = useRegionBarData(data, "unique_stations");
+  const { t } = useTranslation("statistics");
+  const { chartData, series } = useRegionBarData(data, "unique_stations");
 
-  if (isLoading) return <VoivodeshipChartSkeleton />;
-  return <VoivodeshipBarCard title={t("charts.byVoivodeship")} chartData={chartData} operators={operators} locale={i18n.language} />;
+  return (
+    <StatChartCard
+      title={t("charts.byVoivodeship")}
+      data={chartData}
+      series={series}
+      dataXKey="region"
+      stacked
+      height="h-140"
+      showBrush
+      isLoading={isLoading}
+    />
+  );
 }
 
 export function InternalVoivodeshipChart({ data, isLoading }: { data?: VoivodeshipInternalRow[]; isLoading: boolean }) {
-  const { t, i18n } = useTranslation("statistics");
-  const { chartData, operators } = useRegionBarData(data, "stations");
+  const { t } = useTranslation("statistics");
+  const { chartData, series } = useRegionBarData(data, "stations");
 
-  if (isLoading) return <VoivodeshipChartSkeleton />;
-  return <VoivodeshipBarCard title={t("charts.internalByVoivodeship")} chartData={chartData} operators={operators} locale={i18n.language} />;
+  return (
+    <StatChartCard
+      title={t("charts.internalByVoivodeship")}
+      data={chartData}
+      series={series}
+      dataXKey="region"
+      stacked
+      height="h-140"
+      showBrush
+      isLoading={isLoading}
+    />
+  );
 }

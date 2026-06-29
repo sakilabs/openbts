@@ -48,7 +48,7 @@ export type CellsEditorProps<T extends CellDraftBase> = {
   showConfirmCellsButton?: boolean;
   onConfirmAllCellsInRat?: (rat: string) => void;
 
-  // MNC of the selected operator — enables the "Fill EARFCN" button on LTE sections
+  // MNC of the selected operator
   operatorMnc?: number | null;
 
   // Compute diff badge counts for a RAT section header

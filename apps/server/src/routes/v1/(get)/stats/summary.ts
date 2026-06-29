@@ -7,6 +7,7 @@ import db from "../../../../database/psql.js";
 import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { type StatsOperator, statsOperatorSchema } from "./schemas.js";
 
 const CACHE_TTL = 86400; // 24h
 
@@ -23,7 +24,7 @@ const internalSchema = z.object({
   ),
   by_operator: z.array(
     z.object({
-      operator: z.object({ id: z.number(), name: z.string() }),
+      operator: statsOperatorSchema,
       stations: z.number(),
       cells: z.number(),
     }),
@@ -49,7 +50,7 @@ const schemaRoute = {
         ),
         by_operator: z.array(
           z.object({
-            operator: z.object({ id: z.number(), name: z.string() }),
+            operator: statsOperatorSchema,
             unique_stations: z.number(),
             permits: z.number(),
           }),
@@ -66,20 +67,20 @@ interface InternalSummary {
   total_stations: number;
   total_cells: number;
   by_rat: { rat: string; stations: number; cells: number; share_pct: number }[];
-  by_operator: { operator: { id: number; name: string }; stations: number; cells: number }[];
+  by_operator: { operator: StatsOperator; stations: number; cells: number }[];
 }
 
 interface Response {
   total_permits: number;
   total_unique_stations: number;
   by_rat: { rat: string; unique_stations: number; permits: number; share_pct: number }[];
-  by_operator: { operator: { id: number; name: string }; unique_stations: number; permits: number }[];
+  by_operator: { operator: StatsOperator; unique_stations: number; permits: number }[];
   internal: InternalSummary;
 }
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<Response>>) {
   const { operator_id } = req.query;
-  const cacheKey = `stats:summary${operator_id ? `:op:${operator_id}` : ""}`;
+  const cacheKey = `stats:summary:v2${operator_id ? `:op:${operator_id}` : ""}`;
 
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
@@ -104,6 +105,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .select({
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         unique_stations: countDistinct(ukePermits.uke_station_id),
         permits: count(),
       })
@@ -111,7 +113,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .innerJoin(ukeStations, eq(ukePermits.uke_station_id, ukeStations.id))
       .innerJoin(operators, eq(ukeStations.operator_id, operators.id))
       .where(ukeWhere)
-      .groupBy(operators.id, operators.name),
+      .groupBy(operators.id, operators.name, operators.mnc),
 
     db
       .select({
@@ -137,6 +139,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .select({
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         stations: countDistinct(cells.station_id),
         cells: count(),
       })
@@ -144,7 +147,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .innerJoin(stations, eq(cells.station_id, stations.id))
       .innerJoin(operators, eq(stations.operator_id, operators.id))
       .where(stationWhere)
-      .groupBy(operators.id, operators.name),
+      .groupBy(operators.id, operators.name, operators.mnc),
 
     db
       .select({
@@ -173,7 +176,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         share_pct: totalUniqueStations > 0 ? Math.round((r.unique_stations / totalUniqueStations) * 1000) / 10 : 0,
       })),
       by_operator: byOperatorRows.map((r) => ({
-        operator: { id: r.operator_id, name: r.operator_name },
+        operator: { id: r.operator_id, name: r.operator_name, mnc: r.operator_mnc },
         unique_stations: r.unique_stations,
         permits: r.permits,
       })),
@@ -187,7 +190,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
           share_pct: totalInternalStations > 0 ? Math.round((r.stations / totalInternalStations) * 1000) / 10 : 0,
         })),
         by_operator: internalByOperator.map((r) => ({
-          operator: { id: r.operator_id, name: r.operator_name },
+          operator: { id: r.operator_id, name: r.operator_name, mnc: r.operator_mnc },
           stations: r.stations,
           cells: r.cells,
         })),

@@ -873,7 +873,7 @@ function AnalyzerPage() {
         },
       }),
     ],
-    [t],
+    [openStationDialog, t],
   );
 
   const table = useReactTable({

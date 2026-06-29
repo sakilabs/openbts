@@ -1,6 +1,6 @@
 import { bands, cells, extraIdentificators, locations, lteCells, nrCells, operators, regions, stations } from "@openbts/drizzle";
 import { StationsResponseType } from "@openbts/proto/server";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 import { z } from "zod/v4";

@@ -7,19 +7,20 @@ import db from "../../../../database/psql.js";
 import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { statsOperatorSchema } from "./schemas.js";
 
 const CACHE_TTL = 86400; // 24h
 
 const ukeRowSchema = z.object({
   region: z.object({ id: z.number(), name: z.string() }),
-  operator: z.object({ id: z.number(), name: z.string() }),
+  operator: statsOperatorSchema,
   unique_stations: z.number(),
   permits: z.number(),
 });
 
 const internalRowSchema = z.object({
   region: z.object({ id: z.number(), name: z.string() }),
-  operator: z.object({ id: z.number(), name: z.string() }),
+  operator: statsOperatorSchema,
   stations: z.number(),
   cells: z.number(),
 });
@@ -47,7 +48,7 @@ interface VoivodeshipResponse {
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<VoivodeshipResponse>>) {
   const { operator_id } = req.query;
-  const cacheKey = `stats:voivodeships${operator_id ? `:op:${operator_id}` : ""}`;
+  const cacheKey = `stats:voivodeships:v2${operator_id ? `:op:${operator_id}` : ""}`;
 
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
@@ -62,6 +63,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         region_name: regions.name,
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         unique_stations: countDistinct(ukePermits.uke_station_id),
         permits: count(),
       })
@@ -71,7 +73,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .innerJoin(regions, eq(ukeLocations.region_id, regions.id))
       .innerJoin(operators, eq(ukeStations.operator_id, operators.id))
       .where(ukeWhere)
-      .groupBy(regions.id, regions.name, operators.id, operators.name)
+      .groupBy(regions.id, regions.name, operators.id, operators.name, operators.mnc)
       .orderBy(regions.name),
 
     db
@@ -80,6 +82,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         region_name: regions.name,
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         stations: countDistinct(cells.station_id),
         cells: count(),
       })
@@ -89,7 +92,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
       .innerJoin(regions, eq(locations.region_id, regions.id))
       .innerJoin(operators, eq(stations.operator_id, operators.id))
       .where(stationWhere)
-      .groupBy(regions.id, regions.name, operators.id, operators.name)
+      .groupBy(regions.id, regions.name, operators.id, operators.name, operators.mnc)
       .orderBy(regions.name),
   ]);
 
@@ -97,13 +100,13 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
     data: {
       uke: ukeRows.map((row) => ({
         region: { id: row.region_id, name: row.region_name },
-        operator: { id: row.operator_id, name: row.operator_name },
+        operator: { id: row.operator_id, name: row.operator_name, mnc: row.operator_mnc },
         unique_stations: row.unique_stations,
         permits: row.permits,
       })),
       internal: internalRows.map((row) => ({
         region: { id: row.region_id, name: row.region_name },
-        operator: { id: row.operator_id, name: row.operator_name },
+        operator: { id: row.operator_id, name: row.operator_name, mnc: row.operator_mnc },
         stations: row.stations,
         cells: row.cells,
       })),

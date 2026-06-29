@@ -85,15 +85,14 @@ async function handler(req: FastifyRequest<ReqBodyParams>, res: ReplyPayload<JSO
   const result = await db.transaction(async (tx) => {
     const previousById = new Map(previousSectors.map((sector) => [sector.id, sector]));
     const retainedSectorIds = new Set<number>();
-    const nextSectors: ResBody = [];
-
-    for (const sector of sectors) {
+    const sectorPlan = sectors.map((sector) => {
       const matchingPrevious = findPreviousSector(sector, previousById, previousSectors, retainedSectorIds);
-
-      const saved = await saveSector(tx, station_id, sector, matchingPrevious);
       if (matchingPrevious) retainedSectorIds.add(matchingPrevious.id);
-      if (saved) nextSectors.push(saved);
-    }
+      return { sector, matchingPrevious };
+    });
+
+    const savedSectors = await Promise.all(sectorPlan.map(({ sector, matchingPrevious }) => saveSector(tx, station_id, sector, matchingPrevious)));
+    const nextSectors = savedSectors.filter((sector): sector is SectorRow => sector !== null);
 
     const deletedIds = previousSectors.filter((sector) => !retainedSectorIds.has(sector.id)).map((sector) => sector.id);
     await deleteUnusedSectors(tx, deletedIds);

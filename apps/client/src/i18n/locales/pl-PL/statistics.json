@@ -1,9 +1,15 @@
 {
   "title": "Statystyki",
-  "description": "Statystyki pozwoleń i trendy historyczne w podziale na operatorów i pasma. Dane są aktualizowane co 24 godziny",
-  "rebuildNotice": {
-    "title": "Planowana przebudowa",
-    "description": "Planujemy przebudować tę stronę od zera jeszcze w tym miesiącu, wraz z nowymi funkcjonalnościami i widokami. Dodatkowo pojawi się możliwość eksportu statystyk jako zdjęcie oraz lepszy design, który będzie też lepiej wyglądać na telefonach."
+  "description": "Statystyki pozwoleń, kompletności bazy, kontrybucji i trendów historycznych w podziale na operatorów i pasma. Dane są aktualizowane co 24 godziny",
+  "sections": {
+    "quality": "Jakość danych",
+    "permitSnapshot": "UKE wg miesiąca"
+  },
+  "chartType": {
+    "label": "Typ wykresu",
+    "area": "Warstwowy",
+    "line": "Liniowy",
+    "bar": "Słupkowy"
   },
   "kpi": {
     "totalPermits": "Pozwolenia",
@@ -23,7 +29,43 @@
     "byVoivodeship": "Unikalne stacje wg województwa",
     "internalByVoivodeship": "Stacje wg województwa",
     "history": "Trendy historyczne",
+    "noData": "Brak danych",
     "noHistoryData": "Brak danych historycznych. Trendy pojawią się, gdy dane zostaną zebrane."
+  },
+  "completeness": {
+    "stationTitle": "Kompletność dokumentacji stacji",
+    "stationDescription": "Opublikowane stacje z sektorami i dodatkowymi identyfikatorami.",
+    "pciTitle": "Kompletność PCI",
+    "pciDescription": "Komórki LTE i NR z udokumentowanym lub brakującym PCI.",
+    "stations": "Stacje",
+    "withSectors": "Z sektorami",
+    "withoutSectors": "Bez sektorów",
+    "withExtraIds": "Z dodatkowymi ID",
+    "withoutExtraIds": "Bez dodatkowych ID",
+    "documented": "Udokumentowane",
+    "missing": "Brakujące",
+    "analyzerUsage": "Użycie analizatora"
+  },
+  "contributions": {
+    "title": "Historia kontrybucji",
+    "description": "Różnice dla sektorów, dodatkowych identyfikatorów i komórek z PCI.",
+    "addedSectors": "Dodane sektory",
+    "addedExtraIds": "Dodane dodatkowe ID",
+    "addedCellsWithPCI": "Dodane komórki z PCI"
+  },
+  "permitsByMonth": {
+    "title": "Stacje i pozwolenia UKE wg miesiąca",
+    "description": "Wybierz miesiąc, aby sprawdzić liczbę stacji i pozwoleń UKE.",
+    "snapshotDate": "Dane z {{date}} względem {{previousDate}}",
+    "month": "Miesiąc",
+    "view": "Widok",
+    "views": {
+      "stations": "Stacje",
+      "permits": "Pozwolenia"
+    },
+    "all": "Wszystkie",
+    "new": "Nowe",
+    "noPreviousSnapshot": "brak poprzednich danych"
   },
   "filters": {
     "allBands": "Wszystkie pasma",

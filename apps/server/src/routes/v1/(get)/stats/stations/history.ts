@@ -7,6 +7,7 @@ import db from "../../../../../database/psql.js";
 import redis from "../../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../../interfaces/routes.interface.js";
+import { type StatsOperator, statsOperatorSchema } from "../schemas.js";
 
 const CACHE_TTL = 86400; // 24h
 
@@ -22,7 +23,7 @@ const schemaRoute = {
       data: z.array(
         z.object({
           date: z.string(),
-          operator: z.object({ id: z.number(), name: z.string() }),
+          operator: statsOperatorSchema,
           unique_stations: z.number(),
         }),
       ),
@@ -34,13 +35,13 @@ type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
 interface StationsHistoryRow {
   date: string;
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   unique_stations: number;
 }
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<StationsHistoryRow[]>>) {
   const { operator_id, from, to, granularity } = req.query;
-  const cacheKey = `stats:stations:history:${granularity}:${operator_id ?? "all"}:${from?.toISOString() ?? ""}:${to?.toISOString() ?? ""}`;
+  const cacheKey = `stats:stations:history:v2:${granularity}:${operator_id ?? "all"}:${from?.toISOString() ?? ""}:${to?.toISOString() ?? ""}`;
 
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
@@ -52,10 +53,10 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
 
   const whereClause = and(...conditions);
 
-  const mapRows = (rows: { date: Date; operator_id: number; operator_name: string; unique_stations: number }[]) =>
+  const mapRows = (rows: { date: Date; operator_id: number; operator_name: string; operator_mnc: number | null; unique_stations: number }[]) =>
     rows.map((r) => ({
       date: r.date.toISOString().slice(0, 10),
-      operator: { id: r.operator_id, name: r.operator_name },
+      operator: { id: r.operator_id, name: r.operator_name, mnc: r.operator_mnc },
       unique_stations: r.unique_stations,
     }));
 
@@ -65,6 +66,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         date: statsSnapshots.snapshot_date,
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         unique_stations: statsSnapshots.unique_stations_count,
       })
       .from(statsSnapshots)
@@ -83,6 +85,7 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
         date: statsSnapshots.snapshot_date,
         operator_id: operators.id,
         operator_name: operators.name,
+        operator_mnc: operators.mnc,
         unique_stations: statsSnapshots.unique_stations_count,
       })
       .from(statsSnapshots)
@@ -101,11 +104,14 @@ async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody
   const importDateByMonth = new Map(importRows.map((r) => [r.date.toISOString().slice(0, 7), r.date.toISOString().slice(0, 10)]));
 
   const response = {
-    data: rows.map((r) => ({
-      date: importDateByMonth.get(r.date.toISOString().slice(0, 7)) ?? r.date.toISOString().slice(0, 10),
-      operator: { id: r.operator_id, name: r.operator_name },
-      unique_stations: r.unique_stations,
-    })),
+    data: rows.map((r) => {
+      const isoDate = r.date.toISOString();
+      return {
+        date: importDateByMonth.get(isoDate.slice(0, 7)) ?? isoDate.slice(0, 10),
+        operator: { id: r.operator_id, name: r.operator_name, mnc: r.operator_mnc },
+        unique_stations: r.unique_stations,
+      };
+    }),
   };
   await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(response));
   res.send(response);

@@ -105,9 +105,7 @@ async function fetchUkeStations(stations: UkeStationTuple[]): Promise<Map<string
   return map;
 }
 
-async function moveUnambiguousUkeStations(
-  stations: UkeStationTuple[],
-): Promise<Map<string, number>> {
+async function moveUnambiguousUkeStations(stations: UkeStationTuple[]): Promise<Map<string, number>> {
   const moved = new Map<string, number>();
   if (!stations.length) return moved;
 

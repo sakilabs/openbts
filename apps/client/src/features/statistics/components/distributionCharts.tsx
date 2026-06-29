@@ -1,138 +1,136 @@
-import { type ComponentProps, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Cell, Pie, PieChart } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getOperatorColor, getOperatorSortIndex, resolveOperatorMnc } from "@/lib/operatorUtils";
+import { EvilPieChart, Label, Legend, Pie, Tooltip } from "@/components/evilcharts/charts/pie-chart";
+import type { ChartConfig } from "@/components/evilcharts/ui/chart";
 
-import type { StatsSummary } from "../api";
+import type { StatsOperator, StatsSummary } from "../api";
+import { operatorColor, operatorDataKey } from "../lib/series";
 
 const RAT_COLORS: Record<string, string> = {
-  LTE: "#3b82f6",
-  NR: "#8b5cf6",
-  GSM: "#22c55e",
-  UMTS: "#f97316",
-  CDMA: "#ef4444",
-  IOT: "#06b6d4",
+  LTE: "var(--chart-1)",
+  NR: "var(--chart-2)",
+  GSM: "var(--chart-3)",
+  UMTS: "var(--chart-4)",
+  CDMA: "var(--chart-5)",
+  IOT: "var(--chart-1)",
 };
 
-function DonutChart({ title, data, locale }: { title: string; data: { name: string; value: number; fill: string }[]; locale?: string }) {
-  const config = useMemo<ChartConfig>(() => Object.fromEntries(data.map((d) => [d.name, { label: d.name, color: d.fill }])), [data]);
+type PieRow = { name: string; value: number };
+const EMPTY_PIE: { data: PieRow[]; config: ChartConfig } = { data: [], config: {} };
+
+function buildRatPieData(rows: StatsSummary["by_rat"]): { data: PieRow[]; config: ChartConfig } {
+  return {
+    data: rows.map((row) => ({ name: row.rat, value: row.unique_stations })),
+    config: Object.fromEntries(
+      rows.map((row) => [
+        row.rat,
+        { label: row.rat, colors: { light: [RAT_COLORS[row.rat] ?? "var(--chart-1)"], dark: [RAT_COLORS[row.rat] ?? "var(--chart-1)"] } },
+      ]),
+    ),
+  };
+}
+
+function makeLabelFormatter(data: PieRow[], locale: string) {
+  const total = data.reduce((sum, row) => sum + row.value, 0);
+  return (v: unknown) => {
+    const num = typeof v === "number" ? v : 0;
+    if (total > 0 && num / total < 0.05) return "";
+    return num.toLocaleString(locale);
+  };
+}
+
+function buildOperatorPieData<T extends { operator: StatsOperator }>(
+  rows: T[],
+  getValue: (row: T) => number,
+): { data: PieRow[]; config: ChartConfig } {
+  return {
+    data: rows.map((row) => ({ name: operatorDataKey(row.operator), value: getValue(row) })),
+    config: Object.fromEntries(
+      rows.map((row) => {
+        const key = operatorDataKey(row.operator);
+        const color = operatorColor(row.operator);
+        return [key, { label: row.operator.name, colors: { light: [color], dark: [color] } }];
+      }),
+    ),
+  };
+}
+
+function PiePanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="border-b border-border px-4 py-3">
+        <h3 className="text-sm font-medium leading-none">{title}</h3>
+      </div>
+      <div className="px-4 py-4">{children}</div>
+    </div>
+  );
+}
+
+export const UkeDistributionCharts = memo(function UkeDistributionCharts({ data, isLoading }: { data?: StatsSummary; isLoading: boolean }) {
+  const { t, i18n } = useTranslation("statistics");
+  const locale = i18n.language;
+
+  const ratPie = useMemo(() => (data?.by_rat.length ? buildRatPieData(data.by_rat) : EMPTY_PIE), [data]);
+  const operatorPie = useMemo(
+    () => (data?.by_operator.length ? buildOperatorPieData(data.by_operator, (row) => row.unique_stations) : EMPTY_PIE),
+    [data],
+  );
+
+  const ratFormatter = useMemo(() => makeLabelFormatter(ratPie.data, locale), [ratPie.data, locale]);
+  const operatorFormatter = useMemo(() => makeLabelFormatter(operatorPie.data, locale), [operatorPie.data, locale]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} locale={locale} className="mx-auto aspect-4/5 max-h-85">
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} paddingAngle={2} isAnimationActive={false}>
-              {data.map((entry) => (
-                <Cell key={entry.name} fill={entry.fill} />
-              ))}
+    <div className="relative border border-border">
+      <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
+        <PiePanel title={t("charts.byRat")}>
+          <EvilPieChart config={ratPie.config} data={ratPie.data} dataKey="value" nameKey="name" isLoading={isLoading} className="h-64">
+            <Pie paddingAngle={4} cornerRadius={8} minAngle={5}>
+              <Label labelListProps={{ formatter: ratFormatter }} />
             </Pie>
-            <ChartTooltip
-              content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} nameKey="name" hideLabel />}
-            />
-            <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} nameKey="name" />} />
-          </PieChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChartSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-4 w-32" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-64 w-full" />
-      </CardContent>
-    </Card>
-  );
-}
-
-export function DistributionChartsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <ChartSkeleton />
-      <ChartSkeleton />
+            <Tooltip locale={locale} />
+            <Legend variant="vertical-bar" />
+          </EvilPieChart>
+        </PiePanel>
+        <PiePanel title={t("charts.byOperator")}>
+          <EvilPieChart config={operatorPie.config} data={operatorPie.data} dataKey="value" nameKey="name" isLoading={isLoading} className="h-64">
+            <Pie paddingAngle={4} cornerRadius={8} minAngle={5}>
+              <Label labelListProps={{ formatter: operatorFormatter }} />
+            </Pie>
+            <Tooltip locale={locale} />
+            <Legend variant="vertical-bar" />
+          </EvilPieChart>
+        </PiePanel>
+      </div>
     </div>
   );
-}
+});
 
-export function UkeDistributionCharts({ data, isLoading }: { data?: StatsSummary; isLoading: boolean }) {
+export const InternalDistributionCharts = memo(function InternalDistributionCharts({ data, isLoading }: { data?: StatsSummary; isLoading: boolean }) {
   const { t, i18n } = useTranslation("statistics");
+  const locale = i18n.language;
 
-  const ratData = useMemo(
-    () =>
-      data?.by_rat.map((r) => ({
-        name: r.rat,
-        value: r.unique_stations,
-        fill: RAT_COLORS[r.rat] ?? "#94a3b8",
-      })) ?? [],
+  const operatorPie = useMemo(
+    () => (data?.internal.by_operator.length ? buildOperatorPieData(data.internal.by_operator, (row) => row.stations) : EMPTY_PIE),
     [data],
   );
 
-  const operatorData = useMemo(
-    () =>
-      (data?.by_operator ?? [])
-        .map((r) => {
-          const mnc = resolveOperatorMnc(null, r.operator.name);
-          return { name: r.operator.name, value: r.unique_stations, fill: mnc ? getOperatorColor(mnc) : "#94a3b8", mnc };
-        })
-        .sort((a, b) => getOperatorSortIndex(a.mnc) - getOperatorSortIndex(b.mnc)),
-    [data],
-  );
-
-  if (isLoading) return <DistributionChartsSkeleton />;
-  if (!data) return null;
+  const formatter = useMemo(() => makeLabelFormatter(operatorPie.data, locale), [operatorPie.data, locale]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <DonutChart title={t("charts.byRat")} data={ratData} locale={i18n.language} />
-      <DonutChart title={t("charts.byOperator")} data={operatorData} locale={i18n.language} />
+    <div className="relative border border-border">
+      <div className="border-b border-border px-4 py-3">
+        <h3 className="text-sm font-medium leading-none">{t("charts.internalStationsPerOperator")}</h3>
+      </div>
+      <div className="px-4 py-4">
+        <EvilPieChart config={operatorPie.config} data={operatorPie.data} dataKey="value" nameKey="name" isLoading={isLoading} className="h-72">
+          <Pie paddingAngle={4} cornerRadius={8} minAngle={5}>
+            <Label labelListProps={{ formatter }} />
+          </Pie>
+          <Tooltip locale={locale} />
+          <Legend variant="vertical-bar" />
+        </EvilPieChart>
+      </div>
     </div>
   );
-}
-
-export function InternalDistributionCharts({ data, isLoading }: { data?: StatsSummary; isLoading: boolean }) {
-  const { t, i18n } = useTranslation("statistics");
-
-  const ratData = useMemo(
-    () =>
-      data?.internal.by_rat.map((r) => ({
-        name: r.rat,
-        value: r.cells,
-        fill: RAT_COLORS[r.rat] ?? "#94a3b8",
-      })) ?? [],
-    [data],
-  );
-
-  const operatorData = useMemo(
-    () =>
-      (data?.internal.by_operator ?? [])
-        .map((r) => {
-          const mnc = resolveOperatorMnc(null, r.operator.name);
-          return { name: r.operator.name, value: r.cells, fill: mnc ? getOperatorColor(mnc) : "#94a3b8", mnc };
-        })
-        .sort((a, b) => getOperatorSortIndex(a.mnc) - getOperatorSortIndex(b.mnc)),
-    [data],
-  );
-
-  if (isLoading) return <DistributionChartsSkeleton />;
-  if (!data) return null;
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <DonutChart title={t("charts.internalByRat")} data={ratData} locale={i18n.language} />
-      <DonutChart title={t("charts.internalByOperator")} data={operatorData} locale={i18n.language} />
-    </div>
-  );
-}
+});

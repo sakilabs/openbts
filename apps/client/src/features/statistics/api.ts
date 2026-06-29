@@ -1,22 +1,28 @@
 import { fetchApiData } from "@/lib/api";
 
+export interface StatsOperator {
+  id: number;
+  name: string;
+  mnc: number | null;
+}
+
 export interface InternalSummary {
   total_stations: number;
   total_cells: number;
   by_rat: { rat: string; stations: number; cells: number; share_pct: number }[];
-  by_operator: { operator: { id: number; name: string }; stations: number; cells: number }[];
+  by_operator: { operator: StatsOperator; stations: number; cells: number }[];
 }
 
 export interface StatsSummary {
   total_permits: number;
   total_unique_stations: number;
   by_rat: { rat: string; unique_stations: number; permits: number; share_pct: number }[];
-  by_operator: { operator: { id: number; name: string }; unique_stations: number; permits: number }[];
+  by_operator: { operator: StatsOperator; unique_stations: number; permits: number }[];
   internal: InternalSummary;
 }
 
 export interface StatsPermitRow {
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   band: { id: number; name: string; rat: string };
   unique_stations: number;
   permits_count: number;
@@ -24,7 +30,7 @@ export interface StatsPermitRow {
 }
 
 export interface InternalPermitRow {
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   band: { id: number; name: string; rat: string };
   stations: number;
   cells: number;
@@ -38,14 +44,14 @@ export interface StatsPermitsResponse {
 
 export interface VoivodeshipUkeRow {
   region: { id: number; name: string };
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   unique_stations: number;
   permits: number;
 }
 
 export interface VoivodeshipInternalRow {
   region: { id: number; name: string };
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   stations: number;
   cells: number;
 }
@@ -57,7 +63,7 @@ export interface StatsVoivodeshipsResponse {
 
 export interface StatsHistoryRow {
   date: string;
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   band: { id: number; name: string };
   unique_stations: number;
   permits_count: number;
@@ -65,15 +71,83 @@ export interface StatsHistoryRow {
 
 export interface StatsStationsHistoryRow {
   date: string;
-  operator: { id: number; name: string };
+  operator: StatsOperator;
   unique_stations: number;
 }
 
+export interface CompletenessStats {
+  stations: {
+    total: number;
+    withSectors: number;
+    withExtraIds: number;
+  };
+  cells: {
+    lte: {
+      documented: number;
+      missing: number;
+    };
+    nr: {
+      documented: number;
+      missing: number;
+    };
+  };
+}
+
+export interface AnalyzerUsageRow {
+  date: string;
+  count: number;
+}
+
+export interface ContributionsHistoryRow {
+  date: string;
+  totalSectors: number;
+  totalExtraIds: number;
+  totalCellsWithPCI: number;
+  addedSectors: number;
+  addedExtraIds: number;
+  addedCellsWithPCI: number;
+}
+
+export interface PermitSnapshot {
+  snapshot_date: string | null;
+  previous_snapshot_date: string | null;
+  rows: {
+    operator: StatsOperator;
+    band: { id: number; name: string; rat: string };
+    unique_stations: number;
+    permits: number;
+    unique_stations_delta: number;
+    permits_delta: number;
+  }[];
+}
+
 export const fetchStatsSummary = (operatorId?: number) =>
-  fetchApiData<StatsSummary>(`stats/summary${operatorId ? `?operator_id=${operatorId}` : ""}`);
+  fetchApiData<StatsSummary>(`stats/summary${operatorId !== undefined ? `?operator_id=${operatorId}` : ""}`);
 
 export const fetchStatsPermits = (operatorId?: number) =>
-  fetchApiData<StatsPermitsResponse>(`stats/permits${operatorId ? `?operator_id=${operatorId}` : ""}`);
+  fetchApiData<StatsPermitsResponse>(`stats/permits${operatorId !== undefined ? `?operator_id=${operatorId}` : ""}`);
+
+export const fetchStatsCompleteness = () => fetchApiData<CompletenessStats>("stats/completeness");
+
+export const fetchAnalyzerUsage = (params?: { from?: string; to?: string; granularity?: "daily" | "monthly" }) => {
+  const analyzerUsageParams = buildHistoryParams({
+    from: params?.from,
+    to: params?.to,
+    granularity: params?.granularity,
+  });
+  return fetchApiData<AnalyzerUsageRow[]>(`stats/analyzer/usage${analyzerUsageParams ? `?${analyzerUsageParams}` : ""}`);
+};
+
+export const fetchContributionsHistory = (params?: { from?: string; to?: string; granularity?: "daily" | "monthly" }) => {
+  const historyParams = buildHistoryParams({
+    from: params?.from,
+    to: params?.to,
+    granularity: params?.granularity,
+  });
+  return fetchApiData<ContributionsHistoryRow[]>(`stats/contributions/history${historyParams ? `?${historyParams}` : ""}`);
+};
+
+export const fetchPermitSnapshot = (month: string) => fetchApiData<PermitSnapshot>(`stats/permits/snapshot?month=${month}`);
 
 function buildHistoryParams(params: Record<string, string | number | undefined>): string {
   const search = new URLSearchParams();
@@ -105,4 +179,4 @@ export const fetchStatsStationsHistory = (params?: { operator_id?: number; from?
 };
 
 export const fetchStatsVoivodeships = (operatorId?: number) =>
-  fetchApiData<StatsVoivodeshipsResponse>(`stats/voivodeships${operatorId ? `?operator_id=${operatorId}` : ""}`);
+  fetchApiData<StatsVoivodeshipsResponse>(`stats/voivodeships${operatorId !== undefined ? `?operator_id=${operatorId}` : ""}`);

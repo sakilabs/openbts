@@ -190,6 +190,19 @@
   * {
     @apply border-border outline-ring/50;
   }
+  [data-slot="chart"] .recharts-wrapper,
+  [data-slot="chart"] .recharts-wrapper:focus,
+  [data-slot="chart"] .recharts-wrapper:focus-visible,
+  [data-slot="chart"] .recharts-responsive-container,
+  [data-slot="chart"] .recharts-responsive-container:focus,
+  [data-slot="chart"] .recharts-responsive-container:focus-visible,
+  [data-slot="chart"] .recharts-surface,
+  [data-slot="chart"] .recharts-surface:focus,
+  [data-slot="chart"] .recharts-surface:focus-visible,
+  [data-slot="chart"] .recharts-surface *:focus,
+  [data-slot="chart"] .recharts-surface *:focus-visible {
+    outline: none !important;
+  }
   html,
   body {
     @apply h-full overflow-hidden;

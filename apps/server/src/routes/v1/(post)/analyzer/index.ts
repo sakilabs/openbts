@@ -8,6 +8,7 @@ import db from "../../../../database/psql.js";
 import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { recordAnalyzerUsage } from "../../../../services/analyzerUsage.service.ts";
 import {
   type AnalyzerResult,
   type CellGroups,
@@ -140,7 +141,11 @@ function addLookupTasks<TGroup, TItem>(
   getItems: (group: TGroup) => Iterable<TItem>,
   runLookup: (mnc: number, chunk: TItem[]) => Promise<void>,
 ): void {
-  for (const [mnc, group] of groups) for (const chunk of chunks(getItems(group))) tasks.push(() => runLookup(mnc, chunk));
+  for (const [mnc, group] of groups) {
+    for (const chunk of chunks(getItems(group))) {
+      tasks.push(() => runLookup(mnc, chunk));
+    }
+  }
 }
 
 async function runLookupTasks(tasks: LookupTask[]): Promise<void> {
@@ -284,18 +289,18 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
       });
 
       for (const row of rows) {
-        if (row.lac !== null)
-          maps.umtsLacMap.set(pairKey(mnc, row.lac, row.cid), {
-            station: row.cell.station as unknown as AnalyzerStation,
-            cell_id: row.cell_id,
-            sector_id: row.cell.sector_id,
-            band_id: row.cell.band_id,
-            rnc: row.rnc,
-            cid: row.cid,
-            lac: row.lac,
-            arfcn: row.arfcn ?? null,
-            is_confirmed: row.cell.is_confirmed,
-          });
+        if (row.lac === null) continue;
+        maps.umtsLacMap.set(pairKey(mnc, row.lac, row.cid), {
+          station: row.cell.station as unknown as AnalyzerStation,
+          cell_id: row.cell_id,
+          sector_id: row.cell.sector_id,
+          band_id: row.cell.band_id,
+          rnc: row.rnc,
+          cid: row.cid,
+          lac: row.lac,
+          arfcn: row.arfcn ?? null,
+          is_confirmed: row.cell.is_confirmed,
+        });
       }
     },
   );
@@ -312,15 +317,15 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
 
       for (const row of rows) {
         const key = lteEnbidKey(mnc, row.enbid);
-        if (!maps.lteEnbidMap.has(key))
-          maps.lteEnbidMap.set(key, {
-            station: row.cell.station as unknown as AnalyzerStation,
-            cell_id: row.cell_id,
-            sector_id: row.cell.sector_id,
-            band_id: row.cell.band_id,
-            enbid: row.enbid,
-            is_confirmed: row.cell.is_confirmed,
-          });
+        if (maps.lteEnbidMap.has(key)) continue;
+        maps.lteEnbidMap.set(key, {
+          station: row.cell.station as unknown as AnalyzerStation,
+          cell_id: row.cell_id,
+          sector_id: row.cell.sector_id,
+          band_id: row.cell.band_id,
+          enbid: row.enbid,
+          is_confirmed: row.cell.is_confirmed,
+        });
       }
     },
   );
@@ -331,6 +336,8 @@ async function executeLookups(inputCells: CellInput[], groups: CellGroups): Prom
 
 async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<AnalyzerResult<AnalyzerStation>[]>>) {
   const { cells: inputCells } = req.body;
+
+  void recordAnalyzerUsage();
 
   const key = `analyzer:${createHash("sha256").update(JSON.stringify(inputCells)).digest("hex")}`;
   const cached = await redis.get(key);

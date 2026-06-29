@@ -1,5 +1,6 @@
 export {
   getOperatorColor,
+  getOperatorColorByName,
   resolveOperatorMnc,
   normalizeOperatorName,
   getMnoBrand,

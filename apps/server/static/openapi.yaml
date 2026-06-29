@@ -191,6 +191,27 @@ paths:
                         items: { $ref: "#/components/schemas/PermitsByBandInternal" }
         "500": { $ref: "#/components/responses/InternalServerError" }
 
+  /stats/permits/snapshot:
+    get:
+      tags: [Stats]
+      summary: Get latest permit snapshot for a month
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/PermitSnapshot" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
   /stats/permits/history:
     get:
       tags: [Stats]
@@ -4963,6 +4984,13 @@ components:
         createdAt: { type: string, format: date-time }
 
     # Stats schemas
+    StatsOperator:
+      type: object
+      required: [id, name, mnc]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        mnc: { type: integer, nullable: true }
     StatsByRat:
       type: object
       properties:
@@ -4973,11 +5001,7 @@ components:
     StatsByOperator:
       type: object
       properties:
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         unique_stations: { type: integer }
         permits: { type: integer }
     InternalStatsByRat:
@@ -4990,11 +5014,7 @@ components:
     InternalStatsByOperator:
       type: object
       properties:
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         stations: { type: integer }
         cells: { type: integer }
     InternalSummary:
@@ -5007,11 +5027,7 @@ components:
     PermitsByBandUKE:
       type: object
       properties:
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         band:
           type: object
           properties:
@@ -5024,11 +5040,7 @@ components:
     PermitsByBandInternal:
       type: object
       properties:
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         band:
           type: object
           properties:
@@ -5042,11 +5054,7 @@ components:
       type: object
       properties:
         date: { type: string, format: date }
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         band:
           type: object
           properties:
@@ -5054,17 +5062,37 @@ components:
             name: { type: string }
         unique_stations: { type: integer }
         permits_count: { type: integer }
+    PermitSnapshot:
+      type: object
+      required: [snapshot_date, previous_snapshot_date, rows]
+      properties:
+        snapshot_date: { type: string, format: date-time, nullable: true }
+        previous_snapshot_date: { type: string, format: date-time, nullable: true }
+        rows:
+          type: array
+          items: { $ref: "#/components/schemas/PermitSnapshotRow" }
+    PermitSnapshotRow:
+      type: object
+      required: [operator, band, unique_stations, permits, unique_stations_delta, permits_delta]
+      properties:
+        operator: { $ref: "#/components/schemas/StatsOperator" }
+        band:
+          type: object
+          required: [id, name, rat]
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            rat: { type: string }
+        unique_stations: { type: integer }
+        permits: { type: integer }
+        unique_stations_delta: { type: integer }
+        permits_delta: { type: integer }
     StationsHistoryRow:
       type: object
       required: [date, operator, unique_stations]
       properties:
         date: { type: string, format: date }
-        operator:
-          type: object
-          required: [id, name]
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         unique_stations:
           type: integer
           description: Count of unique stations for this operator on this date
@@ -5076,11 +5104,7 @@ components:
           properties:
             id: { type: integer }
             name: { type: string }
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         unique_stations: { type: integer }
         permits: { type: integer }
     VoivodeshipInternal:
@@ -5091,11 +5115,7 @@ components:
           properties:
             id: { type: integer }
             name: { type: string }
-        operator:
-          type: object
-          properties:
-            id: { type: integer }
-            name: { type: string }
+        operator: { $ref: "#/components/schemas/StatsOperator" }
         stations: { type: integer }
         cells: { type: integer }
 
