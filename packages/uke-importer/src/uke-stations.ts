@@ -1,6 +1,7 @@
 import { ukePermits, ukeStations } from "@openbts/drizzle";
 import { db } from "@openbts/drizzle/db";
 import { sql } from "drizzle-orm";
+/* eslint-disable no-await-in-loop */
 
 import { BATCH_SIZE } from "./config.js";
 import { chunk } from "./utils.js";
@@ -17,6 +18,10 @@ export function getUkeStationKey(station: Pick<UkeStationTuple, "station_id" | "
   return `${station.station_id}:${station.operator_id}:${station.location_id}`;
 }
 
+function getUkeStationPairKey(station: Pick<UkeStationTuple, "station_id" | "operator_id">): string {
+  return `${station.station_id}:${station.operator_id}`;
+}
+
 export async function resolveUkeStationIds(stations: UkeStationTuple[]): Promise<Map<string, number>> {
   const uniqueByKey = new Map<string, UkeStationTuple>();
   for (const station of stations) {
@@ -30,10 +35,10 @@ export async function resolveUkeStationIds(stations: UkeStationTuple[]): Promise
 
   const existing = await fetchUkeStations(unique);
   const toInsert = unique.filter((station) => !existing.has(getUkeStationKey(station)));
+  const moved = await moveUnambiguousUkeStations(toInsert);
+  const unresolved = toInsert.filter((station) => !moved.has(getUkeStationKey(station)));
 
-  if (!toInsert.length) return existing;
-
-  for (const group of chunk(toInsert, BATCH_SIZE)) {
+  for (const group of chunk(unresolved, BATCH_SIZE)) {
     if (!group.length) continue;
     await db
       .insert(ukeStations)
@@ -41,8 +46,8 @@ export async function resolveUkeStationIds(stations: UkeStationTuple[]): Promise
       .onConflictDoNothing({ target: [ukeStations.station_id, ukeStations.operator_id, ukeStations.location_id] });
   }
 
-  const newlyResolved = await fetchUkeStations(toInsert);
-  return new Map([...existing, ...newlyResolved]);
+  const newlyResolved = await fetchUkeStations(unresolved);
+  return new Map([...existing, ...moved, ...newlyResolved]);
 }
 
 export async function refreshUkeStationActivity(stationIds: Iterable<number>): Promise<void> {
@@ -98,4 +103,59 @@ async function fetchUkeStations(stations: UkeStationTuple[]): Promise<Map<string
     for (const row of rows) map.set(getUkeStationKey(row), row.id);
   }
   return map;
+}
+
+async function moveUnambiguousUkeStations(
+  stations: UkeStationTuple[],
+): Promise<Map<string, number>> {
+  const moved = new Map<string, number>();
+  if (!stations.length) return moved;
+
+  for (const group of chunk(stations, BATCH_SIZE)) {
+    if (!group.length) continue;
+    const rows = await db
+      .select({
+        id: ukeStations.id,
+        station_id: ukeStations.station_id,
+        operator_id: ukeStations.operator_id,
+        location_id: ukeStations.location_id,
+      })
+      .from(ukeStations)
+      .where(
+        sql`(${ukeStations.station_id}, ${ukeStations.operator_id}) IN (${sql.join(
+          group.map((station) => sql`(${station.station_id}, ${station.operator_id})`),
+          sql`, `,
+        )})`,
+      );
+
+    const rowsByPairKey = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const pairKey = getUkeStationPairKey(row);
+      const pairRows = rowsByPairKey.get(pairKey) ?? [];
+      pairRows.push(row);
+      rowsByPairKey.set(pairKey, pairRows);
+    }
+
+    const moves = group
+      .map((station) => {
+        const pairRows = rowsByPairKey.get(getUkeStationPairKey(station)) ?? [];
+        const existing = pairRows.length === 1 ? pairRows[0] : undefined;
+        if (existing === undefined || existing.location_id === station.location_id) return null;
+        return { station, existing };
+      })
+      .filter((move): move is NonNullable<typeof move> => move !== null && move !== undefined);
+
+    if (!moves.length) continue;
+
+    for (const move of moves) {
+      await db
+        .update(ukeStations)
+        .set({ location_id: move.station.location_id, updatedAt: move.station.updatedAt })
+        .where(sql`${ukeStations.id} = ${move.existing.id}`);
+
+      moved.set(getUkeStationKey(move.station), move.existing.id);
+    }
+  }
+
+  return moved;
 }
