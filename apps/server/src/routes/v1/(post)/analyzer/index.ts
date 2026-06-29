@@ -8,6 +8,7 @@ import db from "../../../../database/psql.js";
 import redis from "../../../../database/redis.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
+import { recordAnalyzerUsage } from "../../../../services/analyzerUsage.service.ts";
 import {
   type AnalyzerResult,
   type CellGroups,
@@ -335,6 +336,7 @@ async function handler(req: FastifyRequest<ReqBody>, res: ReplyPayload<JSONBody<
   const key = `analyzer:${createHash("sha256").update(JSON.stringify(inputCells)).digest("hex")}`;
   const cached = await redis.get(key);
   if (cached) return res.send({ data: JSON.parse(cached) });
+  recordAnalyzerUsage();
 
   const groups = groupCellsByMnc(inputCells);
   const maps = await executeLookups(inputCells, groups);

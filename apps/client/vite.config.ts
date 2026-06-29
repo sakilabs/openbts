@@ -97,7 +97,7 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    include: ["react", "react-dom", "react-i18next", "maplibre-gl", "@hugeicons/react"],
+    include: ["react", "react-dom", "react-i18next", "maplibre-gl", "@hugeicons/react", "recharts"],
   },
   build: {
     rolldownOptions: {

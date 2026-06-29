@@ -8,107 +8,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getOperatorColor, getOperatorSortIndex, resolveOperatorMnc } from "@/lib/operatorUtils";
 
 import type { InternalPermitRow, StatsPermitRow } from "../api";
+import { operatorSeries } from "../lib/series";
+import { StatChartCard } from "./statChartCard";
 
 function useBarData(rows: { operator: { name: string }; band: { name: string } }[] | undefined, valueKey: string) {
   return useMemo(() => {
-    if (!rows?.length) return { chartData: [], operators: [] };
+    if (!rows?.length) return { data: [], series: [] };
 
-    const operatorSet = new Map<string, { name: string; color: string }>();
     const bandMap = new Map<string, Record<string, string | number>>();
-
     for (const row of rows) {
-      if (!operatorSet.has(row.operator.name)) {
-        const mnc = resolveOperatorMnc(null, row.operator.name);
-        operatorSet.set(row.operator.name, {
-          name: row.operator.name,
-          color: mnc ? getOperatorColor(mnc) : "#94a3b8",
-        });
-      }
-
       const existing = bandMap.get(row.band.name) ?? { band: row.band.name };
       existing[row.operator.name] = (row as Record<string, unknown>)[valueKey] as number;
       bandMap.set(row.band.name, existing);
     }
 
-    const operators = [...operatorSet.values()].sort(
-      (a, b) => getOperatorSortIndex(resolveOperatorMnc(null, a.name)) - getOperatorSortIndex(resolveOperatorMnc(null, b.name)),
-    );
-
-    return { chartData: [...bandMap.values()], operators };
+    return { data: [...bandMap.values()], series: operatorSeries(rows.map((row) => row.operator.name)) };
   }, [rows, valueKey]);
-}
-
-const BandBarChartCard = memo(function BandBarChartCard({
-  title,
-  chartData,
-  operators,
-  locale,
-}: {
-  title: string;
-  chartData: Record<string, unknown>[];
-  operators: { name: string; color: string }[];
-  locale?: string;
-}) {
-  const config = useMemo<ChartConfig>(() => Object.fromEntries(operators.map((op) => [op.name, { label: op.name, color: op.color }])), [operators]);
-
-  if (!chartData.length) return null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} locale={locale} className="aspect-auto h-100 w-full">
-          <BarChart accessibilityLayer data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="band" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
-            <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => v.toLocaleString(locale)} />
-            <ChartTooltip content={(props) => <ChartTooltipContent {...(props as ComponentProps<typeof ChartTooltipContent>)} />} />
-            <ChartLegend content={(props) => <ChartLegendContent {...(props as ComponentProps<typeof ChartLegendContent>)} />} />
-            {operators.map((op) => (
-              <Bar key={op.name} dataKey={op.name} fill={op.color} isAnimationActive={false} />
-            ))}
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  );
-});
-
-export function BandBarChartSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-4 w-48" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-96 w-full" />
-      </CardContent>
-    </Card>
-  );
 }
 
 export function UkeBandBarChart({ data, isLoading }: { data?: StatsPermitRow[]; isLoading: boolean }) {
   const { t, i18n } = useTranslation("statistics");
-  const { chartData, operators } = useBarData(data, "unique_stations");
+  const { data: chartData, series } = useBarData(data, "unique_stations");
 
-  if (isLoading) return <BandBarChartSkeleton />;
-  return <BandBarChartCard title={t("charts.byBand")} chartData={chartData} operators={operators} locale={i18n.language} />;
+  return <StatChartCard title={t("charts.byBand")} data={chartData} series={series} dataXKey="band" stacked height="h-96" isLoading={isLoading} />;
 }
 
 export function InternalBandStationsBarChart({ data, isLoading }: { data?: InternalPermitRow[]; isLoading: boolean }) {
   const { t, i18n } = useTranslation("statistics");
-  const { chartData, operators } = useBarData(data, "stations");
+  const { data: chartData, series } = useBarData(data, "stations");
 
-  if (isLoading) return <BandBarChartSkeleton />;
-  return <BandBarChartCard title={t("charts.internalStationsByBand")} chartData={chartData} operators={operators} locale={i18n.language} />;
+  return <StatChartCard title={t("charts.byBand")} data={chartData} series={series} dataXKey="band" stacked height="h-96" isLoading={isLoading} />;
 }
 
 export function InternalBandBarChart({ data, isLoading }: { data?: InternalPermitRow[]; isLoading: boolean }) {
   const { t, i18n } = useTranslation("statistics");
-  const { chartData, operators } = useBarData(data, "cells");
+  const { data: chartData, series } = useBarData(data, "cells");
 
-  if (isLoading) return <BandBarChartSkeleton />;
-  return <BandBarChartCard title={t("charts.internalByBand")} chartData={chartData} operators={operators} locale={i18n.language} />;
+  return <StatChartCard title={t("charts.byBand")} data={chartData} series={series} dataXKey="band" stacked height="h-96" isLoading={isLoading} />;
 }

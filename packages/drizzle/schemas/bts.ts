@@ -17,6 +17,7 @@ import {
   unique,
   uniqueIndex,
   varchar,
+  date,
 } from "drizzle-orm/pg-core";
 
 export const UKEPermissionType = pgEnum("uke_permission_type", ["zmP", "P"]);
@@ -27,6 +28,7 @@ export const StationStatus = pgEnum("station_status", ["published", "inactive", 
 export const PermitsSource = pgEnum("permits_source", ["permits", "device_registry"]);
 export const NRType = pgEnum("nr_type", ["nsa", "sa"]);
 export const UkeSchema = pgSchema("uke");
+export const StatisticsSchema = pgSchema("statistics");
 
 /**
  * Operator table
@@ -596,7 +598,7 @@ export const ukeImportMetadata = UkeSchema.table("uke_import_metadata", {
   status: varchar("status", { length: 20 }).notNull(),
 });
 
-export const statsSnapshots = pgTable(
+export const statsSnapshots = StatisticsSchema.table(
   "stats_snapshots",
   {
     id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
@@ -618,6 +620,26 @@ export const statsSnapshots = pgTable(
     index("stats_snapshots_operator_id_idx").on(t.operator_id),
     index("stats_snapshots_date_operator_band_idx").on(t.snapshot_date, t.operator_id, t.band_id),
   ],
+);
+
+export const analyzerUsage = StatisticsSchema.table("analyzer_usage", {
+  date: date("date").primaryKey(),
+  count: integer("count").notNull().default(0),
+});
+
+export const contributionSnapshots = StatisticsSchema.table(
+  "contribution_snapshots",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    snapshot_date: timestamp("snapshot_date", { withTimezone: true }).notNull(),
+    totalStations: integer("total_stations").notNull().default(0),
+    totalSectors: integer("total_sectors").notNull().default(0),
+    totalExtraIds: integer("total_extra_ids").notNull().default(0),
+    totalCells: integer("total_cells").notNull().default(0),
+    totalCellsWithPCI: integer("total_cells_with_pci").notNull().default(0),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("contribution_snapshots_date_unique").on(t.snapshot_date), index("contribution_snapshots_date_idx").on(t.snapshot_date)],
 );
 
 export const deletedEntries = pgTable(

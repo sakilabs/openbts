@@ -69,11 +69,57 @@ export interface StatsStationsHistoryRow {
   unique_stations: number;
 }
 
+export interface CompletenessStats {
+  stations: {
+    total: number;
+    withSectors: number;
+    withExtraIds: number;
+  };
+  cells: {
+    lte: {
+      documented: number;
+      missing: number;
+    };
+    nr: {
+      documented: number;
+      missing: number;
+    };
+  };
+}
+
+export interface AnalyzerUsageRow {
+  date: string;
+  count: number;
+}
+
+export interface PermitSnapshot {
+  snapshot_date: string | null;
+  rows: {
+    operator: { id: number; name: string };
+    band: { id: number; name: string; rat: string };
+    unique_stations: number;
+    permits: number;
+  }[];
+}
+
 export const fetchStatsSummary = (operatorId?: number) =>
   fetchApiData<StatsSummary>(`stats/summary${operatorId ? `?operator_id=${operatorId}` : ""}`);
 
 export const fetchStatsPermits = (operatorId?: number) =>
   fetchApiData<StatsPermitsResponse>(`stats/permits${operatorId ? `?operator_id=${operatorId}` : ""}`);
+
+export const fetchStatsCompleteness = () => fetchApiData<CompletenessStats>("stats/completeness");
+
+export const fetchAnalyzerUsage = (params?: { from?: string; to?: string; granularity?: "daily" | "monthly" }) => {
+  const analyzerUsageParams = buildHistoryParams({
+    from: params?.from,
+    to: params?.to,
+    granularity: params?.granularity,
+  });
+  fetchApiData<AnalyzerUsageRow[]>(`stats/analyzer/usage${analyzerUsageParams ? `?${analyzerUsageParams}` : ""}`);
+};
+
+export const fetchPermitSnapshot = (month: string) => fetchApiData<PermitSnapshot>(`stats/permits/snapshot?month=${month}`);
 
 function buildHistoryParams(params: Record<string, string | number | undefined>): string {
   const search = new URLSearchParams();
