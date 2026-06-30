@@ -1,4 +1,5 @@
-import { API_BASE, fetchJson } from "@/lib/api";
+import { API_BASE, fetchApiData, fetchJson } from "@/lib/api";
+import type { Region } from "@/types/station";
 
 export const KMZ_TYPES = ["stations", "radiolines"] as const;
 export const KMZ_SOURCES = ["all", "permits", "device_registry"] as const;
@@ -10,9 +11,16 @@ export interface KmzFile {
   date: string;
   type: KmzType;
   source: KmzSource;
-  region: string | null;
+  region: Region | null;
   filename: string;
   size: number;
+}
+
+export interface KmzListFilters {
+  type: KmzType;
+  source: KmzSource;
+  date: string | null;
+  region: string | null;
 }
 
 interface KmzListResponse {
@@ -20,15 +28,22 @@ interface KmzListResponse {
   totalCount: number;
 }
 
-export function fetchKmzList(type: KmzType, source: KmzSource): Promise<KmzListResponse> {
+export function fetchKmzList({ type, source, date, region }: KmzListFilters): Promise<KmzListResponse> {
   const params = new URLSearchParams({ type, source, limit: "50" });
+  if (date) params.set("date", date);
+  if (region) params.set("region", region);
   return fetchJson<KmzListResponse>(`${API_BASE}/kmz?${params.toString()}`);
+}
+
+export function fetchKmzDates(type: KmzType, source: KmzSource): Promise<string[]> {
+  const params = new URLSearchParams({ type, source });
+  return fetchApiData<string[]>(`kmz/dates?${params.toString()}`);
 }
 
 export async function downloadKmzFile(file: KmzFile): Promise<boolean> {
   const { date, type, source, region } = file;
   const params = new URLSearchParams({ date, type, source });
-  if (region) params.set("region", region);
+  if (region) params.set("region", region.code);
 
   try {
     const response = await fetch(`${API_BASE}/kmz/download?${params.toString()}`);

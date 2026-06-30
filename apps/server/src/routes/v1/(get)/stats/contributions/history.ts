@@ -43,7 +43,7 @@ function bucketKey(date: Date, granularity: "daily" | "monthly"): string {
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResBody>>) {
   const { from, to, granularity } = req.query;
-  const cacheKey = `stats:contributions:history:v2:${granularity}:${from ?? ""}:${to ?? ""}`;
+  const cacheKey = `stats:contributions:history:v2:${granularity}:${from.toISOString()}:${to.toISOString()}`;
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
 

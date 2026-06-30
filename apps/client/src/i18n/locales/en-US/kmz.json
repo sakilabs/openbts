@@ -8,18 +8,42 @@
     "stations": "Stations",
     "radiolines": "Radiolines"
   },
+  "source": {
+    "label": "Source",
+    "all": "Combined",
+    "permits": "Permits",
+    "device_registry": "Device registry"
+  },
   "region": {
     "unknownRegion": "Unknown region",
     "allRegions": "All regions"
+  },
+  "sortLabel": "Sort",
+  "sort": {
+    "region": "Region",
+    "size": "File size"
+  },
+  "order": {
+    "asc": "Ascending",
+    "desc": "Descending"
   },
   "list": {
     "count_one": "{{ count, number }} file",
     "count_other": "{{ count, number }} files",
     "download": "Download",
-    "downloading": "Downloading..."
+    "downloading": "Downloading...",
+    "noDates": "No exports yet",
+    "noDatesSubtitle": "Nothing has been generated for this type and source yet.",
+    "emptyTitle": "No files for this date",
+    "emptySubtitle": "Try a different date, source, or region.",
+    "filteredEmptyTitle": "No files match these filters",
+    "filteredEmptySubtitle": "Clear filters to see every file for this date.",
+    "errorTitle": "Could not load KMZ files",
+    "errorSubtitle": "Refresh the page or try again in a moment."
   },
   "file": {
     "new_stations": "New stations",
     "new_radiolines": "New radiolines"
-  }
+  },
+  "downloadError": "Couldn't download the file. Please try again."
 }

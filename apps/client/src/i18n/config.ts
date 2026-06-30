@@ -95,17 +95,13 @@ function getDefaultLanguage(): SupportedLanguage {
   const stored = localStorage.getItem("i18nextLng");
   if (stored && (stored === "en-US" || stored === "pl-PL")) return stored;
 
-  const browserLang = navigator.language;
-  if (browserLang.startsWith("pl")) return "pl-PL";
-  if (browserLang.startsWith("en")) return "en-US";
-
   return "pl-PL";
 }
 
 void i18n.use(initReactI18next).init({
   resources,
   lng: getDefaultLanguage(),
-  fallbackLng: "en-US",
+  fallbackLng: "pl-PL",
   defaultNS,
   ns: [
     "common",

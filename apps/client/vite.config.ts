@@ -59,7 +59,8 @@ export default defineConfig({
       manifest: {
         name: "OpenBTS",
         short_name: "OpenBTS",
-        description: "Map and data explorer for BT stations",
+        description: "Baza stacji bazowych sieci komórkowych w Polsce",
+        lang: "pl-PL",
         theme_color: "#0c0c0c",
         display: "standalone",
         display_override: ["window-controls-overlay", "standalone"],

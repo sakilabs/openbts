@@ -33,12 +33,14 @@ type ResBody = z.infer<typeof schemaRoute.response>;
 
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<ResBody>>) {
   const { from, to, granularity } = req.query;
-  const cacheKey = `stats:analyzer:usage:${granularity}:${from ?? ""}:${to ?? ""}`;
+  const fromIso = from.toISOString();
+  const toIso = to.toISOString();
+  const cacheKey = `stats:analyzer:usage:${granularity}:${fromIso}:${toIso}`;
   const cached = await redis.get(cacheKey);
   if (cached) return res.send(JSON.parse(cached));
 
-  const fromDay = from?.toISOString().slice(0, 10),
-    toDay = to?.toISOString().slice(0, 10);
+  const fromDay = fromIso.slice(0, 10),
+    toDay = toIso.slice(0, 10);
   const rows = await db
     .select()
     .from(analyzerUsage)

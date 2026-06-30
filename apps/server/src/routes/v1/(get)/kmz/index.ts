@@ -1,3 +1,5 @@
+import { regions } from "@openbts/drizzle";
+import { createSelectSchema } from "drizzle-orm/zod";
 import type { FastifyRequest } from "fastify/types/request.js";
 // oxlint-disable no-await-in-loop
 import { existsSync } from "node:fs";
@@ -5,6 +7,7 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod/v4";
 
+import db from "../../../../database/psql.js";
 import type { ReplyPayload } from "../../../../interfaces/fastify.interface.js";
 import type { JSONBody, Route } from "../../../../interfaces/routes.interface.js";
 
@@ -19,11 +22,15 @@ type KmzType = (typeof KMZ_TYPES)[number];
 type KmzSource = (typeof KMZ_SOURCES)[number];
 type KmzSourceDirectory = Exclude<KmzSource, "all">;
 
+const regionsSchema = createSelectSchema(regions);
+type RegionRow = z.infer<typeof regionsSchema>;
+const regionsQuery = db.query.regions.findMany().prepare("kmz_regions_all");
+
 interface KmzFile {
   date: string;
   type: KmzType;
   source: KmzSource;
-  region: string | null;
+  region: RegionRow | null;
   filename: string;
   size: number;
 }
@@ -55,7 +62,7 @@ const schemaRoute = {
           date: z.string(),
           type: z.enum(KMZ_TYPES),
           source: z.enum(KMZ_SOURCES),
-          region: z.string().nullable(),
+          region: regionsSchema.nullable(),
           filename: z.string(),
           size: z.number(),
         }),
@@ -67,7 +74,7 @@ const schemaRoute = {
 
 type ReqQuery = { Querystring: z.infer<typeof schemaRoute.querystring> };
 
-function regionFromFilename(filename: string): string | null {
+function regionCodeFromFilename(filename: string): string | null {
   return filename.match(REGION_FILENAME_REGEX)?.[1] ?? null;
 }
 
@@ -75,18 +82,27 @@ function isKmzSourceDirectory(entry: string): entry is KmzSourceDirectory {
   return entry !== "all" && (KMZ_SOURCES as readonly string[]).includes(entry);
 }
 
-function appendKmzFile(files: KmzFile[], date: string, type: KmzType, source: KmzSource, filename: string, size: number): void {
+function appendKmzFile(
+  files: KmzFile[],
+  date: string,
+  type: KmzType,
+  source: KmzSource,
+  filename: string,
+  size: number,
+  regionMap: Map<string, RegionRow>,
+): void {
+  const regionCode = regionCodeFromFilename(filename);
   files.push({
     date,
     type,
     source,
-    region: regionFromFilename(filename),
+    region: regionCode ? (regionMap.get(regionCode) ?? null) : null,
     filename,
     size,
   });
 }
 
-async function collectAllFiles(): Promise<KmzFile[]> {
+async function collectAllFiles(regionMap: Map<string, RegionRow>): Promise<KmzFile[]> {
   if (!existsSync(KMZ_DIR)) return [];
 
   const files: KmzFile[] = [];
@@ -109,7 +125,7 @@ async function collectAllFiles(): Promise<KmzFile[]> {
         if (!entryStat) continue;
 
         if (entryStat.isFile() && entry.endsWith(".kmz")) {
-          appendKmzFile(files, dateEntry, type, "all", entry, entryStat.size);
+          appendKmzFile(files, dateEntry, type, "all", entry, entryStat.size, regionMap);
           continue;
         }
 
@@ -122,7 +138,7 @@ async function collectAllFiles(): Promise<KmzFile[]> {
           const subStat = await stat(join(entryPath, subFile)).catch(() => null);
           if (!subStat?.isFile()) continue;
 
-          appendKmzFile(files, dateEntry, type, entry, subFile, subStat.size);
+          appendKmzFile(files, dateEntry, type, entry, subFile, subStat.size, regionMap);
         }
       }
     }
@@ -134,12 +150,15 @@ async function collectAllFiles(): Promise<KmzFile[]> {
 async function handler(req: FastifyRequest<ReqQuery>, res: ReplyPayload<JSONBody<KmzListResponse>>) {
   const { date, type, source, region, page, limit } = req.query;
 
-  let files = await collectAllFiles();
+  const regionRows = await regionsQuery.execute();
+  const regionMap = new Map(regionRows.map((row) => [row.code, row]));
+
+  let files = await collectAllFiles(regionMap);
 
   if (date) files = files.filter((f) => f.date === date);
   if (type) files = files.filter((f) => f.type === type);
   if (source) files = files.filter((f) => f.source === source);
-  if (region !== undefined) files = files.filter((f) => f.region === region);
+  if (region !== undefined) files = files.filter((f) => f.region?.code === region);
 
   files.sort((a, b) => b.date.localeCompare(a.date) || a.type.localeCompare(b.type) || a.filename.localeCompare(b.filename));
 

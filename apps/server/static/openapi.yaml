@@ -3,7 +3,7 @@ info:
   title: OpenBTS API
   description: |
     API for OpenBTS Backend
-    Last updated: 2026-06-27
+    Last updated: 2026-07-01
   version: 1.1.0
 
 servers:
@@ -3654,20 +3654,24 @@ paths:
   /kmz:
     get:
       tags: [KMZ]
-      summary: Get list of generated KMZ files
+      summary: List generated KMZ files
       description: |
-        Returns a list of pre-generated KMZ (Google Earth) files from our UKE imports. Includes data from both stations and radiolines
+        Returns pre-generated KMZ (Google Earth) files from our UKE imports, for both stations and radiolines. Each file's `region` is a full region object (or `null` for combined, new-stations, or unknown-region files). Use `/kmz/dates` to discover which dates have data for a given `type`/`source` combination before filtering here
       parameters:
         - name: date
           in: query
-          description: Optional date of files generation in YYYY-MM-DD format
-          schema: { type: number, format: double }
+          description: Export date in YYYY-MM-DD format. Omit to return files across all available dates
+          schema: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$", example: "2026-06-25" }
         - name: type
           in: query
           schema: { type: string, enum: [stations, radiolines] }
         - name: source
           in: query
           schema: { type: string, enum: [all, permits, device_registry] }
+        - name: region
+          in: query
+          description: Three-letter region code to filter by
+          schema: { type: string, pattern: "^[A-Z]{3}$" }
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
@@ -3681,11 +3685,74 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [data, totalCount]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/KmzFile" }
+                  totalCount: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /kmz/dates:
+    get:
+      tags: [KMZ]
+      summary: List available KMZ export dates
+      description: |
+        Returns the export dates (descending) that have at least one generated KMZ file for the given `type` and `source`. Meant to populate a date filter without paging through the full `/kmz` file list
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema: { type: string, enum: [stations, radiolines] }
+        - name: source
+          in: query
+          schema: { type: string, enum: [all, permits, device_registry], default: all }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
                 required: [data]
                 properties:
                   data:
                     type: array
-                    items: { $ref: "#/components/schemas/PemReport" }
+                    items: { type: string, format: date, example: "2026-06-25" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /kmz/download:
+    get:
+      tags: [KMZ]
+      summary: Download a generated KMZ file
+      description: Streams the KMZ file matching the given date, type, source, and optional region as `application/vnd.google-earth.kmz`
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$", example: "2026-06-25" }
+        - name: type
+          in: query
+          required: true
+          schema: { type: string, enum: [stations, radiolines] }
+        - name: source
+          in: query
+          required: true
+          schema: { type: string, enum: [all, permits, device_registry] }
+        - name: region
+          in: query
+          description: Three-letter region code
+          schema: { type: string, pattern: "^[A-Z]{3}$" }
+      responses:
+        "200":
+          description: The KMZ file
+          content:
+            application/vnd.google-earth.kmz: { schema: { type: string, format: binary } }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/InternalServerError" }
@@ -3901,6 +3968,20 @@ components:
                 document_url: { type: string, format: uri }
                 installation_document: { type: string, format: uri }
                 lab_name: { type: string }
+
+    KmzFile:
+      type: object
+      required: [date, type, source, region, filename, size]
+      properties:
+        date: { type: string, format: date, example: "2026-06-25" }
+        type: { type: string, enum: [stations, radiolines] }
+        source: { type: string, enum: [all, permits, device_registry] }
+        region:
+          $ref: "#/components/schemas/Region"
+          nullable: true
+          description: Null for combined, new-stations/radiolines, or unknown-region files
+        filename: { type: string }
+        size: { type: integer, description: File size in bytes }
 
     ApiError:
       type: object
