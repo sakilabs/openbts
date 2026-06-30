@@ -28,7 +28,9 @@ x-server-common: &server-common
     - KMZ_OUTPUT_DIR=/app/kmz
   volumes:
     - uploads-volume:/app/uploads
-    - kmz-volume:/app/kmz
+    - type: bind
+      source: /opt/openbts/kmz
+      target: /app/kmz
   networks:
     - internal
   healthcheck:
@@ -226,6 +228,3 @@ volumes:
   redis-volume:
     external: true
     name: btsearch_redis-volume
-  kmz-volume:
-    external: true
-    name: btsearch_kmz-volume
