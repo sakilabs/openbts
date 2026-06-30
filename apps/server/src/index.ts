@@ -166,7 +166,7 @@ function scheduleContributionSnapshot() {
       );
     }
     setTimeout(run, 24 * 60 * 60 * 1000); // 24h
-  }, 45 * 1000); // 90 seconds
+  }, 90 * 1000); // 90 seconds
 }
 if (cluster.isPrimary) {
   console.log(await figlet("sora"));
