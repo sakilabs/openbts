@@ -14,7 +14,7 @@ const BAND_ORDER = [
   "NR1800",
   "NR2100",
   "NR2600",
-  "NR3600",
+  "NR3500",
   "GSM-R900",
   "IOT900",
   "CDMA420",
@@ -24,14 +24,10 @@ const BAND_ORDER = [
 
 const normalizeBandName = (bandName: string) => bandName.replace(/\s+/g, "");
 
-const BAND_ORDER_INDEX = new Map(
-  BAND_ORDER.map((band, index) => [normalizeBandName(band), index]),
-);
+const BAND_ORDER_INDEX = new Map(BAND_ORDER.map((band, index) => [normalizeBandName(band), index]));
 
 export function compareBandNames(a: string, b: string): number {
-  const orderA =
-    BAND_ORDER_INDEX.get(normalizeBandName(a)) ?? Number.MAX_SAFE_INTEGER;
-  const orderB =
-    BAND_ORDER_INDEX.get(normalizeBandName(b)) ?? Number.MAX_SAFE_INTEGER;
+  const orderA = BAND_ORDER_INDEX.get(normalizeBandName(a)) ?? Number.MAX_SAFE_INTEGER;
+  const orderB = BAND_ORDER_INDEX.get(normalizeBandName(b)) ?? Number.MAX_SAFE_INTEGER;
   return orderA - orderB || a.localeCompare(b, undefined, { numeric: true });
 }
