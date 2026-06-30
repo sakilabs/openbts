@@ -7,6 +7,7 @@ import enUSCellAnalyzer from "./locales/en-US/cellAnalyzer.json";
 import enUSClfExport from "./locales/en-US/clfExport.json";
 import enUSCommon from "./locales/en-US/common.json";
 import enUSDeletedEntries from "./locales/en-US/deletedEntries.json";
+import enUSKMZ from "./locales/en-US/kmz.json";
 import enUSLists from "./locales/en-US/lists.json";
 import enUSMain from "./locales/en-US/main.json";
 import enUSNav from "./locales/en-US/nav.json";
@@ -24,6 +25,7 @@ import plPLCellAnalyzer from "./locales/pl-PL/cellAnalyzer.json";
 import plPLClfExport from "./locales/pl-PL/clfExport.json";
 import plPLCommon from "./locales/pl-PL/common.json";
 import plPLDeletedEntries from "./locales/pl-PL/deletedEntries.json";
+import plPLKMZ from "./locales/pl-PL/kmz.json";
 import plPLLists from "./locales/pl-PL/lists.json";
 import plPLMain from "./locales/pl-PL/main.json";
 import plPLNav from "./locales/pl-PL/nav.json";
@@ -56,6 +58,7 @@ export const resources = {
     cellAnalyzer: enUSCellAnalyzer,
     spectrum: enUSSpectrum,
     pem: enUSPem,
+    kmz: enUSKMZ,
   },
   "pl-PL": {
     common: plPLCommon,
@@ -75,6 +78,7 @@ export const resources = {
     cellAnalyzer: plPLCellAnalyzer,
     spectrum: plPLSpectrum,
     pem: plPLPem,
+    kmz: plPLKMZ,
   },
 } as const;
 

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchRegions } from "@/features/shared/api";
+import { regionsQueryOptions } from "@/features/shared/queries";
 import { API_BASE, fetchJson } from "@/lib/api";
 import { resolveAvatarUrl } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -37,13 +37,6 @@ function useHunters() {
   return useQuery({
     queryKey: ["hunters"],
     queryFn: () => fetchJson<{ data: HunterUser[] }>(`${API_BASE}/hunters`).then((r) => r.data),
-  });
-}
-
-function useRegions() {
-  return useQuery({
-    queryKey: ["regions"],
-    queryFn: fetchRegions,
   });
 }
 
@@ -257,7 +250,7 @@ function HuntersContent() {
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<SelectedRegion>("all");
   const { data: hunters = [], isLoading: huntersLoading, isError } = useHunters();
-  const { data: regions = [] } = useRegions();
+  const { data: regions = [] } = useQuery(regionsQueryOptions());
 
   const regionMap = useMemo(() => new Map(regions.map((region) => [region.id, region.name])), [regions]);
   const filteredHunters = useMemo(() => {

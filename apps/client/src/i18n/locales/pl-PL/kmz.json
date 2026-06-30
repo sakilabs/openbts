@@ -1,0 +1,27 @@
+{
+  "page": {
+    "title": "Pliki KMZ",
+    "subtitle": "Gotowe pliki Google Earth wygenerowane z naszych importów UKE"
+  },
+  "type": {
+    "label": "Typ pliku",
+    "stations": "Stacje",
+    "radiolines": "Radiolinie"
+  },
+  "region": {
+    "unknownRegion": "Nieznane województwo",
+    "allRegions": "Wszystkie województwa"
+  },
+  "list": {
+    "count_one": "{{ count, number }} plik",
+    "count_few": "{{ count, number }} pliki",
+    "count_many": "{{ count, number }} plików",
+    "count_other": "{{ count, number }} plików",
+    "download": "Pobierz",
+    "downloading": "Pobieranie..."
+  },
+  "file": {
+    "new_stations": "Nowe stacje",
+    "new_radiolines": "Nowe radiolinie"
+  }
+}

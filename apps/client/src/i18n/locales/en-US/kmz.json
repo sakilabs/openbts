@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "KMZ Downloads",
+    "subtitle": "Pre-generated Google Earth files from our UKE imports"
+  },
+  "type": {
+    "label": "File type",
+    "stations": "Stations",
+    "radiolines": "Radiolines"
+  },
+  "region": {
+    "unknownRegion": "Unknown region",
+    "allRegions": "All regions"
+  },
+  "list": {
+    "count_one": "{{ count, number }} file",
+    "count_other": "{{ count, number }} files",
+    "download": "Download",
+    "downloading": "Downloading..."
+  },
+  "file": {
+    "new_stations": "New stations",
+    "new_radiolines": "New radiolines"
+  }
+}

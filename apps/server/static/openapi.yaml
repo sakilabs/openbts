@@ -31,6 +31,7 @@ tags:
   - name: Lists
   - name: Comments
   - name: PEM
+  - name: KMZ
 
 paths:
   /health:
@@ -3634,6 +3635,45 @@ paths:
           required: true
           description: Operator MNC (e.g. 26002 for T-Mobile). Used to map to the SI2PEM legal entity name
           schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PemReport" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /kmz:
+    get:
+      tags: [KMZ]
+      summary: Get list of generated KMZ files
+      description: |
+        Returns a list of pre-generated KMZ (Google Earth) files from our UKE imports. Includes data from both stations and radiolines
+      parameters:
+        - name: date
+          in: query
+          description: Optional date of files generation in YYYY-MM-DD format
+          schema: { type: number, format: double }
+        - name: type
+          in: query
+          schema: { type: string, enum: [stations, radiolines] }
+        - name: source
+          in: query
+          schema: { type: string, enum: [all, permits, device_registry] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 50 }
       responses:
         "200":
           description: OK
