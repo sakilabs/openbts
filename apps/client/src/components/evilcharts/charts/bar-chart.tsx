@@ -617,8 +617,8 @@ const CustomBar = (props: CustomBarProps) => {
     return typeof val === "number" && val > 0;
   });
   const tinyStackOffset = Math.max(0, positiveStackKeys.indexOf(dataKey));
-  const visibleHeight = isStacked ? Math.max(0, height) : getVisibleVerticalBarHeight(height, hasPositiveValue);
-  const visibleY = hasPositiveValue && !isStacked && visibleHeight > height ? y + height - visibleHeight - tinyStackOffset * visibleHeight : y;
+  const visibleHeight = getVisibleVerticalBarHeight(height, hasPositiveValue);
+  const visibleY = hasPositiveValue && visibleHeight > height ? y + height - visibleHeight - (isStacked ? tinyStackOffset * visibleHeight : 0) : y;
 
   // The visible, painted bar — plus the stripped variant's solid top strip
   const visibleBar = (
